@@ -43,8 +43,7 @@ class FritzBoxScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.success_init = True
 
-        # pylint: disable=import-error
-        import fritzconnection as fc
+        import fritzconnection as fc  # pylint: disable=import-error
 
         # Establish a connection to the FRITZ!Box.
         try:
@@ -75,9 +74,9 @@ class FritzBoxScanner(DeviceScanner):
                 active_hosts.append(known_host['mac'])
         return active_hosts
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if is not known."""
-        ret = self.fritz_box.get_specific_host_entry(mac).get(
+        ret = self.fritz_box.get_specific_host_entry(device).get(
             'NewHostName'
         )
         if ret == {}:

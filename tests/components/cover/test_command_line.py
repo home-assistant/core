@@ -1,87 +1,75 @@
 """The tests the cover command line platform."""
-
 import os
 import tempfile
-import unittest
 from unittest import mock
 
-from homeassistant.setup import setup_component
-import homeassistant.components.cover as cover
-from homeassistant.components.cover import (
-    command_line as cmd_rs)
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components.cover import DOMAIN
+import homeassistant.components.cover.command_line as cmd_rs
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER)
+from homeassistant.setup import async_setup_component
 
 
-class TestCommandCover(unittest.TestCase):
-    """Test the cover command line platform."""
+@pytest.fixture
+def rs(hass):
+    """Return CommandCover instance."""
+    return cmd_rs.CommandCover(hass, 'foo', 'command_open', 'command_close',
+                               'command_stop', 'command_state', None)
 
-    def setup_method(self, method):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.rs = cmd_rs.CommandCover(self.hass, 'foo',
-                                      'command_open', 'command_close',
-                                      'command_stop', 'command_state',
-                                      None)
 
-    def teardown_method(self, method):
-        """Stop down everything that was started."""
-        self.hass.stop()
+def test_should_poll_new(rs):
+    """Test the setting of polling."""
+    assert rs.should_poll is True
+    rs._command_state = None
+    assert rs.should_poll is False
 
-    def test_should_poll(self):
-        """Test the setting of polling."""
-        self.assertTrue(self.rs.should_poll)
-        self.rs._command_state = None
-        self.assertFalse(self.rs.should_poll)
 
-    def test_query_state_value(self):
-        """Test with state value."""
-        with mock.patch('subprocess.check_output') as mock_run:
-            mock_run.return_value = b' foo bar '
-            result = self.rs._query_state_value('runme')
-            self.assertEqual('foo bar', result)
-            self.assertEqual(mock_run.call_count, 1)
-            self.assertEqual(
-                mock_run.call_args, mock.call('runme', shell=True)
-            )
+def test_query_state_value(rs):
+    """Test with state value."""
+    with mock.patch('subprocess.check_output') as mock_run:
+        mock_run.return_value = b' foo bar '
+        result = rs._query_state_value('runme')
+        assert 'foo bar' == result
+        assert mock_run.call_count == 1
+        assert mock_run.call_args == mock.call('runme', shell=True)
 
-    def test_state_value(self):
-        """Test with state value."""
-        with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, 'cover_status')
-            test_cover = {
-                'command_state': 'cat {}'.format(path),
-                'command_open': 'echo 1 > {}'.format(path),
-                'command_close': 'echo 1 > {}'.format(path),
-                'command_stop': 'echo 0 > {}'.format(path),
-                'value_template': '{{ value }}'
-            }
-            self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
-                'cover': {
-                    'platform': 'command_line',
-                    'covers': {
-                        'test': test_cover
-                    }
+
+async def test_state_value(hass):
+    """Test with state value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, 'cover_status')
+        test_cover = {
+            'command_state': 'cat {}'.format(path),
+            'command_open': 'echo 1 > {}'.format(path),
+            'command_close': 'echo 1 > {}'.format(path),
+            'command_stop': 'echo 0 > {}'.format(path),
+            'value_template': '{{ value }}'
+        }
+        assert await async_setup_component(hass, DOMAIN, {
+            'cover': {
+                'platform': 'command_line',
+                'covers': {
+                    'test': test_cover
                 }
-            }))
+            }
+        }) is True
 
-            state = self.hass.states.get('cover.test')
-            self.assertEqual('unknown', state.state)
+        assert 'unknown' == hass.states.get('cover.test').state
 
-            cover.open_cover(self.hass, 'cover.test')
-            self.hass.block_till_done()
+        await hass.services.async_call(
+            DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        assert 'open' == hass.states.get('cover.test').state
 
-            state = self.hass.states.get('cover.test')
-            self.assertEqual('open', state.state)
+        await hass.services.async_call(
+            DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        assert 'open' == hass.states.get('cover.test').state
 
-            cover.close_cover(self.hass, 'cover.test')
-            self.hass.block_till_done()
-
-            state = self.hass.states.get('cover.test')
-            self.assertEqual('open', state.state)
-
-            cover.stop_cover(self.hass, 'cover.test')
-            self.hass.block_till_done()
-
-            state = self.hass.states.get('cover.test')
-            self.assertEqual('closed', state.state)
+        await hass.services.async_call(
+            DOMAIN, SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        assert 'closed' == hass.states.get('cover.test').state

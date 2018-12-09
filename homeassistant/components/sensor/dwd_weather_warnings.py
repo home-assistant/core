@@ -47,12 +47,13 @@ MONITORED_CONDITIONS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION_NAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DWD-Weather-Warnings sensor."""
     name = config.get(CONF_NAME)
     region_name = config.get(CONF_REGION_NAME)
@@ -62,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = [DwdWeatherWarningsSensor(api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class DwdWeatherWarningsSensor(Entity):
@@ -94,7 +95,6 @@ class DwdWeatherWarningsSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._var_units
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of the device."""
@@ -103,7 +103,6 @@ class DwdWeatherWarningsSensor(Entity):
         except TypeError:
             return self._api.data[self._var_id]
 
-    # pylint: disable=no-member
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
@@ -137,11 +136,11 @@ class DwdWeatherWarningsSensor(Entity):
             data['warning_{}_name'.format(i)] = event['event']
             data['warning_{}_level'.format(i)] = event['level']
             data['warning_{}_type'.format(i)] = event['type']
-            if len(event['headline']) > 0:
+            if event['headline']:
                 data['warning_{}_headline'.format(i)] = event['headline']
-            if len(event['description']) > 0:
+            if event['description']:
                 data['warning_{}_description'.format(i)] = event['description']
-            if len(event['instruction']) > 0:
+            if event['instruction']:
                 data['warning_{}_instruction'.format(i)] = event['instruction']
 
             if event['start'] is not None:
@@ -164,7 +163,7 @@ class DwdWeatherWarningsSensor(Entity):
         self._api.update()
 
 
-class DwdWeatherWarningsAPI(object):
+class DwdWeatherWarningsAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, region_name):

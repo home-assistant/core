@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
-                '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
+REQUIREMENTS = ['pyedimax==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
     from pyedimax.smartplug import SmartPlug
 
@@ -39,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     name = config.get(CONF_NAME)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host, auth), name)])
+    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)])
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -77,20 +75,19 @@ class SmartPlugSwitch(SwitchDevice):
         """Turn the switch on."""
         self.smartplug.state = 'ON'
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.state = 'OFF'
 
     def update(self):
         """Update edimax switch."""
         try:
-            self._now_power = float(self.smartplug.now_power) / 1000000.0
+            self._now_power = float(self.smartplug.now_power)
         except (TypeError, ValueError):
             self._now_power = None
 
         try:
-            self._now_energy_day = (float(self.smartplug.now_energy_day) /
-                                    1000.0)
+            self._now_energy_day = float(self.smartplug.now_energy_day)
         except (TypeError, ValueError):
             self._now_energy_day = None
 

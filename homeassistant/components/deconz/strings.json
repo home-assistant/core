@@ -1,0 +1,33 @@
+{
+    "config": {
+        "title": "deCONZ Zigbee gateway",
+        "step": {
+            "init": {
+                "title": "Define deCONZ gateway",
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "link": {
+                "title": "Link with deCONZ",
+                "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ system settings\n2. Press \"Unlock Gateway\" button"
+            },
+            "options": {
+                "title": "Extra configuration options for deCONZ",
+                "data":{
+                    "allow_clip_sensor": "Allow importing virtual sensors",
+                    "allow_deconz_groups": "Allow importing deCONZ groups"
+                }
+            }
+        },
+        "error": {
+            "no_key": "Couldn't get an API key"
+        },
+        "abort": {
+            "already_configured": "Bridge is already configured",
+            "no_bridges": "No deCONZ bridges discovered",
+            "one_instance_only": "Component only supports one deCONZ instance"
+        }
+    }
+}

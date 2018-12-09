@@ -10,12 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
+    SUPPORT_ON_OFF)
 from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.8']
+REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +40,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                 SUPPORT_AWAY_MODE)
+                 SUPPORT_AWAY_MODE | SUPPORT_ON_OFF)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the eQ-3 BLE thermostats."""
     devices = []
 
@@ -50,17 +51,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mac = device_cfg[CONF_MAC]
         devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
-# pylint: disable=import-error
 class EQ3BTSmartThermostat(ClimateDevice):
-    """Representation of a eQ-3 Bluetooth Smart thermostat."""
+    """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
-        import eq3bt as eq3
+        import eq3bt as eq3  # pylint: disable=import-error
 
         self.modes = {
             eq3.Mode.Open: STATE_ON,
@@ -75,6 +75,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+        self._target_temperature = None
+        self._target_mode = None
 
     @property
     def supported_features(self):
@@ -116,6 +118,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        self._target_temperature = temperature
         self._thermostat.target_temperature = temperature
 
     @property
@@ -132,6 +135,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
+        self._target_mode = operation_mode
         self._thermostat.mode = self.reverse_modes[operation_mode]
 
     def turn_away_mode_off(self):
@@ -146,6 +150,14 @@ class EQ3BTSmartThermostat(ClimateDevice):
     def is_away_mode_on(self):
         """Return if we are away."""
         return self.current_operation == STATE_AWAY
+
+    def turn_on(self):
+        """Turn device on."""
+        self.set_operation_mode(STATE_AUTO)
+
+    def turn_off(self):
+        """Turn device off."""
+        self.set_operation_mode(STATE_OFF)
 
     @property
     def min_temp(self):
@@ -172,8 +184,20 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        from bluepy.btle import BTLEException
+        from bluepy.btle import BTLEException  # pylint: disable=import-error
         try:
             self._thermostat.update()
         except BTLEException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)
+
+        if (self._target_temperature and
+                self._thermostat.target_temperature
+                != self._target_temperature):
+            self.set_temperature(temperature=self._target_temperature)
+        else:
+            self._target_temperature = None
+        if (self._target_mode and
+                self.modes[self._thermostat.mode] != self._target_mode):
+            self.set_operation_mode(operation_mode=self._target_mode)
+        else:
+            self._target_mode = None

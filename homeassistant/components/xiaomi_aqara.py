@@ -4,7 +4,6 @@ Support for Xiaomi Gateways.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/xiaomi_aqara/
 """
-import asyncio
 import logging
 
 from datetime import timedelta
@@ -21,8 +20,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
 
@@ -68,10 +69,11 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
 
 GATEWAY_CONFIG = vol.Schema({
     vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
-    vol.Optional(CONF_KEY, default=None):
+    vol.Optional(CONF_KEY):
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
+    vol.Optional(CONF_DISABLE, default=False): cv.boolean,
 })
 
 
@@ -90,11 +92,9 @@ def _fix_conf_defaults(config):
     return config
 
 
-DEFAULT_GATEWAY_CONFIG = [{CONF_MAC: None, CONF_KEY: None}]
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=DEFAULT_GATEWAY_CONFIG):
+        vol.Optional(CONF_GATEWAYS, default={}):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
@@ -112,8 +112,7 @@ def setup(hass, config):
         interface = config[DOMAIN][CONF_INTERFACE]
         discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
 
-    @asyncio.coroutine
-    def xiaomi_gw_discovered(service, discovery_info):
+    async def xiaomi_gw_discovered(service, discovery_info):
         """Perform action when Xiaomi Gateway device(s) has been found."""
         # We don't need to do anything here, the purpose of Home Assistant's
         # discovery service is to just trigger loading of this
@@ -138,7 +137,8 @@ def setup(hass, config):
     xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
-    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover',
+                      'lock']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
@@ -183,19 +183,19 @@ def setup(hass, config):
 
     gateway_only_schema = _add_gateway_to_schema(xiaomi, vol.Schema({}))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_PLAY_RINGTONE, play_ringtone_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_PLAY_RINGTONE))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_STOP_RINGTONE, stop_ringtone_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_ADD_DEVICE, add_device_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_REMOVE_DEVICE, remove_device_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE))
 
@@ -205,32 +205,46 @@ def setup(hass, config):
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, name, xiaomi_hub):
+    def __init__(self, device, device_type, xiaomi_hub):
         """Initialize the Xiaomi device."""
         self._state = None
         self._is_available = True
         self._sid = device['sid']
-        self._name = '{}_{}'.format(name, self._sid)
+        self._name = '{}_{}'.format(device_type, self._sid)
+        self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
         self._remove_unavailability_tracker = None
-        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self._xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+        if hasattr(self, '_data_key') \
+                and self._data_key:  # pylint: disable=no-member
+            self._unique_id = slugify("{}-{}".format(
+                self._data_key,  # pylint: disable=no-member
+                self._sid))
+        else:
+            self._unique_id = slugify("{}-{}".format(self._type, self._sid))
 
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Start unavailability tracking."""
+        self._xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self._async_track_unavailable()
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def available(self):

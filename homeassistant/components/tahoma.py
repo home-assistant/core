@@ -13,9 +13,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (slugify)
 
-REQUIREMENTS = ['tahoma-api==0.0.10']
+REQUIREMENTS = ['tahoma-api==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,17 +32,31 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 TAHOMA_COMPONENTS = [
-    'sensor', 'cover'
+    'scene', 'sensor', 'cover', 'switch', 'binary_sensor'
 ]
 
 TAHOMA_TYPES = {
-    'rts:RollerShutterRTSComponent': 'cover',
-    'rts:CurtainRTSComponent': 'cover',
-    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
-    'io:RollerShutterVeluxIOComponent': 'cover',
-    'io:RollerShutterGenericIOComponent': 'cover',
-    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:ExteriorVenetianBlindIOComponent': 'cover',
+    'io:HorizontalAwningIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
+    'io:OnOffLightIOComponent': 'switch',
+    'io:RollerShutterGenericIOComponent': 'cover',
+    'io:RollerShutterUnoIOComponent': 'cover',
+    'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:SomfyContactIOSystemSensor': 'sensor',
+    'io:VerticalExteriorAwningIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'rtds:RTDSContactSensor': 'sensor',
+    'rtds:RTDSMotionSensor': 'sensor',
+    'rtds:RTDSSmokeSensor': 'smoke',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:CurtainRTSComponent': 'cover',
+    'rts:DualCurtainRTSComponent': 'cover',
+    'rts:ExteriorVenetianBlindRTSComponent': 'cover',
+    'rts:GarageDoor4TRTSComponent': 'switch',
+    'rts:RollerShutterRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover'
 }
 
 
@@ -58,19 +71,21 @@ def setup(hass, config):
     try:
         api = TahomaApi(username, password)
     except RequestException:
-        _LOGGER.exception("Error communicating with Tahoma API")
+        _LOGGER.exception("Error when trying to log in to the Tahoma API")
         return False
 
     try:
         api.get_setup()
         devices = api.get_devices()
+        scenes = api.get_action_groups()
     except RequestException:
-        _LOGGER.exception("Cannot fetch informations from Tahoma API")
+        _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
         'controller': api,
-        'devices': defaultdict(list)
+        'devices': defaultdict(list),
+        'scenes': []
     }
 
     for device in devices:
@@ -82,6 +97,9 @@ def setup(hass, config):
                                 _device.type, _device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
+
+    for scene in scenes:
+        hass.data[DOMAIN]['scenes'].append(scene)
 
     for component in TAHOMA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -101,14 +119,7 @@ class TahomaDevice(Entity):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
         self.controller = controller
-        self._unique_id = TAHOMA_ID_FORMAT.format(
-            slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this cover."""
-        return self._unique_id
 
     @property
     def name(self):

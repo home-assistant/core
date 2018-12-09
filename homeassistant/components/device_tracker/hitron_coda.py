@@ -14,15 +14,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TYPE = "rogers"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
 })
 
 
@@ -49,6 +52,11 @@ class HitronCODADeviceScanner(DeviceScanner):
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
 
+        if config.get(CONF_TYPE) == "shaw":
+            self._type = 'pwd'
+        else:
+            self._type = 'pws'
+
         self._userid = None
 
         self.success_init = self._update_info()
@@ -60,11 +68,11 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the device with the given MAC address."""
         name = next((
-            device.name for device in self.last_results
-            if device.mac == mac), None)
+            result.name for result in self.last_results
+            if result.mac == device), None)
         return name
 
     def _login(self):
@@ -74,7 +82,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         try:
             data = [
                 ('user', self._username),
-                ('pws', self._password),
+                (self._type, self._password),
             ]
             res = requests.post(self._loginurl, data=data, timeout=10)
         except requests.exceptions.Timeout:

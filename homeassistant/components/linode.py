@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['linode-api==4.1.4b2']
+REQUIREMENTS = ['linode-api==4.1.9b1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def setup(hass, config):
     return True
 
 
-class Linode(object):
+class Linode:
     """Handle all communication with the Linode API."""
 
     def __init__(self, access_token):

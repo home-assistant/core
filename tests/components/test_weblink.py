@@ -11,7 +11,7 @@ class TestComponentWeblink(unittest.TestCase):
     """Test the Weblink component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -20,15 +20,93 @@ class TestComponentWeblink(unittest.TestCase):
 
     def test_bad_config(self):
         """Test if new entity is created."""
-        self.assertFalse(setup_component(self.hass, 'weblink', {
+        assert not setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [{}],
             }
-        }))
+        })
+
+    def test_bad_config_relative_url(self):
+        """Test if new entity is created."""
+        assert not setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My router',
+                        weblink.CONF_URL: '../states/group.bla'
+                    },
+                ],
+            }
+        })
+
+    def test_bad_config_relative_file(self):
+        """Test if new entity is created."""
+        assert not setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My group',
+                        weblink.CONF_URL: 'group.bla'
+                    },
+                ],
+            }
+        })
+
+    def test_good_config_absolute_path(self):
+        """Test if new entity is created."""
+        assert setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My second URL',
+                        weblink.CONF_URL: '/states/group.bla'
+                    },
+                ],
+            }
+        })
+
+    def test_good_config_path_short(self):
+        """Test if new entity is created."""
+        assert setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My third URL',
+                        weblink.CONF_URL: '/states'
+                    },
+                ],
+            }
+        })
+
+    def test_good_config_path_directory(self):
+        """Test if new entity is created."""
+        assert setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My last URL',
+                        weblink.CONF_URL: '/states/bla/'
+                    },
+                ],
+            }
+        })
+
+    def test_good_config_ftp_link(self):
+        """Test if new entity is created."""
+        assert setup_component(self.hass, 'weblink', {
+            'weblink': {
+                'entities': [
+                    {
+                        weblink.CONF_NAME: 'My FTP URL',
+                        weblink.CONF_URL: 'ftp://somehost/'
+                    },
+                ],
+            }
+        })
 
     def test_entities_get_created(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, weblink.DOMAIN, {
+        assert setup_component(self.hass, weblink.DOMAIN, {
             weblink.DOMAIN: {
                 'entities': [
                     {
@@ -37,7 +115,7 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ]
             }
-        }))
+        })
 
         state = self.hass.states.get('weblink.my_router')
 

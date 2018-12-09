@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RPi cover platform."""
     relay_time = config.get(CONF_RELAY_TIME)
     state_pull_mode = config.get(CONF_STATE_PULL_MODE)
@@ -68,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         covers.append(RPiGPIOCover(
             cover[CONF_NAME], cover[CONF_RELAY_PIN], cover[CONF_STATE_PIN],
             state_pull_mode, relay_time, invert_state, invert_relay))
-    add_devices(covers)
+    add_entities(covers)
 
 
 class RPiGPIOCover(CoverDevice):
@@ -87,12 +86,7 @@ class RPiGPIOCover(CoverDevice):
         self._invert_relay = invert_relay
         rpi_gpio.setup_output(self._relay_pin)
         rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
-        rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
-
-    @property
-    def unique_id(self):
-        """Return the ID of this cover."""
-        return '{}.{}'.format(self.__class__, self._name)
+        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
     @property
     def name(self):
@@ -110,16 +104,16 @@ class RPiGPIOCover(CoverDevice):
 
     def _trigger(self):
         """Trigger the cover."""
-        rpi_gpio.write_output(self._relay_pin, self._invert_relay)
+        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
         sleep(self._relay_time)
-        rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
+        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         if not self.is_closed:
             self._trigger()
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         if self.is_closed:
             self._trigger()

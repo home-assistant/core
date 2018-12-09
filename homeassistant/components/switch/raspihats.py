@@ -25,7 +25,7 @@ _CHANNELS_SCHEMA = vol.Schema([{
     vol.Required(CONF_INDEX): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
-    vol.Optional(CONF_INITIAL_STATE, default=None): cv.boolean,
+    vol.Optional(CONF_INITIAL_STATE): cv.boolean,
 }])
 
 _I2C_HATS_SCHEMA = vol.Schema([{
@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the raspihats switch devices."""
     I2CHatSwitch.I2C_HATS_MANAGER = hass.data[I2C_HATS_MANAGER]
     switches = []
@@ -56,14 +55,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         board, address, channel_config[CONF_INDEX],
                         channel_config[CONF_NAME],
                         channel_config[CONF_INVERT_LOGIC],
-                        channel_config[CONF_INITIAL_STATE]
+                        channel_config.get(CONF_INITIAL_STATE)
                     )
                 )
         except I2CHatsException as ex:
             _LOGGER.error(
                 "Failed to register %s I2CHat@%s %s", board, hex(address),
                 str(ex))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class I2CHatSwitch(ToggleEntity):
@@ -121,19 +120,19 @@ class I2CHatSwitch(ToggleEntity):
             _LOGGER.error(self._log_message("Is ON check failed, " + str(ex)))
             return False
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         try:
-            state = True if self._invert_logic is False else False
+            state = self._invert_logic is False
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
             _LOGGER.error(self._log_message("Turn ON failed, " + str(ex)))
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         try:
-            state = False if self._invert_logic is False else True
+            state = self._invert_logic is not False
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:

@@ -4,37 +4,41 @@ Support for Coinbase sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.coinbase/
 """
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.entity import Entity
 
-
-DEPENDENCIES = ['coinbase']
-
-DATA_COINBASE = 'coinbase_cache'
-
-CONF_ATTRIBUTION = "Data provided by coinbase.com"
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
-BTC_ICON = 'mdi:currency-btc'
-ETH_ICON = 'mdi:currency-eth'
-COIN_ICON = 'mdi:coin'
+CURRENCY_ICONS = {
+    'BTC': 'mdi:currency-btc',
+    'ETH': 'mdi:currency-eth',
+    'EUR': 'mdi:currency-eur',
+    'LTC': 'mdi:litecoin',
+    'USD': 'mdi:currency-usd'
+}
+DEFAULT_COIN_ICON = 'mdi:coin'
+
+CONF_ATTRIBUTION = "Data provided by coinbase.com"
+
+DATA_COINBASE = 'coinbase_cache'
+DEPENDENCIES = ['coinbase']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Coinbase sensors."""
     if discovery_info is None:
         return
     if 'account' in discovery_info:
         account = discovery_info['account']
-        sensor = AccountSensor(hass.data[DATA_COINBASE],
-                               account['name'],
-                               account['balance']['currency'])
+        sensor = AccountSensor(
+            hass.data[DATA_COINBASE], account['name'],
+            account['balance']['currency'])
     if 'exchange_currency' in discovery_info:
-        sensor = ExchangeRateSensor(hass.data[DATA_COINBASE],
-                                    discovery_info['exchange_currency'],
-                                    discovery_info['native_currency'])
+        sensor = ExchangeRateSensor(
+            hass.data[DATA_COINBASE], discovery_info['exchange_currency'],
+            discovery_info['native_currency'])
 
-    add_devices([sensor], True)
+    add_entities([sensor], True)
 
 
 class AccountSensor(Entity):
@@ -67,19 +71,15 @@ class AccountSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self._name == "Coinbase BTC Wallet":
-            return BTC_ICON
-        if self._name == "Coinbase ETH Wallet":
-            return ETH_ICON
-        return COIN_ICON
+        return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(self._native_balance,
-                                                self._native_currency)
+            ATTR_NATIVE_BALANCE: "{} {}".format(
+                self._native_balance, self._native_currency),
         }
 
     def update(self):
@@ -121,11 +121,7 @@ class ExchangeRateSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self._name == "BTC Exchange Rate":
-            return BTC_ICON
-        if self._name == "ETH Exchange Rate":
-            return ETH_ICON
-        return COIN_ICON
+        return CURRENCY_ICONS.get(self.currency, DEFAULT_COIN_ICON)
 
     @property
     def device_state_attributes(self):

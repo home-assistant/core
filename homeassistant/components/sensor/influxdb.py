@@ -4,25 +4,25 @@ InfluxDB component which allows you to get data from an Influx database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.influxdb/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
-                                 CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL,
-                                 CONF_NAME, CONF_UNIT_OF_MEASUREMENT,
-                                 CONF_VALUE_TEMPLATE)
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.util import Throttle
 
+from homeassistant.components.influxdb import CONF_DB_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.2.0']
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
@@ -32,13 +32,13 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_GROUP_FUNCTION = 'mean'
 DEFAULT_FIELD = 'value'
 
-CONF_DB_NAME = 'database'
 CONF_QUERIES = 'queries'
 CONF_GROUP_FUNCTION = 'group_function'
 CONF_FIELD = 'field'
 CONF_MEASUREMENT_NAME = 'measurement'
 CONF_WHERE = 'where'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -62,11 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
 })
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
     influx_conf = {
         'host': config[CONF_HOST],
@@ -84,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.connected:
             dev.append(sensor)
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class InfluxSensor(Entity):
@@ -122,7 +119,7 @@ class InfluxSensor(Entity):
         except exceptions.InfluxDBClientError as exc:
             _LOGGER.error("Database host is not accessible due to '%s', please"
                           " check your entries in the configuration file and"
-                          " that the database exists and is READ/WRITE.", exc)
+                          " that the database exists and is READ/WRITE", exc)
             self.connected = False
 
     @property
@@ -158,7 +155,7 @@ class InfluxSensor(Entity):
         self._state = value
 
 
-class InfluxSensorData(object):
+class InfluxSensorData:
     """Class for handling the data retrieval."""
 
     def __init__(self, influx, group, field, measurement, where):

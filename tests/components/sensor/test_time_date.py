@@ -14,7 +14,7 @@ class TestTimeDateSensor(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)

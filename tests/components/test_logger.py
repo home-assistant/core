@@ -10,6 +10,7 @@ from tests.common import get_test_home_assistant
 
 RECORD = namedtuple('record', ('name', 'levelno'))
 
+NO_DEFAULT_CONFIG = {'logger': {}}
 NO_LOGS_CONFIG = {'logger': {'default': 'info'}}
 TEST_CONFIG = {
     'logger': {
@@ -23,7 +24,7 @@ class TestUpdater(unittest.TestCase):
     """Test logger component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.log_filter = None
 
@@ -33,30 +34,30 @@ class TestUpdater(unittest.TestCase):
         self.hass.stop()
 
     def setup_logger(self, config):
-        """Setup logger and save log filter."""
+        """Set up logger and save log filter."""
         setup_component(self.hass, logger.DOMAIN, config)
         self.log_filter = logging.root.handlers[-1].filters[0]
 
     def assert_logged(self, name, level):
         """Assert that a certain record was logged."""
-        self.assertTrue(self.log_filter.filter(RECORD(name, level)))
+        assert self.log_filter.filter(RECORD(name, level))
 
     def assert_not_logged(self, name, level):
         """Assert that a certain record was not logged."""
-        self.assertFalse(self.log_filter.filter(RECORD(name, level)))
+        assert not self.log_filter.filter(RECORD(name, level))
 
     def test_logger_setup(self):
         """Use logger to create a logging filter."""
         self.setup_logger(TEST_CONFIG)
 
-        self.assertTrue(len(logging.root.handlers) > 0)
+        assert len(logging.root.handlers) > 0
         handler = logging.root.handlers[-1]
 
-        self.assertEqual(len(handler.filters), 1)
+        assert len(handler.filters) == 1
         log_filter = handler.filters[0].logfilter
 
-        self.assertEqual(log_filter['default'], logging.WARNING)
-        self.assertEqual(log_filter['logs']['test'], logging.INFO)
+        assert log_filter['default'] == logging.WARNING
+        assert log_filter['logs']['test'] == logging.INFO
 
     def test_logger_test_filters(self):
         """Test resulting filter operation."""
@@ -95,6 +96,32 @@ class TestUpdater(unittest.TestCase):
 
         self.hass.services.call(logger.DOMAIN, 'set_level',
                                 {'asdf': 'debug', 'dummy': 'info'})
+        self.hass.block_till_done()
+
+        self.assert_logged('asdf', logging.DEBUG)
+        self.assert_logged('dummy', logging.WARNING)
+
+    def test_set_default_filter_empty_config(self):
+        """Test change default log level from empty configuration."""
+        self.setup_logger(NO_DEFAULT_CONFIG)
+
+        self.assert_logged('test', logging.DEBUG)
+
+        self.hass.services.call(
+            logger.DOMAIN, 'set_default_level', {'level': 'warning'})
+        self.hass.block_till_done()
+
+        self.assert_not_logged('test', logging.DEBUG)
+
+    def test_set_default_filter(self):
+        """Test change default log level with existing default."""
+        self.setup_logger(TEST_CONFIG)
+
+        self.assert_not_logged('asdf', logging.DEBUG)
+        self.assert_logged('dummy', logging.WARNING)
+
+        self.hass.services.call(
+            logger.DOMAIN, 'set_default_level', {'level': 'debug'})
         self.hass.block_till_done()
 
         self.assert_logged('asdf', logging.DEBUG)

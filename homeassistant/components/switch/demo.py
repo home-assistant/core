@@ -8,10 +8,9 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo switches."""
-    add_devices_callback([
+    add_entities_callback([
         DemoSwitch('Decorative Lights', True, None, True),
         DemoSwitch('AC', False, 'mdi:air-conditioner', False)
     ])

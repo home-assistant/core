@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD)
+    CONF_METHOD, CONF_HEADERS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -38,6 +38,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
@@ -52,8 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the REST command component."""
     websession = async_get_clientsession(hass)
 
@@ -77,12 +77,16 @@ def async_setup(hass, config):
             template_payload.hass = hass
 
         headers = None
+        if CONF_HEADERS in command_config:
+            headers = command_config[CONF_HEADERS]
+
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
-            headers = {hdrs.CONTENT_TYPE: content_type}
+            if headers is None:
+                headers = {}
+            headers[hdrs.CONTENT_TYPE] = content_type
 
-        @asyncio.coroutine
-        def async_service_handler(service):
+        async def async_service_handler(service):
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -92,7 +96,7 @@ def async_setup(hass, config):
 
             try:
                 with async_timeout.timeout(timeout, loop=hass.loop):
-                    request = yield from getattr(websession, method)(
+                    request = await getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,
                         auth=auth,

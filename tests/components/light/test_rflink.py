@@ -254,7 +254,7 @@ def test_signal_repetitions(hass, monkeypatch):
 
     assert protocol.send_command_ack.call_count == 2
 
-    # test if default apply to configured devcies
+    # test if default apply to configured devices
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: DOMAIN + '.test1'}))
@@ -356,11 +356,10 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
 
     yield from hass.async_block_till_done()
 
-    print(protocol.send_command_ack.call_args_list)
-    assert protocol.send_command_ack.call_args_list[0][0][1] == 'off'
-    assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
-    assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
-    assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[0][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[1][0][1] == 'off'
+    assert protocol.send_command_ack.call_args_list[2][0][1] == 'off'
+    assert protocol.send_command_ack.call_args_list[3][0][1] == 'off'
 
 
 @asyncio.coroutine

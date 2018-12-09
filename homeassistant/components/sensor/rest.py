@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -35,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -49,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -76,8 +77,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
+    if rest.data is None:
+        raise PlatformNotReady
 
-    add_devices([RestSensor(
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    add_entities([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
 
@@ -130,18 +135,20 @@ class RestSensor(Entity):
 
         if self._json_attrs:
             self._attributes = {}
-            try:
-                json_dict = json.loads(value)
-                if isinstance(json_dict, dict):
-                    attrs = {k: json_dict[k] for k in self._json_attrs
-                             if k in json_dict}
-                    self._attributes = attrs
-                else:
-                    _LOGGER.warning("JSON result was not a dictionary")
-            except ValueError:
-                _LOGGER.warning("REST result could not be parsed as JSON")
-                _LOGGER.debug("Erroneous JSON: %s", value)
-
+            if value:
+                try:
+                    json_dict = json.loads(value)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in self._json_attrs
+                                 if k in json_dict}
+                        self._attributes = attrs
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("REST result could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", value)
+            else:
+                _LOGGER.warning("Empty reply found when expecting JSON data")
         if value is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
@@ -156,7 +163,7 @@ class RestSensor(Entity):
         return self._attributes
 
 
-class RestData(object):
+class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(self, method, resource, auth, headers, data, verify_ssl):
@@ -168,12 +175,14 @@ class RestData(object):
 
     def update(self):
         """Get the latest data from REST service with provided method."""
+        _LOGGER.debug("Updating from %s", self._request.url)
         try:
             with requests.Session() as sess:
                 response = sess.send(
                     self._request, timeout=10, verify=self._verify_ssl)
 
             self.data = response.text
-        except requests.exceptions.RequestException:
-            _LOGGER.error("Error fetching data: %s", self._request)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Error fetching data: %s from %s failed with %s",
+                          self._request, self._request.url, ex)
             self.data = None

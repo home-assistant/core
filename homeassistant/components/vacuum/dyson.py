@@ -4,7 +4,6 @@ Support for the Dyson 360 eye vacuum cleaner robot.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.dyson/
 """
-import asyncio
 import logging
 
 from homeassistant.components.dyson import DYSON_DEVICES
@@ -24,14 +23,12 @@ DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
-ICON = 'mdi:roomba'
-
 SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                 SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATUS | \
                 SUPPORT_BATTERY | SUPPORT_STOP
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson 360 Eye robot vacuum platform."""
     from libpurecoollink.dyson_360_eye import Dyson360Eye
 
@@ -45,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = Dyson360EyeDevice(device)
         hass.data[DYSON_360_EYE_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_360_EYE_DEVICES])
+    add_entities(hass.data[DYSON_360_EYE_DEVICES])
     return True
 
 
@@ -56,10 +53,8 @@ class Dyson360EyeDevice(VacuumDevice):
         """Dyson 360 Eye robot vacuum device."""
         _LOGGER.debug("Creating device %s", device.name)
         self._device = device
-        self._icon = ICON
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
@@ -81,11 +76,6 @@ class Dyson360EyeDevice(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._device.name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return self._icon
 
     @property
     def status(self):

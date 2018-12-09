@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tilgangspunktet er allerede konfigurert",
+            "connection_aborted": "Kunne ikke koble til HMIP serveren",
+            "unknown": "Ukjent feil oppstod."
+        },
+        "error": {
+            "invalid_pin": "Ugyldig PIN kode, pr\u00f8v igjen.",
+            "press_the_button": "Vennligst trykk p\u00e5 den bl\u00e5 knappen.",
+            "register_failed": "Kunne ikke registrere, vennligst pr\u00f8v igjen.",
+            "timeout_button": "Bl\u00e5 knapp-trykk tok for lang tid, vennligst pr\u00f8v igjen."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Tilgangspunkt ID (SGTIN)",
+                    "name": "Navn (valgfritt, brukes som prefiks for alle enheter)",
+                    "pin": "PIN kode (valgfritt)"
+                },
+                "title": "Velg HomematicIP tilgangspunkt"
+            },
+            "link": {
+                "description": "Trykk p\u00e5 den bl\u00e5 knappen p\u00e5 tilgangspunktet og p\u00e5 send knappen for \u00e5 registrere HomematicIP med Home Assistant. \n\n![Plassering av knapp p\u00e5 bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Link tilgangspunkt"
+            }
+        },
+        "title": "HomematicIP Sky"
+    }
+}

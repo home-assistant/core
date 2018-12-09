@@ -4,7 +4,6 @@ Support for the IKEA Tradfri platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tradfri/
 """
-import asyncio
 import logging
 
 from datetime import timedelta
@@ -20,21 +19,16 @@ DEPENDENCIES = ['tradfri']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the IKEA Tradfri device platform."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a Tradfri config entry."""
+    api = hass.data[KEY_API][config_entry.entry_id]
+    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
 
-    gateway_id = discovery_info['gateway']
-    api = hass.data[KEY_API][gateway_id]
-    gateway = hass.data[KEY_GATEWAY][gateway_id]
-
-    devices_command = gateway.get_devices()
-    devices_commands = yield from api(devices_command)
-    all_devices = yield from api(devices_commands)
-    devices = [dev for dev in all_devices if not dev.has_light_control]
-    async_add_devices(TradfriDevice(device, api) for device in devices)
+    devices_commands = await api(gateway.get_devices())
+    all_devices = await api(devices_commands)
+    devices = (dev for dev in all_devices if not dev.has_light_control and
+               not dev.has_socket_control)
+    async_add_entities(TradfriDevice(device, api) for device in devices)
 
 
 class TradfriDevice(Entity):
@@ -48,8 +42,7 @@ class TradfriDevice(Entity):
 
         self._refresh(device)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
 
@@ -91,7 +84,7 @@ class TradfriDevice(Entity):
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         # pylint: disable=import-error
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
@@ -100,8 +93,8 @@ class TradfriDevice(Entity):
             cmd = self._device.observe(callback=self._observe_update,
                                        err_callback=self._async_start_observe,
                                        duration=0)
-            self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as err:
+            self.hass.async_create_task(self._api(cmd))
+        except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
@@ -114,4 +107,4 @@ class TradfriDevice(Entity):
         """Receive new state data for this device."""
         self._refresh(tradfri_device)
 
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_create_task(self.async_update_ha_state())

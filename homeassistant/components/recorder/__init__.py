@@ -15,8 +15,7 @@ import logging
 import queue
 import threading
 import time
-
-from typing import Dict, Optional
+from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
 
@@ -34,7 +33,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.1']
+REQUIREMENTS = ['sqlalchemy==1.2.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +42,11 @@ DOMAIN = 'recorder'
 SERVICE_PURGE = 'purge'
 
 ATTR_KEEP_DAYS = 'keep_days'
+ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean,
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -61,40 +61,28 @@ CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
+        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
     })
 })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
+        vol.Optional(CONF_PURGE_KEEP_DAYS, default=10):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_PURGE_INTERVAL, default=1):
+            vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
-def wait_connection_ready(hass):
-    """
-    Wait till the connection is ready.
-
-    Returns a coroutine object.
-    """
-    return hass.data[DATA_INSTANCE].async_db_ready
-
-
-def run_information(hass, point_in_time: Optional[datetime]=None):
+def run_information(hass, point_in_time: Optional[datetime] = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -115,8 +103,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
         return res
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
@@ -135,19 +122,18 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
 
-    @asyncio.coroutine
-    def async_handle_purge_service(service):
+    async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
-        instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
+        instance.do_adhoc_purge(**service.data)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PURGE, async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA)
 
-    return (yield from instance.async_db_ready)
+    return await instance.async_db_ready
 
 
-PurgeTask = namedtuple('PurgeTask', ['keep_days'])
+PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])
 
 
 class Recorder(threading.Thread):
@@ -181,10 +167,12 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
 
-    def do_adhoc_purge(self, keep_days):
+    def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
-        if keep_days is not None:
-            self.queue.put(PurgeTask(keep_days))
+        keep_days = kwargs.get(ATTR_KEEP_DAYS, self.keep_days)
+        repack = kwargs.get(ATTR_REPACK)
+
+        self.queue.put(PurgeTask(keep_days, repack))
 
     def run(self):
         """Start processing events to save."""
@@ -250,33 +238,35 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_START, notify_hass_started)
 
-            if self.keep_days and self.purge_interval:
-                @callback
-                def async_purge(now):
-                    """Trigger the purge and schedule the next run."""
-                    self.queue.put(PurgeTask(self.keep_days))
-                    self.hass.helpers.event.async_track_point_in_time(
-                        async_purge, now + timedelta(days=self.purge_interval))
-
-                earliest = dt_util.utcnow() + timedelta(minutes=30)
-                run = latest = dt_util.utcnow() + \
-                    timedelta(days=self.purge_interval)
-                with session_scope(session=self.get_session()) as session:
-                    event = session.query(Events).first()
-                    if event is not None:
-                        session.expunge(event)
-                        run = dt_util.as_utc(event.time_fired) + \
-                            timedelta(days=self.keep_days+self.purge_interval)
-                run = min(latest, max(run, earliest))
-                self.hass.helpers.event.async_track_point_in_time(
-                    async_purge, run)
-
         self.hass.add_job(register)
         result = hass_started.result()
 
-        # If shutdown happened before HASS finished starting
+        # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             return
+
+        # Start periodic purge
+        if self.keep_days and self.purge_interval:
+            @callback
+            def async_purge(now):
+                """Trigger the purge and schedule the next run."""
+                self.queue.put(
+                    PurgeTask(self.keep_days, repack=False))
+                self.hass.helpers.event.async_track_point_in_time(
+                    async_purge, now + timedelta(days=self.purge_interval))
+
+            earliest = dt_util.utcnow() + timedelta(minutes=30)
+            run = latest = dt_util.utcnow() + \
+                timedelta(days=self.purge_interval)
+            with session_scope(session=self.get_session()) as session:
+                event = session.query(Events).first()
+                if event is not None:
+                    session.expunge(event)
+                    run = dt_util.as_utc(event.time_fired) + timedelta(
+                        days=self.keep_days+self.purge_interval)
+            run = min(latest, max(run, earliest))
+
+            self.hass.helpers.event.track_point_in_time(async_purge, run)
 
         while True:
             event = self.queue.get()
@@ -286,8 +276,8 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days)
+            if isinstance(event, PurgeTask):
+                purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:
@@ -310,13 +300,24 @@ class Recorder(threading.Thread):
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
                     with session_scope(session=self.get_session()) as session:
-                        dbevent = Events.from_event(event)
-                        session.add(dbevent)
+                        try:
+                            dbevent = Events.from_event(event)
+                            session.add(dbevent)
+                            session.flush()
+                        except (TypeError, ValueError):
+                            _LOGGER.warning(
+                                "Event is not JSON serializable: %s", event)
 
                         if event.event_type == EVENT_STATE_CHANGED:
-                            dbstate = States.from_event(event)
-                            dbstate.event_id = dbevent.event_id
-                            session.add(dbstate)
+                            try:
+                                dbstate = States.from_event(event)
+                                dbstate.event_id = dbevent.event_id
+                                session.add(dbstate)
+                            except (TypeError, ValueError):
+                                _LOGGER.warning(
+                                    "State is not JSON serializable: %s",
+                                    event.data.get('new_state'))
+
                     updated = True
 
                 except exc.OperationalError as err:

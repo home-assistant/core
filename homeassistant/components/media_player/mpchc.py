@@ -11,12 +11,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
-    CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     url = '{}:{}'.format(host, port)
 
-    add_devices([MpcHcDevice(name, url)], True)
+    add_entities([MpcHcDevice(name, url)], True)
 
 
 class MpcHcDevice(MediaPlayerDevice):
@@ -94,7 +93,7 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_OFF
         if state == 'playing':
             return STATE_PLAYING
-        elif state == 'paused':
+        if state == 'paused':
             return STATE_PAUSED
 
         return STATE_IDLE
@@ -155,8 +154,8 @@ class MpcHcDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._send_command(921)
+        self._send_command(920)
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._send_command(920)
+        self._send_command(919)

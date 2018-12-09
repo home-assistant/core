@@ -4,18 +4,15 @@ Component to offer a way to enter a value into a text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_text/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,10 +23,14 @@ CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
 
+MODE_TEXT = 'text'
+MODE_PASSWORD = 'password'
+
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_PATTERN = 'pattern'
+ATTR_MODE = 'mode'
 
 SERVICE_SET_VALUE = 'set_value'
 
@@ -63,22 +64,14 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(ATTR_PATTERN): cv.string,
+            vol.Optional(CONF_MODE, default=MODE_TEXT):
+                vol.In([MODE_TEXT, MODE_PASSWORD]),
         }, _cv_input_text)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-def set_value(hass, entity_id, value):
-    """Set input_text to value."""
-    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    })
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up an input text box."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -92,37 +85,29 @@ def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         pattern = cfg.get(ATTR_PATTERN)
+        mode = cfg.get(CONF_MODE)
 
         entities.append(InputText(
             object_id, name, initial, minimum, maximum, icon, unit,
-            pattern))
+            pattern, mode))
 
     if not entities:
         return False
 
-    @asyncio.coroutine
-    def async_set_value_service(call):
-        """Handle a calls to the input box services."""
-        target_inputs = component.async_extract_from_service(call)
+    component.async_register_entity_service(
+        SERVICE_SET_VALUE, SERVICE_SET_VALUE_SCHEMA,
+        'async_set_value'
+    )
 
-        tasks = [input_text.async_set_value(call.data[ATTR_VALUE])
-                 for input_text in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
-        schema=SERVICE_SET_VALUE_SCHEMA)
-
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
-class InputText(Entity):
+class InputText(RestoreEntity):
     """Represent a text box."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, icon,
-                 unit, pattern):
+                 unit, pattern, mode):
         """Initialize a text input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -132,6 +117,7 @@ class InputText(Entity):
         self._icon = icon
         self._unit = unit
         self._pattern = pattern
+        self._mode = mode
 
     @property
     def should_poll(self):
@@ -165,27 +151,27 @@ class InputText(Entity):
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_PATTERN: self._pattern,
+            ATTR_MODE: self._mode,
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         if self._current_value is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         value = state and state.state
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= len(value) <= self._maximum:
             self._current_value = value
 
-    @asyncio.coroutine
-    def async_set_value(self, value):
+    async def async_set_value(self, value):
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
             _LOGGER.warning("Invalid value: %s (length range %s - %s)",
                             value, self._minimum, self._maximum)
             return
         self._current_value = value
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

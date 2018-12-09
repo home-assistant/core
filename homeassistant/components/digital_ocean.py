@@ -27,6 +27,7 @@ ATTR_MEMORY = 'memory'
 ATTR_REGION = 'region'
 ATTR_VCPUS = 'vcpus'
 
+CONF_ATTRIBUTION = 'Data provided by Digital Ocean'
 CONF_DROPLETS = 'droplets'
 
 DATA_DIGITAL_OCEAN = 'data_do'
@@ -64,7 +65,7 @@ def setup(hass, config):
     return True
 
 
-class DigitalOcean(object):
+class DigitalOcean:
     """Handle all communication with the Digital Ocean API."""
 
     def __init__(self, access_token):

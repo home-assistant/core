@@ -2,8 +2,11 @@
 import unittest
 from unittest import mock
 
+from homeassistant.setup import setup_component
+from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.fan import dyson
+from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
+                                          ATTR_OSCILLATING)
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
 from libpurecoollink.dyson_pure_state import DysonPureCoolState
@@ -65,7 +68,7 @@ class DysonTest(unittest.TestCase):
     """Dyson Sensor component test class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -75,9 +78,9 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_with_no_devices(self):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices)
-        add_devices.assert_called_with([])
+        add_entities = mock.MagicMock()
+        dyson.setup_platform(self.hass, None, add_entities)
+        add_entities.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""
@@ -91,11 +94,50 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
 
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_device_on()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_get_state_attributes(self, mocked_login, mocked_devices):
+        """Test async added to hass."""
+        setup_component(self.hass, dyson_parent.DOMAIN, {
+            dyson_parent.DOMAIN: {
+                dyson_parent.CONF_USERNAME: "email",
+                dyson_parent.CONF_PASSWORD: "password",
+                dyson_parent.CONF_LANGUAGE: "US",
+                }
+            })
+        self.hass.block_till_done()
+        state = self.hass.states.get("{}.{}".format(
+            dyson.DOMAIN,
+            mocked_devices.return_value[0].name))
+
+        assert dyson.ATTR_IS_NIGHT_MODE in state.attributes
+        assert dyson.ATTR_IS_AUTO_MODE in state.attributes
+        assert ATTR_SPEED in state.attributes
+        assert ATTR_SPEED_LIST in state.attributes
+        assert ATTR_OSCILLATING in state.attributes
+
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_device_on()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_async_added_to_hass(self, mocked_login, mocked_devices):
+        """Test async added to hass."""
+        setup_component(self.hass, dyson_parent.DOMAIN, {
+            dyson_parent.DOMAIN: {
+                dyson_parent.CONF_USERNAME: "email",
+                dyson_parent.CONF_PASSWORD: "password",
+                dyson_parent.CONF_LANGUAGE: "US",
+                }
+            })
+        self.hass.block_till_done()
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+        assert mocked_devices.return_value[0].add_message_listener.called
+
     def test_dyson_set_speed(self):
         """Test set fan speed."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.set_speed("1")
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.FAN,
@@ -109,7 +151,7 @@ class DysonTest(unittest.TestCase):
         """Test turn on fan."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.turn_on()
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.FAN)
@@ -118,7 +160,7 @@ class DysonTest(unittest.TestCase):
         """Test turn on fan with night mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.night_mode(True)
         set_config = device.set_configuration
         set_config.assert_called_with(night_mode=NightMode.NIGHT_MODE_ON)
@@ -131,17 +173,17 @@ class DysonTest(unittest.TestCase):
         """Test night mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.is_night_mode)
+        assert not component.is_night_mode
 
         device = _get_device_off()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertTrue(component.is_night_mode)
+        assert component.is_night_mode
 
     def test_dyson_turn_auto_mode(self):
         """Test turn on/off fan with auto mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.auto_mode(True)
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.AUTO)
@@ -154,17 +196,17 @@ class DysonTest(unittest.TestCase):
         """Test auto mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.is_auto_mode)
+        assert not component.is_auto_mode
 
         device = _get_device_auto()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertTrue(component.is_auto_mode)
+        assert component.is_auto_mode
 
     def test_dyson_turn_on_speed(self):
         """Test turn on fan with specified speed."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.turn_on("1")
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.FAN,
@@ -178,7 +220,7 @@ class DysonTest(unittest.TestCase):
         """Test turn off fan."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
         component.turn_off()
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.OFF)
@@ -203,65 +245,65 @@ class DysonTest(unittest.TestCase):
         """Test get oscillation value on."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertTrue(component.oscillating)
+        assert component.oscillating
 
     def test_dyson_oscillate_value_off(self):
         """Test get oscillation value off."""
         device = _get_device_off()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.oscillating)
+        assert not component.oscillating
 
     def test_dyson_on(self):
         """Test device is on."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertTrue(component.is_on)
+        assert component.is_on
 
     def test_dyson_off(self):
         """Test device is off."""
         device = _get_device_off()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.is_on)
+        assert not component.is_on
 
         device = _get_device_with_no_state()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertFalse(component.is_on)
+        assert not component.is_on
 
     def test_dyson_get_speed(self):
         """Test get device speed."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(component.speed, 1)
+        assert component.speed == 1
 
         device = _get_device_off()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(component.speed, 4)
+        assert component.speed == 4
 
         device = _get_device_with_no_state()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertIsNone(component.speed)
+        assert component.speed is None
 
         device = _get_device_auto()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(component.speed, "AUTO")
+        assert component.speed == "AUTO"
 
     def test_dyson_get_direction(self):
         """Test get device direction."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertIsNone(component.current_direction)
+        assert component.current_direction is None
 
     def test_dyson_get_speed_list(self):
         """Test get speeds list."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(len(component.speed_list), 11)
+        assert len(component.speed_list) == 11
 
     def test_dyson_supported_features(self):
         """Test supported features."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(component.supported_features, 3)
+        assert component.supported_features == 3
 
     def test_on_message(self):
         """Test when message is received."""

@@ -43,8 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pyLoad sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             client_name=name)
         devices.append(new_sensor)
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class PyLoadSensor(Entity):
@@ -125,7 +124,7 @@ class PyLoadSensor(Entity):
             self._state = value
 
 
-class PyLoadAPI(object):
+class PyLoadAPI:
     """Simple wrapper for pyLoad's API."""
 
     def __init__(self, api_url, username=None, password=None):
@@ -163,8 +162,4 @@ class PyLoadAPI(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        try:
-            self.status = self.post('speed')
-        except requests.exceptions.ConnectionError:
-            # Failed to update status - exception already logged in self.post
-            raise
+        self.status = self.post('speed')

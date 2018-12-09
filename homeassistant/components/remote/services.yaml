@@ -49,3 +49,16 @@ harmony_sync:
     entity_id:
       description: Name(s) of entities to sync.
       example: 'remote.family_room'
+
+xiaomi_miio_learn_command:
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  fields:
+    entity_id:
+      description: 'Name of the entity to learn command from.'
+      example: 'remote.xiaomi_miio'
+    slot:
+      description: 'Define the slot used to save the IR command (Value from 1 to 1000000)'
+      example: '1'
+    timeout:
+      description: 'Define the timeout in seconds, before which the command must be learned.'
+      example: '30'

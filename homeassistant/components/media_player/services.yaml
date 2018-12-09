@@ -131,8 +131,8 @@ play_media:
       description: The ID of the content to play. Platform dependent.
       example: 'https://home-assistant.io/images/cast/splash.png'
     media_content_type:
-      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
-      example: 'MUSIC'
+      description: The type of the content to play. Must be one of music, tvshow, video, episode, channel or playlist
+      example: 'music'
 
 select_source:
   description: Send the media player the command to change input source.
@@ -143,6 +143,16 @@ select_source:
     source:
       description: Name of the source to switch to. Platform dependent.
       example: 'video1'
+
+select_sound_mode:
+  description: Send the media player the command to change sound mode.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change sound mode on.
+      example: 'media_player.marantz'
+    sound_mode:
+      description: Name of the sound mode to switch to.
+      example: 'Music'
 
 clear_playlist:
   description: Send the media player the command to clear players playlist.
@@ -242,6 +252,30 @@ sonos_set_option:
       description: Enable Speech Enhancement mode
       example: 'true'
 
+channels_seek_forward:
+  description: Seek forward by a set number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+
+channels_seek_backward:
+  description: Seek backward by a set number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+
+channels_seek_by:
+  description: Seek by an inputted number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+    seconds:
+      description: Number of seconds to seek by. Negative numbers seek backwards.
+      example: 120
+
 soundtouch_play_everywhere:
   description: Play on all Bose Soundtouch devices.
   fields:
@@ -323,7 +357,6 @@ squeezebox_call_method:
 
 yamaha_enable_output:
   description: Enable or disable an output port
-
   fields:
     entity_id:
       description: Name(s) of entites to enable/disable port on.
@@ -334,3 +367,68 @@ yamaha_enable_output:
     enabled:
       description: Boolean indicating if port should be enabled or not.
       example: true
+
+bluesound_join:
+  description: Group player together.
+  fields:
+    master:
+      description: Entity ID of the player that should become the master of the group.
+      example: 'media_player.bluesound_livingroom'
+    entity_id:
+      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
+      example: 'media_player.bluesound_livingroom'
+
+bluesound_unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
+      example: 'media_player.bluesound_livingroom'
+
+bluesound_set_sleep_timer:
+  description: "Set a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0"
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have a timer set.
+      example: 'media_player.bluesound_livingroom'
+
+bluesound_clear_sleep_timer:
+  description: Clear a Bluesound timer.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have the timer cleared.
+      example: 'media_player.bluesound_livingroom'
+
+songpal_set_sound_setting:
+  description: Change sound setting.
+
+  fields:
+    entity_id:
+      description: Target device.
+      example: 'media_player.my_soundbar'
+    name:
+      description: Name of the setting.
+      example: 'nightMode'
+    value:
+      description: Value to set.
+      example: 'on'
+
+blackbird_set_all_zones:
+  description: Set all Blackbird zones to a single source.
+  fields:
+    entity_id:
+      description: Name of any blackbird zone.
+      example: 'media_player.zone_1'
+    source:
+      description: Name of source to switch to.
+      example: 'Source 1'
+
+epson_select_cmode:
+  description: Select Color mode of Epson projector
+  fields:
+    entity_id:
+      description: Name of projector
+      example: 'media_player.epson_projector'
+    cmode:
+      description: Name of Cmode
+      example: 'cinema'

@@ -13,10 +13,9 @@ FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo fan platform."""
-    add_devices_callback([
+    add_entities_callback([
         DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
         DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
     ])
@@ -59,13 +58,13 @@ class DemoFan(FanEntity):
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=None) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
         self.set_speed(speed)
 
-    def turn_off(self) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
         self.oscillate(False)
         self.set_speed(STATE_OFF)

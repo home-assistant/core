@@ -15,14 +15,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==1.8.0']
+REQUIREMENTS = ['alpha_vantage==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLOSE = 'close'
 ATTR_HIGH = 'high'
 ATTR_LOW = 'low'
-ATTR_VOLUME = 'volume'
 
 CONF_ATTRIBUTION = "Stock market information provided by Alpha Vantage"
 CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
@@ -31,25 +30,13 @@ CONF_SYMBOL = 'symbol'
 CONF_SYMBOLS = 'symbols'
 CONF_TO = 'to'
 
-DEFAULT_SYMBOL = {
-    CONF_CURRENCY: 'USD',
-    CONF_NAME: 'Google',
-    CONF_SYMBOL: 'GOOGL',
-}
-
-DEFAULT_CURRENCY = {
-    CONF_FROM: 'BTC',
-    CONF_NAME: 'Bitcon',
-    CONF_TO: 'USD',
-}
-
 ICONS = {
     'BTC': 'mdi:currency-btc',
     'EUR': 'mdi:currency-eur',
     'GBP': 'mdi:currency-gbp',
     'INR': 'mdi:currency-inr',
     'RUB': 'mdi:currency-rub',
-    'TRY': 'mdi: currency-try',
+    'TRY': 'mdi:currency-try',
     'USD': 'mdi:currency-usd',
 }
 
@@ -69,26 +56,36 @@ CURRENCY_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_FOREIGN_EXCHANGE, default=[DEFAULT_CURRENCY]):
+    vol.Optional(CONF_FOREIGN_EXCHANGE):
         vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
-    vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
+    vol.Optional(CONF_SYMBOLS):
         vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
     from alpha_vantage.timeseries import TimeSeries
     from alpha_vantage.foreignexchange import ForeignExchange
 
     api_key = config.get(CONF_API_KEY)
-    symbols = config.get(CONF_SYMBOLS)
+    symbols = config.get(CONF_SYMBOLS, [])
+    conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
+
+    if not symbols and not conversions:
+        msg = 'Warning: No symbols or currencies configured.'
+        hass.components.persistent_notification.create(
+            msg, 'Sensor alpha_vantage')
+        _LOGGER.warning(msg)
+        return
 
     timeseries = TimeSeries(key=api_key)
 
     dev = []
     for symbol in symbols:
         try:
+            _LOGGER.debug("Configuring timeseries for symbols: %s",
+                          symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
         except ValueError:
             _LOGGER.error(
@@ -96,10 +93,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
-    for conversion in config.get(CONF_FOREIGN_EXCHANGE):
+    for conversion in conversions:
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
+            _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
@@ -109,7 +107,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug(str(error))
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
+    _LOGGER.debug("Setup completed")
 
 
 class AlphaVantageSensor(Entity):
@@ -148,7 +147,6 @@ class AlphaVantageSensor(Entity):
                 ATTR_CLOSE: self.values['4. close'],
                 ATTR_HIGH: self.values['2. high'],
                 ATTR_LOW: self.values['3. low'],
-                ATTR_VOLUME: self.values['5. volume'],
             }
 
     @property
@@ -158,8 +156,10 @@ class AlphaVantageSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
+        _LOGGER.debug("Received new values for symbol %s", self._symbol)
 
 
 class AlphaVantageForeignExchange(Entity):
@@ -210,5 +210,9 @@ class AlphaVantageForeignExchange(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug("Requesting new data for forex %s - %s",
+                      self._from_currency, self._to_currency)
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency)
+        _LOGGER.debug("Received new data for forex %s - %s",
+                      self._from_currency, self._to_currency)

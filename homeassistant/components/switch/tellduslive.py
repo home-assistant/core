@@ -9,17 +9,20 @@ https://home-assistant.io/components/switch.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components import tellduslive
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tellstick switches."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveSwitch(hass, switch) for switch in discovery_info)
+    client = hass.data[tellduslive.DOMAIN]
+    add_entities(
+        TelldusLiveSwitch(client, switch) for switch in discovery_info)
 
 
 class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
@@ -33,9 +36,7 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.device.turn_on()
-        self.changed()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.device.turn_off()
-        self.changed()

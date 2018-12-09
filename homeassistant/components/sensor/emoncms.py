@@ -61,7 +61,7 @@ def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
         sensorid, feedtag, feedname, feedid, feeduserid)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Emoncms sensor."""
     apikey = config.get(CONF_API_KEY)
     url = config.get(CONF_URL)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(EmonCmsSensor(hass, data, name, value_template,
                                      unit_of_measurement, str(sensorid),
                                      elem))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class EmonCmsSensor(Entity):
@@ -153,7 +153,7 @@ class EmonCmsSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the atrributes of the sensor."""
+        """Return the attributes of the sensor."""
         return {
             ATTR_FEEDID: self._elem["id"],
             ATTR_TAG: self._elem["tag"],
@@ -190,7 +190,7 @@ class EmonCmsSensor(Entity):
             self._state = round(float(elem["value"]), DECIMALS)
 
 
-class EmonCmsData(object):
+class EmonCmsData:
     """The class for handling the data retrieval."""
 
     def __init__(self, hass, url, apikey, interval):

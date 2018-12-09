@@ -6,46 +6,51 @@ https://home-assistant.io/components/device_tracker.mysensors/
 """
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the MySensors device scanner."""
     new_devices = mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsDeviceScanner,
-        device_args=(see, ))
+        device_args=(async_see, ))
     if not new_devices:
         return False
 
     for device in new_devices:
+        gateway_id = id(device.gateway)
         dev_id = (
-            id(device.gateway), device.node_id, device.child_id,
+            gateway_id, device.node_id, device.child_id,
             device.value_type)
-        dispatcher_connect(
-            hass, mysensors.SIGNAL_CALLBACK.format(*dev_id),
-            device.update_callback)
+        async_dispatcher_connect(
+            hass, mysensors.const.CHILD_CALLBACK.format(*dev_id),
+            device.async_update_callback)
+        async_dispatcher_connect(
+            hass,
+            mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
+            device.async_update_callback)
 
     return True
 
 
-class MySensorsDeviceScanner(mysensors.MySensorsDevice):
+class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, see, *args):
+    def __init__(self, async_see, *args):
         """Set up instance."""
         super().__init__(*args)
-        self.see = see
+        self.async_see = async_see
 
-    def update_callback(self):
+    async def async_update_callback(self):
         """Update the device."""
-        self.update()
+        await self.async_update()
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         position = child.values[self.value_type]
         latitude, longitude, _ = position.split(',')
 
-        self.see(
+        await self.async_see(
             dev_id=slugify(self.name),
             host_name=self.name,
             gps=(latitude, longitude),

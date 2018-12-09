@@ -1,5 +1,4 @@
 """Provides a Hue API to control Home Assistant."""
-import asyncio
 import logging
 
 from aiohttp import web
@@ -21,11 +20,11 @@ from homeassistant.components.fan import (
     SPEED_MEDIUM, SPEED_HIGH
 )
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.util.network import is_local
+
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_EMULATED_HUE = 'emulated_hue'
-ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 
 HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
@@ -39,11 +38,10 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ['/api/']
     requires_auth = False
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle a POST request."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -51,7 +49,38 @@ class HueUsernameView(HomeAssistantView):
             return self.json_message('devicetype not specified',
                                      HTTP_BAD_REQUEST)
 
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         return self.json([{'success': {'username': '12345678901234567890'}}])
+
+
+class HueGroupView(HomeAssistantView):
+    """Group handler to get Logitech Pop working."""
+
+    url = '/api/{username}/groups/0/action'
+    name = 'emulated_hue:groups:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def put(self, request, username):
+        """Process a request to make the Logitech Pop working."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
+        return self.json([{
+            'error': {
+                'address': '/groups/0/action/scene',
+                'type': 7,
+                'description': 'invalid value, dummy for parameter, scene'
+            }
+        }])
 
 
 class HueAllLightsStateView(HomeAssistantView):
@@ -68,6 +97,10 @@ class HueAllLightsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         hass = request.app['hass']
         json_response = {}
 
@@ -77,7 +110,7 @@ class HueAllLightsStateView(HomeAssistantView):
 
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(
-                    entity, state, brightness)
+                    self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -96,6 +129,10 @@ class HueOneLightStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         hass = request.app['hass']
         entity_id = self.config.number_to_entity_id(entity_id)
         entity = hass.states.get(entity_id)
@@ -110,7 +147,7 @@ class HueOneLightStateView(HomeAssistantView):
 
         state, brightness = get_entity_state(self.config, entity)
 
-        json_response = entity_to_json(entity, state, brightness)
+        json_response = entity_to_json(self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -126,9 +163,12 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
-    @asyncio.coroutine
-    def put(self, request, username, entity_number):
+    async def put(self, request, username, entity_number):
         """Process a request to set the state of an individual light."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         config = self.config
         hass = request.app['hass']
         entity_id = config.number_to_entity_id(entity_number)
@@ -148,7 +188,7 @@ class HueOneLightChangeView(HomeAssistantView):
             return web.Response(text="Entity not exposed", status=404)
 
         try:
-            request_json = yield from request.json()
+            request_json = await request.json()
         except ValueError:
             _LOGGER.error('Received invalid json')
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
@@ -217,11 +257,11 @@ class HueOneLightChangeView(HomeAssistantView):
                     # Convert 0-100 to a fan speed
                     if brightness == 0:
                         data[ATTR_SPEED] = SPEED_OFF
-                    elif brightness <= 33.3 and brightness > 0:
+                    elif 0 < brightness <= 33.3:
                         data[ATTR_SPEED] = SPEED_LOW
-                    elif brightness <= 66.6 and brightness > 33.3:
+                    elif 33.3 < brightness <= 66.6:
                         data[ATTR_SPEED] = SPEED_MEDIUM
-                    elif brightness <= 100 and brightness > 66.6:
+                    elif 66.6 < brightness <= 100:
                         data[ATTR_SPEED] = SPEED_HIGH
 
         if entity.domain in config.off_maps_to_on_domains:
@@ -237,11 +277,11 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_add_job(hass.services.async_call(
+            hass.async_create_task(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
 
-        hass.async_add_job(hass.services.async_call(
+        hass.async_create_task(hass.services.async_call(
             domain, service, data, blocking=True))
 
         json_response = \
@@ -344,10 +384,8 @@ def get_entity_state(config, entity):
     return (final_state, final_brightness)
 
 
-def entity_to_json(entity, is_on=None, brightness=None):
+def entity_to_json(config, entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
-    name = entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
-
     return {
         'state':
         {
@@ -356,7 +394,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
             'reachable': True
         },
         'type': 'Dimmable light',
-        'name': name,
+        'name': config.get_entity_name(entity),
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
         'swversion': '123'

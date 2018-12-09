@@ -76,6 +76,10 @@ run_tests() {
     rsync -a --delete \
         --exclude='*.tox' \
         --exclude='*.git' \
+        --exclude='.vagrant' \
+        --exclude='lib64' \
+        --exclude='bin/python' \
+        --exclude='bin/python3' \
         /home-assistant/ /home-assistant-tests/
     cd /home-assistant-tests && tox || true
     echo '############################################################'
@@ -105,7 +109,7 @@ main() {
                     vagrant up --provision; exit ;;
     esac
     # ...otherwise we assume it's the Vagrant provisioner
-    if [ $(hostname) != "contrib-jessie" ]; then usage; exit; fi
+    if [ $(hostname) != "contrib-jessie" ] && [ $(hostname) != "contrib-stretch" ]; then usage; exit; fi
     if ! [ -f $SETUP_DONE ]; then setup; fi
     if [ -f $RESTART ]; then restart; fi
     if [ -f $RUN_TESTS ]; then run_tests; fi

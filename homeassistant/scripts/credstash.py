@@ -4,7 +4,7 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['credstash==1.14.0', 'botocore==1.7.34']
+REQUIREMENTS = ['credstash==1.15.0', 'botocore==1.7.34']
 
 
 def run(args):
@@ -24,7 +24,7 @@ def run(args):
         'value', help="The value to save when putting a secret",
         nargs='?', default=None)
 
-    # pylint: disable=import-error
+    # pylint: disable=import-error, no-member
     import credstash
     import botocore
 

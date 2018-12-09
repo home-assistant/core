@@ -6,9 +6,10 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 from datetime import timedelta
 import logging
-
-import asyncio
 import async_timeout
+
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
@@ -16,7 +17,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +30,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    'usage': ['Usage', PERCENT, 'mdi:percent'],
+    'usage': ['Usage Ratio', PERCENT, 'mdi:percent'],
     'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
     'limit': ['Data limit', GIGABYTES, 'mdi:download'],
     'onpeak_download': ['On Peak Download', GIGABYTES, 'mdi:download'],
-    'onpeak_upload': ['On Peak Upload ', GIGABYTES, 'mdi:upload'],
+    'onpeak_upload': ['On Peak Upload', GIGABYTES, 'mdi:upload'],
     'onpeak_total': ['On Peak Total', GIGABYTES, 'mdi:download'],
     'offpeak_download': ['Off Peak download', GIGABYTES, 'mdi:download'],
     'offpeak_upload': ['Off Peak Upload', GIGABYTES, 'mdi:upload'],
@@ -57,15 +57,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
     bandwidthcap = config.get(CONF_TOTAL_BANDWIDTH)
 
     ts_data = TekSavvyData(hass.loop, websession, apikey, bandwidthcap)
-    ret = yield from ts_data.async_update()
+    ret = await ts_data.async_update()
     if ret is False:
         _LOGGER.error("Invalid Teksavvy API key: %s", apikey)
         return
@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(TekSavvySensor(ts_data, variable, name))
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class TekSavvySensor(Entity):
@@ -110,15 +110,14 @@ class TekSavvySensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from TekSavvy and update the state."""
-        yield from self.teksavvydata.async_update()
+        await self.teksavvydata.async_update()
         if self.type in self.teksavvydata.data:
             self._state = round(self.teksavvydata.data[self.type], 2)
 
 
-class TekSavvyData(object):
+class TekSavvyData:
     """Get data from TekSavvy API."""
 
     def __init__(self, loop, websession, api_key, bandwidth_cap):
@@ -127,23 +126,25 @@ class TekSavvyData(object):
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
-        self.data = {"limit": self.bandwidth_cap}
+        # Set unlimited users to infinite, otherwise the cap.
+        self.data = {"limit": self.bandwidth_cap} if self.bandwidth_cap > 0 \
+            else {"limit": float('inf')}
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the TekSavvy bandwidth data from the web service."""
         headers = {"TekSavvy-APIKey": self.api_key}
         _LOGGER.debug("Updating TekSavvy data")
         url = "https://api.teksavvy.com/"\
               "web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true"
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
-            req = yield from self.websession.get(url, headers=headers)
+            req = await self.websession.get(url, headers=headers)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
-        else:
-            data = yield from req.json()
+
+        try:
+            data = await req.json()
             for (api, ha_name) in API_HA_MAP:
                 self.data[ha_name] = float(data["value"][0][api])
             on_peak_download = self.data["onpeak_download"]
@@ -151,9 +152,17 @@ class TekSavvyData(object):
             off_peak_download = self.data["offpeak_download"]
             off_peak_upload = self.data["offpeak_upload"]
             limit = self.data["limit"]
-            self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+            # Support "unlimited" users
+            if self.bandwidth_cap > 0:
+                self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+            else:
+                self.data["usage"] = 0
             self.data["usage_gb"] = on_peak_download
             self.data["onpeak_total"] = on_peak_download + on_peak_upload
-            self.data["offpeak_total"] = off_peak_download + off_peak_upload
+            self.data["offpeak_total"] =\
+                off_peak_download + off_peak_upload
             self.data["onpeak_remaining"] = limit - on_peak_download
             return True
+        except ValueError:
+            _LOGGER.error("JSON Decode Failed")
+            return False

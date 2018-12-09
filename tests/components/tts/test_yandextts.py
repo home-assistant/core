@@ -13,11 +13,11 @@ from tests.common import (
 from .test_init import mutagen_mock  # noqa
 
 
-class TestTTSYandexPlatform(object):
+class TestTTSYandexPlatform:
     """Test the speech component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._base_url = "https://tts.voicetech.yandex.net/generate?"
 
@@ -224,7 +224,7 @@ class TestTTSYandexPlatform(object):
 
         assert len(calls) == 0
 
-    def test_service_say_specifed_speaker(self, aioclient_mock):
+    def test_service_say_specified_speaker(self, aioclient_mock):
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -259,7 +259,7 @@ class TestTTSYandexPlatform(object):
         assert len(aioclient_mock.mock_calls) == 1
         assert len(calls) == 1
 
-    def test_service_say_specifed_emotion(self, aioclient_mock):
+    def test_service_say_specified_emotion(self, aioclient_mock):
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 

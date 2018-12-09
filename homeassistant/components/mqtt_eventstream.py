@@ -10,15 +10,14 @@ import json
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.loader as loader
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
-    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
+    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'mqtt_eventstream'
 DEPENDENCIES = ['mqtt']
@@ -26,6 +25,7 @@ DEPENDENCIES = ['mqtt']
 CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
+CONF_IGNORE_EVENT = 'ignore_event'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -33,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
             cv.boolean,
+        vol.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -40,10 +41,11 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the MQTT eventstream component."""
-    mqtt = loader.get_component('mqtt')
+    mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
+    ignore_event = conf.get(CONF_IGNORE_EVENT)
 
     @callback
     def _event_publisher(event):
@@ -51,6 +53,10 @@ def async_setup(hass, config):
         if event.origin != EventOrigin.local:
             return
         if event.event_type == EVENT_TIME_CHANGED:
+            return
+
+        # User-defined events to ignore
+        if event.event_type in ignore_event:
             return
 
         # Filter out the events that were triggered by publishing
@@ -63,19 +69,9 @@ def async_setup(hass, config):
             ):
                 return
 
-        # Filter out all the "event service executed" events because they
-        # are only used internally by core as callbacks for blocking
-        # during the interval while a service is being executed.
-        # They will serve no purpose to the external system,
-        # and thus are unnecessary traffic.
-        # And at any rate it would cause an infinite loop to publish them
-        # because publishing to an MQTT topic itself triggers one.
-        if event.event_type == EVENT_SERVICE_EXECUTED:
-            return
-
         event_info = {'event_type': event.event_type, 'event_data': event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.async_publish(hass, pub_topic, msg)
+        mqtt.async_publish(pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
@@ -108,7 +104,6 @@ def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        yield from mqtt.async_subscribe(hass, sub_topic, _event_receiver)
+        yield from mqtt.async_subscribe(sub_topic, _event_receiver)
 
-    hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True

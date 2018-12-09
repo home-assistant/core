@@ -23,15 +23,15 @@ from homeassistant.util.unit_system import UnitSystem
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES.keys()):
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Daikin sensors."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
@@ -51,13 +51,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for monitored_state in monitored_conditions:
         sensors.append(DaikinClimateSensor(api, monitored_state, units, name))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class DaikinClimateSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, monitored_state, units: UnitSystem, name=None):
+    def __init__(self, api, monitored_state, units: UnitSystem,
+                 name=None) -> None:
         """Initialize the sensor."""
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
@@ -69,6 +70,11 @@ class DaikinClimateSensor(Entity):
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
             self._unit_of_measurement = units.temperature_unit
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}-{}".format(self._api.mac, self._device_attribute)
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -84,7 +90,7 @@ class DaikinClimateSensor(Entity):
         if value is None:
             _LOGGER.warning("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value in ("-", "--"):
                 value = None
             elif cast_to_float:
                 try:
@@ -93,11 +99,6 @@ class DaikinClimateSensor(Entity):
                     value = None
 
         return value
-
-    @property
-    def unique_id(self):
-        """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._api.ip_address)
 
     @property
     def icon(self):

@@ -66,10 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_devices(
+    add_entities(
         [RadarrSensor(hass, config, sensor) for sensor in conditions], True)
 
 
@@ -162,7 +162,7 @@ class RadarrSensor(Entity):
                     self.ssl, self.host, self.port, self.urlbase, start, end),
                 headers={'X-Api-Key': self.apikey}, timeout=10)
         except OSError:
-            _LOGGER.error("Host %s is not available", self.host)
+            _LOGGER.warning("Host %s is not available", self.host)
             self._available = False
             self._state = None
             return

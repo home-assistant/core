@@ -19,7 +19,7 @@ class TestRecorder(unittest.TestCase):
     """Test the recorder module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
@@ -42,6 +42,7 @@ class TestRecorder(unittest.TestCase):
         with session_scope(hass=self.hass) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
+            assert db_states[0].event_id > 0
             state = db_states[0].to_native()
 
         assert state == self.hass.states.get(entity_id)
@@ -91,7 +92,7 @@ def hass_recorder():
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
-        """Setup with params."""
+        """Set up with params."""
         init_recorder_component(hass, config)
         hass.start()
         hass.block_till_done()

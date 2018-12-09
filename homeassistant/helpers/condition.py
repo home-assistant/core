@@ -13,12 +13,12 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 ASYNC_FROM_CONFIG_FORMAT = 'async_{}_from_config'
@@ -47,7 +47,7 @@ def _threaded_factory(async_factory):
     return factory
 
 
-def async_from_config(config: ConfigType, config_validation: bool=True):
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -70,7 +70,7 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType, config_validation: bool=True):
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
@@ -101,7 +101,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType, config_validation: bool=True):
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
@@ -160,10 +160,14 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
             _LOGGER.error("Template error: %s", ex)
             return False
 
+    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+
     try:
         value = float(value)
     except ValueError:
-        _LOGGER.warning("Value cannot be processed as a number: %s", value)
+        _LOGGER.warning("Value cannot be processed as a number: %s "
+                        "(Offending entity: %s)", entity, value)
         return False
 
     if below is not None and value >= below:
@@ -239,29 +243,27 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, 'sunrise', today)
-    sunset = get_astral_event_date(hass, 'sunset', today)
+    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
+    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
 
-    if sunrise is None and (before == SUN_EVENT_SUNRISE or
-                            after == SUN_EVENT_SUNRISE):
+    if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
         return False
 
-    if sunset is None and (before == SUN_EVENT_SUNSET or
-                           after == SUN_EVENT_SUNSET):
+    if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
         return False
 
     if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
         return False
 
     if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
@@ -390,8 +392,8 @@ def zone(hass, zone_ent, entity):
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.in_zone(zone_ent, latitude, longitude,
-                            entity.attributes.get(ATTR_GPS_ACCURACY, 0))
+    return zone_cmp.zone.in_zone(zone_ent, latitude, longitude,
+                                 entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
 def zone_from_config(config, config_validation=True):

@@ -4,7 +4,6 @@ Component to keep track of user controlled booleans for within automation.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_boolean/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -16,7 +15,7 @@ from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 DOMAIN = 'input_boolean'
 
@@ -47,26 +46,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id):
-    """Set input_boolean to True."""
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def turn_off(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def toggle(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -85,37 +65,26 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @asyncio.coroutine
-    def async_handler_service(service):
-        """Handle a calls to the input boolean services."""
-        target_inputs = component.async_extract_from_service(service)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, SERVICE_SCHEMA,
+        'async_turn_on'
+    )
 
-        if service.service == SERVICE_TURN_ON:
-            attr = 'async_turn_on'
-        elif service.service == SERVICE_TURN_OFF:
-            attr = 'async_turn_off'
-        else:
-            attr = 'async_toggle'
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, SERVICE_SCHEMA,
+        'async_turn_off'
+    )
 
-        tasks = [getattr(input_b, attr)() for input_b in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, SERVICE_SCHEMA,
+        'async_toggle'
+    )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handler_service,
-        schema=SERVICE_SCHEMA)
-
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
-class InputBoolean(ToggleEntity):
+class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
     def __init__(self, object_id, name, initial, icon):
@@ -137,7 +106,7 @@ class InputBoolean(ToggleEntity):
 
     @property
     def icon(self):
-        """Returh the icon to be used for this entity."""
+        """Return the icon to be used for this entity."""
         return self._icon
 
     @property
@@ -145,24 +114,22 @@ class InputBoolean(ToggleEntity):
         """Return true if entity is on."""
         return self._state
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
+        await super().async_added_to_hass()
         if self._state is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         self._state = state and state.state == STATE_ON
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

@@ -7,6 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.manual/
 import copy
 import datetime
 import logging
+import re
 
 import voluptuous as vol
 
@@ -20,6 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,9 +104,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
 }, _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual alarm platform."""
-    add_devices([ManualAlarm(
+    add_entities([ManualAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -114,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )])
 
 
-class ManualAlarm(alarm.AlarmControlPanel):
+class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     """
     Representation of an alarm status.
 
@@ -172,9 +174,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
                     trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
-                else:
-                    self._state = self._previous_state
-                    return self._state
+                self._state = self._previous_state
+                return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and \
                 self._within_pending_time(self._state):
@@ -187,8 +188,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
             return self._previous_state
-        else:
-            return self._state
+        return self._state
 
     def _pending_time(self, state):
         """Get the pending time."""
@@ -203,8 +203,12 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return one or more characters."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -303,3 +307,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
             state_attr[ATTR_POST_PENDING_STATE] = self._state
 
         return state_attr
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state
+            self._state_ts = state.last_updated

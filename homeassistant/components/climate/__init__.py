@@ -4,14 +4,12 @@ Provides functionality to interact with climate devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/climate/
 """
-import asyncio
 from datetime import timedelta
 import logging
 import functools as ft
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
@@ -21,7 +19,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
-    PRECISION_TENTHS, )
+    PRECISION_TENTHS)
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMITIDY = 30
+DEFAULT_MAX_HUMIDITY = 99
+
 DOMAIN = 'climate'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -40,14 +44,10 @@ STATE_HEAT = 'heat'
 STATE_COOL = 'cool'
 STATE_IDLE = 'idle'
 STATE_AUTO = 'auto'
+STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
-STATE_ELECTRIC = 'electric'
-STATE_PERFORMANCE = 'performance'
-STATE_HIGH_DEMAND = 'high_demand'
-STATE_HEAT_PUMP = 'heat_pump'
-STATE_GAS = 'gas'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2
@@ -136,333 +136,69 @@ SET_SWING_MODE_SCHEMA = vol.Schema({
 })
 
 
-@bind_hass
-def set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified climate devices away mode on."""
-    data = {
-        ATTR_AWAY_MODE: away_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
-
-
-@bind_hass
-def set_hold_mode(hass, hold_mode, entity_id=None):
-    """Set new hold mode."""
-    data = {
-        ATTR_HOLD_MODE: hold_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HOLD_MODE, data)
-
-
-@bind_hass
-def set_aux_heat(hass, aux_heat, entity_id=None):
-    """Turn all or specified climate devices auxiliary heater on."""
-    data = {
-        ATTR_AUX_HEAT: aux_heat
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
-
-
-@bind_hass
-def set_temperature(hass, temperature=None, entity_id=None,
-                    target_temp_high=None, target_temp_low=None,
-                    operation_mode=None):
-    """Set new target temperature."""
-    kwargs = {
-        key: value for key, value in [
-            (ATTR_TEMPERATURE, temperature),
-            (ATTR_TARGET_TEMP_HIGH, target_temp_high),
-            (ATTR_TARGET_TEMP_LOW, target_temp_low),
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
-        ] if value is not None
-    }
-    _LOGGER.debug("set_temperature start data=%s", kwargs)
-    hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
-
-
-@bind_hass
-def set_humidity(hass, humidity, entity_id=None):
-    """Set new target humidity."""
-    data = {ATTR_HUMIDITY: humidity}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
-
-
-@bind_hass
-def set_fan_mode(hass, fan, entity_id=None):
-    """Set all or specified climate devices fan mode on."""
-    data = {ATTR_FAN_MODE: fan}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
-
-
-@bind_hass
-def set_operation_mode(hass, operation_mode, entity_id=None):
-    """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, data)
-
-
-@bind_hass
-def set_swing_mode(hass, swing_mode, entity_id=None):
-    """Set new target swing mode."""
-    data = {ATTR_SWING_MODE: swing_mode}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up climate devices."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
-    yield from component.async_setup(config)
+    component = hass.data[DOMAIN] = \
+        EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_away_mode_set_service(service):
-        """Set away mode on target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        away_mode = service.data.get(ATTR_AWAY_MODE)
-
-        update_tasks = []
-        for climate in target_climate:
-            if away_mode:
-                yield from climate.async_turn_away_mode_on()
-            else:
-                yield from climate.async_turn_away_mode_off()
-
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
-        schema=SET_AWAY_MODE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_hold_mode_set_service(service):
-        """Set hold mode on target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        hold_mode = service.data.get(ATTR_HOLD_MODE)
-
-        update_tasks = []
-        for climate in target_climate:
-            yield from climate.async_set_hold_mode(hold_mode)
-
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_HOLD_MODE, async_hold_mode_set_service,
-        schema=SET_HOLD_MODE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_aux_heat_set_service(service):
-        """Set auxiliary heater on target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        aux_heat = service.data.get(ATTR_AUX_HEAT)
-
-        update_tasks = []
-        for climate in target_climate:
-            if aux_heat:
-                yield from climate.async_turn_aux_heat_on()
-            else:
-                yield from climate.async_turn_aux_heat_off()
-
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
-        schema=SET_AUX_HEAT_SCHEMA)
-
-    @asyncio.coroutine
-    def async_temperature_set_service(service):
-        """Set temperature on the target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for climate in target_climate:
-            kwargs = {}
-            for value, temp in service.data.items():
-                if value in CONVERTIBLE_ATTRIBUTE:
-                    kwargs[value] = convert_temperature(
-                        temp,
-                        hass.config.units.temperature_unit,
-                        climate.temperature_unit
-                    )
-                else:
-                    kwargs[value] = temp
-
-            yield from climate.async_set_temperature(**kwargs)
-
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
-        schema=SET_TEMPERATURE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_humidity_set_service(service):
-        """Set humidity on the target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        humidity = service.data.get(ATTR_HUMIDITY)
-
-        update_tasks = []
-        for climate in target_climate:
-            yield from climate.async_set_humidity(humidity)
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
-        schema=SET_HUMIDITY_SCHEMA)
-
-    @asyncio.coroutine
-    def async_fan_mode_set_service(service):
-        """Set fan mode on target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        fan = service.data.get(ATTR_FAN_MODE)
-
-        update_tasks = []
-        for climate in target_climate:
-            yield from climate.async_set_fan_mode(fan)
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
-        schema=SET_FAN_MODE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_operation_set_service(service):
-        """Set operating mode on the target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        operation_mode = service.data.get(ATTR_OPERATION_MODE)
-
-        update_tasks = []
-        for climate in target_climate:
-            yield from climate.async_set_operation_mode(operation_mode)
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
-        schema=SET_OPERATION_MODE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_swing_set_service(service):
-        """Set swing mode on the target climate devices."""
-        target_climate = component.async_extract_from_service(service)
-
-        swing_mode = service.data.get(ATTR_SWING_MODE)
-
-        update_tasks = []
-        for climate in target_climate:
-            yield from climate.async_set_swing_mode(swing_mode)
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
-        schema=SET_SWING_MODE_SCHEMA)
-
-    @asyncio.coroutine
-    def async_on_off_service(service):
-        """Handle on/off calls."""
-        target_climate = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for climate in target_climate:
-            if service.service == SERVICE_TURN_ON:
-                yield from climate.async_turn_on()
-            elif service.service == SERVICE_TURN_OFF:
-                yield from climate.async_turn_off()
-
-            if not climate.should_poll:
-                continue
-            update_tasks.append(climate.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_on_off_service,
-        schema=ON_OFF_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_on_off_service,
-        schema=ON_OFF_SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA,
+        async_service_away_mode
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_HOLD_MODE, SET_HOLD_MODE_SCHEMA,
+        'async_set_hold_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_AUX_HEAT, SET_AUX_HEAT_SCHEMA,
+        async_service_aux_heat
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA,
+        'async_set_humidity'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA,
+        'async_set_fan_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_OPERATION_MODE, SET_OPERATION_MODE_SCHEMA,
+        'async_set_operation_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_SWING_MODE, SET_SWING_MODE_SCHEMA,
+        'async_set_swing_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self):
         """Return the current state."""
@@ -477,7 +213,7 @@ class ClimateDevice(Entity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        if self.unit_of_measurement == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -499,61 +235,59 @@ class ClimateDevice(Entity):
                 self.precision),
         }
 
+        supported_features = self.supported_features
         if self.target_temperature_step is not None:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
 
-        target_temp_high = self.target_temperature_high
-        if target_temp_high is not None:
+        if supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
                 self.hass, self.target_temperature_high, self.temperature_unit,
                 self.precision)
+
+        if supported_features & SUPPORT_TARGET_TEMPERATURE_LOW:
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision)
 
-        humidity = self.target_humidity
-        if humidity is not None:
-            data[ATTR_HUMIDITY] = humidity
+        if self.current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        fan_mode = self.current_fan_mode
-        if fan_mode is not None:
-            data[ATTR_FAN_MODE] = fan_mode
+        if supported_features & SUPPORT_TARGET_HUMIDITY:
+            data[ATTR_HUMIDITY] = self.target_humidity
+
+            if supported_features & SUPPORT_TARGET_HUMIDITY_LOW:
+                data[ATTR_MIN_HUMIDITY] = self.min_humidity
+
+            if supported_features & SUPPORT_TARGET_HUMIDITY_HIGH:
+                data[ATTR_MAX_HUMIDITY] = self.max_humidity
+
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODE] = self.current_fan_mode
             if self.fan_list:
                 data[ATTR_FAN_LIST] = self.fan_list
 
-        operation_mode = self.current_operation
-        if operation_mode is not None:
-            data[ATTR_OPERATION_MODE] = operation_mode
+        if supported_features & SUPPORT_OPERATION_MODE:
+            data[ATTR_OPERATION_MODE] = self.current_operation
             if self.operation_list:
                 data[ATTR_OPERATION_LIST] = self.operation_list
 
-        is_hold = self.current_hold_mode
-        if is_hold is not None:
-            data[ATTR_HOLD_MODE] = is_hold
+        if supported_features & SUPPORT_HOLD_MODE:
+            data[ATTR_HOLD_MODE] = self.current_hold_mode
 
-        swing_mode = self.current_swing_mode
-        if swing_mode is not None:
-            data[ATTR_SWING_MODE] = swing_mode
+        if supported_features & SUPPORT_SWING_MODE:
+            data[ATTR_SWING_MODE] = self.current_swing_mode
             if self.swing_list:
                 data[ATTR_SWING_LIST] = self.swing_list
 
-        is_away = self.is_away_mode_on
-        if is_away is not None:
+        if supported_features & SUPPORT_AWAY_MODE:
+            is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
-        is_aux_heat = self.is_aux_heat_on
-        if is_aux_heat is not None:
+        if supported_features & SUPPORT_AUX_HEAT:
+            is_aux_heat = self.is_aux_heat_on
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
 
         return data
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement to display."""
-        return self.hass.config.units.temperature_unit
 
     @property
     def temperature_unit(self):
@@ -668,16 +402,16 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_humidity, humidity)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         raise NotImplementedError()
 
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.set_fan_mode, fan)
+        return self.hass.async_add_job(self.set_fan_mode, fan_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -786,19 +520,55 @@ class ClimateDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(7, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(35, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        return 30
+        return DEFAULT_MIN_HUMITIDY
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        return 99
+        return DEFAULT_MAX_HUMIDITY
+
+
+async def async_service_away_mode(entity, service):
+    """Handle away mode service."""
+    if service.data[ATTR_AWAY_MODE]:
+        await entity.async_turn_away_mode_on()
+    else:
+        await entity.async_turn_away_mode_off()
+
+
+async def async_service_aux_heat(entity, service):
+    """Handle aux heat service."""
+    if service.data[ATTR_AUX_HEAT]:
+        await entity.async_turn_aux_heat_on()
+    else:
+        await entity.async_turn_aux_heat_off()
+
+
+async def async_service_temperature_set(entity, service):
+    """Handle set temperature service."""
+    hass = entity.hass
+    kwargs = {}
+
+    for value, temp in service.data.items():
+        if value in CONVERTIBLE_ATTRIBUTE:
+            kwargs[value] = convert_temperature(
+                temp,
+                hass.config.units.temperature_unit,
+                entity.temperature_unit
+            )
+        else:
+            kwargs[value] = temp
+
+    await entity.async_set_temperature(**kwargs)

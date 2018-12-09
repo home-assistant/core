@@ -4,7 +4,6 @@ Support for showing random states.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.random/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -24,13 +23,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Random binary sensor."""
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices([RandomSensor(name, device_class)], True)
+    async_add_entities([RandomSensor(name, device_class)], True)
 
 
 class RandomSensor(BinarySensorDevice):
@@ -57,8 +56,7 @@ class RandomSensor(BinarySensorDevice):
         """Return the sensor class of the sensor."""
         return self._device_class
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get new state and update the sensor's state."""
         from random import getrandbits
         self._state = bool(getrandbits(1))

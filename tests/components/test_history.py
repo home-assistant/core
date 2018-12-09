@@ -4,21 +4,20 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
 from tests.common import (
-    init_recorder_component, mock_http_component, mock_state_change_event,
-    get_test_home_assistant)
+    init_recorder_component, mock_state_change_event, get_test_home_assistant)
 
 
 class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -38,7 +37,6 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_setup(self):
         """Test setup method of history."""
-        mock_http_component(self.hass)
         config = history.CONFIG_SCHEMA({
             # ha.DOMAIN: {},
             history.DOMAIN: {
@@ -49,7 +47,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_DOMAINS: ['thermostat'],
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.init_recorder()
-        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
+        assert setup_component(self.hass, history.DOMAIN, config)
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
@@ -85,14 +83,14 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         # Get states returns everything before POINT
-        self.assertEqual(states,
-                         sorted(history.get_states(self.hass, future),
-                                key=lambda state: state.entity_id))
+        for state1, state2 in zip(
+                states, sorted(history.get_states(self.hass, future),
+                               key=lambda state: state.entity_id)):
+            assert state1 == state2
 
         # Test get_state here because we have a DB setup
-        self.assertEqual(
-            states[0], history.get_state(self.hass, future,
-                                         states[0].entity_id))
+        assert states[0] == \
+            history.get_state(self.hass, future, states[0].entity_id)
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
@@ -131,7 +129,40 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.state_changes_during_period(
             self.hass, start, end, entity_id)
 
-        self.assertEqual(states, hist[entity_id])
+        assert states == hist[entity_id]
+
+    def test_get_last_state_changes(self):
+        """Test number of state changes."""
+        self.init_recorder()
+        entity_id = 'sensor.test'
+
+        def set_state(state):
+            """Set the state."""
+            self.hass.states.set(entity_id, state)
+            self.wait_recording_done()
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+        point2 = point + timedelta(minutes=1)
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=start):
+            set_state('1')
+
+        states = []
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point):
+            states.append(set_state('2'))
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point2):
+            states.append(set_state('3'))
+
+        hist = history.get_last_state_changes(
+            self.hass, 2, entity_id)
+
+        assert states == hist[entity_id]
 
     def test_get_significant_states(self):
         """Test that only significant states are returned.
@@ -397,18 +428,17 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
-    def check_significant_states(self, zero, four, states, config): \
-            # pylint: disable=no-self-use
+    def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)
         if exclude:
-            filters.excluded_entities = exclude[history.CONF_ENTITIES]
-            filters.excluded_domains = exclude[history.CONF_DOMAINS]
+            filters.excluded_entities = exclude.get(history.CONF_ENTITIES, [])
+            filters.excluded_domains = exclude.get(history.CONF_DOMAINS, [])
         include = config[history.DOMAIN].get(history.CONF_INCLUDE)
         if include:
-            filters.included_entities = include[history.CONF_ENTITIES]
-            filters.included_domains = include[history.CONF_DOMAINS]
+            filters.included_entities = include.get(history.CONF_ENTITIES, [])
+            filters.included_domains = include.get(history.CONF_DOMAINS, [])
 
         hist = history.get_significant_states(
             self.hass, zero, four, filters=filters)
@@ -483,3 +513,14 @@ class TestComponentHistory(unittest.TestCase):
             set_state(therm, 22, attributes={'current_temperature': 21,
                                              'hidden': True})
         return zero, four, states
+
+
+async def test_fetch_period_api(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(hass, 'history', {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get(
+        '/api/history/period/{}'.format(dt_util.utcnow().isoformat()))
+    assert response.status == 200

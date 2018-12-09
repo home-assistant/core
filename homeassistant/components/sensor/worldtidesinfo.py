@@ -1,23 +1,25 @@
 """
-This component provides HA sensor support for the worldtides.info API.
+Support for the worldtides.info API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.worldtidesinfo/
 """
+from datetime import timedelta
 import logging
 import time
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ATTRIBUTION = "Data provided by WorldTides"
 
 DEFAULT_NAME = 'WorldTidesInfo'
 
@@ -31,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
     name = config.get(CONF_NAME)
 
@@ -43,7 +44,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if None in (lat, lon):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
 
-    add_devices([WorldTidesInfoSensor(name, lat, lon, key)], True)
+    tides = WorldTidesInfoSensor(name, lat, lon, key)
+    tides.update()
+    if tides.data.get('error') == 'No location found':
+        _LOGGER.error("Location not available")
+        return
+
+    add_entities([tides])
 
 
 class WorldTidesInfoSensor(Entity):
@@ -65,13 +72,14 @@ class WorldTidesInfoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {}
-        if "High" in str(self.data['extremes'][0]['type']):
+        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+
+        if 'High' in str(self.data['extremes'][0]['type']):
             attr['high_tide_time_utc'] = self.data['extremes'][0]['date']
             attr['high_tide_height'] = self.data['extremes'][0]['height']
             attr['low_tide_time_utc'] = self.data['extremes'][1]['date']
             attr['low_tide_height'] = self.data['extremes'][1]['height']
-        elif "Low" in str(self.data['extremes'][0]['type']):
+        elif 'Low' in str(self.data['extremes'][0]['type']):
             attr['high_tide_time_utc'] = self.data['extremes'][1]['date']
             attr['high_tide_height'] = self.data['extremes'][1]['height']
             attr['low_tide_time_utc'] = self.data['extremes'][0]['date']
@@ -82,32 +90,30 @@ class WorldTidesInfoSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self.data:
-            if "High" in str(self.data['extremes'][0]['type']):
+            if 'High' in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime('%I:%M %p', time.localtime(
                     self.data['extremes'][0]['dt']))
-                return "High tide at %s" % (tidetime)
-            elif "Low" in str(self.data['extremes'][0]['type']):
+                return "High tide at {}".format(tidetime)
+            if 'Low' in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime('%I:%M %p', time.localtime(
                     self.data['extremes'][0]['dt']))
-                return "Low tide at %s" % (tidetime)
-            else:
-                return STATE_UNKNOWN
-        else:
-            return STATE_UNKNOWN
+                return "Low tide at {}".format(tidetime)
+            return None
+        return None
 
     def update(self):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
-        resource = 'https://www.worldtides.info/api?extremes&length=86400' \
-                   '&key=%s&lat=%s&lon=%s&start=%s' % (self._key, self._lat,
-                                                       self._lon, start)
+        resource = ('https://www.worldtides.info/api?extremes&length=86400'
+                    '&key={}&lat={}&lon={}&start={}').format(
+                        self._key, self._lat, self._lon, start)
 
         try:
             self.data = requests.get(resource, timeout=10).json()
-            _LOGGER.debug("Data = %s", self.data)
-            _LOGGER.info("Tide data queried with start time set to: %s",
-                         (start))
+            _LOGGER.debug("Data: %s", self.data)
+            _LOGGER.debug(
+                "Tide data queried with start time set to: %s", start)
         except ValueError as err:
-            _LOGGER.error("Check WorldTidesInfo %s", err.args)
+            _LOGGER.error(
+                "Error retrieving data from WorldTidesInfo: %s", err.args)
             self.data = None
-            raise

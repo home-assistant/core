@@ -30,9 +30,8 @@ for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 fan platform."""
     devices = []
 
@@ -42,15 +41,11 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYFanProgram(name, status, actions))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYFanDevice(ISYDevice, FanEntity):
     """Representation of an ISY994 fan device."""
-
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 fan device."""
-        super().__init__(node)
 
     @property
     def speed(self) -> str:
@@ -66,7 +61,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
         """Send the set speed command to the ISY994 fan device."""
         self._node.on(val=STATE_TO_VALUE.get(speed, 255))
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
         self.set_speed(speed)
 
@@ -99,7 +94,7 @@ class ISYFanProgram(ISYFanDevice):
         if not self._actions.runThen():
             _LOGGER.error("Unable to turn off the fan")
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
             _LOGGER.error("Unable to turn on the fan")

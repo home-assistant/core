@@ -42,8 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the raspihats binary_sensor devices."""
     I2CHatBinarySensor.I2C_HATS_MANAGER = hass.data[I2C_HATS_MANAGER]
     binary_sensors = []
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except I2CHatsException as ex:
             _LOGGER.error("Failed to register %s I2CHat@%s %s",
                           board, hex(address), str(ex))
-    add_devices(binary_sensors)
+    add_entities(binary_sensors)
 
 
 class I2CHatBinarySensor(BinarySensorDevice):

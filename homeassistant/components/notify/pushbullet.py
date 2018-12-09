@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_service(hass, config, discovery_info=None):
     """Get the Pushbullet notification service."""
     from pushbullet import PushBullet
@@ -138,8 +137,11 @@ class PushBulletNotificationService(BaseNotificationService):
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
+            email_kwargs = {}
+            if email:
+                email_kwargs['email'] = email
             if url:
-                pusher.push_link(title, url, body=message, email=email)
+                pusher.push_link(title, url, body=message, **email_kwargs)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
                     _LOGGER.error("Filepath is not valid or allowed")
@@ -149,20 +151,21 @@ class PushBulletNotificationService(BaseNotificationService):
                     if filedata.get('file_type') == 'application/x-empty':
                         _LOGGER.error("Can not send an empty file")
                         return
-
+                    filedata.update(email_kwargs)
                     pusher.push_file(title=title, body=message,
-                                     email=email, **filedata)
+                                     **filedata)
             elif file_url:
                 if not file_url.startswith('http'):
                     _LOGGER.error("URL should start with http or https")
                     return
-                pusher.push_file(title=title, body=message, email=email,
+                pusher.push_file(title=title, body=message,
                                  file_name=file_url, file_url=file_url,
                                  file_type=(mimetypes
-                                            .guess_type(file_url)[0]))
+                                            .guess_type(file_url)[0]),
+                                 **email_kwargs)
             elif data_list:
-                pusher.push_note(title, data_list, email=email)
+                pusher.push_list(title, data_list, **email_kwargs)
             else:
-                pusher.push_note(title, message, email=email)
+                pusher.push_note(title, message, **email_kwargs)
         except PushError as err:
             _LOGGER.error("Notify failed: %s", err)

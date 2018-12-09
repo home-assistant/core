@@ -1,0 +1,4 @@
+# Describes the format for available HomeKit services
+
+start:
+  description: Starts the HomeKit component driver.

@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-import homeassistant.components.rpi_pfio as rpi_pfio
+from homeassistant.components import rpi_pfio
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -26,7 +26,7 @@ DEFAULT_SETTLE_TIME = 20
 DEPENDENCIES = ['rpi_pfio']
 
 PORT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SETTLE_TIME, default=DEFAULT_SETTLE_TIME):
         cv.positive_int,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
@@ -39,18 +39,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PiFace Digital Input devices."""
     binary_sensors = []
     ports = config.get(CONF_PORTS)
     for port, port_entity in ports.items():
-        name = port_entity[CONF_NAME]
+        name = port_entity.get(CONF_NAME)
         settle_time = port_entity[CONF_SETTLE_TIME] / 1000
         invert_logic = port_entity[CONF_INVERT_LOGIC]
 
         binary_sensors.append(RPiPFIOBinarySensor(
             hass, port, name, settle_time, invert_logic))
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
     rpi_pfio.activate_listener(hass)
 

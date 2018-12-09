@@ -9,10 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
-from homeassistant.const import (CONF_NAME, STATE_IDLE, STATE_PAUSED,
-                                 STATE_PLAYING)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -24,19 +25,18 @@ CONF_ARGUMENTS = 'arguments'
 DEFAULT_NAME = 'Vlc'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_ARGUMENTS, default=''): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
-    add_devices([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
-                           config.get(CONF_ARGUMENTS))])
+    add_entities([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
+                            config.get(CONF_ARGUMENTS))])
 
 
 class VlcDevice(MediaPlayerDevice):
@@ -145,6 +145,11 @@ class VlcDevice(MediaPlayerDevice):
         """Send pause command."""
         self._vlc.pause()
         self._state = STATE_PAUSED
+
+    def media_stop(self):
+        """Send stop command."""
+        self._vlc.stop()
+        self._state = STATE_IDLE
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL or file."""

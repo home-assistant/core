@@ -5,12 +5,13 @@ import os
 import pkgutil
 import re
 import sys
+import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
     'raspihats',
     'rpi-rf',
-    'Adafruit_Python_DHT',
+    'Adafruit-DHT',
     'Adafruit_BBIO',
     'fritzconnection',
     'pybluez',
@@ -18,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     'bluepy',
     'opencv-python',
     'python-lirc',
-    'gattlib',
     'pyuserinput',
     'evdev',
     'pycups',
@@ -31,31 +31,43 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
+    'homekit',
+    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
+    'aiohue',
+    'aiounifi',
     'apns2',
     'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
+    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser',
-    'fuzzywuzzy',
+    'foobot_async',
+    'geojson_client',
+    'georss_client',
     'gTTS-token',
     'ha-ffmpeg',
+    'hangups',
+    'HAP-python',
     'haversine',
     'hbmqtt',
+    'hdate',
     'holidays',
     'home-assistant-frontend',
+    'homematicip',
     'influxdb',
+    'jsonpath',
     'libpurecoollink',
     'libsoundtouch',
+    'luftdaten',
     'mficlient',
     'numpy',
     'paho-mqtt',
@@ -63,34 +75,55 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'pushbullet.py',
     'py-canary',
+    'pyblackbird',
+    'pydeconz',
     'pydispatcher',
-    'PyJWT',
+    'pyhomematic',
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyopenuv',
+    'pyotp',
+    'pysonos',
+    'pyqwikswitch',
+    'PyRMVtransport',
+    'PyTransportNSW',
+    'pyspcwebgw',
     'python-forecastio',
+    'python-nest',
+    'python_awair',
+    'pytradfri\\[async\\]',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
+    'regenmaschine',
     'restrictedpython',
     'rflink',
     'ring_doorbell',
     'rxv',
+    'simplisafe-python',
     'sleepyq',
-    'SoCo',
+    'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
+    'srpenergy',
     'statsd',
     'uvcclient',
+    'vsure',
     'warrant',
-    'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'YesssSMS',
+    'ruamel.yaml',
 )
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
+    'homeassistant.components.homekit.*',
+    'homeassistant.components.hangouts.hangups_utils'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -99,15 +132,23 @@ IGNORE_REQ = (
     'colorama<=1',  # Windows only requirement in check_config
 )
 
-URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
-           '#1-requirements')
+URL_PIN = ('https://developers.home-assistant.io/docs/'
+           'creating_platform_code_review.html#1-requirements')
 
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
 CONSTRAINT_BASE = """
-# Breaks Python 3.6 and is not needed for our supported Pythons
+pycryptodome>=3.6.6
+
+# Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with pycryptodome
+pycrypto==1000000000.0.0
+
+# Contains code to modify Home Assistant to work around our rules
+python-systemair-savecair==1000000000.0.0
 """
 
 
@@ -138,7 +179,7 @@ def core_requirements():
 
 
 def comment_requirement(req):
-    """Some requirements don't install on all systems."""
+    """Comment out requirement. Some don't install on all systems."""
     return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
@@ -148,12 +189,17 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(explore_module('homeassistant.components', True) +
-                          explore_module('homeassistant.scripts', True)):
+    for package in sorted(
+            explore_module('homeassistant.components', True) +
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
         except ImportError:
-            if package not in IGNORE_PACKAGES:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
                 errors.append(package)
             continue
 
@@ -163,6 +209,10 @@ def gather_modules():
         for req in module.REQUIREMENTS:
             if req in IGNORE_REQ:
                 continue
+            if '://' in req:
+                errors.append(
+                    "{}[Only pypi dependencies are allowed: {}]".format(
+                        package, req))
             if req.partition('==')[1] == '' and req not in IGNORE_PIN:
                 errors.append(
                     "{}[Please pin requirement {}, see {}]".format(
@@ -238,7 +288,7 @@ def write_requirements_file(data):
 
 
 def write_test_requirements_file(data):
-    """Write the modules to the requirements_all.txt."""
+    """Write the modules to the requirements_test_all.txt."""
     with open('requirements_test_all.txt', 'w+', newline="\n") as req_file:
         req_file.write(data)
 
@@ -256,7 +306,7 @@ def validate_requirements_file(data):
 
 
 def validate_requirements_test_file(data):
-    """Validate if requirements_all.txt is up to date."""
+    """Validate if requirements_test_all.txt is up to date."""
     with open('requirements_test_all.txt', 'r') as req_file:
         return data == req_file.read()
 
@@ -267,23 +317,23 @@ def validate_constraints_file(data):
         return data + CONSTRAINT_BASE == req_file.read()
 
 
-def main():
-    """Main section of the script."""
+def main(validate):
+    """Run the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
-        return
+        return 1
 
     data = gather_modules()
 
     if data is None:
-        sys.exit(1)
+        return 1
 
     constraints = gather_constraints()
 
     reqs_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
 
-    if sys.argv[-1] == 'validate':
+    if validate:
         errors = []
         if not validate_requirements_file(reqs_file):
             errors.append("requirements_all.txt is not up to date")
@@ -299,14 +349,16 @@ def main():
             print("******* ERROR")
             print('\n'.join(errors))
             print("Please run script/gen_requirements_all.py")
-            sys.exit(1)
+            return 1
 
-        sys.exit(0)
+        return 0
 
     write_requirements_file(reqs_file)
     write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    _VAL = sys.argv[-1] == 'validate'
+    sys.exit(main(_VAL))

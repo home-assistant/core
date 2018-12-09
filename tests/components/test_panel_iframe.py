@@ -1,6 +1,5 @@
 """The tests for the panel_iframe component."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components import frontend
@@ -11,11 +10,11 @@ from tests.common import get_test_home_assistant
 class TestPanelIframe(unittest.TestCase):
     """Test the panel_iframe component."""
 
-    def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+    def setUp(self):
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def teardown_method(self, method):
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -33,8 +32,6 @@ class TestPanelIframe(unittest.TestCase):
                     'panel_iframe': conf
                 })
 
-    @patch.dict('hass_frontend_es5.FINGERPRINTS',
-                {'iframe': 'md5md5'})
     def test_correct_config(self):
         """Test correct config."""
         assert setup.setup_component(
@@ -50,25 +47,49 @@ class TestPanelIframe(unittest.TestCase):
                         'title': 'Weather',
                         'url': 'https://www.wunderground.com/us/ca/san-diego',
                     },
+                    'api': {
+                        'icon': 'mdi:weather',
+                        'title': 'Api',
+                        'url': '/api',
+                    },
+                    'ftp': {
+                        'icon': 'mdi:weather',
+                        'title': 'FTP',
+                        'url': 'ftp://some/ftp',
+                    },
                 },
             })
 
         panels = self.hass.data[frontend.DATA_PANELS]
 
-        assert panels.get('router').to_response(self.hass, None) == {
+        assert panels.get('router').to_response() == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
             'title': 'Router',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'router'
         }
 
-        assert panels.get('weather').to_response(self.hass, None) == {
+        assert panels.get('weather').to_response() == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',
             'title': 'Weather',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'weather',
+        }
+
+        assert panels.get('api').to_response() == {
+            'component_name': 'iframe',
+            'config': {'url': '/api'},
+            'icon': 'mdi:weather',
+            'title': 'Api',
+            'url_path': 'api',
+        }
+
+        assert panels.get('ftp').to_response() == {
+            'component_name': 'iframe',
+            'config': {'url': 'ftp://some/ftp'},
+            'icon': 'mdi:weather',
+            'title': 'FTP',
+            'url_path': 'ftp',
         }

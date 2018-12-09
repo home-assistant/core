@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Travis CI sensor."""
     from travispy import TravisPy
     from travispy.errors import TravisError
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
 
-    # non specificy repository selected, then show all associated
+    # non specific repository selected, then show all associated
     if not repositories:
         all_repos = travis.repos(member=user.login)
         repositories = [repo.slug for repo in all_repos]
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(
                 TravisCISensor(travis, repo, user, branch, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 

@@ -9,17 +9,15 @@ import logging
 import requests
 
 from homeassistant.components.camera import Camera
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['bloomsky']
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to BloomSky cameras."""
-    bloomsky = get_component('bloomsky')
+    bloomsky = hass.components.bloomsky
     for device in bloomsky.BLOOMSKY.devices.values():
-        add_devices([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
+        add_entities([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
 
 
 class BloomSkyCamera(Camera):
@@ -54,6 +52,11 @@ class BloomSkyCamera(Camera):
             return None
 
         return self._last_image
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._id
 
     @property
     def name(self):

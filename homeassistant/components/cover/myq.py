@@ -8,90 +8,105 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
-import homeassistant.helpers.config_validation as cv
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
+    STATE_OPEN, STATE_OPENING)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-REQUIREMENTS = ['pymyq==0.0.8']
-
+REQUIREMENTS = ['pymyq==1.0.0']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'myq'
+MYQ_TO_HASS = {
+    'closed': STATE_CLOSED,
+    'closing': STATE_CLOSING,
+    'open': STATE_OPEN,
+    'opening': STATE_OPENING
+}
 
-NOTIFICATION_ID = 'myq_notification'
-NOTIFICATION_TITLE = 'MyQ Cover Setup'
-
-COVER_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MyQ component."""
-    from pymyq import MyQAPI as pymyq
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the platform."""
+    from pymyq import login
+    from pymyq.errors import MyQError, UnsupportedBrandError
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    brand = config.get(CONF_TYPE)
-    myq = pymyq(username, password, brand)
+    websession = aiohttp_client.async_get_clientsession(hass)
+
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    brand = config[CONF_TYPE]
 
     try:
-        if not myq.is_supported_brand():
-            raise ValueError("Unsupported type. See documentation")
+        myq = await login(username, password, brand, websession)
+    except UnsupportedBrandError:
+        _LOGGER.error('Unsupported brand: %s', brand)
+        return
+    except MyQError as err:
+        _LOGGER.error('There was an error while logging in: %s', err)
+        return
 
-        if not myq.is_login_valid():
-            raise ValueError("Username or Password is incorrect")
-
-        add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
-        return True
-
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    devices = await myq.get_devices()
+    async_add_entities([MyQDevice(device) for device in devices], True)
 
 
 class MyQDevice(CoverDevice):
     """Representation of a MyQ cover."""
 
-    def __init__(self, myq, device):
+    def __init__(self, device):
         """Initialize with API object, device id."""
-        self.myq = myq
-        self.device_id = device['deviceid']
-        self._name = device['name']
-        self._status = STATE_CLOSED
+        self._device = device
 
     @property
-    def should_poll(self):
-        """Poll for state."""
-        return True
+    def device_class(self):
+        """Define this cover as a garage door."""
+        return 'garage'
 
     @property
     def name(self):
         """Return the name of the garage door if any."""
-        return self._name if self._name else DEFAULT_NAME
+        return self._device.name
 
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._status == STATE_CLOSED
+        return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSED
 
-    def close_cover(self):
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self._device.device_id
+
+    async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
-        self.myq.close_device(self.device_id)
+        await self._device.close()
 
-    def open_cover(self):
+    async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
-        self.myq.open_device(self.device_id)
+        await self._device.open()
 
-    def update(self):
+    async def async_update(self):
         """Update status of cover."""
-        self._status = self.myq.get_status(self.device_id)
+        await self._device.update()

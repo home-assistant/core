@@ -4,7 +4,6 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -31,10 +30,7 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 })
 
 SMART_HOME_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
 })
 
@@ -56,8 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Activate Alexa component."""
     config = config.get(DOMAIN, {})
     flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)

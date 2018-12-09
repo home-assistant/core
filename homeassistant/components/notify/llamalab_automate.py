@@ -56,4 +56,4 @@ class AutomateNotificationService(BaseNotificationService):
 
         response = requests.post(_RESOURCE, json=data)
         if response.status_code != 200:
-            _LOGGER.error("Error sending message: " + str(response))
+            _LOGGER.error("Error sending message: %s", response)

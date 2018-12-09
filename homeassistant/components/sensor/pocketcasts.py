@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pocketcasts platform for sensors."""
     import pocketcasts
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         api = pocketcasts.Api(username, password)
         _LOGGER.debug("Found %d podcasts", len(api.my_podcasts()))
-        add_devices([PocketCastsSensor(api)], True)
+        add_entities([PocketCastsSensor(api)], True)
     except OSError as err:
         _LOGGER.error("Connection to server failed: %s", err)
         return False

@@ -9,7 +9,6 @@ import logging
 from homeassistant.components.hdmi_cec import CecDevice, ATTR_NEW
 from homeassistant.components.switch import SwitchDevice, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_STANDBY, STATE_ON
-from homeassistant.core import HomeAssistant
 
 DEPENDENCIES = ['hdmi_cec']
 
@@ -18,24 +17,27 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecSwitchDevice(hass, hass.data.get(device),
-                                    hass.data.get(device).logical_address) for
-                    device in discovery_info[ATTR_NEW])
+        entities = []
+        for device in discovery_info[ATTR_NEW]:
+            hdmi_device = hass.data.get(device)
+            entities.append(CecSwitchDevice(
+                hdmi_device, hdmi_device.logical_address,
+            ))
+        add_entities(entities, True)
 
 
 class CecSwitchDevice(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
-        CecDevice.__init__(self, hass, device, logical)
+        CecDevice.__init__(self, device, logical)
         self.entity_id = "%s.%s_%s" % (
             DOMAIN, 'hdmi', hex(self._logical_address)[2:])
-        self.update()
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
@@ -47,7 +49,7 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
         self._device.turn_off()
         self._state = STATE_ON
 
-    def toggle(self):
+    def toggle(self, **kwargs):
         """Toggle the entity."""
         self._device.toggle()
         if self._state == STATE_ON:

@@ -4,7 +4,6 @@ Kodi notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.kodi/
 """
-import asyncio
 import logging
 
 import aiohttp
@@ -38,8 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_DISPLAYTIME = 'displaytime'
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
@@ -51,7 +49,7 @@ def async_get_service(hass, config, discovery_info=None):
     encryption = config.get(CONF_PROXY_SSL)
 
     if host.startswith('http://') or host.startswith('https://'):
-        host = host.lstrip('http://').lstrip('https://')
+        host = host[host.index('://') + 3:]
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
@@ -86,8 +84,7 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
-    @asyncio.coroutine
-    def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
         import jsonrpc_async
         try:
@@ -96,7 +93,7 @@ class KodiNotificationService(BaseNotificationService):
             displaytime = data.get(ATTR_DISPLAYTIME, 10000)
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            yield from self._server.GUI.ShowNotification(
+            await self._server.GUI.ShowNotification(
                 title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError:

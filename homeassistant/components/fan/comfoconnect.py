@@ -26,18 +26,17 @@ SPEED_MAPPING = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_devices([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
-    return
+    add_entities([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    def __init__(self, hass, name, ccb: ComfoConnectBridge):
+    def __init__(self, hass, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
@@ -87,31 +86,31 @@ class ComfoConnectFan(FanEntity):
         """List of available fan modes."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW
         self.set_speed(speed)
 
-    def turn_off(self) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the fan (to away)."""
         self.set_speed(SPEED_OFF)
 
-    def set_speed(self, mode):
+    def set_speed(self, speed: str):
         """Set fan speed."""
-        _LOGGER.debug('Changing fan mode to %s.', mode)
+        _LOGGER.debug('Changing fan speed to %s.', speed)
 
         from pycomfoconnect import (
             CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
             CMD_FAN_MODE_HIGH)
 
-        if mode == SPEED_OFF:
+        if speed == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)
-        elif mode == SPEED_LOW:
+        elif speed == SPEED_LOW:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_LOW)
-        elif mode == SPEED_MEDIUM:
+        elif speed == SPEED_MEDIUM:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_MEDIUM)
-        elif mode == SPEED_HIGH:
+        elif speed == SPEED_HIGH:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_HIGH)
 
         # Update current mode

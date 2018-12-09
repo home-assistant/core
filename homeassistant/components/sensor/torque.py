@@ -46,15 +46,14 @@ def convert_pid(value):
     return int(value, 16)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Torque platform."""
     vehicle = config.get(CONF_NAME)
     email = config.get(CONF_EMAIL)
     sensors = {}
 
     hass.http.register_view(TorqueReceiveDataView(
-        email, vehicle, sensors, add_devices))
+        email, vehicle, sensors, add_entities))
     return True
 
 
@@ -64,12 +63,12 @@ class TorqueReceiveDataView(HomeAssistantView):
     url = API_PATH
     name = 'api:torque'
 
-    def __init__(self, email, vehicle, sensors, add_devices):
+    def __init__(self, email, vehicle, sensors, add_entities):
         """Initialize a Torque view."""
         self.email = email
         self.vehicle = vehicle
         self.sensors = sensors
-        self.add_devices = add_devices
+        self.add_entities = add_entities
 
     @callback
     def get(self, request):
@@ -103,7 +102,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                 self.sensors[pid] = TorqueSensor(
                     ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
                     units.get(pid, None))
-                hass.async_add_job(self.add_devices, [self.sensors[pid]])
+                hass.async_add_job(self.add_entities, [self.sensors[pid]])
 
         return "OK!"
 

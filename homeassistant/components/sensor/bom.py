@@ -17,16 +17,22 @@ import zipfile
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, ATTR_ATTRIBUTION,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://www.bom.gov.au/fwo/{}/{}.{}.json'
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_LAST_UPDATE = 'last_update'
+ATTR_SENSOR_ID = 'sensor_id'
+ATTR_STATION_ID = 'station_id'
+ATTR_STATION_NAME = 'station_name'
+ATTR_ZONE_ID = 'zone_id'
 
 CONF_ATTRIBUTION = "Data provided by the Australian Bureau of Meteorology"
 CONF_STATION = 'station'
@@ -34,9 +40,7 @@ CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
-LAST_UPDATE = 0
 
-# Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'wmo': ['wmo', None],
     'name': ['Station Name', None],
@@ -71,7 +75,7 @@ SENSOR_TYPES = {
     'weather': ['Weather', None],
     'wind_dir': ['Wind Direction', None],
     'wind_spd_kmh': ['Wind Speed kmh', 'km/h'],
-    'wind_spd_kt': ['Wind Direction kt', 'kt']
+    'wind_spd_kt': ['Wind Speed kt', 'kt']
 }
 
 
@@ -88,17 +92,18 @@ def validate_station(station):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
     vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BOM sensor."""
     station = config.get(CONF_STATION)
     zone_id, wmo_id = config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID)
+
     if station is not None:
         if zone_id and wmo_id:
             _LOGGER.warning(
@@ -112,25 +117,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass.config.config_dir)
         if station is None:
             _LOGGER.error("Could not get BOM weather station from lat/lon")
-            return False
+            return
 
-    rest = BOMCurrentData(hass, station)
+    bom_data = BOMCurrentData(station)
+
     try:
-        rest.update()
+        bom_data.update()
     except ValueError as err:
-        _LOGGER.error("Received error from BOM_Current: %s", err)
-        return False
-    add_devices([BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
-    return True
+        _LOGGER.error("Received error from BOM Current: %s", err)
+        return
+
+    add_entities([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
+                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class BOMCurrentSensor(Entity):
     """Implementation of a BOM current sensor."""
 
-    def __init__(self, rest, condition, stationname):
+    def __init__(self, bom_data, condition, stationname):
         """Initialize the sensor."""
-        self.rest = rest
+        self.bom_data = bom_data
         self._condition = condition
         self.stationname = stationname
 
@@ -146,22 +152,20 @@ class BOMCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.rest.data and self._condition in self.rest.data:
-            return self.rest.data[self._condition]
-
-        return STATE_UNKNOWN
+        return self.bom_data.get_reading(self._condition)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
-        attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.rest.data['history_product']
-        attr['Station Id'] = self.rest.data['wmo']
-        attr['Station Name'] = self.rest.data['name']
-        attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
-        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr = {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_LAST_UPDATE: self.bom_data.last_updated,
+            ATTR_SENSOR_ID: self._condition,
+            ATTR_STATION_ID: self.bom_data.latest_data['wmo'],
+            ATTR_STATION_NAME: self.bom_data.latest_data['name'],
+            ATTR_ZONE_ID: self.bom_data.latest_data['history_product'],
+        }
+
         return attr
 
     @property
@@ -171,44 +175,87 @@ class BOMCurrentSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        self.bom_data.update()
 
 
-class BOMCurrentData(object):
+class BOMCurrentData:
     """Get data from BOM."""
 
-    def __init__(self, hass, station_id):
+    def __init__(self, station_id):
         """Initialize the data object."""
-        self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
-        self.data = None
-        self._lastupdate = LAST_UPDATE
+        self._data = None
+        self.last_updated = None
 
     def _build_url(self):
+        """Build the URL for the requests."""
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
-        _LOGGER.info("BOM URL %s", url)
+        _LOGGER.debug("BOM URL: %s", url)
         return url
+
+    @property
+    def latest_data(self):
+        """Return the latest data object."""
+        if self._data:
+            return self._data[0]
+        return None
+
+    def get_reading(self, condition):
+        """Return the value for the given condition.
+
+        BOM weather publishes condition readings for weather (and a few other
+        conditions) at intervals throughout the day. To avoid a `-` value in
+        the frontend for these conditions, we traverse the historical data
+        for the latest value that is not `-`.
+
+        Iterators are used in this method to avoid iterating needlessly
+        through the entire BOM provided dataset.
+        """
+        condition_readings = (entry[condition] for entry in self._data)
+        return next((x for x in condition_readings if x != '-'), None)
+
+    def should_update(self):
+        """Determine whether an update should occur.
+
+        BOM provides updated data every 30 minutes. We manually define
+        refreshing logic here rather than a throttle to keep updates
+        in lock-step with BOM.
+
+        If 35 minutes has passed since the last BOM data update, then
+        an update should be done.
+        """
+        if self.last_updated is None:
+            # Never updated before, therefore an update should occur.
+            return True
+
+        now = datetime.datetime.now()
+        update_due_at = self.last_updated + datetime.timedelta(minutes=35)
+        return now > update_due_at
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
-             datetime.timedelta(minutes=35)):
-            _LOGGER.info(
+        if not self.should_update():
+            _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
-            return self._lastupdate
+                " < 35 minutes, Now: %s, LastUpdate: %s",
+                (datetime.datetime.now() - self.last_updated),
+                datetime.datetime.now(), self.last_updated)
+            return
 
         try:
             result = requests.get(self._build_url(), timeout=10).json()
-            self.data = result['observations']['data'][0]
-            self._lastupdate = datetime.datetime.strptime(
-                str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
-            return self._lastupdate
+            self._data = result['observations']['data']
+
+            # set lastupdate using self._data[0] as the first element in the
+            # array is the latest date in the json
+            self.last_updated = datetime.datetime.strptime(
+                str(self._data[0]['local_date_time_full']), '%Y%m%d%H%M%S')
+            return
+
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
-            self.data = None
+            self._data = None
             raise
 
 
@@ -252,7 +299,7 @@ def _get_bom_stations():
 def bom_stations(cache_dir):
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
 
-    Results from internet requests are cached as compressed json, making
+    Results from internet requests are cached as compressed JSON, making
     subsequent calls very much faster.
     """
     cache_file = os.path.join(cache_dir, '.bom-stations.json.gz')
@@ -272,7 +319,7 @@ def closest_station(lat, lon, cache_dir):
     stations = bom_stations(cache_dir)
 
     def comparable_dist(wmo_id):
-        """Create a psudeo-distance from lat/lon."""
+        """Create a psudeo-distance from latitude/longitude."""
         station_lat, station_lon = stations[wmo_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

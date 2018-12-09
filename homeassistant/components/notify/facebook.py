@@ -4,6 +4,7 @@ Facebook platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.facebook/
 """
+import json
 import logging
 
 from aiohttp.hdrs import CONTENT_TYPE
@@ -19,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = 'page_access_token'
 BASE_URL = 'https://graph.facebook.com/v2.6/me/messages'
+CREATE_BROADCAST_URL = 'https://graph.facebook.com/v2.11/me/message_creatives'
+SEND_BROADCAST_URL = 'https://graph.facebook.com/v2.11/me/broadcast_messages'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
@@ -55,27 +58,60 @@ class FacebookNotificationService(BaseNotificationService):
             _LOGGER.error("At least 1 target is required")
             return
 
-        for target in targets:
-            # If the target starts with a "+", we suppose it's a phone number,
-            # otherwise it's a user id.
-            if target.startswith('+'):
-                recipient = {"phone_number": target}
-            else:
-                recipient = {"id": target}
+        # broadcast message
+        if targets[0].lower() == 'broadcast':
+            broadcast_create_body = {"messages": [body_message]}
+            _LOGGER.debug("Broadcast body %s : ", broadcast_create_body)
 
-            body = {
-                "recipient": recipient,
-                "message": body_message
+            resp = requests.post(CREATE_BROADCAST_URL,
+                                 data=json.dumps(broadcast_create_body),
+                                 params=payload,
+                                 headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                                 timeout=10)
+            _LOGGER.debug("FB Messager broadcast id %s : ", resp.json())
+
+            # at this point we get broadcast id
+            broadcast_body = {
+                "message_creative_id": resp.json().get('message_creative_id'),
+                "notification_type": "REGULAR",
             }
-            import json
-            resp = requests.post(BASE_URL, data=json.dumps(body),
+
+            resp = requests.post(SEND_BROADCAST_URL,
+                                 data=json.dumps(broadcast_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
             if resp.status_code != 200:
-                obj = resp.json()
-                error_message = obj['error']['message']
-                error_code = obj['error']['code']
-                _LOGGER.error(
-                    "Error %s : %s (Code %s)", resp.status_code, error_message,
-                    error_code)
+                log_error(resp)
+
+        # non-broadcast message
+        else:
+            for target in targets:
+                # If the target starts with a "+", it's a phone number,
+                # otherwise it's a user id.
+                if target.startswith('+'):
+                    recipient = {"phone_number": target}
+                else:
+                    recipient = {"id": target}
+
+                body = {
+                    "recipient": recipient,
+                    "message": body_message
+                }
+                resp = requests.post(BASE_URL, data=json.dumps(body),
+                                     params=payload,
+                                     headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                                     timeout=10)
+                if resp.status_code != 200:
+                    log_error(resp)
+
+
+def log_error(response):
+    """Log error message."""
+    obj = response.json()
+    error_message = obj['error']['message']
+    error_code = obj['error']['code']
+
+    _LOGGER.error(
+        "Error %s : %s (Code %s)", response.status_code, error_message,
+        error_code)

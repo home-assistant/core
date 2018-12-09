@@ -16,9 +16,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
-                "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
-                "pygtfs==0.1.3"]
+REQUIREMENTS = ['pygtfs-homeassistant==0.1.3.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_DATA): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)):
-        cv.time_period_dict,
+    vol.Optional(CONF_OFFSET, default=0): cv.time_period,
 })
 
 
@@ -154,7 +151,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
     data = config.get(CONF_DATA)
@@ -179,10 +176,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     gtfs = pygtfs.Schedule(joined_path)
 
     # pylint: disable=no-member
-    if len(gtfs.feeds) < 1:
+    if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
-    add_devices([GTFSDepartureSensor(gtfs, name, origin, destination, offset)])
+    add_entities([
+        GTFSDepartureSensor(gtfs, name, origin, destination, offset)])
 
 
 class GTFSDepartureSensor(Entity):

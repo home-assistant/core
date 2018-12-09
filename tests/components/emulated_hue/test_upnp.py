@@ -6,10 +6,8 @@ from unittest.mock import patch
 import requests
 from aiohttp.hdrs import CONTENT_TYPE
 
-from homeassistant import setup, const, core
-import homeassistant.components as core_components
+from homeassistant import setup, const
 from homeassistant.components import emulated_hue, http
-from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -20,29 +18,6 @@ BRIDGE_URL_BASE = 'http://127.0.0.1:{}'.format(BRIDGE_SERVER_PORT) + '{}'
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
-def setup_hass_instance(emulated_hue_config):
-    """Set up the Home Assistant instance to test."""
-    hass = get_test_home_assistant()
-
-    # We need to do this to get access to homeassistant/turn_(on,off)
-    run_coroutine_threadsafe(
-        core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
-    ).result()
-
-    setup.setup_component(
-        hass, http.DOMAIN,
-        {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}})
-
-    setup.setup_component(hass, emulated_hue.DOMAIN, emulated_hue_config)
-
-    return hass
-
-
-def start_hass_instance(hass):
-    """Start the Home Assistant instance to test."""
-    hass.start()
-
-
 class TestEmulatedHue(unittest.TestCase):
     """Test the emulated Hue component."""
 
@@ -50,13 +25,8 @@ class TestEmulatedHue(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Setup the class."""
+        """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
-
-        # We need to do this to get access to homeassistant/turn_(on,off)
-        run_coroutine_threadsafe(
-            core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
-        ).result()
 
         setup.setup_component(
             hass, http.DOMAIN,
@@ -83,14 +53,13 @@ class TestEmulatedHue(unittest.TestCase):
         result = requests.get(
             BRIDGE_URL_BASE.format('/description.xml'), timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('text/xml' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'text/xml' in result.headers['content-type']
 
         # Make sure the XML is parsable
-        # pylint: disable=bare-except
         try:
             ET.fromstring(result.text)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):
@@ -101,14 +70,14 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('application/json' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'application/json' in result.headers['content-type']
 
         resp_json = result.json()
         success_json = resp_json[0]
 
-        self.assertTrue('success' in success_json)
-        self.assertTrue('username' in success_json['success'])
+        assert 'success' in success_json
+        assert 'username' in success_json['success']
 
     def test_valid_username_request(self):
         """Test request with a valid username."""
@@ -118,4 +87,4 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 400)
+        assert result.status_code == 400

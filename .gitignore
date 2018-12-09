@@ -16,9 +16,12 @@ Icon
 # Thumbnails
 ._*
 
+# IntelliJ IDEA
 .idea
+*.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:
@@ -98,3 +101,12 @@ desktop.ini
 /home-assistant.pyproj
 /home-assistant.sln
 /.vs/*
+
+# mypy
+/.mypy_cache/*
+
+# Secrets
+.lokalise_token
+
+# monkeytype
+monkeytype.sqlite3

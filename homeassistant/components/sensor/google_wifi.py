@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 import requests
 
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -69,13 +69,14 @@ MONITORED_CONDITIONS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Google Wifi sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -86,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for condition in conditions:
         dev.append(GoogleWifiSensor(api, name, condition))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class GoogleWifiSensor(Entity):
@@ -137,7 +138,7 @@ class GoogleWifiSensor(Entity):
             self._state = STATE_UNKNOWN
 
 
-class GoogleWifiAPI(object):
+class GoogleWifiAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, host, conditions):

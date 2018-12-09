@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tutti i bridge Philips Hue sono gi\u00e0 configurati",
+            "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi al bridge",
+            "discover_timeout": "Impossibile trovare i bridge Hue",
+            "no_bridges": "Nessun bridge Hue di Philips trovato",
+            "unknown": "Si \u00e8 verificato un errore"
+        },
+        "error": {
+            "linking": "Si \u00e8 verificato un errore sconosciuto in fase di collegamento.",
+            "register_failed": "Errore in fase di registrazione, riprova"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Seleziona il bridge Hue"
+            },
+            "link": {
+                "description": "Premi il pulsante sul bridge per registrare Philips Hue con Home Assistant\n\n![Posizione del pulsante sul bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Collega Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Dovoljena je samo ena konfiguracija MQTT."
+        },
+        "error": {
+            "cannot_connect": "Ne morem se povezati na posrednik."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Posrednik",
+                    "discovery": "Omogo\u010di odkrivanje",
+                    "password": "Geslo",
+                    "port": "port",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Prosimo vnesite informacije o povezavi va\u0161ega MQTT posrednika.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Omogo\u010di odkrivanje"
+                },
+                "description": "\u017delite konfigurirati Home Assistent-a za povezavo s posrednikom MQTT, ki ga ponuja hass.io add-on {addon} ?",
+                "title": "MQTT Broker prek dodatka Hass.io"
+            }
+        },
+        "title": "MQTT"
+    }
+}

@@ -11,9 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY, CONF_ID, CONF_WHITELIST, STATE_UNAVAILABLE, STATE_UNKNOWN)
-from homeassistant.helpers import state as state_helper
+from homeassistant.helpers import event, state as state_helper
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.event as event
 
 REQUIREMENTS = ['thingspeak==0.4.1']
 

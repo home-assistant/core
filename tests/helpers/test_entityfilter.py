@@ -1,5 +1,5 @@
-"""The tests for the EntityFitler component."""
-from homeassistant.helpers.entityfilter import generate_filter
+"""The tests for the EntityFilter component."""
+from homeassistant.helpers.entityfilter import generate_filter, FILTER_SCHEMA
 
 
 def test_no_filters_case_1():
@@ -78,7 +78,7 @@ def test_exclude_domain_case4b():
     assert testfilter("sun.sun") is True
 
 
-def testno_domain_case4c():
+def test_no_domain_case4c():
     """Test case 4c - include and exclude specified, with no domains."""
     incl_dom = {}
     incl_ent = {'binary_sensor.working'}
@@ -93,3 +93,15 @@ def testno_domain_case4c():
     assert testfilter("binary_sensor.working")
     assert testfilter("binary_sensor.another") is False
     assert testfilter("sun.sun") is False
+
+
+def test_filter_schema():
+    """Test filter schema."""
+    conf = {
+        'include_domains': ['light'],
+        'include_entities': ['switch.kitchen'],
+        'exclude_domains': ['cover'],
+        'exclude_entities': ['light.kitchen']
+    }
+    filt = FILTER_SCHEMA(conf)
+    assert filt.config == conf

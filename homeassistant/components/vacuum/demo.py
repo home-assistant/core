@@ -7,10 +7,12 @@ https://home-assistant.io/components/demo/
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, VacuumDevice)
+    SUPPORT_TURN_ON, SUPPORT_STATE, SUPPORT_START, STATE_CLEANING,
+    STATE_DOCKED, STATE_IDLE, STATE_PAUSED, STATE_RETURNING, VacuumDevice,
+    StateVacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,29 +30,34 @@ SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                        SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY | \
                        SUPPORT_CLEAN_SPOT
 
+SUPPORT_STATE_SERVICES = SUPPORT_STATE | SUPPORT_PAUSE | SUPPORT_STOP | \
+                         SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
+                         SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT | SUPPORT_START
+
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
 DEMO_VACUUM_COMPLETE = '0_Ground_floor'
 DEMO_VACUUM_MOST = '1_First_floor'
 DEMO_VACUUM_BASIC = '2_Second_floor'
 DEMO_VACUUM_MINIMAL = '3_Third_floor'
 DEMO_VACUUM_NONE = '4_Fourth_floor'
+DEMO_VACUUM_STATE = '5_Fifth_floor'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_devices([
+    add_entities([
         DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
         DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
         DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
         DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
         DemoVacuum(DEMO_VACUUM_NONE, 0),
+        StateDemoVacuum(DEMO_VACUUM_STATE),
     ])
 
 
 class DemoVacuum(VacuumDevice):
     """Representation of a demo vacuum."""
 
-    # pylint: disable=no-self-use
     def __init__(self, name, supported_features):
         """Initialize the vacuum."""
         self._name = name
@@ -65,11 +72,6 @@ class DemoVacuum(VacuumDevice):
     def name(self):
         """Return the name of the vacuum."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the vacuum."""
-        return DEFAULT_ICON
 
     @property
     def should_poll(self):
@@ -209,4 +211,126 @@ class DemoVacuum(VacuumDevice):
 
         self._status = 'Executing {}({})'.format(command, params)
         self._state = True
+        self.schedule_update_ha_state()
+
+
+class StateDemoVacuum(StateVacuumDevice):
+    """Representation of a demo vacuum supporting states."""
+
+    def __init__(self, name):
+        """Initialize the vacuum."""
+        self._name = name
+        self._supported_features = SUPPORT_STATE_SERVICES
+        self._state = STATE_DOCKED
+        self._fan_speed = FAN_SPEEDS[1]
+        self._cleaned_area = 0
+        self._battery_level = 100
+
+    @property
+    def name(self):
+        """Return the name of the vacuum."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed for a demo vacuum."""
+        return False
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self._supported_features
+
+    @property
+    def state(self):
+        """Return the current state of the vacuum."""
+        return self._state
+
+    @property
+    def battery_level(self):
+        """Return the current battery level of the vacuum."""
+        if self.supported_features & SUPPORT_BATTERY == 0:
+            return
+
+        return max(0, min(100, self._battery_level))
+
+    @property
+    def fan_speed(self):
+        """Return the current fan speed of the vacuum."""
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+
+        return self._fan_speed
+
+    @property
+    def fan_speed_list(self):
+        """Return the list of supported fan speeds."""
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+        return FAN_SPEEDS
+
+    @property
+    def device_state_attributes(self):
+        """Return device state attributes."""
+        return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
+
+    def start(self):
+        """Start or resume the cleaning task."""
+        if self.supported_features & SUPPORT_START == 0:
+            return
+
+        if self._state != STATE_CLEANING:
+            self._state = STATE_CLEANING
+            self._cleaned_area += 1.32
+            self._battery_level -= 1
+            self.schedule_update_ha_state()
+
+    def pause(self):
+        """Pause the cleaning task."""
+        if self.supported_features & SUPPORT_PAUSE == 0:
+            return
+
+        if self._state == STATE_CLEANING:
+            self._state = STATE_PAUSED
+            self.schedule_update_ha_state()
+
+    def stop(self, **kwargs):
+        """Stop the cleaning task, do not return to dock."""
+        if self.supported_features & SUPPORT_STOP == 0:
+            return
+
+        self._state = STATE_IDLE
+        self.schedule_update_ha_state()
+
+    def return_to_base(self, **kwargs):
+        """Return dock to charging base."""
+        if self.supported_features & SUPPORT_RETURN_HOME == 0:
+            return
+
+        self._state = STATE_RETURNING
+        self.schedule_update_ha_state()
+
+        self.hass.loop.call_later(30, self.__set_state_to_dock)
+
+    def clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
+            return
+
+        self._state = STATE_CLEANING
+        self._cleaned_area += 1.32
+        self._battery_level -= 1
+        self.schedule_update_ha_state()
+
+    def set_fan_speed(self, fan_speed, **kwargs):
+        """Set the vacuum's fan speed."""
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+
+        if fan_speed in self.fan_speed_list:
+            self._fan_speed = fan_speed
+            self.schedule_update_ha_state()
+
+    def __set_state_to_dock(self):
+        self._state = STATE_DOCKED
         self.schedule_update_ha_state()

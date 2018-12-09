@@ -25,7 +25,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Juicenet sensor."""
     api = hass.data[DOMAIN]['api']
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for variable in SENSOR_TYPES:
             dev.append(JuicenetSensorDevice(device, variable, hass))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class JuicenetSensorDevice(JuicenetDevice, Entity):

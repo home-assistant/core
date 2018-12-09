@@ -6,13 +6,13 @@ https://home-assistant.io/components/media_player.dunehd/
 """
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
-    SUPPORT_PLAY, MediaPlayerDevice)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_ON, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pdunehd==1.3']
 
@@ -32,8 +32,7 @@ DUNEHD_PLAYER_SUPPORT = \
     SUPPORT_PLAY
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DuneHD media player platform."""
     from pdunehd import DuneHDPlayer
 
@@ -41,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    add_devices([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
+    add_entities([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerDevice):

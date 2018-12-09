@@ -1,10 +1,9 @@
 """An abstract class for entities."""
-import asyncio
+from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-
-from typing import Optional, List
+from typing import Optional, List, Iterable
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
@@ -15,15 +14,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistant]=None) -> str:
+                       current_ids: Optional[List[str]] = None,
+                       hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -42,8 +42,8 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
 
 @callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None,
-                             hass: Optional[HomeAssistant]=None) -> str:
+                             current_ids: Optional[Iterable[str]] = None,
+                             hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -56,10 +56,9 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity(object):
+class Entity:
     """An abstract class for Home Assistant entities."""
 
-    # pylint: disable=no-self-use
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
@@ -77,8 +76,18 @@ class Entity(object):
     # Protect for multiple updates
     _update_staged = False
 
-    # Process updates pararell
+    # Process updates in parallel
     parallel_updates = None
+
+    # Name in the entity registry
+    registry_name = None
+
+    # Hold list for functions to call on remove.
+    _on_remove = None
+
+    # Context
+    _context = None
+    _context_set = None
 
     @property
     def should_poll(self) -> bool:
@@ -90,8 +99,8 @@ class Entity(object):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
-        return "{}.{}".format(self.__class__, id(self))
+        """Return a unique ID."""
+        return None
 
     @property
     def name(self) -> Optional[str]:
@@ -114,6 +123,14 @@ class Entity(object):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes.
+
+        Implemented by platform classes.
+        """
+        return None
+
+    @property
+    def device_info(self):
+        """Return device specific attributes.
 
         Implemented by platform classes.
         """
@@ -152,7 +169,7 @@ class Entity(object):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return None
+        return False
 
     @property
     def force_update(self) -> bool:
@@ -168,20 +185,23 @@ class Entity(object):
         """Flag supported features."""
         return None
 
-    def update(self):
-        """Retrieve latest state.
-
-        For asyncio use coroutine async_update.
-        """
-        pass
+    @property
+    def context_recent_time(self):
+        """Time that a context is considered recent."""
+        return timedelta(seconds=5)
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    @asyncio.coroutine
-    def async_update_ha_state(self, force_refresh=False):
+    @callback
+    def async_set_context(self, context):
+        """Set the context the entity currently operates under."""
+        self._context = context
+        self._context_set = dt_util.utcnow()
+
+    async def async_update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -198,7 +218,7 @@ class Entity(object):
         # update entity data
         if force_refresh:
             try:
-                yield from self.async_device_update()
+                await self.async_device_update()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -221,21 +241,41 @@ class Entity(object):
             if device_attr is not None:
                 attr.update(device_attr)
 
-        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
-                          attr)
+        unit_of_measurement = self.unit_of_measurement
+        if unit_of_measurement is not None:
+            attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        self._attr_setter('name', str, ATTR_FRIENDLY_NAME, attr)
-        self._attr_setter('icon', str, ATTR_ICON, attr)
-        self._attr_setter('entity_picture', str, ATTR_ENTITY_PICTURE, attr)
-        self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
-        self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
-        self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
-                          attr)
-        self._attr_setter('device_class', str, ATTR_DEVICE_CLASS, attr)
+        name = self.registry_name or self.name
+        if name is not None:
+            attr[ATTR_FRIENDLY_NAME] = name
+
+        icon = self.icon
+        if icon is not None:
+            attr[ATTR_ICON] = icon
+
+        entity_picture = self.entity_picture
+        if entity_picture is not None:
+            attr[ATTR_ENTITY_PICTURE] = entity_picture
+
+        hidden = self.hidden
+        if hidden:
+            attr[ATTR_HIDDEN] = hidden
+
+        assumed_state = self.assumed_state
+        if assumed_state:
+            attr[ATTR_ASSUMED_STATE] = assumed_state
+
+        supported_features = self.supported_features
+        if supported_features is not None:
+            attr[ATTR_SUPPORTED_FEATURES] = supported_features
+
+        device_class = self.device_class
+        if device_class is not None:
+            attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         end = timer()
 
-        if not self._slow_reported and end - start > 0.4:
+        if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
             _LOGGER.warning("Updating state for %s (%s) took %.3f seconds. "
                             "Please report platform to the developers at "
@@ -245,10 +285,6 @@ class Entity(object):
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
-
-        # Remove hidden property if false so it won't show up.
-        if not attr.get(ATTR_HIDDEN, True):
-            attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
         try:
@@ -264,11 +300,17 @@ class Entity(object):
             # Could not convert state to float
             pass
 
+        if (self._context is not None and
+                dt_util.utcnow() - self._context_set >
+                self.context_recent_time):
+            self._context = None
+            self._context_set = None
+
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update)
+            self.entity_id, state, attr, self.force_update, self._context)
 
     def schedule_update_ha_state(self, force_refresh=False):
-        """Schedule a update ha state change task.
+        """Schedule an update ha state change task.
 
         That avoid executor dead looks.
         """
@@ -276,11 +318,10 @@ class Entity(object):
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule a update ha state change task."""
+        """Schedule an update ha state change task."""
         self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
-    @asyncio.coroutine
-    def async_device_update(self, warning=True):
+    async def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.
 
         This method is a coroutine.
@@ -291,7 +332,7 @@ class Entity(object):
 
         # Process update sequential
         if self.parallel_updates:
-            yield from self.parallel_updates.acquire()
+            await self.parallel_updates.acquire()
 
         if warning:
             update_warn = self.hass.loop.call_later(
@@ -301,11 +342,11 @@ class Entity(object):
             )
 
         try:
+            # pylint: disable=no-member
             if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
-                yield from self.async_update()
-            else:
-                yield from self.hass.async_add_job(self.update)
+                await self.async_update()
+            elif hasattr(self, 'update'):
+                await self.hass.async_add_executor_job(self.update)
         finally:
             self._update_staged = False
             if warning:
@@ -313,33 +354,63 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    @asyncio.coroutine
-    def async_remove(self):
+    @callback
+    def async_on_remove(self, func):
+        """Add a function to call when entity removed."""
+        if self._on_remove is None:
+            self._on_remove = []
+        self._on_remove.append(func)
+
+    async def async_remove(self):
         """Remove entity from Home Assistant."""
-        if self.platform is not None:
-            yield from self.platform.async_remove_entity(self.entity_id)
-        else:
-            self.hass.states.async_remove(self.entity_id)
+        await self.async_will_remove_from_hass()
 
-    def _attr_setter(self, name, typ, attr, attrs):
-        """Populate attributes based on properties."""
-        if attr in attrs:
+        if self._on_remove is not None:
+            while self._on_remove:
+                self._on_remove.pop()()
+
+        self.hass.states.async_remove(self.entity_id)
+
+    @callback
+    def async_registry_updated(self, old, new):
+        """Handle entity registry update."""
+        self.registry_name = new.name
+
+        if new.entity_id == self.entity_id:
+            self.async_schedule_update_ha_state()
             return
 
-        value = getattr(self, name)
+        async def readd():
+            """Remove and add entity again."""
+            await self.async_remove()
+            await self.platform.async_add_entities([self])
 
-        if value is None:
-            return
+        self.hass.async_create_task(readd())
 
-        try:
-            attrs[attr] = typ(value)
-        except (TypeError, ValueError):
-            pass
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
 
     def __eq__(self, other):
         """Return the comparison."""
-        return (isinstance(other, Entity) and
-                other.unique_id == self.unique_id)
+        if not isinstance(other, self.__class__):
+            return False
+
+        # Can only decide equality if both have a unique id
+        if self.unique_id is None or other.unique_id is None:
+            return False
+
+        # Ensure they belong to the same platform
+        if self.platform is not None or other.platform is not None:
+            if self.platform is None or other.platform is None:
+                return False
+
+            if self.platform.platform != other.platform.platform:
+                return False
+
+        return self.unique_id == other.unique_id
 
     def __repr__(self):
         """Return the representation."""
@@ -349,7 +420,6 @@ class Entity(object):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self) -> str:
         """Return the state."""

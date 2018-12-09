@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.eight_sleep/
 """
 import logging
-import asyncio
 
 from homeassistant.components.eight_sleep import (
     DATA_EIGHT, EightSleepHeatEntity, EightSleepUserEntity,
@@ -24,20 +23,20 @@ ATTR_AVG_HEART_RATE = 'Average Heart Rate'
 ATTR_SLEEP_DUR = 'Time Slept'
 ATTR_LIGHT_PERC = 'Light Sleep %'
 ATTR_DEEP_PERC = 'Deep Sleep %'
+ATTR_REM_PERC = 'REM Sleep %'
 ATTR_TNT = 'Tosses & Turns'
 ATTR_SLEEP_STAGE = 'Sleep Stage'
 ATTR_TARGET_HEAT = 'Target Heating Level'
 ATTR_ACTIVE_HEAT = 'Heating Active'
 ATTR_DURATION_HEAT = 'Heating Time Remaining'
-ATTR_LAST_SEEN = 'Last In Bed'
 ATTR_PROCESSING = 'Processing'
 ATTR_SESSION_START = 'Session Start'
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the eight sleep sensors."""
     if discovery_info is None:
         return
@@ -61,11 +60,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             all_sensors.append(EightUserSensor(name, eight, sensor, units))
 
-    async_add_devices(all_sensors, True)
+    async_add_entities(all_sensors, True)
 
 
 class EightHeatSensor(EightSleepHeatEntity):
-    """Representation of a eight sleep heat-based sensor."""
+    """Representation of an eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
         """Initialize the sensor."""
@@ -98,8 +97,7 @@ class EightHeatSensor(EightSleepHeatEntity):
         """Return the unit the value is expressed in."""
         return '%'
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Updating Heat sensor: %s", self._sensor)
         self._state = self._usrobj.heating_level
@@ -110,13 +108,12 @@ class EightHeatSensor(EightSleepHeatEntity):
         state_attr = {ATTR_TARGET_HEAT: self._usrobj.target_heating_level}
         state_attr[ATTR_ACTIVE_HEAT] = self._usrobj.now_heating
         state_attr[ATTR_DURATION_HEAT] = self._usrobj.heating_remaining
-        state_attr[ATTR_LAST_SEEN] = self._usrobj.last_seen
 
         return state_attr
 
 
 class EightUserSensor(EightSleepUserEntity):
-    """Representation of a eight sleep user-based sensor."""
+    """Representation of an eight sleep user-based sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""
@@ -152,7 +149,7 @@ class EightUserSensor(EightSleepUserEntity):
         """Return the unit the value is expressed in."""
         if 'current_sleep' in self._sensor or 'last_sleep' in self._sensor:
             return 'Score'
-        elif 'bed_temp' in self._sensor:
+        if 'bed_temp' in self._sensor:
             if self._units == 'si':
                 return '°C'
             return '°F'
@@ -164,8 +161,7 @@ class EightUserSensor(EightSleepUserEntity):
         if 'bed_temp' in self._sensor:
             return 'mdi:thermometer'
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Updating User sensor: %s", self._sensor)
         if 'current' in self._sensor:
@@ -176,10 +172,13 @@ class EightUserSensor(EightSleepUserEntity):
             self._attr = self._usrobj.last_values
         elif 'bed_temp' in self._sensor:
             temp = self._usrobj.current_values['bed_temp']
-            if self._units == 'si':
-                self._state = round(temp, 2)
-            else:
-                self._state = round((temp*1.8)+32, 2)
+            try:
+                if self._units == 'si':
+                    self._state = round(temp, 2)
+                else:
+                    self._state = round((temp*1.8)+32, 2)
+            except TypeError:
+                self._state = None
         elif 'sleep_stage' in self._sensor:
             self._state = self._usrobj.current_values['stage']
 
@@ -208,12 +207,27 @@ class EightUserSensor(EightSleepUserEntity):
         except ZeroDivisionError:
             state_attr[ATTR_DEEP_PERC] = 0
 
-        if self._units == 'si':
-            room_temp = round(self._attr['room_temp'], 2)
-            bed_temp = round(self._attr['bed_temp'], 2)
-        else:
-            room_temp = round((self._attr['room_temp']*1.8)+32, 2)
-            bed_temp = round((self._attr['bed_temp']*1.8)+32, 2)
+        try:
+            state_attr[ATTR_REM_PERC] = round((
+                self._attr['breakdown']['rem'] / sleep_time) * 100, 2)
+        except ZeroDivisionError:
+            state_attr[ATTR_REM_PERC] = 0
+
+        try:
+            if self._units == 'si':
+                room_temp = round(self._attr['room_temp'], 2)
+            else:
+                room_temp = round((self._attr['room_temp']*1.8)+32, 2)
+        except TypeError:
+            room_temp = None
+
+        try:
+            if self._units == 'si':
+                bed_temp = round(self._attr['bed_temp'], 2)
+            else:
+                bed_temp = round((self._attr['bed_temp']*1.8)+32, 2)
+        except TypeError:
+            bed_temp = None
 
         if 'current' in self._sensor_root:
             state_attr[ATTR_RESP_RATE] = round(self._attr['resp_rate'], 2)
@@ -232,7 +246,7 @@ class EightUserSensor(EightSleepUserEntity):
 
 
 class EightRoomSensor(EightSleepUserEntity):
-    """Representation of a eight sleep room sensor."""
+    """Representation of an eight sleep room sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""
@@ -255,15 +269,17 @@ class EightRoomSensor(EightSleepUserEntity):
         """Return the state of the sensor."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Updating Room sensor: %s", self._sensor)
         temp = self._eight.room_temperature()
-        if self._units == 'si':
-            self._state = round(temp, 2)
-        else:
-            self._state = round((temp*1.8)+32, 2)
+        try:
+            if self._units == 'si':
+                self._state = round(temp, 2)
+            else:
+                self._state = round((temp*1.8)+32, 2)
+        except TypeError:
+            self._state = None
 
     @property
     def unit_of_measurement(self):

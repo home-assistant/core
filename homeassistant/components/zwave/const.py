@@ -7,7 +7,6 @@ ATTR_ASSOCIATION = "association"
 ATTR_INSTANCE = "instance"
 ATTR_GROUP = "group"
 ATTR_VALUE_ID = "value_id"
-ATTR_OBJECT_ID = "object_id"
 ATTR_MESSAGES = "messages"
 ATTR_NAME = "name"
 ATTR_RETURN_ROUTES = "return_routes"
@@ -20,7 +19,20 @@ ATTR_CONFIG_VALUE = "value"
 ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
-NETWORK_READY_WAIT_SECS = 30
+NETWORK_READY_WAIT_SECS = 300
+NODE_READY_WAIT_SECS = 30
+
+CONF_AUTOHEAL = 'autoheal'
+CONF_DEBUG = 'debug'
+CONF_POLLING_INTERVAL = 'polling_interval'
+CONF_USB_STICK_PATH = 'usb_path'
+CONF_CONFIG_PATH = 'config_path'
+CONF_NETWORK_KEY = 'network_key'
+
+DEFAULT_CONF_AUTOHEAL = True
+DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
+DEFAULT_POLLING_INTERVAL = 60000
+DEFAULT_DEBUG = False
 
 DISCOVERY_DEVICE = 'device'
 
@@ -39,6 +51,8 @@ SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NODE = "test_node"
 SERVICE_TEST_NETWORK = "test_network"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
+SERVICE_SET_NODE_VALUE = "set_node_value"
+SERVICE_REFRESH_NODE_VALUE = "refresh_node_value"
 SERVICE_PRINT_CONFIG_PARAMETER = "print_config_parameter"
 SERVICE_PRINT_NODE = "print_node"
 SERVICE_REMOVE_FAILED_NODE = "remove_failed_node"
@@ -52,11 +66,13 @@ SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
 SERVICE_RESET_NODE_METERS = "reset_node_meters"
+SERVICE_UPDATE_CONFIG = "update_config"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
 EVENT_NETWORK_READY = "zwave.network_ready"
 EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_COMPLETE_SOME_DEAD = "zwave.network_complete_some_dead"
 EVENT_NETWORK_START = "zwave.network_start"
 EVENT_NETWORK_STOP = "zwave.network_stop"
 
@@ -182,8 +198,8 @@ SPECIFIC_TYPE_NOT_USED = 0  # Available in all Generic types
 
 GENERIC_TYPE_AV_CONTROL_POINT = 3
 SPECIFIC_TYPE_DOORBELL = 18
-SPECIFIC_TYPE_SATELLITE_RECIEVER = 4
-SPECIFIC_TYPE_SATELLITE_RECIEVER_V2 = 17
+SPECIFIC_TYPE_SATELLITE_RECEIVER = 4
+SPECIFIC_TYPE_SATELLITE_RECEIVER_V2 = 17
 
 GENERIC_TYPE_DISPLAY = 4
 SPECIFIC_TYPE_SIMPLE_DISPLAY = 1
@@ -328,6 +344,7 @@ TYPE_DECIMAL = "Decimal"
 TYPE_INT = "Int"
 TYPE_LIST = "List"
 TYPE_STRING = "String"
+TYPE_BUTTON = "Button"
 
 DISC_COMMAND_CLASS = "command_class"
 DISC_COMPONENT = "component"
@@ -343,7 +360,6 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 
-# noqa
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49
 # See also:
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275

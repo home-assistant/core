@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge ist bereits konfiguriert",
+            "no_bridges": "Keine deCON-Bridges entdeckt",
+            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz"
+        },
+        "error": {
+            "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port (Standartwert : '80')"
+                },
+                "title": "Definiere das deCONZ-Gateway"
+            },
+            "link": {
+                "description": "Entsperre dein deCONZ-Gateway, um dich bei Home Assistant zu registrieren. \n\n 1. Gehe zu den deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
+                "title": "Mit deCONZ verbinden"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
+                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
+                },
+                "title": "Weitere Konfigurationsoptionen f\u00fcr deCONZ"
+            }
+        },
+        "title": "deCONZ Zigbee Gateway"
+    }
+}

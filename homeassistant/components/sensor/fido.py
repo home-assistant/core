@@ -7,7 +7,6 @@ https://www.fido.ca/pages/#/my-account/wireless
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fido/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfido==2.1.0']
+REQUIREMENTS = ['pyfido==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +49,12 @@ SENSOR_TYPES = {
     'text_int_used': ['International text used',
                       MESSAGES, 'mdi:message-alert'],
     'text_int_limit': ['International text limit',
-                       MESSAGES, 'mdi:message-alart'],
-    'text_int_remaining': ['Internaltional remaining',
+                       MESSAGES, 'mdi:message-alert'],
+    'text_int_remaining': ['International remaining',
                            MESSAGES, 'mdi:message-alert'],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
     'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
-    'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
+    'talk_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
     'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
     'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
     'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
@@ -70,15 +69,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Fido sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     fido_data = FidoData(username, password, httpsession)
-    ret = yield from fido_data.async_update()
+    ret = await fido_data.async_update()
     if ret is False:
         return
 
@@ -89,7 +88,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for variable in config[CONF_MONITORED_VARIABLES]:
             sensors.append(FidoSensor(fido_data, variable, name, number))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class FidoSensor(Entity):
@@ -133,10 +132,9 @@ class FidoSensor(Entity):
             'number': self._number,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Fido and update the state."""
-        yield from self.fido_data.async_update()
+        await self.fido_data.async_update()
         if self.type == 'balance':
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
@@ -147,7 +145,7 @@ class FidoSensor(Entity):
                 self._state = round(self._state, 2)
 
 
-class FidoData(object):
+class FidoData:
     """Get data from Fido."""
 
     def __init__(self, username, password, httpsession):
@@ -157,13 +155,12 @@ class FidoData(object):
                                  REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Fido."""
         from pyfido.client import PyFidoError
         try:
-            yield from self.client.fetch_data()
+            await self.client.fetch_data()
         except PyFidoError as exp:
             _LOGGER.error("Error on receive last Fido data: %s", exp)
             return False

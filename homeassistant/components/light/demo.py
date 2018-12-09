@@ -7,14 +7,13 @@ https://home-assistant.io/components/demo/
 import random
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT,
-    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 
 LIGHT_COLORS = [
-    [237, 224, 33],
-    [255, 63, 111],
+    (56, 86),
+    (345, 75),
 ]
 
 LIGHT_EFFECT_LIST = ['rainbow', 'none']
@@ -22,17 +21,17 @@ LIGHT_EFFECT_LIST = ['rainbow', 'none']
 LIGHT_TEMPS = [240, 380]
 
 SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
+                SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo light platform."""
-    add_devices_callback([
-        DemoLight("Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
+    add_entities_callback([
+        DemoLight(1, "Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
-        DemoLight("Ceiling Lights", True, True,
+        DemoLight(2, "Ceiling Lights", True, True,
                   LIGHT_COLORS[0], LIGHT_TEMPS[1]),
-        DemoLight("Kitchen Lights", True, True,
+        DemoLight(3, "Kitchen Lights", True, True,
                   LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
 
@@ -40,19 +39,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class DemoLight(Light):
     """Representation of a demo light."""
 
-    def __init__(self, name, state, available=False, rgb=None, ct=None,
-                 brightness=180, xy_color=(.5, .5), white=200,
-                 effect_list=None, effect=None):
+    def __init__(self, unique_id, name, state, available=False, hs_color=None,
+                 ct=None, brightness=180, white=200, effect_list=None,
+                 effect=None):
         """Initialize the light."""
+        self._unique_id = unique_id
         self._name = name
         self._state = state
-        self._rgb = rgb
+        self._hs_color = hs_color
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._brightness = brightness
-        self._xy_color = xy_color
         self._white = white
         self._effect_list = effect_list
         self._effect = effect
+        self._available = True
 
     @property
     def should_poll(self) -> bool:
@@ -65,11 +65,16 @@ class DemoLight(Light):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
+
+    @property
     def available(self) -> bool:
         """Return availability."""
         # This demo light is always available, but well-behaving components
         # should implement this to inform Home Assistant accordingly.
-        return True
+        return self._available
 
     @property
     def brightness(self) -> int:
@@ -77,14 +82,9 @@ class DemoLight(Light):
         return self._brightness
 
     @property
-    def xy_color(self) -> tuple:
-        """Return the XY color value [float, float]."""
-        return self._xy_color
-
-    @property
-    def rgb_color(self) -> tuple:
-        """Return the RBG color value."""
-        return self._rgb
+    def hs_color(self) -> tuple:
+        """Return the hs color value."""
+        return self._hs_color
 
     @property
     def color_temp(self) -> int:
@@ -120,17 +120,14 @@ class DemoLight(Light):
         """Turn the light on."""
         self._state = True
 
-        if ATTR_RGB_COLOR in kwargs:
-            self._rgb = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_COLOR_TEMP in kwargs:
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_XY_COLOR in kwargs:
-            self._xy_color = kwargs[ATTR_XY_COLOR]
 
         if ATTR_WHITE_VALUE in kwargs:
             self._white = kwargs[ATTR_WHITE_VALUE]

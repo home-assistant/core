@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "T\u00ean \u0111\u00e3 t\u1ed3n t\u1ea1i"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Bi\u1ec3u t\u01b0\u1ee3ng",
+                    "latitude": "V\u0129 \u0111\u1ed9",
+                    "longitude": "Kinh \u0111\u1ed9",
+                    "name": "T\u00ean",
+                    "passive": "Th\u1ee5 \u0111\u1ed9ng",
+                    "radius": "B\u00e1n k\u00ednh"
+                },
+                "title": "X\u00e1c \u0111\u1ecbnh tham s\u1ed1 v\u00f9ng"
+            }
+        },
+        "title": "V\u00f9ng"
+    }
+}

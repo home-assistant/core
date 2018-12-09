@@ -8,14 +8,14 @@ from tests.common import mock_coro
 
 
 @asyncio.coroutine
-def test_validate_config_ok(hass, test_client):
+def test_validate_config_ok(hass, hass_client):
     """Test checking config."""
     with patch.object(config, 'SECTIONS', ['core']):
         yield from async_setup_component(hass, 'config', {})
 
     yield from asyncio.sleep(0.1, loop=hass.loop)
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',

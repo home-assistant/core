@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['ephem==3.7.6.0']
 
@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 NORTHERN = 'northern'
 SOUTHERN = 'southern'
 EQUATOR = 'equator'
-STATE_SPRING = 'Spring'
-STATE_SUMMER = 'Summer'
-STATE_AUTUMN = 'Autumn'
-STATE_WINTER = 'Winter'
+STATE_SPRING = 'spring'
+STATE_SUMMER = 'summer'
+STATE_AUTUMN = 'autumn'
+STATE_WINTER = 'winter'
 TYPE_ASTRONOMICAL = 'astronomical'
 TYPE_METEOROLOGICAL = 'meteorological'
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
@@ -34,13 +34,20 @@ HEMISPHERE_SEASON_SWAP = {STATE_WINTER: STATE_SUMMER,
                           STATE_AUTUMN: STATE_SPRING,
                           STATE_SUMMER: STATE_WINTER}
 
+SEASON_ICONS = {
+    STATE_SPRING: 'mdi:flower',
+    STATE_SUMMER: 'mdi:sunglasses',
+    STATE_AUTUMN: 'mdi:leaf',
+    STATE_WINTER: 'mdi:snowflake'
+}
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Display the current season."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -57,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_devices([Season(hass, hemisphere, _type)])
+    add_entities([Season(hass, hemisphere, _type)])
 
     return True
 
@@ -115,6 +122,11 @@ class Season(Entity):
     def state(self):
         """Return the current season."""
         return self.season
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SEASON_ICONS.get(self.season, 'mdi:cloud')
 
     def update(self):
         """Update season."""

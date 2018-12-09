@@ -6,6 +6,7 @@ https://home-assistant.io/components/sleepiq/
 """
 import logging
 from datetime import timedelta
+from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -14,7 +15,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
-from requests.exceptions import HTTPError
 
 DOMAIN = 'sleepiq'
 
@@ -51,7 +51,6 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    # pylint: disable=global-statement
     global DATA
 
     from sleepyq import Sleepyq
@@ -74,7 +73,7 @@ def setup(hass, config):
     return True
 
 
-class SleepIQData(object):
+class SleepIQData:
     """Get the latest data from SleepIQ."""
 
     def __init__(self, client):

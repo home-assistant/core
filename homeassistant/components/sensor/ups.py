@@ -38,8 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the UPS platform."""
     import upsmychoice
     try:
@@ -51,8 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Could not connect to UPS My Choice")
         return False
 
-    add_devices([UPSSensor(session, config.get(CONF_NAME),
-                           config.get(CONF_UPDATE_INTERVAL))], True)
+    add_entities([UPSSensor(session, config.get(CONF_NAME),
+                            config.get(CONF_UPDATE_INTERVAL))], True)
 
 
 class UPSSensor(Entity):

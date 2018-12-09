@@ -23,8 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GC100 devices."""
     binary_sensors = []
     ports = config.get(CONF_PORTS)
@@ -32,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for port_addr, port_name in port.items():
             binary_sensors.append(GC100BinarySensor(
                 port_name, port_addr, hass.data[DATA_GC100]))
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class GC100BinarySensor(BinarySensorDevice):
@@ -40,7 +39,6 @@ class GC100BinarySensor(BinarySensorDevice):
 
     def __init__(self, name, port_addr, gc100):
         """Initialize the GC100 binary sensor."""
-        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port_addr = port_addr
         self._gc100 = gc100

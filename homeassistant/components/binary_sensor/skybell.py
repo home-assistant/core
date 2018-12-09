@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform for a Skybell device."""
     skybell = hass.data.get(SKYBELL_DOMAIN)
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in skybell.get_devices():
             sensors.append(SkybellBinarySensor(device, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
@@ -94,4 +94,4 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
 
         self._state = bool(event and event.get('id') != self._event.get('id'))
 
-        self._event = event
+        self._event = event or {}

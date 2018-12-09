@@ -7,18 +7,16 @@ from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
-
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
 
-from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -36,6 +34,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
@@ -60,21 +59,6 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_least_one_key_value(*items: list) -> Callable:
-    """Validate that at least one (key, value) pair exists."""
-    def validate(obj: Dict) -> Dict:
-        """Test (key,value) exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        for item in obj.items():
-            if item in items:
-                return obj
-        raise vol.Invalid('must contain one of {}.'.format(str(items)))
-
-    return validate
-
-
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
@@ -94,6 +78,36 @@ def isdevice(value):
         return str(value)
     except OSError:
         raise vol.Invalid('No device at {} found'.format(value))
+
+
+def matches_regex(regex):
+    """Validate that the value is a string that matches a regex."""
+    regex = re.compile(regex)
+
+    def validator(value: Any) -> str:
+        """Validate that value matches the given regex."""
+        if not isinstance(value, str):
+            raise vol.Invalid('not a string value: {}'.format(value))
+
+        if not regex.match(value):
+            raise vol.Invalid('value {} does not match regular expression {}'
+                              .format(value, regex.pattern))
+
+        return value
+    return validator
+
+
+def is_regex(value):
+    """Validate that a string is a valid regular expression."""
+    try:
+        r = re.compile(value)
+        return r
+    except TypeError:
+        raise vol.Invalid("value {} is of the wrong type for a regular "
+                          "expression".format(value))
+    except re.error:
+        raise vol.Invalid("value {} is not a valid regular expression".format(
+            value))
 
 
 def isfile(value: Any) -> str:
@@ -145,6 +159,29 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entity domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
 
 
 def enum(enumClass):
@@ -259,19 +296,6 @@ def match_all(value):
     return value
 
 
-def platform_validator(domain):
-    """Validate if platform exists for given domain."""
-    def validator(value):
-        """Test if platform exists."""
-        if value is None:
-            raise vol.Invalid('platform cannot be None')
-        if get_platform(domain, str(value)):
-            return value
-        raise vol.Invalid(
-            'platform {} does not exist for {}'.format(value, domain))
-    return validator
-
-
 def positive_timedelta(value: timedelta) -> timedelta:
     """Validate timedelta is positive."""
     if value < timedelta(0):
@@ -311,9 +335,12 @@ def slugify(value):
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is not None:
-        return str(value)
-    raise vol.Invalid('string value is None')
+    if value is None:
+        raise vol.Invalid('string value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('value should be a string')
+
+    return str(value)
 
 
 def temperature_unit(value) -> str:
@@ -321,7 +348,7 @@ def temperature_unit(value) -> str:
     value = str(value).upper()
     if value == 'C':
         return TEMP_CELSIUS
-    elif value == 'F':
+    if value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
@@ -395,15 +422,14 @@ def socket_timeout(value):
     """
     if value is None:
         return _GLOBAL_DEFAULT_TIMEOUT
-    else:
-        try:
-            float_value = float(value)
-            if float_value > 0.0:
-                return float_value
-            raise vol.Invalid('Invalid socket timeout value.'
-                              ' float > 0.0 required.')
-        except Exception as _:
-            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+    try:
+        float_value = float(value)
+        if float_value > 0.0:
+            return float_value
+        raise vol.Invalid('Invalid socket timeout value.'
+                          ' float > 0.0 required.')
+    except Exception as _:
+        raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter
@@ -509,7 +535,8 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
     vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
-    vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
+    vol.Optional('after'): vol.All(vol.Lower, vol.Any(
+        SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)),
     vol.Optional('after_offset'): time_period,
 }), has_at_least_one_key('before', 'after'))
 
@@ -567,13 +594,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, template_complex)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+    vol.Optional("continue_on_timeout"): boolean,
 })
 
 SCRIPT_SCHEMA = vol.All(

@@ -1,5 +1,19 @@
 # Describes the format for available camera services
 
+turn_off:
+  description: Turn off camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+turn_on:
+  description: Turn on camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
 enable_motion_detection:
   description: Enable the motion detection in a camera.
   fields:
@@ -23,3 +37,65 @@ snapshot:
     filename:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
+
+local_file_update_file_path:
+  description: Update the file_path for a local_file camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to update.
+      example: 'camera.local_file'
+    file_path:
+      description: Path to the new image file.
+      example: '/images/newimage.jpg'
+
+onvif_ptz:
+  description: Pan/Tilt/Zoom service for ONVIF camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to pan, tilt or zoom.
+      example: 'camera.living_room_camera'
+    pan:
+      description: "Direction of pan. Allowed values: LEFT, RIGHT."
+      example: 'LEFT'
+    tilt:
+      description: "Direction of tilt. Allowed values: DOWN, UP."
+      example: 'DOWN'
+    zoom:
+      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
+      example: "ZOOM_IN"
+
+logi_circle_set_config:
+  description: Set a configuration property.
+  fields:
+    entity_id:
+      description: Name(s) of entities to apply the operation mode to.
+      example: "camera.living_room_camera"
+    mode:
+      description: "Operation mode. Allowed values: BATTERY_SAVING, LED, PRIVACY_MODE."
+      example: "PRIVACY_MODE"
+    value:
+      description: "Operation value. Allowed values: true, false"
+      example: true
+
+logi_circle_livestream_snapshot:
+  description: Take a snapshot from the camera's livestream. Will wake the camera from sleep if required.
+  fields:
+    entity_id:
+      description: Name(s) of entities to create snapshots from.
+      example: "camera.living_room_camera"
+    filename:
+      description: Template of a Filename. Variable is entity_id.
+      example: "/tmp/snapshot_{{ entity_id }}.jpg"
+
+logi_circle_livestream_record:
+  description: Take a video recording from the camera's livestream.
+  fields:
+    entity_id:
+      description: Name(s) of entities to create recordings from.
+      example: "camera.living_room_camera"
+    filename:
+      description: Template of a Filename. Variable is entity_id.
+      example: "/tmp/snapshot_{{ entity_id }}.mp4"
+    duration:
+      description: Recording duration in seconds.
+      example: 60

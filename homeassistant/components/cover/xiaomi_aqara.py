@@ -1,7 +1,7 @@
 """Support for Xiaomi curtain."""
 import logging
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 
@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CURTAIN_LEVEL = 'curtain_level'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                   {'status': 'status',
                                                    'pos': 'curtain_level'},
                                                   gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiGenericCover(XiaomiDevice, CoverDevice):
@@ -55,8 +55,9 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
         """Stop the cover."""
         self._write_to_hub(self._sid, **{self._data_key['status']: 'stop'})
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
         self._write_to_hub(self._sid, **{self._data_key['pos']: str(position)})
 
     def parse_data(self, data, raw_data):

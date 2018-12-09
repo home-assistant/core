@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "user_privilege": "L'utilisateur doit \u00eatre administrateur"
+        },
+        "error": {
+            "faulty_credentials": "Mauvaises informations d'identification de l'utilisateur",
+            "service_unavailable": "Aucun service disponible"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "site": "ID du site",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

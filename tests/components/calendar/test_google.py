@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import logging
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -11,7 +11,7 @@ import homeassistant.components.calendar.google as calendar
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockDependency
 
 TEST_PLATFORM = {calendar_base.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -25,8 +25,9 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.http = Mock()
 
         # Set our timezone to CST/Regina so we can check calculations
         # This keeps UTC-6 all year round
@@ -86,21 +87,21 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None,
                                                  '', {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_OFF)
+        assert cal.state == STATE_OFF
 
-        self.assertFalse(cal.offset_reached())
+        assert not cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event['summary'],
             'all_day': True,
             'offset_reached': False,
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
-        })
+            'description': event['description'],
+        }
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_future_event(self, mock_next_event):
@@ -145,13 +146,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_OFF)
+        assert cal.state == STATE_OFF
 
-        self.assertFalse(cal.offset_reached())
+        assert not cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -160,8 +161,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (one_hour_from_now + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
-        })
+            'description': '',
+        }
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_in_progress_event(self, mock_next_event):
@@ -207,13 +208,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_ON)
+        assert cal.state == STATE_ON
 
-        self.assertFalse(cal.offset_reached())
+        assert not cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -222,8 +223,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
-        })
+            'description': '',
+        }
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_offset_in_progress_event(self, mock_next_event):
@@ -270,13 +271,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_OFF)
+        assert cal.state == STATE_OFF
 
-        self.assertTrue(cal.offset_reached())
+        assert cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event_summary,
             'all_day': False,
             'offset_reached': True,
@@ -285,8 +286,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
-        })
+            'description': '',
+        }
 
     @pytest.mark.skip
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -339,21 +340,21 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_OFF)
+        assert cal.state == STATE_OFF
 
-        self.assertTrue(cal.offset_reached())
+        assert cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event_summary,
             'all_day': True,
             'offset_reached': True,
             'start_time': '{} 06:00:00'.format(event['start']['date']),
             'end_time': '{} 06:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
-        })
+            'description': event['description'],
+        }
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_offset_event(self, mock_next_event):
@@ -406,18 +407,31 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEqual(cal.name, device_name)
+        assert cal.name == device_name
 
-        self.assertEqual(cal.state, STATE_OFF)
+        assert cal.state == STATE_OFF
 
-        self.assertFalse(cal.offset_reached())
+        assert not cal.offset_reached()
 
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.device_state_attributes == {
             'message': event_summary,
             'all_day': True,
             'offset_reached': False,
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
-        })
+            'description': event['description'],
+        }
+
+    @MockDependency("httplib2")
+    def test_update_false(self, mock_httplib2):
+        """Test that the update returns False upon Error."""
+        mock_service = Mock()
+        mock_service.get = Mock(
+            side_effect=mock_httplib2.ServerNotFoundError("unit test"))
+
+        cal = calendar.GoogleCalendarEventDevice(self.hass, mock_service, None,
+                                                 {'name': "test"})
+        result = cal.data.update()
+
+        assert not result

@@ -37,19 +37,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VARIABLE): cv.string,
     vol.Required(CONF_PAYLOAD): vol.Schema(dict),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default='on'): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default='off'): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default='on'): vol.Any(
+        cv.positive_int, cv.small_float, cv.string),
+    vol.Optional(CONF_PAYLOAD_OFF, default='off'): vol.Any(
+        cv.positive_int, cv.small_float, cv.string),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
     vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Pilight Binary Sensor."""
     disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
     if disarm:
-        add_devices([PilightTriggerSensor(
+        add_entities([PilightTriggerSensor(
             hass=hass,
             name=config.get(CONF_NAME),
             variable=config.get(CONF_VARIABLE),
@@ -59,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             rst_dly_sec=config.get(CONF_RESET_DELAY_SEC),
         )])
     else:
-        add_devices([PilightBinarySensor(
+        add_entities([PilightBinarySensor(
             hass=hass,
             name=config.get(CONF_NAME),
             variable=config.get(CONF_VARIABLE),
@@ -97,7 +98,7 @@ class PilightBinarySensor(BinarySensorDevice):
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
-        If the code matches the defined playload
+        If the code matches the defined payload
         of this sensor the sensor state is changed accordingly.
         """
         # Check if received code matches defined playoad
@@ -162,10 +163,10 @@ class PilightTriggerSensor(BinarySensorDevice):
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
-        If the code matches the defined playload
+        If the code matches the defined payload
         of this sensor the sensor state is changed accordingly.
         """
-        # Check if received code matches defined playoad
+        # Check if received code matches defined payload
         # True if payload is contained in received code dict
         payload_ok = True
         for key in self._payload:

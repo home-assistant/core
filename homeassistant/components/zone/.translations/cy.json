@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Enw eisoes yn bodoli"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Eicon",
+                    "latitude": "Lledred",
+                    "longitude": "Hydred",
+                    "name": "Enw",
+                    "passive": "Goddefol",
+                    "radius": "Radiws"
+                },
+                "title": "Ddiffinio paramedrau parth"
+            }
+        },
+        "title": "Parth"
+    }
+}

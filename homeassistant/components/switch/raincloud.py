@@ -28,21 +28,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a raincloud device."""
     raincloud = hass.data[DATA_RAINCLOUD].data
     default_watering_timer = config.get(CONF_WATERING_TIME)
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        # create an sensor for each zone managed by faucet
+        # create a sensor for each zone managed by faucet
         for zone in raincloud.controller.faucet.zones:
             sensors.append(
                 RainCloudSwitch(default_watering_timer,
                                 zone,
                                 sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 
@@ -59,7 +59,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._sensor_type == 'manual_watering':
             self.data.watering_time = self._default_watering_timer
@@ -67,7 +67,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
             self.data.auto_watering = True
         self._state = True
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sensor_type == 'manual_watering':
             self.data.watering_time = 'off'
@@ -88,7 +88,6 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'default_manual_timer': self._default_watering_timer,
             'identifier': self.data.serial
         }

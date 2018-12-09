@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'status': ['Charging Status', None],
     'charge_time': ['Charge Time Elapsed', 'minutes'],
-    'ambient_temp': ['Ambient Termperature', TEMP_CELSIUS],
+    'ambient_temp': ['Ambient Temperature', TEMP_CELSIUS],
     'ir_temp': ['IR Temperature', TEMP_CELSIUS],
     'rtc_temp': ['RTC Temperature', TEMP_CELSIUS],
     'usage_session': ['Usage this Session', 'kWh'],
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenEVSE sensor."""
     import openevsewifi
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in monitored_variables:
         dev.append(OpenEVSESensor(variable, charger))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class OpenEVSESensor(Entity):

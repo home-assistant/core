@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Get the uk_transport sensor."""
     sensors = []
     number_sensors = len(config.get(CONF_QUERIES))
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     calling_at,
                     interval))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class UkTransportSensor(Entity):
@@ -132,7 +132,7 @@ class UkTransportSensor(Entity):
             _LOGGER.warning('Invalid response from API')
         elif 'error' in response.json():
             if 'exceeded' in response.json()['error']:
-                self._state = 'Useage limites exceeded'
+                self._state = 'Usage limits exceeded'
             if 'invalid' in response.json()['error']:
                 self._state = 'Credentials invalid'
         else:

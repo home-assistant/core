@@ -4,7 +4,6 @@ Provides functionality to turn on lights based on the states.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_sun_light_trigger/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -12,11 +11,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.components.light import (
+    ATTR_PROFILE, ATTR_TRANSITION, DOMAIN as DOMAIN_LIGHT)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME,
+    STATE_NOT_HOME, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_state_change)
 from homeassistant.helpers.sun import is_up, get_astral_event_next
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'device_sun_light_trigger'
@@ -44,13 +46,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
-    device_tracker = get_component('device_tracker')
-    group = get_component('group')
-    light = get_component('light')
+    device_tracker = hass.components.device_tracker
+    group = hass.components.group
+    light = hass.components.light
     conf = config[DOMAIN]
     disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
     light_group = conf.get(CONF_LIGHT_GROUP, light.ENTITY_ID_ALL_LIGHTS)
@@ -58,14 +59,14 @@ def async_setup(hass, config):
     device_group = conf.get(
         CONF_DEVICE_GROUP, device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(
-        hass, device_group, device_tracker.DOMAIN)
+        device_group, device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
         return False
 
     # Get the light IDs from the specified group
-    light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
+    light_ids = group.get_entity_ids(light_group, light.DOMAIN)
 
     if not light_ids:
         logger.error("No lights found to turn on")
@@ -78,18 +79,21 @@ def async_setup(hass, config):
 
         Async friendly.
         """
-        next_setting = get_astral_event_next(hass, 'sunset')
+        next_setting = get_astral_event_next(hass, SUN_EVENT_SUNSET)
         if not next_setting:
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
     def async_turn_on_before_sunset(light_id):
         """Turn on lights."""
-        if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
+        if not device_tracker.is_on() or light.is_on(light_id):
             return
-        light.async_turn_on(hass, light_id,
-                            transition=LIGHT_TRANSITION_TIME.seconds,
-                            profile=light_profile)
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN_LIGHT, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: light_id,
+                    ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
+                    ATTR_PROFILE: light_profile}))
 
     def async_turn_on_factory(light_id):
         """Generate turn on callbacks as factory."""
@@ -119,7 +123,8 @@ def async_setup(hass, config):
                 start_point + index * LIGHT_TRANSITION_TIME)
 
     async_track_point_in_utc_time(hass, schedule_light_turn_on,
-                                  get_astral_event_next(hass, 'sunrise'))
+                                  get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNRISE))
 
     # If the sun is already above horizon schedule the time-based pre-sun set
     # event.
@@ -129,7 +134,7 @@ def async_setup(hass, config):
     @callback
     def check_light_on_dev_state_change(entity, old_state, new_state):
         """Handle tracked device state changes."""
-        lights_are_on = group.is_on(hass, light_group)
+        lights_are_on = group.is_on(light_group)
         light_needed = not (lights_are_on or is_up(hass))
 
         # These variables are needed for the elif check
@@ -139,20 +144,27 @@ def async_setup(hass, config):
         # Do we need lights?
         if light_needed:
             logger.info("Home coming event for %s. Turning lights on", entity)
-            light.async_turn_on(hass, light_ids, profile=light_profile)
+            hass.async_create_task(
+                hass.services.async_call(
+                    DOMAIN_LIGHT, SERVICE_TURN_ON,
+                    {ATTR_ENTITY_ID: light_ids, ATTR_PROFILE: light_profile}))
 
         # Are we in the time span were we would turn on the lights
         # if someone would be home?
         # Check this by seeing if current time is later then the point
         # in time when we would start putting the lights on.
         elif (start_point and
-              start_point < now < get_astral_event_next(hass, 'sunset')):
+              start_point < now < get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNSET)):
 
             # Check for every light if it would be on if someone was home
             # when the fading in started and turn it on if so
             for index, light_id in enumerate(light_ids):
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
-                    light.async_turn_on(hass, light_id)
+                    hass.async_create_task(
+                        hass.services.async_call(
+                            DOMAIN_LIGHT, SERVICE_TURN_ON,
+                            {ATTR_ENTITY_ID: light_id}))
 
                 else:
                     # If this light didn't happen to be turned on yet so
@@ -169,12 +181,14 @@ def async_setup(hass, config):
     @callback
     def turn_off_lights_when_all_leave(entity, old_state, new_state):
         """Handle device group state change."""
-        if not group.is_on(hass, light_group):
+        if not group.is_on(light_group):
             return
 
         logger.info(
             "Everyone has left but there are lights on. Turning them off")
-        light.async_turn_off(hass, light_ids)
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN_LIGHT, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}))
 
     async_track_state_change(
         hass, device_group, turn_off_lights_when_all_leave,

@@ -10,7 +10,7 @@ from typing import Any, Optional, Tuple, Dict
 import requests
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.io/json/'
+FREEGEO_API = 'https://freegeoip.net/json/'
 IP_API = 'http://ip-api.com/json'
 
 # Constants from https://github.com/maurycyp/vincenty
@@ -33,7 +33,7 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info():
+def detect_location_info() -> Optional[LocationInfo]:
     """Detect location information."""
     data = _get_freegeoip()
 
@@ -49,15 +49,21 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lat1, lon1, lat2, lon2):
+def distance(lat1: Optional[float], lon1: Optional[float],
+             lat2: float, lon2: float) -> Optional[float]:
     """Calculate the distance in meters between two points.
 
     Async friendly.
     """
-    return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+    if lat1 is None or lon1 is None:
+        return None
+    result = vincenty((lat1, lon1), (lat2, lon2))
+    if result is None:
+        return None
+    return result * 1000
 
 
-def elevation(latitude, longitude):
+def elevation(latitude: float, longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
         req = requests.get(
@@ -82,9 +88,9 @@ def elevation(latitude, longitude):
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name, unused-variable, invalid-sequence-index
+# pylint: disable=invalid-name
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
-             miles: bool=False) -> Optional[float]:
+             miles: bool = False) -> Optional[float]:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -107,7 +113,7 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     sinU2 = math.sin(U2)
     cosU2 = math.cos(U2)
 
-    for iteration in range(MAX_ITERATIONS):
+    for _ in range(MAX_ITERATIONS):
         sinLambda = math.sin(Lambda)
         cosLambda = math.cos(Lambda)
         sinSigma = math.sqrt((cosU2 * sinLambda) ** 2 +

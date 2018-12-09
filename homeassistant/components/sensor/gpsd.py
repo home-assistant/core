@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GPSD component."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Not able to connect to GPSD")
         return False
 
-    add_devices([GpsdSensor(hass, name, host, port)])
+    add_entities([GpsdSensor(hass, name, host, port)])
 
 
 class GpsdSensor(Entity):
@@ -86,13 +86,12 @@ class GpsdSensor(Entity):
         """Return the name."""
         return self._name
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
             return "3D Fix"
-        elif self.agps_thread.data_stream.mode == 2:
+        if self.agps_thread.data_stream.mode == 2:
             return "2D Fix"
         return STATE_UNKNOWN
 

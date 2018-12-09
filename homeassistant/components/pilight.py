@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SEND_DELAY = 'send_delay'
 
 DEFAULT_HOST = '127.0.0.1'
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 5001
 DEFAULT_SEND_DELAY = 0.0
 DOMAIN = 'pilight'
 
@@ -118,7 +118,7 @@ def setup(hass, config):
     return True
 
 
-class CallRateDelayThrottle(object):
+class CallRateDelayThrottle:
     """Helper class to provide service call rate throttling.
 
     This class provides a decorator to decorate service methods that need
@@ -130,7 +130,7 @@ class CallRateDelayThrottle(object):
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float):
+    def __init__(self, hass, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
         self._queue = []

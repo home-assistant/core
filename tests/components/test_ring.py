@@ -1,4 +1,5 @@
 """The tests for the Ring component."""
+from copy import deepcopy
 import os
 import unittest
 import requests_mock
@@ -41,17 +42,19 @@ class TestRing(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test the setup."""
+        mock.post('https://oauth.ring.com/oauth/token',
+                  text=load_fixture('ring_oauth.json'))
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         response = ring.setup(self.hass, self.config)
-        self.assertTrue(response)
+        assert response
 
     @requests_mock.Mocker()
     def test_setup_component_no_login(self, mock):
         """Test the setup when no login is configured."""
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
-        conf = self.config.copy()
+        conf = deepcopy(VALID_CONFIG)
         del conf['ring']['username']
         assert not setup.setup_component(self.hass, ring.DOMAIN, conf)
 
@@ -60,6 +63,6 @@ class TestRing(unittest.TestCase):
         """Test the setup when no password is configured."""
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
-        conf = self.config.copy()
+        conf = deepcopy(VALID_CONFIG)
         del conf['ring']['password']
         assert not setup.setup_component(self.hass, ring.DOMAIN, conf)

@@ -2,19 +2,25 @@
 # pylint: disable=protected-access
 import asyncio
 import json
+from unittest.mock import patch
 
+from aiohttp import web
 import pytest
+import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_mock_service
+
 
 @pytest.fixture
-def mock_api_client(hass, test_client):
-    """Start the Hass HTTP component."""
+def mock_api_client(hass, hass_client):
+    """Start the Hass HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(hass_client())
 
 
 @asyncio.coroutine
@@ -149,7 +155,7 @@ def test_api_fire_event_with_no_data(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify our event got called."""
+        """Record that our event got called."""
         test_value.append(1)
 
     hass.bus.async_listen_once("test.event_no_data", listener)
@@ -169,7 +175,7 @@ def test_api_fire_event_with_data(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify that our event got called.
+        """Record that our event got called.
 
         Also test if our data came through.
         """
@@ -195,7 +201,7 @@ def test_api_fire_event_with_invalid_json(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify our event got called."""
+        """Record that our event got called."""
         test_value.append(1)
 
     hass.bus.async_listen_once("test_event_bad_data", listener)
@@ -276,7 +282,7 @@ def test_api_call_service_no_data(hass, mock_api_client):
 
     @ha.callback
     def listener(service_call):
-        """Helper method that will verify that our service got called."""
+        """Record that our service got called."""
         test_value.append(1)
 
     hass.services.async_register("test_domain", "test_service", listener)
@@ -295,7 +301,7 @@ def test_api_call_service_with_data(hass, mock_api_client):
 
     @ha.callback
     def listener(service_call):
-        """Helper method that will verify that our service got called.
+        """Record that our service got called.
 
         Also test if our data came through.
         """
@@ -398,3 +404,204 @@ def _stream_next_event(stream):
 def _listen_count(hass):
     """Return number of event listeners."""
     return sum(hass.bus.async_listeners().values())
+
+
+async def test_api_error_log(hass, aiohttp_client, hass_access_token,
+                             hass_admin_user, legacy_auth):
+    """Test if we can fetch the error log."""
+    hass.data[DATA_LOGGING] = '/some/path'
+    await async_setup_component(hass, 'api', {
+        'http': {
+            'api_password': 'yolo'
+        }
+    })
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.get(const.URL_API_ERROR_LOG)
+    # Verify auth required
+    assert resp.status == 401
+
+    with patch(
+                'aiohttp.web.FileResponse',
+                return_value=web.Response(status=200, text='Hello')
+            ) as mock_file:
+        resp = await client.get(const.URL_API_ERROR_LOG, headers={
+            'Authorization': 'Bearer {}'.format(hass_access_token)
+        })
+
+    assert len(mock_file.mock_calls) == 1
+    assert mock_file.mock_calls[0][1][0] == hass.data[DATA_LOGGING]
+    assert resp.status == 200
+    assert await resp.text() == 'Hello'
+
+    # Verify we require admin user
+    hass_admin_user.groups = []
+    resp = await client.get(const.URL_API_ERROR_LOG, headers={
+        'Authorization': 'Bearer {}'.format(hass_access_token)
+    })
+    assert resp.status == 401
+
+
+async def test_api_fire_event_context(hass, mock_api_client,
+                                      hass_access_token):
+    """Test if the API sets right context if we fire an event."""
+    test_value = []
+
+    @ha.callback
+    def listener(event):
+        """Record that our event got called."""
+        test_value.append(event)
+
+    hass.bus.async_listen("test.event", listener)
+
+    await mock_api_client.post(
+        const.URL_API_EVENTS_EVENT.format("test.event"),
+        headers={
+            'authorization': 'Bearer {}'.format(hass_access_token)
+        })
+    await hass.async_block_till_done()
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    assert len(test_value) == 1
+    assert test_value[0].context.user_id == refresh_token.user.id
+
+
+async def test_api_call_service_context(hass, mock_api_client,
+                                        hass_access_token):
+    """Test if the API sets right context if we call a service."""
+    calls = async_mock_service(hass, 'test_domain', 'test_service')
+
+    await mock_api_client.post(
+        '/api/services/test_domain/test_service',
+        headers={
+            'authorization': 'Bearer {}'.format(hass_access_token)
+        })
+    await hass.async_block_till_done()
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    assert len(calls) == 1
+    assert calls[0].context.user_id == refresh_token.user.id
+
+
+async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
+    """Test if the API sets right context if we set state."""
+    await mock_api_client.post(
+        '/api/states/light.kitchen',
+        json={
+            'state': 'on'
+        },
+        headers={
+            'authorization': 'Bearer {}'.format(hass_access_token)
+        })
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    state = hass.states.get('light.kitchen')
+    assert state.context.user_id == refresh_token.user.id
+
+
+async def test_event_stream_requires_admin(hass, mock_api_client,
+                                           hass_admin_user):
+    """Test user needs to be admin to access event stream."""
+    hass_admin_user.groups = []
+    resp = await mock_api_client.get('/api/stream')
+    assert resp.status == 401
+
+
+async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
+    """Test filtering only visible states."""
+    hass_admin_user.mock_policy({
+        'entities': {
+            'entity_ids': {
+                'test.entity': True
+            }
+        }
+    })
+    hass.states.async_set('test.entity', 'hello')
+    hass.states.async_set('test.not_visible_entity', 'invisible')
+    resp = await mock_api_client.get(const.URL_API_STATES)
+    assert resp.status == 200
+    json = await resp.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == 'test.entity'
+
+
+async def test_get_entity_state_read_perm(hass, mock_api_client,
+                                          hass_admin_user):
+    """Test getting a state requires read permission."""
+    hass_admin_user.mock_policy({})
+    resp = await mock_api_client.get('/api/states/light.test')
+    assert resp.status == 401
+
+
+async def test_post_entity_state_admin(hass, mock_api_client, hass_admin_user):
+    """Test updating state requires admin."""
+    hass_admin_user.groups = []
+    resp = await mock_api_client.post('/api/states/light.test')
+    assert resp.status == 401
+
+
+async def test_delete_entity_state_admin(hass, mock_api_client,
+                                         hass_admin_user):
+    """Test deleting entity requires admin."""
+    hass_admin_user.groups = []
+    resp = await mock_api_client.delete('/api/states/light.test')
+    assert resp.status == 401
+
+
+async def test_post_event_admin(hass, mock_api_client, hass_admin_user):
+    """Test sending event requires admin."""
+    hass_admin_user.groups = []
+    resp = await mock_api_client.post('/api/events/state_changed')
+    assert resp.status == 401
+
+
+async def test_rendering_template_admin(hass, mock_api_client,
+                                        hass_admin_user):
+    """Test rendering a template requires admin."""
+    hass_admin_user.groups = []
+    resp = await mock_api_client.post(const.URL_API_TEMPLATE)
+    assert resp.status == 401
+
+
+async def test_rendering_template_legacy_user(
+        hass, mock_api_client, aiohttp_client, legacy_auth):
+    """Test rendering a template with legacy API password."""
+    hass.states.async_set('sensor.temperature', 10)
+    client = await aiohttp_client(hass.http.app)
+    resp = await client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": '{{ states.sensor.temperature.state }}'}
+    )
+    assert resp.status == 401
+
+
+async def test_api_call_service_not_found(hass, mock_api_client):
+    """Test if the API failes 400 if unknown service."""
+    resp = await mock_api_client.post(
+        const.URL_API_SERVICES_SERVICE.format(
+            "test_domain", "test_service"))
+    assert resp.status == 400
+
+
+async def test_api_call_service_bad_data(hass, mock_api_client):
+    """Test if the API failes 400 if unknown service."""
+    test_value = []
+
+    @ha.callback
+    def listener(service_call):
+        """Record that our service got called."""
+        test_value.append(1)
+
+    hass.services.async_register("test_domain", "test_service", listener,
+                                 schema=vol.Schema({'hello': str}))
+
+    resp = await mock_api_client.post(
+        const.URL_API_SERVICES_SERVICE.format(
+            "test_domain", "test_service"), json={'hello': 5})
+    assert resp.status == 400

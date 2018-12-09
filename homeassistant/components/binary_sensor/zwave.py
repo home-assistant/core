@@ -7,16 +7,34 @@ https://home-assistant.io/components/binary_sensor.zwave/
 import logging
 import datetime
 import homeassistant.util.dt as dt_util
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
 from homeassistant.components.zwave import workaround
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave binary sensors."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave binary sensors from Config Entry."""
+    @callback
+    def async_add_binary_sensor(binary_sensor):
+        """Add Z-Wave  binary sensor."""
+        async_add_entities([binary_sensor])
+
+    async_dispatcher_connect(hass, 'zwave_new_binary_sensor',
+                             async_add_binary_sensor)
 
 
 def get_device(values, **kwargs):

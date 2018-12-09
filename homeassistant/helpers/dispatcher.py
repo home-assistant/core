@@ -1,9 +1,11 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
 import logging
+from typing import Any, Callable
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
+from .typing import HomeAssistantType
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,12 +13,13 @@ DATA_DISPATCHER = 'dispatcher'
 
 
 @bind_hass
-def dispatcher_connect(hass, signal, target):
+def dispatcher_connect(hass: HomeAssistantType, signal: str,
+                       target: Callable[..., None]) -> Callable[[], None]:
     """Connect a callable function to a signal."""
     async_unsub = run_callback_threadsafe(
         hass.loop, async_dispatcher_connect, hass, signal, target).result()
 
-    def remove_dispatcher():
+    def remove_dispatcher() -> None:
         """Remove signal listener."""
         run_callback_threadsafe(hass.loop, async_unsub).result()
 
@@ -25,7 +28,8 @@ def dispatcher_connect(hass, signal, target):
 
 @callback
 @bind_hass
-def async_dispatcher_connect(hass, signal, target):
+def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
+                             target: Callable[..., Any]) -> Callable[[], None]:
     """Connect a callable function to a signal.
 
     This method must be run in the event loop.
@@ -39,7 +43,7 @@ def async_dispatcher_connect(hass, signal, target):
     hass.data[DATA_DISPATCHER][signal].append(target)
 
     @callback
-    def async_remove_dispatcher():
+    def async_remove_dispatcher() -> None:
         """Remove signal listener."""
         try:
             hass.data[DATA_DISPATCHER][signal].remove(target)
@@ -53,14 +57,15 @@ def async_dispatcher_connect(hass, signal, target):
 
 
 @bind_hass
-def dispatcher_send(hass, signal, *args):
+def dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> None:
     """Send signal and data."""
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
 @callback
 @bind_hass
-def async_dispatcher_send(hass, signal, *args):
+def async_dispatcher_send(
+        hass: HomeAssistantType, signal: str, *args: Any) -> None:
     """Send signal and data.
 
     This method must be run in the event loop.

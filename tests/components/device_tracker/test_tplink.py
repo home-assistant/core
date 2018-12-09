@@ -1,7 +1,7 @@
 """The tests for the tplink device tracker platform."""
 
 import os
-import unittest
+import pytest
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker.tplink import Tplink4DeviceScanner
@@ -9,27 +9,19 @@ from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 import requests_mock
 
-from tests.common import get_test_home_assistant
+
+@pytest.fixture(autouse=True)
+def setup_comp(hass):
+    """Initialize components."""
+    yaml_devices = hass.config.path(device_tracker.YAML_DEVICES)
+    yield
+    if os.path.isfile(yaml_devices):
+        os.remove(yaml_devices)
 
 
-class TestTplink4DeviceScanner(unittest.TestCase):
-    """Tests for the Tplink4DeviceScanner class."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-        try:
-            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
-        except FileNotFoundError:
-            pass
-
-    @requests_mock.mock()
-    def test_get_mac_addresses_from_both_bands(self, m):
-        """Test grabbing the mac addresses from 2.4 and 5 GHz clients pages."""
+async def test_get_mac_addresses_from_both_bands(hass):
+    """Test grabbing the mac addresses from 2.4 and 5 GHz clients pages."""
+    with requests_mock.Mocker() as m:
         conf_dict = {
             CONF_PLATFORM: 'tplink',
             CONF_HOST: 'fake-host',
@@ -40,8 +32,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         # Mock the token retrieval process
         FAKE_TOKEN = 'fake_token'
         fake_auth_token_response = 'window.parent.location.href = ' \
-                                   '"https://a/{}/userRpm/Index.htm";'.format(
-                                       FAKE_TOKEN)
+            '"https://a/{}/userRpm/Index.htm";'.format(FAKE_TOKEN)
 
         m.get('http://{}/userRpm/LoginRpm.htm?Save=Save'.format(
             conf_dict[CONF_HOST]), text=fake_auth_token_response)
@@ -65,4 +56,4 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         expected_mac_results = [mac.replace('-', ':') for mac in
                                 [FAKE_MAC_1, FAKE_MAC_2, FAKE_MAC_3]]
 
-        self.assertEqual(tplink.last_results, expected_mac_results)
+        assert tplink.last_results == expected_mac_results
