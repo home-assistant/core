@@ -96,8 +96,8 @@ async def schedule_future_update(hass, sensors, midnight_time,
     """
     _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
-    now = datetime.now()
-    today = datetime.today().strftime('%Y-%m-%d')
+    now = dt_util.as_local(dt_util.now())
+    today = now.date()
 
     midnight_dt_str = '{}::{}'.format(str(today), midnight_time)
     midnight_dt = datetime.strptime(midnight_dt_str, '%Y-%m-%d::%H:%M')
