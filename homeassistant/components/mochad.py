@@ -94,8 +94,8 @@ class MochadCtrl:
                          mqtt_auth={"username": username, "password":
                                     password})
         self.ctrl_recv.start()
-        _LOGGER.debug("""PyMochadMqtt controller created for mochad {}:{} and
-                       mqtt {}:{}""".format(host, port, broker, mqtt_port))
+        _LOGGER.debug("""PyMochadMqtt controller created for mochad %s:%s and
+                       mqtt %s:%s""", host, port, broker, mqtt_port)
         if self.ctrl_recv.connect_event.wait():
             self.ctrl_send = self.ctrl_recv.ctrl
 
