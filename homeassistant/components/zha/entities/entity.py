@@ -65,6 +65,7 @@ class ZhaEntity(entity.Entity):
         self._out_listeners = {}
 
         self._initialized = False
+        self.manufacturer_code = None
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
@@ -103,6 +104,9 @@ class ZhaEntity(entity.Entity):
             if cluster is None:
                 continue
 
+            manufacturer = None
+            if cluster.cluster_id >= 0xfc00 and self.manufacturer_code:
+                manufacturer = self.manufacturer_code
             skip_bind = False  # bind cluster only for the 1st configured attr
             for attr, details in attrs.items():
                 min_report_interval, max_report_interval, change = details
@@ -111,7 +115,8 @@ class ZhaEntity(entity.Entity):
                     min_report=min_report_interval,
                     max_report=max_report_interval,
                     reportable_change=change,
-                    skip_bind=skip_bind
+                    skip_bind=skip_bind,
+                    manufacturer=manufacturer
                 )
                 skip_bind = True
                 await sleep(uniform(0.1, 0.8))

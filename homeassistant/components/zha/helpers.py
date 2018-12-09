@@ -35,7 +35,8 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
 async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
                               min_report=REPORT_CONFIG_MIN_INT,
                               max_report=REPORT_CONFIG_MAX_INT,
-                              reportable_change=REPORT_CONFIG_RPT_CHANGE):
+                              reportable_change=REPORT_CONFIG_RPT_CHANGE,
+                              manufacturer=None):
     """Configure attribute reporting for a cluster.
 
     while swallowing the DeliverError exceptions in case of unreachable
@@ -59,7 +60,8 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
 
     try:
         res = await cluster.configure_reporting(attr, min_report,
-                                                max_report, reportable_change)
+                                                max_report, reportable_change,
+                                                manufacturer=manufacturer)
         _LOGGER.debug(
             "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
             entity_id, attr_name, cluster_name, min_report, max_report,
