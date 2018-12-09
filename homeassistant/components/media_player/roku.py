@@ -14,8 +14,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 
-REQUIREMENTS = ['python-roku==3.1.5']
-
 DEPENDENCIES = ['roku']
 
 DEFAULT_PORT = 8060
