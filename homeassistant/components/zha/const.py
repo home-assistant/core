@@ -13,6 +13,7 @@ DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
 DATA_ZHA_RADIO = 'zha_radio'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
 DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
+DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = [
@@ -54,6 +55,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
+EVENTABLE_CLUSTERS = []
 
 
 def populate_data():
@@ -70,6 +72,11 @@ def populate_data():
         DEVICE_CLASS[zha.PROFILE_ID] = {}
     if zll.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zll.PROFILE_ID] = {}
+
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.AnalogInput.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.MultistateInput.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
