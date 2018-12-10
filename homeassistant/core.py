@@ -1098,9 +1098,11 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            service_data = handler.schema(service_data)
+            processed_data = handler.schema(service_data)
+        else:
+            processed_data = service_data
 
-        service_call = ServiceCall(domain, service, service_data, context)
+        service_call = ServiceCall(domain, service, processed_data, context)
 
         self._hass.bus.async_fire(EVENT_CALL_SERVICE, {
             ATTR_DOMAIN: domain.lower(),
