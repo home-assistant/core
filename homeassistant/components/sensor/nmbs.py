@@ -44,8 +44,8 @@ def get_time_until(departure_time=None):
     return round((delta.total_seconds() / 60))
 
 
-def convert_ms_to_sec(delay=0):
-    """Convert a delay given in milliseconds to seconds."""
+def get_delay_in_minutes(delay=0):
+    """Get the delay in minutes from a delay in seconds."""
     return round((int(delay) / 60))
 
 
@@ -54,7 +54,7 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)) - dt_util.utc_from_timestamp(int(departure_time))
     duration_time = int(round((duration.total_seconds() / 60)))
-    return duration_time + convert_ms_to_sec(delay)
+    return duration_time + get_delay_in_minutes(delay)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -109,7 +109,7 @@ class NMBSLiveBoard(Entity):
         if self._state is None or self._attrs is None:
             return None
 
-        delay = convert_ms_to_sec(self._attrs["delay"])
+        delay = get_delay_in_minutes(self._attrs["delay"])
         departure = get_time_until(self._attrs['time'])
 
         attrs = {
@@ -159,7 +159,7 @@ class NMBSSensor(Entity):
     @property
     def icon(self):
         """Return the sensor default icon or an alert icon if any delay."""
-        delay = convert_ms_to_sec(self._attrs['departure']['delay'])
+        delay = get_delay_in_minutes(self._attrs['departure']['delay'])
         if self._attrs is not None and delay > 0:
             return "mdi:alert-octagon"
 
@@ -171,7 +171,7 @@ class NMBSSensor(Entity):
         if self._state is None or self._attrs is None:
             return None
 
-        delay = convert_ms_to_sec(self._attrs['departure']['delay'])
+        delay = get_delay_in_minutes(self._attrs['departure']['delay'])
         departure = get_time_until(self._attrs['departure']['time'])
 
         attrs = {
