@@ -46,6 +46,7 @@ SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
@@ -63,7 +64,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
-    SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),

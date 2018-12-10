@@ -73,7 +73,8 @@ omit =
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
-    homeassistant/components/daikin.py
+    homeassistant/components/daikin/__init__.py
+    homeassistant/components/daikin/const.py
     homeassistant/components/*/daikin.py
 
     homeassistant/components/digital_ocean.py
