@@ -39,12 +39,11 @@ def setup(hass, config):
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
-    mqtt_client = hass.data[mqtt.DATA_MQTT]._mqttc
 
     from pymochad import exceptions
 
     try:
-        controller = MochadCtrl(hass, host, port, mqtt_client)
+        controller = MochadCtrl(hass, host, port)
         hass.data[DOMAIN] = controller
     except exceptions.ConfigurationError:
         _LOGGER.exception()
@@ -66,7 +65,7 @@ def setup(hass, config):
 class MochadCtrl:
     """Mochad controller."""
 
-    def __init__(self, hass, host, port, mqtt_client):
+    def __init__(self, hass, host, port):
         """Initialize a PyMochad send-receive controller."""
         self._host = host
         self._port = port
