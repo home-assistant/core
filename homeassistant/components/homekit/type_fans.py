@@ -78,7 +78,7 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set oscillating to %d', self.entity_id, value)
         self._flag[CHAR_SWING_MODE] = True
-        oscillating = True if value == 1 else False
+        oscillating = value == 1
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_OSCILLATING: oscillating}
         self.call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)

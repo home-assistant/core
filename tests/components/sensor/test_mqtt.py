@@ -412,6 +412,39 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     assert state is None
 
 
+async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('sensor.milk')
+    assert state is None
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)

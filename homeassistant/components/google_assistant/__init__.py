@@ -33,8 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 
-DEFAULT_AGENT_USER_ID = 'home-assistant'
-
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
@@ -69,11 +67,13 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(5, loop=hass.loop):
+            with async_timeout.timeout(15, loop=hass.loop):
+                agent_user_id = call.data.get('agent_user_id') or \
+                                call.context.user_id
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},
-                    json={'agent_user_id': call.context.user_id})
+                    json={'agent_user_id': agent_user_id})
                 _LOGGER.info("Submitted request_sync request to Google")
                 res.raise_for_status()
         except aiohttp.ClientResponseError:
