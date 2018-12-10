@@ -17,9 +17,8 @@ def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     flow = config_flow.FlowHandler()
     flow.hass = hass
-    flow._get_auth_url = Mock(
-        return_value=mock_coro('https://example.com'),
-        side_effect=side_effect)
+    if side_effect:
+        flow._get_auth_url = Mock(side_effect=side_effect)
     return flow
 
 
@@ -43,16 +42,8 @@ def mock_tellduslive(supports_local_api, authorize):
         mock_tellduslive_.Session().authorize.return_value = authorize
         mock_tellduslive_.Session().access_token = 'token'
         mock_tellduslive_.Session().access_token_secret = 'token_secret'
+        mock_tellduslive_.Session().authorize_url = 'https://example.com'
         yield mock_tellduslive_
-
-
-def test_auth_url(hass, mock_tellduslive):
-    """Test _get_auth_url."""
-    flow = config_flow.FlowHandler()
-    with patch.object(flow, '_session') as session:
-        session.authorize_url = 'url'
-        result = flow._get_auth_url()
-    assert result == 'url'
 
 
 async def test_abort_if_already_setup(hass):
@@ -134,9 +125,10 @@ async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
     """Test that we add host and trigger user when configuring from import."""
     flow = init_config_flow(hass)
 
-    with patch('homeassistant.components.tellduslive.config_flow.load_json', return_value={'tellduslive': {}}):
-        with patch('os.path.isfile'):
-            result = await flow.async_step_import({ KEY_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
+    with patch('homeassistant.components.tellduslive.config_flow.load_json',
+               return_value={'tellduslive': {}}), \
+            patch('os.path.isfile'):
+        result = await flow.async_step_import({ KEY_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -145,9 +137,10 @@ async def test_step_import_load_json(hass, mock_tellduslive):
     """Test that we create entry when configuring from import."""
     flow = init_config_flow(hass)
 
-    with patch('homeassistant.components.tellduslive.config_flow.load_json', return_value={'localhost': {}}):
-        with patch('os.path.isfile'):
-            result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
+    with patch('homeassistant.components.tellduslive.config_flow.load_json',
+               return_value={'localhost': {}}), \
+            patch('os.path.isfile'):
+        result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'localhost'
     assert result['data']['host'] == 'localhost'
