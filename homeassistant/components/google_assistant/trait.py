@@ -518,6 +518,9 @@ class TemperatureSettingTrait(_Trait):
         climate.STATE_COOL: 'cool',
         climate.STATE_OFF: 'off',
         climate.STATE_AUTO: 'heatcool',
+        climate.STATE_FAN_ONLY: 'fan-only',
+        climate.STATE_DRY: 'dry',
+        climate.STATE_ECO: 'eco'
     }
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
