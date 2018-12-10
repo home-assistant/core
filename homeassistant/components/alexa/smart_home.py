@@ -1035,7 +1035,8 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         # not ready yet
         return
 
-    async def async_entity_state_listener(changed_entity, old_state, new_state):
+    async def async_entity_state_listener(changed_entity, old_state,
+                                          new_state):
         if not smart_home_config.should_expose(changed_entity):
             _LOGGER.debug("Not exposing %s because filtered by config",
                           changed_entity)
