@@ -237,7 +237,8 @@ class HueLight(Light):
         elif self.col_gam_typ == 'C':
             self.hue_converter = Converter(GamutC)
         else:
-            _LOGGER.warning('Can not match color gamut type "%s" of light "%s"', self.col_gam_typ, self.name)
+            err_msg = 'Can not match color gamut type "%s" of light "%s"'
+            _LOGGER.warning(err_msg, self.col_gam_typ, self.name)
             self.hue_converter = Converter(GamutB)
 
         if is_group:
@@ -336,8 +337,9 @@ class HueLight(Light):
             'model_id': self.light.modelid,
             # Not yet exposed as properties in aiohue
             'sw_version': self.light.raw['swversion'],
-            'color_gamut_type': self.light.raw['capabilities']['control']['colorgamuttype'],
-            'color_gamut': self.light.raw['capabilities']['control']['colorgamut'],
+            light_spec = self.light.raw['capabilities']['control']
+            'color_gamut_type': light_spec['colorgamuttype'],
+            'color_gamut': light_spec['colorgamut'],
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
 
@@ -357,8 +359,8 @@ class HueLight(Light):
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
                 rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
-                command['xy'] = xy
+                xy_color = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
+                command['xy'] = xy_color
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
