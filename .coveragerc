@@ -578,6 +578,7 @@ omit =
     homeassistant/components/lock/sesame.py
     homeassistant/components/map.py
     homeassistant/components/media_extractor.py
+    homeassistant/components/media_player/androidtv.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/bluesound.py
