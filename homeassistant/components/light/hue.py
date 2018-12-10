@@ -43,6 +43,7 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+ATTR_COL_GAM_TYP = 'color_gamut_type'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -214,14 +215,30 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light, request_bridge_update, bridge, is_group=False):
-        """Initialize the light."""
-        from rgbxy import Converter, GamutA
+        from rgbxy import Converter, GamutA, GamutB, GamutC
 
+        """Initialize the light."""
         self.light = light
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
         self.is_group = is_group
-        self.hue_converter = Converter(GamutA)
+
+        if self.device_info:
+            self.col_gam_typ = self.device_info['color_gamut_type']
+        elif is_group:
+            self.col_gam_typ = 'B'
+        else:
+            self.col_gam_typ = 'None'
+
+        if self.col_gam_typ == 'A':
+            self.hue_converter = Converter(GamutA)
+        elif self.col_gam_typ == 'B':
+            self.hue_converter = Converter(GamutB)
+        elif self.col_gam_typ == 'C':
+            self.hue_converter = Converter(GamutC)
+        else:
+            _LOGGER.warning('Can not match color gamut type "%s" of light "%s"', self.col_gam_typ, self.name)
+            self.hue_converter = Converter(GamutB)
 
         if is_group:
             self.is_osram = False
@@ -316,8 +333,11 @@ class HueLight(Light):
             # productname added in Hue Bridge API 1.24
             # (published 03/05/2018)
             'model': self.light.productname or self.light.modelid,
+            'model_id': self.light.modelid,
             # Not yet exposed as properties in aiohue
             'sw_version': self.light.raw['swversion'],
+            'color_gamut_type': self.light.raw['capabilities']['control']['colorgamuttype'],
+            'color_gamut': self.light.raw['capabilities']['control']['colorgamut'],
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
 
@@ -337,8 +357,8 @@ class HueLight(Light):
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
                 rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy_color = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
-                command['xy'] = xy_color
+                xy = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
+                command['xy'] = xy
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
@@ -405,4 +425,6 @@ class HueLight(Light):
         attributes = {}
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
+        if self.col_gam_typ:
+            attributes[ATTR_COL_GAM_TYP] = self.col_gam_typ
         return attributes
