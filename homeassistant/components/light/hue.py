@@ -325,6 +325,8 @@ class HueLight(Light):
         if self.light.type in ('LightGroup', 'Room'):
             return None
 
+        light_spec = self.light.raw['capabilities']['control']
+
         return {
             'identifiers': {
                 (hue.DOMAIN, self.unique_id)
@@ -337,7 +339,6 @@ class HueLight(Light):
             'model_id': self.light.modelid,
             # Not yet exposed as properties in aiohue
             'sw_version': self.light.raw['swversion'],
-            light_spec = self.light.raw['capabilities']['control']
             'color_gamut_type': light_spec['colorgamuttype'],
             'color_gamut': light_spec['colorgamut'],
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
