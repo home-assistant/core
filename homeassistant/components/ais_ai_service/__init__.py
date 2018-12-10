@@ -66,6 +66,7 @@ INTENT_SWITCHES_OFF = 'AisSwitchesOff'
 INTENT_OPEN_COVER = 'AisCoverOpen'
 INTENT_CLOSE_COVER = 'AisCoverClose'
 INTENT_STOP = 'AisStop'
+INTENT_PLAY = 'AisPlay'
 INTENT_NEXT = 'AisNext'
 INTENT_PREV = 'AisPrev'
 INTENT_SCENE = 'AisSceneActive'
@@ -1081,6 +1082,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisOpenCover())
     hass.helpers.intent.async_register(AisCloseCover())
     hass.helpers.intent.async_register(AisStop())
+    hass.helpers.intent.async_register(AisPlay())
     hass.helpers.intent.async_register(AisNext())
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
@@ -1184,6 +1186,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Zasłoń {item}'])
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
+    async_register(hass, INTENT_PLAY, ['Start', 'Graj', 'Odtwarzaj'])
     async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
     async_register(hass, INTENT_NEXT, ['[włącz] następny', '[włącz] kolejny', '[graj] następny', '[graj] kolejny'])
     async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni', '[graj] wcześniejszy'])
@@ -2296,6 +2299,20 @@ class AisStop(intent.IntentHandler):
         yield from hass.services.async_call(
             'media_player', 'media_stop')
         message = 'ok, stop'
+        return message, True
+
+
+class AisPlay(intent.IntentHandler):
+    """Handle AisPlay intents."""
+    intent_type = INTENT_PLAY
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'media_player', 'media_play')
+        message = 'ok, gram'
         return message, True
 
 

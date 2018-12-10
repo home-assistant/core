@@ -41,7 +41,7 @@ aiohttp_cors==0.7.0
 aiohue==1.3.0
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181121.1
+ais-dom-frontend==20181121.2
 
 # homeassistant.components.unifi
 aiounifi==3
@@ -100,7 +100,7 @@ hdate==0.7.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181121.1
+ais-dom-frontend==20181121.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
