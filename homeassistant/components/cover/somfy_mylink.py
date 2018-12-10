@@ -140,7 +140,7 @@ class SomfyShade(CoverDevice, RestoreEntity):
                 self._closed = False
 
     async def async_open_cover(self, **kwargs):
-        """Handles Homeassistant calls to open the cover."""
+        """Wrap Homeassistant calls to open the cover."""
         if self._move_time:
             await self.async_set_cover_position(position=100)
             self._closed = False
@@ -149,7 +149,7 @@ class SomfyShade(CoverDevice, RestoreEntity):
         self._closed = None
 
     async def async_close_cover(self, **kwargs):
-        """Handles Homeassistant calls to close the cover."""
+        """Wrap Homeassistant calls to close the cover."""
         if self._move_time:
             await self.async_set_cover_position(position=0)
             self._closed = True
