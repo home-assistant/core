@@ -135,7 +135,7 @@ class TemplateVacuum(StateVacuumDevice):
                  start_action, pause_action, stop_action,
                  return_to_base_action, clean_spot_action, locate_action,
                  set_fan_speed_action, fan_speed_list, entity_ids):
-        """Initialize the fan."""
+        """Initialize the vacuum."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -223,7 +223,7 @@ class TemplateVacuum(StateVacuumDevice):
 
     @property
     def fan_speed_list(self) -> list:
-        """Get the list of available speeds."""
+        """Get the list of available fan speeds."""
         return self._fan_speed_list
 
     @property
