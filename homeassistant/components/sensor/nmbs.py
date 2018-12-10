@@ -112,14 +112,18 @@ class NMBSLiveBoard(Entity):
         delay = convert_ms_to_sec(self._attrs["delay"])
         departure = get_time_until(self._attrs['time'])
 
-        return {
-            'delay': "{} minutes".format(delay) if delay > 0 else None,
+        attrs = {
             'departure': "In {} minutes".format(departure),
             'extra_train': int(self._attrs['isExtra']) > 0,
             'occupancy': self._attrs['occupancy']['name'],
             'vehicle_id': self._attrs['vehicle'],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
+
+        if delay > 0:
+            attrs['delay'] = "{} minutes".format(delay)
+
+        return attrs
 
     def update(self):
         """Set the state equal to the next departure."""
@@ -170,8 +174,7 @@ class NMBSSensor(Entity):
         delay = convert_ms_to_sec(self._attrs['departure']['delay'])
         departure = get_time_until(self._attrs['departure']['time'])
 
-        return {
-            'delay': "{} minutes".format(delay) if delay > 0 else None,
+        attrs = {
             'departure': "In {} minutes".format(departure),
             'direction': self._attrs['departure']['direction']['name'],
             'occupancy': self._attrs['departure']['occupancy']['name'],
@@ -180,6 +183,11 @@ class NMBSSensor(Entity):
             "vehicle_id": self._attrs['departure']['vehicle'],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
+
+        if delay > 0:
+            attrs['delay'] = "{} minutes".format(delay)
+
+        return attrs
 
     @property
     def state(self):
