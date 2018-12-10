@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lcn/
 """
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.lcn import LcnDevice
@@ -20,8 +18,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['lcn']
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
