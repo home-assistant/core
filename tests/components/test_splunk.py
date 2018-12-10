@@ -31,6 +31,7 @@ class TestSplunk(unittest.TestCase):
                 'port': 123,
                 'token': 'secret',
                 'ssl': 'False',
+                'ssl_verify': 'True',
                 'name': 'hostname',
             }
         }
