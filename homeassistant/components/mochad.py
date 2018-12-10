@@ -72,6 +72,7 @@ class MochadCtrl:
         self._port = port
 
         from pymochad_mqtt.controller import PyMochadMqtt
+        
         def mqtt_pub_callback(topic, payload, qos, retain):
             """Call MQTT publish function."""
             mqtt.publish(hass, topic, payload, qos, retain)
