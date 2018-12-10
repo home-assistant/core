@@ -4,13 +4,13 @@
             "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 de ZHA."
         },
         "error": {
-            "cannot_connect": "No es pot connectar amb el dispositiu ZHA."
+            "cannot_connect": "No s'ha pogut connectar amb el dispositiu ZHA."
         },
         "step": {
             "user": {
                 "data": {
                     "radio_type": "Tipus de r\u00e0dio",
-                    "usb_path": "Ruta del port USB amb el dispositiu"
+                    "usb_path": "Ruta del port USB al dispositiu"
                 },
                 "title": "ZHA"
             }

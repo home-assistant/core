@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "one": "hiba",
+            "other": ""
+        },
         "step": {
             "init": {
                 "title": "UPnP/IGD"
