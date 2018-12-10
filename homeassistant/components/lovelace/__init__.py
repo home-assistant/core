@@ -101,8 +101,8 @@ class LovelaceStorage:
 
     async def async_save(self, config):
         """Save config."""
-        self._data = {'config': config}
-        await self._store.async_save(config)
+        self._data['config'] = config
+        await self._store.async_save(self._data)
 
 
 class LovelaceYAML:
