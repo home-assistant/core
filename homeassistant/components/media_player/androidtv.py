@@ -296,7 +296,6 @@ class AndroidTVDevice(MediaPlayerDevice):
 
     def __init__(self, atv, name, apps):
         """Initialize the Android TV device."""
-
         self.androidtv = atv
 
         self._name = name
@@ -304,6 +303,7 @@ class AndroidTVDevice(MediaPlayerDevice):
         self._apps.update(dict(apps))
         self._app_name = None
         self._state = None
+        self._muted = None
         self._available = self.androidtv.available
 
         # whether or not the ADB connection is currently in use
@@ -324,6 +324,7 @@ class AndroidTVDevice(MediaPlayerDevice):
 
     @adb_decorator(override_available=True)
     def update(self):
+        """Update the states of the device."""
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
