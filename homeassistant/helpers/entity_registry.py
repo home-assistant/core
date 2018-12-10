@@ -118,8 +118,9 @@ class EntityRegistry:
 
         if not entity_id or not valid_entity_id(entity_id):
             new_entity_id = self.async_generate_entity_id(
-                domain, suggested_object_id
-                        or '{}_{}'.format(platform, unique_id))
+                domain,
+                suggested_object_id or '{}_{}'.format(platform, unique_id)
+            )
 
         if entity_id:
             return self._async_update_entity(
