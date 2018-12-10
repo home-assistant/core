@@ -1655,6 +1655,9 @@ yahooweather==0.10
 # homeassistant.components.alarm_control_panel.yale_smart_alarm
 yalesmartalarmclient==0.1.5
 
+# homeassistant.components.weather.yandex
+yandex-weather-api==0.2.3
+
 # homeassistant.components.light.yeelight
 yeelight==0.4.3
 
