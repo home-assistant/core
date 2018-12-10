@@ -159,9 +159,10 @@ class NMBSSensor(Entity):
     @property
     def icon(self):
         """Return the sensor default icon or an alert icon if any delay."""
-        delay = get_delay_in_minutes(self._attrs['departure']['delay'])
-        if self._attrs is not None and delay > 0:
-            return "mdi:alert-octagon"
+        if self._attrs is not None:
+            delay = get_delay_in_minutes(self._attrs['departure']['delay'])
+            if delay > 0:
+                return "mdi:alert-octagon"
 
         return "mdi:train"
 
