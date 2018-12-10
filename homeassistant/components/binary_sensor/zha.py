@@ -192,7 +192,7 @@ class Remote(ZhaEntity, BinarySensorDevice):
 
         def zha_send_event(self, cluster, command, args):
             """Relay entity events to hass."""
-            self._entity.zha_send_event(cluster, command, args)
+            pass  # don't let entities fire events
 
     class LevelListener:
         """Listener for the LevelControl Zigbee cluster."""
@@ -226,7 +226,7 @@ class Remote(ZhaEntity, BinarySensorDevice):
 
         def zha_send_event(self, cluster, command, args):
             """Relay entity events to hass."""
-            self._entity.zha_send_event(cluster, command, args)
+            pass  # don't let entities fire events
 
     def __init__(self, **kwargs):
         """Initialize Switch."""

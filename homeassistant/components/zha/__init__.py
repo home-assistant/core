@@ -21,12 +21,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import const as zha_const
+from .event import ZhaEvent
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
-    DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType)
+    DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType,
+    EVENTABLE_CLUSTERS, DATA_ZHA_CORE_EVENTS)
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -219,6 +221,9 @@ async def async_unload_entry(hass, config_entry):
     for entity_id in entity_ids:
         await component.async_remove_entity(entity_id)
 
+    # clean up events
+    hass.data[DATA_ZHA][DATA_ZHA_CORE_EVENTS].clear()
+
     _LOGGER.debug("Closing zha radio")
     hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
@@ -235,6 +240,7 @@ class ApplicationListener:
         self._config = config
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
+        self._events = {}
         zha_const.populate_data()
 
         for component in COMPONENTS:
@@ -242,6 +248,7 @@ class ApplicationListener:
                 hass.data[DATA_ZHA].get(component, {})
             )
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
+        hass.data[DATA_ZHA][DATA_ZHA_CORE_EVENTS] = self._events
 
     def device_joined(self, device):
         """Handle device joined.
@@ -270,6 +277,8 @@ class ApplicationListener:
         """Handle device being removed from the network."""
         for device_entity in self._device_registry[device.ieee]:
             self._hass.async_create_task(device_entity.async_remove())
+        if device.ieee in self._events:
+            self._events.pop(device.ieee)
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
@@ -347,6 +356,13 @@ class ApplicationListener:
                     'in_clusters',
                     join,
                 )
+                if cluster.cluster_id in EVENTABLE_CLUSTERS:
+                    if cluster.endpoint.device.ieee not in self._events:
+                        self._events.update({cluster.endpoint.device.ieee: []})
+                    self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
+                        self._hass,
+                        cluster
+                    ))
 
             for cluster in endpoint.out_clusters.values():
                 await self._attempt_single_cluster_device(
@@ -358,6 +374,13 @@ class ApplicationListener:
                     'out_clusters',
                     join,
                 )
+                if cluster.cluster_id in EVENTABLE_CLUSTERS:
+                    if cluster.endpoint.device.ieee not in self._events:
+                        self._events.update({cluster.endpoint.device.ieee: []})
+                    self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
+                        self._hass,
+                        cluster
+                    ))
 
         endpoint_entity = ZhaDeviceEntity(
             device,
