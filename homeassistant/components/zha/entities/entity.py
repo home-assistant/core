@@ -103,3 +103,8 @@ class ZhaEntity(entity.Entity):
             'name': self._device_state_attributes['friendly_name'],
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
+
+    @callback
+    def zha_send_event(self, cluster, command, args):
+        """Relay entity events to hass."""
+        pass  # don't relay events from entities
