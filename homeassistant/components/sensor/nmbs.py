@@ -30,7 +30,7 @@ REQUIREMENTS = ["pyrail==0.0.3"]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_FROM): cv.string,
     vol.Required(CONF_STATION_TO): cv.string,
-    vol.Optional(CONF_STATION_LIVE, default=None): cv.string,
+    vol.Optional(CONF_STATION_LIVE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -45,7 +45,7 @@ def get_time_until(departure_time=None):
 
 
 def convert_ms_to_sec(delay=0):
-    """Calculate the delay in minutes. Delays are expressed in seconds."""
+    """Convert a delay given in milliseconds to seconds."""
     return round((int(delay) / 60))
 
 
@@ -62,10 +62,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from pyrail import iRail
     api_client = iRail()
 
-    name = config.get(CONF_NAME)
-    station_from = config.get(CONF_STATION_FROM)
-    station_to = config.get(CONF_STATION_TO)
-    station_live = config.get(CONF_STATION_LIVE)
+    name = config[CONF_NAME]
+    station_from = config[CONF_STATION_FROM]
+    station_to = config[CONF_STATION_TO]
+    station_live = config[CONF_STATION_LIVE]
 
     sensors = [NMBSSensor(name, station_from, station_to, api_client)]
 
@@ -112,11 +112,11 @@ class NMBSLiveBoard(Entity):
         departure = get_time_until(self._attrs['time'])
 
         return {
-            'Delay': "{} minutes".format(delay) if delay > 0 else None,
-            "Vehicle ID": self._attrs['vehicle'],
-            'Occupancy': self._attrs['occupancy']['name'],
-            "Extra train": True if int(self._attrs['isExtra']) > 0 else False,
-            'Departure': "In {} minutes".format(departure),
+            'delay': "{} minutes".format(delay) if delay > 0 else None,
+            'departure': "In {} minutes".format(departure),
+            'extra_train': int(self._attrs['isExtra']) > 0,
+            'occupancy': self._attrs['occupancy']['name'],
+            'vehicle_id': self._attrs['vehicle'],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
@@ -169,13 +169,13 @@ class NMBSSensor(Entity):
         departure = get_time_until(self._attrs['departure']['time'])
 
         return {
-            'Delay': "{} minutes".format(delay) if delay > 0 else None,
-            'Departure': "In {} minutes".format(departure),
-            'Direction': self._attrs['departure']['direction']['name'],
-            'Occupancy': self._attrs['departure']['occupancy']['name'],
-            "Platform (arriving)": self._attrs['arrival']['platform'],
-            "Platform (departing)": self._attrs['departure']['platform'],
-            "Vehicle ID": self._attrs['departure']['vehicle'],
+            'delay': "{} minutes".format(delay) if delay > 0 else None,
+            'departure': "In {} minutes".format(departure),
+            'direction': self._attrs['departure']['direction']['name'],
+            'occupancy': self._attrs['departure']['occupancy']['name'],
+            "platform_arriving": self._attrs['arrival']['platform'],
+            "platform_departing": self._attrs['departure']['platform'],
+            "vehicle_id": self._attrs['departure']['vehicle'],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
