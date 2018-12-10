@@ -19,8 +19,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING)
+    CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -57,6 +57,7 @@ SIGNAL_CAST_DISCOVERED = 'cast_discovered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_IGNORE_CEC, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
 })
@@ -236,7 +237,8 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                               port=discovery_info['port'])
     elif CONF_HOST in config:
         info = ChromecastInfo(host=config[CONF_HOST],
-                              port=DEFAULT_PORT)
+                              port=DEFAULT_PORT,
+                              friendly_name=config.get(CONF_NAME, None))
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:

@@ -113,25 +113,29 @@ class EntityRegistry:
                             suggested_object_id=None, config_entry_id=None,
                             device_id=None):
         """Get entity. Create if it doesn't exist."""
-        entity_id = self.async_get_entity_id(domain, platform, unique_id)
+        entity_id = new_entity_id = \
+            self.async_get_entity_id(domain, platform, unique_id)
+
+        if not entity_id or not valid_entity_id(entity_id):
+            new_entity_id = self.async_generate_entity_id(
+                domain, suggested_object_id
+                        or '{}_{}'.format(platform, unique_id))
+
         if entity_id:
             return self._async_update_entity(
                 entity_id, config_entry_id=config_entry_id,
-                device_id=device_id)
-
-        entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
+                device_id=device_id, new_entity_id=new_entity_id)
 
         entity = RegistryEntry(
-            entity_id=entity_id,
+            entity_id=new_entity_id,
             config_entry_id=config_entry_id,
             device_id=device_id,
             unique_id=unique_id,
             platform=platform,
         )
-        self.entities[entity_id] = entity
+        self.entities[new_entity_id] = entity
         _LOGGER.info('Registered new %s.%s entity: %s',
-                     domain, platform, entity_id)
+                     domain, platform, new_entity_id)
         self.async_schedule_save()
         return entity
 
