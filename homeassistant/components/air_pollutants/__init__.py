@@ -12,7 +12,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = []
 DOMAIN = 'air_pollutants'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -59,7 +58,7 @@ class AirPollutantsEntity(Entity):
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        raise NotImplementedError()
+        return None
 
     @property
     def particulate_matter_0_1(self):
@@ -150,7 +149,7 @@ class AirPollutantsEntity(Entity):
             data[ATTR_AIR_POLLUTANTS_NO] = nitrogen_monoxide
 
         nitrogen_dioxide = self.nitrogen_dioxide
-        if sulphur_dioxide is not None:
+        if nitrogen_dioxide is not None:
             data[ATTR_AIR_POLLUTANTS_NO2] = nitrogen_dioxide
 
         carbon_dioxide = self.carbon_dioxide
