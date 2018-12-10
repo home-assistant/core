@@ -44,6 +44,8 @@ SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
+SERVICE_IGD = 'igd'
+SERVICE_DLNA_DMR = 'dlna_dmr'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
@@ -52,6 +54,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
+    SERVICE_IGD: 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -92,7 +95,7 @@ SERVICE_HANDLERS = {
 
 OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_HOMEKIT: ('homekit_controller', None),
-    'dlna_dmr': ('media_player', 'dlna_dmr'),
+    SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
 CONF_IGNORE = 'ignore'
