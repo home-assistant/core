@@ -1,6 +1,9 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
@@ -163,11 +166,13 @@ async def test_service_configure(hass):
         await hass.async_block_till_done()
 
     # field does not start with /
-    with patch('pydeconz.DeconzSession.async_put_state',
-               return_value=mock_coro(True)):
-        await hass.services.async_call('deconz', 'configure', service_data={
-            'entity': 'light.test', 'field': 'state', 'data': data})
-        await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid):
+        with patch('pydeconz.DeconzSession.async_put_state',
+                   return_value=mock_coro(True)):
+            await hass.services.async_call(
+                'deconz', 'configure', service_data={
+                    'entity': 'light.test', 'field': 'state', 'data': data})
+            await hass.async_block_till_done()
 
 
 async def test_service_refresh_devices(hass):

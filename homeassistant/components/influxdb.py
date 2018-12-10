@@ -23,7 +23,7 @@ from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
-REQUIREMENTS = ['influxdb==5.0.0']
+REQUIREMENTS = ['influxdb==5.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ def setup(hass, config):
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
+        influx.write_points([])
     except (exceptions.InfluxDBClientError,
             requests.exceptions.ConnectionError) as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "

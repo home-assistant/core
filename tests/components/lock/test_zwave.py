@@ -1,6 +1,4 @@
 """Test Z-Wave locks."""
-import asyncio
-
 from unittest.mock import patch, MagicMock
 
 from homeassistant import config_entries
@@ -64,7 +62,7 @@ def test_lock_value_changed(mock_openzwave):
     assert device.is_locked
 
 
-def test_lock_value_changed_workaround(mock_openzwave):
+def test_lock_state_workaround(mock_openzwave):
     """Test value changed for Z-Wave lock using notification state."""
     node = MockNode(manufacturer_id='0090', product_id='0440')
     values = MockEntityValues(
@@ -78,6 +76,50 @@ def test_lock_value_changed_workaround(mock_openzwave):
     values.access_control.data = 2
     value_changed(values.access_control)
     assert not device.is_locked
+
+
+def test_track_message_workaround(mock_openzwave):
+    """Test value changed for Z-Wave lock by alarm-clearing workaround."""
+    node = MockNode(manufacturer_id='003B', product_id='5044',
+                    stats={'lastReceivedMessage': [0] * 6})
+    values = MockEntityValues(
+        primary=MockValue(data=True, node=node),
+        access_control=None,
+        alarm_type=None,
+        alarm_level=None,
+    )
+
+    # Here we simulate an RF lock. The first zwave.get_device will call
+    # update properties, simulating the first DoorLock report. We then trigger
+    # a change, simulating the openzwave automatic refreshing behavior (which
+    # is enabled for at least the lock that needs this workaround)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    device = zwave.get_device(node=node, values=values)
+    value_changed(values.primary)
+    assert device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
+
+    # Simulate a keypad unlock. We trigger a value_changed() which simulates
+    # the Alarm notification received from the lock. Then, we trigger
+    # value_changed() to simulate the automatic refreshing behavior.
+    values.access_control = MockValue(data=6, node=node)
+    values.alarm_type = MockValue(data=19, node=node)
+    values.alarm_level = MockValue(data=3, node=node)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_ALARM
+    value_changed(values.access_control)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    values.primary.data = False
+    value_changed(values.primary)
+    assert not device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_LOCK_STATUS] == \
+        'Unlocked with Keypad by user 3'
+
+    # Again, simulate an RF lock.
+    device.lock()
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    value_changed(values.primary)
+    assert device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
 
 
 def test_v2btze_value_changed(mock_openzwave):
@@ -185,21 +227,19 @@ def test_lock_alarm_level(mock_openzwave):
         'Tamper Alarm: Too many keypresses'
 
 
-@asyncio.coroutine
-def setup_ozw(hass, mock_openzwave):
+async def setup_ozw(hass, mock_openzwave):
     """Set up the mock ZWave config entry."""
     hass.config.components.add('zwave')
     config_entry = config_entries.ConfigEntry(1, 'zwave', 'Mock Title', {
         'usb_path': 'mock-path',
         'network_key': 'mock-key'
     }, 'test', config_entries.CONN_CLASS_LOCAL_PUSH)
-    yield from hass.config_entries.async_forward_entry_setup(config_entry,
-                                                             'lock')
-    yield from hass.async_block_till_done()
+    await hass.config_entries.async_forward_entry_setup(config_entry,
+                                                        'lock')
+    await hass.async_block_till_done()
 
 
-@asyncio.coroutine
-def test_lock_set_usercode_service(hass, mock_openzwave):
+async def test_lock_set_usercode_service(hass, mock_openzwave):
     """Test the zwave lock set_usercode service."""
     mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
 
@@ -216,35 +256,34 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
         node.node_id: node
     }
 
-    yield from setup_ozw(hass, mock_openzwave)
-    yield from hass.async_block_till_done()
+    await setup_ozw(hass, mock_openzwave)
+    await hass.async_block_till_done()
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
             const.ATTR_NODE_ID: node.node_id,
             zwave.ATTR_USERCODE: '1234',
             zwave.ATTR_CODE_SLOT: 1,
             })
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert value1.data == '1234'
 
     mock_network.nodes = {
         node.node_id: node
     }
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
             const.ATTR_NODE_ID: node.node_id,
             zwave.ATTR_USERCODE: '123',
             zwave.ATTR_CODE_SLOT: 1,
             })
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert value1.data == '1234'
 
 
-@asyncio.coroutine
-def test_lock_get_usercode_service(hass, mock_openzwave):
+async def test_lock_get_usercode_service(hass, mock_openzwave):
     """Test the zwave lock get_usercode service."""
     mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
@@ -256,25 +295,24 @@ def test_lock_get_usercode_service(hass, mock_openzwave):
         value1.value_id: value1,
     }
 
-    yield from setup_ozw(hass, mock_openzwave)
-    yield from hass.async_block_till_done()
+    await setup_ozw(hass, mock_openzwave)
+    await hass.async_block_till_done()
 
     with patch.object(zwave, '_LOGGER') as mock_logger:
         mock_network.nodes = {node.node_id: node}
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             zwave.DOMAIN, zwave.SERVICE_GET_USERCODE, {
                 const.ATTR_NODE_ID: node.node_id,
                 zwave.ATTR_CODE_SLOT: 1,
                 })
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
         # This service only seems to write to the log
         assert mock_logger.info.called
         assert len(mock_logger.info.mock_calls) == 1
         assert mock_logger.info.mock_calls[0][1][2] == '1234'
 
 
-@asyncio.coroutine
-def test_lock_clear_usercode_service(hass, mock_openzwave):
+async def test_lock_clear_usercode_service(hass, mock_openzwave):
     """Test the zwave lock clear_usercode service."""
     mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
@@ -290,14 +328,14 @@ def test_lock_clear_usercode_service(hass, mock_openzwave):
         node.node_id: node
     }
 
-    yield from setup_ozw(hass, mock_openzwave)
-    yield from hass.async_block_till_done()
+    await setup_ozw(hass, mock_openzwave)
+    await hass.async_block_till_done()
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         zwave.DOMAIN, zwave.SERVICE_CLEAR_USERCODE, {
             const.ATTR_NODE_ID: node.node_id,
             zwave.ATTR_CODE_SLOT: 1
         })
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert value1.data == '\0\0\0'

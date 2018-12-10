@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyatv==0.3.10']
+REQUIREMENTS = ['pyatv==0.3.12']
 
 _LOGGER = logging.getLogger(__name__)
 

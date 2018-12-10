@@ -1354,6 +1354,25 @@ async def test_report_colored_light_state(hass):
     })
 
 
+async def test_report_colored_temp_light_state(hass):
+    """Test ColorTemperatureController reports color temp correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'color_temp': 240,
+                                'supported_features': 2})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 2})
+
+    properties = await reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.ColorTemperatureController',
+                            'colorTemperatureInKelvin', 4166)
+
+    properties = await reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.ColorTemperatureController',
+                            'colorTemperatureInKelvin', 0)
+
+
 async def reported_properties(hass, endpoint):
     """Use ReportState to get properties and return them.
 
@@ -1437,10 +1456,10 @@ async def test_unsupported_domain(hass):
     assert not msg['payload']['endpoints']
 
 
-async def do_http_discovery(config, hass, aiohttp_client):
+async def do_http_discovery(config, hass, hass_client):
     """Submit a request to the Smart Home HTTP API."""
     await async_setup_component(hass, alexa.DOMAIN, config)
-    http_client = await aiohttp_client(hass.http.app)
+    http_client = await hass_client()
 
     request = get_new_request('Alexa.Discovery', 'Discover')
     response = await http_client.post(
@@ -1450,7 +1469,7 @@ async def do_http_discovery(config, hass, aiohttp_client):
     return response
 
 
-async def test_http_api(hass, aiohttp_client):
+async def test_http_api(hass, hass_client):
     """With `smart_home:` HTTP API is exposed."""
     config = {
         'alexa': {
@@ -1458,7 +1477,7 @@ async def test_http_api(hass, aiohttp_client):
         }
     }
 
-    response = await do_http_discovery(config, hass, aiohttp_client)
+    response = await do_http_discovery(config, hass, hass_client)
     response_data = await response.json()
 
     # Here we're testing just the HTTP view glue -- details of discovery are
@@ -1466,12 +1485,12 @@ async def test_http_api(hass, aiohttp_client):
     assert response_data['event']['header']['name'] == 'Discover.Response'
 
 
-async def test_http_api_disabled(hass, aiohttp_client):
+async def test_http_api_disabled(hass, hass_client):
     """Without `smart_home:`, the HTTP API is disabled."""
     config = {
         'alexa': {}
     }
-    response = await do_http_discovery(config, hass, aiohttp_client)
+    response = await do_http_discovery(config, hass, hass_client)
 
     assert response.status == 404
 

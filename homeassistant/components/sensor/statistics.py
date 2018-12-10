@@ -80,8 +80,7 @@ class StatisticsSensor(Entity):
                  precision):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
-        self.is_binary = True if self._entity_id.split('.')[0] == \
-            'binary_sensor' else False
+        self.is_binary = self._entity_id.split('.')[0] == 'binary_sensor'
         if not self.is_binary:
             self._name = '{} {}'.format(name, ATTR_MEAN)
         else:
@@ -120,7 +119,7 @@ class StatisticsSensor(Entity):
                 self.hass, self._entity_id, async_stats_sensor_state_listener)
 
             if 'recorder' in self.hass.config.components:
-                # only use the database if it's configured
+                # Only use the database if it's configured
                 self.hass.async_create_task(
                     self._async_initialize_from_database()
                 )
@@ -129,11 +128,20 @@ class StatisticsSensor(Entity):
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup)
 
     def _add_state_to_queue(self, new_state):
+        """Add the state to the queue."""
+        if new_state.state == STATE_UNKNOWN:
+            return
+
         try:
-            self.states.append(float(new_state.state))
+            if self.is_binary:
+                self.states.append(new_state.state)
+            else:
+                self.states.append(float(new_state.state))
+
             self.ages.append(new_state.last_updated)
         except ValueError:
-            pass
+            _LOGGER.error("%s: parsing error, expected number and received %s",
+                          self.entity_id, new_state.state)
 
     @property
     def name(self):
