@@ -215,7 +215,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def media_image_url(self):
         """Return the image url of current playing media."""
         if self._stream_image is None:
-            return "https://localhost:8123/static/icons/tile-win-310x150.png"
+            return "http://localhost:8180/static/icons/tile-win-310x150.png"
         return self._stream_image
 
     @property
@@ -436,7 +436,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             # set image and name
             j_info = json.loads(media_content_id)
             if "IMAGE_URL" not in j_info:
-                self._stream_image = "https://localhost:8123/static/icons/tile-win-310x150.png"
+                self._stream_image = "http://localhost:8180/static/icons/tile-win-310x150.png"
             else:
                 self._stream_image = j_info["IMAGE_URL"]
             self._media_title = j_info["NAME"]

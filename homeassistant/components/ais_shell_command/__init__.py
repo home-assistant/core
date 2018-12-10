@@ -248,7 +248,7 @@ def _execute_upgrade(hass, call):
 def _execute_restart(hass, call):
     import subprocess
     subprocess.Popen(
-        "su -c reboot",
+        "su -c 'reboot -p'",
         shell=True, stdout=None, stderr=None)
 
 

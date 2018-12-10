@@ -608,8 +608,20 @@ def select_entity(hass, long_press):
             set_next_position(hass)
             CURR_ENTITIE_SELECTED = True
         else:
-            # eneter on unchanged item
-            _say_it(hass, "Tej pozycji nie można zmieniać", None)
+            # do some special staff for some entries
+            if CURR_ENTITIE == 'sensor.version_info':
+                # get the info about upgrade
+                state = hass.states.get(CURR_ENTITIE)
+                upgrade = state.attributes.get('reinstall_dom_app')
+                if upgrade is True:
+                    _say_it(
+                        hass,
+                        "Aktualizuje system do najnowszej wersji. Do usłyszenia.", None)
+                    hass.services.call('ais_shell_command', 'execute_upgrade')
+                else:
+                    _say_it(hass, "Twoja wersja jest aktualna", None)
+            else:
+                _say_it(hass, "Tej pozycji nie można zmieniać", None)
         return
 
     # check if we can change this item
@@ -677,21 +689,8 @@ def select_entity(hass, long_press):
             )
 
     else:
-        # do some special staff for some entries
-        if CURR_ENTITIE == 'sensor.version_info':
-            # get the info about upgrade
-            state = hass.states.get(CURR_ENTITIE)
-            upgrade = state.attributes.get('reinstall_dom_app')
-            if upgrade is True:
-                _say_it(
-                    hass,
-                    "Aktualizuje system do najnowszej wersji. Do usłyszenia.", None)
-                hass.services.call('ais_shell_command', 'execute_upgrade')
-            else:
-                _say_it(hass, "Twoja wersja jest aktualna", None)
-        else:
-            # eneter on unchanged item
-            _say_it(hass, "Tej pozycji nie można zmieniać", None)
+        # eneter on unchanged item
+        _say_it(hass, "Tej pozycji nie można zmieniać", None)
 
     hass.block_till_done()
     # say_curr_entity(hass)
