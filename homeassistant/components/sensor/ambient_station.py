@@ -69,6 +69,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_APP_KEY): cv.string,
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_UNITS): vol.In([UNITS_SI, UNITS_US]),
 })
 
 
