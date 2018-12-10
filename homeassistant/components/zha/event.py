@@ -6,11 +6,7 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
 from homeassistant.core import EventOrigin, callback
-from homeassistant.helpers import entity
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +57,7 @@ class ZhaEvent():
 
     @callback
     def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
         pass
 
     @callback
