@@ -40,11 +40,6 @@ class ZhaEvent():
                 kwargs.get('entity_suffix', ''),
             )
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
     @callback
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""

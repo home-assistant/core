@@ -356,13 +356,6 @@ class ApplicationListener:
                     'in_clusters',
                     join,
                 )
-                if cluster.cluster_id in EVENTABLE_CLUSTERS:
-                    if cluster.endpoint.device.ieee not in self._events:
-                        self._events.update({cluster.endpoint.device.ieee: []})
-                    self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
-                        self._hass,
-                        cluster
-                    ))
 
             for cluster in endpoint.out_clusters.values():
                 await self._attempt_single_cluster_device(
@@ -374,13 +367,6 @@ class ApplicationListener:
                     'out_clusters',
                     join,
                 )
-                if cluster.cluster_id in EVENTABLE_CLUSTERS:
-                    if cluster.endpoint.device.ieee not in self._events:
-                        self._events.update({cluster.endpoint.device.ieee: []})
-                    self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
-                        self._hass,
-                        cluster
-                    ))
 
         endpoint_entity = ZhaDeviceEntity(
             device,
@@ -399,6 +385,14 @@ class ApplicationListener:
                                              device_classes, discovery_attr,
                                              is_new_join):
         """Try to set up an entity from a "bare" cluster."""
+        if cluster.cluster_id in EVENTABLE_CLUSTERS:
+            if cluster.endpoint.device.ieee not in self._events:
+                self._events.update({cluster.endpoint.device.ieee: []})
+            self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
+                self._hass,
+                cluster
+            ))
+
         if cluster.cluster_id in profile_clusters:
             return
 
