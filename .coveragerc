@@ -543,6 +543,7 @@ omit =
     homeassistant/components/light/avion.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/blinkt.py
+    homeassistant/components/light/c_by_ge.py    
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/decora.py
     homeassistant/components/light/flux_led.py

@@ -566,6 +566,9 @@ konnected==0.1.4
 # homeassistant.components.eufy
 lakeside==0.11
 
+# homeassistant.components.light.c_by_ge
+laurel==0.2
+
 # homeassistant.components.owntracks
 libnacl==1.6.1
 
