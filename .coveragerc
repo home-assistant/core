@@ -740,6 +740,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
+    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
@@ -765,8 +766,8 @@ omit =
     homeassistant/components/sensor/mvglive.py
     homeassistant/components/sensor/nederlandse_spoorwegen.py
     homeassistant/components/sensor/netatmo_public.py
-    homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/netdata.py
+    homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nmbs.py
     homeassistant/components/sensor/noaa_tides.py
@@ -800,8 +801,8 @@ omit =
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/seventeentrack.py
-    homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/sht31.py
+    homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/sigfox.py
     homeassistant/components/sensor/simulated.py
     homeassistant/components/sensor/skybeacon.py
@@ -812,7 +813,6 @@ omit =
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
-    homeassistant/components/sensor/srp_energy.py
     homeassistant/components/sensor/starlingbank.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
@@ -820,6 +820,7 @@ omit =
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/syncthru.py
     homeassistant/components/sensor/synologydsm.py
+    homeassistant/components/sensor/srp_energy.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sytadin.py
     homeassistant/components/sensor/tank_utility.py
@@ -834,7 +835,6 @@ omit =
     homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
-    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
