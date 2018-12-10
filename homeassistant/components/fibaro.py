@@ -86,6 +86,15 @@ class FibaroController():
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
         self._scene_map = None
+        # Whether to import devices from plugins
+        self._import_plugins = import_plugins
+        self._device_config = config[CONF_DEVICE_CONFIG]
+        self._room_map = None         # Mapping roomId to room object
+        self._device_map = None       # Mapping deviceId to device object
+        self.fibaro_devices = None    # List of devices by type
+        self._callbacks = {}          # Update value callbacks by deviceId
+        self._state_handler = None    # Fiblary's StateHandler object
+        self._excluded_devices = config.get(CONF_EXCLUDE, [])
         self.hub_serial = None          # Unique serial number of the hub
         # Whether to import devices from plugins
         self._import_plugins = import_plugins
