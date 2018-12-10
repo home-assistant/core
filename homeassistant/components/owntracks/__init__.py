@@ -118,9 +118,18 @@ async def async_connect_mqtt(hass, component):
 
 
 async def handle_webhook(hass, webhook_id, request):
-    """Handle webhook callback."""
+    """Handle webhook callback.
+
+    iOS sets the "topic" as part of the payload.
+    Android does not set a topic but adds headers to the request.
+    """
     context = hass.data[DOMAIN]['context']
-    message = await request.json()
+
+    try:
+        message = await request.json()
+    except ValueError:
+        _LOGGER.warning('Received invalid JSON from OwnTracks')
+        return json_response([])
 
     # Android doesn't populate topic
     if 'topic' not in message:
@@ -129,11 +138,10 @@ async def handle_webhook(hass, webhook_id, request):
         device = headers.get('X-Limit-D', user)
 
         if user is None:
-            _LOGGER.warning('Set a username in Connection -> Identification')
-            return json_response(
-                {'error': 'You need to supply username.'},
-                status=400
-            )
+            _LOGGER.warning('No topic or user found in message. If on Android,'
+                            ' set a username in Connection -> Identification')
+            # Keep it as a 200 response so the incorrect packet is discarded
+            return json_response([])
 
         topic_base = re.sub('/#$', '', context.mqtt_topic)
         message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
