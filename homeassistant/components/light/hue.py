@@ -215,9 +215,9 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light, request_bridge_update, bridge, is_group=False):
+        """Initialize the light."""
         from rgbxy import Converter, GamutA, GamutB, GamutC
 
-        """Initialize the light."""
         self.light = light
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
