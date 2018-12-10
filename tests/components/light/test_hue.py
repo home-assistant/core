@@ -85,6 +85,16 @@ LIGHT_1_ON = {
         "colormode": "xy",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
@@ -104,6 +114,16 @@ LIGHT_1_OFF = {
         "effect": "none",
         "colormode": "xy",
         "reachable": True
+    },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
     },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
@@ -125,6 +145,16 @@ LIGHT_2_OFF = {
         "colormode": "hs",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 2",
     "modelid": "LCT001",
@@ -144,6 +174,16 @@ LIGHT_2_ON = {
         "effect": "none",
         "colormode": "hs",
         "reachable": True
+    },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
     },
     "type": "Extended color light",
     "name": "Hue Lamp 2 new",
@@ -380,6 +420,16 @@ async def test_new_light_discovered(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True
         },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "B",
+                "colorgamut": [
+                    [0.675, 0.322],
+                    [0.409, 0.518],
+                    [0.167, 0.04]
+                ]
+            }
+        },
         "type": "Extended color light",
         "name": "Hue Lamp 3",
         "modelid": "LCT001",
@@ -492,6 +542,16 @@ async def test_other_light_update(hass, mock_bridge):
             "effect": "none",
             "colormode": "hs",
             "reachable": True
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "B",
+                "colorgamut": [
+                    [0.675, 0.322],
+                    [0.409, 0.518],
+                    [0.167, 0.04]
+                ]
+            }
         },
         "type": "Extended color light",
         "name": "Hue Lamp 2 new",
