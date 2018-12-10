@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.2.0']
+REQUIREMENTS = ['netdisco==2.3.0']
 
 DOMAIN = 'discovery'
 
@@ -44,6 +44,7 @@ SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
+SERVICE_TWINKLY = 'twinkly'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
@@ -63,6 +64,7 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
+    SERVICE_TWINKLY: ('light', 'twinkly'),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),

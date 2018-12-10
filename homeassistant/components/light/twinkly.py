@@ -41,8 +41,21 @@ async def async_setup_platform(hass, config, async_add_entities,
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    if discovery_info is None:
+    if discovery_info is not None:
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
+    else:
         async_add_entities_config(hass, config, async_add_entities)
+
+
+@callback
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
+    """Set up Twinkly lights discovered automatically."""
+    _LOGGER.debug("Parsing %s", discovery_info)
+    host = discovery_info[CONF_HOST]
+    _LOGGER.debug("Adding autodetected %s", host)
+    device_id = discovery_info[CONF_NAME]
+    entity = TwinklyLight(host, device_id)
+    async_add_entities([entity])
 
 
 @callback
