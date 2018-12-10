@@ -16,7 +16,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 from homeassistant.components import mqtt
 
 DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ["pymochad_mqtt==0.8.8", 'pymochad==0.2.0']
+REQUIREMENTS = ["pymochad_mqtt==0.8.9", 'pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,14 +72,17 @@ class MochadCtrl:
         self._port = port
 
         from pymochad_mqtt.controller import PyMochadMqtt
+        def mqtt_pub_callback(topic, payload, qos, retain):
+            """Call MQTT publish function."""
+            mqtt.publish(hass, topic, payload, qos, retain)
 
         self.ctrl_recv = PyMochadMqtt(mochad_server=self._host,
                                       mochad_port=self._port,
-                                      mqtt_client=mqtt_client)
+                                      mqtt_pub_callback=mqtt_pub_callback)
         self.ctrl_recv.start()
         _LOGGER.debug(
-            "PyMochadMqtt controller created for mochad %s:%s and mqtt %s:%s",
-            host, port, mqtt_client._host, mqtt_client._port)
+            "PyMochadMqtt controller created for mochad %s:%s and mqtt",
+            host, port)
         if self.ctrl_recv.connect_event.wait():
             self.ctrl_send = self.ctrl_recv.ctrl
 
