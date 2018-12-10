@@ -10,6 +10,3 @@ CONF_PORTS = 'ports'
 DOMAIN = 'upnp'
 LOGGER = logging.getLogger('homeassistant.components.upnp')
 SIGNAL_REMOVE_SENSOR = 'upnp_remove_sensor'
-XML_NS = {
-    'device': 'urn:schemas-upnp-org:device-1-0',
-}
