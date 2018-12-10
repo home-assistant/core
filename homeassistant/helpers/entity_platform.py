@@ -346,8 +346,7 @@ class EntityPlatform:
         self.entities[entity_id] = entity
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
-        if hasattr(entity, 'async_added_to_hass'):
-            await entity.async_added_to_hass()
+        await entity.async_added_to_hass()
 
         await entity.async_update_ha_state()
 

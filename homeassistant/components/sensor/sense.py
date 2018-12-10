@@ -4,27 +4,31 @@ Support for monitoring a Sense energy sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sense/
 """
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
+from homeassistant.components.sense import SENSE_DATA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.components.sense import SENSE_DATA
-
-DEPENDENCIES = ['sense']
 
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVE_NAME = 'Energy'
-PRODUCTION_NAME = 'Production'
+ACTIVE_TYPE = 'active'
+
 CONSUMPTION_NAME = 'Usage'
 
-ACTIVE_TYPE = 'active'
+DEPENDENCIES = ['sense']
+
+ICON = 'mdi:flash'
+
+MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
+
+PRODUCTION_NAME = 'Production'
 
 
 class SensorConfig:
-    """Data structure holding sensor config."""
+    """Data structure holding sensor configuration."""
 
     def __init__(self, name, sensor_type):
         """Sensor name and type to pass to API."""
@@ -33,18 +37,16 @@ class SensorConfig:
 
 
 # Sensor types/ranges
-SENSOR_TYPES = {'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
-                'daily': SensorConfig('Daily', 'DAY'),
-                'weekly': SensorConfig('Weekly', 'WEEK'),
-                'monthly': SensorConfig('Monthly', 'MONTH'),
-                'yearly': SensorConfig('Yearly', 'YEAR')}
+SENSOR_TYPES = {
+    'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
+    'daily': SensorConfig('Daily', 'DAY'),
+    'weekly': SensorConfig('Weekly', 'WEEK'),
+    'monthly': SensorConfig('Monthly', 'MONTH'),
+    'yearly': SensorConfig('Yearly', 'YEAR'),
+}
 
 # Production/consumption variants
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
-
-ICON = 'mdi:flash'
-
-MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -73,8 +75,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 update_call = update_active
             else:
                 update_call = update_trends
-            devices.append(Sense(data, name, sensor_type,
-                                 is_production, update_call))
+            devices.append(Sense(
+                data, name, sensor_type, is_production, update_call))
 
     add_entities(devices)
 
@@ -83,9 +85,9 @@ class Sense(Entity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(self, data, name, sensor_type, is_production, update_call):
-        """Initialize the sensor."""
+        """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = "%s %s" % (name, name_type)
+        self._name = "{} {}".format(name, name_type)
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
@@ -132,6 +134,6 @@ class Sense(Entity):
             else:
                 self._state = round(self._data.active_power)
         else:
-            state = self._data.get_trend(self._sensor_type,
-                                         self._is_production)
+            state = self._data.get_trend(
+                self._sensor_type, self._is_production)
             self._state = round(state, 1)

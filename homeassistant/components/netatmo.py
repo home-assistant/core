@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyatmo==1.2']
+REQUIREMENTS = ['pyatmo==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def setup(hass, config):
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera '
             'read_thermostat write_thermostat '
-            'read_presence access_presence')
+            'read_presence access_presence read_homecoach')
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False

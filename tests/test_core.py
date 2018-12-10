@@ -8,6 +8,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
 
+import voluptuous as vol
 import pytz
 import pytest
 
@@ -21,7 +22,7 @@ from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_SERVICE_EXECUTED)
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE)
 
 from tests.common import get_test_home_assistant, async_mock_service
 
@@ -673,13 +674,8 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
-        prior = ha.SERVICE_CALL_LIMIT
-        try:
-            ha.SERVICE_CALL_LIMIT = 0.01
-            assert not self.services.call('test_domain', 'i_do_not_exist',
-                                          blocking=True)
-        finally:
-            ha.SERVICE_CALL_LIMIT = prior
+        with pytest.raises(ha.ServiceNotFound):
+            self.services.call('test_domain', 'i_do_not_exist', blocking=True)
 
     def test_async_service(self):
         """Test registering and calling an async service."""
@@ -1005,4 +1001,27 @@ async def test_service_executed_with_subservices(hass):
     assert len(calls) == 4
     assert [call.service for call in calls] == [
         'outer', 'inner', 'inner', 'outer']
-    assert len(hass.bus.async_listeners().get(EVENT_SERVICE_EXECUTED, [])) == 0
+
+
+async def test_service_call_event_contains_original_data(hass):
+    """Test that service call event contains original data."""
+    events = []
+
+    @ha.callback
+    def callback(event):
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_CALL_SERVICE, callback)
+
+    calls = async_mock_service(hass, 'test', 'service', vol.Schema({
+        'number': vol.Coerce(int)
+    }))
+
+    await hass.services.async_call('test', 'service', {
+        'number': '23'
+    }, blocking=True)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data['service_data']['number'] == '23'
+    assert len(calls) == 1
+    assert calls[0].data['number'] == 23

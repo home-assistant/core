@@ -28,6 +28,10 @@ class UnknownHandler(Exception):
     """Exception raised when trying to handle unknown handler."""
 
 
+class NotConnected(Exception):
+    """Exception raised when trying to handle unknown handler."""
+
+
 class ErrorMessage(Exception):
     """Exception raised when there was error handling message in the cloud."""
 
@@ -116,10 +120,17 @@ class CloudIoT:
         if remove_hass_stop_listener is not None:
             remove_hass_stop_listener()
 
-    async def async_send_message(self, handler, payload):
+    async def async_send_message(self, handler, payload,
+                                 expect_answer=True):
         """Send a message."""
+        if self.state != STATE_CONNECTED:
+            raise NotConnected
+
         msgid = uuid.uuid4().hex
-        self._response_handler[msgid] = asyncio.Future()
+
+        if expect_answer:
+            fut = self._response_handler[msgid] = asyncio.Future()
+
         message = {
             'msgid': msgid,
             'handler': handler,
@@ -129,6 +140,9 @@ class CloudIoT:
             _LOGGER.debug("Publishing message:\n%s\n",
                           pprint.pformat(message))
         await self.client.send_json(message)
+
+        if expect_answer:
+            return await fut
 
     @asyncio.coroutine
     def _handle_connection(self):

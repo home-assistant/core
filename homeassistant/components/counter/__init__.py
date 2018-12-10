@@ -10,9 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ async def async_setup(hass, config):
     return True
 
 
-class Counter(Entity):
+class Counter(RestoreEntity):
     """Representation of a counter."""
 
     def __init__(self, object_id, name, initial, restore, step, icon):
@@ -128,10 +127,11 @@ class Counter(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
+        await super().async_added_to_hass()
         # __init__ will set self._state to self._initial, only override
         # if needed.
         if self._restore:
-            state = await async_get_last_state(self.hass, self.entity_id)
+            state = await self.async_get_last_state()
             if state is not None:
                 self._state = int(state.state)
 

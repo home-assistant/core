@@ -49,6 +49,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
 }
@@ -62,7 +63,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
-    SERVICE_TELLDUSLIVE: ('tellduslive', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
@@ -134,6 +134,7 @@ async def async_setup(hass, config):
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
         if discovery_hash in already_discovered:
+            logger.debug("Already discoverd service %s %s.", service, info)
             return
 
         already_discovered.add(discovery_hash)

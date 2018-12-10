@@ -31,6 +31,9 @@ class User:
     """A user."""
 
     name = attr.ib(type=str)  # type: Optional[str]
+    perm_lookup = attr.ib(
+        type=perm_mdl.PermissionLookup, cmp=False,
+    )  # type: perm_mdl.PermissionLookup
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
@@ -66,7 +69,8 @@ class User:
 
         self._permissions = perm_mdl.PolicyPermissions(
             perm_mdl.merge_policies([
-                group.policy for group in self.groups]))
+                group.policy for group in self.groups]),
+            self.perm_lookup)
 
         return self._permissions
 

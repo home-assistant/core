@@ -191,9 +191,9 @@ class Cloud:
 
             self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
+                allow_unlock=self.prefs.google_allow_unlock,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
-                allow_unlock=self.prefs.google_allow_unlock,
             )
 
         return self._gactions_config
@@ -253,7 +253,7 @@ class Cloud:
 
         info = await self.hass.async_add_job(load_config)
 
-        await self.prefs.async_initialize(not info)
+        await self.prefs.async_initialize(bool(info))
 
         if info is None:
             return

@@ -57,7 +57,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
     """Test the sending MQTT commands in optimistic mode."""
     fake_state = ha.State('switch.test', 'on')
 
-    with patch('homeassistant.components.switch.mqtt.async_get_last_state',
+    with patch('homeassistant.helpers.restore_state.RestoreEntity'
+               '.async_get_last_state',
                return_value=mock_coro(fake_state)):
         assert await async_setup_component(hass, switch.DOMAIN, {
             switch.DOMAIN: {
@@ -357,6 +358,42 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get('switch.beer')
+    assert state is None
+
+
+async def test_discovery_update_switch(hass, mqtt_mock, caplog):
+    """Test expansion of discovered switch."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('switch.milk')
     assert state is None
 
 

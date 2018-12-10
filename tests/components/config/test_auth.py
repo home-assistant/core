@@ -1,20 +1,10 @@
 """Test config entries API."""
-from unittest.mock import PropertyMock, patch
-
 import pytest
 
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
 
 from tests.common import MockGroup, MockUser, CLIENT_ID
-
-
-@pytest.fixture(autouse=True)
-def auth_active(hass):
-    """Mock that auth is active."""
-    with patch('homeassistant.auth.AuthManager.active',
-               PropertyMock(return_value=True)):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +27,7 @@ async def test_list_requires_owner(hass, hass_ws_client, hass_access_token):
     assert result['error']['code'] == 'unauthorized'
 
 
-async def test_list(hass, hass_ws_client):
+async def test_list(hass, hass_ws_client, hass_admin_user):
     """Test get users."""
     group = MockGroup().add_to_hass(hass)
 
@@ -80,8 +70,17 @@ async def test_list(hass, hass_ws_client):
     result = await client.receive_json()
     assert result['success'], result
     data = result['result']
-    assert len(data) == 3
+    assert len(data) == 4
     assert data[0] == {
+        'id': hass_admin_user.id,
+        'name': 'Mock User',
+        'is_owner': False,
+        'is_active': True,
+        'system_generated': False,
+        'group_ids': [group.id for group in hass_admin_user.groups],
+        'credentials': []
+    }
+    assert data[1] == {
         'id': owner.id,
         'name': 'Test Owner',
         'is_owner': True,
@@ -90,7 +89,7 @@ async def test_list(hass, hass_ws_client):
         'group_ids': [group.id for group in owner.groups],
         'credentials': [{'type': 'homeassistant'}]
     }
-    assert data[1] == {
+    assert data[2] == {
         'id': system.id,
         'name': 'Test Hass.io',
         'is_owner': False,
@@ -99,7 +98,7 @@ async def test_list(hass, hass_ws_client):
         'group_ids': [],
         'credentials': [],
     }
-    assert data[2] == {
+    assert data[3] == {
         'id': inactive.id,
         'name': 'Inactive User',
         'is_owner': False,
