@@ -2,18 +2,13 @@
 from collections import defaultdict
 from datetime import timedelta
 import logging
+import uuid
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -23,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_AREA = 'area'
 DEFAULT_NAME = 'Brottsplatskartan'
-DOMAIN = 'brottsplatskartan'
-EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
 SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -40,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
     import brottsplatskartan
-    import uuid
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
@@ -70,7 +62,6 @@ class BrottsplatskartanSensor(Entity):
         self._brottsplatskartan = bpk
         self._name = name
         self._previous_incidents = set()
-        self._starting_up = True
         self._state = None
 
     @property
@@ -88,32 +79,13 @@ class BrottsplatskartanSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    def _incident_event(self, incident):
-        """Fire if an event occurs."""
-        data = {
-            'description': incident.get('description'),
-            'external_source_link': incident.get('external_source_link'),
-            'location': incident.get('title_location'),
-            'timestamp': incident.get('pubdate_iso8601'),
-            'type': incident.get('title_type'),
-        }
-
-        if incident.get('lat') and incident.get('lng'):
-            data.update(
-                {
-                    ATTR_LATITUDE: incident.get('lat'),
-                    ATTR_LONGITUDE: incident.get('lng'),
-                }
-            )
-        self.hass.bus.fire(EVENT_INCIDENT, data)
-
     def update(self):
         """Update device state."""
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
-            _LOGGER.debug("Problems fetching incidents.")
+            _LOGGER.debug("Problems fetching incidents")
             return
 
         if len(incidents) < len(self._previous_incidents):
@@ -122,15 +94,7 @@ class BrottsplatskartanSensor(Entity):
         for incident in incidents:
             incident_type = incident.get('title_type')
             incident_counts[incident_type] += 1
-
-            current_incident_id = incident.get('id')
-            if (
-                    not self._starting_up
-                    and current_incident_id not in self._previous_incidents
-            ):
-                self._incident_event(incident)
-            self._previous_incidents.add(current_incident_id)
+            self._previous_incidents.add(incident.get('id'))
 
         self._attributes.update(incident_counts)
-        self._starting_up = False
         self._state = len(incidents)
