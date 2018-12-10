@@ -24,6 +24,7 @@ from . import http_api, iot, auth_api, prefs, cloudhooks
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
+DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
