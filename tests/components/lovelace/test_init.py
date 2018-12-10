@@ -34,7 +34,7 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     response = await client.receive_json()
     assert response['success']
     assert hass_storage[lovelace.STORAGE_KEY]['data'] == {
-        'yo': 'hello'
+        'config': {'yo': 'hello'}
     }
 
     # Load new config
