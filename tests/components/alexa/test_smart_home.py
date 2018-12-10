@@ -15,9 +15,16 @@ from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
 
+
+async def get_access_token():
+    return "thisisnotanacesstoken"
+
+
+TEST_URL = "https://api.amazonalexa.com/v3/events"
+
 DEFAULT_CONFIG = smart_home.Config(
-    endpoint=None,
-    async_get_access_token=None,
+    endpoint=TEST_URL,
+    async_get_access_token=get_access_token,
     should_expose=lambda entity_id: True)
 
 
@@ -1612,3 +1619,39 @@ async def test_disabled(hass):
     assert msg['header']['name'] == 'ErrorResponse'
     assert msg['header']['namespace'] == 'Alexa'
     assert msg['payload']['type'] == 'BRIDGE_UNREACHABLE'
+
+
+async def test_report_state(hass, aioclient_mock):
+    aioclient_mock.post(TEST_URL, json={'data': 'is irrelevant'})
+
+    hass.states.async_set(
+        'binary_sensor.test_contact',
+        'on',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+
+    await smart_home.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+
+    hass.states.async_set(
+        'binary_sensor.test_contact',
+        'off',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = json.loads(call[0][2])
+    assert call_json["event"]["payload"]["change"]["properties"][0][
+               "value"] == "NOT_DETECTED"
+    assert call_json["event"]["endpoint"][
+               "endpointId"] == "binary_sensor#test_contact"
