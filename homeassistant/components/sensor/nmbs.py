@@ -82,6 +82,7 @@ class NMBSLiveBoard(Entity):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
+        self._attrs = {}
         self._state = None
 
     @property
@@ -138,6 +139,7 @@ class NMBSSensor(Entity):
         self._station_from = station_from
         self._station_to = station_to
         self._api_client = api_client
+        self._attrs = {}
         self._state = None
 
     @property
