@@ -170,11 +170,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     if CONF_ADB_SERVER_IP not in config:
+        from adb.usb_exceptions import DeviceAuthError
         try:
             # "python-adb" without adbkey
             atv = AndroidTV(host)
             adb_log = ""
-        except:
+        except DeviceAuthError:
             # "python-adb" with adbkey
             if CONF_ADBKEY in config:
                 adbkey = config[CONF_ADBKEY]
@@ -294,8 +295,7 @@ class AndroidTVDevice(MediaPlayerDevice):
     """Representation of an Android TV device."""
 
     def __init__(self, atv, name, apps):
-        from adb.adb_protocol import (
-            InvalidChecksumError, InvalidCommandError, InvalidResponseError)
+        """Initialize the Android TV device."""
 
         self.androidtv = atv
 
@@ -312,12 +312,15 @@ class AndroidTVDevice(MediaPlayerDevice):
         # ADB exceptions to catch
         if not self.androidtv.adb_server_ip:
             # "python-adb"
+            from adb.adb_protocol import (
+                InvalidChecksumError, InvalidCommandError,
+                InvalidResponseError)
             self.exceptions = (AttributeError, BrokenPipeError, TypeError,
                                ValueError, InvalidChecksumError,
                                InvalidCommandError, InvalidResponseError)
         else:
             # "pure-python-adb"
-            self.exceptions = []
+            self.exceptions = tuple()
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -325,17 +328,18 @@ class AndroidTVDevice(MediaPlayerDevice):
         if not self._available:
             # Try to connect
             self.androidtv.connect()
-            self._available = self.androidtv.available
-            if self._available:
+            if self.androidtv._available:
                 _LOGGER.info("Device {} reconnected.".format(self._name))
+                self._available = True
+            else:
+                # If the ADB connection is not intact, don't update.
+                return
 
-        # If the ADB connection is not intact, don't update.
-        if not self._available:
-            return
-        try:
-            self.androidtv.update()
-            self._app_name = self.get_app_name(self.androidtv.app_id)
-        except:
+        self.androidtv.update()
+        self._app_name = self.get_app_name(self.androidtv.app_id)
+
+        # Device was available before the update
+        if not self.androidtv._available:
             _LOGGER.warning(
                 "Device {} became unavailable.".format(self._name))
             self._available = False
@@ -351,6 +355,8 @@ class AndroidTVDevice(MediaPlayerDevice):
 
     def get_app_name(self, app_id):
         """Return the app name from its id and known apps."""
+        if app_id is None:
+            return None
         i = 0
         for app in self._apps:
             if app in app_id['package']:
