@@ -51,7 +51,7 @@ def test_fan_turn_on(mock_openzwave):
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
 
     assert value_id == value.value_id
-    assert brightness == 1
+    assert brightness > 0 and brightness <= 33
 
     node.reset_mock()
 
@@ -61,7 +61,7 @@ def test_fan_turn_on(mock_openzwave):
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
 
     assert value_id == value.value_id
-    assert brightness == 50
+    assert brightness > 33 and brightness <= 66
 
     node.reset_mock()
 
@@ -71,7 +71,7 @@ def test_fan_turn_on(mock_openzwave):
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
 
     assert value_id == value.value_id
-    assert brightness == 99
+    assert brightness > 66 and brightness <= 100
 
 
 def test_fan_turn_off(mock_openzwave):

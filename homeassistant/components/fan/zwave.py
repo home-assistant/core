@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.zwave/
 """
 import logging
-import math
 
 from homeassistant.core import callback
 from homeassistant.components.fan import (
@@ -16,25 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_LIST = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+HOMESEER_FC200 = (0x000c, 0x0001)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
-
-# Value will first be divided to an integer
-VALUE_TO_SPEED = {
-    0: SPEED_OFF,
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH,
-}
-
-SPEED_TO_VALUE = {
-    SPEED_OFF: 0,
-    SPEED_LOW: 1,
-    SPEED_MEDIUM: 50,
-    SPEED_HIGH: 99,
-}
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -52,10 +35,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, 'zwave_new_fan', async_add_fan)
 
 
-def get_device(values, **kwargs):
+def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     return ZwaveFan(values)
-
 
 class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
     """Representation of a Z-Wave fan."""
@@ -63,17 +45,47 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
     def __init__(self, values):
         """Initialize the Z-Wave fan device."""
         zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._init_speed_value_mappings()
         self.update_properties()
+
+    def _init_speed_value_mappings(self):
+        """Build maps to translate between logical speeds and dimmer values."""
+        if self._device_id() == HOMESEER_FC200:
+            self._speed_list = [SPEED_OFF, "1", "2", "3", "4"]
+            self._speed_to_values = {
+                SPEED_OFF: [0],
+                "1": range(1, 25),
+                "2": range(25, 50),
+                "3": range(50, 75),
+                "4": range(75, 101)
+        }
+        else:
+            self._speed_list = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            self._speed_to_values = {
+                SPEED_OFF: [0],
+                SPEED_LOW: range(1, 34),
+                SPEED_MEDIUM: range(34, 67),
+                SPEED_HIGH: range(67, 101)
+            }
+
+        self._value_to_speed = {}
+        for speed, values in self._speed_to_values.items():
+              for value in values:
+                    self._value_to_speed[value] = speed
+
+    def _device_id(self):
+        return (int(self.node.manufacturer_id, 16),
+          int(self.node.product_id, 16))
 
     def update_properties(self):
         """Handle data changes for node values."""
-        value = math.ceil(self.values.primary.data * 3 / 100)
-        self._state = VALUE_TO_SPEED[value]
+        self._state = self._value_to_speed[self.values.primary.data]
 
     def set_speed(self, speed):
         """Set the speed of the fan."""
-        self.node.set_dimmer(
-            self.values.primary.value_id, SPEED_TO_VALUE[speed])
+        value_range = self._speed_to_values[speed]
+        midpoint = value_range[int(len(value_range) / 2)]
+        self.node.set_dimmer(self.values.primary.value_id, midpoint)
 
     def turn_on(self, speed=None, **kwargs):
         """Turn the device on."""
@@ -95,7 +107,7 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
     @property
     def speed_list(self):
         """Get the list of available speeds."""
-        return SPEED_LIST
+        return self._speed_list
 
     @property
     def supported_features(self):
