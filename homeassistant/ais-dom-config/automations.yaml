@@ -422,3 +422,14 @@
       data:
         payload: 0
         topic: cmnd/dom/status
+
+- id: '20181205122942123'
+  alias: 'Execute process command web hook'
+  hide_entity: true
+  trigger:
+     platform: webhook
+     webhook_id: aisdomprocesscommandfromframe
+  action:
+    - service: ais_ai_service.process_command_from_frame
+      data_template:
+        web_hook_json: '{{ trigger.json }}'

@@ -163,9 +163,10 @@ http:
    trusted_networks:
     - 127.0.0.1
     - 0.0.0.0/0
-   base_url: localhost:8123
-   ssl_certificate: /data/data/pl.sviete.dom/files/home/AIS/servercert.pem
-   ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem
+   base_url: localhost:8180
+   server_port: 8180
+   #ssl_certificate: /data/data/pl.sviete.dom/files/home/AIS/servercert.pem
+   #ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem
 
 
 

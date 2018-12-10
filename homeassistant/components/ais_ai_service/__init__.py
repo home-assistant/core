@@ -1294,6 +1294,9 @@ def _publish_wifi_status(hass, service):
 def _process_command_from_frame(hass, service):
     # process from frame
     _LOGGER.info('_process_command_from_frame: ' + str(service.data))
+    if "web_hook_json" in service.data:
+        import ast
+        service.data = ast.literal_eval(service.data["web_hook_json"])
     callback = None
     if "callback" in service.data:
         callback = service.data["callback"]
