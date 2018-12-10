@@ -74,8 +74,8 @@ class MochadCtrl:
         from pymochad_mqtt.controller import PyMochadMqtt
 
         self.ctrl_recv = PyMochadMqtt(mochad_server=self._host,
-                                       mochad_port=self._port,
-                                       mqtt_client=mqtt_client)
+                                      mochad_port=self._port,
+                                      mqtt_client=mqtt_client)
         self.ctrl_recv.start()
         _LOGGER.debug(
             "PyMochadMqtt controller created for mochad %s:%s and mqtt %s:%s",
