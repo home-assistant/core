@@ -7,9 +7,10 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tellduslive import (
-    APPLICATION_NAME, DOMAIN, KEY_SCAN_INTERVAL, KEY_HOST, config_flow)
+    APPLICATION_NAME, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, SCAN_INTERVAL,
+    config_flow)
 
-from tests.common import MockDependency, mock_coro
+from tests.common import MockConfigEntry, MockDependency, mock_coro
 
 
 def init_config_flow(hass, side_effect=None):
@@ -19,7 +20,6 @@ def init_config_flow(hass, side_effect=None):
     flow._get_auth_url = Mock(
         return_value=mock_coro('https://example.com'),
         side_effect=side_effect)
-
     return flow
 
 
@@ -44,6 +44,15 @@ def mock_tellduslive(supports_local_api, authorize):
         mock_tellduslive_.Session().access_token = 'token'
         mock_tellduslive_.Session().access_token_secret = 'token_secret'
         yield mock_tellduslive_
+
+
+def test_auth_url(hass, mock_tellduslive):
+    """Test _get_auth_url."""
+    flow = config_flow.FlowHandler()
+    with patch.object(flow, '_session') as session:
+        session.authorize_url = 'url'
+        result = flow._get_auth_url()
+    assert result == 'url'
 
 
 async def test_abort_if_already_setup(hass):
@@ -98,6 +107,52 @@ async def test_step_import(hass, mock_tellduslive):
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
+
+
+async def test_step_import_add_host(hass, mock_tellduslive):
+    """Test that we add host and trigger user when configuring from import."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_import({
+        KEY_HOST: 'localhost',
+        KEY_SCAN_INTERVAL: 0,
+    })
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
+
+
+async def test_step_import_no_config_file(hass, mock_tellduslive):
+    """Test that we trigger user with no config_file configuring from import."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: 0, })
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
+
+
+async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
+    """Test that we add host and trigger user when configuring from import."""
+    flow = init_config_flow(hass)
+
+    with patch('homeassistant.components.tellduslive.config_flow.load_json', return_value={'tellduslive': {}}):
+        with patch('os.path.isfile'):
+            result = await flow.async_step_import({ KEY_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
+
+
+async def test_step_import_load_json(hass, mock_tellduslive):
+    """Test that we create entry when configuring from import."""
+    flow = init_config_flow(hass)
+
+    with patch('homeassistant.components.tellduslive.config_flow.load_json', return_value={'localhost': {}}):
+        with patch('os.path.isfile'):
+            result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['title'] == 'localhost'
+    assert result['data']['host'] == 'localhost'
+    assert result['data']['scan_interval'] == 60
+    assert result['data']['session'] == {}
 
 
 @pytest.mark.parametrize('supports_local_api', [False])
@@ -161,3 +216,15 @@ async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'authorize_url_fail'
+
+async def test_discovery_already_configured(hass, mock_tellduslive):
+    """Test abort if alredy configured fires from discovery."""
+    MockConfigEntry(
+        domain='tellduslive',
+        data={'host': 'some-host'}
+    ).add_to_hass(hass)
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_discovery(['some-host', ''])
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'already_configured'
