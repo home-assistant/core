@@ -329,8 +329,8 @@ class AndroidTVDevice(MediaPlayerDevice):
         if not self._available:
             # Try to connect
             self.androidtv.connect()
-            if self.androidtv._available:
-                _LOGGER.info("Device {} reconnected.".format(self._name))
+            if self.androidtv._available:  # pylint: disable=protected-access
+                _LOGGER.info("Device %s reconnected.", self._name)
                 self._available = True
             else:
                 # If the ADB connection is not intact, don't update.
@@ -340,9 +340,9 @@ class AndroidTVDevice(MediaPlayerDevice):
         self._app_name = self.get_app_name(self.androidtv.app_id)
 
         # Device was available before the update
-        if not self.androidtv._available:
+        if not self.androidtv._available:  # pylint: disable=protected-access
             _LOGGER.warning(
-                "Device {} became unavailable.".format(self._name))
+                "Device %s became unavailable.", self._name)
             self._available = False
 
         if self.androidtv.state == 'off':
