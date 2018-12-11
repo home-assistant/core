@@ -523,10 +523,10 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get('brightness') is None
     assert state.attributes.get('rgb_color') is None
 
-    async_fire_mqtt_message(hass, 'test_light_rgb/rgb/status',
-                            '{"hello": [1, 2, 3]}')
     async_fire_mqtt_message(hass, 'test_light_rgb/status',
                             '{"hello": "ON"}')
+    async_fire_mqtt_message(hass, 'test_light_rgb/rgb/status',
+                            '{"hello": [1, 2, 3]}')
     async_fire_mqtt_message(hass, 'test_light_rgb/brightness/status',
                             '{"hello": "50"}')
     async_fire_mqtt_message(hass, 'test_light_rgb/color_temp/status',
