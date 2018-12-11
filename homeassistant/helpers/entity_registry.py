@@ -171,7 +171,9 @@ class EntityRegistry:
             changes['device_id'] = device_id
 
         if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
-            if self.async_is_registered(new_entity_id):
+            if (self.async_is_registered(new_entity_id) or new_entity_id in
+                    self.hass.states.async_entity_ids(
+                        split_entity_id(entity_id)[0])):
                 raise ValueError('Entity is already registered')
 
             if not valid_entity_id(new_entity_id):
