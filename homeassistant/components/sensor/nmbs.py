@@ -1,5 +1,6 @@
 """
 Get ride details and liveboard details for NMBS (Belgian railway).
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nmbs/
 """
@@ -139,6 +140,7 @@ class NMBSSensor(Entity):
     """Get the the total travel time for a given connection."""
 
     def __init__(self, name, station_from, station_to, api_client):
+        """Initialize the NMBS connection sensor."""
         self._name = name
         self._station_from = station_from
         self._station_to = station_to
@@ -196,7 +198,7 @@ class NMBSSensor(Entity):
         return self._state
 
     def update(self):
-        """Set the state to the available amount of bikes as a number"""
+        """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
             self._station_from, self._station_to)
 
