@@ -74,8 +74,11 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
                     self._value_to_speed[value] = speed
 
     def _device_id(self):
-        return (int(self.node.manufacturer_id, 16),
-          int(self.node.product_id, 16))
+        if (self.node.manufacturer_id.strip() and
+                self.node.product_id.strip()):
+            return (int(self.node.manufacturer_id, 16),
+                    int(self.node.product_id, 16))
+        return None
 
     def update_properties(self):
         """Handle data changes for node values."""
