@@ -64,6 +64,7 @@ TEST_REQUIREMENTS = (
     'homematicip',
     'influxdb',
     'iobl',
+    'jsonpath',
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
