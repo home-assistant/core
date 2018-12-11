@@ -42,11 +42,8 @@ CONF_DIASPORA = 'diaspora'
 CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
 CONF_CANDLE_LIGHT_MINUTES = 'candle_lighting_minutes_before_sunset'
-CONF_HAVDALAH_MINUTES = 'havdalah_minutes_after_sunset'
 
 CANDLE_LIGHT_DEFAULT = 18
-HAVDALAH_DEFAULT = 42
-
 
 DEFAULT_NAME = 'Jewish Calendar'
 
@@ -58,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANGUAGE, default='english'):
         vol.In(['hebrew', 'english']),
     vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT): int,
-    vol.Optional(CONF_HAVDALAH_MINUTES, default=HAVDALAH_DEFAULT): int,
     vol.Optional(CONF_SENSORS, default=['date']):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
@@ -73,7 +69,6 @@ async def async_setup_platform(
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     diaspora = config.get(CONF_DIASPORA)
     candle_lighting_offset = config.get(CONF_CANDLE_LIGHT_MINUTES)
-    havdalah_offset = config.get(CONF_HAVDALAH_MINUTES)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -83,8 +78,7 @@ async def async_setup_platform(
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
             name, language, sensor_type, latitude, longitude,
-            hass.config.time_zone, diaspora, candle_lighting_offset, 
-            havdalah_offset))
+            hass.config.time_zone, diaspora, candle_lighting_offset))
     async_add_entities(dev, True)
 
 
@@ -93,7 +87,7 @@ class JewishCalSensor(Entity):
 
     def __init__(
             self, name, language, sensor_type, latitude, longitude, timezone,
-            diaspora, candle_lighting_offset, havdalah_offset):
+            diaspora, candle_lighting_offset=CANDLE_LIGHT_DEFAULT):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -105,7 +99,6 @@ class JewishCalSensor(Entity):
         self.timezone = timezone
         self.diaspora = diaspora
         self.candle_lighting_offset = candle_lighting_offset
-        self.havdalah_offset = havdalah_offset
         _LOGGER.debug("Sensor %s initialized", self.type)
 
     @property
@@ -175,17 +168,21 @@ class JewishCalSensor(Entity):
             end_day = date.upcoming_shabbat
             if self.type == 'upcoming_havdalah':
                 next_yom_tov_end = date.upcoming_yom_tov
-                while (next_yom_tov_end.next_day.holiday_type == 2):
+                _LOGGER.debug("Next YT ht %d hn %s %d", 
+                    next_yom_tov_end.next_day.holiday_type,
+                    next_yom_tov_end.next_day.holiday_name, next_yom_tov_end.diaspora)
+                while (next_yom_tov_end.next_day.holiday_type == 1):
                     next_yom_tov_end = next_yom_tov_end.next_day
+                    _LOGGER.debug(next_yom_tov_end)
                 if next_yom_tov_end < end_day:
+                    _LOGGER.debug(end_day)
                     end_day = next_yom_tov_end
+                    _LOGGER.debug(next_yom_tov_end)
 
             times = hdate.Zmanim(
                 date=end_day.gdate, location=location,
                 hebrew=self._hebrew).zmanim
-            self._state = (times['sunset'] 
-                           + timedelta(minutes=self.havdalah_offset))
-            
+            self._state = times['three_stars']
         else:
             times = hdate.Zmanim(
                 date=today, location=location,

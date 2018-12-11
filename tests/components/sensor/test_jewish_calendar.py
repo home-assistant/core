@@ -1,4 +1,5 @@
 """The tests for the Jewish calendar sensor platform."""
+from collections import namedtuple
 from datetime import time
 from datetime import datetime as dt
 from unittest.mock import patch
@@ -8,8 +9,28 @@ import pytest
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util.dt import get_time_zone, set_default_time_zone
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor.jewish_calendar import JewishCalSensor
+from homeassistant.components.sensor.jewish_calendar import (
+    JewishCalSensor, CANDLE_LIGHT_DEFAULT)
 from tests.common import get_test_home_assistant
+
+
+_LatLng = namedtuple('_LatLng', ['lat', 'lng'])
+
+NYC_LATLNG = _LatLng(40.7128, -74.0060)
+JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
+
+
+def make_nyc_test_params(dtime, results):
+    """Make test params for NYC."""
+    return (dtime, CANDLE_LIGHT_DEFAULT, True,
+            'America/New_York', NYC_LATLNG.lat, NYC_LATLNG.lng, results)
+
+
+def make_jerusalem_test_params(dtime, results):
+    """Make test params for Jerusalem."""
+    return (dtime, CANDLE_LIGHT_DEFAULT, False,
+            'Asia/Jerusalem', JERUSALEM_LATLNG.lat, JERUSALEM_LATLNG.lng,
+            results)
 
 
 class TestJewishCalenderSensor():
@@ -120,3 +141,153 @@ class TestJewishCalenderSensor():
                 sensor.async_update(),
                 self.hass.loop).result()
             assert sensor.state == result
+
+    shabbat_params = [
+        make_nyc_test_params(
+            dt(2018, 9, 1, 16, 0),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 8, 31, 19, 15),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 1, 20, 14),
+             'weekly_portion': 'Ki Tavo',
+             'hebrew_weekly_portion': 'כי תבוא'}),
+        make_nyc_test_params(
+            dt(2018, 9, 1, 20, 21),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 9, 7, 19, 4),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 8, 20, 2),
+             'weekly_portion': 'Nitzavim',
+             'hebrew_weekly_portion': 'נצבים'}),
+        make_nyc_test_params(
+            dt(2018, 9, 7, 13, 1),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 9, 7, 19, 4),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 8, 20, 2),
+             'weekly_portion': 'Nitzavim',
+             'hebrew_weekly_portion': 'נצבים'}),
+        make_nyc_test_params(
+            dt(2018, 9, 8, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 9, 19, 1),
+             'upcoming_havdalah': dt(2018, 9, 11, 19, 57),
+             'upcoming_shabbat_candle_lighting': dt(2018, 9, 14, 18, 52),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 15, 19, 50),
+             'weekly_portion': 'Vayeilech',
+             'hebrew_weekly_portion': 'וילך',
+             'holiday_name': 'Erev Rosh Hashana',
+             'hebrew_holiday_name': 'ערב ראש השנה'}),
+        make_nyc_test_params(
+            dt(2018, 9, 9, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 9, 19, 1),
+             'upcoming_havdalah': dt(2018, 9, 11, 19, 57),
+             'upcoming_shabbat_candle_lighting': dt(2018, 9, 14, 18, 52),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 15, 19, 50),
+             'weekly_portion': 'Vayeilech',
+             'hebrew_weekly_portion': 'וילך',
+             'holiday_name': 'Rosh Hashana I',
+             'hebrew_holiday_name': "א' ראש השנה"}),
+        make_nyc_test_params(
+            dt(2018, 9, 10, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 10, 18, 59),
+             'upcoming_havdalah': dt(2018, 9, 11, 19, 57),
+             'upcoming_shabbat_candle_lighting': dt(2018, 9, 14, 18, 52),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 15, 19, 50),
+             'weekly_portion': 'Vayeilech',
+             'hebrew_weekly_portion': 'וילך',
+             'holiday_name': 'Rosh Hashana II',
+             'hebrew_holiday_name': "ב' ראש השנה"}),
+        make_nyc_test_params(
+            dt(2018, 9, 28, 21, 25),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 9, 28, 18, 28),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 29, 19, 25),
+             'weekly_portion': 'none',
+             'hebrew_weekly_portion': 'none'}),
+        make_nyc_test_params(
+            dt(2018, 9, 29, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 30, 18, 25),
+             'upcoming_havdalah': dt(2018, 10, 2, 19, 20),
+             # TODO add shabbat sensor
+             'holiday_name': 'Hoshana Raba',
+             'hebrew_holiday_name': 'הושענא רבה'}),
+        make_nyc_test_params(
+            dt(2018, 9, 30, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 30, 18, 25),
+             'upcoming_havdalah': dt(2018, 10, 2, 19, 20),
+             'holiday_name': 'Shmini Atzeret',
+             'hebrew_holiday_name': 'שמיני עצרת'}),
+        make_nyc_test_params(
+            dt(2018, 10, 1, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 10, 1, 18, 23),
+             'upcoming_havdalah': dt(2018, 10, 2, 19, 20),
+             'holiday_name': 'Simchat Torah',
+             'hebrew_holiday_name': 'שמחת תורה'}),
+        make_jerusalem_test_params(
+            dt(2018, 9, 29, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 30, 18, 10),
+             'upcoming_havdalah': dt(2018, 10, 1, 19, 2),
+             'holiday_name': 'Hoshana Raba',
+             'hebrew_holiday_name': 'הושענא רבה'}),
+        make_jerusalem_test_params(
+            dt(2018, 9, 30, 21, 25),
+            {'upcoming_candle_lighting': dt(2018, 9, 30, 18, 10),
+             'upcoming_havdalah': dt(2018, 10, 1, 19, 2),
+             'holiday_name': 'Shmini Atzeret',
+             'hebrew_holiday_name': 'שמיני עצרת'}),
+        make_jerusalem_test_params(
+            dt(2018, 10, 1, 21, 25),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 10, 5, 18, 3),
+             'upcoming_shabbat_havdalah': dt(2018, 10, 6, 18, 56),
+             'weekly_portion': 'Bereshit',
+             'hebrew_weekly_portion': 'בראשית'}),
+    ]
+
+    shabbat_test_ids = [
+        "currently_first_shabbat",
+        "after_first_shabbat",
+        "friday_upcoming_shabbat",
+        "upcoming_rosh_hashana",
+        "currently_rosh_hashana",
+        "second_day_rosh_hashana",
+        "currently_shabbat_chol_hamoed",
+        "upcoming_two_day_yomtov_in_diaspora",
+        "currently_first_day_of_two_day_yomtov_in_diaspora",
+        "currently_second_day_of_two_day_yomtov_in_diaspora",
+        "upcoming_one_day_yom_tov_in_israel",
+        "currently_one_day_yom_tov_in_israel",
+        "after_one_day_yom_tov_in_israel",
+    ]
+    @pytest.mark.parametrize(["now", "candle_lighting", "diaspora",
+                              "tzname", "latitude", "longitude", "result"],
+                             shabbat_params, ids=shabbat_test_ids)
+    def test_shabbat_times_sensor(self, now, candle_lighting, 
+                                  diaspora, tzname, latitude, longitude,
+                                  result):
+        """Test Shabbat Times sensor output."""
+        
+        tz = get_time_zone(tzname)
+        set_default_time_zone(tz)
+        test_time = tz.localize(now)
+        for sensor_type, value in result.items():
+            if isinstance(value, dt):
+                result[sensor_type] = tz.localize(value)
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
+        
+        if ('upcoming_shabbat_candle_lighting' in result 
+            and not 'upcoming_candle_lighting' in result):
+            result['upcoming_candle_lighting'] = result['upcoming_shabbat_candle_lighting']
+        if ('upcoming_shabbat_havdalah' in result 
+            and not 'upcoming_havdalah' in result):
+            result['upcoming_havdalah'] = result['upcoming_shabbat_havdalah']
+
+        for sensor_type, result_value in result.items():
+            language = 'english'
+            if sensor_type.startswith('hebrew_'):
+                language = 'hebrew'
+                sensor_type = sensor_type.replace('hebrew_', '')
+            sensor = JewishCalSensor(
+                name='test', language=language, sensor_type=sensor_type,
+                latitude=latitude, longitude=longitude,
+                timezone=tz, diaspora=diaspora, 
+                candle_lighting_offset=candle_lighting)
+            sensor.hass = self.hass
+            with patch('homeassistant.util.dt.now', return_value=test_time):
+                run_coroutine_threadsafe(
+                    sensor.async_update(),
+                    self.hass.loop).result()
+                assert sensor.state == result_value, "Value for {}".format(sensor_type)
