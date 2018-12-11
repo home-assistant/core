@@ -206,7 +206,7 @@ class ProxyCamera(Camera):
         self._cache_images = bool(
             config.get(CONF_IMAGE_REFRESH_RATE)
             or config.get(CONF_CACHE_IMAGES))
-        self._last_image_time = 0
+        self._last_image_time = self._last_image_time = dt_util.utc_from_timestamp(0)
         self._last_image = None
         self._headers = (
             {HTTP_HEADER_HA_AUTH: self.hass.config.api.api_password}
@@ -223,7 +223,8 @@ class ProxyCamera(Camera):
         now = dt_util.utcnow()
 
         if (self._image_refresh_rate and
-                now < self._last_image_time + self._image_refresh_rate):
+                now < self._last_image_time +
+                dt.timedelta(seconds=self._image_refresh_rate)):
             return self._last_image
 
         self._last_image_time = now
