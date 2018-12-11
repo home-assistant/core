@@ -27,7 +27,7 @@ from homeassistant.helpers.temperature import display_temp
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['ambient_api']
+REQUIREMENTS = ['ambient_api==1.5.2']
 DEFAULT_NAME = "Ambient Weather"
 
 SCAN_INTERVAL = timedelta(minutes=5)
