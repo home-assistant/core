@@ -252,8 +252,7 @@ class Cloud:
                 return json.loads(file.read())
 
         info = await self.hass.async_add_job(load_config)
-
-        await self.prefs.async_initialize(bool(info))
+        await self.prefs.async_initialize()
 
         if info is None:
             return
