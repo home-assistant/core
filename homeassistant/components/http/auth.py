@@ -10,6 +10,7 @@ import jwt
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.auth.providers import legacy_api_password
 from homeassistant.auth.util import generate_secret
 from homeassistant.util import dt as dt_util
 
@@ -40,8 +41,7 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 
 
 @callback
-def setup_auth(app, trusted_networks, use_auth,
-               support_legacy=False, api_password=None):
+def setup_auth(app, trusted_networks, api_password):
     """Create auth middleware for the app."""
     old_auth_warning = set()
 
@@ -50,19 +50,17 @@ def setup_auth(app, trusted_networks, use_auth,
         """Authenticate as middleware."""
         authenticated = False
 
-        if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
-                         DATA_API_PASSWORD in request.query):
+        if (HTTP_HEADER_HA_AUTH in request.headers or
+                DATA_API_PASSWORD in request.query):
             if request.path not in old_auth_warning:
                 _LOGGER.log(
-                    logging.INFO if support_legacy else logging.WARNING,
+                    logging.INFO if api_password else logging.WARNING,
                     'You need to use a bearer token to access %s from %s',
                     request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
-        legacy_auth = (not use_auth or support_legacy) and api_password
         if (hdrs.AUTHORIZATION in request.headers and
-                await async_validate_auth_header(
-                    request, api_password if legacy_auth else None)):
+                await async_validate_auth_header(request, api_password)):
             # it included both use_auth and api_password Basic auth
             authenticated = True
 
@@ -72,35 +70,35 @@ def setup_auth(app, trusted_networks, use_auth,
               await async_validate_signed_request(request)):
             authenticated = True
 
-        elif (legacy_auth and HTTP_HEADER_HA_AUTH in request.headers and
+        elif (api_password and HTTP_HEADER_HA_AUTH in request.headers and
               hmac.compare_digest(
                   api_password.encode('utf-8'),
                   request.headers[HTTP_HEADER_HA_AUTH].encode('utf-8'))):
             # A valid auth header has been set
             authenticated = True
+            request['hass_user'] = await legacy_api_password.async_get_user(
+                app['hass'])
 
-        elif (legacy_auth and DATA_API_PASSWORD in request.query and
+        elif (api_password and DATA_API_PASSWORD in request.query and
               hmac.compare_digest(
                   api_password.encode('utf-8'),
                   request.query[DATA_API_PASSWORD].encode('utf-8'))):
             authenticated = True
+            request['hass_user'] = await legacy_api_password.async_get_user(
+                app['hass'])
 
         elif _is_trusted_ip(request, trusted_networks):
-            authenticated = True
-
-        elif not use_auth and api_password is None:
-            # If neither password nor auth_providers set,
-            #  just always set authenticated=True
+            users = await app['hass'].auth.async_get_users()
+            for user in users:
+                if user.is_owner:
+                    request['hass_user'] = user
+                    break
             authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
-    async def auth_startup(app):
-        """Initialize auth middleware when app starts up."""
-        app.middlewares.append(auth_middleware)
-
-    app.on_startup.append(auth_startup)
+    app.middlewares.append(auth_middleware)
 
 
 def _is_trusted_ip(request, trusted_networks):
@@ -135,8 +133,9 @@ async def async_validate_auth_header(request, api_password=None):
         # If no space in authorization header
         return False
 
+    hass = request.app['hass']
+
     if auth_type == 'Bearer':
-        hass = request.app['hass']
         refresh_token = await hass.auth.async_validate_access_token(auth_val)
         if refresh_token is None:
             return False
@@ -156,8 +155,12 @@ async def async_validate_auth_header(request, api_password=None):
         if username != 'homeassistant':
             return False
 
-        return hmac.compare_digest(api_password.encode('utf-8'),
-                                   password.encode('utf-8'))
+        if not hmac.compare_digest(api_password.encode('utf-8'),
+                                   password.encode('utf-8')):
+            return False
+
+        request['hass_user'] = await legacy_api_password.async_get_user(hass)
+        return True
 
     return False
 

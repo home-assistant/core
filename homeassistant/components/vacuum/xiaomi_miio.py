@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,8 @@ FAN_SPEEDS = {
     'Turbo': 77,
     'Max': 90}
 
+ATTR_CLEAN_START = 'clean_start'
+ATTR_CLEAN_STOP = 'clean_stop'
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
 ATTR_DO_NOT_DISTURB_START = 'do_not_disturb_start'
@@ -169,6 +171,7 @@ class MiroboVacuum(StateVacuumDevice):
         self.consumable_state = None
         self.clean_history = None
         self.dnd_state = None
+        self.last_clean = None
 
     @property
     def name(self):
@@ -248,6 +251,10 @@ class MiroboVacuum(StateVacuumDevice):
                 ATTR_STATUS: str(self.vacuum_state.state)
                 })
 
+            if self.last_clean:
+                attrs[ATTR_CLEAN_START] = self.last_clean.start
+                attrs[ATTR_CLEAN_STOP] = self.last_clean.end
+
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
         return attrs
@@ -266,7 +273,8 @@ class MiroboVacuum(StateVacuumDevice):
         """Call a vacuum command handling error messages."""
         from miio import DeviceException
         try:
-            await self.hass.async_add_job(partial(func, *args, **kwargs))
+            await self.hass.async_add_executor_job(
+                partial(func, *args, **kwargs))
             return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
@@ -367,6 +375,7 @@ class MiroboVacuum(StateVacuumDevice):
 
             self.consumable_state = self._vacuum.consumable_status()
             self.clean_history = self._vacuum.clean_history()
+            self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
 
             self._available = True

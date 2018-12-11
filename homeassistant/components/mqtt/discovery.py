@@ -27,30 +27,25 @@ SUPPORTED_COMPONENTS = [
     'light', 'sensor', 'switch', 'lock', 'climate',
     'alarm_control_panel']
 
-ALLOWED_PLATFORMS = {
-    'binary_sensor': ['mqtt'],
-    'camera': ['mqtt'],
-    'cover': ['mqtt'],
-    'fan': ['mqtt'],
-    'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
-    'lock': ['mqtt'],
-    'sensor': ['mqtt'],
-    'switch': ['mqtt'],
-    'climate': ['mqtt'],
-    'alarm_control_panel': ['mqtt'],
+CONFIG_ENTRY_COMPONENTS = [
+    'binary_sensor',
+    'camera',
+    'cover',
+    'light',
+    'lock',
+    'sensor',
+    'switch',
+    'climate',
+    'alarm_control_panel',
+    'fan',
+]
+
+DEPRECATED_PLATFORM_TO_SCHEMA = {
+    'mqtt': 'basic',
+    'mqtt_json': 'json',
+    'mqtt_template': 'template',
 }
 
-CONFIG_ENTRY_PLATFORMS = {
-    'binary_sensor': ['mqtt'],
-    'camera': ['mqtt'],
-    'cover': ['mqtt'],
-    'light': ['mqtt'],
-    'sensor': ['mqtt'],
-    'switch': ['mqtt'],
-    'climate': ['mqtt'],
-    'alarm_control_panel': ['mqtt'],
-    'fan': ['mqtt'],
-}
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 DATA_CONFIG_ENTRY_LOCK = 'mqtt_config_entry_lock'
@@ -201,20 +196,38 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         if TOPIC_BASE in payload:
             base = payload[TOPIC_BASE]
             for key, value in payload.items():
-                if value[0] == TOPIC_BASE and key.endswith('_topic'):
-                    payload[key] = "{}{}".format(base, value[1:])
-                if value[-1] == TOPIC_BASE and key.endswith('_topic'):
-                    payload[key] = "{}{}".format(value[:-1], base)
+                if isinstance(value, str):
+                    if value[0] == TOPIC_BASE and key.endswith('_topic'):
+                        payload[key] = "{}{}".format(base, value[1:])
+                    if value[-1] == TOPIC_BASE and key.endswith('_topic'):
+                        payload[key] = "{}{}".format(value[:-1], base)
 
         # If present, the node_id will be included in the discovered object id
-        discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
+        discovery_id = ' '.join((node_id, object_id)) if node_id else object_id
+        discovery_hash = (component, discovery_id)
+
+        if payload:
+            if CONF_PLATFORM in payload:
+                platform = payload[CONF_PLATFORM]
+                if platform in DEPRECATED_PLATFORM_TO_SCHEMA:
+                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[platform]
+                    payload['schema'] = schema
+                    _LOGGER.warning('"platform": "%s" is deprecated, '
+                                    'replace with "schema":"%s"',
+                                    platform, schema)
+            payload[CONF_PLATFORM] = 'mqtt'
+
+            if CONF_STATE_TOPIC not in payload:
+                payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
+                    discovery_topic, component,
+                    '%s/' % node_id if node_id else '', object_id)
+
+            payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
-
-        discovery_hash = (component, discovery_id)
-
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+            # Dispatch update
             _LOGGER.info(
                 "Component has already been discovered: %s %s, sending update",
                 component, discovery_id)
@@ -222,29 +235,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload)
         elif payload:
             # Add component
-            platform = payload.get(CONF_PLATFORM, 'mqtt')
-            if platform not in ALLOWED_PLATFORMS.get(component, []):
-                _LOGGER.warning("Platform %s (component %s) is not allowed",
-                                platform, component)
-                return
-
-            payload[CONF_PLATFORM] = platform
-            if CONF_STATE_TOPIC not in payload:
-                payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
-                    discovery_topic, component,
-                    '%s/' % node_id if node_id else '', object_id)
-
-            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-            payload[ATTR_DISCOVERY_HASH] = discovery_hash
-
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
+            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
-            if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
+            if component not in CONFIG_ENTRY_COMPONENTS:
                 await async_load_platform(
-                    hass, component, platform, payload, hass_config)
+                    hass, component, 'mqtt', payload, hass_config)
                 return
 
-            config_entries_key = '{}.{}'.format(component, platform)
+            config_entries_key = '{}.{}'.format(component, 'mqtt')
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await hass.config_entries.async_forward_entry_setup(
@@ -252,7 +251,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
-                component, platform), payload)
+                component, 'mqtt'), payload)
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()

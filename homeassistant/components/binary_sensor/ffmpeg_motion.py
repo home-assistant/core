@@ -49,10 +49,6 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the FFmpeg binary motion sensor."""
     manager = hass.data[DATA_FFMPEG]
-
-    if not await manager.async_run_test(config.get(CONF_INPUT)):
-        return
-
     entity = FFmpegMotion(hass, manager, config)
     async_add_entities([entity])
 

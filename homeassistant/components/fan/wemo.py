@@ -251,7 +251,7 @@ class WemoHumidifier(FanEntity):
     async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
         async with self._update_lock:
-            await self.hass.asyn_add_executor_job(self._update, force_update)
+            await self.hass.async_add_executor_job(self._update, force_update)
 
     def _update(self, force_update=True):
         """Update the device state."""

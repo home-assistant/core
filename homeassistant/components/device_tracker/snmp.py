@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['pysnmp==4.4.5']
+REQUIREMENTS = ['pysnmp==4.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 

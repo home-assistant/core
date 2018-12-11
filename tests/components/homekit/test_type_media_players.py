@@ -64,7 +64,6 @@ async def test_media_player_set_state(hass, hk_driver, events):
     call_media_stop = async_mock_service(hass, DOMAIN, 'media_stop')
     call_toggle_mute = async_mock_service(hass, DOMAIN, 'volume_mute')
 
-    acc.chars[FEATURE_ON_OFF].value = False
     await hass.async_add_job(acc.chars[FEATURE_ON_OFF]
                              .client_update_value, True)
     await hass.async_block_till_done()

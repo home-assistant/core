@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, CONF_SERVER, CONF_BROADCAST)
+    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -155,27 +155,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             interfaces = [{}]
 
     lifx_manager = LIFXManager(hass, async_add_entities)
+    hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
     for interface in interfaces:
-        kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
-        broadcast_ip = interface.get(CONF_BROADCAST)
-        if broadcast_ip:
-            kwargs['broadcast_ip'] = broadcast_ip
-        lifx_discovery = aiolifx().LifxDiscovery(
-            hass.loop, lifx_manager, **kwargs)
-
-        kwargs = {}
-        listen_ip = interface.get(CONF_SERVER)
-        if listen_ip:
-            kwargs['listen_ip'] = listen_ip
-        lifx_discovery.start(**kwargs)
-
-    @callback
-    def cleanup(event):
-        """Clean up resources."""
-        lifx_discovery.cleanup()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+        lifx_manager.start_discovery(interface)
 
     return True
 
@@ -226,9 +209,42 @@ class LIFXManager:
         self.hass = hass
         self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
+        self.discoveries = []
+        self.cleanup_unsub = self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP,
+            self.cleanup)
 
         self.register_set_state()
         self.register_effects()
+
+    def start_discovery(self, interface):
+        """Start discovery on a network interface."""
+        kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
+        broadcast_ip = interface.get(CONF_BROADCAST)
+        if broadcast_ip:
+            kwargs['broadcast_ip'] = broadcast_ip
+        lifx_discovery = aiolifx().LifxDiscovery(
+            self.hass.loop, self, **kwargs)
+
+        kwargs = {}
+        listen_ip = interface.get(CONF_SERVER)
+        if listen_ip:
+            kwargs['listen_ip'] = listen_ip
+        lifx_discovery.start(**kwargs)
+
+        self.discoveries.append(lifx_discovery)
+
+    @callback
+    def cleanup(self, event=None):
+        """Release resources."""
+        self.cleanup_unsub()
+
+        for discovery in self.discoveries:
+            discovery.cleanup()
+
+        for service in [SERVICE_LIFX_SET_STATE, SERVICE_EFFECT_STOP,
+                        SERVICE_EFFECT_PULSE, SERVICE_EFFECT_COLORLOOP]:
+            self.hass.services.async_remove(DOMAIN, service)
 
     def register_set_state(self):
         """Register the LIFX set_state service call."""

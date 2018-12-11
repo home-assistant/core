@@ -13,11 +13,12 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import MAX_PENDING_MSG, CANCELLATION_ERRORS, URL
+from .const import MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR
 from .auth import AuthPhase, auth_required_message
 from .error import Disconnect
+from .messages import error_message
 
-JSON_DUMP = partial(json.dumps, cls=JSONEncoder)
+JSON_DUMP = partial(json.dumps, cls=JSONEncoder, allow_nan=False)
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -58,9 +59,12 @@ class WebSocketHandler:
                 self._logger.debug("Sending %s", message)
                 try:
                     await self.wsock.send_json(message, dumps=JSON_DUMP)
-                except TypeError as err:
+                except (ValueError, TypeError) as err:
                     self._logger.error('Unable to serialize to JSON: %s\n%s',
                                        err, message)
+                    await self.wsock.send_json(error_message(
+                        message['id'], ERR_UNKNOWN_ERROR,
+                        'Invalid JSON in response'))
 
     @callback
     def _send_message(self, message):
