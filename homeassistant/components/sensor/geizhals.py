@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 
 REQUIREMENTS = ['geizhals==0.0.9']
 
@@ -80,7 +80,10 @@ class Geizwatch(Entity):
     @property
     def state(self):
         """Return the best price of the selected product."""
-        return self._device.prices[0]
+        if not self._device.prices:
+            return STATE_UNKNOWN
+        else:
+            return self._device.prices[0]
 
     @property
     def device_state_attributes(self):
