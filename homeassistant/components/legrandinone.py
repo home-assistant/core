@@ -6,7 +6,6 @@ https://home-assistant.io/components/legrandinone/
 """
 import asyncio
 from collections import defaultdict
-#from typing import Any, Dict, cast
 import logging
 import numbers
 import async_timeout
@@ -14,7 +13,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
+    CONF_COMMAND, CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -207,9 +206,7 @@ async def async_setup(hass, config):
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
-        #LegrandInOneCommand.set_iobl_protocol(None)
         hass.data[IOBL_PROTOCOL_HANDLE] = None
-
 
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
@@ -257,7 +254,6 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # Bind protocol to command class to allow entities to send commands
-        #LegrandInOneCommand.set_iobl_protocol(protocol)
         hass.data[IOBL_PROTOCOL_HANDLE] = protocol
 
         # handle shutdown of IOBL asyncio transport
@@ -376,14 +372,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
     reset on reconnect).
     """
 
-    #_protocol = None
-
-    #@classmethod
-    #def set_iobl_protocol(cls, protocol):
-    #    """Set the IOBL asyncio protocol as a class variable."""
-    #    cls._protocol = protocol
-
-    #@classmethod
     def is_connected(self):
         """Return connection status."""
         return bool(self._protocol)

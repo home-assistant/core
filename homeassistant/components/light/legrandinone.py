@@ -93,7 +93,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, hass, initial_event=event, **device_config)
+        device = entity_class(device_id, hass, initial_event=event,
+            **device_config)
         async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:
