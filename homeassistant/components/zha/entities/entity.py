@@ -69,6 +69,8 @@ class ZhaEntity(entity.Entity):
         for cluster_id, cluster in self._out_clusters.items():
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
 
+        self._endpoint.device.zdo.add_listener(self)
+
         self._initialized = True
 
     @property
@@ -89,6 +91,17 @@ class ZhaEntity(entity.Entity):
     @callback
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
+        pass
+
+    @callback
+    def device_announce(self, device):
+        """Handle device_announce zdo event."""
+        if hasattr(self, 'async_update'):
+            self.hass.async_create_task(self.async_update())
+
+    @callback
+    def permit_duration(self, permit_duration):
+        """Handle permit_duration zdo event."""
         pass
 
     @property
