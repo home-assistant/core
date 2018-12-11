@@ -160,7 +160,6 @@ def test_firing_bus_event(hass, monkeypatch):
             'devices': {
                 '123456': {
                     'name': 'test',
-                    'fire_event': True,
                 },
             },
         },

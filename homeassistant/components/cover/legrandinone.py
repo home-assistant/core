@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
-CONF_FIRE_EVENT = 'fire_event'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -37,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_MEDIA, default='plc'): cv.string,
             vol.Optional(CONF_COMM_MODE, default='unicast'): cv.string,
         },
@@ -45,12 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def devices_from_config(domain_config):
+def devices_from_config(domain_config, hass):
     """Parse configuration and add IOBL cover devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = LegrandInOneCover(device_id, **device_config)
+        device = LegrandInOneCover(device_id, hass, **device_config)
         devices.append(device)
 
     return devices
@@ -59,14 +57,14 @@ def devices_from_config(domain_config):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IOBL cover platform."""
-    async_add_entities(devices_from_config(config))
+    async_add_entities(devices_from_config(config, hass))
 
     async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = LegrandInOneCover(device_id, initial_event=event,
+        device = LegrandInOneCover(device_id, hass, initial_event=event,
                                    **device_config)
         async_add_entities([device])
         hass.data[DATA_ENTITY_LOOKUP][

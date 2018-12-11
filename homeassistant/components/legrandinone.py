@@ -6,7 +6,7 @@ https://home-assistant.io/components/legrandinone/
 """
 import asyncio
 from collections import defaultdict
-from typing import Any, Dict, cast
+#from typing import Any, Dict, cast
 import logging
 import numbers
 import async_timeout
@@ -39,7 +39,6 @@ CONF_COMM_MEDIA = 'media'
 CONF_COMM_MODE = 'comm_mode'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
-CONF_FIRE_EVENT = 'fire_event'
 CONF_MEDIA = 'iobl_media'
 CONF_COMM_MODE = 'iobl_comm_mode'
 CONF_PACKET_TYPE = 'iobl_pkt_type'
@@ -49,6 +48,7 @@ CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
 DATA_DEVICE_REGISTER = 'iobl_device_register'
 DATA_ENTITY_LOOKUP = 'iobl_entity_lookup'
+IOBL_PROTOCOL_HANDLE = 'iobl_protocol'
 DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
 CONNECTION_TIMEOUT = 10
@@ -71,7 +71,6 @@ SIGNAL_HANDLE_EVENT = 'iobl_handle_event_{}'
 TMP_ENTITY = 'tmp.{}'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
     vol.Optional(CONF_MEDIA, default='plc'): cv.string,
     vol.Optional(CONF_COMM_MODE, default='unicast'): cv.string,
 })
@@ -127,14 +126,14 @@ async def async_setup(hass, config):
         """Send legrandinone command."""
         _LOGGER.debug('LegrandInOne command for %s', str(call.data))
 
-        data = cast(Dict[str, Any], {
+        data = {
             'legrand_id': call.data.get(CONF_DEVICE_ID),
             'who': call.data.get(CONF_DEVICE_TYPE),
             'mode': call.data.get(CONF_COMM_MODE),
             'media': call.data.get(CONF_COMM_MEDIA),
             'unit': call.data.get(CONF_DEVICE_UNIT),
             'what': call.data.get(CONF_COMMAND)
-        })
+        }
 
         data['type'] = call.data.get(CONF_PACKET_TYPE)
         if data['type'] is None:
@@ -208,7 +207,9 @@ async def async_setup(hass, config):
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
-        LegrandInOneCommand.set_iobl_protocol(None)
+        #LegrandInOneCommand.set_iobl_protocol(None)
+        hass.data[IOBL_PROTOCOL_HANDLE] = None
+
 
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
@@ -256,7 +257,8 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # Bind protocol to command class to allow entities to send commands
-        LegrandInOneCommand.set_iobl_protocol(protocol)
+        #LegrandInOneCommand.set_iobl_protocol(protocol)
+        hass.data[IOBL_PROTOCOL_HANDLE] = protocol
 
         # handle shutdown of IOBL asyncio transport
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -282,21 +284,22 @@ class LegrandInOneDevice(Entity):
     iobl_media = None
     iobl_type = None
     iobl_unit = None
+    _protocol = None
 
-    def __init__(self, device_id, initial_event=None, name=None,
-                 fire_event=False, iobl_media='plc', iobl_comm_mode='unicast'):
+    def __init__(self, device_id, hass, initial_event=None, name=None,
+                 iobl_media='plc', iobl_comm_mode='unicast'):
         """Initialize the device."""
         self._initial_event = initial_event
         self.legrand_id = device_id
         self.iobl_mode = iobl_comm_mode
         self.iobl_media = iobl_media
+        self._protocol = hass.data[IOBL_PROTOCOL_HANDLE]
 
         if name:
             self._name = name
         else:
             self._name = device_id
 
-        self._should_fire_event = fire_event
 
     @callback
     def handle_event_callback(self, event):
@@ -306,16 +309,6 @@ class LegrandInOneDevice(Entity):
 
         # Propagate changes through ha
         self.async_schedule_update_ha_state()
-
-        # Put command onto bus for user to subscribe to
-        if self._should_fire_event and identify_event_type(
-                event) == EVENT_KEY_COMMAND:
-            self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
-                ATTR_ENTITY_ID: self.entity_id,
-                ATTR_STATE: event.get(EVENT_TYPE_COMMAND),
-            })
-            _LOGGER.debug("Fired bus event for %s: %s",
-                          self.entity_id, event.get(EVENT_TYPE_COMMAND))
 
     def _handle_event(self, event):
         """Platform specific event handler."""
@@ -356,12 +349,6 @@ class LegrandInOneDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        # Remove temporary bogus entity_id if added
-#         tmp_entity = TMP_ENTITY.format(self.legrand_id)
-#         if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
-#                 EVENT_KEY_SENSOR][self.legrand_id]:
-#             self.hass.data[DATA_ENTITY_LOOKUP][
-#                 EVENT_KEY_SENSOR][self.legrand_id].remove(tmp_entity)
 
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][
@@ -379,7 +366,7 @@ class LegrandInOneDevice(Entity):
 
 
 class LegrandInOneCommand(LegrandInOneDevice):
-    """Singleton class to make IOBL command interface available to entities.
+    """Class to make IOBL command interface available to entities.
 
     This class is to be inherited by every Entity class that is actionable
     (switches/lights). It exposes the IOBL command interface for these
@@ -389,22 +376,22 @@ class LegrandInOneCommand(LegrandInOneDevice):
     reset on reconnect).
     """
 
-    _protocol = None
+    #_protocol = None
 
-    @classmethod
-    def set_iobl_protocol(cls, protocol):
-        """Set the IOBL asyncio protocol as a class variable."""
-        cls._protocol = protocol
+    #@classmethod
+    #def set_iobl_protocol(cls, protocol):
+    #    """Set the IOBL asyncio protocol as a class variable."""
+    #    cls._protocol = protocol
 
-    @classmethod
-    def is_connected(cls):
+    #@classmethod
+    def is_connected(self):
         """Return connection status."""
-        return bool(cls._protocol)
+        return bool(self._protocol)
 
     @classmethod
-    async def send_command(cls, command_data):
+    async def send_command(self, command_data):
         """Send device command to IOBL."""
-        return await cls._protocol.send_packet(command_data)
+        return await self._protocol.send_packet(command_data)
 
     async def _async_handle_command(self, command, *args):
 
@@ -460,13 +447,13 @@ class LegrandInOneCommand(LegrandInOneDevice):
         # IOBL protocol/transport handles asynchronous writing of buffer
         # to serial/tcp device. Does not wait for command send
         # confirmation.
-        data = cast(Dict[str, Any], {
+        data = {
             'legrand_id': self.legrand_id,
             'who': self.iobl_type,
             'mode': self.iobl_mode,
             'media': self.iobl_media,
             'unit': self.iobl_unit,
-        })
+        }
 
         if isinstance(cmd, numbers.Integral):
             data['type'] = 'set_dimension'
