@@ -60,8 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    _friendly_name: str
-
     def __init__(self, token, country_code, lat, lon, location_type, refresh_rate = 15):
         """Initialize the sensor."""
 
