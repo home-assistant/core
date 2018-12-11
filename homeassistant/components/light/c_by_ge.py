@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP,
@@ -30,16 +29,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+                   discovery_info=None):
     """Set up the C by GE platform."""
     import laurel
 
-    l = laurel.laurel(config[CONF_NAME], config[CONF_PASSWORD])
-    for network in l.networks:
+    data = laurel.laurel(config[CONF_NAME], config[CONF_PASSWORD])
+    for network in data.networks:
         network.connect()
 
     lights = []
-    for bulb in l.devices:
+    for bulb in data.devices:
         lights.append(GELight(bulb))
 
     add_entities(lights)
@@ -60,7 +59,7 @@ class GELight(Light):
             self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         else:
             self._features = SUPPORT_BRIGHTNESS
-            
+
     def callback(self, args):
         if self.hass is not None:
             self.schedule_update_ha_state()
