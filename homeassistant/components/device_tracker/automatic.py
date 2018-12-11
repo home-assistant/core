@@ -28,6 +28,7 @@ REQUIREMENTS = ['aioautomatic==0.6.5']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FUEL_LEVEL = 'fuel_level'
+ATTR_BATTERY = 'battery_voltage'
 AUTOMATIC_CONFIG_FILE = '.automatic/session-{}.json'
 
 CONF_CLIENT_ID = 'client_id'
@@ -248,8 +249,11 @@ class AutomaticData:
         # If this is a vehicle status report, update the fuel level
         if name == "vehicle:status_report":
             fuel_level = event.vehicle.fuel_level_percent
+            battery_voltage = event.vehicle.battery_voltage
             if fuel_level is not None:
                 kwargs[ATTR_ATTRIBUTES][ATTR_FUEL_LEVEL] = fuel_level
+            if battery_voltage is not None:
+                kwargs[ATTR_ATTRIBUTES][ATTR_BATTERY] = battery_voltage
 
         # Send the device seen notification
         if event.location is not None:
@@ -334,6 +338,7 @@ class AutomaticData:
             ATTR_MAC: vehicle.id,
             ATTR_ATTRIBUTES: {
                 ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
+                ATTR_BATTERY: vehicle.battery_voltage,
             }
         }
         self.vehicle_seen[vehicle.id] = \
