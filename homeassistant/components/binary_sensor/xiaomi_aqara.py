@@ -423,9 +423,7 @@ class XiaomiButton(XiaomiBinarySensor):
         })
         self._last_action = click_type
 
-        if value in ['long_click_press', 'long_click_release']:
-            return True
-        return False
+        return True
 
 
 class XiaomiCube(XiaomiBinarySensor):
@@ -464,6 +462,14 @@ class XiaomiCube(XiaomiBinarySensor):
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
                 'action_value': float(data['rotate'].replace(",", "."))
+            })
+            self._last_action = 'rotate'
+
+        if 'rotate_degree' in data:
+            self._hass.bus.fire('xiaomi_aqara.cube_action', {
+                'entity_id': self.entity_id,
+                'action_type': 'rotate',
+                'action_value': float(data['rotate_degree'].replace(",", "."))
             })
             self._last_action = 'rotate'
 

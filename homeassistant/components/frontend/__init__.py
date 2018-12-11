@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20181207.0']
+REQUIREMENTS = ['home-assistant-frontend==20181210.1']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -250,8 +250,7 @@ async def async_setup(hass, config):
     await asyncio.wait(
         [async_register_built_in_panel(hass, panel) for panel in (
             'dev-event', 'dev-info', 'dev-service', 'dev-state',
-            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace',
-            'states', 'profile')],
+            'dev-template', 'dev-mqtt', 'kiosk', 'states', 'profile')],
         loop=hass.loop)
 
     hass.data[DATA_FINALIZE_PANEL] = async_finalize_panel
