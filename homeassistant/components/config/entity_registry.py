@@ -1,7 +1,7 @@
 """HTTP views to interact with the entity registry."""
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import callback, split_entity_id
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
@@ -106,6 +106,11 @@ async def websocket_update_entity(hass, connection, msg):
 
     if 'new_entity_id' in msg:
         changes['new_entity_id'] = msg['new_entity_id']
+        if (msg['new_entity_id'] in hass.states.async_entity_ids(
+                split_entity_id(msg['new_entity_id'])[0])):
+            connection.send_message(websocket_api.error_message(
+                msg['id'], ERR_NOT_FOUND, 'Entity is already registered'))
+            return
 
     try:
         if changes:
