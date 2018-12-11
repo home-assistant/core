@@ -33,8 +33,6 @@ ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 
-DEPENDENCIES = []
-
 DOMAIN = 'weather'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
