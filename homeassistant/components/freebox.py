@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -88,4 +89,7 @@ async def async_setup_freebox(hass, config, host, port):
         hass.async_create_task(async_load_platform(
             hass, 'device_tracker', DOMAIN, {}, config))
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, fbx.close())
+        @callback
+        async def close_fbx(event):
+            await fbx.close()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fbx)
