@@ -243,6 +243,9 @@ caldav==0.5.0
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
+# homeassistant.components.sensor.co2signal
+co2signal==0.2
+
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
