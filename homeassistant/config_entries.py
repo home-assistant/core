@@ -149,15 +149,18 @@ FLOWS = [
     'mqtt',
     'nest',
     'openuv',
+    'owntracks',
     'point',
     'rainmachine',
     'simplisafe',
     'smhi',
     'sonos',
+    'tellduslive',
     'tradfri',
     'twilio',
     'unifi',
     'upnp',
+    'zha',
     'zone',
     'zwave'
 ]

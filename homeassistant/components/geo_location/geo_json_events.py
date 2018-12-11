@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA, GeoLocationEvent)
 from homeassistant.const import (
-    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START)
+    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -38,6 +39,8 @@ SOURCE = 'geo_json_events'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
 })
 
@@ -46,10 +49,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoJSON Events platform."""
     url = config[CONF_URL]
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
+                   config.get(CONF_LONGITUDE, hass.config.longitude))
     radius_in_km = config[CONF_RADIUS]
     # Initialize the entity manager.
-    feed = GeoJsonFeedManager(hass, add_entities, scan_interval, url,
-                              radius_in_km)
+    feed = GeoJsonFeedEntityManager(
+        hass, add_entities, scan_interval, coordinates, url, radius_in_km)
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -58,87 +63,49 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
-class GeoJsonFeedManager:
-    """Feed Manager for GeoJSON feeds."""
+class GeoJsonFeedEntityManager:
+    """Feed Entity Manager for GeoJSON feeds."""
 
-    def __init__(self, hass, add_entities, scan_interval, url, radius_in_km):
+    def __init__(self, hass, add_entities, scan_interval, coordinates, url,
+                 radius_in_km):
         """Initialize the GeoJSON Feed Manager."""
-        from geojson_client.generic_feed import GenericFeed
+        from geojson_client.generic_feed import GenericFeedManager
 
         self._hass = hass
-        self._feed = GenericFeed(
-            (hass.config.latitude, hass.config.longitude),
-            filter_radius=radius_in_km, url=url)
+        self._feed_manager = GenericFeedManager(
+            self._generate_entity, self._update_entity, self._remove_entity,
+            coordinates, url, filter_radius=radius_in_km)
         self._add_entities = add_entities
         self._scan_interval = scan_interval
-        self.feed_entries = {}
-        self._managed_external_ids = set()
 
     def startup(self):
         """Start up this manager."""
-        self._update()
+        self._feed_manager.update()
         self._init_regular_updates()
 
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._update(), self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(),
+            self._scan_interval)
 
-    def _update(self):
-        """Update the feed and then update connected entities."""
-        import geojson_client
+    def get_entry(self, external_id):
+        """Get feed entry by external id."""
+        return self._feed_manager.feed_entries.get(external_id)
 
-        status, feed_entries = self._feed.update()
-        if status == geojson_client.UPDATE_OK:
-            _LOGGER.debug("Data retrieved %s", feed_entries)
-            # Keep a copy of all feed entries for future lookups by entities.
-            self.feed_entries = {entry.external_id: entry
-                                 for entry in feed_entries}
-            # For entity management the external ids from the feed are used.
-            feed_external_ids = set(self.feed_entries)
-            remove_external_ids = self._managed_external_ids.difference(
-                feed_external_ids)
-            self._remove_entities(remove_external_ids)
-            update_external_ids = self._managed_external_ids.intersection(
-                feed_external_ids)
-            self._update_entities(update_external_ids)
-            create_external_ids = feed_external_ids.difference(
-                self._managed_external_ids)
-            self._generate_new_entities(create_external_ids)
-        elif status == geojson_client.UPDATE_OK_NO_DATA:
-            _LOGGER.debug(
-                "Update successful, but no data received from %s", self._feed)
-        else:
-            _LOGGER.warning(
-                "Update not successful, no data received from %s", self._feed)
-            # Remove all entities.
-            self._remove_entities(self._managed_external_ids.copy())
-
-    def _generate_new_entities(self, external_ids):
-        """Generate new entities for events."""
-        new_entities = []
-        for external_id in external_ids:
-            new_entity = GeoJsonLocationEvent(self, external_id)
-            _LOGGER.debug("New entity added %s", external_id)
-            new_entities.append(new_entity)
-            self._managed_external_ids.add(external_id)
+    def _generate_entity(self, external_id):
+        """Generate new entity."""
+        new_entity = GeoJsonLocationEvent(self, external_id)
         # Add new entities to HA.
-        self._add_entities(new_entities, True)
+        self._add_entities([new_entity], True)
 
-    def _update_entities(self, external_ids):
-        """Update entities."""
-        for external_id in external_ids:
-            _LOGGER.debug("Existing entity found %s", external_id)
-            dispatcher_send(
-                self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+    def _update_entity(self, external_id):
+        """Update entity."""
+        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
-    def _remove_entities(self, external_ids):
-        """Remove entities."""
-        for external_id in external_ids:
-            _LOGGER.debug("Entity not current anymore %s", external_id)
-            self._managed_external_ids.remove(external_id)
-            dispatcher_send(
-                self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+    def _remove_entity(self, external_id):
+        """Remove entity."""
+        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class GeoJsonLocationEvent(GeoLocationEvent):
@@ -184,7 +151,7 @@ class GeoJsonLocationEvent(GeoLocationEvent):
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
-        feed_entry = self._feed_manager.feed_entries.get(self._external_id)
+        feed_entry = self._feed_manager.get_entry(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
 

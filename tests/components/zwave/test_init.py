@@ -947,7 +947,7 @@ class TestZWaveServices(unittest.TestCase):
             assert self.zwave_network.stop.called
             assert len(self.zwave_network.stop.mock_calls) == 1
             assert mock_fire.called
-            assert len(mock_fire.mock_calls) == 2
+            assert len(mock_fire.mock_calls) == 1
             assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
 
     def test_rename_node(self):

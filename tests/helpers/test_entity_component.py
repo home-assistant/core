@@ -431,3 +431,24 @@ async def test_update_entity(hass):
 
     assert len(entity.async_update_ha_state.mock_calls) == 2
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
+
+
+async def test_set_service_race(hass):
+    """Test race condition on setting service."""
+    exception = False
+
+    def async_loop_exception_handler(_, _2) -> None:
+        """Handle all exception inside the core loop."""
+        nonlocal exception
+        exception = True
+
+    hass.loop.set_exception_handler(async_loop_exception_handler)
+
+    await async_setup_component(hass, 'group', {})
+    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name='yo')
+
+    for i in range(2):
+        hass.async_create_task(component.async_add_entities([MockEntity()]))
+
+    await hass.async_block_till_done()
+    assert not exception

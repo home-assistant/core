@@ -20,7 +20,7 @@ from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
 from homeassistant.components.google_assistant import const as ga_c
 
-from . import http_api, iot, auth_api, prefs
+from . import http_api, iot, auth_api, prefs, cloudhooks
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
@@ -37,6 +37,7 @@ CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
 CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
 CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
+CONF_CLOUDHOOK_CREATE_URL = 'cloudhook_create_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -78,6 +79,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): str,
         vol.Optional(CONF_SUBSCRIPTION_INFO_URL): str,
+        vol.Optional(CONF_CLOUDHOOK_CREATE_URL): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
@@ -113,7 +115,7 @@ class Cloud:
     def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
                  relayer=None, google_actions_sync_url=None,
-                 subscription_info_url=None):
+                 subscription_info_url=None, cloudhook_create_url=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
@@ -125,6 +127,7 @@ class Cloud:
         self.access_token = None
         self.refresh_token = None
         self.iot = iot.CloudIoT(self)
+        self.cloudhooks = cloudhooks.Cloudhooks(self)
 
         if mode == MODE_DEV:
             self.cognito_client_id = cognito_client_id
@@ -133,6 +136,7 @@ class Cloud:
             self.relayer = relayer
             self.google_actions_sync_url = google_actions_sync_url
             self.subscription_info_url = subscription_info_url
+            self.cloudhook_create_url = cloudhook_create_url
 
         else:
             info = SERVERS[mode]
@@ -143,6 +147,7 @@ class Cloud:
             self.relayer = info['relayer']
             self.google_actions_sync_url = info['google_actions_sync_url']
             self.subscription_info_url = info['subscription_info_url']
+            self.cloudhook_create_url = info['cloudhook_create_url']
 
     @property
     def is_logged_in(self):
@@ -186,9 +191,9 @@ class Cloud:
 
             self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
+                allow_unlock=self.prefs.google_allow_unlock,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
-                allow_unlock=self.prefs.google_allow_unlock,
             )
 
         return self._gactions_config
@@ -247,8 +252,7 @@ class Cloud:
                 return json.loads(file.read())
 
         info = await self.hass.async_add_job(load_config)
-
-        await self.prefs.async_initialize(not info)
+        await self.prefs.async_initialize()
 
         if info is None:
             return

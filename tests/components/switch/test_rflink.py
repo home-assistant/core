@@ -9,9 +9,10 @@ import asyncio
 
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from homeassistant.core import callback
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
+from homeassistant.core import callback, State, CoreState
 
+from tests.common import mock_restore_cache
 from ..test_rflink import mock_rflink
 
 DOMAIN = 'switch'
@@ -310,3 +311,43 @@ def test_not_firing_default(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert not calls, 'an event has been fired'
+
+
+@asyncio.coroutine
+def test_restore_state(hass, monkeypatch):
+    """Ensure states are restored on startup."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'test': {
+                    'name': 's1',
+                    'aliases': ['test_alias_0_0'],
+                },
+                'switch_test': {
+                    'name': 's2',
+                }
+            }
+        }
+    }
+
+    mock_restore_cache(hass, (
+        State(DOMAIN + '.s1', STATE_ON, ),
+        State(DOMAIN + '.s2', STATE_OFF, ),
+    ))
+
+    hass.state = CoreState.starting
+
+    # setup mocking rflink module
+    _, _, _, _ = yield from mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    state = hass.states.get(DOMAIN + '.s1')
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get(DOMAIN + '.s2')
+    assert state
+    assert state.state == STATE_OFF

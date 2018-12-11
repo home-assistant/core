@@ -132,3 +132,8 @@ class DaikinApi:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
+
+    @property
+    def mac(self):
+        """Return mac-address of device."""
+        return self.device.values.get('mac')

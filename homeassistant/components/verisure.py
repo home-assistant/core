@@ -28,6 +28,7 @@ CONF_DOOR_WINDOW = 'door_window'
 CONF_GIID = 'giid'
 CONF_HYDROMETERS = 'hygrometers'
 CONF_LOCKS = 'locks'
+CONF_DEFAULT_LOCK_CODE = 'default_lock_code'
 CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
@@ -52,6 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_GIID): cv.string,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
+        vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
