@@ -20,27 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by CO2signal'
 
-# Sensor types are defined like: Name, units
-SENSOR_TYPES = {
-    'co2_intensity': ['Carbon Dioxide Intensity', 'CO2eq/kWh'],
-}
-
-# Sensor types are defined like: Name, Name_API
-SENSOR_TYPES_NAMES = {
-    'co2': 'Carbon Dioxide',
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TOKEN, default = None): cv.string,
     vol.Optional(CONF_COUNTRY_CODE, default = None): cv.string,
-    vol.Optional(CONF_LATITUDE, default = 50): cv.latitude,
-    vol.Optional(CONF_LONGITUDE, default = 5): cv.longitude,
+    vol.Optional(CONF_LATITUDE, default = 0): cv.latitude,
+    vol.Optional(CONF_LONGITUDE, default = 0): cv.longitude,
     vol.Optional(CONF_REFRESH, default = 60): cv.positive_int,
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CO2signal sensor."""
-    import CO2Signal
 
     _LOGGER.debug("Setting up the CO2signal platform")
 
@@ -75,7 +64,6 @@ class CO2Sensor(Entity):
 
     def __init__(self, token, country_code, lat, lon, location_type, refresh_rate = 15):
         """Initialize the sensor."""
-        import CO2Signal
 
         self._token = token
         self._country_code = country_code
