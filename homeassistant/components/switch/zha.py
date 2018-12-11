@@ -71,7 +71,7 @@ class Switch(ZhaEntity, SwitchDevice):
             self.async_schedule_update_ha_state()
 
     @property
-    def attributes_to_report(self) -> dict:
+    def zcl_reporting_config(self) -> dict:
         """Retrun a dict of attribute reporting configuration."""
         return {
             self.cluster: {'on_off': REPORT_CONFIG_IMMEDIATE}

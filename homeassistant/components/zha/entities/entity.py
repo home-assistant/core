@@ -5,8 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 from asyncio import sleep
-from random import uniform
 import logging
+from random import uniform
 
 from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
@@ -51,7 +51,6 @@ class ZhaEntity(entity.Entity):
                 kwargs.get('entity_suffix', ''),
             )
 
-        self._attributes_to_report = {}
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
@@ -82,31 +81,15 @@ class ZhaEntity(entity.Entity):
 
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
-        from zigpy.zcl import Cluster as Zcl_Cluster
-
-        for key, attrs in self.attributes_to_report.items():
-            cluster = None
-            if isinstance(key, str):
-                cluster = getattr(self._endpoint, key, None)
-            elif isinstance(key, int):
-                if key in self._in_clusters:
-                    cluster = self._in_clusters[key]
-                elif key in self._out_clusters:
-                    cluster = self._out_clusters[key]
-            elif isinstance(key, Zcl_Cluster):
-                cluster = key
-            elif issubclass(key, Zcl_Cluster):
-                key = key.cluster_id
-                if key in self._in_clusters:
-                    cluster = self._in_clusters[key]
-                elif key in self._out_clusters:
-                    cluster = self._out_clusters[key]
+        for cluster_key, attrs in self.zcl_reporting_config.items():
+            cluster = self._get_cluster_from_report_config(cluster_key)
             if cluster is None:
                 continue
 
             manufacturer = None
             if cluster.cluster_id >= 0xfc00 and self.manufacturer_code:
                 manufacturer = self.manufacturer_code
+
             skip_bind = False  # bind cluster only for the 1st configured attr
             for attr, details in attrs.items():
                 min_report_interval, max_report_interval, change = details
@@ -119,14 +102,44 @@ class ZhaEntity(entity.Entity):
                     manufacturer=manufacturer
                 )
                 skip_bind = True
-                await sleep(uniform(0.1, 0.8))
+                await sleep(uniform(0.1, 0.5))
         _LOGGER.debug("%s: finished configuration", self.entity_id)
 
+    def _get_cluster_from_report_config(self, cluster_key):
+        """Parse an entry from zcl_reporting_config dict."""
+        from zigpy.zcl import Cluster as Zcl_Cluster
+
+        cluster = None
+        if isinstance(cluster_key, Zcl_Cluster):
+            cluster = cluster_key
+        elif isinstance(cluster_key, str):
+            cluster = getattr(self._endpoint, cluster_key, None)
+        elif isinstance(cluster_key, int):
+            if cluster_key in self._in_clusters:
+                cluster = self._in_clusters[cluster_key]
+            elif cluster_key in self._out_clusters:
+                cluster = self._out_clusters[cluster_key]
+        elif issubclass(cluster_key, Zcl_Cluster):
+            cluster_id = cluster_key.cluster_id
+            if cluster_id in self._in_clusters:
+                cluster = self._in_clusters[cluster_id]
+            elif cluster_id in self._out_clusters:
+                cluster = self._out_clusters[cluster_id]
+        return cluster
+
     @property
-    def attributes_to_report(self):
-        """Return a dict of attributes to report.
+    def zcl_reporting_config(self):
+        """Return a dict of ZCL attribute reporting configuration.
 
         {
+            Cluster_Class: {
+                attr_id: (min_report_interval, max_report_interval, change),
+                attr_name: (min_rep_interval, max_rep_interval, change)
+            }
+            Cluster_Instance: {
+                attr_id: (min_report_interval, max_report_interval, change),
+                attr_name: (min_rep_interval, max_rep_interval, change)
+            }
             cluster_id: {
                 attr_id: (min_report_interval, max_report_interval, change),
                 attr_name: (min_rep_interval, max_rep_interval, change)
@@ -135,13 +148,9 @@ class ZhaEntity(entity.Entity):
                 attr_id: (min_report_interval, max_report_interval, change),
                 attr_name: (min_rep_interval, max_rep_interval, change)
             }
-            Cluster_Class: {
-                attr_id: (min_report_interval, max_report_interval, change),
-                attr_name: (min_rep_interval, max_rep_interval, change)
-            }
         }
         """
-        return self._attributes_to_report
+        return dict()
 
     @property
     def unique_id(self) -> str:

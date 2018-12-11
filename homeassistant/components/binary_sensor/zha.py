@@ -225,12 +225,13 @@ class Remote(ZhaEntity, BinarySensorDevice):
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
         out_clusters = kwargs.get('out_clusters')
+        self._zcl_reporting = {}
         for cluster_id in [general.OnOff.cluster_id,
                            general.LevelControl.cluster_id]:
             if cluster_id not in out_clusters:
                 continue
             cluster = out_clusters[cluster_id]
-            self._attributes_to_report[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
+            self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
 
     @property
     def should_poll(self) -> bool:
@@ -249,6 +250,11 @@ class Remote(ZhaEntity, BinarySensorDevice):
             'level': self._state and self._level or 0
         })
         return self._device_state_attributes
+
+    @property
+    def zcl_reporting_config(self):
+        """Return ZCL attribute reporting configuration."""
+        return self._zcl_reporting
 
     def move_level(self, change):
         """Increment the level, setting state if appropriate."""

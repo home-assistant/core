@@ -104,7 +104,7 @@ class Sensor(ZhaEntity):
         self._cluster = list(kwargs['in_clusters'].values())[0]
 
     @property
-    def attributes_to_report(self) -> dict:
+    def zcl_reporting_config(self) -> dict:
         """Return a dict of attribute reporting configuration."""
         return {
             self.cluster: {self.value_attribute: self.report_config}

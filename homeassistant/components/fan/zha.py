@@ -85,7 +85,7 @@ class ZhaFan(ZhaEntity, FanEntity):
     value_attribute = 0  # fan_mode
 
     @property
-    def attributes_to_report(self) -> dict:
+    def zcl_reporting_config(self) -> dict:
         """Return a dict of attribute reporting configuration."""
         return {
             self.cluster: {self.value_attribute: REPORT_CONFIG_OP}

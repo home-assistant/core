@@ -110,7 +110,7 @@ class Light(ZhaEntity, light.Light):
                 self._hs_color = (0, 0)
 
     @property
-    def attributes_to_report(self) -> dict:
+    def zcl_reporting_config(self) -> dict:
         """Return attribute reporting configuration."""
         return {
             'on_off': {'on_off': REPORT_CONFIG_IMMEDIATE},
