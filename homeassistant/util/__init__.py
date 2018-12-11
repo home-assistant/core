@@ -10,7 +10,6 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unicodedata import normalize
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
 
