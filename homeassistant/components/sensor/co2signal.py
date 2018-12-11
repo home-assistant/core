@@ -21,11 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = 'Data provided by CO2signal'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TOKEN, default = None): cv.string,
-    vol.Optional(CONF_COUNTRY_CODE, default = None): cv.string,
-    vol.Optional(CONF_LATITUDE, default = 0): cv.latitude,
-    vol.Optional(CONF_LONGITUDE, default = 0): cv.longitude,
-    vol.Optional(CONF_REFRESH, default = 60): cv.positive_int,
+    vol.Optional(CONF_TOKEN, default=None): cv.string,
+    vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
+    vol.Optional(CONF_LATITUDE, default=0): cv.latitude,
+    vol.Optional(CONF_LONGITUDE, default=0): cv.longitude,
+    vol.Optional(CONF_REFRESH, default=60): cv.positive_int,
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
