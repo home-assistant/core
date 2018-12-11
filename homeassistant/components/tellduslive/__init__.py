@@ -23,7 +23,7 @@ from .const import (
 
 APPLICATION_NAME = 'Home Assistant'
 
-REQUIREMENTS = ['tellduslive==0.10.4']
+REQUIREMENTS = ['tellduslive==0.10.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +78,19 @@ async def async_setup_entry(hass, entry):
     hass.data[INTERVAL_TRACKER] = async_track_time_interval(
         hass, client.update, interval)
 
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    for hub in client.get_hubs():
+        _LOGGER.debug("Connected hub %s", hub['name'])
+        dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={('IP', hub['ip'])},
+            identifiers={(DOMAIN, hub['id'])},
+            manufacturer='Telldus',
+            name=hub['name'],
+            model=hub['type'],
+            sw_version=hub['version'],
+        )
+
     return True
 
 
@@ -120,6 +133,10 @@ class TelldusLiveClient:
         self._hass = hass
         self._config_entry = config_entry
         self._client = session
+
+    def get_hubs(self):
+        """Return hubs registered for the user."""
+        return self._client.get_clients() or []
 
     @staticmethod
     def identify_device(device):

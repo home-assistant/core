@@ -1545,7 +1545,7 @@ tellcore-net==0.4
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.4
+tellduslive==0.10.8
 
 # homeassistant.components.media_player.lg_soundbar
 temescal==0.1
