@@ -120,12 +120,14 @@ class CO2Sensor(Entity):
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._location_type == 'country_code':
-            self._data = CO2Signal.get_latest_carbon_intensity(self._token,
-                                                               country_code=self._country_code)
+            self._data = CO2Signal\
+                .get_latest_carbon_intensity(self._token,
+                                             country_code=self._country_code)
         elif self._location_type == 'coordinates':
-            self._data = CO2Signal.get_latest_carbon_intensity(self._token,
-                                                               latitude=self._latitude,
-                                                               longitude=self._longitude)
+            self._data = CO2Signal\
+                .get_latest_carbon_intensity(self._token,
+                                             latitude=self._latitude,
+                                             longitude=self._longitude)
         else:
             raise ValueError("Unknown location type: {location_type}"
                              .format(location_type=self._location_type))
