@@ -14,6 +14,8 @@ from unicodedata import normalize
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
 
+from slugify import slugify
+
 from .dt import as_local, utcnow
 
 # pylint: disable=invalid-name
@@ -42,13 +44,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text)
-    text = text.lower()
-    text = text.replace(" ", "_")
-    text = text.translate(TBL_SLUGIFY)
-    text = RE_SLUGIFY.sub("", text)
-
-    return text
+    return slugify(text, only_ascii=True)
 
 
 def repr_helper(inp: Any) -> str:
