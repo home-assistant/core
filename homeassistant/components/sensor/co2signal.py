@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REFRESH, default=60): cv.positive_int,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CO2signal sensor."""
 
@@ -52,7 +53,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devs = []
 
-    devs.append(CO2Sensor(token, country_code, lat, lon, location_type, refresh_rate))
+    devs.append(CO2Sensor(token,
+                          country_code,
+                          lat,
+                          lon,
+                          location_type,
+                          refresh_rate))
 
     add_devices(devs)
 
@@ -60,7 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    def __init__(self, token, country_code, lat, lon, location_type, refresh_rate = 15):
+    def __init__(self, token, country_code, lat, lon,
+                 location_type, refresh_rate=15):
         """Initialize the sensor."""
 
         self._token = token
@@ -97,7 +104,6 @@ class CO2Sensor(Entity):
 
     @property
     def state(self):
-        import datetime
         """Return the state of the device."""
         _LOGGER.debug("Get state for %s", self._friendly_name)
         return self._data
@@ -114,8 +120,12 @@ class CO2Sensor(Entity):
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._location_type == 'country_code':
-            self._data = CO2Signal.get_latest_carbon_intensity(self._token, country_code = self._country_code)
+            self._data = CO2Signal.get_latest_carbon_intensity(self._token,
+                                                               country_code=self._country_code)
         elif self._location_type == 'coordinates':
-            self._data = CO2Signal.get_latest_carbon_intensity(self._token, latitude = self._latitude, longitude = self._longitude)
+            self._data = CO2Signal.get_latest_carbon_intensity(self._token,
+                                                               latitude=self._latitude,
+                                                               longitude=self._longitude)
         else:
-            raise ValueError("Unknown location type: {location_type}".format(location_type = self._location_type))
+            raise ValueError("Unknown location type: {location_type}"
+                             .format(location_type=self._location_type))
