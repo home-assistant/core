@@ -200,7 +200,9 @@ class Icloud(DeviceScanner):
             self._intervals = {}
             for device in self.api.devices:
                 status = device.status(DEVICESTATUSSET)
+                _LOGGER.debug('Device Status is %s', status)
                 devicename = slugify(status['name'].replace(' ', '', 99))
+                _LOGGER.info('Adding icloud device: %s', devicename)
                 if devicename in self.devices:
                     _LOGGER.error('Multiple devices with name: %s', devicename)
                     continue
@@ -404,6 +406,7 @@ class Icloud(DeviceScanner):
                     continue
 
                 status = device.status(DEVICESTATUSSET)
+                _LOGGER.debug('Device Status is %s', status)
                 dev_id = status['name'].replace(' ', '', 99)
                 dev_id = slugify(dev_id)
                 attrs[ATTR_DEVICESTATUS] = DEVICESTATUSCODES.get(
@@ -443,7 +446,9 @@ class Icloud(DeviceScanner):
         self.api.authenticate()
 
         for device in self.api.devices:
-            if devicename is None or device == self.devices[devicename]:
+            _LOGGER.info("Request Lost iPhone for %s",devicename)
+            if devicename is None or str(device) == str(self.devices[devicename]):
+                _LOGGER.debug("About to play sound Lost iPhone for %s",devicename)
                 device.play_sound()
 
     def update_icloud(self, devicename=None):
