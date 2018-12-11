@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     station_from = config[CONF_STATION_FROM]
     station_to = config[CONF_STATION_TO]
-    station_live = config[CONF_STATION_LIVE]
+    station_live = config.get(CONF_STATION_LIVE)
 
     sensors = [NMBSSensor(name, station_from, station_to, api_client)]
 
