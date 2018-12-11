@@ -11,6 +11,7 @@ modbus:
 climate:
   - platform: stiebel_eltron
     name: LWZ504e
+    slave: 1
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.stiebel_eltron/
@@ -19,19 +20,35 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
+    CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
     ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
+    ClimateDevice, PLATFORM_SCHEMA,
+    ATTR_CURRENT_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     STATE_AUTO, STATE_MANUAL, STATE_IDLE)
 from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pymodbus==1.3.1', 
-                'https://github.com/fucm/python-stiebel-eltron/archive/v0.0.1.dev1.zip#python-stiebel-eltron==0.0.1.dev1']
+REQUIREMENTS = ['pymodbus==1.3.1',
+                """https://github.com/fucm/python-stiebel-eltron/archive/v0.0.1.dev1.zip#
+                   python-stiebel-eltron==0.0.1.dev1"""]
 DEPENDENCIES = ['modbus']
+
+
+DEFAULT_SLAVE = 1
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE):
+        vol.All(int, vol.Range(min=0, max=32)),
+})
+
+_LOGGER = logging.getLogger(__name__)
+
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 STATE_DAYMODE = 'Tagbetrieb'
 STATE_SETBACK = 'Absenkbetrieb'
@@ -56,68 +73,36 @@ HASS_TO_STE_STATE = {STATE_AUTO: 'AUTOMATIC',
                      STATE_DHW: 'DHW',
                      STATE_EMERGENCY: 'EMERGENCY OPERATION'}
 
-DEVICE_DEFAULT_NAME = "Stiebel Eltron Heatpump"
-DEFAULT_PORT = 502
-DEFAULT_UNIT = 1
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    #vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SLAVE, default=DEFAULT_UNIT):
-        vol.All(int, vol.Range(min=0, max=32)),
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
-})
-
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-# | SUPPORT_FAN_MODE
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the StiebelEltron Platform."""
-    host = config.get(CONF_HOST, None)
-    port = config.get(CONF_PORT, None)
-    modbus_slave = config.get(CONF_SLAVE, None)
-    name = config.get(CONF_NAME, None)
+    """Set up the StiebelEltron platform."""
+    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+    modbus_slave = config.get(CONF_SLAVE, DEFAULT_SLAVE)
+    modbus_client = modbus.HUB
 
-    #from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-    #client = ModbusClient(host=host, port=port)
-    #client.connect()
-    client = None
-    add_devices([StiebelEltron(client, modbus_slave, name)], True)
-
+    add_devices([StiebelEltron(name, modbus_client, modbus_slave)], True)
     return True
 
 
 class StiebelEltron(ClimateDevice):
     """Representation of a Stiebel Eltron heat pump."""
 
-    def __init__(self, client, modbus_slave, name):
+    def __init__(self, name, modbus_client, modbus_slave):
         """Initialize the unit."""
         from pystiebeleltron import pystiebeleltron
         self._name = name
-        self._client = client
-        self._slave = modbus_slave
+        self._modbus_client = modbus_client
+        self._modbus_slave = modbus_slave
+
         self._target_temperature = None
         self._current_temperature = None
-        # self._current_fan_mode = None
-        # Skip special states:
-        # STATE_MANUAL, STATE_DAYMODE, STATE_SETBACK, STATE_EMERGENCY
+        self._current_humidity = None
         self._operation_modes = [STATE_AUTO, STATE_IDLE, STATE_DHW]
         self._current_operation = None
-        # self._fan_list = ['Off', 'Low', 'Medium', 'High']
-        # self._current_operation = None
-        # self._filter_hours = None
         self._filter_alarm = None
-        # self._heat_recovery = None
-        # self._heater_enabled = False
-        # self._heating = None
-        # self._cooling = None
-        # self._alarm = False
-        #self.unit = pystiebeleltron.StiebelEltronAPI(self._client, self._slave)
-        self.unit = pystiebeleltron.StiebelEltronAPI(modbus.HUB, self._slave)
-        _LOGGER.debug("Initialized stiebel_eltron.")
+        self.unit = pystiebeleltron.StiebelEltronAPI(self._modbus_client,
+                                                     self._modbus_slave)
+        _LOGGER.debug("Initialized StiebelEltron climat component.")
 
     @property
     def supported_features(self):
@@ -131,32 +116,19 @@ class StiebelEltron(ClimateDevice):
 
         self._target_temperature = self.unit.get_target_temp
         self._current_temperature = self.unit.get_current_temp
-        # self._current_fan_mode =\
-        #    self._fan_list[self.unit.get_fan_speed]
-        # self._filter_hours = self.unit.get_filter_hours
-        # Mechanical heat recovery, 0-100%
-        # self._heat_recovery = self.unit.get_heat_recovery
-        # Heater active 0-100%
-        # self._heating = self.unit.get_heating
-        # Cooling active 0-100%
-        # self._cooling = self.unit.get_cooling
-        # Filter alarm 0/1
+        # self._current_humidity = self.unit.get_current_humidity
         self._filter_alarm = self.unit.get_filter_alarm
-        # Heater enabled or not. Does not mean it's necessarily heating
-        # self._heater_enabled = self.unit.get_heater_enabled
-        # Current operation mode
         self._current_operation = self.unit.get_operation
+
+        _LOGGER.debug("Update %s, current temp: %s", self._name, 
+                      self._current_temperature)
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            # 'filter_hours':     self._filter_hours,
-            'filter_alarm':     self._filter_alarm,
-            # 'heat_recovery':    self._heat_recovery,
-            # 'heating':          self._heating,
-            # 'heater_enabled':   self._heater_enabled,
-            # 'cooling':          self._cooling
+            # ATTR_CURRENT_HUMIDITY: self._current_humidity,
+            'filter_alarm':     self._filter_alarm
         }
 
     @property
@@ -169,6 +141,7 @@ class StiebelEltron(ClimateDevice):
         """Return the name of the climate device."""
         return self._name
 
+    # Handle SUPPORT_TARGET_TEMPERATURE
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
@@ -199,6 +172,14 @@ class StiebelEltron(ClimateDevice):
         """Return the maximum temperature."""
         return 30.0
 
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        if kwargs.get(ATTR_TEMPERATURE) is not None:
+            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        _LOGGER.debug("set_temperature: %s", self._target_temperature)
+        # self.unit.set_target_temp(self._target_temperature)
+
+    # Handle SUPPORT_OPERATION_MODE
     @property
     def operation_list(self):
         """List of the operation modes."""
@@ -212,24 +193,7 @@ class StiebelEltron(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         new_mode = HASS_TO_STE_STATE.get(operation_mode)
+        _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
+                      new_mode)
+        self._current_operation = new_mode
         self.unit.set_operation(new_mode)
-
-#    @property
-#    def current_fan_mode(self):
-#        """Return the fan setting."""
-#        return self._current_fan_mode
-
-#    @property
-#    def fan_list(self):
-#        """Return the list of available fan modes."""
-#        return self._fan_list
-
-#    def set_temperature(self, **kwargs):
-#        """Set new target temperature."""
-#        if kwargs.get(ATTR_TEMPERATURE) is not None:
-#            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-#        self.unit.set_temp(self._target_temperature)
-
-#    def set_fan_mode(self, fan_mode):
-#        """Set new fan mode."""
-#        self.unit.set_fan_speed(self._fan_list.index(fan_mode))
