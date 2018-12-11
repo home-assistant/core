@@ -96,12 +96,15 @@ class ZhaEntity(entity.Entity):
     @callback
     def device_announce(self, device):
         """Handle device_announce zdo event."""
-        if hasattr(self, 'async_update'):
-            self.hass.async_create_task(self.async_update())
+        self.hass.async_create_task(self.async_update())
 
     @callback
     def permit_duration(self, permit_duration):
         """Handle permit_duration zdo event."""
+        pass
+
+    async def async_update(self):
+        """Retrieve latest state."""
         pass
 
     @property
