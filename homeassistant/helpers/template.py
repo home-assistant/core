@@ -150,7 +150,7 @@ class Template:
 
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL,
-                                              entity_id=None):
+                                              variables=None):
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -160,12 +160,8 @@ class Template:
         if self._compiled is None:
             self._ensure_compiled()
 
-        variables = {
-            'value': value
-        }
-
-        if entity_id:
-            variables['entity_id'] = entity_id
+        variables = dict(variables or {})
+        variables['value'] = value
 
         try:
             variables['value_json'] = json.loads(value)

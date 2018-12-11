@@ -135,7 +135,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
-                    payload, entity_id=self.entity_id)
+                    payload, variables={'entity_id': self.entity_id})
             if payload == self._config.get(CONF_PAYLOAD_ON):
                 self._state = True
             elif payload == self._config.get(CONF_PAYLOAD_OFF):
