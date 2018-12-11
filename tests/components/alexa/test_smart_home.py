@@ -1622,6 +1622,7 @@ async def test_disabled(hass):
 
 
 async def test_report_state(hass, aioclient_mock):
+    """Test proactive state reports."""
     aioclient_mock.post(TEST_URL, json={'data': 'is irrelevant'})
 
     hass.states.async_set(
