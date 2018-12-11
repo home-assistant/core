@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.alarmdecoder/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from ..alarmdecoder import (
+from homeassistant.components.alarmdecoder import (
     ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE,
     CONF_ZONE_RFID, CONF_ZONE_LOOP, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
     SIGNAL_RFX_MESSAGE, SIGNAL_REL_MESSAGE, CONF_RELAY_ADDR,
