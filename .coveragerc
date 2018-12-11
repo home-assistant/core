@@ -876,6 +876,7 @@ omit =
     homeassistant/components/vacuum/roomba.py
     homeassistant/components/water_heater/econet.py
     homeassistant/components/watson_iot.py
+    homeassistant/components/weather/ambient.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
