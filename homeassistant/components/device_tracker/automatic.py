@@ -246,12 +246,13 @@ class AutomaticData:
             # Ignored device
             return
 
-        # If this is a vehicle status report, update the battery voltage and fuel level
+        # If this is a vehicle status report, update the
+        # battery voltage and fuel level.
         if name == "vehicle:status_report":
-            battery = event.vehicle.battery_voltage
+            battery_voltage = event.vehicle.battery_voltage
             fuel_level = event.vehicle.fuel_level_percent
-            if battery is not None:
-                kwargs[ATTR_ATTRIBUTES][ATTR_BATTERY] = battery
+            if battery_voltage is not None:
+                kwargs[ATTR_ATTRIBUTES][ATTR_BATTERY] = battery_voltage
             if fuel_level is not None:
                 kwargs[ATTR_ATTRIBUTES][ATTR_FUEL_LEVEL] = fuel_level
 
@@ -338,9 +339,7 @@ class AutomaticData:
             ATTR_MAC: vehicle.id,
             ATTR_ATTRIBUTES: {
                 ATTR_BATTERY: vehicle.battery_voltage,
-            },
-            ATTR_ATTRIBUTES: {
-                ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
+                ATTR_FUEL_LEVEL: vehicle.fuel_level_percent
             }
         }
         self.vehicle_seen[vehicle.id] = \

@@ -67,7 +67,7 @@ def test_valid_credentials(
 
     vehicle.id = 'mock_id'
     vehicle.display_name = 'mock_display_name'
-    vehicle.battery_voltage = 12.3
+    vehicle.battery_voltage = 12.9
     vehicle.fuel_level_percent = 45.6
     vehicle.latest_location = None
     vehicle.updated_at = datetime(2017, 8, 13, 1, 2, 3)
@@ -126,7 +126,7 @@ def test_valid_credentials(
     assert mock_see.mock_calls[0][2]['dev_id'] == 'mock_id'
     assert mock_see.mock_calls[0][2]['mac'] == 'mock_id'
     assert mock_see.mock_calls[0][2]['host_name'] == 'mock_display_name'
-    assert mock_see.mock_calls[0][2]['attributes'] == {'fuel_level': 45.6}
+    assert mock_see.mock_calls[0][2]['attributes'] == {'battery_voltage': 12.9, 'fuel_level': 45.6}
     assert mock_see.mock_calls[0][2]['gps'] == (45.567, 34.345)
     assert mock_see.mock_calls[0][2]['gps_accuracy'] == 5.6
 
