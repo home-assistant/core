@@ -7,7 +7,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
