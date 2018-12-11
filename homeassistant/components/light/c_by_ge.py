@@ -49,7 +49,6 @@ class GELight(Light):
 
     def __init__(self, bulb):
         """Initialize the light."""
-
         self._bulb = bulb
         self._state = False
         self._brightness = 255
@@ -61,6 +60,7 @@ class GELight(Light):
             self._features = SUPPORT_BRIGHTNESS
 
     def callback(self, args):
+        """Handle updates from the bulb."""
         if self.hass is not None:
             self.schedule_update_ha_state()
 
@@ -74,13 +74,12 @@ class GELight(Light):
         """Return true if device is on."""
         if self._bulb.brightness == 0:
             return False
-        else:
-            return True
+        return True
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return (self._bulb.brightness * 2.55)
+        return self._bulb.brightness * 2.55
 
     @property
     def supported_features(self):
@@ -105,12 +104,11 @@ class GELight(Light):
 
     @property
     def should_poll(self):
-        """Don't need to poll"""
+        """Don't need to poll."""
         return False
 
     def turn_on(self, **kwargs):
         """Turn the specified light on."""
-
         if not self.is_on:
             self._bulb.set_power(True)
 
