@@ -4,6 +4,7 @@ Component for handling Air Pollutants data for your location.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/air_pollutants/
 """
+from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
@@ -11,10 +12,6 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'air_pollutants'
-
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_AIR_POLLUTANTS_AQI = 'air_quality_index'
 ATTR_AIR_POLLUTANTS_ATTRIBUTION = 'attribution'
@@ -29,10 +26,17 @@ ATTR_AIR_POLLUTANTS_PM_10 = 'particulate_matter_10'
 ATTR_AIR_POLLUTANTS_PM_2_5 = 'particulate_matter_2_5'
 ATTR_AIR_POLLUTANTS_SO2 = 'sulphur_dioxide'
 
+DOMAIN = 'air_pollutants'
+
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+SCAN_INTERVAL = timedelta(seconds=30)
+
 
 async def async_setup(hass, config):
     """Set up the air pollutants component."""
-    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
     return True
 
