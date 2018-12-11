@@ -49,6 +49,7 @@ REQUIRES = [
     'pyyaml>=3.13,<4',
     'requests==2.20.1',
     'ruamel.yaml==0.15.80',
+    'unicode-slugify==0.1.3',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.0.0',
 ]
