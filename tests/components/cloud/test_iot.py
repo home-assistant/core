@@ -411,7 +411,7 @@ async def test_refresh_token_expired(hass):
 async def test_webhook_msg(hass):
     """Test webhook msg."""
     cloud = Cloud(hass, MODE_DEV, None, None)
-    await cloud.prefs.async_initialize(True)
+    await cloud.prefs.async_initialize()
     await cloud.prefs.async_update(cloudhooks={
         'hello': {
             'webhook_id': 'mock-webhook-id',
