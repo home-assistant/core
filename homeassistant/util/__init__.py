@@ -14,7 +14,7 @@ from unicodedata import normalize
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
 
-from slugify import slugify
+import slugify as moz_slug
 
 from .dt import as_local, utcnow
 
@@ -44,7 +44,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    return slugify(text, only_ascii=True)
+    return moz_slug.slugify(text, only_ascii=True)
 
 
 def repr_helper(inp: Any) -> str:
