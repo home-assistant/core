@@ -88,7 +88,7 @@ async def websocket_get_entity(hass, connection, msg):
 
 @async_response
 async def websocket_update_entity(hass, connection, msg):
-    """Handle get camera thumbnail websocket command.
+    """Handle update entity websocket command.
 
     Async friendly.
     """
