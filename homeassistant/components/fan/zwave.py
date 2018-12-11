@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, 'zwave_new_fan', async_add_fan)
 
 
-def get_device(node, values, node_config, **kwargs):
+def get_device(values, **kwargs):
     """Create Z-Wave entity device."""
     return ZwaveFan(values)
 
@@ -58,7 +58,7 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
                 "2": range(25, 50),
                 "3": range(50, 75),
                 "4": range(75, 101)
-        }
+            }
         else:
             self._speed_list = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
             self._speed_to_values = {
@@ -70,8 +70,8 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
 
         self._value_to_speed = {}
         for speed, values in self._speed_to_values.items():
-              for value in values:
-                    self._value_to_speed[value] = speed
+            for value in values:
+                self._value_to_speed[value] = speed
 
     def _device_id(self):
         if (self.node.manufacturer_id.strip() and
