@@ -42,7 +42,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/JeffLIrion/python-androidtv/zipball/pure-python-adb#androidtv==0.0.3']
+REQUIREMENTS = ['androidtv==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
