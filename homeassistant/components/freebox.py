@@ -91,5 +91,6 @@ async def async_setup_freebox(hass, config, host, port):
 
         @callback
         async def close_fbx(event):
+        """Close Freebox connection on HA Stop"""
             await fbx.close()
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fbx)
