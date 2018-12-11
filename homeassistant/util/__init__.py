@@ -44,7 +44,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    return moz_slug.slugify(text, only_ascii=True)
+    return moz_slug.slugify(text, ok='_', only_ascii=True)
 
 
 def repr_helper(inp: Any) -> str:
