@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 
-#REQUIREMENTS = ['transmissionrpc==0.11']
 DEPENDENCIES = ['transmission']
 DATA_TRANSMISSION = 'TRANSMISSION'
 
@@ -53,10 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
-    #import transmissionrpc
-    #from transmissionrpc.error import TransmissionError
 
-    transmission_api = hass.data[DATA_TRANSMISSION];
+    transmission_api = hass.data[DATA_TRANSMISSION]
     monitored_variables = discovery_info['sensors']
     name = discovery_info['client_name']
 

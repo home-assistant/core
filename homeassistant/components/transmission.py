@@ -12,10 +12,10 @@ from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_NAME, 
-  CONF_PORT, CONF_USERNAME, CONF_MONITORED_VARIABLES)
- 
-REQUIREMENTS = ['transmissionrpc==0.11'] 
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_NAME,
+   CONF_PORT, CONF_USERNAME, CONF_MONITORED_VARIABLES)
+
+REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
@@ -43,26 +43,29 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
   })
 }, extra=vol.ALLOW_EXTRA)
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
 
-def setup(hass,config):
+def setup(hass, config):
     hass.data[DATA_TRANSMISSION] = TransmissionData(hass, config)
-    
+
     def refresh(event_time):
         hass.data[DATA_TRANSMISSION].update()
 
     track_time_interval(hass, refresh, SCAN_INTERVAL)
 
-    sensorconfig = {'sensors': config[DOMAIN].get(CONF_MONITORED_VARIABLES) , 'client_name' : config[DOMAIN].get(CONF_NAME)}
+    sensorconfig = {
+        'sensors': config[DOMAIN].get(CONF_MONITORED_VARIABLES),
+        'client_name': config[DOMAIN].get(CONF_NAME)}
     load_platform(hass, 'sensor', DOMAIN, sensorconfig)
 
     _LOGGER.info("Transmission component setup completed.")
     return True
+
 
 class TransmissionData:
     """Get the latest data and update the states."""
@@ -72,7 +75,6 @@ class TransmissionData:
         from transmissionrpc.error import TransmissionError
         try:
             """Initialize the Transmission RPC API"""
-            name = config[DOMAIN].get(CONF_NAME)
             host = config[DOMAIN].get(CONF_HOST)
             username = config[DOMAIN].get(CONF_USERNAME)
             password = config[DOMAIN].get(CONF_PASSWORD)
@@ -93,7 +95,8 @@ class TransmissionData:
 
         except TransmissionError as error:
             if str(error).find("401: Unauthorized"):
-                _LOGGER.error("Credentials for Transmission client are not valid")
+                _LOGGER
+                .error("Credentials for Transmission client are not valid")
                 return
 
             _LOGGER.warning(
@@ -159,7 +162,7 @@ class TransmissionData:
                     'transmission_started_torrent', {
                         'name': var})
         self.started_torrents = actual_started_torrents
-    
+
     def getStartedTorrentCount(self):
         return len(self.started_torrents)
 
