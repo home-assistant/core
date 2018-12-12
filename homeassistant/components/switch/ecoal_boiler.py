@@ -1,25 +1,8 @@
 """
 Allows to configuration ecoal (esterownik.pl) pumps as switches.
 
-solid fuel boiler controller as set of switches operating over pumps
-Example configuration:
-
-switch:
-  - platform: ecoal_boiler
-    enable:
-      central_heating_pump: Wall radiators
-      central_heating_pump2: Floor radiators
-      # domestic_hot_water_pump: N/A
-
-ecoal_boiler:
-  host: 192.168.1.123
-  login: admin
-  password: admin
-
-
-sets names for two pumps (central_heating_pump,central_heating_pump2).
-Missing grom config 3rd pump ( domestic_hot_water_pump ) is not used
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.ecoal_boiler/
 """
 import logging
 from typing import Optional

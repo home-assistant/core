@@ -1,22 +1,8 @@
 """
 Allows reading temperatures from ecoal/esterownik.pl controller.
 
-Example configuration:
-sensor:
-  - platform: ecoal_boiler
-    enable:
-      outdoor_temp: Outdoor
-      indoor_temp: Konrad room
-      indoor_temp2: Ala room
-      domestic_hot_water_temp: Domestic hot water
-      feedwater_out_temp: Feedwater
-      # more sensors from SENSOR_IDS
-
-ecoal_boiler:
-  host: 192.168.1.123
-  login: admin
-  password: admin
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.ecoal_boiler/
 """
 
 import voluptuous as vol
