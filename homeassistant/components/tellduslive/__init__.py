@@ -70,28 +70,31 @@ async def async_setup_entry(hass, entry):
 
     client = TelldusLiveClient(hass, entry, session)
     hass.data[DOMAIN] = client
-
-    await client.update()
+    hass.async_create_task(async_add_hubs(hass, client, entry.entry_id))
+    hass.async_create_task(client.update())
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
     hass.data[INTERVAL_TRACKER] = async_track_time_interval(
         hass, client.update, interval)
 
+    return True
+
+
+async def async_add_hubs(hass, client, entry_id):
+    """Add the hubs associated with the current client to device_registry."""
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     for hub in client.get_hubs():
         _LOGGER.debug("Connected hub %s", hub['name'])
         dev_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
+            config_entry_id=entry_id,
             connections={('IP', hub['ip'])},
             identifiers={(DOMAIN, hub['id'])},
             manufacturer='Telldus',
-            name=hub['name'],
+            name=hub.get('name', hub['ip']),
             model=hub['type'],
             sw_version=hub['version'],
         )
-
-    return True
 
 
 async def async_setup(hass, config):
