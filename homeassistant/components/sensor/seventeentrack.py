@@ -143,9 +143,10 @@ class SeventeenTrackSummarySensor(Entity):
         await self._data.async_update()
 
         package_data = []
-        for package in [
-                p for p in self._data.packages if p.status == self._status
-        ]:
+        for package in self._data.packages:
+            if package.status != self._status:
+                continue
+
             package_data.append({
                 ATTR_FRIENDLY_NAME: package.friendly_name,
                 ATTR_INFO_TEXT: package.info_text,
