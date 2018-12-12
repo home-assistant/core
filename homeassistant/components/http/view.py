@@ -9,11 +9,14 @@ import json
 import logging
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
+from aiohttp.web_exceptions import (
+    HTTPUnauthorized, HTTPInternalServerError, HTTPBadRequest)
+import voluptuous as vol
 
 from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import Context, is_callback
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant import exceptions
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
@@ -44,8 +47,9 @@ class HomeAssistantView:
         """Return a JSON response."""
         try:
             msg = json.dumps(
-                result, sort_keys=True, cls=JSONEncoder).encode('UTF-8')
-        except TypeError as err:
+                result, sort_keys=True, cls=JSONEncoder, allow_nan=False
+            ).encode('UTF-8')
+        except (ValueError, TypeError) as err:
             _LOGGER.error('Unable to serialize to JSON: %s\n%s', err, result)
             raise HTTPInternalServerError
         response = web.Response(
@@ -107,10 +111,17 @@ def request_handler_factory(view, handler):
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, request.get(KEY_REAL_IP), authenticated)
 
-        result = handler(request, **request.match_info)
+        try:
+            result = handler(request, **request.match_info)
 
-        if asyncio.iscoroutine(result):
-            result = await result
+            if asyncio.iscoroutine(result):
+                result = await result
+        except vol.Invalid:
+            raise HTTPBadRequest()
+        except exceptions.ServiceNotFound:
+            raise HTTPInternalServerError()
+        except exceptions.Unauthorized:
+            raise HTTPUnauthorized()
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it

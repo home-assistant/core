@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
 
-REQUIREMENTS = ['librouteros==2.1.1']
+REQUIREMENTS = ['librouteros==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +128,8 @@ class MikrotikScanner(DeviceScanner):
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist or self.method == 'ip':
+                if not self.wireless_exist and not self.capsman_exist \
+                   or self.method == 'ip':
                     _LOGGER.info(
                         "Mikrotik %s: Wireless adapters not found. Try to "
                         "use DHCP lease table as presence tracker source. "
@@ -143,12 +144,18 @@ class MikrotikScanner(DeviceScanner):
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error("Connection error: %s", api_error)
-
         return self.connected
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-        self._update_info()
+        import librouteros
+        try:
+            self._update_info()
+        except (librouteros.exceptions.TrapError,
+                librouteros.exceptions.MultiTrapError,
+                librouteros.exceptions.ConnectionError) as api_error:
+            _LOGGER.error("Connection error: %s", api_error)
+            self.connect_to_device()
         return [device for device in self.last_results]
 
     def get_device_name(self, device):

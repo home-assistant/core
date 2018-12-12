@@ -274,6 +274,37 @@ class TestHelpersTemplate(unittest.TestCase):
             template.Template('{{ [1, 2, 3] | max }}',
                               self.hass).render()
 
+    def test_base64_encode(self):
+        """Test the base64_encode filter."""
+        self.assertEqual(
+            'aG9tZWFzc2lzdGFudA==',
+            template.Template('{{ "homeassistant" | base64_encode }}',
+                              self.hass).render())
+
+    def test_base64_decode(self):
+        """Test the base64_decode filter."""
+        self.assertEqual(
+            'homeassistant',
+            template.Template('{{ "aG9tZWFzc2lzdGFudA==" | base64_decode }}',
+                              self.hass).render())
+
+    def test_ordinal(self):
+        """Test the ordinal filter."""
+        tests = [
+            (1, '1st'),
+            (2, '2nd'),
+            (3, '3rd'),
+            (4, '4th'),
+            (5, '5th'),
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | ordinal }}' % value,
+                    self.hass).render())
+
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
         now = dt_util.utcnow()

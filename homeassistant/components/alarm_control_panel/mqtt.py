@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT alarm control panel through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -67,54 +67,47 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_COMMAND_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_RETAIN),
-        config.get(CONF_PAYLOAD_DISARM),
-        config.get(CONF_PAYLOAD_ARM_HOME),
-        config.get(CONF_PAYLOAD_ARM_AWAY),
-        config.get(CONF_CODE),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        discovery_hash,)])
+    async_add_entities([MqttAlarm(config, discovery_hash)])
 
 
 class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
                 alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, name, state_topic, command_topic, qos, retain,
-                 payload_disarm, payload_arm_home, payload_arm_away, code,
-                 availability_topic, payload_available, payload_not_available,
-                 discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
+        self._state = STATE_UNKNOWN
+        self._config = config
+        self._sub_state = None
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        qos = config.get(CONF_QOS)
+
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash)
-        self._state = STATE_UNKNOWN
-        self._name = name
-        self._state_topic = state_topic
-        self._command_topic = command_topic
-        self._qos = qos
-        self._retain = retain
-        self._payload_disarm = payload_disarm
-        self._payload_arm_home = payload_arm_home
-        self._payload_arm_away = payload_arm_away
-        self._code = code
-        self._discovery_hash = discovery_hash
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        await MqttAvailability.async_added_to_hass(self)
-        await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await super().async_added_to_hass()
+        await self._subscribe_topics()
 
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._config = config
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
@@ -126,8 +119,16 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        await mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, self._qos)
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state,
+            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+                             'msg_callback': message_received,
+                             'qos': self._config.get(CONF_QOS)}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):
@@ -137,7 +138,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def state(self):
@@ -147,9 +148,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if self._code is None:
+        code = self._config.get(CONF_CODE)
+        if code is None:
             return None
-        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(code, str) and re.search('^\\d+$', code):
             return 'Number'
         return 'Any'
 
@@ -161,8 +163,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'disarming'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_disarm, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_DISARM),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
@@ -172,8 +176,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'arming home'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_arm_home, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_ARM_HOME),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -183,12 +189,15 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'arming away'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_arm_away, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_ARM_AWAY),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     def _validate_code(self, code, state):
         """Validate given code."""
-        check = self._code is None or code == self._code
+        conf_code = self._config.get(CONF_CODE)
+        check = conf_code is None or code == conf_code
         if not check:
             _LOGGER.warning('Wrong code entered for %s', state)
         return check

@@ -179,10 +179,8 @@ def _setup_bme680(config):
 
     sensor_handler = BME680Handler(
         sensor,
-        True if (
-            SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
-            SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
-        ) else False,
+        (SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
+         SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]),
         config[CONF_AQ_BURN_IN_TIME],
         config[CONF_AQ_HUM_BASELINE],
         config[CONF_AQ_HUM_WEIGHTING]

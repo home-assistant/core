@@ -15,7 +15,7 @@ from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 DOMAIN = 'input_boolean'
 
@@ -84,7 +84,7 @@ async def async_setup(hass, config):
     return True
 
 
-class InputBoolean(ToggleEntity):
+class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
     def __init__(self, object_id, name, initial, icon):
@@ -117,10 +117,11 @@ class InputBoolean(ToggleEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
+        await super().async_added_to_hass()
         if self._state is not None:
             return
 
-        state = await async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         self._state = state and state.state == STATE_ON
 
     async def async_turn_on(self, **kwargs):

@@ -11,7 +11,6 @@ import voluptuous as vol
 from requests import RequestException
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
@@ -141,11 +140,11 @@ def setup(hass, config):
     from requests import Session
 
     conf = config[DOMAIN]
+    api_http_session = None
     try:
         api_http_session = Session()
     except RequestException as ex:
         _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
-        api_http_session = None
 
     api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
 
@@ -156,6 +155,20 @@ def setup(hass, config):
         conf.get(CONF_PASSWORD),
         install_id=conf.get(CONF_INSTALL_ID),
         access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE))
+
+    def close_http_session(event):
+        """Close API sessions used to connect to August."""
+        _LOGGER.debug("Closing August HTTP sessions")
+        if api_http_session:
+            try:
+                api_http_session.close()
+            except RequestException:
+                pass
+
+        _LOGGER.debug("August HTTP session closed.")
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
+    _LOGGER.debug("Registered for HASS stop event")
 
     return setup_august(hass, config, api, authenticator)
 
@@ -177,22 +190,6 @@ class AugustData:
         self._lock_detail_by_id = {}
         self._door_state_by_id = {}
         self._activities_by_id = {}
-
-        @callback
-        def august_api_stop(event):
-            """Close the API HTTP session."""
-            _LOGGER.debug("Closing August HTTP session")
-
-            try:
-                self._api.http_session.close()
-                self._api.http_session = None
-            except RequestException:
-                pass
-            _LOGGER.debug("August HTTP session closed.")
-
-        self._hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_STOP, august_api_stop)
-        _LOGGER.debug("Registered for HASS stop event")
 
     @property
     def house_ids(self):

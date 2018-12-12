@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['millheater==0.2.7']
+REQUIREMENTS = ['millheater==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class MillHeater(ClimateDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._heater.device_status == 0  # weird api choice
+        return self._heater.available
 
     @property
     def unique_id(self):
