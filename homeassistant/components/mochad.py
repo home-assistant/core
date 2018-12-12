@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 from homeassistant.components import mqtt
 
-DEPENDENCIES = ['mqtt']
+
 REQUIREMENTS = ["pymochad_mqtt==0.8.9", 'pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
