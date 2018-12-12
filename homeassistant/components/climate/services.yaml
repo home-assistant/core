@@ -156,34 +156,34 @@ broadlink_set_schedule:
       description: Name of entities to change.
       example: 'climate.kitchen'
     week_start_1:
-      description: Name of entities to change.
+      description: First starting period (week).
       example: 'climate.kitchen'
     week_stop_1:
-      description: Name of entities to change.
+      description: First ending period (week).
       example: 'climate.kitchen'
     week_start_2:
-      description: Name of entities to change.
+      description: Second starting period (week).
       example: 'climate.kitchen'
     week_stop_2:
-      description: Name of entities to change.
+      description: Second ending period (week).
       example: 'climate.kitchen'
     week_start_3:
-      description: Name of entities to change.
+      description: Third starting period (week).
       example: 'climate.kitchen'
     week_stop_3:
-      description: Name of entities to change.
+      description: Third ending period (week).
       example: 'climate.kitchen'
     weekend_start:
-      description: Name of entities to change.
+      description: Starting period (weekend).
       example: 'climate.kitchen'
     weekend_stop:
-      description: Name of entities to change.
+      description: Ending period (weekend).
       example: 'climate.kitchen'
     away_temp:
-      description: Name of entities to change.
+      description: Away Temperature.
       example: 'climate.kitchen'
     home_temp:
-      description: Name of entities to change.
+      description: Home temperature.
       example: 'climate.kitchen'
 
 
