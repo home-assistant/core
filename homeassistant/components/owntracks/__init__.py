@@ -137,14 +137,15 @@ async def handle_webhook(hass, webhook_id, request):
         user = headers.get('X-Limit-U')
         device = headers.get('X-Limit-D', user)
 
-        if user is None:
+        if user:
+            topic_base = re.sub('/#$', '', context.mqtt_topic)
+            message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
+
+        elif message['_type'] != 'encrypted':
             _LOGGER.warning('No topic or user found in message. If on Android,'
                             ' set a username in Connection -> Identification')
             # Keep it as a 200 response so the incorrect packet is discarded
             return json_response([])
-
-        topic_base = re.sub('/#$', '', context.mqtt_topic)
-        message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
 
     hass.helpers.dispatcher.async_dispatcher_send(
         DOMAIN, hass, context, message)
