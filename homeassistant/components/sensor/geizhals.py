@@ -82,8 +82,8 @@ class Geizwatch(Entity):
         """Return the best price of the selected product."""
         if not self._device.prices:
             return None
-        else:
-            return self._device.prices[0]
+        
+        return self._device.prices[0]
 
     @property
     def device_state_attributes(self):
