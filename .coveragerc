@@ -407,6 +407,7 @@ omit =
 
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
+    homeassistant/components/zha/event.py
     homeassistant/components/zha/entities/*
     homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
