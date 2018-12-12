@@ -148,3 +148,75 @@ sensibo_assume_state:
     state:
       description: State to set.
       example: 'idle'
+
+broadlink_set_schedule:
+  description: Set programmed schedule.
+  fields:
+    entity_id:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_start_1:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_stop_1:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_start_2:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_stop_2:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_start_3:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    week_stop_3:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    weekend_start:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    weekend_stop:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    away_temp:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    home_temp:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+
+
+broadlink_set_advanced_conf:
+  description: Set thermostat advanced conf.
+  fields:
+    entity_id:
+      description: Name of entities to change.
+      example: 'climate.kitchen'
+    loop_mode:
+      description: 0 means Saturday and Sunday follow the "weekend" schedule, 1 means only Sunday follow the "weekend" schedule, 2 means every day follows the "weekday" schedule.
+      example: '0'
+    osv:
+      description: Set temperature range for external sensor. 5 to 99.. Factory default = 42.
+      example: '42'
+    dif:
+      description: Deadzone for floor temprature. 1 to 9. Factory default = 2
+      example: '2'
+    svh:
+      description: Upper temperature limit for internal sensor. 5 to 99. Factory default = 35.
+      example: '35'
+    svl:
+      description: Lower temperature limit for internal sensor. 5 to 99. Factory default = 5.
+      example: '5'
+    freeze:
+      description: Anti-freezing function 0 for anti-freezing function shut down, 1 for anti-freezing function open. Factory default = 0
+      example: '0'
+    adj:
+      description: Actual temperature calibration. Prescision 0.1.
+      example: '0.1'
+    pon:
+      description: Power on memory. 0 for power on memory off, 1 for power on memory on. Factory default = 0
+      example: '0'
+    sen:
+      description: Sensor mode. 0 for internal sensor, 1 for external sensor, 2 for internal control temperature, external limit temperature. Factory default = 0.
+      example: '0'

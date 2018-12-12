@@ -274,11 +274,3 @@ wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
-
-# homeassistant.components.climate.broadlink
-broadlink==0.9.0
-BroadlinkWifiThermostat==1.0.1
-
-
-# homeassistant.components.sensor.yahoo_finance
-yahoo-finance==1.4.0
