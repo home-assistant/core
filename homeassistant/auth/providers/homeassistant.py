@@ -78,7 +78,7 @@ class Data:
 
         # Compare all users to avoid timing attacks.
         for user in self.users:
-            if username == user['username']:
+            if username.casefold() == user['username'].casefold():
                 found = user
 
         if found is None:
@@ -105,7 +105,10 @@ class Data:
 
     def add_auth(self, username: str, password: str) -> None:
         """Add a new authenticated user/pass."""
-        if any(user['username'] == username for user in self.users):
+        if any(
+                user['username'].casefold() == username.casefold()
+                for user in self.users
+        ):
             raise InvalidUser
 
         self.users.append({
@@ -118,7 +121,7 @@ class Data:
         """Remove authentication."""
         index = None
         for i, user in enumerate(self.users):
-            if user['username'] == username:
+            if user['username'].casefold() == username.casefold():
                 index = i
                 break
 
@@ -133,7 +136,7 @@ class Data:
         Raises InvalidUser if user cannot be found.
         """
         for user in self.users:
-            if user['username'] == username:
+            if user['username'].casefold() == username.casefold():
                 user['password'] = self.hash_password(
                     new_password, True).decode()
                 break
