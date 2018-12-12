@@ -69,8 +69,6 @@ async def async_setup_platform(hass, config, async_add_entities,
         device = LegrandInOneCover(device_id, hass.data[IOBL_PROTOCOL_HANDLE],
                                    initial_event=event, **device_config)
         async_add_entities([device])
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
 
     if config[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][

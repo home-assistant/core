@@ -110,11 +110,11 @@ homematicip==0.9.8
 # homeassistant.components.sensor.influxdb
 influxdb==5.2.0
 
-# homeassistant.components.verisure
-jsonpath==0.75
-
 # homeassistant.components.legrandinone
 iobl==0.0.4
+
+# homeassistant.components.verisure
+jsonpath==0.75
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
