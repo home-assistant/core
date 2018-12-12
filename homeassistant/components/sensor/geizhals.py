@@ -80,6 +80,9 @@ class Geizwatch(Entity):
     @property
     def state(self):
         """Return the best price of the selected product."""
+        if not self._device.prices:
+            return None
+
         return self._device.prices[0]
 
     @property
