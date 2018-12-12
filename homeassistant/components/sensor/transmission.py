@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
 
 DEPENDENCIES = ['transmission']
 DATA_TRANSMISSION = 'TRANSMISSION'

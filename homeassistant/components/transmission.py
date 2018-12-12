@@ -13,7 +13,8 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_NAME,
-   CONF_PORT, CONF_USERNAME, CONF_MONITORED_VARIABLES)
+                                 CONF_PORT, CONF_USERNAME,
+                                 CONF_MONITORED_VARIABLES)
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
@@ -95,8 +96,8 @@ class TransmissionData:
 
         except TransmissionError as error:
             if str(error).find("401: Unauthorized"):
-                _LOGGER
-                .error("Credentials for Transmission client are not valid")
+                _LOGGER.error("Credentials for"
+                              " Transmission client are not valid")
                 return
 
             _LOGGER.warning(
