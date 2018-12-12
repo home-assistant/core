@@ -64,7 +64,6 @@ async def async_setup(hass, config):
     entity_config = config[DOMAIN].get(CONF_ENTITY_CONFIG, {})
     for default_key in [CONF_DEFAULT_MOVE_TIME, CONF_DEFAULT_REVERSE]:
         config_key = default_key.replace('default_', '')
-        _LOGGER.error(config[DOMAIN][default_key])
         if config[DOMAIN].get(default_key, None):
             entity_config.setdefault('default', {})
             entity_config['default'][config_key] = config[DOMAIN][default_key]
