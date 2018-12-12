@@ -22,9 +22,8 @@ from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant import util
@@ -384,7 +383,6 @@ class DeviceTracker:
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
-                device.mark_stale()
                 self.hass.async_create_task(device.async_update_ha_state(True))
 
     async def async_setup_tracked_device(self):
@@ -407,7 +405,7 @@ class DeviceTracker:
             await asyncio.wait(tasks, loop=self.hass.loop)
 
 
-class Device(Entity):
+class Device(RestoreEntity):
     """Represent a tracked device."""
 
     host_name = None  # type: str
@@ -575,7 +573,8 @@ class Device(Entity):
 
     async def async_added_to_hass(self):
         """Add an entity."""
-        state = await async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state

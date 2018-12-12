@@ -10,6 +10,7 @@ timer.
 from collections import OrderedDict
 from itertools import chain
 import logging
+from typing import Optional
 import weakref
 
 import attr
@@ -84,6 +85,11 @@ class EntityRegistry:
     def async_is_registered(self, entity_id):
         """Check if an entity_id is currently registered."""
         return entity_id in self.entities
+
+    @callback
+    def async_get(self, entity_id: str) -> Optional[RegistryEntry]:
+        """Get EntityEntry for an entity_id."""
+        return self.entities.get(entity_id)
 
     @callback
     def async_get_entity_id(self, domain: str, platform: str, unique_id: str):

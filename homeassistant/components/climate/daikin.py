@@ -193,6 +193,11 @@ class DaikinClimate(ClimateDevice):
         return self._api.name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._api.mac
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS

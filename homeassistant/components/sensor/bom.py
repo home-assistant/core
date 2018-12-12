@@ -119,7 +119,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Could not get BOM weather station from lat/lon")
             return
 
-    bom_data = BOMCurrentData(hass, station)
+    bom_data = BOMCurrentData(station)
 
     try:
         bom_data.update()
@@ -181,9 +181,8 @@ class BOMCurrentSensor(Entity):
 class BOMCurrentData:
     """Get data from BOM."""
 
-    def __init__(self, hass, station_id):
+    def __init__(self, station_id):
         """Initialize the data object."""
-        self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
         self._data = None
         self.last_updated = None

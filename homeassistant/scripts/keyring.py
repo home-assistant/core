@@ -5,7 +5,7 @@ import os
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['keyring==15.1.0', 'keyrings.alt==3.1']
+REQUIREMENTS = ['keyring==17.0.0', 'keyrings.alt==3.1']
 
 
 def run(args):

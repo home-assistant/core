@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Wymagana jest tylko jedna instancja."
+        },
+        "create_entry": {
+            "default": "Na Androida, otw\u00f3rz [the OwnTracks app]({android_url}), id\u017a do preferencje -> po\u0142aczenia. Zmie\u0144 nast\u0119puj\u0105ce ustawienia:\n - Tryb: Private HTTP\n - Host: {webhook_url}\n - Identyfikacja:\n   - Nazwa u\u017cytkownika: `<Your name>`\n   - ID urz\u0105dzenia: `<Your device name>`\n\nNa iOS, otw\u00f3rz [the OwnTracks app]({ios_url}), stuknij ikon\u0119 (i) w lewym g\u00f3rnym rogu -> ustawienia. Zmie\u0144 nast\u0119puj\u0105ce ustawienia:\n - Tryb: HTTP\n - URL: {webhook_url}\n - W\u0142\u0105cz uwierzytelnianie\n - ID u\u017cytkownika: `<Your name>`\n\n{secret}"
+        },
+        "step": {
+            "user": {
+                "description": "Czy na pewno chcesz skonfigurowa\u0107 OwnTracks?",
+                "title": "Skonfiguruj OwnTracks"
+            }
+        },
+        "title": "OwnTracks"
+    }
+}

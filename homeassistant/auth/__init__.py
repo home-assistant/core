@@ -79,11 +79,6 @@ class AuthManager:
             self._async_finish_login_flow)
 
     @property
-    def active(self) -> bool:
-        """Return if any auth providers are registered."""
-        return bool(self._providers)
-
-    @property
     def support_legacy(self) -> bool:
         """
         Return if legacy_api_password auth providers are registered.

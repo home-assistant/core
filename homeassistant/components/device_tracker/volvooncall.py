@@ -7,33 +7,32 @@ https://home-assistant.io/components/device_tracker.volvooncall/
 import logging
 
 from homeassistant.util import slugify
-from homeassistant.helpers.dispatcher import (
-    dispatcher_connect, dispatcher_send)
-from homeassistant.components.volvooncall import DATA_KEY, SIGNAL_VEHICLE_SEEN
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.volvooncall import DATA_KEY, SIGNAL_STATE_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Volvo tracker."""
     if discovery_info is None:
         return
 
-    vin, _ = discovery_info
-    voc = hass.data[DATA_KEY]
-    vehicle = voc.vehicles[vin]
+    vin, component, attr = discovery_info
+    data = hass.data[DATA_KEY]
+    instrument = data.instrument(vin, component, attr)
 
-    def see_vehicle(vehicle):
+    async def see_vehicle():
         """Handle the reporting of the vehicle position."""
-        host_name = voc.vehicle_name(vehicle)
+        host_name = instrument.vehicle_name
         dev_id = 'volvo_{}'.format(slugify(host_name))
-        see(dev_id=dev_id,
-            host_name=host_name,
-            gps=(vehicle.position['latitude'],
-                 vehicle.position['longitude']),
-            icon='mdi:car')
+        await async_see(dev_id=dev_id,
+                        host_name=host_name,
+                        source_type=SOURCE_TYPE_GPS,
+                        gps=instrument.state,
+                        icon='mdi:car')
 
-    dispatcher_connect(hass, SIGNAL_VEHICLE_SEEN, see_vehicle)
-    dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
+    async_dispatcher_connect(hass, SIGNAL_STATE_UPDATED, see_vehicle)
 
     return True
