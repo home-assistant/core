@@ -323,7 +323,8 @@ async def async_handle_encrypted_message(hass, context, message):
         return
 
     decrypted = json.loads(plaintext_payload)
-    decrypted['topic'] = message['topic']
+    if 'topic' in message and 'topic' not in decrypted:
+        decrypted['topic'] = message['topic']
 
     await async_handle_message(hass, context, decrypted)
 
