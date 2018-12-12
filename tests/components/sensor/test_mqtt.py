@@ -333,6 +333,67 @@ class TestSensorMQTT(unittest.TestCase):
             state.attributes.get('val')
         assert '100' == state.state
 
+    def test_setting_sensor_attribute_via_mqtt_json_topic(self):
+        """Test the setting of attribute via MQTT with JSON payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert '100' == \
+            state.attributes.get('val')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '[ "list", "of", "things"]')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'JSON result was not a dictionary')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', 'This is not JSON')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'Erroneous JSON: %s', 'This is not JSON')
+
     def test_invalid_device_class(self):
         """Test device_class option with invalid value."""
         with assert_setup_component(0):
