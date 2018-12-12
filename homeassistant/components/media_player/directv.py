@@ -162,8 +162,8 @@ class DirecTvDevice(MediaPlayerDevice):
                         self._current['offset']
                     self._assumed_state = self._is_recorded
                     self._last_position = self._current['offset']
-                    self._last_update = dt_util.now() if not self._paused or\
-                        self._last_update is None else self._last_update
+                    self._last_update = dt_util.utcnow() if not self._paused \
+                        or self._last_update is None else self._last_update
                 else:
                     self._available = False
         except requests.RequestException as ex:

@@ -22,7 +22,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==5.0.0']
+REQUIREMENTS = ['influxdb==5.2.0']
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086

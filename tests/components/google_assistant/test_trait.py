@@ -389,6 +389,47 @@ async def test_onoff_media_player(hass):
     }
 
 
+async def test_onoff_climate(hass):
+    """Test OnOff trait support for climate domain."""
+    assert trait.OnOffTrait.supported(climate.DOMAIN, climate.SUPPORT_ON_OFF)
+
+    trt_on = trait.OnOffTrait(hass, State('climate.bla', STATE_ON),
+                              BASIC_CONFIG)
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {
+        'on': True
+    }
+
+    trt_off = trait.OnOffTrait(hass, State('climate.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
+    assert trt_off.query_attributes() == {
+        'on': False
+    }
+
+    on_calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ONOFF, {
+        'on': True
+    })
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+    }
+
+    off_calls = async_mock_service(hass, climate.DOMAIN,
+                                   SERVICE_TURN_OFF)
+
+    await trt_on.execute(trait.COMMAND_ONOFF, {
+        'on': False
+    })
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+    }
+
+
 async def test_dock_vacuum(hass):
     """Test dock trait support for vacuum domain."""
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0)
@@ -875,4 +916,92 @@ async def test_fan_speed(hass):
     assert calls[0].data == {
         'entity_id': 'fan.living_room_fan',
         'speed': 'medium'
+    }
+
+
+async def test_modes(hass):
+    """Test Mode trait."""
+    assert trait.ModesTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE)
+
+    trt = trait.ModesTrait(
+        hass, State(
+            'media_player.living_room', media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: [
+                    'media', 'game', 'chromecast', 'plex'
+                ],
+                media_player.ATTR_INPUT_SOURCE: 'game'
+            }),
+        BASIC_CONFIG)
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        'availableModes': [
+            {
+                'name': 'input source',
+                'name_values': [
+                    {
+                        'name_synonym': ['input source'],
+                        'lang': 'en'
+                    }
+                ],
+                'settings': [
+                    {
+                        'setting_name': 'media',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['media', 'media mode'],
+                                'lang': 'en'
+                            }
+                        ]
+                    },
+                    {
+                        'setting_name': 'game',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['game', 'game mode'],
+                                'lang': 'en'
+                            }
+                        ]
+                    },
+                    {
+                        'setting_name': 'chromecast',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['chromecast'],
+                                'lang': 'en'
+                            }
+                        ]
+                    }
+                ],
+                'ordered': False
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        'currentModeSettings': {'source': 'game'},
+        'on': True,
+        'online': True
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={
+            'updateModeSettings': {
+                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): 'media'
+            }})
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE)
+    await trt.execute(
+        trait.COMMAND_MODES, params={
+            'updateModeSettings': {
+                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): 'media'
+            }})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        'entity_id': 'media_player.living_room',
+        'source': 'media'
     }

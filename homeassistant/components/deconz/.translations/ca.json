@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Amfitri\u00f3",
-                    "port": "Port (predeterminat: '80')"
+                    "port": "Port"
                 },
                 "title": "Definiu la passarel\u00b7la deCONZ"
             },
