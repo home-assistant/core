@@ -142,7 +142,7 @@ class JewishCalSensor(Entity):
         if self.type == 'date':
             self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
-            self._state = date.parasha
+            self._state = date.upcoming_shabbat.parasha
         elif self.type == 'holiday_name':
             self._state = date.holiday_description
         elif self.type == 'holyness':
