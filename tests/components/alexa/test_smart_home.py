@@ -17,6 +17,7 @@ from tests.common import async_mock_service
 
 
 async def get_access_token():
+    """Return a test access token."""
     return "thisisnotanacesstoken"
 
 
