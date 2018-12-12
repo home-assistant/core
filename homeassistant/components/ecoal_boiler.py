@@ -1,8 +1,8 @@
 """
-Control ecoal/esterownik.pl coal/wood boiler controller.
+Component to control ecoal/esterownik.pl coal/wood boiler controller.
 
-Allows read various readings available in controller
-and set very basic switches.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/ecoal_boiler/
 """
 import logging
 
@@ -10,6 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+
+REQUIREMENTS = ['ecoaliface==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,17 +30,17 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PASSWORD,
                      default=DEFAULT_PASSWORD): cv.string,
     })
- }, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
-    """Set up global ECoalControler instance same for sensors and switches."""
-    from .http_iface import ECoalControler
+    """Set up global ECoalController instance same for sensors and switches."""
+    from ecoaliface.simple import ECoalController
 
     conf = config.get(DOMAIN)
     host = conf.get(CONF_HOST)
     username = conf.get(CONF_USERNAME)
     passwd = conf.get(CONF_PASSWORD)
-    ecoal_contr = ECoalControler(host, username, passwd)
+    ecoal_contr = ECoalController(host, username, passwd)
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     return True

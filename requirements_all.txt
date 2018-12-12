@@ -323,6 +323,9 @@ dsmr_parser==0.12
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
 
+# homeassistant.components.ecoal_boiler
+ecoaliface==0.4.0
+
 # homeassistant.components.edp_redy
 edp_redy==0.0.2
 
