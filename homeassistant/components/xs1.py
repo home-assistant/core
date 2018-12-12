@@ -51,7 +51,6 @@ UPDATE_LOCK = asyncio.Lock()
 
 def _create_controller_api(host, port, ssl, user, password):
     """Create an api instance to use for communication."""
-
     import xs1_api_client
 
     try:
