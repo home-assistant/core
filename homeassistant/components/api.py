@@ -9,7 +9,9 @@ import json
 import logging
 
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPBadRequest
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
@@ -21,7 +23,8 @@ from homeassistant.const import (
     URL_API_TEMPLATE, __version__)
 import homeassistant.core as ha
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.exceptions import TemplateError, Unauthorized
+from homeassistant.exceptions import (
+    TemplateError, Unauthorized, ServiceNotFound)
 from homeassistant.helpers import template
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
@@ -339,8 +342,11 @@ class APIDomainServicesView(HomeAssistantView):
                 "Data should be valid JSON.", HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
-            await hass.services.async_call(
-                domain, service, data, True, self.context(request))
+            try:
+                await hass.services.async_call(
+                    domain, service, data, True, self.context(request))
+            except (vol.Invalid, ServiceNotFound):
+                raise HTTPBadRequest()
 
         return self.json(changed_states)
 
