@@ -58,25 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_EXTERNAL_TEMP, default=False): cv.boolean,
     vol.Optional(CONF_AWAY_TEMP, default=12): vol.Coerce(float),
-    vol.Optional(ATTR_LOOP_MODE, default=0): vol.Coerce(int),
-    vol.Optional(ATTR_SEN, default=0): vol.Coerce(int),
-    vol.Optional(ATTR_OSV, default=42): vol.Coerce(int),
-    vol.Optional(ATTR_DIF, default=2): vol.Coerce(int),
-    vol.Optional(ATTR_SVH, default=35): vol.Coerce(int),
-    vol.Optional(ATTR_SVL, default=5): vol.Coerce(int),
-    vol.Optional(ATTR_ADJ, default=0.1): vol.Coerce(float),
-    vol.Optional(ATTR_FRE, default=0): vol.Coerce(int),
-    vol.Optional(ATTR_PON, default=0): vol.Coerce(int),
-    vol.Optional(ATTR_WEEK_START_1): cv.time,
-    vol.Optional(ATTR_WEEK_STOP_1): cv.time,
-    vol.Optional(ATTR_WEEK_START_2): cv.time,
-    vol.Optional(ATTR_WEEK_STOP_2): cv.time,
-    vol.Optional(ATTR_WEEK_START_3): cv.time,
-    vol.Optional(ATTR_WEEK_STOP_3): cv.time,
-    vol.Optional(ATTR_WEEKEND_START): cv.time,
-    vol.Optional(ATTR_WEEKEND_STOP): cv.time,
-    vol.Optional(ATTR_HOME_TEMP): vol.Coerce(float),
-    vol.Optional(ATTR_AWAY_TEMP): vol.Coerce(float)
+    vol.Optional(ATTR_LOOP_MODE, default=0): vol.Coerce(int)
 })
 
 SET_SCHEDULE_SCHEMA = vol.Schema({
