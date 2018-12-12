@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==2.2.0']
+REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==2.3.0']
 
 DEFAULT_NAME = 'broadlink'
 
