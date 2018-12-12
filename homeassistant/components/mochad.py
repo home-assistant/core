@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COMM_TYPE = 'comm_type'
 DOMAIN = 'mochad'
-CONF_BROKER = 'broker'
 
 REQ_LOCK = threading.Lock()
 
