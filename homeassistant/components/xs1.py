@@ -6,15 +6,16 @@ https://home-assistant.io/components/xs1/
 """
 
 import asyncio
-import logging
 from functools import partial
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, \
-    CONF_PORT, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['xs1-api-client==2.3.5']
@@ -25,17 +26,14 @@ DOMAIN = 'xs1'
 ACTUATORS = 'actuators'
 SENSORS = 'sensors'
 
-# configuration keys
-CONF_SSL = 'ssl'
-
 # define configuration parameters
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.string,
-        vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string
+        vol.Optional(CONF_PORT, default=80): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_USERNAME, default=None): cv.string,
+        vol.Optional(CONF_PASSWORD, default=None): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -52,13 +50,19 @@ UPDATE_LOCK = asyncio.Lock()
 
 
 def _create_controller_api(host, port, ssl, user, password):
+    """Create an api instance to use for communication."""
+
     import xs1_api_client
-    return xs1_api_client.XS1(
-        host=host,
-        port=port,
-        ssl=ssl,
-        user=user,
-        password=password)
+
+    try:
+        return xs1_api_client.XS1(
+            host=host,
+            port=port,
+            ssl=ssl,
+            user=user,
+            password=password)
+    except ConnectionError:
+        raise PlatformNotReady
 
 
 async def async_setup(hass, config):
@@ -108,10 +112,7 @@ class XS1DeviceEntity(Entity):
         self.device = device
 
     async def async_update(self):
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Retrieve latest device state."""
         async with UPDATE_LOCK:
             await self.hass.async_add_executor_job(
                 partial(self.device.update))

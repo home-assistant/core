@@ -4,16 +4,14 @@ Support for XS1 climate devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xs1/
 """
-import logging
 from functools import partial
+import logging
 
-from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, ClimateDevice)
-from homeassistant.const import (
-    TEMP_CELSIUS)
+from homeassistant.components.climate import ATTR_TEMPERATURE, ClimateDevice
+from homeassistant.components.xs1 import (
+    ACTUATORS, DOMAIN, SENSORS, XS1DeviceEntity)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.components.xs1 import ACTUATORS, DOMAIN, SENSORS, \
-    XS1DeviceEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
