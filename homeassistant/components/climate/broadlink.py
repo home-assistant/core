@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==2.3.0']
+REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==2.4.0']
 
 DEFAULT_NAME = 'broadlink'
 
@@ -115,24 +115,21 @@ def setup_platform(hass, config, async_add_entities,
         else:
             target_thermostats = thermostats
 
-        week_start_1 = service.data.get(ATTR_WEEK_START_1)
-        week_stop_1 = service.data.get(ATTR_WEEK_STOP_1)
-        week_start_2 = service.data.get(ATTR_WEEK_START_2)
-        week_stop_2 = service.data.get(ATTR_WEEK_STOP_2)
-        week_start_3 = service.data.get(ATTR_WEEK_START_3)
-        week_stop_3 = service.data.get(ATTR_WEEK_STOP_3)
+        schedules = dict()
+        schedules['week_start_1'] = service.data.get(ATTR_WEEK_START_1)
+        schedules['week_stop_1'] = service.data.get(ATTR_WEEK_STOP_1)
+        schedules['week_start_2'] = service.data.get(ATTR_WEEK_START_2)
+        schedules['week_stop_2'] = service.data.get(ATTR_WEEK_STOP_2)
+        schedules['week_start_3'] = service.data.get(ATTR_WEEK_START_3)
+        schedules['week_stop_3'] = service.data.get(ATTR_WEEK_STOP_3)
 
-        weekend_start = service.data.get(ATTR_WEEKEND_START)
-        weekend_stop = service.data.get(ATTR_WEEKEND_STOP)
-        away_temp = service.data.get(ATTR_AWAY_TEMP)
-        home_temp = service.data.get(ATTR_HOME_TEMP)
+        schedules['weekend_start'] = service.data.get(ATTR_WEEKEND_START)
+        schedules['weekend_stop'] = service.data.get(ATTR_WEEKEND_STOP)
+        schedules['away_temp'] = service.data.get(ATTR_AWAY_TEMP)
+        schedules['home_temp'] = service.data.get(ATTR_HOME_TEMP)
 
         for thermostat in target_thermostats:
-            thermostat.set_schedule(week_start_1, week_stop_1,
-                                    week_start_2, week_stop_2,
-                                    week_start_3, week_stop_3,
-                                    weekend_start, weekend_stop,
-                                    away_temp, home_temp)
+            thermostat.set_schedule(schedules)
 
     hass.services.register(DOMAIN, SERVICE_SET_SCHEDULE,
                            set_schedule, schema=SET_SCHEDULE_SCHEMA)
@@ -146,17 +143,17 @@ def setup_platform(hass, config, async_add_entities,
         else:
             target_thermostats = thermostats
 
-        loop_mode = service.data.get(ATTR_LOOP_MODE)
-        sen = service.data.get(ATTR_SEN)
-        osv = service.data.get(ATTR_OSV)
-        dif = service.data.get(ATTR_DIF)
-        svh = service.data.get(ATTR_SVH)
-        svl = service.data.get(ATTR_SVL)
-        adj = service.data.get(ATTR_ADJ)
-        fre = service.data.get(ATTR_FRE)
-        pon = service.data.get(ATTR_PON)
-        target_thermostats.set_advanced_config(loop_mode, sen, osv,
-                                               dif, svh, svl, adj, fre, pon)
+        advance_conf = dict()
+        advance_conf["loop_mode"] = service.data.get(ATTR_LOOP_MODE)
+        advance_conf['sen'] = service.data.get(ATTR_SEN)
+        advance_conf['osv'] = service.data.get(ATTR_OSV)
+        advance_conf['dif'] = service.data.get(ATTR_DIF)
+        advance_conf['svh'] = service.data.get(ATTR_SVH)
+        advance_conf['svl'] = service.data.get(ATTR_SVL)
+        advance_conf['adj'] = service.data.get(ATTR_ADJ)
+        advance_conf['fre'] = service.data.get(ATTR_FRE)
+        advance_conf['pon'] = service.data.get(ATTR_PON)
+        target_thermostats.set_advanced_config(advance_conf)
 
     hass.services.register(DOMAIN, SERVICE_SET_ADVANCED_CONF,
                            set_advanced_conf, schema=SET_SCHEDULE_SCHEMA)
@@ -240,23 +237,13 @@ class BroadlinkThermostat(ClimateDevice):
         """Set operation mode."""
         self._device.set_operation_mode(operation_mode)
 
-    def set_schedule(self, week_start_1, week_stop_1,
-                     week_start_2, week_stop_2,
-                     week_start_3, week_stop_3,
-                     weekend_start, weekend_stop,
-                     away_temp, home_temp):
+    def set_schedule(self, schedules):
         """Set automatic schedule."""
-        self._device.set_schedule(week_start_1, week_stop_1,
-                                  week_start_2, week_stop_2,
-                                  week_start_3, week_stop_3,
-                                  weekend_start, weekend_stop,
-                                  away_temp, home_temp)
+        self._device.set_schedule(schedules)
 
-    def set_advanced_config(self, loop_mode, sen, osv,
-                            dif, svh, svl, adj, fre, pon):
+    def set_advanced_config(self, advanced_conf):
         """Set advanced configuration."""
-        self._device.set_advanced_config(self, loop_mode, sen, osv,
-                                         dif, svh, svl, adj, fre, pon)
+        self._device.set_advanced_config(self, advanced_conf)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
