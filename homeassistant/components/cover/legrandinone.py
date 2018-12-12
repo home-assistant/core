@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.legrandinone import (
     DATA_ENTITY_LOOKUP, CONF_MEDIA, CONF_COMM_MODE,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND,
+    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, IOBL_PROTOCOL_HANDLE,
     DEVICE_TYPE_AUTOMATION, DATA_DEVICE_REGISTER,
     EVENT_KEY_ID, LegrandInOneCommand)
 from homeassistant.components.cover import (
@@ -48,7 +48,9 @@ def devices_from_config(domain_config, hass):
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = LegrandInOneCover(device_id, hass, **device_config)
+        device = LegrandInOneCover(device_id,
+                                   hass.data[IOBL_PROTOCOL_HANDLE],
+                                   **device_config)
         devices.append(device)
 
     return devices
@@ -64,8 +66,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         device_id = event[EVENT_KEY_ID]
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = LegrandInOneCover(device_id, hass, initial_event=event,
-                                   **device_config)
+        device = LegrandInOneCover(device_id, hass.data[IOBL_PROTOCOL_HANDLE],
+                                   initial_event=event, **device_config)
         async_add_entities([device])
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)

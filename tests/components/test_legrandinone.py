@@ -218,7 +218,7 @@ def test_error_when_not_connected(hass, monkeypatch):
     _, mock_create, _, disconnect_callback = yield from mock_legrandinone(
         hass, config, domain, monkeypatch, failures=failures)
 
-    # rflink initiated disconnect
+    # legrandinone initiated disconnect
     disconnect_callback(None)
 
     yield from asyncio.sleep(0, loop=hass.loop)

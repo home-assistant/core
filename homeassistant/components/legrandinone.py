@@ -52,7 +52,6 @@ DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
 CONNECTION_TIMEOUT = 10
 
-EVENT_BUTTON_PRESSED = 'button_pressed'
 EVENT_KEY_ID = 'legrand_id'
 EVENT_KEY_COMMAND = 'bus_command'
 EVENT_TYPE_COMMAND = 'what'
@@ -120,6 +119,7 @@ async def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
     hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = {}
+    hass.data[IOBL_PROTOCOL_HANDLE] = None
 
     async def async_send_command(call):
         """Send legrandinone command."""
@@ -206,9 +206,7 @@ async def async_setup(hass, config):
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
-        hass.data[IOBL_PROTOCOL_HANDLE] = None
-
-        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False, None)
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
@@ -243,15 +241,13 @@ async def async_setup(hass, config):
             _LOGGER.exception(
                 "Error connecting to iobl, reconnecting in %s",
                 reconnect_interval)
-            # Connection to IOBL device is lost, make entities unavailable
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
         # There is a valid connection to a IOBL device now so
         # mark entities as available
-        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True, protocol)
 
         # Bind protocol to command class to allow entities to send commands
         hass.data[IOBL_PROTOCOL_HANDLE] = protocol
@@ -282,20 +278,19 @@ class LegrandInOneDevice(Entity):
     iobl_unit = None
     _protocol = None
 
-    def __init__(self, device_id, hass, initial_event=None, name=None,
+    def __init__(self, device_id, protocol, initial_event=None, name=None,
                  iobl_media='plc', iobl_comm_mode='unicast'):
         """Initialize the device."""
         self._initial_event = initial_event
         self.legrand_id = device_id
         self.iobl_mode = iobl_comm_mode
         self.iobl_media = iobl_media
-        self._protocol = hass.data[IOBL_PROTOCOL_HANDLE]
+        self._protocol = protocol
 
         if name:
             self._name = name
         else:
             self._name = device_id
-
 
     @callback
     def handle_event_callback(self, event):
@@ -332,20 +327,19 @@ class LegrandInOneDevice(Entity):
         """Assume device state until first device event sets state."""
         return self._state is None
 
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
 
     @callback
-    def _availability_callback(self, availability):
+    def _availability_callback(self, availability, protocol):
         """Update availability state."""
         self._available = availability
+        self._protocol = protocol
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
-
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][self.legrand_id].append(self.legrand_id)
@@ -374,9 +368,8 @@ class LegrandInOneCommand(LegrandInOneDevice):
 
     def is_connected(self):
         """Return connection status."""
-        return bool(self._protocol)
+        return self.available()
 
-    @classmethod
     async def send_command(self, command_data):
         """Send device command to IOBL."""
         return await self._protocol.send_packet(command_data)

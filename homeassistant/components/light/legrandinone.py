@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.legrandinone import (
     CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS,
-    CONF_DEVICES, DATA_DEVICE_REGISTER,
+    CONF_DEVICES, DATA_DEVICE_REGISTER, IOBL_PROTOCOL_HANDLE,
     DEVICE_DEFAULTS_SCHEMA, CONF_MEDIA, CONF_COMM_MODE,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, DEVICE_TYPE_LIGHT,
     SwitchableLegrandInOneDevice, cv,
@@ -73,7 +73,8 @@ def devices_from_config(domain_config, hass):
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
 
-        device = entity_class(device_id, hass, **device_config)
+        device = entity_class(device_id, hass.data[IOBL_PROTOCOL_HANDLE],
+                              **device_config)
         devices.append(device)
 
     return devices
@@ -93,8 +94,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, hass, initial_event=event,
-            **device_config)
+        device = entity_class(device_id, hass.data[IOBL_PROTOCOL_HANDLE],
+                              initial_event=event, **device_config)
         async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:
