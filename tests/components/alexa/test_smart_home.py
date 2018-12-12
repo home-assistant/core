@@ -1313,6 +1313,33 @@ async def test_api_increase_color_temp(hass, result, initial):
     assert msg['header']['name'] == 'Response'
 
 
+async def test_api_accept_grant(hass):
+    """Test api AcceptGrant process."""
+    request = get_new_request("Alexa.Authorization", "AcceptGrant")
+
+    # add payload
+    request['directive']['payload'] = {
+      'grant': {
+        'type': 'OAuth2.AuthorizationCode',
+        'code': 'VGhpcyBpcyBhbiBhdXRob3JpemF0aW9uIGNvZGUuIDotKQ=='
+      },
+      'grantee': {
+        'type': 'BearerToken',
+        'token': 'access-token-from-skill'
+      }
+    }
+
+    # setup test devices
+    msg = await smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request)
+    await hass.async_block_till_done()
+
+    assert 'event' in msg
+    msg = msg['event']
+
+    assert msg['header']['name'] == 'AcceptGrant.Response'
+
+
 async def test_report_lock_state(hass):
     """Test LockController implements lockState property."""
     hass.states.async_set(
