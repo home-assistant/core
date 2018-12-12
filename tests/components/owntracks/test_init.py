@@ -33,6 +33,12 @@ LOCATION_MESSAGE = {
 }
 
 
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf):
+    """Mock device tracker config loading."""
+    pass
+
+
 @pytest.fixture
 def mock_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
@@ -104,7 +110,7 @@ def test_handle_value_error(mock_client):
 
 
 @asyncio.coroutine
-def test_returns_error_missing_username(mock_client):
+def test_returns_error_missing_username(mock_client, caplog):
     """Test that an error is returned when username is missing."""
     resp = yield from mock_client.post(
         '/api/webhook/owntracks_test',
@@ -114,10 +120,29 @@ def test_returns_error_missing_username(mock_client):
         }
     )
 
-    assert resp.status == 400
-
+    # Needs to be 200 or OwnTracks keeps retrying bad packet.
+    assert resp.status == 200
     json = yield from resp.json()
-    assert json == {'error': 'You need to supply username.'}
+    assert json == []
+    assert 'No topic or user found' in caplog.text
+
+
+@asyncio.coroutine
+def test_returns_error_incorrect_json(mock_client, caplog):
+    """Test that an error is returned when username is missing."""
+    resp = yield from mock_client.post(
+        '/api/webhook/owntracks_test',
+        data='not json',
+        headers={
+            'X-Limit-d': 'Pixel',
+        }
+    )
+
+    # Needs to be 200 or OwnTracks keeps retrying bad packet.
+    assert resp.status == 200
+    json = yield from resp.json()
+    assert json == []
+    assert 'invalid JSON' in caplog.text
 
 
 @asyncio.coroutine

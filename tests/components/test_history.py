@@ -519,7 +519,6 @@ async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'history', {})
-    await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(

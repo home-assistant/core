@@ -8,9 +8,10 @@ https://home-assistant.io/components/light.tellduslive/
 """
 import logging
 
+from homeassistant.components import tellduslive
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,21 +20,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick Net lights."""
     if discovery_info is None:
         return
-    add_entities(TelldusLiveLight(hass, light) for light in discovery_info)
+    client = hass.data[tellduslive.DOMAIN]
+    add_entities(TelldusLiveLight(client, light) for light in discovery_info)
 
 
 class TelldusLiveLight(TelldusLiveEntity, Light):
     """Representation of a Tellstick Net light."""
 
-    def __init__(self, hass, device_id):
+    def __init__(self, client, device_id):
         """Initialize the  Tellstick Net light."""
-        super().__init__(hass, device_id)
+        super().__init__(client, device_id)
         self._last_brightness = self.brightness
 
     def changed(self):
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
-        super().changed()
 
     @property
     def brightness(self):

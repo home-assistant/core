@@ -41,29 +41,26 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 
 
 @callback
-def setup_auth(app, trusted_networks, use_auth,
-               support_legacy=False, api_password=None):
+def setup_auth(app, trusted_networks, api_password):
     """Create auth middleware for the app."""
     old_auth_warning = set()
-    legacy_auth = (not use_auth or support_legacy) and api_password
 
     @middleware
     async def auth_middleware(request, handler):
         """Authenticate as middleware."""
         authenticated = False
 
-        if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
-                         DATA_API_PASSWORD in request.query):
+        if (HTTP_HEADER_HA_AUTH in request.headers or
+                DATA_API_PASSWORD in request.query):
             if request.path not in old_auth_warning:
                 _LOGGER.log(
-                    logging.INFO if support_legacy else logging.WARNING,
+                    logging.INFO if api_password else logging.WARNING,
                     'You need to use a bearer token to access %s from %s',
                     request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
         if (hdrs.AUTHORIZATION in request.headers and
-                await async_validate_auth_header(
-                    request, api_password if legacy_auth else None)):
+                await async_validate_auth_header(request, api_password)):
             # it included both use_auth and api_password Basic auth
             authenticated = True
 
@@ -73,7 +70,7 @@ def setup_auth(app, trusted_networks, use_auth,
               await async_validate_signed_request(request)):
             authenticated = True
 
-        elif (legacy_auth and HTTP_HEADER_HA_AUTH in request.headers and
+        elif (api_password and HTTP_HEADER_HA_AUTH in request.headers and
               hmac.compare_digest(
                   api_password.encode('utf-8'),
                   request.headers[HTTP_HEADER_HA_AUTH].encode('utf-8'))):
@@ -82,7 +79,7 @@ def setup_auth(app, trusted_networks, use_auth,
             request['hass_user'] = await legacy_api_password.async_get_user(
                 app['hass'])
 
-        elif (legacy_auth and DATA_API_PASSWORD in request.query and
+        elif (api_password and DATA_API_PASSWORD in request.query and
               hmac.compare_digest(
                   api_password.encode('utf-8'),
                   request.query[DATA_API_PASSWORD].encode('utf-8'))):
@@ -96,11 +93,6 @@ def setup_auth(app, trusted_networks, use_auth,
                 if user.is_owner:
                     request['hass_user'] = user
                     break
-            authenticated = True
-
-        elif not use_auth and api_password is None:
-            # If neither password nor auth_providers set,
-            #  just always set authenticated=True
             authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated

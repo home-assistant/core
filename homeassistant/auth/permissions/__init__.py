@@ -1,14 +1,17 @@
 """Permissions for Home Assistant."""
 import logging
 from typing import (  # noqa: F401
-    cast, Any, Callable, Dict, List, Mapping, Set, Tuple, Union)
+    cast, Any, Callable, Dict, List, Mapping, Set, Tuple, Union,
+    TYPE_CHECKING)
 
 import voluptuous as vol
 
 from .const import CAT_ENTITIES
+from .models import PermissionLookup
 from .types import PolicyType
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
 from .merge import merge_policies  # noqa
+
 
 POLICY_SCHEMA = vol.Schema({
     vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA
@@ -39,13 +42,16 @@ class AbstractPermissions:
 class PolicyPermissions(AbstractPermissions):
     """Handle permissions."""
 
-    def __init__(self, policy: PolicyType) -> None:
+    def __init__(self, policy: PolicyType,
+                 perm_lookup: PermissionLookup) -> None:
         """Initialize the permission class."""
         self._policy = policy
+        self._perm_lookup = perm_lookup
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
-        return compile_entities(self._policy.get(CAT_ENTITIES))
+        return compile_entities(self._policy.get(CAT_ENTITIES),
+                                self._perm_lookup)
 
     def __eq__(self, other: Any) -> bool:
         """Equals check."""

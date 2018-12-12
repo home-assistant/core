@@ -52,10 +52,10 @@ def setup_api(hass):
 
 
 @pytest.fixture
-def cloud_client(hass, aiohttp_client):
+def cloud_client(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+        yield hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture
@@ -527,3 +527,45 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert not setup_api[PREF_ENABLE_GOOGLE]
     assert not setup_api[PREF_ENABLE_ALEXA]
     assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+
+
+async def test_enabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to enable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_create', return_value=mock_coro()) as mock_enable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/cloudhook/create',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_enable.mock_calls) == 1
+    assert mock_enable.mock_calls[0][1][0] == 'mock-webhook-id'
+
+
+async def test_disabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to disable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_delete', return_value=mock_coro()) as mock_disable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/cloudhook/delete',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_disable.mock_calls) == 1
+    assert mock_disable.mock_calls[0][1][0] == 'mock-webhook-id'

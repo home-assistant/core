@@ -130,6 +130,38 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     assert state is None
 
 
+async def test_discovery_update_fan(hass, mqtt_mock, caplog):
+    """Test removal of discovered fan."""
+    entry = MockConfigEntry(domain='mqtt')
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "command_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('fan.milk')
+    assert state is None
+
+
 async def test_unique_id(hass):
     """Test unique_id option only creates one fan per id."""
     await async_mock_mqtt_component(hass)
