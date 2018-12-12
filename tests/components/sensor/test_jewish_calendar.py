@@ -270,14 +270,15 @@ class TestJewishCalenderSensor():
         "currently_one_day_yom_tov_in_israel",
         "after_one_day_yom_tov_in_israel",
     ]
+
     @pytest.mark.parametrize(["now", "candle_lighting", "diaspora",
                               "tzname", "latitude", "longitude", "result"],
                              shabbat_params, ids=shabbat_test_ids)
-    def test_shabbat_times_sensor(self, now, candle_lighting, 
+    def test_shabbat_times_sensor(self, now, candle_lighting,
                                   diaspora, tzname, latitude, longitude,
                                   result):
         """Test Shabbat Times sensor output."""
-        
+
         tz = get_time_zone(tzname)
         set_default_time_zone(tz)
         test_time = tz.localize(now)
@@ -286,12 +287,12 @@ class TestJewishCalenderSensor():
                 result[sensor_type] = tz.localize(value)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        
-        if ('upcoming_shabbat_candle_lighting' in result 
-            and not 'upcoming_candle_lighting' in result):
+
+        if ('upcoming_shabbat_candle_lighting' in result
+                and not 'upcoming_candle_lighting' in result):
             result['upcoming_candle_lighting'] = result['upcoming_shabbat_candle_lighting']
-        if ('upcoming_shabbat_havdalah' in result 
-            and not 'upcoming_havdalah' in result):
+        if ('upcoming_shabbat_havdalah' in result
+                and not 'upcoming_havdalah' in result):
             result['upcoming_havdalah'] = result['upcoming_shabbat_havdalah']
 
         for sensor_type, result_value in result.items():
@@ -302,11 +303,70 @@ class TestJewishCalenderSensor():
             sensor = JewishCalSensor(
                 name='test', language=language, sensor_type=sensor_type,
                 latitude=latitude, longitude=longitude,
-                timezone=tz, diaspora=diaspora, 
+                timezone=tz, diaspora=diaspora,
                 candle_lighting_offset=candle_lighting)
             sensor.hass = self.hass
             with patch('homeassistant.util.dt.now', return_value=test_time):
                 run_coroutine_threadsafe(
                     sensor.async_update(),
                     self.hass.loop).result()
-                assert sensor.state == result_value, "Value for {}".format(sensor_type)
+                assert sensor.state == result_value, "Value for {}".format(
+                    sensor_type)
+                   
+                    
+    melacha_params = [
+      make_nyc_test_params(dt(2018, 9, 1, 16, 0), True),
+      make_nyc_test_params(dt(2018, 9, 1, 20, 21), False),
+      make_nyc_test_params(dt(2018, 9, 7, 13, 1), False),
+      make_nyc_test_params(dt(2018, 9, 8, 21, 25), False),
+      make_nyc_test_params(dt(2018, 9, 9, 21, 25), True),
+      make_nyc_test_params(dt(2018, 9, 10, 21, 25), True),
+      make_nyc_test_params(dt(2018, 9, 28, 21, 25), True),
+      make_nyc_test_params(dt(2018, 9, 29, 21, 25), False),
+      make_nyc_test_params(dt(2018, 9, 30, 21, 25), True),
+      make_nyc_test_params(dt(2018, 10, 1, 21, 25), True),
+      make_jerusalem_test_params(dt(2018, 9, 29, 21, 25), False),
+      make_jerusalem_test_params(dt(2018, 9, 30, 21, 25), True),
+      make_jerusalem_test_params(dt(2018, 10, 1, 21, 25), False),
+    ]
+    melacha_test_ids = [
+        "currently_first_shabbat",
+        "after_first_shabbat",
+        "friday_upcoming_shabbat",
+        "upcoming_rosh_hashana",
+        "currently_rosh_hashana",
+        "second_day_rosh_hashana",
+        "currently_shabbat_chol_hamoed",
+        "upcoming_two_day_yomtov_in_diaspora",
+        "currently_first_day_of_two_day_yomtov_in_diaspora",
+        "currently_second_day_of_two_day_yomtov_in_diaspora",
+        "upcoming_one_day_yom_tov_in_israel",
+        "currently_one_day_yom_tov_in_israel",
+        "after_one_day_yom_tov_in_israel",
+    ]
+
+    @pytest.mark.parametrize(["now", "candle_lighting", "diaspora",
+                              "tzname", "latitude", "longitude", "result"],
+                             melacha_params, ids=melacha_test_ids)
+    def test_issur_melacha_sensor(self, now, candle_lighting,
+                                  diaspora, tzname, latitude, longitude,
+                                  result):
+        """Test Issur Melacha sensor output."""
+
+        tz = get_time_zone(tzname)
+        set_default_time_zone(tz)
+        test_time = tz.localize(now)
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
+        sensor = JewishCalSensor(
+            name='test', language='english',
+            sensor_type='issur_melacha_in_effect',
+            latitude=latitude, longitude=longitude,
+            timezone=tz, diaspora=diaspora,
+            candle_lighting_offset=candle_lighting)
+        sensor.hass = self.hass
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            assert sensor.state == result

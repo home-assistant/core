@@ -31,10 +31,14 @@ SENSOR_TYPES = {
     'mga_end_shma': ['Latest time for Shm"a MG"A', 'mdi:calendar-clock'],
     'plag_mincha': ['Plag Hamincha', 'mdi:weather-sunset-down'],
     'first_stars': ['T\'set Hakochavim', 'mdi:weather-night'],
-    'upcoming_shabbat_candle_lighting': ['Upcoming Shabbat Candle Lighting', 'mdi:candle'],
-    'upcoming_shabbat_havdalah': ['Upcoming Shabbat Havdalah', 'mdi:weather-night'],
+    'upcoming_shabbat_candle_lighting': ['Upcoming Shabbat Candle Lighting',
+                                         'mdi:candle'],
+    'upcoming_shabbat_havdalah': ['Upcoming Shabbat Havdalah',
+                                  'mdi:weather-night'],
     'upcoming_candle_lighting': ['Upcoming Candle Lighting', 'mdi:candle'],
     'upcoming_havdalah': ['Upcoming Havdalah', 'mdi:weather-night'],
+    'issur_melacha_in_effect': ['Issur Melacha in Effect',
+                                'mdi:power-plug-off'],
     'omer_count': ['Day of the Omer', 'mdi:counter'],
 }
 
@@ -134,55 +138,56 @@ class JewishCalSensor(Entity):
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
-            
-        location = hdate.Location(latitude=self.latitude, 
+
+        location = hdate.Location(latitude=self.latitude,
                                   longitude=self.longitude,
-                                  timezone=self.timezone)
+                                  timezone=self.timezone,
+                                  diaspora=self.diaspora)
 
         if self.type == 'date':
             self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
+            # Compute the weekly portion based on the upcoming shabbat.
             self._state = date.upcoming_shabbat.parasha
         elif self.type == 'holiday_name':
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
         elif self.type == 'upcoming_shabbat_candle_lighting' or \
-             self.type == 'upcoming_candle_lighting':             
+                self.type == 'upcoming_candle_lighting':
             # Start out with Shabbat/Friday.
             # upcoming_shabbat returns the Saturday, so back up to the Friday
             # for candle-lighting time.
             start_day = date.upcoming_shabbat.previous_day
             # If next yom tov is sooner, advance that.
             if self.type == 'upcoming_candle_lighting':
-              next_erev_yom_tov = date.upcoming_yom_tov.previous_day
-              if next_erev_yom_tov < start_day:
-                start_day = next_erev_yom_tov
+                next_erev_yom_tov = date.upcoming_yom_tov.previous_day
+                if next_erev_yom_tov < start_day:
+                    start_day = next_erev_yom_tov
             times = hdate.Zmanim(
-                date=start_day.gdate, location=location, 
+                date=start_day.gdate, location=location,
                 hebrew=self._hebrew).zmanim
-            self._state = (times['sunset'] 
+            self._state = (times['sunset']
                            - timedelta(minutes=self.candle_lighting_offset))
         elif self.type == 'upcoming_shabbat_havdalah' or \
-             self.type == 'upcoming_havdalah':
+                self.type == 'upcoming_havdalah':
             end_day = date.upcoming_shabbat
             if self.type == 'upcoming_havdalah':
                 next_yom_tov_end = date.upcoming_yom_tov
-                _LOGGER.debug("Next YT ht %d hn %s %d", 
-                    next_yom_tov_end.next_day.holiday_type,
-                    next_yom_tov_end.next_day.holiday_name, next_yom_tov_end.diaspora)
                 while (next_yom_tov_end.next_day.holiday_type == 1):
                     next_yom_tov_end = next_yom_tov_end.next_day
-                    _LOGGER.debug(next_yom_tov_end)
                 if next_yom_tov_end < end_day:
-                    _LOGGER.debug(end_day)
                     end_day = next_yom_tov_end
-                    _LOGGER.debug(next_yom_tov_end)
 
             times = hdate.Zmanim(
                 date=end_day.gdate, location=location,
                 hebrew=self._hebrew).zmanim
             self._state = times['three_stars']
+        elif self.type == 'issur_melacha_in_effect':
+            self._state = hdate.Zmanim(
+                date=now, location=location,
+                shabbat_offset=self.candle_lighting_offset,
+                hebrew=self._hebrew).issur_melacha_in_effect
         else:
             times = hdate.Zmanim(
                 date=today, location=location,
