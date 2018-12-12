@@ -93,14 +93,17 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             else:
                 self._clean_state = STATE_IDLE
                 self._status_state = 'Stopped'
+
+            if ALERTS.get(self._state['alert']) is not None:
+                self._status_state = ALERTS.get(self._state['alert'])
         elif self._state['state'] == 2:
-            if ALERTS.get(self._state['error']) is None:
+            if ALERTS.get(self._state['alert']) is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
                     MODE.get(self._state['cleaning']['mode'])
                     + ' ' + ACTION.get(self._state['action']))
             else:
-                self._status_state = ALERTS.get(self._state['error'])
+                self._status_state = ALERTS.get(self._state['alert'])
         elif self._state['state'] == 3:
             self._clean_state = STATE_PAUSED
             self._status_state = 'Paused'

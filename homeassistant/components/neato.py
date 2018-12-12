@@ -143,7 +143,9 @@ ALERTS = {
     'maint_brush_change': 'Change the brush',
     'maint_filter_change': 'Change the filter',
     'clean_completed_to_start': 'Cleaning completed',
-    'nav_floorplan_not_created': 'No floorplan found'
+    'nav_floorplan_not_created': 'No floorplan found',
+    'nav_floorplan_load_fail': 'Failed to load floorplan',
+    'nav_floorplan_localization_fail': 'Failed to load floorplan'
 }
 
 
