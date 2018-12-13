@@ -257,6 +257,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 if workaround & WORKAROUND_TRACK_MESSAGE:
                     self._track_message_workaround = True
                     _LOGGER.debug("Message tracking workaround enabled")
+                if workaround & WORKAROUND_ALARM_TYPE:
+                    self._alarm_type_workaround = True
+                    _LOGGER.debug(
+                        "Alarm Type device state workaround enabled")
         self.update_properties()
 
     def update_properties(self):
