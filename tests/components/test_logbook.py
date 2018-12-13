@@ -273,14 +273,10 @@ class TestComponentLogbook(unittest.TestCase):
 
         eventA = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id,
         })
         eventB = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id2,
         })
 
@@ -311,14 +307,10 @@ class TestComponentLogbook(unittest.TestCase):
 
         eventA = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id,
         })
         eventB = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id2,
         })
 
