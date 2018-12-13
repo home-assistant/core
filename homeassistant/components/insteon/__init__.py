@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.15.1']
+REQUIREMENTS = ['insteonplm==0.15.2']
 
 _LOGGER = logging.getLogger(__name__)
 
