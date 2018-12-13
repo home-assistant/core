@@ -688,6 +688,15 @@ class WinkDevice(Entity):
         return self.wink.name()
 
     @property
+    def unique_id(self):
+        """Return the unique id of the Wink device."""
+        if hasattr(self.wink, 'capability') and \
+                self.wink.capability() is not None:
+            return "{}_{}".format(self.wink.object_id(),
+                                  self.wink.capability())
+        return self.wink.object_id()
+
+    @property
     def available(self):
         """Return true if connection == True."""
         return self.wink.available()

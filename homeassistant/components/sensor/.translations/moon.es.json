@@ -2,6 +2,9 @@
     "state": {
         "first_quarter": "Primer cuarto",
         "full_moon": "Luna llena",
-        "new_moon": "Luna nueva"
+        "last_quarter": "\u00daltimo cuarto",
+        "new_moon": "Luna nueva",
+        "waning_crescent": "Luna menguante",
+        "waxing_crescent": "Luna creciente"
     }
 }

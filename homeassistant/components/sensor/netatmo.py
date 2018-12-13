@@ -63,6 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MODULES): MODULE_SCHEMA,
 })
 
+MODULE_TYPE_OUTDOOR = 'NAModule1'
+MODULE_TYPE_WIND = 'NAModule2'
+MODULE_TYPE_RAIN = 'NAModule3'
+MODULE_TYPE_INDOOR = 'NAModule4'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
@@ -74,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         if CONF_MODULES in config:
             # Iterate each module
-            for module_name, monitored_conditions in\
+            for module_name, monitored_conditions in \
                     config[CONF_MODULES].items():
                 # Test if module exists
                 if module_name not in data.get_module_names():
@@ -85,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     dev.append(NetAtmoSensor(data, module_name, variable))
         else:
             for module_name in data.get_module_names():
-                for variable in\
+                for variable in \
                         data.station_data.monitoredConditions(module_name):
                     if variable in SENSOR_TYPES.keys():
                         dev.append(NetAtmoSensor(data, module_name, variable))
@@ -112,9 +117,11 @@ class NetAtmoSensor(Entity):
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        module_id = self.netatmo_data.\
+        self._module_type = self.netatmo_data. \
+            station_data.moduleByName(module=module_name)['type']
+        module_id = self.netatmo_data. \
             station_data.moduleByName(module=module_name)['_id']
-        self.module_id = module_id[1]
+        self._unique_id = '{}-{}'.format(module_id, self.type)
 
     @property
     def name(self):
@@ -140,6 +147,11 @@ class NetAtmoSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
@@ -169,7 +181,8 @@ class NetAtmoSensor(Entity):
             self._state = round(data['Pressure'], 1)
         elif self.type == 'battery_lvl':
             self._state = data['battery_vp']
-        elif self.type == 'battery_vp' and self.module_id == '6':
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_WIND):
             if data['battery_vp'] >= 5590:
                 self._state = "Full"
             elif data['battery_vp'] >= 5180:
@@ -180,7 +193,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4360:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self.module_id == '5':
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_RAIN):
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
             elif data['battery_vp'] >= 5000:
@@ -191,7 +205,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4000:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self.module_id == '3':
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_INDOOR):
             if data['battery_vp'] >= 5640:
                 self._state = "Full"
             elif data['battery_vp'] >= 5280:
@@ -202,7 +217,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4560:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self.module_id == '2':
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_OUTDOOR):
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
             elif data['battery_vp'] >= 5000:
@@ -304,6 +320,20 @@ class NetAtmoData:
         self.update()
         return self.data.keys()
 
+    def _detect_platform_type(self):
+        """Return the XXXData object corresponding to the specified platform.
+
+        The return can be a WeatherStationData or a HomeCoachData.
+        """
+        import pyatmo
+        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
+            try:
+                station_data = data_class(self.auth)
+                _LOGGER.debug("%s detected!", str(data_class.__name__))
+                return station_data
+            except TypeError:
+                continue
+
     def update(self):
         """Call the Netatmo API to update the data.
 
@@ -316,12 +346,9 @@ class NetAtmoData:
             return
 
         try:
-            import pyatmo
-            try:
-                self.station_data = pyatmo.WeatherStationData(self.auth)
-            except TypeError:
-                _LOGGER.error("Failed to connect to NetAtmo")
-                return  # finally statement will be executed
+            self.station_data = self._detect_platform_type()
+            if not self.station_data:
+                raise Exception("No Weather nor HomeCoach devices found")
 
             if self.station is not None:
                 self.data = self.station_data.lastData(

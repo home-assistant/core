@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
 
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.sun as sun
 
@@ -92,9 +93,9 @@ class TestSun(unittest.TestCase):
             assert next_noon == sun.get_astral_event_next(
                 self.hass, 'solar_noon')
             assert next_rising == sun.get_astral_event_next(
-                self.hass, 'sunrise')
+                self.hass, SUN_EVENT_SUNRISE)
             assert next_setting == sun.get_astral_event_next(
-                self.hass, 'sunset')
+                self.hass, SUN_EVENT_SUNSET)
 
     def test_date_events(self):
         """Test retrieving next sun events."""
@@ -123,9 +124,9 @@ class TestSun(unittest.TestCase):
         assert noon == sun.get_astral_event_date(
             self.hass, 'solar_noon', utc_today)
         assert sunrise == sun.get_astral_event_date(
-            self.hass, 'sunrise', utc_today)
+            self.hass, SUN_EVENT_SUNRISE, utc_today)
         assert sunset == sun.get_astral_event_date(
-            self.hass, 'sunset', utc_today)
+            self.hass, SUN_EVENT_SUNSET, utc_today)
 
     def test_date_events_default_date(self):
         """Test retrieving next sun events."""
@@ -155,9 +156,9 @@ class TestSun(unittest.TestCase):
             assert noon == sun.get_astral_event_date(
                 self.hass, 'solar_noon', utc_today)
             assert sunrise == sun.get_astral_event_date(
-                self.hass, 'sunrise', utc_today)
+                self.hass, SUN_EVENT_SUNRISE, utc_today)
             assert sunset == sun.get_astral_event_date(
-                self.hass, 'sunset', utc_today)
+                self.hass, SUN_EVENT_SUNSET, utc_today)
 
     def test_date_events_accepts_datetime(self):
         """Test retrieving next sun events."""
@@ -186,9 +187,9 @@ class TestSun(unittest.TestCase):
         assert noon == sun.get_astral_event_date(
             self.hass, 'solar_noon', utc_now)
         assert sunrise == sun.get_astral_event_date(
-            self.hass, 'sunrise', utc_now)
+            self.hass, SUN_EVENT_SUNRISE, utc_now)
         assert sunset == sun.get_astral_event_date(
-            self.hass, 'sunset', utc_now)
+            self.hass, SUN_EVENT_SUNSET, utc_now)
 
     def test_is_up(self):
         """Test retrieving next sun events."""
@@ -209,19 +210,21 @@ class TestSun(unittest.TestCase):
 
         june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-        print(sun.get_astral_event_date(self.hass, 'sunrise',
+        print(sun.get_astral_event_date(self.hass, SUN_EVENT_SUNRISE,
                                         datetime(2017, 7, 25)))
-        print(sun.get_astral_event_date(self.hass, 'sunset',
+        print(sun.get_astral_event_date(self.hass, SUN_EVENT_SUNSET,
                                         datetime(2017, 7, 25)))
 
-        print(sun.get_astral_event_date(self.hass, 'sunrise',
+        print(sun.get_astral_event_date(self.hass, SUN_EVENT_SUNRISE,
                                         datetime(2017, 7, 26)))
-        print(sun.get_astral_event_date(self.hass, 'sunset',
+        print(sun.get_astral_event_date(self.hass, SUN_EVENT_SUNSET,
                                         datetime(2017, 7, 26)))
 
-        assert sun.get_astral_event_next(self.hass, 'sunrise', june) == \
-            datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
-        assert sun.get_astral_event_next(self.hass, 'sunset', june) == \
-            datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
-        assert sun.get_astral_event_date(self.hass, 'sunrise', june) is None
-        assert sun.get_astral_event_date(self.hass, 'sunset', june) is None
+        assert sun.get_astral_event_next(self.hass, SUN_EVENT_SUNRISE, june) \
+            == datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+        assert sun.get_astral_event_next(self.hass, SUN_EVENT_SUNSET, june) \
+            == datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+        assert sun.get_astral_event_date(self.hass, SUN_EVENT_SUNRISE, june) \
+            is None
+        assert sun.get_astral_event_date(self.hass, SUN_EVENT_SUNSET, june) \
+            is None

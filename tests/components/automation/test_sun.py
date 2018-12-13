@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 from unittest.mock import patch
 
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.setup import async_setup_component
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
@@ -39,7 +40,7 @@ async def test_sunset_trigger(hass, calls):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunset',
+                    'event': SUN_EVENT_SUNSET,
                 },
                 'action': {
                     'service': 'test.automation',
@@ -75,7 +76,7 @@ async def test_sunrise_trigger(hass, calls):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunrise',
+                    'event': SUN_EVENT_SUNRISE,
                 },
                 'action': {
                     'service': 'test.automation',
@@ -99,7 +100,7 @@ async def test_sunset_trigger_with_offset(hass, calls):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunset',
+                    'event': SUN_EVENT_SUNSET,
                     'offset': '0:30:00'
                 },
                 'action': {
@@ -130,7 +131,7 @@ async def test_sunrise_trigger_with_offset(hass, calls):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunrise',
+                    'event': SUN_EVENT_SUNRISE,
                     'offset': '-0:30:00'
                 },
                 'action': {
@@ -154,7 +155,7 @@ async def test_if_action_before(hass, calls):
             },
             'condition': {
                 'condition': 'sun',
-                'before': 'sunrise',
+                'before': SUN_EVENT_SUNRISE,
             },
             'action': {
                 'service': 'test.automation'
@@ -187,7 +188,7 @@ async def test_if_action_after(hass, calls):
             },
             'condition': {
                 'condition': 'sun',
-                'after': 'sunrise',
+                'after': SUN_EVENT_SUNRISE,
             },
             'action': {
                 'service': 'test.automation'
@@ -220,7 +221,7 @@ async def test_if_action_before_with_offset(hass, calls):
             },
             'condition': {
                 'condition': 'sun',
-                'before': 'sunrise',
+                'before': SUN_EVENT_SUNRISE,
                 'before_offset': '+1:00:00'
             },
             'action': {
@@ -254,7 +255,7 @@ async def test_if_action_after_with_offset(hass, calls):
             },
             'condition': {
                 'condition': 'sun',
-                'after': 'sunrise',
+                'after': SUN_EVENT_SUNRISE,
                 'after_offset': '+1:00:00'
             },
             'action': {
@@ -288,8 +289,8 @@ async def test_if_action_before_and_after_during(hass, calls):
             },
             'condition': {
                 'condition': 'sun',
-                'after': 'sunrise',
-                'before': 'sunset'
+                'after': SUN_EVENT_SUNRISE,
+                'before': SUN_EVENT_SUNSET
             },
             'action': {
                 'service': 'test.automation'

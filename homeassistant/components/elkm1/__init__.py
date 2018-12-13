@@ -11,7 +11,7 @@ import re
 import voluptuous as vol
 from homeassistant.const import (
     CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
-    CONF_TEMPERATURE_UNIT, CONF_USERNAME, TEMP_FAHRENHEIT)
+    CONF_TEMPERATURE_UNIT, CONF_USERNAME)
 from homeassistant.core import HomeAssistant, callback  # noqa
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType  # noqa
 
 DOMAIN = "elkm1"
 
-REQUIREMENTS = ['elkm1-lib==0.7.10']
+REQUIREMENTS = ['elkm1-lib==0.7.13']
 
 CONF_AREA = 'area'
 CONF_COUNTER = 'counter'
@@ -83,17 +83,17 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_USERNAME, default=''): cv.string,
             vol.Optional(CONF_PASSWORD, default=''): cv.string,
-            vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
+            vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
                 cv.temperature_unit,
-            vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_KEYPAD): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_OUTPUT): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_PLC): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_SETTING): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_TASK): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_THERMOSTAT): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_ZONE): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_AREA, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_COUNTER, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_KEYPAD, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_OUTPUT, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_PLC, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_SETTING, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_TASK, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_THERMOSTAT, default={}): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_ZONE, default={}): CONFIG_SCHEMA_SUBDOMAIN,
         },
         _host_validator,
     )

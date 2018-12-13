@@ -46,10 +46,12 @@ class GarageDoorOpener(HomeAccessory):
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
-            self.char_current_state.set_value(3)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(3)
             self.call_service(DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
-            self.char_current_state.set_value(2)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(2)
             self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):

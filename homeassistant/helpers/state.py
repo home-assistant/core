@@ -44,14 +44,13 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
-from homeassistant.core import State
+from homeassistant.core import State, DOMAIN as HASS_DOMAIN
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 GROUP_DOMAIN = 'group'
-HASS_DOMAIN = 'homeassistant'
 
 # Update this dict of lists when new services are added to HA.
 # Each item is a service with a list of required attributes.

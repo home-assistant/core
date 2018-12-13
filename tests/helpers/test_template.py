@@ -274,6 +274,37 @@ class TestHelpersTemplate(unittest.TestCase):
             template.Template('{{ [1, 2, 3] | max }}',
                               self.hass).render()
 
+    def test_base64_encode(self):
+        """Test the base64_encode filter."""
+        self.assertEqual(
+            'aG9tZWFzc2lzdGFudA==',
+            template.Template('{{ "homeassistant" | base64_encode }}',
+                              self.hass).render())
+
+    def test_base64_decode(self):
+        """Test the base64_decode filter."""
+        self.assertEqual(
+            'homeassistant',
+            template.Template('{{ "aG9tZWFzc2lzdGFudA==" | base64_decode }}',
+                              self.hass).render())
+
+    def test_ordinal(self):
+        """Test the ordinal filter."""
+        tests = [
+            (1, '1st'),
+            (2, '2nd'),
+            (3, '3rd'),
+            (4, '4th'),
+            (5, '5th'),
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | ordinal }}' % value,
+                    self.hass).render())
+
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
         now = dt_util.utcnow()
@@ -849,7 +880,9 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
-        assert MATCH_ALL == template.extract_entities(None)
+        assert [] == template.extract_entities(None)
+
+        assert [] == template.extract_entities("mdi:water")
 
         assert MATCH_ALL == \
             template.extract_entities(
@@ -896,7 +929,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
         assert ['device_tracker.phone_2'] == \
             template.extract_entities("""
-is_state_attr('device_tracker.phone_2', 'battery', 40)
+{{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
             """)
 
         assert sorted([
@@ -960,6 +993,23 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             template.extract_entities(
                 "{{ is_state('media_player.' ~ where , 'playing') }}",
                 {'where': 'livingroom'})
+
+    def test_jinja_namespace(self):
+        """Test Jinja's namespace command can be used."""
+        test_template = template.Template(
+            (
+                "{% set ns = namespace(a_key='') %}"
+                "{% set ns.a_key = states.sensor.dummy.state %}"
+                "{{ ns.a_key }}"
+            ),
+            self.hass
+        )
+
+        self.hass.states.set('sensor.dummy', 'a value')
+        assert 'a value' == test_template.render()
+
+        self.hass.states.set('sensor.dummy', 'another value')
+        assert 'another value' == test_template.render()
 
 
 @asyncio.coroutine

@@ -6,6 +6,7 @@ https://home-assistant.io/components/mqtt/
 """
 import asyncio
 from itertools import groupby
+import json
 import logging
 from operator import attrgetter
 import os
@@ -70,6 +71,7 @@ CONF_COMMAND_TOPIC = 'command_topic'
 CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
+CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -223,6 +225,10 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SW_VERSION): cv.string,
 }), validate_device_has_at_least_one_identifier)
+
+MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+})
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -820,6 +826,66 @@ def _match_topic(subscription: str, topic: str) -> bool:
         return False
 
 
+class MqttAttributes(Entity):
+    """Mixin used for platforms that support JSON attributes."""
+
+    def __init__(self, config: dict) -> None:
+        """Initialize the JSON attributes mixin."""
+        self._attributes = None
+        self._attributes_sub_state = None
+        self._attributes_config = config
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe MQTT events.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        await super().async_added_to_hass()
+        await self._attributes_subscribe_topics()
+
+    async def attributes_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._attributes_config = config
+        await self._attributes_subscribe_topics()
+
+    async def _attributes_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        from .subscription import async_subscribe_topics
+
+        @callback
+        def attributes_message_received(topic: str,
+                                        payload: SubscribePayloadType,
+                                        qos: int) -> None:
+            try:
+                json_dict = json.loads(payload)
+                if isinstance(json_dict, dict):
+                    self._attributes = json_dict
+                    self.async_schedule_update_ha_state()
+                else:
+                    _LOGGER.warning("JSON result was not a dictionary")
+                    self._attributes = None
+            except ValueError:
+                _LOGGER.warning("Erroneous JSON: %s", payload)
+                self._attributes = None
+
+        self._attributes_sub_state = await async_subscribe_topics(
+            self.hass, self._attributes_sub_state,
+            {CONF_JSON_ATTRS_TOPIC: {
+                'topic': self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
+                'msg_callback': attributes_message_received,
+                'qos': self._attributes_config.get(CONF_QOS)}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        from .subscription import async_unsubscribe_topics
+        await async_unsubscribe_topics(self.hass, self._attributes_sub_state)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
@@ -827,9 +893,11 @@ class MqttAvailability(Entity):
                  payload_available: Optional[str],
                  payload_not_available: Optional[str]) -> None:
         """Initialize the availability mixin."""
+        self._availability_sub_state = None
+        self._available = False  # type: bool
+
         self._availability_topic = availability_topic
         self._availability_qos = qos
-        self._available = availability_topic is None  # type: bool
         self._payload_available = payload_available
         self._payload_not_available = payload_not_available
 
@@ -838,6 +906,25 @@ class MqttAvailability(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
+        await super().async_added_to_hass()
+        await self._availability_subscribe_topics()
+
+    async def availability_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._availability_setup_from_config(config)
+        await self._availability_subscribe_topics()
+
+    def _availability_setup_from_config(self, config):
+        """(Re)Setup."""
+        self._availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        self._availability_qos = config.get(CONF_QOS)
+        self._payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        self._payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+
+    async def _availability_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        from .subscription import async_subscribe_topics
+
         @callback
         def availability_message_received(topic: str,
                                           payload: SubscribePayloadType,
@@ -850,27 +937,37 @@ class MqttAvailability(Entity):
 
             self.async_schedule_update_ha_state()
 
-        if self._availability_topic is not None:
-            await async_subscribe(
-                self.hass, self._availability_topic,
-                availability_message_received, self._availability_qos)
+        self._availability_sub_state = await async_subscribe_topics(
+            self.hass, self._availability_sub_state,
+            {'availability_topic': {
+                'topic': self._availability_topic,
+                'msg_callback': availability_message_received,
+                'qos': self._availability_qos}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        from .subscription import async_unsubscribe_topics
+        await async_unsubscribe_topics(self.hass, self._availability_sub_state)
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return self._availability_topic is None or self._available
 
 
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash) -> None:
+    def __init__(self, discovery_hash, discovery_update=None) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
+        self._discovery_update = discovery_update
         self._remove_signal = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
+        await super().async_added_to_hass()
+
         from homeassistant.helpers.dispatcher import async_dispatcher_connect
         from homeassistant.components.mqtt.discovery import (
             ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
@@ -886,6 +983,10 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass.async_create_task(self.async_remove())
                 del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
                 self._remove_signal()
+            elif self._discovery_update:
+                # Non-empty payload: Notify component
+                _LOGGER.info("Updating component: %s", self.entity_id)
+                self.hass.async_create_task(self._discovery_update(payload))
 
         if self._discovery_hash:
             self._remove_signal = async_dispatcher_connect(

@@ -13,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
-    CONF_PLATFORM, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_PLATFORM, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.51']
+REQUIREMENTS = ['pyhomematic==0.1.53']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +65,9 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
         'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
-        'IPKeySwitchPowermeter'],
-    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
+        'IPKeySwitchPowermeter', 'IPGarage'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer', 'IPDimmer',
+                      'ColorEffectLight'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
@@ -76,7 +78,8 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic', 'IPBrightnessSensor'],
+        'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage',
+        'UniversalSensor'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -172,6 +175,9 @@ DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = False
+DEFAULT_CHANNEL = 1
 
 
 DEVICE_SCHEMA = vol.Schema({
@@ -179,7 +185,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_INTERFACE): cv.string,
-    vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
+    vol.Optional(ATTR_CHANNEL, default=DEFAULT_CHANNEL): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
     vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
@@ -197,6 +203,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
             vol.Optional(CONF_CALLBACK_PORT): cv.port,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(
+                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         }},
         vol.Optional(CONF_HOSTS, default={}): {cv.match_all: {
             vol.Required(CONF_HOST): cv.string,
@@ -267,6 +276,8 @@ def setup(hass, config):
             'password': rconfig.get(CONF_PASSWORD),
             'callbackip': rconfig.get(CONF_CALLBACK_IP),
             'callbackport': rconfig.get(CONF_CALLBACK_PORT),
+            'ssl': rconfig.get(CONF_SSL),
+            'verify_ssl': rconfig.get(CONF_VERIFY_SSL),
             'connect': True,
         }
 

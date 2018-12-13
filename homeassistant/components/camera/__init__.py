@@ -61,7 +61,7 @@ FALLBACK_STREAM_INTERVAL = 1  # seconds
 MIN_STREAM_INTERVAL = 0.5  # seconds
 
 CAMERA_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
@@ -299,7 +299,8 @@ class Camera(Entity):
         a direct stream from the camera.
         This method must be run in the event loop.
         """
-        await self.handle_async_still_stream(request, self.frame_interval)
+        return await self.handle_async_still_stream(
+            request, self.frame_interval)
 
     @property
     def state(self):

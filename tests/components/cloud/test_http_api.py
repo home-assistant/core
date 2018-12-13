@@ -6,7 +6,9 @@ import pytest
 from jose import jwt
 
 from homeassistant.components.cloud import (
-    DOMAIN, auth_api, iot, STORAGE_ENABLE_GOOGLE, STORAGE_ENABLE_ALEXA)
+    DOMAIN, auth_api, iot)
+from homeassistant.components.cloud.const import (
+    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK)
 from homeassistant.util import dt as dt_util
 
 from tests.common import mock_coro
@@ -35,15 +37,25 @@ def setup_api(hass):
         'relayer': 'relayer',
         'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
         'subscription_info_url': SUBSCRIPTION_INFO_URL,
+        'google_actions': {
+            'filter': {
+                'include_domains': 'light'
+            }
+        },
+        'alexa': {
+            'filter': {
+                'include_entities': ['light.kitchen', 'switch.ac']
+            }
+        }
     })
     return mock_cloud_prefs(hass)
 
 
 @pytest.fixture
-def cloud_client(hass, aiohttp_client):
+def cloud_client(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+        yield hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture
@@ -325,17 +337,36 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
     }, 'test')
     hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
     client = await hass_ws_client(hass)
-    await client.send_json({
-        'id': 5,
-        'type': 'cloud/status'
-    })
-    response = await client.receive_json()
+
+    with patch.dict(
+        'homeassistant.components.google_assistant.smart_home.'
+        'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
+    ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
+                  {'switch': None}, clear=True):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/status'
+        })
+        response = await client.receive_json()
     assert response['result'] == {
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
-        'alexa_enabled': True,
-        'google_enabled': True,
+        'prefs': mock_cloud_fixture,
+        'alexa_entities': {
+            'include_domains': [],
+            'include_entities': ['light.kitchen', 'switch.ac'],
+            'exclude_domains': [],
+            'exclude_entities': [],
+        },
+        'alexa_domains': ['switch'],
+        'google_entities': {
+            'include_domains': ['light'],
+            'include_entities': [],
+            'exclude_domains': [],
+            'exclude_entities': [],
+        },
+        'google_domains': ['light'],
     }
 
 
@@ -475,8 +506,9 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
 async def test_websocket_update_preferences(hass, hass_ws_client,
                                             aioclient_mock, setup_api):
     """Test updating preference."""
-    assert setup_api[STORAGE_ENABLE_GOOGLE]
-    assert setup_api[STORAGE_ENABLE_ALEXA]
+    assert setup_api[PREF_ENABLE_GOOGLE]
+    assert setup_api[PREF_ENABLE_ALEXA]
+    assert setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
         'custom:sub-exp': '2018-01-03'
@@ -487,9 +519,53 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
         'type': 'cloud/update_prefs',
         'alexa_enabled': False,
         'google_enabled': False,
+        'google_allow_unlock': False,
     })
     response = await client.receive_json()
 
     assert response['success']
-    assert not setup_api[STORAGE_ENABLE_GOOGLE]
-    assert not setup_api[STORAGE_ENABLE_ALEXA]
+    assert not setup_api[PREF_ENABLE_GOOGLE]
+    assert not setup_api[PREF_ENABLE_ALEXA]
+    assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+
+
+async def test_enabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to enable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_create', return_value=mock_coro()) as mock_enable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/cloudhook/create',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_enable.mock_calls) == 1
+    assert mock_enable.mock_calls[0][1][0] == 'mock-webhook-id'
+
+
+async def test_disabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to disable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_delete', return_value=mock_coro()) as mock_disable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/cloudhook/delete',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_disable.mock_calls) == 1
+    assert mock_disable.mock_calls[0][1][0] == 'mock-webhook-id'
