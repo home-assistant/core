@@ -299,7 +299,6 @@ class TestComponentLogbook(unittest.TestCase):
     def test_exclude_script_events(self):
         """Test if script start can be excluded by entity_id."""
         name = 'My Script Rule'
-        message = 'started'
         domain = 'script'
         entity_id = 'script.my_script'
         entity_id2 = 'script.my_script_2'
