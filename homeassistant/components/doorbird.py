@@ -4,6 +4,7 @@ Support for DoorBird device.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
 """
+import datetime
 import logging
 
 import voluptuous as vol
@@ -303,6 +304,16 @@ class ConfiguredDoorBird():
 
         return None
 
+    def get_event_data(self):
+        """Get data to pass along with HA event."""
+        return {
+            'timestamp': datetime.datetime.now(),
+            'live_video_url': self._device.live_video_url,
+            'live_image_url': self._device.live_image_url,
+            'rtsp_live_video_url': self._device.rtsp_live_video_url,
+            'html5_viewer_url': self._device.html5_viewer_url
+        }
+
 
 class DoorBirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -330,7 +341,14 @@ class DoorBirdRequestView(HomeAssistantView):
         if request_token == '' or not authenticated:
             return web.Response(status=401, text='Unauthorized')
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        doorstation = get_doorstation_by_slug(hass, sensor)
+
+        if doorstation:
+            event_data = doorstation.get_event_data()
+        else:
+            event_data = {}
+
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), event_data)
 
         return web.Response(status=200, text='OK')
 
