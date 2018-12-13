@@ -147,8 +147,6 @@ async def test_delete_unable_self_account(hass, hass_ws_client,
 async def test_delete_unknown_user(hass, hass_ws_client, hass_access_token):
     """Test we cannot delete an unknown user."""
     client = await hass_ws_client(hass, hass_access_token)
-    refresh_token = await hass.auth.async_validate_access_token(
-        hass_access_token)
 
     await client.send_json({
         'id': 5,
@@ -164,8 +162,6 @@ async def test_delete_unknown_user(hass, hass_ws_client, hass_access_token):
 async def test_delete(hass, hass_ws_client, hass_access_token):
     """Test delete command works."""
     client = await hass_ws_client(hass, hass_access_token)
-    refresh_token = await hass.auth.async_validate_access_token(
-        hass_access_token)
     test_user = MockUser(
         id='efg',
     ).add_to_hass(hass)
@@ -186,8 +182,6 @@ async def test_delete(hass, hass_ws_client, hass_access_token):
 async def test_create(hass, hass_ws_client, hass_access_token):
     """Test create command works."""
     client = await hass_ws_client(hass, hass_access_token)
-    refresh_token = await hass.auth.async_validate_access_token(
-        hass_access_token)
 
     assert len(await hass.auth.async_get_users()) == 1
 
