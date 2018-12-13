@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD,  CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 REQUIREMENTS = ['ecoaliface==0.4.0']
 
@@ -46,5 +46,6 @@ def setup(hass, config):
         # Wrong credentials nor network config
         return False
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
-    _LOGGER.debug("Detected controller version: %r @%s", ecoal_contr.version,  host, )
+    _LOGGER.debug("Detected controller version: %r @%s",
+                  ecoal_contr.version, host, )
     return True
