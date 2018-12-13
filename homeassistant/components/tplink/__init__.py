@@ -51,8 +51,11 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_CONFIG] = conf
 
-    hass.async_create_task(hass.config_entries.flow.async_init(
-        DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+    if conf is not None:
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+
+        return True
 
     return True
 
@@ -70,7 +73,9 @@ async def async_setup_entry(hass, config_entry):
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
     # If discovery is defined and not disabled, discover devices
-    if config_data[CONF_DISCOVERY]:
+    # If initialized from configure integrations, there's no config
+    # so we default here to True
+    if config_data is None or config_data[CONF_DISCOVERY]:
         devs = await _async_has_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
         devices.update(devs)
@@ -84,18 +89,22 @@ async def async_setup_entry(hass, config_entry):
 
         return dev
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH]:
-        for entry in config_data[type_]:
-            try:
-                host = entry['host']
-                dev = _device_for_type(host, type_)
-                devices[host] = dev
-                _LOGGER.debug("Succesfully added %s %s: %s",
-                              type_, host, dev)
-            except SmartDeviceException as ex:
-                _LOGGER.error("Unable to initialize %s %s: %s",
-                              type_, host, ex)
+    # When arriving from configure integrations, we have no config data.
+    if config_data is not None:
+        for type_ in [CONF_LIGHT, CONF_SWITCH]:
+            for entry in config_data[type_]:
+                try:
+                    host = entry['host']
+                    dev = _device_for_type(host, type_)
+                    devices[host] = dev
+                    _LOGGER.debug("Succesfully added %s %s: %s",
+                                  type_, host, dev)
+                except SmartDeviceException as ex:
+                    _LOGGER.error("Unable to initialize %s %s: %s",
+                                  type_, host, ex)
 
+    # This is necessary to avoid I/O blocking on is_dimmable,
+    # the upstream library
     def _fill_device_lists():
         for dev in devices.values():
             if isinstance(dev, SmartPlug):
@@ -128,9 +137,6 @@ async def async_unload_entry(hass, entry):
 
     hass.data[DOMAIN][CONF_LIGHT] = None
     hass.data[DOMAIN][CONF_SWITCH] = None
-
-    # balloob if config entry was never marked loaded, return True from async_setup_config_entry
-    # for unloading, make sure you return True from unloading too
 
     return remove_lights and remove_switches
 

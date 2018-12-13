@@ -41,6 +41,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(devs, True)
 
+    return True
+
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""

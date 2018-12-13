@@ -46,6 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(devs, True)
 
+    return True
+
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
