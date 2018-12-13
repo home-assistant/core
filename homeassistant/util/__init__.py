@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
 
-import slugify as moz_slug
+import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
@@ -39,8 +39,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    return moz_slug.slugify(
-      text, ok='_', space_replacement='_', only_ascii=True)
+    return unicode_slug.slugify(text, separator='_')
 
 
 def repr_helper(inp: Any) -> str:
