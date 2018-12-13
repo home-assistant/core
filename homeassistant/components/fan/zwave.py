@@ -8,8 +8,8 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.fan import (
-    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM_LOW,
+    SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
 from homeassistant.components import zwave
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -53,13 +53,19 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
     def _init_speed_value_mappings(self):
         """Build maps to translate between logical speeds and dimmer values."""
         if self._device_id() == HOMESEER_FC200:
-            self._speed_list = [SPEED_OFF, "1", "2", "3", "4"]
+            self._speed_list = [
+                SPEED_OFF,
+                SPEED_LOW,
+                SPEED_MEDIUM_LOW,
+                SPEED_MEDIUM,
+                SPEED_HIGH
+            ]
             self._speed_to_values = {
                 SPEED_OFF: [0],
-                "1": range(1, 25),
-                "2": range(25, 50),
-                "3": range(50, 75),
-                "4": range(75, 101)
+                SPEED_LOW: range(1, 25),
+                SPEED_MEDIUM_LOW: range(25, 50),
+                SPEED_MEDIUM: range(50, 75),
+                SPEED_HIGH: range(75, 101)
             }
         else:
             self._speed_list = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
