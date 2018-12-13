@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, CONF_HOST, \
-    CONF_PORT, CONF_PLATFORM, CONF_SWITCHES
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PLATFORM, CONF_PORT, CONF_SWITCHES,
+    DEVICE_DEFAULT_NAME)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['raspyrfm-client==1.2.8']
 _LOGGER = logging.getLogger(__name__)
