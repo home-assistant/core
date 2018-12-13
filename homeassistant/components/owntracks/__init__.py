@@ -18,7 +18,7 @@ from .config_flow import CONF_SECRET
 
 DOMAIN = "owntracks"
 REQUIREMENTS = ['libnacl==1.6.1']
-DEPENDENCIES = ['device_tracker', 'webhook']
+DEPENDENCIES = ['webhook']
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = 'waypoints'
