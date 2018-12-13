@@ -472,11 +472,11 @@ def _exclude_events(events, entities_filter):
         elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
-           
+
         elif event.event_type == EVENT_SCRIPT_STARTED:
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
-            
+
         elif event.event_type == EVENT_ALEXA_SMART_HOME:
             domain = 'alexa'
 
