@@ -9,12 +9,13 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.components.ecoal_boiler import DATA_ECOAL_BOILER
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['ecoal_boiler']
 
 # Available ids
 PUMP_IDNAMES = (
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches, True)
 
 
-class EcoalSwitch(ToggleEntity):
+class EcoalSwitch(SwitchDevice):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
@@ -57,22 +58,19 @@ class EcoalSwitch(ToggleEntity):
         self._ecoal_contr = ecoal_contr
         self._name = name
         self._state_attr = state_attr
-        # NOTE: Convetion set_<attr> and status.<attr>
-        # is held inside ecoal_boiler.http_interface
+        # NOTE: Ecoalcotroller holds convention that same postfix is used 
+        # to set attribute 
+        #   set_<attr>()
+        # as attribute name in status instance:
+        #   status.<attr>
         self._contr_set_fun = getattr(self._ecoal_contr, "set_" + state_attr)
-        # No setting value, read instead
-        # self._state = self.is_on
+        # No value set, will be read from controller instead
         self._state = None
 
     @property
     def name(self) -> Optional[str]:
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if polling needed."""
-        return True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -98,11 +96,9 @@ class EcoalSwitch(ToggleEntity):
         self._contr_set_fun(1)
         # Reread state without using cache.
         self.reread_update()
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         self._contr_set_fun(0)
         # Reread state without using cache.
         self.reread_update()
-        self.schedule_update_ha_state()

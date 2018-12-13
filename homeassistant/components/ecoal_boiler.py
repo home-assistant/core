@@ -41,8 +41,10 @@ def setup(hass, config):
     username = conf[CONF_USERNAME]
     passwd = conf[CONF_PASSWORD]
     ecoal_contr = ECoalController(host, username, passwd)
+    # Creating ECoalController instance makes HTTP request to controller.
     if ecoal_contr.version is None:
-        # Wrong  credentials or network config
+        # Wrong credentials nor network config
         return False
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
+    _LOGGER.debug("Detected controller version: %r @%s", ecoal_contr.version,  host, )
     return True

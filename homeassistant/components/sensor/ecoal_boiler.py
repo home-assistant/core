@@ -13,6 +13,8 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
+DEPENDENCIES = ['ecoal_boiler']
+
 # Available temp sensor ids
 SENSOR_IDS = (
     "outdoor_temp",
