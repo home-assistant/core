@@ -330,7 +330,7 @@ edp_redy==0.0.2
 einder==0.3.1
 
 # homeassistant.components.sensor.eliqonline
-eliqonline==1.0.14
+eliqonline==1.2.2
 
 # homeassistant.components.elkm1
 elkm1-lib==0.7.12
