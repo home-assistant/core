@@ -20,7 +20,7 @@ BASE_COMMAND_MESSAGE_SCHEMA = messages.BASE_COMMAND_MESSAGE_SCHEMA
 error_message = messages.error_message
 result_message = messages.result_message
 async_response = decorators.async_response
-require_owner = decorators.require_owner
+require_admin = decorators.require_admin
 ws_require_user = decorators.ws_require_user
 # pylint: enable=invalid-name
 
