@@ -31,6 +31,13 @@ async def test_adding_user_duplicate_username(data, hass):
         data.add_auth('test-user', 'other-pass')
 
 
+async def test_adding_user_duplicate_case_insensitive_username(data, hass):
+    """Test adding a user with a duplicate case-insensitve username."""
+    data.add_auth('test-user', 'test-pass')
+    with pytest.raises(hass_auth.InvalidUser):
+        data.add_auth('Test-User', 'test-pass')
+
+
 async def test_validating_password_invalid_user(data, hass):
     """Test validating an invalid user."""
     with pytest.raises(hass_auth.InvalidAuth):
@@ -106,6 +113,16 @@ async def test_saving_loading(data, hass):
     await data.async_load()
     data.validate_login('test-user', 'test-pass')
     data.validate_login('second-user', 'second-pass')
+
+
+async def test_login_case_insensitive_username(data, hass):
+    """Test logging in with a case insensitive username."""
+    data.add_auth('test-user', 'test-pass')
+    await data.async_save()
+
+    data = hass_auth.Data(hass)
+    await data.async_load()
+    data.validate_login('Test-User', 'test-pass')
 
 
 async def test_not_allow_set_id():
