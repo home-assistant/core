@@ -232,7 +232,7 @@ async def test_call_context_target_all(hass, mock_service_platform_call,
                            'light.kitchen': True
                        }
                    }
-               })))):
+               }, None)))):
         await service.entity_service_call(hass, [
             Mock(entities=mock_entities)
         ], Mock(), ha.ServiceCall('test_domain', 'test_service',
@@ -253,7 +253,7 @@ async def test_call_context_target_specific(hass, mock_service_platform_call,
                            'light.kitchen': True
                        }
                    }
-               })))):
+               }, None)))):
         await service.entity_service_call(hass, [
             Mock(entities=mock_entities)
         ], Mock(), ha.ServiceCall('test_domain', 'test_service', {
@@ -271,7 +271,7 @@ async def test_call_context_target_specific_no_auth(
     with pytest.raises(exceptions.Unauthorized) as err:
         with patch('homeassistant.auth.AuthManager.async_get_user',
                    return_value=mock_coro(Mock(
-                       permissions=PolicyPermissions({})))):
+                       permissions=PolicyPermissions({}, None)))):
             await service.entity_service_call(hass, [
                 Mock(entities=mock_entities)
             ], Mock(), ha.ServiceCall('test_domain', 'test_service', {

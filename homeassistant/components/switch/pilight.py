@@ -13,7 +13,7 @@ from homeassistant.components import pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
                                  CONF_PROTOCOL, STATE_ON)
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class _ReceiveHandle:
         switch.set_state(turn_on=turn_on, send_code=self.echo)
 
 
-class PilightSwitch(SwitchDevice):
+class PilightSwitch(SwitchDevice, RestoreEntity):
     """Representation of a Pilight switch."""
 
     def __init__(self, hass, name, code_on, code_off, code_on_receive,
@@ -123,7 +123,8 @@ class PilightSwitch(SwitchDevice):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
-        state = await async_get_last_state(self._hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if state:
             self._state = state.state == STATE_ON
 

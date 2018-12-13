@@ -2,6 +2,9 @@
 import unittest
 import copy
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM
 )
@@ -91,7 +94,8 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
         assert "off" == state.state
-        common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
@@ -177,7 +181,8 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
-        common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
@@ -225,7 +230,8 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
-        common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
@@ -683,4 +689,35 @@ async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('climate.beer')
+    assert state is None
+
+
+async def test_discovery_update_climate(hass, mqtt_mock, caplog):
+    """Test removal of discovered climate."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('climate.milk')
     assert state is None

@@ -69,7 +69,7 @@ class AuthPhase:
             self._send_message(auth_invalid_message(error_msg))
             raise Disconnect
 
-        if self._hass.auth.active and 'access_token' in msg:
+        if 'access_token' in msg:
             self._logger.debug("Received access_token")
             refresh_token = \
                 await self._hass.auth.async_validate_access_token(
@@ -78,8 +78,7 @@ class AuthPhase:
                 return await self._async_finish_auth(
                     refresh_token.user, refresh_token)
 
-        elif ((not self._hass.auth.active or self._hass.auth.support_legacy)
-              and 'api_password' in msg):
+        elif self._hass.auth.support_legacy and 'api_password' in msg:
             self._logger.debug("Received api_password")
             if validate_password(self._request, msg['api_password']):
                 return await self._async_finish_auth(None, None)

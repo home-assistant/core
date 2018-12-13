@@ -43,6 +43,7 @@ TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
+TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -59,7 +60,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
 COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
-
+COMMAND_MODES = PREFIX_COMMANDS + 'SetModes'
 
 TRAITS = []
 
@@ -197,6 +198,8 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_ON_OFF != 0
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -515,6 +518,9 @@ class TemperatureSettingTrait(_Trait):
         climate.STATE_COOL: 'cool',
         climate.STATE_OFF: 'off',
         climate.STATE_AUTO: 'heatcool',
+        climate.STATE_FAN_ONLY: 'fan-only',
+        climate.STATE_DRY: 'dry',
+        climate.STATE_ECO: 'eco'
     }
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
@@ -585,8 +591,11 @@ class TemperatureSettingTrait(_Trait):
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            temp = temp_util.convert(params['thermostatTemperatureSetpoint'],
-                                     TEMP_CELSIUS, unit)
+            temp = temp_util.convert(
+                params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
+                unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp = round(temp)
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -604,6 +613,8 @@ class TemperatureSettingTrait(_Trait):
             temp_high = temp_util.convert(
                 params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
                 unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp_high = round(temp_high)
 
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
@@ -612,7 +623,10 @@ class TemperatureSettingTrait(_Trait):
                     "{} and {}".format(min_temp, max_temp))
 
             temp_low = temp_util.convert(
-                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS, unit)
+                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
+                unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp_low = round(temp_low)
 
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
@@ -752,3 +766,188 @@ class FanSpeedTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 fan.ATTR_SPEED: params['fanSpeed']
             }, blocking=True)
+
+
+@register_trait
+class ModesTrait(_Trait):
+    """Trait to set modes.
+
+    https://developers.google.com/actions/smarthome/traits/modes
+    """
+
+    name = TRAIT_MODES
+    commands = [
+        COMMAND_MODES
+    ]
+
+    # Google requires specific mode names and settings. Here is the full list.
+    # https://developers.google.com/actions/reference/smarthome/traits/modes
+    # All settings are mapped here as of 2018-11-28 and can be used for other
+    # entity types.
+
+    HA_TO_GOOGLE = {
+        media_player.ATTR_INPUT_SOURCE: "input source",
+    }
+    SUPPORTED_MODE_SETTINGS = {
+        'xsmall': [
+            'xsmall', 'extra small', 'min', 'minimum', 'tiny', 'xs'],
+        'small': ['small', 'half'],
+        'large': ['large', 'big', 'full'],
+        'xlarge': ['extra large', 'xlarge', 'xl'],
+        'Cool': ['cool', 'rapid cool', 'rapid cooling'],
+        'Heat': ['heat'], 'Low': ['low'],
+        'Medium': ['medium', 'med', 'mid', 'half'],
+        'High': ['high'],
+        'Auto': ['auto', 'automatic'],
+        'Bake': ['bake'], 'Roast': ['roast'],
+        'Convection Bake': ['convection bake', 'convect bake'],
+        'Convection Roast': ['convection roast', 'convect roast'],
+        'Favorite': ['favorite'],
+        'Broil': ['broil'],
+        'Warm': ['warm'],
+        'Off': ['off'],
+        'On': ['on'],
+        'Normal': [
+            'normal', 'normal mode', 'normal setting', 'standard',
+            'schedule', 'original', 'default', 'old settings'
+        ],
+        'None': ['none'],
+        'Tap Cold': ['tap cold'],
+        'Cold Warm': ['cold warm'],
+        'Hot': ['hot'],
+        'Extra Hot': ['extra hot'],
+        'Eco': ['eco'],
+        'Wool': ['wool', 'fleece'],
+        'Turbo': ['turbo'],
+        'Rinse': ['rinse', 'rinsing', 'rinse wash'],
+        'Away': ['away', 'holiday'],
+        'maximum': ['maximum'],
+        'media player': ['media player'],
+        'chromecast': ['chromecast'],
+        'tv': [
+            'tv', 'television', 'tv position', 'television position',
+            'watching tv', 'watching tv position', 'entertainment',
+            'entertainment position'
+        ],
+        'am fm': ['am fm', 'am radio', 'fm radio'],
+        'internet radio': ['internet radio'],
+        'satellite': ['satellite'],
+        'game console': ['game console'],
+        'antifrost': ['antifrost', 'anti-frost'],
+        'boost': ['boost'],
+        'Clock': ['clock'],
+        'Message': ['message'],
+        'Messages': ['messages'],
+        'News': ['news'],
+        'Disco': ['disco'],
+        'antifreeze': ['antifreeze', 'anti-freeze', 'anti freeze'],
+        'balanced': ['balanced', 'normal'],
+        'swing': ['swing'],
+        'media': ['media', 'media mode'],
+        'panic': ['panic'],
+        'ring': ['ring'],
+        'frozen': ['frozen', 'rapid frozen', 'rapid freeze'],
+        'cotton': ['cotton', 'cottons'],
+        'blend': ['blend', 'mix'],
+        'baby wash': ['baby wash'],
+        'synthetics': ['synthetic', 'synthetics', 'compose'],
+        'hygiene': ['hygiene', 'sterilization'],
+        'smart': ['smart', 'intelligent', 'intelligence'],
+        'comfortable': ['comfortable', 'comfort'],
+        'manual': ['manual'],
+        'energy saving': ['energy saving'],
+        'sleep': ['sleep'],
+        'quick wash': ['quick wash', 'fast wash'],
+        'cold': ['cold'],
+        'airsupply': ['airsupply', 'air supply'],
+        'dehumidification': ['dehumidication', 'dehumidify'],
+        'game': ['game', 'game mode']
+    }
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != media_player.DOMAIN:
+            return False
+
+        return features & media_player.SUPPORT_SELECT_SOURCE
+
+    def sync_attributes(self):
+        """Return mode attributes for a sync request."""
+        sources_list = self.state.attributes.get(
+            media_player.ATTR_INPUT_SOURCE_LIST, [])
+        modes = []
+        sources = {}
+
+        if sources_list:
+            sources = {
+                "name": self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE),
+                "name_values": [{
+                    "name_synonym": ['input source'],
+                    "lang": "en"
+                }],
+                "settings": [],
+                "ordered": False
+            }
+            for source in sources_list:
+                if source in self.SUPPORTED_MODE_SETTINGS:
+                    src = source
+                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
+                elif source.lower() in self.SUPPORTED_MODE_SETTINGS:
+                    src = source.lower()
+                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
+
+                else:
+                    continue
+
+                sources['settings'].append(
+                    {
+                        "setting_name": src,
+                        "setting_values": [{
+                            "setting_synonym": synonyms,
+                            "lang": "en"
+                        }]
+                    }
+                )
+        if sources:
+            modes.append(sources)
+        payload = {'availableModes': modes}
+
+        return payload
+
+    def query_attributes(self):
+        """Return current modes."""
+        attrs = self.state.attributes
+        response = {}
+        mode_settings = {}
+
+        if attrs.get(media_player.ATTR_INPUT_SOURCE_LIST):
+            mode_settings.update({
+                media_player.ATTR_INPUT_SOURCE: attrs.get(
+                    media_player.ATTR_INPUT_SOURCE)
+            })
+        if mode_settings:
+            response['on'] = self.state.state != STATE_OFF
+            response['online'] = True
+            response['currentModeSettings'] = mode_settings
+
+        return response
+
+    async def execute(self, command, params):
+        """Execute an SetModes command."""
+        settings = params.get('updateModeSettings')
+        requested_source = settings.get(
+            self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE))
+
+        if requested_source:
+            for src in self.state.attributes.get(
+                    media_player.ATTR_INPUT_SOURCE_LIST):
+                if src.lower() == requested_source.lower():
+                    source = src
+
+                    await self.hass.services.async_call(
+                        media_player.DOMAIN,
+                        media_player.SERVICE_SELECT_SOURCE, {
+                            ATTR_ENTITY_ID: self.state.entity_id,
+                            media_player.ATTR_INPUT_SOURCE: source
+                        }, blocking=True)

@@ -93,18 +93,19 @@ from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES)
-import homeassistant.components.light as light
+from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 
-from tests.common import mock_coro, async_fire_mqtt_message
+from tests.common import mock_coro, async_fire_mqtt_message, MockConfigEntry
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
     """Test if setup fails with no command topic."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
         }
     })
@@ -116,7 +117,8 @@ async def test_no_color_brightness_color_temp_white_val_if_no_topics(
     """Test for no RGB, brightness, color temp, effect, white val or XY."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -152,7 +154,8 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     """Test the controlling of the state via topic."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -276,12 +279,13 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                                                'color_temp': 100,
                                                'white_value': 50})
 
-    with patch('homeassistant.components.light.mqtt_json'
+    with patch('homeassistant.helpers.restore_state.RestoreEntity'
                '.async_get_last_state',
                return_value=mock_coro(fake_state)):
         assert await async_setup_component(hass, light.DOMAIN, {
             light.DOMAIN: {
-                'platform': 'mqtt_json',
+                'platform': 'mqtt',
+                'schema': 'json',
                 'name': 'test',
                 'command_topic': 'test_light_rgb/set',
                 'brightness': True,
@@ -308,7 +312,8 @@ async def test_sending_hs_color(hass, mqtt_mock):
     """Test light.turn_on with hs color sends hs color parameters."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'command_topic': 'test_light_rgb/set',
             'hs': True,
@@ -323,7 +328,8 @@ async def test_flash_short_and_long(hass, mqtt_mock):
     """Test for flash length being sent when included."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -342,7 +348,8 @@ async def test_transition(hass, mqtt_mock):
     """Test for transition time being sent when included."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -359,7 +366,8 @@ async def test_brightness_scale(hass, mqtt_mock):
     """Test for brightness scaling."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_bright_scale',
             'command_topic': 'test_light_bright_scale/set',
@@ -395,7 +403,8 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
     """Test that invalid color/brightness/white values are ignored."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -466,7 +475,8 @@ async def test_default_availability_payload(hass, mqtt_mock):
     """Test availability by default payload with defined topic."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -495,7 +505,8 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
     assert await async_setup_component(hass, light.DOMAIN, {
         light.DOMAIN: {
-            'platform': 'mqtt_json',
+            'platform': 'mqtt',
+            'schema': 'json',
             'name': 'test',
             'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
@@ -524,10 +535,11 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal(hass, mqtt_mock, caplog):
     """Test removal of discovered mqtt_json lights."""
-    await async_start(hass, 'homeassistant', {'mqtt': {}})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
     data = (
         '{ "name": "Beer",'
-        '  "platform": "mqtt_json",'
+        '  "schema": "json",'
         '  "command_topic": "test_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
@@ -541,4 +553,59 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('light.beer')
+    assert state is None
+
+
+async def test_discovery_deprecated(hass, mqtt_mock, caplog):
+    """Test discovery of mqtt_json light with deprecated platform option."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
+    data = (
+        '{ "name": "Beer",'
+        '  "platform": "mqtt_json",'
+        '  "command_topic": "test_topic"}'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+
+async def test_discovery_update_light(hass, mqtt_mock, caplog):
+    """Test removal of discovered light."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer",'
+        '  "schema": "json",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "schema": "json",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('light.milk')
     assert state is None
