@@ -336,7 +336,7 @@ class TestComponentLogbook(unittest.TestCase):
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
         self.assert_entry(
-            entries[1], name=name, domain=domain, entity_id=entity_id2)        
+            entries[1], name=name, domain=domain, entity_id=entity_id2)
 
     def test_include_events_entity(self):
         """Test if events are filtered if entity is included in config."""
