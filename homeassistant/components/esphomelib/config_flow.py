@@ -4,10 +4,9 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.esphomelib import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register('esphomelib')
 class EsphomelibFlowHandler(config_entries.ConfigFlow):
     """Handle a esphomelib config flow."""
 

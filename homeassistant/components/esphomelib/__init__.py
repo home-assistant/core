@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .config_flow import EsphomelibFlowHandler  # noqa
 
 DOMAIN = 'esphomelib'
-REQUIREMENTS = ['aioesphomeapi']
+REQUIREMENTS = ['aioesphomeapi==1.0.0']
 
 STORAGE_KEY = 'esphomelib.data'
 STORAGE_VERSION = 1
