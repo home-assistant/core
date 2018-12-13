@@ -3,6 +3,9 @@
 import asyncio
 import datetime
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import async_setup_component
 from homeassistant.components.input_datetime import (
@@ -109,10 +112,11 @@ def test_set_invalid(hass):
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    yield from hass.services.async_call('input_datetime', 'set_datetime', {
-        'entity_id': 'test_date',
-        'time': time_portion
-    })
+    with pytest.raises(vol.Invalid):
+        yield from hass.services.async_call('input_datetime', 'set_datetime', {
+            'entity_id': 'test_date',
+            'time': time_portion
+        })
     yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

@@ -332,7 +332,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
-    configuration by itself.
+    configuration by itself. Include package merge.
 
     This method is a coroutine.
     """
@@ -341,17 +341,22 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         if path is None:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
-        conf = load_yaml_config_file(path)
+        config = load_yaml_config_file(path)
+        core_config = config.get(CONF_CORE, {})
+        merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+
         # ais config
         ais_config_path = str(os.path.dirname(__file__))
         ais_config_path += '/ais-dom-config/configuration.yaml'
         ais_config = load_yaml_config_file(ais_config_path)
-        try:
-            import homeassistant.ais_dom.ais_utils as ais_utils
-            ais_utils.dict_merge(ais_config, conf)
-        except:
-            _LOGGER.error("Error loading user customize")
-        return ais_config
+        merge_packages_config(hass, config, ais_config)
+        # try:
+        #     import homeassistant.ais_dom.ais_utils as ais_utils
+        #     ais_utils.dict_merge(ais_config, conf)
+        # except:
+        #     _LOGGER.error("Error loading user customize")
+        # return ais_config
+        return config
 
     return await hass.async_add_executor_job(_load_hass_yaml_config)
 
