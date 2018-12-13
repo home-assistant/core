@@ -6,10 +6,10 @@ https://home-assistant.io/components/sensor.point/
 """
 import logging
 
-from homeassistant.components.point import (
-    DOMAIN as PARENT_DOMAIN, MinutPointEntity)
+from homeassistant.components.point import MinutPointEntity
 from homeassistant.components.point.const import (
     DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW)
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)
@@ -38,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             for sensor_type in SENSOR_TYPES), True)
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(PARENT_DOMAIN, POINT_DOMAIN),
+        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN),
         async_discover_sensor)
 
 
