@@ -227,20 +227,20 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli, key,
 
         if tries != 0:
             wait_time = min(2**tries, 300)
-            _LOGGER.info(u"Trying to reconnect in %s seconds.", wait_time)
+            _LOGGER.info("Trying to reconnect in %s seconds.", wait_time)
             await asyncio.sleep(wait_time)
 
         if is_disconnect and tries == 0:
             # This can happen often depending on WiFi strength.
             # Let's make this an info message ("unavailable" state will
             # be set anyway)
-            _LOGGER.info(u"Disconnected from API.")
+            _LOGGER.info("Disconnected from API.")
 
         try:
             await cli.connect()
             await cli.login()
         except APIConnectionError as error:
-            _LOGGER.info(u"Can't connect to esphomelib API for %s (%s).",
+            _LOGGER.info("Can't connect to esphomelib API for %s (%s).",
                          host, error)
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks
