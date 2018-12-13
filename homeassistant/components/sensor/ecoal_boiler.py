@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ecoal sensors."""
     devices = []
     config_enable = config.get(CONF_ENABLE, {})
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config_enable.get(sensor_id)
         if name:
             devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class EcoalTempSensor(Entity):

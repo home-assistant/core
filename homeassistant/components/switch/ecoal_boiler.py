@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     config_enable = config.get(CONF_ENABLE, {})
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config_enable.get(pump_id)
         if name:
             switches.append(EcoalSwitch(ecoal_contr, name, pump_id))
-    add_devices(switches, True)
+    add_entities(switches, True)
 
 
 class EcoalSwitch(ToggleEntity):

@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD,  CONF_USERNAME
 
 REQUIREMENTS = ['ecoaliface==0.4.0']
 
@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "ecoal_boiler"
 DATA_ECOAL_BOILER = 'data_' + DOMAIN
 
-CONF_USERNAME = "username"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
 
@@ -33,14 +32,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up global ECoalController instance same for sensors and switches."""
     from ecoaliface.simple import ECoalController
 
-    conf = config.get(DOMAIN)
-    host = conf.get(CONF_HOST)
-    username = conf.get(CONF_USERNAME)
-    passwd = conf.get(CONF_PASSWORD)
+    conf = config[DOMAIN]
+    host = conf[CONF_HOST]
+    username = conf[CONF_USERNAME]
+    passwd = conf[CONF_PASSWORD]
     ecoal_contr = ECoalController(host, username, passwd)
+    if ecoal_contr.version is None:
+        # Wrong  credentials or network config
+        return False
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     return True
