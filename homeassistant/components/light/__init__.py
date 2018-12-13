@@ -88,7 +88,7 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -115,13 +115,13 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
 })
 

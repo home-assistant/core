@@ -140,6 +140,8 @@ homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/sensor/worldclock.py @fabaff
 homeassistant/components/shiftr.py @fabaff
 homeassistant/components/spaceapi.py @fabaff
+homeassistant/components/switch/switchbot.py @danielhiversen
+homeassistant/components/switch/switchmate.py @danielhiversen
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/weather/__init__.py @fabaff
@@ -234,8 +236,8 @@ homeassistant/components/*/simplisafe.py @bachya
 # T
 homeassistant/components/tahoma.py @philklei
 homeassistant/components/*/tahoma.py @philklei
-homeassistant/components/tellduslive.py @molobrakos @fredrike
-homeassistant/components/*/tellduslive.py @molobrakos @fredrike
+homeassistant/components/tellduslive/*.py @fredrike
+homeassistant/components/*/tellduslive.py @fredrike
 homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/thethingsnetwork.py @fabaff

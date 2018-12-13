@@ -62,7 +62,7 @@ def test_lock_value_changed(mock_openzwave):
     assert device.is_locked
 
 
-def test_lock_value_changed_workaround(mock_openzwave):
+def test_lock_state_workaround(mock_openzwave):
     """Test value changed for Z-Wave lock using notification state."""
     node = MockNode(manufacturer_id='0090', product_id='0440')
     values = MockEntityValues(
@@ -76,6 +76,50 @@ def test_lock_value_changed_workaround(mock_openzwave):
     values.access_control.data = 2
     value_changed(values.access_control)
     assert not device.is_locked
+
+
+def test_track_message_workaround(mock_openzwave):
+    """Test value changed for Z-Wave lock by alarm-clearing workaround."""
+    node = MockNode(manufacturer_id='003B', product_id='5044',
+                    stats={'lastReceivedMessage': [0] * 6})
+    values = MockEntityValues(
+        primary=MockValue(data=True, node=node),
+        access_control=None,
+        alarm_type=None,
+        alarm_level=None,
+    )
+
+    # Here we simulate an RF lock. The first zwave.get_device will call
+    # update properties, simulating the first DoorLock report. We then trigger
+    # a change, simulating the openzwave automatic refreshing behavior (which
+    # is enabled for at least the lock that needs this workaround)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    device = zwave.get_device(node=node, values=values)
+    value_changed(values.primary)
+    assert device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
+
+    # Simulate a keypad unlock. We trigger a value_changed() which simulates
+    # the Alarm notification received from the lock. Then, we trigger
+    # value_changed() to simulate the automatic refreshing behavior.
+    values.access_control = MockValue(data=6, node=node)
+    values.alarm_type = MockValue(data=19, node=node)
+    values.alarm_level = MockValue(data=3, node=node)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_ALARM
+    value_changed(values.access_control)
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    values.primary.data = False
+    value_changed(values.primary)
+    assert not device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_LOCK_STATUS] == \
+        'Unlocked with Keypad by user 3'
+
+    # Again, simulate an RF lock.
+    device.lock()
+    node.stats['lastReceivedMessage'][5] = const.COMMAND_CLASS_DOOR_LOCK
+    value_changed(values.primary)
+    assert device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
 
 
 def test_v2btze_value_changed(mock_openzwave):

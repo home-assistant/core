@@ -329,7 +329,8 @@ omit =
     homeassistant/components/tahoma.py
     homeassistant/components/*/tahoma.py
 
-    homeassistant/components/tellduslive.py
+    homeassistant/components/tellduslive/__init__.py
+    homeassistant/components/tellduslive/entry.py
     homeassistant/components/*/tellduslive.py
 
     homeassistant/components/tellstick.py
@@ -406,6 +407,7 @@ omit =
 
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
+    homeassistant/components/zha/event.py
     homeassistant/components/zha/entities/*
     homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
@@ -595,6 +597,7 @@ omit =
     homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
+    homeassistant/components/media_player/harman_kardon_avr.py
     homeassistant/components/media_player/horizon.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
@@ -645,7 +648,6 @@ omit =
     homeassistant/components/notify/group.py
     homeassistant/components/notify/hipchat.py
     homeassistant/components/notify/homematic.py
-    homeassistant/components/notify/instapush.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py

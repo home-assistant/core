@@ -96,6 +96,11 @@ class SmhiWeather(WeatherEntity):
         self._fail_count = 0
         self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
 
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id."""
+        return '{}, {}'.format(self._latitude, self._longitude)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
