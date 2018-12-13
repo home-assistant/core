@@ -85,6 +85,7 @@ class Script():
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
+        self._exception_step = None
         self.last_action = None
         self.last_triggered = None
         self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
@@ -136,10 +137,9 @@ class Script():
                 return
             except _StopScript:
                 break
-            except Exception as err:
+            except Exception:
                 # Store the step that had an exception
-                # pylint: disable=protected-access
-                err._script_step = cur
+                self._exception_step = cur
                 # Set script to not running
                 self._cur = -1
                 self.last_action = None
@@ -165,6 +165,44 @@ class Script():
         self._async_remove_listener()
         if self._change_listener:
             self.hass.async_add_job(self._change_listener)
+
+    @callback
+    def async_log_exception(self, logger, message_base, exception):
+        """Log an exception for this script.
+
+        Should only be called on exceptions raised by this scripts async_run.
+        """
+        # pylint: disable=protected-access
+        step = self._exception_step
+        action = self.sequence[step]
+        action_type = _determine_action(action)
+
+        error = None
+        meth = logger.error
+
+        if isinstance(exception, vol.Invalid):
+            error_desc = "Invalid data"
+
+        elif isinstance(exception, exceptions.TemplateError):
+            error_desc = "Error rendering template"
+
+        elif isinstance(exception, exceptions.Unauthorized):
+            error_desc = "Unauthorized"
+
+        elif isinstance(exception, exceptions.ServiceNotFound):
+            error_desc = "Service not found"
+
+        else:
+            # Print the full stack trace, unknown error
+            error_desc = 'Unknown error'
+            meth = logger.exception
+            error = ""
+
+        if error is None:
+            error = str(exception)
+
+        meth("%s. %s for %s at pos %s: %s",
+             message_base, error_desc, action_type, step + 1, error)
 
     async def _handle_action(self, action, variables, context):
         """Handle an action."""
