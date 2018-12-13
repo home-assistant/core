@@ -100,6 +100,6 @@ class ZhaEntity(entity.Entity):
             'identifiers': {(DOMAIN, ieee)},
             'manufacturer': self._endpoint.manufacturer,
             'model': self._endpoint.model,
-            'name': self._device_state_attributes['friendly_name'],
+            'name': self._device_state_attributes.get('friendly_name', ieee),
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
