@@ -19,6 +19,7 @@ HOMESEER_FC200 = (0x000c, 0x0001)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old method of setting up Z-Wave fans."""
@@ -38,6 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_device(values, **kwargs):
     """Create Z-Wave entity device."""
     return ZwaveFan(values)
+
 
 class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
     """Representation of a Z-Wave fan."""
