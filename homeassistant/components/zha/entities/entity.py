@@ -43,11 +43,6 @@ class ZhaEntity(entity.Entity):
                 endpoint.endpoint_id,
                 kwargs.get('entity_suffix', ''),
             )
-            self._device_state_attributes['friendly_name'] = "{}_{}{}".format(
-                ieeetail,
-                endpoint.endpoint_id,
-                kwargs.get('entity_suffix', ''),
-            )
 
         self._endpoint = endpoint
         self._in_clusters = in_clusters
@@ -105,6 +100,6 @@ class ZhaEntity(entity.Entity):
             'identifiers': {(DOMAIN, ieee)},
             'manufacturer': self._endpoint.manufacturer,
             'model': self._endpoint.model,
-            'name': self._device_state_attributes['friendly_name'],
+            'name': self._device_state_attributes.get('friendly_name', ieee),
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
