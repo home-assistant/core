@@ -5,13 +5,13 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
 import logging
+
 from homeassistant.components import light
-from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.zha.const import (
-    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
-)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)

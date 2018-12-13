@@ -113,11 +113,12 @@ class TestMQTTComponent(unittest.TestCase):
         """
         payload = "not a template"
         payload_template = "a template"
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: payload,
-            mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
-        }, blocking=True)
+        with pytest.raises(vol.Invalid):
+            self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: payload,
+                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
+            }, blocking=True)
         assert not self.hass.data['mqtt'].async_publish.called
 
     def test_service_call_with_ascii_qos_retain_flags(self):

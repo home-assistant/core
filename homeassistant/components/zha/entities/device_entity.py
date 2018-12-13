@@ -6,6 +6,7 @@ https://home-assistant.io/components/zha/
 """
 
 import time
+
 from homeassistant.helpers import entity
 from homeassistant.util import slugify
 

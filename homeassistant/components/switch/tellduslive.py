@@ -9,17 +9,36 @@ https://home-assistant.io/components/switch.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components import switch, tellduslive
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Tellstick switches."""
-    if discovery_info is None:
-        return
-    add_entities(TelldusLiveSwitch(hass, switch) for switch in discovery_info)
+    """Old way of setting up TelldusLive.
+
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up tellduslive sensors dynamically."""
+    async def async_discover_switch(device_id):
+        """Discover and add a discovered sensor."""
+        client = hass.data[tellduslive.DOMAIN]
+        async_add_entities([TelldusLiveSwitch(client, device_id)])
+
+    async_dispatcher_connect(
+        hass,
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(switch.DOMAIN,
+                                                 tellduslive.DOMAIN),
+        async_discover_switch,
+    )
 
 
 class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
@@ -33,9 +52,7 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.device.turn_on()
-        self.changed()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.device.turn_off()
-        self.changed()

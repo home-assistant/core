@@ -17,7 +17,7 @@
                 "title": "deCONZ gateway d\u00e9fin\u00e9ieren"
             },
             "link": {
-                "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op\u00a0deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
+                "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
                 "title": "Link mat deCONZ"
             },
             "options": {

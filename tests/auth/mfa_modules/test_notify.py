@@ -61,6 +61,7 @@ async def test_validating_mfa_counter(hass):
         'counter': 0,
         'notify_service': 'dummy',
     })
+    async_mock_service(hass, 'notify', 'dummy')
 
     assert notify_auth_module._user_settings
     notify_setting = list(notify_auth_module._user_settings.values())[0]
@@ -389,9 +390,8 @@ async def test_not_raise_exception_when_service_not_exist(hass):
                 'username': 'test-user',
                 'password': 'test-pass',
             })
-        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert result['step_id'] == 'mfa'
-        assert result['data_schema'].schema.get('code') == str
+        assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result['reason'] == 'unknown_error'
 
     # wait service call finished
     await hass.async_block_till_done()

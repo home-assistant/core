@@ -1,6 +1,4 @@
 """Tests for WebSocket API commands."""
-from unittest.mock import patch
-
 from async_timeout import timeout
 
 from homeassistant.core import callback
@@ -47,6 +45,25 @@ async def test_call_service(hass, websocket_client):
     assert call.domain == 'domain_test'
     assert call.service == 'test_service'
     assert call.data == {'hello': 'world'}
+
+
+async def test_call_service_not_found(hass, websocket_client):
+    """Test call service command."""
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_CALL_SERVICE,
+        'domain': 'domain_test',
+        'service': 'test_service',
+        'service_data': {
+            'hello': 'world'
+        }
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_NOT_FOUND
 
 
 async def test_subscribe_unsubscribe_events(hass, websocket_client):
@@ -182,18 +199,16 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active') as auth_active:
-            auth_active.return_value = True
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
-            await ws.send_json({
-                'type': TYPE_AUTH,
-                'access_token': hass_access_token
-            })
+        await ws.send_json({
+            'type': TYPE_AUTH,
+            'access_token': hass_access_token
+        })
 
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_OK
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_OK
 
         await ws.send_json({
             'id': 5,
@@ -217,50 +232,6 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
         assert call.service == 'test_service'
         assert call.data == {'hello': 'world'}
         assert call.context.user_id == refresh_token.user.id
-
-
-async def test_call_service_context_no_user(hass, aiohttp_client):
-    """Test that connection without user sets context."""
-    assert await async_setup_component(hass, 'websocket_api', {
-        'http': {
-            'api_password': API_PASSWORD
-        }
-    })
-
-    calls = async_mock_service(hass, 'domain_test', 'test_service')
-    client = await aiohttp_client(hass.http.app)
-
-    async with client.ws_connect(URL) as ws:
-        auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
-
-        await ws.send_json({
-            'type': TYPE_AUTH,
-            'api_password': API_PASSWORD
-        })
-
-        auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == TYPE_AUTH_OK
-
-        await ws.send_json({
-            'id': 5,
-            'type': commands.TYPE_CALL_SERVICE,
-            'domain': 'domain_test',
-            'service': 'test_service',
-            'service_data': {
-                'hello': 'world'
-            }
-        })
-
-        msg = await ws.receive_json()
-        assert msg['success']
-
-        assert len(calls) == 1
-        call = calls[0]
-        assert call.domain == 'domain_test'
-        assert call.service == 'test_service'
-        assert call.data == {'hello': 'world'}
-        assert call.context.user_id is None
 
 
 async def test_subscribe_requires_admin(websocket_client, hass_admin_user):

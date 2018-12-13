@@ -16,7 +16,8 @@ from homeassistant.core import CoreState
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
+    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
+    EVENT_AUTOMATION_TRIGGERED, ATTR_NAME)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
@@ -286,6 +287,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """
         if skip_condition or self._cond_func(variables):
             self.async_set_context(context)
+            self.hass.bus.async_fire(EVENT_AUTOMATION_TRIGGERED, {
+                ATTR_NAME: self._name,
+                ATTR_ENTITY_ID: self.entity_id,
+            }, context=context)
             await self._async_action(self.entity_id, variables, context)
             self._last_triggered = utcnow()
             await self.async_update_ha_state()
@@ -370,8 +375,6 @@ def _async_get_action(hass, config, name):
     async def action(entity_id, variables, context):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
-        hass.components.logbook.async_log_entry(
-            name, 'has been triggered', DOMAIN, entity_id)
         await script_obj.async_run(variables, context)
 
     return action
