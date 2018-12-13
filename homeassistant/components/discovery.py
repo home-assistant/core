@@ -52,6 +52,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
+    'esphomelib': 'esphomelib'
 }
 
 SERVICE_HANDLERS = {
