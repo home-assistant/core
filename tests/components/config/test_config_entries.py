@@ -190,7 +190,7 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = await client.post('/api/config/config_entries/flow',
-                                      json={'handler': 'test'})
+                                 json={'handler': 'test'})
 
     assert resp.status == 401
 
@@ -339,7 +339,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = await client.post('/api/config/config_entries/flow',
-                                      json={'handler': 'test'})
+                                 json={'handler': 'test'})
         assert resp.status == 200
         data = await resp.json()
         flow_id = data.pop('flow_id')
@@ -400,22 +400,6 @@ def test_get_progress_index(hass, client):
 async def test_get_progress_index_unauth(hass, client, hass_admin_user):
     """Test we can't get flows that are in progress."""
     hass_admin_user.groups = []
-
-    class TestFlow(core_ce.ConfigFlow):
-        VERSION = 5
-
-        async def async_step_hassio(self, info):
-            return (await self.async_step_account())
-
-        async def async_step_account(self, user_input=None):
-            return self.async_show_form(
-                step_id='account',
-            )
-
-    with patch.dict(HANDLERS, {'test': TestFlow}):
-        form = await hass.config_entries.flow.async_init(
-            'test', context={'source': 'hassio'})
-
     resp = await client.get('/api/config/config_entries/flow')
     assert resp.status == 401
 
@@ -454,8 +438,8 @@ def test_get_progress_flow(hass, client):
     assert data == data2
 
 
-async def test_get_progress_flow(hass, client, hass_admin_user):
-    """Test we can query the API for same result as we get from init a flow."""
+async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
+    """Test we can can't query the API for result of flow."""
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = OrderedDict()
@@ -472,7 +456,7 @@ async def test_get_progress_flow(hass, client, hass_admin_user):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = await client.post('/api/config/config_entries/flow',
-                                      json={'handler': 'test'})
+                                 json={'handler': 'test'})
 
     assert resp.status == 200
     data = await resp.json()
