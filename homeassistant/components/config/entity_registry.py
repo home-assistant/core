@@ -88,7 +88,7 @@ async def websocket_get_entity(hass, connection, msg):
 
 @async_response
 async def websocket_update_entity(hass, connection, msg):
-    """Handle get camera thumbnail websocket command.
+    """Handle update entity websocket command.
 
     Async friendly.
     """
@@ -106,6 +106,10 @@ async def websocket_update_entity(hass, connection, msg):
 
     if 'new_entity_id' in msg:
         changes['new_entity_id'] = msg['new_entity_id']
+        if hass.states.get(msg['new_entity_id']) is not None:
+            connection.send_message(websocket_api.error_message(
+                msg['id'], 'invalid_info', 'Entity is already registered'))
+            return
 
     try:
         if changes:
