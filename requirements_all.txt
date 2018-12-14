@@ -1287,7 +1287,7 @@ regenmaschine==1.0.2
 # homeassistant.components.python_script
 restrictedpython==4.0b5
 
-# homeassistant.components.sensor.idteck_prox
+# homeassistant.components.idteck_prox
 rfk101py==0.0.1
 
 # homeassistant.components.rflink

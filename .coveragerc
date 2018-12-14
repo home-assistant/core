@@ -503,6 +503,7 @@ omit =
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
+    homeassistant/components/idteck_prox.py
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
@@ -708,7 +709,6 @@ omit =
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
     homeassistant/components/sensor/upnp.py
-    homeassistant/components/sensor/idteck_prox.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
