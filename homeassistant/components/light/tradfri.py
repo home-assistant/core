@@ -63,7 +63,7 @@ class TradfriGroup(Light):
         self._unique_id = "group-{}-{}".format(gateway_id, group.id)
         self._group = group
         self._name = group.name
-
+        self._available = True
         self._refresh(group)
 
     async def async_added_to_hass(self):
@@ -74,6 +74,11 @@ class TradfriGroup(Light):
     def unique_id(self):
         """Return unique ID for this group."""
         return self._unique_id
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def supported_features(self):
@@ -120,6 +125,8 @@ class TradfriGroup(Light):
         # pylint: disable=import-error
         from pytradfri.error import PytradfriError
         if exc:
+            self._available = False
+            self.async_schedule_update_ha_state()
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
 
