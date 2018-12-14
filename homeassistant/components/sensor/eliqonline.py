@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -65,7 +65,7 @@ class EliqSensor(Entity):
     def __init__(self, api, channel_id, name):
         """Initialize the sensor."""
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._api = api
         self._channel_id = channel_id
 
