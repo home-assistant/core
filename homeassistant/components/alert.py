@@ -218,6 +218,9 @@ class Alert(ToggleEntity):
     async def _schedule_notify(self):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
+        """Disable alert schedule if repeat contains 0 or minus number"""
+        if delay.days <= 0:
+            return
         next_msg = datetime.now() + delay
         self._cancel = \
             event.async_track_point_in_time(self.hass, self._notify, next_msg)
