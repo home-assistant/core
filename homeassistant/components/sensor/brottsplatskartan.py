@@ -20,12 +20,22 @@ CONF_AREA = 'area'
 DEFAULT_NAME = 'Brottsplatskartan'
 SCAN_INTERVAL = timedelta(minutes=30)
 
+AREAS = [
+    "Blekinge län", "Dalarnas län", "Gotlands län", "Gävleborgs län",
+    "Hallands län", "Jämtlands län", "Jönköpings län", "Kalmar län",
+    "Kronobergs län", "Norrbottens län", "Skåne län", "Stockholms län",
+    "Södermanlands län", "Uppsala län", "Värmlands län", "Västerbottens län",
+    "Västernorrlands län", "Västmanlands län", "Västra Götalands län",
+    "Örebro län", "Östergötlands län"
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=''): cv.string,
+        vol.Optional(CONF_AREA, default=''):
+            vol.All(cv.ensure_list, [vol.In(AREAS)])
     }
 )
 
