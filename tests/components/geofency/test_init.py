@@ -109,14 +109,13 @@ BEACON_EXIT_CAR = {
 def geofency_client(loop, hass, hass_client):
     """Geofency mock client."""
     assert loop.run_until_complete(async_setup_component(
-        hass, 'persistent_notification, {}))
+        hass, 'persistent_notification', {}))
 
     assert loop.run_until_complete(async_setup_component(
         hass, DOMAIN, {
             DOMAIN: {
                 CONF_MOBILE_BEACONS: ['Car 1']
             }}))
-
 
     loop.run_until_complete(hass.async_block_till_done())
 
