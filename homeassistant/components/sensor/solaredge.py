@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -18,8 +18,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['solaredge==0.0.2']
-
-DOMAIN = "solaredge"
 
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"
