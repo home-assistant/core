@@ -9,8 +9,6 @@ from homeassistant import config_entries
 
 from .const import KEY_HOST, KEY_IP, KEY_MAC
 
-# from . import DaikinApi
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,7 +58,7 @@ class FlowHandler(config_entries.ConfigFlow):
                     vol.Required(KEY_HOST): str
                 })
             )
-        return await self._create_device(user_input.get(KEY_HOST))
+        return await self._create_device(user_input[KEY_HOST])
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
