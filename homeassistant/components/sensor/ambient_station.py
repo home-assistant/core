@@ -80,31 +80,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api_key = config[CONF_API_KEY]
     app_key = config[CONF_APP_KEY]
     station_data = AmbientStationData(hass, api_key, app_key)
-    if station_data.connect_success:
-        sensor_list = []
-
-        if CONF_UNITS in config:
-            sys_units = config[CONF_UNITS]
-        elif hass.config.units.is_metric:
-            sys_units = UNITS_SI
-        else:
-            sys_units = UNITS_US
-
-        for condition in config[CONF_MONITORED_CONDITIONS]:
-            # create a sensor object for each monitored condition
-            sensor_params = SENSOR_TYPES[condition]
-            name = sensor_params[SENSOR_NAME]
-            units = sensor_params[SENSOR_UNITS]
-            if isinstance(units, list):
-                units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
-
-            sensor_list.append(AmbientWeatherSensor(station_data, condition,
-                                                    name, units))
-
-        add_entities(sensor_list)
-
-    else:
+    if not station_data.connect_success:
         _LOGGER.error("Could not connect to weather station API")
+        return
+
+    sensor_list = []
+
+    if CONF_UNITS in config:
+        sys_units = config[CONF_UNITS]
+    elif hass.config.units.is_metric:
+        sys_units = UNITS_SI
+    else:
+        sys_units = UNITS_US
+
+    for condition in config[CONF_MONITORED_CONDITIONS]:
+        # create a sensor object for each monitored condition
+        sensor_params = SENSOR_TYPES[condition]
+        name = sensor_params[SENSOR_NAME]
+        units = sensor_params[SENSOR_UNITS]
+        if isinstance(units, list):
+            units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
+
+        sensor_list.append(AmbientWeatherSensor(station_data, condition,
+                                                name, units))
+
+    add_entities(sensor_list)
 
 
 class AmbientWeatherSensor(Entity):
