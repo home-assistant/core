@@ -25,10 +25,6 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
 
     _hassio_discovery = None
 
-    def __init__(self):
-        """Initialize emulated_roku configuration flow."""
-        pass
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
@@ -46,7 +42,7 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
 
         servers_num = len(configured_servers(self.hass))
 
-        if servers_num > 0:
+        if servers_num:
             default_name = "{} {}".format(DEFAULT_NAME, servers_num + 1)
             default_port = DEFAULT_PORT + servers_num
         else:

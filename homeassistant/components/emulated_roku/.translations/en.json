@@ -1,10 +1,10 @@
 {
     "config": {
-        "error": {
+        "abort": {
             "name_exists": "Name already exists"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "name": "Name",
                     "listen_port": "Port",
