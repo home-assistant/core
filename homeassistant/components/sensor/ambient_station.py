@@ -75,32 +75,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialze each sensor platform for each monitored condition."""
     api_key = config[CONF_API_KEY]
     app_key = config[CONF_APP_KEY]
     station_data = AmbientStationData(hass, api_key, app_key)
-    sensor_list = []
+    if station_data.connect_success:
+        sensor_list = []
 
-    if CONF_UNITS in config:
-        sys_units = config[CONF_UNITS]
-    elif hass.config.units.is_metric:
-        sys_units = UNITS_SI
+        if CONF_UNITS in config:
+            sys_units = config[CONF_UNITS]
+        elif hass.config.units.is_metric:
+            sys_units = UNITS_SI
+        else:
+            sys_units = UNITS_US
+
+        for condition in config[CONF_MONITORED_CONDITIONS]:
+            # create a sensor object for each monitored condition
+            sensor_params = SENSOR_TYPES[condition]
+            name = sensor_params[SENSOR_NAME]
+            units = sensor_params[SENSOR_UNITS]
+            if isinstance(units, list):
+                units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
+
+            sensor_list.append(AmbientWeatherSensor(station_data, condition,
+                                                    name, units))
+
+        add_entities(sensor_list)
+
     else:
-        sys_units = UNITS_US
-
-    for condition in config[CONF_MONITORED_CONDITIONS]:
-        # create a sensor object for each monitored condition in the yaml file
-        sensor_params = SENSOR_TYPES[condition]
-        name = sensor_params[SENSOR_NAME]
-        units = sensor_params[SENSOR_UNITS]
-        if isinstance(units, list):
-            units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
-
-        sensor_list.append(AmbientWeatherSensor(station_data, condition, name,
-                                                units))
-
-    add_devices(sensor_list)
+        _LOGGER.error("Could not connect to weather station API")
 
 
 class AmbientWeatherSensor(Entity):
@@ -168,8 +172,10 @@ class AmbientStationData:
         self._station = None
         self._api = None
         self._devices = None
+        self.connect_success = False
 
         self.get_data = Throttle(SCAN_INTERVAL)(self.async_update)
+        self._connect_api()     # attempt to connect to API
 
     async def async_update(self):
         """Get new data."""
@@ -200,5 +206,7 @@ class AmbientStationData:
 
         if self._devices:
             self._station = self._devices[0]
+            if self._station is not None:
+                self.connect_success = True
         else:
-            _LOGGER.warning("No station devices available")
+            _LOGGER.debug("No station devices available")
