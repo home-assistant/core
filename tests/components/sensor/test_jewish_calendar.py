@@ -20,15 +20,15 @@ NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 
 
-def make_nyc_test_params(dtime, results):
+def make_nyc_test_params(dtime, results, havdalah_offset=0):
     """Make test params for NYC."""
-    return (dtime, CANDLE_LIGHT_DEFAULT, True,
+    return (dtime, CANDLE_LIGHT_DEFAULT, havdalah_offset, True,
             'America/New_York', NYC_LATLNG.lat, NYC_LATLNG.lng, results)
 
 
-def make_jerusalem_test_params(dtime, results):
+def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     """Make test params for Jerusalem."""
-    return (dtime, CANDLE_LIGHT_DEFAULT, False,
+    return (dtime, CANDLE_LIGHT_DEFAULT, havdalah_offset, False,
             'Asia/Jerusalem', JERUSALEM_LATLNG.lat, JERUSALEM_LATLNG.lng,
             results)
 
@@ -150,6 +150,13 @@ class TestJewishCalenderSensor():
              'weekly_portion': 'Ki Tavo',
              'hebrew_weekly_portion': 'כי תבוא'}),
         make_nyc_test_params(
+            dt(2018, 9, 1, 16, 0),
+            {'upcoming_shabbat_candle_lighting': dt(2018, 8, 31, 19, 15),
+             'upcoming_shabbat_havdalah': dt(2018, 9, 1, 20, 22),
+             'weekly_portion': 'Ki Tavo',
+             'hebrew_weekly_portion': 'כי תבוא'},
+            havdalah_offset=50),
+        make_nyc_test_params(
             dt(2018, 9, 1, 20, 21),
             {'upcoming_shabbat_candle_lighting': dt(2018, 9, 7, 19, 4),
              'upcoming_shabbat_havdalah': dt(2018, 9, 8, 20, 2),
@@ -257,6 +264,7 @@ class TestJewishCalenderSensor():
 
     shabbat_test_ids = [
         "currently_first_shabbat",
+        "currently_first_shabbat_with_havdalah_offset",
         "after_first_shabbat",
         "friday_upcoming_shabbat",
         "upcoming_rosh_hashana",
@@ -271,10 +279,10 @@ class TestJewishCalenderSensor():
         "after_one_day_yom_tov_in_israel",
     ]
 
-    @pytest.mark.parametrize(["now", "candle_lighting", "diaspora",
+    @pytest.mark.parametrize(["now", "candle_lighting", "havdalah", "diaspora",
                               "tzname", "latitude", "longitude", "result"],
                              shabbat_params, ids=shabbat_test_ids)
-    def test_shabbat_times_sensor(self, now, candle_lighting,
+    def test_shabbat_times_sensor(self, now, candle_lighting, havdalah,
                                   diaspora, tzname, latitude, longitude,
                                   result):
         """Test Shabbat Times sensor output."""
@@ -290,7 +298,8 @@ class TestJewishCalenderSensor():
 
         if ('upcoming_shabbat_candle_lighting' in result
                 and not 'upcoming_candle_lighting' in result):
-            result['upcoming_candle_lighting'] = result['upcoming_shabbat_candle_lighting']
+            result['upcoming_candle_lighting'] = \
+                result['upcoming_shabbat_candle_lighting']
         if ('upcoming_shabbat_havdalah' in result
                 and not 'upcoming_havdalah' in result):
             result['upcoming_havdalah'] = result['upcoming_shabbat_havdalah']
@@ -303,7 +312,7 @@ class TestJewishCalenderSensor():
             sensor = JewishCalSensor(
                 name='test', language=language, sensor_type=sensor_type,
                 latitude=latitude, longitude=longitude,
-                timezone=tz, diaspora=diaspora,
+                timezone=tz, diaspora=diaspora, havdalah_offset=havdalah,
                 candle_lighting_offset=candle_lighting)
             sensor.hass = self.hass
             with patch('homeassistant.util.dt.now', return_value=test_time):
@@ -312,8 +321,8 @@ class TestJewishCalenderSensor():
                     self.hass.loop).result()
                 assert sensor.state == result_value, "Value for {}".format(
                     sensor_type)
-                   
-                    
+
+
     melacha_params = [
       make_nyc_test_params(dt(2018, 9, 1, 16, 0), True),
       make_nyc_test_params(dt(2018, 9, 1, 20, 21), False),
@@ -345,10 +354,10 @@ class TestJewishCalenderSensor():
         "after_one_day_yom_tov_in_israel",
     ]
 
-    @pytest.mark.parametrize(["now", "candle_lighting", "diaspora",
+    @pytest.mark.parametrize(["now", "candle_lighting", "havdalah", "diaspora",
                               "tzname", "latitude", "longitude", "result"],
                              melacha_params, ids=melacha_test_ids)
-    def test_issur_melacha_sensor(self, now, candle_lighting,
+    def test_issur_melacha_sensor(self, now, candle_lighting, havdalah,
                                   diaspora, tzname, latitude, longitude,
                                   result):
         """Test Issur Melacha sensor output."""
@@ -362,7 +371,7 @@ class TestJewishCalenderSensor():
             name='test', language='english',
             sensor_type='issur_melacha_in_effect',
             latitude=latitude, longitude=longitude,
-            timezone=tz, diaspora=diaspora,
+            timezone=tz, diaspora=diaspora, havdalah_offset=havdalah,
             candle_lighting_offset=candle_lighting)
         sensor.hass = self.hass
         with patch('homeassistant.util.dt.now', return_value=test_time):

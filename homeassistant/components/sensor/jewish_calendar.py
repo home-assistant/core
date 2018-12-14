@@ -46,6 +46,7 @@ CONF_DIASPORA = 'diaspora'
 CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
 CONF_CANDLE_LIGHT_MINUTES = 'candle_lighting_minutes_before_sunset'
+CONF_HAVDALAH_OFFSET_MINUTES = 'havdalah_minutes_after_sunset'
 
 CANDLE_LIGHT_DEFAULT = 18
 
@@ -59,6 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANGUAGE, default='english'):
         vol.In(['hebrew', 'english']),
     vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT): int,
+    # Default of 0 means use 8.5 degrees / 'three_stars' time.
+    vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
     vol.Optional(CONF_SENSORS, default=['date']):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
@@ -73,6 +76,7 @@ async def async_setup_platform(
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     diaspora = config.get(CONF_DIASPORA)
     candle_lighting_offset = config.get(CONF_CANDLE_LIGHT_MINUTES)
+    havdalah_offset = config.get(CONF_HAVDALAH_OFFSET_MINUTES)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -91,7 +95,8 @@ class JewishCalSensor(Entity):
 
     def __init__(
             self, name, language, sensor_type, latitude, longitude, timezone,
-            diaspora, candle_lighting_offset=CANDLE_LIGHT_DEFAULT):
+            diaspora, candle_lighting_offset=CANDLE_LIGHT_DEFAULT,
+            havdalah_offset=0):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -103,6 +108,7 @@ class JewishCalSensor(Entity):
         self.timezone = timezone
         self.diaspora = diaspora
         self.candle_lighting_offset = candle_lighting_offset
+        self.havdalah_offset = havdalah_offset
         _LOGGER.debug("Sensor %s initialized", self.type)
 
     @property
@@ -182,7 +188,11 @@ class JewishCalSensor(Entity):
             times = hdate.Zmanim(
                 date=end_day.gdate, location=location,
                 hebrew=self._hebrew).zmanim
-            self._state = times['three_stars']
+            if self.havdalah_offset == 0:
+                self._state = times['three_stars']
+            else:
+                self._state = (times['sunset']
+                               + timedelta(minutes=self.havdalah_offset))
         elif self.type == 'issur_melacha_in_effect':
             self._state = hdate.Zmanim(
                 date=now, location=location,
