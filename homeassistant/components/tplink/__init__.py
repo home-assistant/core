@@ -55,8 +55,6 @@ async def async_setup(hass, config):
         hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
-        return True
-
     return True
 
 
@@ -103,8 +101,7 @@ async def async_setup_entry(hass, config_entry):
                     _LOGGER.error("Unable to initialize %s %s: %s",
                                   type_, host, ex)
 
-    # This is necessary to avoid I/O blocking on is_dimmable,
-    # the upstream library
+    # This is necessary to avoid I/O blocking on is_dimmable
     def _fill_device_lists():
         for dev in devices.values():
             if isinstance(dev, SmartPlug):
@@ -135,8 +132,7 @@ async def async_unload_entry(hass, entry):
     remove_lights = await forward_unload(entry, 'light')
     remove_switches = await forward_unload(entry, 'switch')
 
-    hass.data[DOMAIN][CONF_LIGHT] = None
-    hass.data[DOMAIN][CONF_SWITCH] = None
+    hass.data.pop(DOMAIN, None)
 
     return remove_lights and remove_switches
 
