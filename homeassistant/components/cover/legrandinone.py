@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.legrandinone import (
-    DATA_ENTITY_LOOKUP, CONF_MEDIA, CONF_COMM_MODE,
+    CONF_MEDIA, CONF_COMM_MODE,
     DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, IOBL_PROTOCOL_HANDLE,
     DEVICE_TYPE_AUTOMATION, DATA_DEVICE_REGISTER,
     EVENT_KEY_ID, LegrandInOneCommand)
@@ -85,12 +85,13 @@ class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
         super().__init__(*args, **kwargs)
 
     def _handle_event(self, event):
-
+        """Parse event to decide if cover is opened or closed."""
         command = event['what']
         if command in ['move_up']:
             self._state = True
         elif command in ['move_down']:
             self._state = False
+        # In case a move_stop is received, retain the previous state
 
     @property
     def should_poll(self):

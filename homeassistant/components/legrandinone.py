@@ -164,38 +164,37 @@ async def async_setup(hass, config):
             _LOGGER.debug('unhandled event of type: %s', event_type)
             return
 
-        # Lookup entities who registered this device id as device id or alias
+        # Lookup entities who registered this device id as device id
         event_id = event.get('legrand_id', None)
 
-        entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
+#        entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
-        if entity_ids:
-            # Propagate event to every entity matching the device id
-            for entity in entity_ids:
-                _LOGGER.debug('passing event to %s', entity)
-                async_dispatcher_send(hass,
-                                      SIGNAL_HANDLE_EVENT.format(entity),
-                                      event)
-        else:
-            device_type = event.get('who')
+#        if entity_ids:
+        if hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
+            # Propagate event
+            _LOGGER.debug('passing event to %s', event_id)
+            async_dispatcher_send(hass,
+                                  SIGNAL_HANDLE_EVENT.format(event_id),
+                                  event)
+            return
 
-            # If device is not yet known, register with platform (if loaded)
-            if event_type in hass.data[DATA_DEVICE_REGISTER]:
-                if device_type in hass.data[DATA_DEVICE_REGISTER][event_type]:
-                    _LOGGER.debug('device_id not known, adding new device')
+        device_type = event.get('who')
 
-                    hass.data[DATA_ENTITY_LOOKUP][event_type][
-                        event_id].append(TMP_ENTITY.format(event_id))
-                    hass.async_create_task(
-                        hass.data[DATA_DEVICE_REGISTER][event_type][
-                            device_type](event))
+        # If device is not yet known, register with platform (if loaded)
+        if event_type in hass.data[DATA_DEVICE_REGISTER]:
+            if device_type in hass.data[DATA_DEVICE_REGISTER][event_type]:
+                _LOGGER.debug('device_id not known, adding new device')
 
-                else:
-                    _LOGGER.debug(
-                        'device_id not known and automatic %s add disabled',
-                        device_type)
+                hass.async_create_task(
+                    hass.data[DATA_DEVICE_REGISTER][event_type][
+                        device_type](event))
+
             else:
-                _LOGGER.debug('device_id not known and automatic add disabled')
+                _LOGGER.debug(
+                    'device_id not known and automatic %s add disabled',
+                    device_type)
+        else:
+            _LOGGER.debug('device_id not known and automatic add disabled')
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
@@ -316,13 +315,6 @@ class LegrandInOneDevice(Entity):
         return self._name
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        if self.assumed_state:
-            return False
-        return self._state
-
-    @property
     def assumed_state(self):
         """Assume device state until first device event sets state."""
         return self._state is None
@@ -340,9 +332,9 @@ class LegrandInOneDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        # Register id and aliases
+        # Register id
         self.hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][self.legrand_id].append(self.legrand_id)
+             EVENT_KEY_COMMAND][self.legrand_id].append(self)
 
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
@@ -366,10 +358,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
     reset on reconnect).
     """
 
-    def is_connected(self):
-        """Return connection status."""
-        return self.available()
-
     async def send_command(self, command_data):
         """Send device command to IOBL."""
         return await self._protocol.send_packet(command_data)
@@ -389,12 +377,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
             cmd = int(args[0] * 100 / 255)
             self._state = True
 
-        elif command == 'toggle':
-            cmd = 'on'
-            # if the state is unknown or false, it gets set as true
-            # if the state is true, it gets set as false
-            self._state = self._state in [None, False]
-
         # Cover options for IOBL
         elif command == 'close_cover':
             cmd = 'move_down'
@@ -408,9 +390,7 @@ class LegrandInOneCommand(LegrandInOneDevice):
             cmd = 'move_stop'
             self._state = True
 
-        # Send initial command and queue repetitions.
-        # This allows the entity state to be updated quickly and not having to
-        # wait for all repetitions to be sent
+        # Send command.
         await self._async_send_command(cmd)
 
         # Update state of entity
@@ -421,7 +401,7 @@ class LegrandInOneCommand(LegrandInOneDevice):
         _LOGGER.debug(
             "Sending command: %s to iobl device: %s", cmd, self.legrand_id)
 
-        if not self.is_connected():
+        if not self.available():
             raise HomeAssistantError('Cannot send command, not connected!')
 
         # Puts command on outgoing buffer and returns straight away.
@@ -457,12 +437,18 @@ class SwitchableLegrandInOneDevice(LegrandInOneCommand):
         super().__init__(*args, **kwargs)
 
     def _handle_event(self, event):
-
+        """Parse event to decide if item is on or off."""
         command = event['what']
         if command in ['on']:
             self._state = True
         elif command in ['off']:
             self._state = False
+
+    def is_on(self):
+        """Return true if device is on."""
+        if self.assumed_state():
+            return False
+        return self._state
 
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
