@@ -30,11 +30,7 @@ ATTR_MEDIA_RATING = 'media_rating'
 ATTR_MEDIA_RECORDED = 'media_recorded'
 ATTR_MEDIA_START_TIME = 'media_start_time'
 
-CONF_DISCOVER_CLIENTS = 'discover_clients'
-CONF_CLIENT_DISCOVER_INTERVAL = 'client_discover_interval'
-
 DEFAULT_DEVICE = '0'
-DEFAULT_DISCOVER_CLIENTS = True
 DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 DEFAULT_CLIENT_DISCOVER_INTERVAL = timedelta(seconds=300)
@@ -55,11 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    vol.Optional(CONF_DISCOVER_CLIENTS, default=DEFAULT_DISCOVER_CLIENTS):
-        cv.boolean,
-    vol.Optional(CONF_CLIENT_DISCOVER_INTERVAL,
-                 default=DEFAULT_CLIENT_DISCOVER_INTERVAL):
-        vol.All(cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -76,31 +67,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = config.get(CONF_DEVICE)
         _LOGGER.debug("Adding configured device %s with client address %s ",
                       name, device)
+
+        resp = {}
         from DirectPy import DIRECTV
         try:
             dtv = DIRECTV(host, port, device)
+            resp = dtv.get_version()
         except requests.exceptions.RequestException as ex:
             # Use uPnP data only
-            _LOGGER.debug("Request exception %s trying to connect to %s",
-                          ex, host)
-            resp = []
-
-        if dtv:
-            try:
-                resp = dtv.get_version()
-            except requests.exceptions.RequestException as ex:
-                # Use uPnP data only
-                _LOGGER.debug("Request exception %s trying to get "
-                              "receiver id for %s", ex, name)
-                resp = []
-
-        client_discover_interval = config.get(CONF_CLIENT_DISCOVER_INTERVAL,
-                                              DEFAULT_CLIENT_DISCOVER_INTERVAL)
-        if client_discover_interval < timedelta(seconds=5):
-            _LOGGER.warning("Invalid client_discover_interval value %s "
-                            "provided for %s, minimum is 5 seconds",
-                            client_discover_interval, name)
-            client_discover_interval = DEFAULT_CLIENT_DISCOVER_INTERVAL
+            _LOGGER.debug("Request exception %s trying to get "
+                          "receiver id for %s", ex, name)
+            resp = {}
 
         directv_entity = {
             CONF_NAME: name,
@@ -108,39 +85,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_PORT: port,
             CONF_DEVICE: device,
             RECEIVER_ID: resp.get('receiverId', host).replace(' ', ''),
-            CONF_DISCOVER_CLIENTS: config.get(CONF_DISCOVER_CLIENTS),
-            CONF_CLIENT_DISCOVER_INTERVAL: client_discover_interval,
         }
 
     elif discovery_info:
         discovered = True
         host = discovery_info.get('host')
-        serial_num = discovery_info.get('serial', host)
         receiver_id = discovery_info.get('serial', '').split('-')[-1]
         receiver_id = receiver_id if receiver_id else host
-        name = 'DirecTV_{}'.format(serial_num)
-        resp = []
+        name = host
 
         if (receiver_id, DEFAULT_DEVICE) in known_devices:
             _LOGGER.debug("Discovered device on host %s is already"
                           " configured", host)
             return
 
+        resp = {}
         from DirectPy import DIRECTV
         try:
             dtv = DIRECTV(host, DEFAULT_PORT, DEFAULT_DEVICE)
+            resp = dtv.get_locations()
         except requests.exceptions.RequestException as ex:
-            _LOGGER.debug("Request exception %s trying to connect to %s",
-                          ex, name)
-            resp = []
-
-        if dtv:
-            try:
-                resp = dtv.get_locations()
-            except requests.exceptions.RequestException as ex:
-                _LOGGER.debug("Request exception %s trying to get "
-                              "locations for %s", ex, name)
-                resp = []
+            _LOGGER.debug("Request exception %s trying to retrieve "
+                          "name for %s", ex, name)
+            resp = {}
 
         for loc in resp.get("locations") or []:
             if loc.get("clientAddr") == DEFAULT_DEVICE and \
@@ -156,42 +123,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_PORT: DEFAULT_PORT,
             CONF_DEVICE: DEFAULT_DEVICE,
             RECEIVER_ID: receiver_id,
-            CONF_DISCOVER_CLIENTS: DEFAULT_DISCOVER_CLIENTS,
-            CONF_CLIENT_DISCOVER_INTERVAL:
-                DEFAULT_CLIENT_DISCOVER_INTERVAL,
         }
 
-    if directv_entity is not None:
-        # Add entries for both as host and receiver id
-        hass.data.setdefault(DATA_DIRECTV, set()).add((
-            directv_entity[CONF_HOST], directv_entity[CONF_DEVICE]))
+    if directv_entity is None:
+        return
 
-        hass.data.setdefault(DATA_DIRECTV, set()).add((
-            directv_entity[RECEIVER_ID], directv_entity[CONF_DEVICE]))
+    # Add entries for both as host and receiver id
+    hass.data.setdefault(DATA_DIRECTV, set()).add((
+        directv_entity[CONF_HOST], directv_entity[CONF_DEVICE]))
 
-        add_entities([DirecTvDevice(
-            directv_entity[CONF_NAME], directv_entity[CONF_HOST],
-            directv_entity[CONF_PORT], directv_entity[CONF_DEVICE])])
+    hass.data[DATA_DIRECTV].add((
+        directv_entity[RECEIVER_ID], directv_entity[CONF_DEVICE]))
 
-        # Only enable client discovery if not disabled in configuration
-        # and this is the main DVR (not a client device itself).
-        if directv_entity[CONF_DISCOVER_CLIENTS] and \
-           directv_entity[CONF_DEVICE] == DEFAULT_DEVICE:
-            # Client discovery is to be enabled for this DVR.
-            DirecTvClientDiscovery(
-                hass, add_entities, discovered,
-                directv_entity[CONF_HOST], directv_entity[CONF_NAME],
-                directv_entity[RECEIVER_ID], directv_entity[CONF_PORT],
-                directv_entity[CONF_CLIENT_DISCOVER_INTERVAL]
-            )
+    add_entities([DirecTvDevice(
+        directv_entity[CONF_NAME], directv_entity[CONF_HOST],
+        directv_entity[CONF_PORT], directv_entity[CONF_DEVICE])])
+
+    # Enable client discovery.
+    DirecTvClientDiscovery(
+        hass, add_entities, discovered,
+        directv_entity[CONF_HOST], directv_entity[CONF_NAME],
+        directv_entity[RECEIVER_ID], directv_entity[CONF_PORT],
+    )
 
 
-class DirecTvClientDiscovery():
+class DirecTvClientDiscovery:
     """Discover client devices attached to DVR."""
 
     def __init__(self, hass, add_entities, discovered, host, name,
-                 receiver_id, port=DEFAULT_PORT,
-                 interval=DEFAULT_CLIENT_DISCOVER_INTERVAL):
+                 receiver_id, port=DEFAULT_PORT):
         """Initialize discovery for client devices."""
         self._hass = hass
         self._add_entities = add_entities
@@ -214,9 +174,9 @@ class DirecTvClientDiscovery():
             # Schedule discovery to run based on interval.
             track_time_interval(
                 self._hass, self._discover_directv_client_devices,
-                interval)
+                DEFAULT_CLIENT_DISCOVER_INTERVAL)
             _LOGGER.debug("%s: Client discovery scheduled for every %s",
-                          self._name, interval)
+                          self._name, DEFAULT_CLIENT_DISCOVER_INTERVAL)
 
         # If HASS is already running then start the discovery.
         # If HASS is not yet running, register for the event before starting
@@ -229,7 +189,7 @@ class DirecTvClientDiscovery():
 
     def _discover_directv_client_devices(self, now=None):
         """Discover new client devices connected to the main DVR."""
-        known_devices = self._hass.data.get(DATA_DIRECTV, set())
+        known_devices = self._hass.data.get(DATA_DIRECTV)
         discovered_devices = []
         dtvs = []
 
@@ -259,8 +219,8 @@ class DirecTvClientDiscovery():
 
         # If for some reason we did not have a receiver id then retrieve
         # it now.
-        receiver_id_resp = None
         if not self._receiver_id:
+            receiver_id_resp = None
             try:
                 receiver_id_resp = self.dtv.get_version()
             except requests.exceptions.RequestException as ex:
@@ -319,8 +279,7 @@ class DirecTvClientDiscovery():
                     CONF_NAME: str.title(loc['locationName']),
                     CONF_HOST: self._host,
                     CONF_PORT: self._port,
-                    CONF_DEVICE: loc['clientAddr'],
-                    CONF_DISCOVER_CLIENTS: False,
+                    CONF_DEVICE: loc['clientAddr']
                 })
 
         if discovered_devices:
