@@ -58,6 +58,33 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
         assert STATE_OFF == state.state
 
+    def test_setting_sensor_value_via_mqtt_message_and_template(self):
+        """Test the setting of the value via MQTT."""
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'payload_on': 'ON',
+                'payload_off': 'OFF',
+                'value_template': '{%if is_state(entity_id,\"on\")-%}OFF'
+                                  '{%-else-%}ON{%-endif%}'
+            }
+        })
+
+        state = self.hass.states.get('binary_sensor.test')
+        assert STATE_OFF == state.state
+
+        fire_mqtt_message(self.hass, 'test-topic', '')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        assert STATE_ON == state.state
+
+        fire_mqtt_message(self.hass, 'test-topic', '')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        assert STATE_OFF == state.state
+
     def test_valid_device_class(self):
         """Test the setting of a valid sensor class."""
         assert setup_component(self.hass, binary_sensor.DOMAIN, {
