@@ -42,8 +42,7 @@ class LutronLight(LutronDevice, Light):
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        super(LutronLight, self).__init__(
-            self, area_name, lutron_device, controller)
+        super().__init__(area_name, lutron_device, controller)
 
     @property
     def supported_features(self):
