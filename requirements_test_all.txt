@@ -59,7 +59,7 @@ defusedxml==0.5.0
 dsmr_parser==0.12
 
 # homeassistant.components.sensor.entur_public_transport
-enturclient==0.1.0
+enturclient==0.1.2
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
@@ -101,7 +101,7 @@ hdate==0.7.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181210.1
+home-assistant-frontend==20181211.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8

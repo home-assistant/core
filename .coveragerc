@@ -265,6 +265,9 @@ omit =
     homeassistant/components/openuv/__init__.py
     homeassistant/components/*/openuv.py
 
+    homeassistant/components/plum_lightpad.py
+    homeassistant/components/*/plum_lightpad.py
+
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
@@ -407,6 +410,7 @@ omit =
 
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
+    homeassistant/components/zha/event.py
     homeassistant/components/zha/entities/*
     homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
@@ -596,6 +600,7 @@ omit =
     homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
+    homeassistant/components/media_player/harman_kardon_avr.py
     homeassistant/components/media_player/horizon.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
@@ -769,6 +774,7 @@ omit =
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
+    homeassistant/components/sensor/nmbs.py
     homeassistant/components/sensor/noaa_tides.py
     homeassistant/components/sensor/nsw_fuel_station.py
     homeassistant/components/sensor/nut.py
