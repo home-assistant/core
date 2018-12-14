@@ -10,8 +10,10 @@ from datetime import timedelta, datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pygtt==1.1.2']
 
@@ -32,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gtt platform."""
-    stop = config.get(CONF_STOP)
+    stop = config[CONF_STOP]
     bus_name = config.get(CONF_BUS_NAME)
 
     add_entities([GttSensor(stop, bus_name)], True)
@@ -63,18 +65,23 @@ class GttSensor(Entity):
         return self._state
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        attr = {}
-        for bus in self.data.bus_list:
-            attr[bus['bus_name']] = bus['time'][0]['run']
+        attr = {
+            'bus_name': self.data.state_bus['bus_name'] 
+        }
         return attr
 
     def update(self):
         """Update device state."""
         self.data.get_data()
-        self._state = "{}: {}".format(self.data.state_bus['bus_name'],
-                                      self.data.state_bus['time'][0]['run'])
+        self._state = dt_util.parse_time(
+            self.data.state_bus['time'][0]['run']).isoformat()
 
 
 class GttData:
@@ -92,28 +99,17 @@ class GttData:
     def get_data(self):
         """Get the data from the api."""
         self.bus_list = self._pygtt.get_by_stop(self._stop)
-        if self._bus_name is not None:
-            self.get_bus_by_name()
-        else:
-            self.get_next_bus()
+        self.bus_list.sort(key=lambda b:
+            datetime.strptime(b['time'][0]['run'], "%H:%M"))
 
-    def get_next_bus(self):
-        """Get the next bus."""
-        prev = None
-        for bus in self.bus_list:
-            this_time = 0
-            prev_time = 0
-            if prev is not None:
-                this_time = datetime.strptime(bus['time'][0]['run'], "%H:%M")
-                # pylint: disable=unsubscriptable-object
-                prev_time = datetime.strptime(prev['time'][0]['run'], "%H:%M")
-            if this_time <= prev_time:
-                prev = bus
-        self.state_bus = prev
+        if self._bus_name is not None:
+            self.state_bus = self.get_bus_by_name()
+            return
+
+        self.state_bus = self.bus_list[0]
 
     def get_bus_by_name(self):
         """Get the bus by name."""
         for bus in self.bus_list:
             if bus['bus_name'] == self._bus_name:
-                self.state_bus = bus
-                return
+                return bus
