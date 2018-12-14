@@ -36,6 +36,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
 class TestJewishCalenderSensor():
     """Test the Jewish Calendar sensor."""
 
+    # pylint: disable=attribute-defined-outside-init
     def setup_method(self, method):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
@@ -120,21 +121,22 @@ class TestJewishCalenderSensor():
         "date_after_sunset"
     ]
 
-    @pytest.mark.parametrize(["time", "tzname", "latitude", "longitude",
+    @pytest.mark.parametrize(["cur_time", "tzname", "latitude", "longitude",
                               "language", "sensor", "diaspora", "result"],
                              test_params, ids=test_ids)
-    def test_jewish_calendar_sensor(self, time, tzname, latitude, longitude,
-                                    language, sensor, diaspora, result):
+    def test_jewish_calendar_sensor(self, cur_time, tzname, latitude,
+                                    longitude, language, sensor, diaspora,
+                                    result):
         """Test Jewish calendar sensor output."""
-        tz = get_time_zone(tzname)
-        set_default_time_zone(tz)
-        test_time = tz.localize(time)
+        time_zone = get_time_zone(tzname)
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(cur_time)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sensor = JewishCalSensor(
             name='test', language=language, sensor_type=sensor,
             latitude=latitude, longitude=longitude,
-            timezone=tz, diaspora=diaspora)
+            timezone=time_zone, diaspora=diaspora)
         sensor.hass = self.hass
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
@@ -285,23 +287,22 @@ class TestJewishCalenderSensor():
     def test_shabbat_times_sensor(self, now, candle_lighting, havdalah,
                                   diaspora, tzname, latitude, longitude,
                                   result):
-        """Test Shabbat Times sensor output."""
-
-        tz = get_time_zone(tzname)
-        set_default_time_zone(tz)
-        test_time = tz.localize(now)
+        """Test sensor output for upcoming shabbat/yomtov times."""
+        time_zone = get_time_zone(tzname)
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(now)
         for sensor_type, value in result.items():
             if isinstance(value, dt):
-                result[sensor_type] = tz.localize(value)
+                result[sensor_type] = time_zone.localize(value)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
 
         if ('upcoming_shabbat_candle_lighting' in result
-                and not 'upcoming_candle_lighting' in result):
+                and 'upcoming_candle_lighting' not in result):
             result['upcoming_candle_lighting'] = \
                 result['upcoming_shabbat_candle_lighting']
         if ('upcoming_shabbat_havdalah' in result
-                and not 'upcoming_havdalah' in result):
+                and 'upcoming_havdalah' not in result):
             result['upcoming_havdalah'] = result['upcoming_shabbat_havdalah']
 
         for sensor_type, result_value in result.items():
@@ -312,7 +313,8 @@ class TestJewishCalenderSensor():
             sensor = JewishCalSensor(
                 name='test', language=language, sensor_type=sensor_type,
                 latitude=latitude, longitude=longitude,
-                timezone=tz, diaspora=diaspora, havdalah_offset=havdalah,
+                timezone=time_zone, diaspora=diaspora,
+                havdalah_offset=havdalah,
                 candle_lighting_offset=candle_lighting)
             sensor.hass = self.hass
             with patch('homeassistant.util.dt.now', return_value=test_time):
@@ -322,21 +324,20 @@ class TestJewishCalenderSensor():
                 assert sensor.state == result_value, "Value for {}".format(
                     sensor_type)
 
-
     melacha_params = [
-      make_nyc_test_params(dt(2018, 9, 1, 16, 0), True),
-      make_nyc_test_params(dt(2018, 9, 1, 20, 21), False),
-      make_nyc_test_params(dt(2018, 9, 7, 13, 1), False),
-      make_nyc_test_params(dt(2018, 9, 8, 21, 25), False),
-      make_nyc_test_params(dt(2018, 9, 9, 21, 25), True),
-      make_nyc_test_params(dt(2018, 9, 10, 21, 25), True),
-      make_nyc_test_params(dt(2018, 9, 28, 21, 25), True),
-      make_nyc_test_params(dt(2018, 9, 29, 21, 25), False),
-      make_nyc_test_params(dt(2018, 9, 30, 21, 25), True),
-      make_nyc_test_params(dt(2018, 10, 1, 21, 25), True),
-      make_jerusalem_test_params(dt(2018, 9, 29, 21, 25), False),
-      make_jerusalem_test_params(dt(2018, 9, 30, 21, 25), True),
-      make_jerusalem_test_params(dt(2018, 10, 1, 21, 25), False),
+        make_nyc_test_params(dt(2018, 9, 1, 16, 0), True),
+        make_nyc_test_params(dt(2018, 9, 1, 20, 21), False),
+        make_nyc_test_params(dt(2018, 9, 7, 13, 1), False),
+        make_nyc_test_params(dt(2018, 9, 8, 21, 25), False),
+        make_nyc_test_params(dt(2018, 9, 9, 21, 25), True),
+        make_nyc_test_params(dt(2018, 9, 10, 21, 25), True),
+        make_nyc_test_params(dt(2018, 9, 28, 21, 25), True),
+        make_nyc_test_params(dt(2018, 9, 29, 21, 25), False),
+        make_nyc_test_params(dt(2018, 9, 30, 21, 25), True),
+        make_nyc_test_params(dt(2018, 10, 1, 21, 25), True),
+        make_jerusalem_test_params(dt(2018, 9, 29, 21, 25), False),
+        make_jerusalem_test_params(dt(2018, 9, 30, 21, 25), True),
+        make_jerusalem_test_params(dt(2018, 10, 1, 21, 25), False),
     ]
     melacha_test_ids = [
         "currently_first_shabbat",
@@ -361,17 +362,16 @@ class TestJewishCalenderSensor():
                                   diaspora, tzname, latitude, longitude,
                                   result):
         """Test Issur Melacha sensor output."""
-
-        tz = get_time_zone(tzname)
-        set_default_time_zone(tz)
-        test_time = tz.localize(now)
+        time_zone = get_time_zone(tzname)
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(now)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sensor = JewishCalSensor(
             name='test', language='english',
             sensor_type='issur_melacha_in_effect',
             latitude=latitude, longitude=longitude,
-            timezone=tz, diaspora=diaspora, havdalah_offset=havdalah,
+            timezone=time_zone, diaspora=diaspora, havdalah_offset=havdalah,
             candle_lighting_offset=candle_lighting)
         sensor.hass = self.hass
         with patch('homeassistant.util.dt.now', return_value=test_time):

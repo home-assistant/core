@@ -86,7 +86,8 @@ async def async_setup_platform(
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
             name, language, sensor_type, latitude, longitude,
-            hass.config.time_zone, diaspora, candle_lighting_offset))
+            hass.config.time_zone, diaspora, candle_lighting_offset,
+            havdalah_offset))
     async_add_entities(dev, True)
 
 
@@ -180,7 +181,8 @@ class JewishCalSensor(Entity):
             end_day = date.upcoming_shabbat
             if self.type == 'upcoming_havdalah':
                 next_yom_tov_end = date.upcoming_yom_tov
-                while (next_yom_tov_end.next_day.holiday_type == 1):
+                while (next_yom_tov_end.next_day.holiday_type
+                       == hdate.HolidayTypes.YOM_TOV):
                     next_yom_tov_end = next_yom_tov_end.next_day
                 if next_yom_tov_end < end_day:
                     end_day = next_yom_tov_end
