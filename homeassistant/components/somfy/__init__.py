@@ -124,6 +124,11 @@ class SomfyEntity(Entity):
         self.api = hass.data[DOMAIN]['api']
 
     @property
+    def unique_id(self):
+        """Return the unique id for the camera sensor."""
+        return self.somfy.id
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self.somfy.name
