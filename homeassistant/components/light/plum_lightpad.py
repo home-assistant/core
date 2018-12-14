@@ -2,7 +2,7 @@
 Support for Plum Lightpad switches.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/plum_lightpad
+https://home-assistant.io/components/light.plum_lightpad/
 """
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
