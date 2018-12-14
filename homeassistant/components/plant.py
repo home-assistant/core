@@ -250,6 +250,11 @@ class Plant(Entity):
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
+        for entity in self._sensormap:
+            state = self.hass.states.get(entity)
+            if state is not None:
+                self.state_changed(entity, None, state)
+
     async def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
