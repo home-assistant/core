@@ -265,6 +265,9 @@ omit =
     homeassistant/components/openuv/__init__.py
     homeassistant/components/*/openuv.py
 
+    homeassistant/components/plum_lightpad.py
+    homeassistant/components/*/plum_lightpad.py
+
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
