@@ -1120,6 +1120,9 @@ pypollencom==2.2.2
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
+# homeassistant.components.sensor.nmbs
+pyrail==0.0.3
+
 # homeassistant.components.rainbird
 pyrainbird==0.1.6
 
