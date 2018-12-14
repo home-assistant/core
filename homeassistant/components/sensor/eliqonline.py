@@ -10,11 +10,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['eliqonline==1.0.14']
+REQUIREMENTS = ['eliqonline==1.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,24 +36,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the ELIQ Online sensor."""
     import eliqonline
 
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME, DEFAULT_NAME)
     channel_id = config.get(CONF_CHANNEL_ID)
+    session = async_get_clientsession(hass)
 
-    api = eliqonline.API(access_token)
+    api = eliqonline.API(session=session,
+                         access_token=access_token)
 
     try:
         _LOGGER.debug("Probing for access to ELIQ Online API")
-        api.get_data_now(channelid=channel_id)
+        await api.get_data_now(channelid=channel_id)
     except OSError as error:
         _LOGGER.error("Could not access the ELIQ Online API: %s", error)
         return False
 
-    add_entities([EliqSensor(api, channel_id, name)], True)
+    async_add_entities([EliqSensor(api, channel_id, name)], True)
 
 
 class EliqSensor(Entity):
@@ -61,7 +65,7 @@ class EliqSensor(Entity):
     def __init__(self, api, channel_id, name):
         """Initialize the sensor."""
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._api = api
         self._channel_id = channel_id
 
@@ -85,12 +89,14 @@ class EliqSensor(Entity):
         """Return the state of the device."""
         return self._state
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data."""
         try:
-            response = self._api.get_data_now(channelid=self._channel_id)
-            self._state = int(response.power)
+            response = await self._api.get_data_now(channelid=self._channel_id)
+            self._state = int(response["power"])
             _LOGGER.debug("Updated power from server %d W", self._state)
+        except KeyError:
+            _LOGGER.warning("Invalid response from ELIQ Online API")
         except OSError as error:
             _LOGGER.warning("Could not connect to the ELIQ Online API: %s",
                             error)
