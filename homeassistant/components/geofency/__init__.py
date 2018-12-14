@@ -7,10 +7,11 @@ https://home-assistant.io/components/geofency/
 import logging
 
 import voluptuous as vol
+from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME, \
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, HTTP_OK
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -60,10 +61,13 @@ async def handle_webhook(hass, webhook_id, request):
     data = _validate_data(await request.post())
 
     if not data:
-        return "Invalid data", HTTP_UNPROCESSABLE_ENTITY
+        return web.Response(
+            body="Invalid data",
+            status=HTTP_UNPROCESSABLE_ENTITY
+        )
 
     if _is_mobile_beacon(data, hass.data[DOMAIN]):
-        return await _set_location(hass, data, None)
+        return _set_location(hass, data, None)
     if data['entry'] == LOCATION_ENTRY:
         location_name = data['name']
     else:
@@ -72,7 +76,7 @@ async def handle_webhook(hass, webhook_id, request):
             data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
             data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
 
-    return await _set_location(hass, data, location_name)
+    return _set_location(hass, data, location_name)
 
 
 def _validate_data(data):
@@ -117,7 +121,7 @@ def _device_name(data):
     return data['device']
 
 
-async def _set_location(hass, data, location_name):
+def _set_location(hass, data, location_name):
     """Fire HA event to set location."""
     device = _device_name(data)
 
@@ -130,7 +134,10 @@ async def _set_location(hass, data, location_name):
         data
     )
 
-    return "Setting location for {}".format(device)
+    return web.Response(
+        body="Setting location for {}".format(device),
+        status=HTTP_OK
+    )
 
 
 async def async_setup_entry(hass, entry):
