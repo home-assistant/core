@@ -42,7 +42,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['androidtv==0.0.3']
+REQUIREMENTS = ['androidtv==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -328,22 +328,22 @@ class AndroidTVDevice(MediaPlayerDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self.androidtv.connect()
-            if self.androidtv._available:  # pylint: disable=protected-access
+            self._available = self.androidtv.connect()
+
+            if self._available:
                 _LOGGER.info("Device %s reconnected.", self._name)
-                self._available = True
-            else:
-                # If the ADB connection is not intact, don't update.
-                return
 
-        self.androidtv.update()
-        self._app_name = self.get_app_name(self.androidtv.app_id)
+        # If the ADB connection is not intact, don't update.
+        if not self._available:
+            return
 
-        # Device was available before the update
-        if not self.androidtv._available:  # pylint: disable=protected-access
+        success = self.androidtv.update()
+        if not success:
             _LOGGER.warning(
                 "Device %s became unavailable.", self._name)
-            self._available = False
+            return
+
+        self._app_name = self.get_app_name(self.androidtv.app_id)
 
         if self.androidtv.state == 'off':
             self._state = STATE_OFF
