@@ -108,6 +108,8 @@ class TradfriSwitch(SwitchDevice):
         """Start observation of switch."""
         from pytradfri.error import PytradfriError
         if exc:
+            self._available = False
+            self.async_schedule_update_ha_state()
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
 
