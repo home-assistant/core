@@ -1627,7 +1627,7 @@ watchdog==0.8.3
 waterfurnace==1.0.0
 
 # homeassistant.components.media_player.gpmdp
-websocket-client==0.37.0
+websocket-client==0.54.0
 
 # homeassistant.components.media_player.webostv
 websockets==6.0
