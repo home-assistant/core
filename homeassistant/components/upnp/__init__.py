@@ -28,7 +28,7 @@ from .const import DOMAIN
 from .const import LOGGER as _LOGGER
 from .device import Device
 
-REQUIREMENTS = ['async-upnp-client==0.13.5']
+REQUIREMENTS = ['async-upnp-client==0.13.6']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistantType,
             (DOMAIN, device.udn)
         },
         name=device.name,
-        # manufacturer=device.manufacturer,
+        manufacturer=device.manufacturer,
     )
 
     # set up sensors
