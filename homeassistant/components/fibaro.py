@@ -10,13 +10,14 @@ from collections import defaultdict
 from typing import Optional
 import voluptuous as vol
 
-from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
-                                 CONF_PASSWORD, CONF_URL, CONF_USERNAME,
-                                 EVENT_HOMEASSISTANT_STOP)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import convert, slugify
+from homeassistant.const import (
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, CONF_DEVICE_CLASS,
+    CONF_EXCLUDE, CONF_ICON, CONF_PASSWORD, CONF_URL, CONF_USERNAME,
+    CONF_WHITE_VALUE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import convert, slugify
 
 REQUIREMENTS = ['fiblary3==0.1.7']
 
@@ -27,6 +28,10 @@ FIBARO_CONTROLLER = 'fibaro_controller'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
+CONF_DIMMING = "dimming"
+CONF_COLOR = "color"
+CONF_RESET_COLOR = "reset_color"
+CONF_DEVICE_CONFIG = "device_config"
 
 FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
                      'scene', 'sensor', 'switch']
@@ -49,12 +54,26 @@ FIBARO_TYPEMAP = {
     'com.fibaro.securitySensor': 'binary_sensor'
 }
 
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(CONF_DIMMING): cv.boolean,
+    vol.Optional(CONF_COLOR): cv.boolean,
+    vol.Optional(CONF_WHITE_VALUE): cv.boolean,
+    vol.Optional(CONF_RESET_COLOR): cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
+    vol.Optional(CONF_ICON): cv.string,
+})
+
+FIBARO_ID_LIST_SCHEMA = vol.Schema([cv.string])
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
+        vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -62,19 +81,20 @@ CONFIG_SCHEMA = vol.Schema({
 class FibaroController():
     """Initiate Fibaro Controller Class."""
 
-    _room_map = None            # Dict for mapping roomId to room object
-    _device_map = None          # Dict for mapping deviceId to device object
-    fibaro_devices = None       # List of devices by type
-    _callbacks = {}             # Dict of update value callbacks by deviceId
-    _client = None              # Fiblary's Client object for communication
-    _state_handler = None       # Fiblary's StateHandler object
-    _import_plugins = None      # Whether to import devices from plugins
-
-    def __init__(self, username, password, url, import_plugins):
+    def __init__(self, username, password, url, import_plugins, config):
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
         self._scene_map = None
+        # Whether to import devices from plugins
+        self._import_plugins = import_plugins
+        self._device_config = config[CONF_DEVICE_CONFIG]
+        self._room_map = None         # Mapping roomId to room object
+        self._device_map = None       # Mapping deviceId to device object
+        self.fibaro_devices = None    # List of devices by type
+        self._callbacks = {}          # Update value callbacks by deviceId
+        self._state_handler = None    # Fiblary's StateHandler object
+        self._excluded_devices = config.get(CONF_EXCLUDE, [])
         self.hub_serial = None          # Unique serial number of the hub
 
     def connect(self):
@@ -210,8 +230,11 @@ class FibaroController():
                     slugify(room_name), slugify(device.name), device.id)
                 if device.enabled and \
                         ('isPlugin' not in device or
-                         (not device.isPlugin or self._import_plugins)):
+                         (not device.isPlugin or self._import_plugins)) and \
+                        device.ha_id not in self._excluded_devices:
                     device.mapped_type = self._map_device_to_type(device)
+                    device.device_config = \
+                        self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
                 if device.mapped_type:
@@ -233,7 +256,8 @@ def setup(hass, config):
         FibaroController(config[DOMAIN][CONF_USERNAME],
                          config[DOMAIN][CONF_PASSWORD],
                          config[DOMAIN][CONF_URL],
-                         config[DOMAIN][CONF_PLUGINS])
+                         config[DOMAIN][CONF_PLUGINS],
+                         config[DOMAIN])
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
