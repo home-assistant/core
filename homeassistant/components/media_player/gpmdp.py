@@ -224,7 +224,7 @@ class GPMDP(MediaPlayerDevice):
 
     @property
     def available(self):
-        """Return if media player is available"""
+        """Return if media player is available."""
         return self._available
 
     @property
