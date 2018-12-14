@@ -265,7 +265,6 @@ class TestComponentLogbook(unittest.TestCase):
     def test_exclude_automation_events(self):
         """Test if automation entries can be excluded by entity_id."""
         name = 'My Automation Rule'
-        message = 'has been triggered'
         domain = 'automation'
         entity_id = 'automation.my_automation_rule'
         entity_id2 = 'automation.my_automation_rule_2'
