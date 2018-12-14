@@ -80,8 +80,7 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        self._state = dt_util.parse_time(
-            self.data.state_bus['time'][0]['run']).isoformat()
+        self._state = dt_util.parse_time(self.data.state_bus['time'][0]['run']).isoformat()
 
 
 class GttData:
@@ -100,7 +99,7 @@ class GttData:
         """Get the data from the api."""
         self.bus_list = self._pygtt.get_by_stop(self._stop)
         self.bus_list.sort(key=lambda b:
-            datetime.strptime(b['time'][0]['run'], "%H:%M"))
+                           datetime.strptime(b['time'][0]['run'], "%H:%M"))
 
         if self._bus_name is not None:
             self.state_bus = self.get_bus_by_name()
