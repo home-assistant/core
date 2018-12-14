@@ -120,6 +120,8 @@ class TradfriGroup(Light):
         # pylint: disable=import-error
         from pytradfri.error import PytradfriError
         if exc:
+            self._available = False
+            self.async_schedule_update_ha_state()
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
 
@@ -339,7 +341,9 @@ class TradfriLight(Light):
         # pylint: disable=import-error
         from pytradfri.error import PytradfriError
         if exc:
-            _LOGGER.warning("Observation failed for %s", self._name,
+            self._available = False
+            self.async_schedule_update_ha_state()
+            _LOGGER.warning("Observation failed for %s, setting available = False", self._name,
                             exc_info=exc)
 
         try:
