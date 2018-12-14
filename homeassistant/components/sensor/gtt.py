@@ -73,7 +73,7 @@ class GttSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
-            'bus_name': self.data.state_bus['bus_name'] 
+            'bus_name': self.data.state_bus['bus_name']
         }
         return attr
 
