@@ -491,6 +491,7 @@ class DysonPureCoolDevice(FanEntity):
         """Return optional state attributes."""
         return {
             ATTR_NIGHT_MODE: self.night_mode,
+            ATTR_AUTO_MODE: self.auto_mode,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,
