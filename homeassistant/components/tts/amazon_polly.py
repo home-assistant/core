@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts.amazon_polly/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
@@ -56,7 +57,7 @@ SUPPORTED_VOICES = [
     'Cristiano', 'Ines',  # Portuguese, European
     'Carmen',  # Romanian
     'Maxim', 'Tatyana',  # Russian
-    'Enrique', 'Conchita', 'Lucia'  # Spanish European
+    'Enrique', 'Conchita', 'Lucia',  # Spanish European
     'Mia',  # Spanish Mexican
     'Miguel', 'Penelope',  # Spanish US
     'Astrid',  # Swedish
