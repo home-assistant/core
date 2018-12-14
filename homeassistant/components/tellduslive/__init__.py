@@ -70,8 +70,8 @@ async def async_setup_entry(hass, entry):
 
     client = TelldusLiveClient(hass, entry, session)
     hass.data[DOMAIN] = client
-    hass.async_create_task(async_add_hubs(hass, client, entry.entry_id))
-    hass.async_create_task(client.update())
+    hass.async_add_executer_job(async_add_hubs(hass, client, entry.entry_id))
+    hass.async_add_executer_job(client.update())
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
