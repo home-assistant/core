@@ -80,7 +80,8 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        self._state = dt_util.parse_time(self.data.state_bus['time'][0]['run']).isoformat()
+        next_time = dt_util.parse_time(self.data.state_bus['time'][0]['run'])
+        self._state = next_time.isoformat()
 
 
 class GttData:
