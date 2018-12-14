@@ -128,11 +128,6 @@ class GlowRing(Light):
         """Return the hue and saturation color value [float, float]."""
         return color_util.color_RGB_to_hs(self._red, self._green, self._blue)
 
-    @hs_color.setter
-    def hs_color(self, value):
-        """Set the color and keep RGB in sync."""
-        self._red, self._green, self._blue = color_util.color_hs_to_RGB(*value)
-
     @property
     def should_poll(self):
         """No polling needed."""
