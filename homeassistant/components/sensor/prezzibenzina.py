@@ -46,10 +46,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     name = client.get_station_name(station)
 
     for index, info in enumerate(info):
-        dev.append(PrezziBenzinaSensor(index, 
-                                       client, 
-                                       station, 
-                                       name, 
+        dev.append(PrezziBenzinaSensor(index,
+                                       client,
+                                       station,
+                                       name,
                                        info['fuel']))
 
     async_add_entities(dev, True)
