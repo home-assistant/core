@@ -13,7 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pynx584==0.4']
@@ -107,6 +107,10 @@ class NX584Alarm(alarm.AlarmControlPanel):
         else:
             self._state = STATE_ALARM_ARMED_AWAY
 
+        for flag in part['condition_flags']:
+            if flag == "Siren on":
+                self._state = STATE_ALARM_TRIGGERED
+            
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._alarm.disarm(code)
