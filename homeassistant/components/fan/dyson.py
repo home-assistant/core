@@ -127,8 +127,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         self.hass = hass
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
