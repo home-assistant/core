@@ -141,9 +141,6 @@ alarmdecoder==1.13.2
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==2.1.0
 
-# homeassistant.components.sensor.ambient_station
-ambient_api==1.5.2
-
 # homeassistant.components.amcrest
 amcrest==1.2.3
 
@@ -603,7 +600,7 @@ lakeside==0.11
 libnacl==1.6.1
 
 # homeassistant.components.dyson
-libpurecoollink==0.4.2
+libpurecool==0.5.0
 
 # homeassistant.components.device_tracker.mikrotik
 librouteros==2.2.0

@@ -2,10 +2,10 @@
 import unittest
 from unittest import mock
 
-from libpurecoollink.const import (FocusMode, HeatMode, HeatState, HeatTarget,
-                                   TiltState)
-from libpurecoollink.dyson_pure_state import DysonPureHotCoolState
-from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
+from libpurecool.const import (FocusMode, HeatMode,
+                               HeatState, HeatTarget, TiltState)
+from libpurecool.dyson_pure_state import DysonPureHotCoolState
+from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from homeassistant.components.climate import dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
@@ -110,9 +110,9 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_device_heat_on(), _get_device_cool()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_setup_component_with_parent_discovery(self, mocked_login,
                                                    mocked_devices):
         """Test setup_component using discovery."""

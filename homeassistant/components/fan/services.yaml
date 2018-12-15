@@ -64,6 +64,49 @@ dyson_set_night_mode:
       description: Night mode status
       example: true
 
+dyson_set_auto_mode:
+  description: Set the fan in auto mode.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable auto mode
+      example: 'fan.living_room'
+    auto_mode:
+      description: Auto mode status
+      example: true
+
+dyson_set_angle:
+  description: Set the oscillation angle of the selected fan(s).
+  fields:
+    entity_id:
+      description: Name(s) of the entities for which to set the an gle
+      example: 'fan.living_room'
+    angle_low:
+      description: The angle at which the oscillation should start
+      example: 1
+    angle_high:
+      description: The angle at which the oscillation should end
+      example: 255
+
+dyson_flow_direction_front:
+  description: Set the fan flow directio0n.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set frontal flow direction for
+      example: 'fan.living_room'
+    flow_direction_front:
+      description: Frontal flow direction
+      example: true
+
+dyson_set_timer:
+  description: Set the sleep timer.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set the sleep timer for
+      example: 'fan.living_room'
+    timer:
+      description: Timer status
+      example: 30
+
 xiaomi_miio_set_buzzer_on:
   description: Turn the buzzer on.
   fields:
