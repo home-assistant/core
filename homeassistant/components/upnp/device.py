@@ -74,7 +74,7 @@ class Device:
     @property
     def manufacturer(self):
         """Get the manufacturer."""
-        return self._igd_device._device.manufacturer
+        return self._igd_device.manufacturer
 
     async def async_add_port_mappings(self, ports, local_ip):
         """Add port mappings."""
