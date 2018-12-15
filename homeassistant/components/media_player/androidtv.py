@@ -40,6 +40,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT,
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['androidtv==0.0.4']
@@ -306,6 +307,9 @@ class AndroidTVDevice(MediaPlayerDevice):
         self._state = None
         self._muted = None
         self._available = self.androidtv.available
+        self._properties = self.androidtv.properties
+        self._unique_id = 'androitv-{}-{}'.format(
+            name, self._properties['serialno'])
 
         # whether or not the ADB connection is currently in use
         self.adb_lock = threading.Lock()
@@ -421,6 +425,27 @@ class AndroidTVDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ANDROIDTV
+
+    @property
+    def unique_id(self):
+        """Return the device unique id."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            'connections': {
+                (dr.CONNECTION_NETWORK_MAC, self._properties['wifimac'])
+            },
+            'identifiers': {
+                (DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'manufacturer': self._properties['manufacturer'],
+            'model': self._properties['model'],
+            'sw_version': self._properties['sw_version'],
+        }
 
     @adb_decorator()
     def turn_on(self):
