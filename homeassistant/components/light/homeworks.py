@@ -93,7 +93,6 @@ class HomeworksLight(HomeworksDevice, Light):
         self._controller.fade_dim(
             float((level*100.)/255.), self._rate,
             0, self._addr)
-        #self._level = level
 
     @property
     def device_state_attributes(self):
