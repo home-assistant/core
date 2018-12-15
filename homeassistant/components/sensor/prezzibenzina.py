@@ -95,7 +95,7 @@ class PrezziBenzinaSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
         import datetime as dt
-        time = dt.datetime.strptime(self._data['date'], 
+        time = dt.datetime.strptime(self._data['date'],
                                     "%d/%m/%Y %H:%M").isoformat()
         attrs = {
             ATTR_FUEL: self._data['fuel'],
