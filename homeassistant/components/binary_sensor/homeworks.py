@@ -1,19 +1,23 @@
 """Component for interfacing to Lutron Homeworks keypads.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homeworks/
+https://home-assistant.io/components/binary_sensor.homeworks/
 """
 import logging
+
 import voluptuous as vol
+
+from homeassistant.core import callback
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.homeworks import (
-    HomeworksDevice, HOMEWORKS_CONTROLLER)
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
+    HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL)
 
 DEPENDENCIES = ['homeworks']
-REQUIREMENTS = ['pyhomeworks==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,18 +41,16 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the Homeworks keypads."""
     controller = hass.data[HOMEWORKS_CONTROLLER]
     devs = []
-    for keypad in config.get(CONF_KEYPADS):
-        name = keypad.get(CONF_NAME)
-        addr = keypad.get(CONF_ADDR)
-        buttons = keypad.get(CONF_BUTTONS)
+    for keypad in config[CONF_KEYPADS]:
+        name = keypad[CONF_NAME]
+        addr = keypad[CONF_ADDR]
+        buttons = keypad[CONF_BUTTONS]
         for button in buttons:
-            # FIX: This should be done differently
             for num, title in button.items():
-                devname = name + '_' + title
+                devname = '{}_{}'.format(name, title)
                 dev = HomeworksKeypad(controller, addr, num, devname)
                 devs.append(dev)
     add_entities(devs, True)
-    return True
 
 
 class HomeworksKeypad(HomeworksDevice, BinarySensorDevice):
@@ -56,9 +58,15 @@ class HomeworksKeypad(HomeworksDevice, BinarySensorDevice):
 
     def __init__(self, controller, addr, num, name):
         """Create keypad with addr, num, and name."""
-        HomeworksDevice.__init__(self, controller, addr, name)
+        super().__init__(controller, addr, name)
         self._num = num
         self._state = None
+
+    async def async_def_added_to_hass(self):
+        """Called when entity is added to hass."""
+        signal = ENTITY_SIGNAL.format(self._addr)
+        async_dispatcher_connect(
+            self.hass, signal, self._update_callback)
 
     @property
     def is_on(self):
@@ -67,20 +75,20 @@ class HomeworksKeypad(HomeworksDevice, BinarySensorDevice):
 
     @property
     def device_state_attributes(self):
-        """Return supported attributes."""
-        return {"Homeworks Address": self._addr,
-                "Button Number": self._num}
+        """Return state attributes."""
+        return {"HomeworksAddress": self._addr,
+                "ButtonNumber": self._num}
 
-    def callback(self, msg_type, values):
+    @callback
+    def _update_callback(self, msg_type, data):
         """Dispatch messages from the controller."""
         from pyhomeworks.pyhomeworks import (
             HW_BUTTON_PRESSED, HW_BUTTON_RELEASED)
 
-        old_state = self._state
+        msg_type, values = data
         if msg_type == HW_BUTTON_PRESSED and values[1] == self._num:
-            self.hass.bus.fire(EVENT_BUTTON_PRESSED,
-                               {'entity_id': self.entity_id})
             self._state = True
+            self.async_schedule_ha_state(True)
         elif msg_type == HW_BUTTON_RELEASED and values[1] == self._num:
             self._state = False
-        return old_state == self._state
+            self.async_schedule_ha_state(True)

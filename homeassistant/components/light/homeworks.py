@@ -1,19 +1,23 @@
 """Component for interfacing to Lutron Homeworks lights.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homeworks/
+https://home-assistant.io/components/light.homeworks/
 """
 import logging
+
 import voluptuous as vol
-from homeassistant.components.homeworks import (
-    HomeworksDevice, HOMEWORKS_CONTROLLER)
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
+
+from homeassistant.core import callback
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect)
+from homeassistant.components.homeworks import (
+    HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 
 DEPENDENCIES = ['homeworks']
-REQUIREMENTS = ['pyhomeworks==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +48,6 @@ def setup_platform(hass, config, add_entities, discover_info=None):
                              dimmer[CONF_NAME], dimmer[CONF_RATE])
         devs.append(dev)
     add_entities(devs, True)
-    return True
 
 
 class HomeworksLight(HomeworksDevice, Light):
@@ -52,10 +55,17 @@ class HomeworksLight(HomeworksDevice, Light):
 
     def __init__(self, controller, addr, name, rate):
         """Create device with Addr, name, and rate."""
-        HomeworksDevice.__init__(self, controller, addr, name)
+        super().__init__(controller, addr, name)
         self._rate = rate
-        self._level = None
-        self._controller.request_dimmer_level(addr)
+        self._level = 0
+
+    async def async_added_to_hass(self):
+        """Called when entity is added to hass."""
+        signal = ENTITY_SIGNAL.format(self._addr)
+        _LOGGER.debug('connecting %s', signal)
+        async_dispatcher_connect(
+            self.hass, signal, self._update_callback)
+        self._controller.request_dimmer_level(self._addr)
 
     @property
     def supported_features(self):
@@ -65,41 +75,43 @@ class HomeworksLight(HomeworksDevice, Light):
     def turn_on(self, **kwargs):
         """Turn on the light."""
         if ATTR_BRIGHTNESS in kwargs:
-            self.brightness = kwargs[ATTR_BRIGHTNESS]
+            self._set_brightness(kwargs[ATTR_BRIGHTNESS])
         else:
-            self.brightness = 255
+            self._set_brightness(255)
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
-        self.brightness = 0
+        self._set_brightness(0)
 
     @property
     def brightness(self):
         """Control the brightness."""
         return self._level
 
-    @brightness.setter
-    def brightness(self, level):
+    def _set_brightness(self, level):
+        """Send the brightness level to the device."""
         self._controller.fade_dim(
             float((level*100.)/255.), self._rate,
             0, self._addr)
-        self._level = level
+        #self._level = level
 
     @property
     def device_state_attributes(self):
         """Supported attributes."""
-        return {'Homeworks Address': self._addr}
+        return {'HomeworksAddress': self._addr}
 
     @property
     def is_on(self):
         """Is the light on/off."""
         return self._level != 0
 
-    def callback(self, msg_type, values):
+    @callback
+    def _update_callback(self, data):
         """Process device specific messages."""
         from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
+        _LOGGER.debug('_update_callback %s', data)
+        msg_type, values = data
         if msg_type == HW_LIGHT_CHANGED:
             self._level = int((values[1] * 255.)/100.)
-            return True
-        return False
+            self.async_schedule_update_ha_state(True)
