@@ -1,5 +1,6 @@
 """Handle MySensors devices."""
 import logging
+from functools import partial
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
@@ -96,14 +97,18 @@ class MySensorsDevice:
         if self._update_scheduled:
             return
 
-        @callback
-        def update():
+        async def update():
             """Perform update."""
-            self.hass.async_create_task(self._async_update_callback())
-            self._update_scheduled = False
+            try:
+                await self._async_update_callback()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error updating %s", self.name)
+            finally:
+                self._update_scheduled = False
 
         self._update_scheduled = True
-        self.hass.loop.call_later(UPDATE_DELAY, update)
+        delayed_update = partial(self.hass.async_create_task, update())
+        self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
 
 
 class MySensorsEntity(MySensorsDevice, Entity):
