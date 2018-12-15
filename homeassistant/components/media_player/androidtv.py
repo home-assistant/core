@@ -326,7 +326,7 @@ class AndroidTVDevice(MediaPlayerDevice):
                                TcpTimeoutException)
         else:
             # "pure-python-adb"
-            self.exceptions = (ConnectionResetError)
+            self.exceptions = (ConnectionResetError,)
 
     @adb_decorator(override_available=True)
     def update(self):
