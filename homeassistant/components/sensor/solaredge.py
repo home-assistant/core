@@ -69,13 +69,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if response['details']['status'].lower() != 'active':
             _LOGGER.error("SolarEdge site is not active")
-            return 
+            return
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
         _LOGGER.error("Missing details data in solaredge response")
-        return 
+        return
     except (ConnectTimeout, HTTPError):
-        _LOGGER.error("Could not retrieve details from SolarEdge Monitoring API")
+        _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
     # Create solaredge data service which will retrieve and update the data.
