@@ -6,19 +6,17 @@ https://home-assistant.io/components/lcn/
 """
 
 import logging
+import re
 
 import voluptuous as vol
 
-from homeassistant.components.lcn.core import (
-    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES,
-    get_connection)
 from homeassistant.const import (
     CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pypck==0.5.5']
+REQUIREMENTS = ['pypck==0.5.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +24,20 @@ DOMAIN = 'lcn'
 DATA_LCN = 'lcn'
 LIB_LCN = 'pypck'
 DEFAULT_NAME = 'pchk'
+
+CONF_SK_NUM_TRIES = 'sk_num_tries'
+CONF_DIM_MODE = 'dim_mode'
+CONF_OUTPUT = 'output'
+CONF_TRANSITION = 'transition'
+CONF_DIMMABLE = 'dimmable'
+CONF_CONNECTIONS = 'connections'
+
+DIM_MODES = ['steps50', 'steps200']
+OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
+
+# Regex for address validation
+PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
+                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
 
 CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -42,6 +54,42 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.Schema([CONNECTION_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
+
+
+def get_connection(connections, connection_id=None):
+    """Return the connection object from list."""
+    if connection_id is None:
+        connection = connections[0]
+    else:
+        for connection in connections:
+            if connection.connection_id == connection_id:
+                break
+        else:
+            raise ValueError('Unknown connection_id.')
+    return connection
+
+
+def is_address(value):
+    """Validate the given address string.
+
+    Examples for S000M005 at myhome:
+        myhome.s000.m005
+        myhome.s0.m5
+        myhome.0.5    ("m" is implicit if missing)
+
+    Examples for s000g011
+        myhome.0.g11
+        myhome.s0.g11
+    """
+    matcher = PATTERN_ADDRESS.match(value)
+    if matcher:
+        is_group = (matcher.group('type') == 'g')
+        addr = (int(matcher.group('seg_id')),
+                int(matcher.group('id')),
+                is_group)
+        conn_id = matcher.group('conn_id')
+        return addr, conn_id
+    raise vol.error.Invalid('Not a valid address string.')
 
 
 async def async_setup(hass, config):

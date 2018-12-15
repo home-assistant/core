@@ -7,9 +7,8 @@ https://home-assistant.io/components/light.lcn/
 
 import voluptuous as vol
 
-from homeassistant.components.lcn import LcnDevice
-from homeassistant.components.lcn.core import (
-    CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS,
+from homeassistant.components.lcn import (
+    CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS, LcnDevice,
     is_address)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
@@ -111,7 +110,7 @@ class LcnOutputLight(LcnDevice, Light):
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
-        if isinstance(input_obj, self.pypck.input.ModStatusOutput):
+        if isinstance(input_obj, self.pypck.inputs.ModStatusOutput):
             if input_obj.get_output_id() == self.output.value:
                 self._brightness = int(input_obj.get_percent() / 100.*255)
                 if not self._is_dimming_to_zero:
