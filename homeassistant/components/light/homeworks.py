@@ -21,7 +21,7 @@ DEPENDENCIES = ['homeworks']
 
 _LOGGER = logging.getLogger(__name__)
 
-FADE_RATE = 2.
+FADE_RATE = 1.
 
 CONF_DIMMERS = 'dimmers'
 CONF_ADDR = 'addr'
@@ -41,9 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the Homeworks lights."""
+    if discover_info is None:
+        return
+
     controller = hass.data[HOMEWORKS_CONTROLLER]
     devs = []
-    for dimmer in config.get(CONF_DIMMERS):
+    for dimmer in discover_info[CONF_DIMMERS]:
         dev = HomeworksLight(controller, dimmer[CONF_ADDR],
                              dimmer[CONF_NAME], dimmer[CONF_RATE])
         devs.append(dev)
@@ -58,6 +61,7 @@ class HomeworksLight(HomeworksDevice, Light):
         super().__init__(controller, addr, name)
         self._rate = rate
         self._level = 0
+        self._prev_level = 0
 
     async def async_added_to_hass(self):
         """Called when entity is added to hass."""
@@ -75,9 +79,12 @@ class HomeworksLight(HomeworksDevice, Light):
     def turn_on(self, **kwargs):
         """Turn on the light."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._set_brightness(kwargs[ATTR_BRIGHTNESS])
+            new_level = kwargs[ATTR_BRIGHTNESS]
+        elif self._prev_level == 0:
+            new_level = 255
         else:
-            self._set_brightness(255)
+            new_level = self._prev_level
+        self._set_brightness(new_level)
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
@@ -97,7 +104,7 @@ class HomeworksLight(HomeworksDevice, Light):
     @property
     def device_state_attributes(self):
         """Supported attributes."""
-        return {'HomeworksAddress': self._addr}
+        return {'homeworks_address': self._addr}
 
     @property
     def is_on(self):
@@ -105,12 +112,12 @@ class HomeworksLight(HomeworksDevice, Light):
         return self._level != 0
 
     @callback
-    def _update_callback(self, data):
+    def _update_callback(self, msg_type, values):
         """Process device specific messages."""
         from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
-        _LOGGER.debug('_update_callback %s', data)
-        msg_type, values = data
         if msg_type == HW_LIGHT_CHANGED:
             self._level = int((values[1] * 255.)/100.)
+            if self._level != 0:
+                self._prev_level = self._level
             self.async_schedule_update_ha_state(True)
