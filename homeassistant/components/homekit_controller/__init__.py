@@ -26,6 +26,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'outlet': 'switch',
     'switch': 'switch',
     'thermostat': 'climate',
+    'security-system': 'alarm_control_panel',
 }
 
 HOMEKIT_IGNORE = [
