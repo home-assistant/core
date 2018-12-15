@@ -122,6 +122,7 @@ class TestFritzboxClimate(unittest.TestCase):
         values = {
             'heat': 22.0,
             'eco': 16.0,
+            'cool': 16.0,
             'on': 30.0,
             'off': 0.0}
         for mode, temp in values.items():
