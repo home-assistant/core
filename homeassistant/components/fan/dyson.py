@@ -367,7 +367,7 @@ class DysonPureCoolDevice(FanEntity):
             self._device.enable_night_mode()
         else:
             self._device.disable_night_mode()
-    
+
     def set_auto_mode(self, auto_mode: bool) -> None:
         """Turn on/off oscillating."""
         _LOGGER.debug("Turn auto mode %s for device %s", auto_mode,
