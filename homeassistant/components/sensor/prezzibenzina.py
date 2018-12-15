@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SERVICE = 'service'
 ATTR_FUEL = 'fuel'
 
+CONF_TYPES = 'fuel_types'
+
 ATTRIBUTION = 'Data provided by PrezziBenzina.it'
 
 CONF_STATION = 'station'
@@ -30,7 +32,8 @@ SCAN_INTERVAL = timedelta(minutes=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): cv.string,
-    vol.Optional(CONF_NAME, None): cv.string
+    vol.Optional(CONF_NAME, None): cv.string,
+    vol.Optional(CONF_TYPES, None): cv.ensure_list
 })
 
 
@@ -40,17 +43,19 @@ async def async_setup_platform(hass, config, async_add_entities,
     from prezzibenzina import PrezziBenzinaPy
 
     station = config[CONF_STATION]
+    name = config.get(CONF_NAME)
+    types = config.get(CONF_TYPES)
 
     client = PrezziBenzinaPy()
     dev = []
     info = client.get_by_id(station)
 
-    name = config.get(CONF_NAME)
-
     if name is None:
         name = client.get_station_name(station)
 
     for index, info in enumerate(info):
+        if types is not None and info['fuel'] not in types:
+            continue
         dev.append(PrezziBenzinaSensor(index,
                                        client,
                                        station,
