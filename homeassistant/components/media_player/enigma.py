@@ -241,7 +241,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
                     else:
                         self._picon_url = 'http://' + self._host + ':' + \
                                            str(self._port) + '/picon/' + \
-                                           str(self._port) + '/picon/' + \
                                            reference.replace(":", "_")[:-1] \
                                            + '.png'
             _LOGGER.debug("Enigma: [update] - Eventtitle for host %s = %s",
