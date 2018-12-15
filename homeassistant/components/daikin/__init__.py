@@ -41,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Establish connection with Daikin."""
     if DOMAIN not in config:
         return True
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     conf = entry.data
     daikin_api = await daikin_api_setup(hass, conf[KEY_HOST])
     if not daikin_api:
-        return
+        return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
     await asyncio.wait([
         hass.config_entries.async_forward_entry_setup(entry, component)
@@ -96,10 +96,10 @@ async def daikin_api_setup(hass, host):
             device = await hass.async_add_executor_job(Appliance, host)
     except asyncio.TimeoutError:
         _LOGGER.error("Connection to Daikin could not be established")
-        return
+        return None
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Unexpected error creating device")
-        return
+        return None
 
     name = device.values['name']
     api = DaikinApi(device, name)
