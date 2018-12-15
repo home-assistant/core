@@ -370,12 +370,11 @@ class AndroidTVDevice(MediaPlayerDevice):
         """Return the app name from its id and known apps."""
         if app_id is None:
             return None
-        i = 0
         for app in self._apps:
             if app in app_id['package']:
                 app_name = self._apps[app]
-                i += 1
-        if i == 0:
+                break
+        else:
             app_name = None
 
         return app_name
