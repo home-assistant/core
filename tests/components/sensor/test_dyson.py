@@ -262,8 +262,10 @@ class DysonTest(unittest.TestCase):
             assert len(devices) == 8
             assert devices[0].name == "Device_name Temperature"
             assert devices[1].name == "Device_name Humidity"
-            assert devices[2].name == "Device_name Particulate matter 2.5 μg/m3"
-            assert devices[3].name == "Device_name Particulate matter 10 μg/m3"
+            assert devices[2].name == \
+                   "Device_name Particulate matter 2.5 μg/m3"
+            assert devices[3].name == \
+                   "Device_name Particulate matter 10 μg/m3"
             assert devices[4].name == "Device_name Volatile organic compounds"
             assert devices[5].name == "Device_name Nitrogen dioxide"
             assert devices[6].name == "Device_name Carbon filter state"
@@ -276,7 +278,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_p25_sensor(self):
         """Test p25 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter25Sensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonParticulateMatter25Sensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -287,7 +290,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_p25_sensor_with_values(self):
         """Test p25 sensor with with values."""
-        sensor = dyson.DysonParticulateMatter25Sensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonParticulateMatter25Sensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -298,7 +302,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_p10_sensor(self):
         """Test p10 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter10Sensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonParticulateMatter10Sensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -309,7 +314,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_p10_sensor_with_values(self):
         """Test p10 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter10Sensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonParticulateMatter10Sensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -320,7 +326,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_no2_sensor(self):
         """Test no2 sensor with no value."""
-        sensor = dyson.DysonNitrogenDioxideSensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonNitrogenDioxideSensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -331,7 +338,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_no2_sensor_with_values(self):
         """Test no2 sensor with with values."""
-        sensor = dyson.DysonNitrogenDioxideSensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonNitrogenDioxideSensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -342,7 +350,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_voc_sensor(self):
         """Test voc sensor with no value."""
-        sensor = dyson.DysonVolatileOrganicCompoundsSensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonVolatileOrganicCompoundsSensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -353,7 +362,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_voc_sensor_with_values(self):
         """Test voc sensor with with values."""
-        sensor = dyson.DysonVolatileOrganicCompoundsSensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonVolatileOrganicCompoundsSensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -364,7 +374,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_carbon_filter_sensor(self):
         """Test carbon filter sensor with no value."""
-        sensor = dyson.DysonCarbonFilterStateSensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonCarbonFilterStateSensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -375,7 +386,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_carbon_filter_sensor_with_values(self):
         """Test carbon filter sensor with with values."""
-        sensor = dyson.DysonCarbonFilterStateSensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonCarbonFilterStateSensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -386,7 +398,8 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_hepa_filter_sensor(self):
         """Test hepa filter sensor with no value."""
-        sensor = dyson.DysonHepaFilterStateSensor(_get_purecool_device_without_state())
+        sensor = dyson.DysonHepaFilterStateSensor(
+            _get_purecool_device_without_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
@@ -397,11 +410,13 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_purecool_hepa_filter_sensor_with_values(self):
         """Test HEPA filter sensor with with values."""
-        sensor = dyson.DysonHepaFilterStateSensor(_get_purecool_device_with_state())
+        sensor = dyson.DysonHepaFilterStateSensor(
+            _get_purecool_device_with_state())
         sensor.hass = self.hass
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 90
         assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name HEPA filter state"
+        assert sensor.name == \
+               "Device_name HEPA filter state"
         assert sensor.entity_id == "sensor.dyson_1"
