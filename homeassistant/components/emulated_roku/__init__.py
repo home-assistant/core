@@ -43,8 +43,10 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
+    existing_servers = configured_servers(hass)
+
     for entry in conf[CONF_SERVERS]:
-        if entry[CONF_NAME] not in configured_servers(hass):
+        if entry[CONF_NAME] not in existing_servers:
             hass.async_create_task(hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={'source': config_entries.SOURCE_IMPORT},
