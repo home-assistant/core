@@ -59,7 +59,7 @@ defusedxml==0.5.0
 dsmr_parser==0.12
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.5
+emulated_roku==0.1.6
 
 # homeassistant.components.sensor.entur_public_transport
 enturclient==0.1.0
