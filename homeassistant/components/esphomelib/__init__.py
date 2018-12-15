@@ -1,8 +1,9 @@
 """Support for esphomelib devices."""
 import asyncio
 import logging
-from typing import Any, List
+from typing import Any, List, Optional, Dict
 
+import attr
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,20 +18,9 @@ from homeassistant.helpers.typing import HomeAssistantType
 DOMAIN = 'esphomelib'
 REQUIREMENTS = ['aioesphomeapi==1.0.0']
 
-# hass.data[<config_entry>]['client']
-DATA_CLIENT = 'client'
-# hass.data[<config_entry>]['reconnect']
-DATA_RECONNECT_TASK = 'reconnect'
-# hass.data[<config_entry>]['available']
-DATA_AVAILABLE = 'available'
-# hass.data[<config_entry>]['device_info']
-DATA_DEVICE_INFO = 'device_info'
-# hass.data[<config_entry>]['state'][<component_name>][<entity_key>]
-DATA_STATE = 'state'
-# hass.data[<config_entry>]['info'][<component_name>][<entity_key>]
-DATA_INFO = 'info'
-DISPATCHER_UPDATE_ENTITY = 'esphomelib_{entry_id}_update_{key}'
-DISPATCHER_REMOVE_ENTITY = 'esphomelib_{entry_id}_remove_{key}'
+
+DISPATCHER_UPDATE_ENTITY = 'esphomelib_{entry_id}_update_{component_key}_{key}'
+DISPATCHER_REMOVE_ENTITY = 'esphomelib_{entry_id}_remove_{component_key}_{key}'
 DISPATCHER_ON_LIST = 'esphomelib_{entry_id}_on_list'
 DISPATCHER_ON_DEVICE_UPDATE = 'esphomelib_{entry_id}_on_device_update'
 DISPATCHER_ON_STATE = 'esphomelib_{entry_id}_on_state'
@@ -41,6 +31,46 @@ _LOGGER = logging.getLogger(__name__)
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+
+
+@attr.s
+class RuntimeEntryData:
+    """Store runtime data for esphomelib config entries."""
+
+    entry_id = attr.ib(type=str)
+    client = attr.ib()
+    reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
+    state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+    info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+    available = attr.ib(type=bool, default=False)
+    device_info = attr.ib(default=None)
+
+    def async_update_entity(self, hass, component_key, key):
+        """Schedule the update of an entity."""
+        signal = DISPATCHER_UPDATE_ENTITY.format(
+            entry_id=self.entry_id, component_key=component_key, key=key)
+        async_dispatcher_send(hass, signal)
+
+    def async_remove_entity(self, hass, component_key, key):
+        """Schedule the removal of an entity."""
+        signal = DISPATCHER_REMOVE_ENTITY.format(
+            entry_id=self.entry_id, component_key=component_key, key=key)
+        async_dispatcher_send(hass, signal)
+
+    def async_update_static_infos(self, hass, infos: List[Any]):
+        """Distribute an update of static infos to all platforms."""
+        signal = DISPATCHER_ON_LIST.format(entry_id=self.entry_id)
+        async_dispatcher_send(hass, signal, infos)
+
+    def async_update_state(self, hass, state: Any):
+        """Distribute an update of state information to all platforms."""
+        signal = DISPATCHER_ON_STATE.format(entry_id=self.entry_id)
+        async_dispatcher_send(hass, signal, state)
+
+    def async_update_device_state(self, hass):
+        """Distribute an update of a core device state like availability."""
+        signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)
+        async_dispatcher_send(hass, signal)
 
 
 async def async_setup(hass, config):
@@ -71,32 +101,27 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
     # Store client in per-config-entry hass.data
-    entry_data = hass.data[DOMAIN][entry.entry_id] = {}
-    entry_data[DATA_CLIENT] = cli
-    entry_data[DATA_AVAILABLE] = False
+    entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
+        client=cli,
+        entry_id=entry.entry_id
+    )
 
     try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host)
 
     @callback
     def async_on_state(state):
         """Send dispatcher updates when a new state is received."""
-        async_dispatcher_send(
-            hass, DISPATCHER_ON_STATE.format(entry_id=entry.entry_id), state)
+        entry_data.async_update_state(hass, state)
 
     async def on_login():
         """Subscribe to states and list entities on successful API login."""
         try:
-
-            entry_data[DATA_DEVICE_INFO] = await cli.device_info()
-            entry_data[DATA_AVAILABLE] = True
-            signal = DISPATCHER_ON_DEVICE_UPDATE.format(
-                entry_id=entry.entry_id)
-            async_dispatcher_send(hass, signal)
+            entry_data.device_info = await cli.device_info()
+            entry_data.available = True
+            entry_data.async_update_device_state(hass)
 
             entity_infos = await cli.list_entities()
-            async_dispatcher_send(
-                hass, DISPATCHER_ON_LIST.format(entry_id=entry.entry_id),
-                entity_infos)
+            entry_data.async_update_static_infos(hass, entity_infos)
             await cli.subscribe_states(async_on_state)
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data: %s", err)
@@ -153,9 +178,9 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli,
             # When removing/disconnecting manually
             return
 
-        hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE] = False
-        signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=entry.entry_id)
-        async_dispatcher_send(hass, signal)
+        data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+        data.available = False
+        data.async_update_device_state(hass)
 
         if tries != 0:
             # If not first re-try, wait and print message
@@ -178,7 +203,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli,
                          host, error)
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
-            hass.data[DOMAIN][entry.entry_id][DATA_RECONNECT_TASK] = \
+            data.reconnect_task = \
                 hass.loop.create_task(try_connect(tries + 1, is_disconnect))
         else:
             _LOGGER.info("Successfully connected to %s", host)
@@ -189,11 +214,10 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli,
 
 async def _cleanup_instance(hass: HomeAssistantType, entry: ConfigEntry):
     """Cleanup the esphomelib client if it exists."""
-    data = hass.data[DOMAIN].pop(entry.entry_id)
-    client = data[DATA_CLIENT]
-    if DATA_RECONNECT_TASK in data:
-        data[DATA_RECONNECT_TASK].cancel()
-    await client.stop()
+    data = hass.data[DOMAIN].pop(entry.entry_id)  # type: RuntimeEntryData
+    if data.reconnect_task is not None:
+        data.reconnect_task.cancel()
+    await data.client.stop()
 
 
 async def async_unload_entry(hass, config_entry) -> bool:
@@ -223,17 +247,14 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    data_info = hass.data[DOMAIN][entry.entry_id].setdefault(
-        DATA_INFO, {})
-    data_info.setdefault(component_key, {})
-    data_state = hass.data[DOMAIN][entry.entry_id].setdefault(
-        DATA_STATE, {})
-    data_state.setdefault(component_key, {})
+    entry_data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+    entry_data.info[component_key] = {}
+    entry_data.state[component_key] = {}
 
     @callback
     def async_list_entities(infos: List[Any]):
         """Update entities of this platform when entities are listed."""
-        old_infos = data_info[component_key]
+        old_infos = entry_data.info[component_key]
         new_infos = {}
         add_entities = []
         for info in infos:
@@ -252,10 +273,8 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
 
         # Remove old entities
         for info in old_infos.values():
-            signal = DISPATCHER_REMOVE_ENTITY.format(entry_id=entry.entry_id,
-                                                     key=info.key)
-            async_dispatcher_send(hass, signal)
-        data_info[component_key] = new_infos
+            entry_data.async_remove_entity(hass, component_key, info.key)
+        entry_data.info[component_key] = new_infos
         async_add_entities(add_entities)
 
     signal = DISPATCHER_ON_LIST.format(entry_id=entry.entry_id)
@@ -266,9 +285,10 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
         """Notify the appropriate entity of an updated state."""
         if not isinstance(state, state_type):
             return
-        data_state[component_key][state.key] = state
+        entry_data.state[component_key][state.key] = state
         async_dispatcher_send(
             hass, DISPATCHER_UPDATE_ENTITY.format(entry_id=entry.entry_id,
+                                                  component_key=component_key,
                                                   key=state.key))
 
     signal = DISPATCHER_ON_STATE.format(entry_id=entry.entry_id)
@@ -286,50 +306,53 @@ class EsphomelibEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        signal = DISPATCHER_UPDATE_ENTITY.format(
-            entry_id=self._entry_id, key=self._key)
-        async_dispatcher_connect(self.hass, signal,
+        kwargs = {
+            'entry_id': self._entry_id,
+            'component_key': self._component_key,
+            'key': self._key,
+        }
+        async_dispatcher_connect(self.hass,
+                                 DISPATCHER_UPDATE_ENTITY.format(**kwargs),
                                  self.async_schedule_update_ha_state)
 
-        signal = DISPATCHER_REMOVE_ENTITY.format(
-            entry_id=self._entry_id, key=self._key)
-        async_dispatcher_connect(self.hass, signal,
+        async_dispatcher_connect(self.hass,
+                                 DISPATCHER_REMOVE_ENTITY.format(**kwargs),
                                  self.async_remove)
 
-        signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self._entry_id)
-        async_dispatcher_connect(self.hass, signal,
+        async_dispatcher_connect(self.hass,
+                                 DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
                                  self.async_schedule_update_ha_state)
 
     @property
-    def _entry_data(self):
+    def _entry_data(self) -> RuntimeEntryData:
         return self.hass.data[DOMAIN][self._entry_id]
 
     @property
     def _static_info(self):
-        return self._entry_data[DATA_INFO][self._component_key][self._key]
+        return self._entry_data.info[self._component_key][self._key]
 
     @property
     def _client(self):
-        return self._entry_data[DATA_CLIENT]
+        return self._entry_data.client
 
     @property
     def _state(self):
         try:
-            return self._entry_data[DATA_STATE][self._component_key][self._key]
+            return self._entry_data.state[self._component_key][self._key]
         except KeyError:
             return None
 
     @property
     def available(self):
         """Return if the entity is available."""
-        device = self._entry_data[DATA_DEVICE_INFO]
+        device = self._entry_data.device_info
 
         if device.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
             # For these cases, show it as available
             return True
 
-        return self._entry_data[DATA_AVAILABLE]
+        return self._entry_data.available
 
     @property
     def unique_id(self):
