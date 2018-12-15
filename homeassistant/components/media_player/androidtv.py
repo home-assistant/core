@@ -197,13 +197,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "Could not connect to Android TV at %s%s", host, adb_log)
         raise PlatformNotReady
 
-    device = AndroidTVDevice(atv, name, config[CONF_APPS])
-    add_entities([device])
-    _LOGGER.info("Setup Android TV at %s%s", host, adb_log)
-
     if host in hass.data[DATA_KEY]:
         _LOGGER.warning("Platform already setup on %s, skipping.", host)
     else:
+        device = AndroidTVDevice(atv, name, config[CONF_APPS])
+        add_entities([device])
+        _LOGGER.info("Setup Android TV at %s%s", host, adb_log)
         hass.data[DATA_KEY][host] = device
 
     def service_action(service):
