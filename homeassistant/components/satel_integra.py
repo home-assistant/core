@@ -64,8 +64,10 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
         vol.Optional(CONF_ARM_HOME_MODE,
                      default=DEFAULT_CONF_ARM_HOME_MODE): vol.In([1, 2, 3]),
-        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-        vol.Optional(CONF_OUTPUTS): {vol.Coerce(int): ZONE_SCHEMA},
+        vol.Optional(CONF_ZONES,
+                     default={}): {vol.Coerce(int): ZONE_SCHEMA},
+        vol.Optional(CONF_OUTPUTS,
+                     default={}): {vol.Coerce(int): ZONE_SCHEMA},
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -74,9 +76,8 @@ async def async_setup(hass, config):
     """Set up the Satel Integra component."""
     conf = config.get(DOMAIN)
 
-    zones = conf.get(CONF_ZONES) if conf.get(CONF_ZONES) is not None else []
-    outputs = \
-        conf.get(CONF_OUTPUTS) if conf.get(CONF_OUTPUTS) is not None else []
+    zones = conf.get(CONF_ZONES)
+    outputs = conf.get(CONF_OUTPUTS)
     host = conf.get(CONF_DEVICE_HOST)
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
