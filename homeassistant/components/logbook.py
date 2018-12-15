@@ -17,7 +17,8 @@ from homeassistant.const import (
     ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, ATTR_SERVICE,
     CONF_EXCLUDE, CONF_INCLUDE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED, HTTP_BAD_REQUEST,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
@@ -59,7 +60,8 @@ CONFIG_SCHEMA = vol.Schema({
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED
+    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED,
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -316,6 +318,28 @@ def humanify(hass, events):
                     'context_user_id': event.context.user_id
                 }
 
+            elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
+                yield {
+                    'when': event.time_fired,
+                    'name': event.data.get(ATTR_NAME),
+                    'message': "has been triggered",
+                    'domain': 'automation',
+                    'entity_id': event.data.get(ATTR_ENTITY_ID),
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
+            elif event.event_type == EVENT_SCRIPT_STARTED:
+                yield {
+                    'when': event.time_fired,
+                    'name': event.data.get(ATTR_NAME),
+                    'message': 'started',
+                    'domain': 'script',
+                    'entity_id': event.data.get(ATTR_ENTITY_ID),
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
 
 def _get_related_entity_ids(session, entity_filter):
     from homeassistant.components.recorder.models import States
@@ -443,6 +467,14 @@ def _exclude_events(events, entities_filter):
 
         elif event.event_type == EVENT_LOGBOOK_ENTRY:
             domain = event.data.get(ATTR_DOMAIN)
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
+            domain = 'automation'
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_SCRIPT_STARTED:
+            domain = 'script'
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
         elif event.event_type == EVENT_ALEXA_SMART_HOME:

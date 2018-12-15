@@ -1,4 +1,5 @@
 """Storage for auth models."""
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 import hmac
@@ -11,7 +12,7 @@ from homeassistant.util import dt as dt_util
 
 from . import models
 from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
-from .permissions import system_policies
+from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType  # noqa: F401
 
 STORAGE_VERSION = 1
@@ -34,6 +35,7 @@ class AuthStore:
         self.hass = hass
         self._users = None  # type: Optional[Dict[str, models.User]]
         self._groups = None  # type: Optional[Dict[str, models.Group]]
+        self._perm_lookup = None  # type: Optional[PermissionLookup]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
                                                  private=True)
 
@@ -94,6 +96,7 @@ class AuthStore:
             # Until we get group management, we just put everyone in the
             # same group.
             'groups': groups,
+            'perm_lookup': self._perm_lookup,
         }  # type: Dict[str, Any]
 
         if is_owner is not None:
@@ -269,12 +272,17 @@ class AuthStore:
 
     async def _async_load(self) -> None:
         """Load the users."""
-        data = await self._store.async_load()
+        [ent_reg, data] = await asyncio.gather(
+            self.hass.helpers.entity_registry.async_get_registry(),
+            self._store.async_load(),
+        )
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
         if self._users is not None:
             return
+
+        self._perm_lookup = perm_lookup = PermissionLookup(ent_reg)
 
         if data is None:
             self._set_defaults()
@@ -374,6 +382,7 @@ class AuthStore:
                 is_owner=user_dict['is_owner'],
                 is_active=user_dict['is_active'],
                 system_generated=user_dict['system_generated'],
+                perm_lookup=perm_lookup,
             )
 
         for cred_dict in data['credentials']:

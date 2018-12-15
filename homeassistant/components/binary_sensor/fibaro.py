@@ -16,6 +16,8 @@ DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
+    'com.fibaro.floodSensor':   ['Flood', 'mdi:water', 'flood'],
+    'com.fibaro.motionSensor':   ['Motion', 'mdi:run', 'motion'],
     'com.fibaro.doorSensor':   ['Door', 'mdi:window-open', 'door'],
     'com.fibaro.windowSensor': ['Window', 'mdi:window-open', 'window'],
     'com.fibaro.smokeSensor': ['Smoke', 'mdi:smoking', 'smoke'],

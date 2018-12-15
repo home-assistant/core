@@ -277,6 +277,8 @@ def setup_comp(hass):
     """Initialize components."""
     mock_component(hass, 'group')
     mock_component(hass, 'zone')
+    hass.loop.run_until_complete(async_setup_component(
+        hass, 'device_tracker', {}))
     hass.loop.run_until_complete(async_mock_mqtt_component(hass))
 
     hass.states.async_set(

@@ -5,13 +5,15 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts.amazon_polly/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['boto3==1.9.16']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -31,15 +33,37 @@ CONF_OUTPUT_FORMAT = 'output_format'
 CONF_SAMPLE_RATE = 'sample_rate'
 CONF_TEXT_TYPE = 'text_type'
 
-SUPPORTED_VOICES = ['Geraint', 'Gwyneth', 'Mads', 'Naja', 'Hans', 'Marlene',
-                    'Nicole', 'Russell', 'Amy', 'Brian', 'Emma', 'Raveena',
-                    'Ivy', 'Joanna', 'Joey', 'Justin', 'Kendra', 'Kimberly',
-                    'Salli', 'Conchita', 'Enrique', 'Miguel', 'Penelope',
-                    'Chantal', 'Celine', 'Mathieu', 'Dora', 'Karl', 'Carla',
-                    'Giorgio', 'Mizuki', 'Liv', 'Lotte', 'Ruben', 'Ewa',
-                    'Jacek', 'Jan', 'Maja', 'Ricardo', 'Vitoria', 'Cristiano',
-                    'Ines', 'Carmen', 'Maxim', 'Tatyana', 'Astrid', 'Filiz',
-                    'Aditi', 'Léa', 'Matthew', 'Seoyeon', 'Takumi', 'Vicki']
+SUPPORTED_VOICES = [
+    'Zhiyu',  # Chinese
+    'Mads', 'Naja',  # Danish
+    'Ruben', 'Lotte',  # Dutch
+    'Russell', 'Nicole',  # English Austrailian
+    'Brian', 'Amy', 'Emma',  # English
+    'Aditi', 'Raveena',  # English, Indian
+    'Joey', 'Justin', 'Matthew', 'Ivy', 'Joanna', 'Kendra', 'Kimberly',
+    'Salli',  # English
+    'Geraint',  # English Welsh
+    'Mathieu', 'Celine', 'Léa',  # French
+    'Chantal',  # French Canadian
+    'Hans', 'Marlene', 'Vicki',  # German
+    'Aditi',  # Hindi
+    'Karl', 'Dora',   # Icelandic
+    'Giorgio', 'Carla', 'Bianca',  # Italian
+    'Takumi', 'Mizuki',  # Japanese
+    'Seoyeon',    # Korean
+    'Liv',  # Norwegian
+    'Jacek', 'Jan', 'Ewa', 'Maja',  # Polish
+    'Ricardo', 'Vitoria',   # Portuguese, Brazilian
+    'Cristiano', 'Ines',  # Portuguese, European
+    'Carmen',  # Romanian
+    'Maxim', 'Tatyana',  # Russian
+    'Enrique', 'Conchita', 'Lucia',  # Spanish European
+    'Mia',  # Spanish Mexican
+    'Miguel', 'Penelope',  # Spanish US
+    'Astrid',  # Swedish
+    'Filiz',  # Turkish
+    'Gwyneth',  # Welsh
+]
 
 SUPPORTED_OUTPUT_FORMATS = ['mp3', 'ogg_vorbis', 'pcm']
 
@@ -48,7 +72,7 @@ SUPPORTED_SAMPLE_RATES = ['8000', '16000', '22050']
 SUPPORTED_SAMPLE_RATES_MAP = {
     'mp3': ['8000', '16000', '22050'],
     'ogg_vorbis': ['8000', '16000', '22050'],
-    'pcm': ['8000', '16000']
+    'pcm': ['8000', '16000'],
 }
 
 SUPPORTED_TEXT_TYPES = ['text', 'ssml']
@@ -56,7 +80,7 @@ SUPPORTED_TEXT_TYPES = ['text', 'ssml']
 CONTENT_TYPE_EXTENSIONS = {
     'audio/mpeg': 'mp3',
     'audio/ogg': 'ogg',
-    'audio/pcm': 'pcm'
+    'audio/pcm': 'pcm',
 }
 
 DEFAULT_VOICE = 'Joanna'
@@ -66,7 +90,7 @@ DEFAULT_TEXT_TYPE = 'text'
 DEFAULT_SAMPLE_RATES = {
     'mp3': '22050',
     'ogg_vorbis': '22050',
-    'pcm': '16000'
+    'pcm': '16000',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -78,8 +102,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
     vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
         vol.In(SUPPORTED_OUTPUT_FORMATS),
-    vol.Optional(CONF_SAMPLE_RATE): vol.All(cv.string,
-                                            vol.In(SUPPORTED_SAMPLE_RATES)),
+    vol.Optional(CONF_SAMPLE_RATE):
+        vol.All(cv.string, vol.In(SUPPORTED_SAMPLE_RATES)),
     vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE):
         vol.In(SUPPORTED_TEXT_TYPES),
 })
@@ -88,8 +112,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_engine(hass, config):
     """Set up Amazon Polly speech component."""
     output_format = config.get(CONF_OUTPUT_FORMAT)
-    sample_rate = config.get(CONF_SAMPLE_RATE,
-                             DEFAULT_SAMPLE_RATES[output_format])
+    sample_rate = config.get(
+        CONF_SAMPLE_RATE, DEFAULT_SAMPLE_RATES[output_format])
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
         _LOGGER.error("%s is not a valid sample rate for %s",
                       sample_rate, output_format)
@@ -127,8 +151,8 @@ def get_engine(hass, config):
         if voice.get('LanguageCode') not in supported_languages:
             supported_languages.append(voice.get('LanguageCode'))
 
-    return AmazonPollyProvider(polly_client, config, supported_languages,
-                               all_voices)
+    return AmazonPollyProvider(
+        polly_client, config, supported_languages, all_voices)
 
 
 class AmazonPollyProvider(Provider):
@@ -171,7 +195,7 @@ class AmazonPollyProvider(Provider):
         if language != voice_in_dict.get('LanguageCode'):
             _LOGGER.error("%s does not support the %s language",
                           voice_id, language)
-            return (None, None)
+            return None, None
 
         resp = self.client.synthesize_speech(
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],

@@ -19,13 +19,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
 
-REQUIREMENTS = ["waterfurnace==0.7.0"]
+REQUIREMENTS = ["waterfurnace==1.0.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "waterfurnace"
 UPDATE_TOPIC = DOMAIN + "_update"
-CONF_UNIT = "unit"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10
@@ -36,8 +35,7 @@ NOTIFICATION_TITLE = 'WaterFurnace website status'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_UNIT): cv.string,
+        vol.Required(CONF_USERNAME): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -49,9 +47,8 @@ def setup(hass, base_config):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    unit = config.get(CONF_UNIT)
 
-    wfconn = wf.WaterFurnace(username, password, unit)
+    wfconn = wf.WaterFurnace(username, password)
     # NOTE(sdague): login will throw an exception if this doesn't
     # work, which will abort the setup.
     try:
@@ -83,7 +80,7 @@ class WaterFurnaceData(threading.Thread):
         super().__init__()
         self.hass = hass
         self.client = client
-        self.unit = client.unit
+        self.unit = self.client.gwid
         self.data = None
         self._shutdown = False
         self._fails = 0
