@@ -28,7 +28,7 @@ class EsphomelibSensor(EsphomelibEntity):
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return self.info.icon
+        return self._static_info.icon
 
     @property
     def state(self) -> Optional[str]:
@@ -38,9 +38,9 @@ class EsphomelibSensor(EsphomelibEntity):
         if math.isnan(self._state.state):
             return None
         return '{:.{prec}f}'.format(
-            self._state.state, prec=self.info.accuracy_decimals)
+            self._state.state, prec=self._static_info.accuracy_decimals)
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self.info.unit_of_measurement
+        return self._static_info.unit_of_measurement
