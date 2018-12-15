@@ -283,7 +283,16 @@ def adb_decorator(override_available=False):
 
             # "pure-python-adb"
             else:
-                returns = func(self, *args, **kwargs)
+                try:
+                    returns = func(self, *args, **kwargs)
+                except self.exceptions:
+                    _LOGGER.error('Failed to execute an ADB command;'
+                                  ' will attempt to re-establish the ADB'
+                                  ' connection in the next update')
+                    returns = None
+                    _LOGGER.warning(
+                        "Device %s became unavailable.", self._name)
+                    self._available = False  # pylint: disable=protected-access
 
             return returns
 
@@ -343,12 +352,7 @@ class AndroidTVDevice(MediaPlayerDevice):
         if not self._available:
             return
 
-        # Try/except needed here if the connection
-        # breaks right after the previous test
-        try:
-            success = self.androidtv.update()
-        except self.exceptions:
-            success = False
+        success = self.androidtv.update()
         if not success:
             _LOGGER.warning(
                 "Device %s became unavailable.", self._name)
