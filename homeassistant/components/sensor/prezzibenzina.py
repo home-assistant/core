@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME)
+    ATTR_ATTRIBUTION, ATTR_TIME, CONF_NAME)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -29,7 +29,8 @@ CONF_STATION = 'station'
 SCAN_INTERVAL = timedelta(minutes=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION): cv.string
+    vol.Required(CONF_STATION): cv.string,
+    vol.Optional(CONF_NAME, None): cv.string
 })
 
 
@@ -43,7 +44,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     client = PrezziBenzinaPy()
     dev = []
     info = client.get_by_id(station)
-    name = client.get_station_name(station)
+
+    name = config.get(CONF_NAME)
+
+    if name is None:
+        name = client.get_station_name(station)
 
     for index, info in enumerate(info):
         dev.append(PrezziBenzinaSensor(index,
@@ -89,10 +94,13 @@ class PrezziBenzinaSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
+        import datetime as dt
+        time = dt.datetime.strptime(self._data['date'], 
+                                    "%d/%m/%Y %H:%M").isoformat()
         attrs = {
             ATTR_FUEL: self._data['fuel'],
             ATTR_SERVICE: self._data['service'],
-            ATTR_TIME: self._data['date'],
+            ATTR_TIME: time,
             ATTR_ATTRIBUTION: ATTRIBUTION
         }
         return attrs
