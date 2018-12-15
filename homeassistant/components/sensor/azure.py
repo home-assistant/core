@@ -24,14 +24,16 @@ CONF_RESOURCE_GROUP = 'resource_group'
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_VIRTUAL_MACHINE): cv.string,
     vol.Required(CONF_RESOURCE_GROUP): cv.string,
-})
+    vol.Optional(CONF_VIRTUAL_MACHINE, default=None): cv.string,
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the azure vm sensor."""
-    add_entities([AzureVmSensor(hass.data[AZURE_DOMAIN], config)])
+    virtual_machine = config.get(CONF_VIRTUAL_MACHINE)
+    if virtual_machine is not None:
+        add_entities([AzureVmSensor(hass.data[AZURE_DOMAIN], config)])
 
 
 class AzureVmSensor(Entity):
