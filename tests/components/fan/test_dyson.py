@@ -656,12 +656,14 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_FAN_DEVICES] = [dyson_device]
         dyson.setup_platform(self.hass, None, mock.MagicMock())
 
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
+        self.hass.services.call(dyson.DOMAIN,
+                                dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
                                 {"entity_id": "fan.bed_room",
                                  "flow_direction_front": True}, True)
         assert not dyson_device.set_flow_direction_front.called
 
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
+        self.hass.services.call(dyson.DOMAIN,
+                                dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
                                 {"entity_id": "fan.living_room",
                                  "flow_direction_front": True}, True)
         dyson_device.set_flow_direction_front.assert_called_with(True)
