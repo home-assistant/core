@@ -262,10 +262,10 @@ class DysonTest(unittest.TestCase):
             assert len(devices) == 8
             assert devices[0].name == "Device_name Temperature"
             assert devices[1].name == "Device_name Humidity"
-            assert devices[2].name == \
-                   "Device_name Particulate matter 2.5 μg/m3"
-            assert devices[3].name == \
-                   "Device_name Particulate matter 10 μg/m3"
+            assert devices[2].name == "Device_name " \
+                                      "Particulate matter 2.5 μg/m3"
+            assert devices[3].name == "Device_name " \
+                                      "Particulate matter 10 μg/m3"
             assert devices[4].name == "Device_name Volatile organic compounds"
             assert devices[5].name == "Device_name Nitrogen dioxide"
             assert devices[6].name == "Device_name Carbon filter state"
@@ -417,6 +417,6 @@ class DysonTest(unittest.TestCase):
         assert not sensor.should_poll
         assert sensor.state == 90
         assert sensor.unit_of_measurement == "%"
-        assert sensor.name == \
-               "Device_name HEPA filter state"
+        assert sensor.name == "Device_name " \
+                              "HEPA filter state"
         assert sensor.entity_id == "sensor.dyson_1"
