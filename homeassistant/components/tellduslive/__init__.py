@@ -52,7 +52,7 @@ async def async_setup_entry(hass, entry):
     conf = entry.data[KEY_SESSION]
 
     if KEY_HOST in conf:
-        session = Session(**conf)
+        session = await hass.async_add_executer_job(Session(**conf))
     else:
         session = Session(
             PUBLIC_KEY,
@@ -70,8 +70,9 @@ async def async_setup_entry(hass, entry):
 
     client = TelldusLiveClient(hass, entry, session)
     hass.data[DOMAIN] = client
-    hass.async_add_executer_job(async_add_hubs(hass, client, entry.entry_id))
-    hass.async_add_executer_job(client.update())
+    await hass.async_add_executer_job(
+        async_add_hubs(hass, client, entry.entry_id))
+    hass.async_create_task(client.update())
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
@@ -181,8 +182,7 @@ class TelldusLiveClient:
 
     async def update(self, *args):
         """Periodically poll the servers for current state."""
-        _LOGGER.debug('Updating')
-        if not self._client.update():
+        if not await self._hass.async_add_executer_job(self._client.update()):
             _LOGGER.warning('Failed request')
 
         dev_ids = {dev.device_id for dev in self._client.devices}
