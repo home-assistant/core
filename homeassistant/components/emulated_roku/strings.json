@@ -1,6 +1,6 @@
 {
     "config": {
-        "error": {
+        "abort": {
             "name_exists": "Name already exists"
         },
         "step": {
