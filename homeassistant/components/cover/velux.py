@@ -88,4 +88,5 @@ class VeluxCover(CoverDevice):
         if ATTR_POSITION in kwargs:
             position_percent = 100 - kwargs[ATTR_POSITION]
             from pyvlx import Position
-            await self.node.set_position(Position(position_percent=position_percent))
+            await self.node.set_position(
+                Position(position_percent=position_percent))
