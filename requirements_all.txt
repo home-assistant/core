@@ -1318,7 +1318,7 @@ pyvesync==0.1.1
 pyvizio==0.0.3
 
 # homeassistant.components.velux
-pyvlx==0.2.2
+pyvlx==0.2.5
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0

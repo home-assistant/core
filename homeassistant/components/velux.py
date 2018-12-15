@@ -17,7 +17,7 @@ DATA_VELUX = "data_velux"
 SUPPORTED_DOMAINS = ['cover', 'scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.2.2']
+REQUIREMENTS = ['pyvlx==0.2.5']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -54,7 +54,8 @@ class VeluxModule:
         password = config[DOMAIN].get(CONF_PASSWORD)
         self.pyvlx = PyVLX(
             host=host,
-            password=password)
+            password=password,
+            log_frames=True)
 
     async def async_start(self):
         """Start velux component."""
