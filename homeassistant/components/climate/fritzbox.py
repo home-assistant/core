@@ -132,7 +132,7 @@ class FritzboxThermostat(ClimateDevice):
         """Set new operation mode."""
         if operation_mode == STATE_HEAT:
             self.set_temperature(temperature=self._comfort_temperature)
-        elif operation_mode == STATE_ECO or operation_mode == STATE_COOL:
+        elif operation_mode in (STATE_ECO, STATE_COOL):
             self.set_temperature(temperature=self._eco_temperature)
         elif operation_mode == STATE_OFF:
             self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
