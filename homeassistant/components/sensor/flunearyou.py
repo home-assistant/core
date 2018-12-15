@@ -48,9 +48,9 @@ TYPE_USER_SYMPTOMS = 'symptoms'
 TYPE_USER_TOTAL = 'total'
 
 EXTENDED_TYPE_MAPPING = {
-    'ili': TYPE_USER_SYMPTOMS,
-    'no_symptoms': TYPE_USER_NO_SYMPTOMS,
-    'total': TYPE_USER_TOTAL,
+    TYPE_USER_FLU: 'ili',
+    TYPE_USER_NO_SYMPTOMS: 'no_symptoms',
+    TYPE_USER_TOTAL: 'total_surveys',
 }
 
 SENSORS = {
@@ -174,12 +174,15 @@ class FluNearYouSensor(Entity):
                 ATTR_ZIP_CODE: user_data['local']['zip'],
             })
 
-            # if self._kind in user_data['state']['data']:
-            #     self._attrs[ATTR_STATE_REPORTS_THIS_WEEK] = user_data['state'][
-            #         'data'][self._kind]
-            # if self._kind in user_data['state']['last_week_data']:
-            #     self._attrs[ATTR_STATE_REPORTS_LAST_WEEK] = user_data['state'][
-            #         'last_week_data'][self._kind]
+            if self._kind in user_data['state']['data']:
+                states_key = self._kind
+            elif self._kind in EXTENDED_TYPE_MAPPING:
+                states_key = EXTENDED_TYPE_MAPPING[self._kind]
+
+            self._attrs[ATTR_STATE_REPORTS_THIS_WEEK] = user_data['state'][
+                'data'][states_key]
+            self._attrs[ATTR_STATE_REPORTS_LAST_WEEK] = user_data['state'][
+                'last_week_data'][states_key]
 
             if self._kind == TYPE_USER_TOTAL:
                 self._state = sum(
