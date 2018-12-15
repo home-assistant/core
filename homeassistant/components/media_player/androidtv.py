@@ -170,12 +170,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     if CONF_ADB_SERVER_IP not in config:
-        from adb.usb_exceptions import DeviceAuthError
-        try:
-            # "python-adb" without adbkey
-            atv = AndroidTV(host)
-            adb_log = ""
-        except DeviceAuthError:
+        atv = AndroidTV(host)
+        if atv.connect() is False:
             # "python-adb" with adbkey
             if CONF_ADBKEY in config:
                 adbkey = config[CONF_ADBKEY]
@@ -183,6 +179,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 adbkey = DEFAULT_ADBKEY
             atv = AndroidTV(host, adbkey)
             adb_log = " using adbkey='{0}'".format(adbkey)
+        else:
+            adb_log = ""
+
     else:
         # "pure-python-adb"
         atv = AndroidTV(
@@ -273,9 +272,11 @@ def adb_decorator(override_available=False):
                     returns = func(self, *args, **kwargs)
                 except self.exceptions:
                     _LOGGER.error('Failed to execute an ADB command;'
-                                  'will attempt to re-establish the ADB'
-                                  'connection in the next update')
+                                  ' will attempt to re-establish the ADB'
+                                  ' connection in the next update')
                     returns = None
+                    _LOGGER.warning(
+                        "Device %s became unavailable.", self._name)
                     self._available = False  # pylint: disable=protected-access
                 finally:
                     self.adb_lock.release()
@@ -315,12 +316,14 @@ class AndroidTVDevice(MediaPlayerDevice):
             from adb.adb_protocol import (
                 InvalidChecksumError, InvalidCommandError,
                 InvalidResponseError)
+            from adb.usb_exceptions import TcpTimeoutException
             self.exceptions = (AttributeError, BrokenPipeError, TypeError,
                                ValueError, InvalidChecksumError,
-                               InvalidCommandError, InvalidResponseError)
+                               InvalidCommandError, InvalidResponseError,
+                               TcpTimeoutException)
         else:
             # "pure-python-adb"
-            self.exceptions = tuple()
+            self.exceptions = (ConnectionResetError)
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -337,10 +340,16 @@ class AndroidTVDevice(MediaPlayerDevice):
         if not self._available:
             return
 
-        success = self.androidtv.update()
+        # Try/except needed here if the connection
+        # breaks right after the previous test
+        try:
+            success = self.androidtv.update()
+        except self.exceptions:
+            success = False
         if not success:
             _LOGGER.warning(
                 "Device %s became unavailable.", self._name)
+            self._available = False
             return
 
         self._app_name = self.get_app_name(self.androidtv.app_id)
