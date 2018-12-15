@@ -147,5 +147,5 @@ class HomeworksKeypadEvent:
             event = EVENT_BUTTON_RELEASE
         else:
             return
-        self._hass.bus.async_fire(event,
-            {CONF_ID: self._id, CONF_NAME: self._name, 'button': values[1]})
+        data = {CONF_ID: self._id, CONF_NAME: self._name, 'button': values[1]}
+        self._hass.bus.async_fire(event, data)
