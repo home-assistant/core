@@ -7,15 +7,17 @@ https://home-assistant.io/components/fibaro/
 
 import logging
 from collections import defaultdict
+from typing import Optional
 import voluptuous as vol
 
-from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
-                                 CONF_PASSWORD, CONF_URL, CONF_USERNAME,
-                                 EVENT_HOMEASSISTANT_STOP)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import convert, slugify
+from homeassistant.const import (
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, CONF_DEVICE_CLASS,
+    CONF_EXCLUDE, CONF_ICON, CONF_PASSWORD, CONF_URL, CONF_USERNAME,
+    CONF_WHITE_VALUE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import convert, slugify
 
 REQUIREMENTS = ['fiblary3==0.1.7']
 
@@ -26,8 +28,13 @@ FIBARO_CONTROLLER = 'fibaro_controller'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
+CONF_DIMMING = "dimming"
+CONF_COLOR = "color"
+CONF_RESET_COLOR = "reset_color"
+CONF_DEVICE_CONFIG = "device_config"
 
-FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light', 'sensor', 'switch']
+FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -43,8 +50,20 @@ FIBARO_TYPEMAP = {
     'com.fibaro.smokeSensor': 'binary_sensor',
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
-    'com.fibaro.colorController': 'light'
+    'com.fibaro.colorController': 'light',
+    'com.fibaro.securitySensor': 'binary_sensor'
 }
+
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(CONF_DIMMING): cv.boolean,
+    vol.Optional(CONF_COLOR): cv.boolean,
+    vol.Optional(CONF_WHITE_VALUE): cv.boolean,
+    vol.Optional(CONF_RESET_COLOR): cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
+    vol.Optional(CONF_ICON): cv.string,
+})
+
+FIBARO_ID_LIST_SCHEMA = vol.Schema([cv.string])
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -52,6 +71,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
+        vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -59,23 +81,28 @@ CONFIG_SCHEMA = vol.Schema({
 class FibaroController():
     """Initiate Fibaro Controller Class."""
 
-    _room_map = None            # Dict for mapping roomId to room object
-    _device_map = None          # Dict for mapping deviceId to device object
-    fibaro_devices = None       # List of devices by type
-    _callbacks = {}             # Dict of update value callbacks by deviceId
-    _client = None               # Fiblary's Client object for communication
-    _state_handler = None        # Fiblary's StateHandler object
-    _import_plugins = None      # Whether to import devices from plugins
-
-    def __init__(self, username, password, url, import_plugins):
+    def __init__(self, username, password, url, import_plugins, config):
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
+        self._scene_map = None
+        # Whether to import devices from plugins
+        self._import_plugins = import_plugins
+        self._device_config = config[CONF_DEVICE_CONFIG]
+        self._room_map = None         # Mapping roomId to room object
+        self._device_map = None       # Mapping deviceId to device object
+        self.fibaro_devices = None    # List of devices by type
+        self._callbacks = {}          # Update value callbacks by deviceId
+        self._state_handler = None    # Fiblary's StateHandler object
+        self._excluded_devices = config.get(CONF_EXCLUDE, [])
+        self.hub_serial = None          # Unique serial number of the hub
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
         try:
             login = self._client.login.get()
+            info = self._client.info.get()
+            self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
             _LOGGER.error("Can't connect to Fibaro HC. "
                           "Please check URL.")
@@ -87,6 +114,7 @@ class FibaroController():
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}
         self._read_devices()
+        self._read_scenes()
         return True
 
     def enable_state_handler(self):
@@ -166,6 +194,25 @@ class FibaroController():
             device_type = 'light'
         return device_type
 
+    def _read_scenes(self):
+        scenes = self._client.scenes.list()
+        self._scene_map = {}
+        for device in scenes:
+            if not device.visible:
+                continue
+            if device.roomID == 0:
+                room_name = 'Unknown'
+            else:
+                room_name = self._room_map[device.roomID].name
+            device.room_name = room_name
+            device.friendly_name = '{} {}'.format(room_name, device.name)
+            device.ha_id = '{}_{}_{}'.format(
+                slugify(room_name), slugify(device.name), device.id)
+            device.unique_id_str = "{}.{}".format(
+                self.hub_serial, device.id)
+            self._scene_map[device.id] = device
+            self.fibaro_devices['scene'].append(device)
+
     def _read_devices(self):
         """Read and process the device list."""
         devices = self._client.devices.list()
@@ -177,16 +224,22 @@ class FibaroController():
                     room_name = 'Unknown'
                 else:
                     room_name = self._room_map[device.roomID].name
+                device.room_name = room_name
                 device.friendly_name = room_name + ' ' + device.name
                 device.ha_id = '{}_{}_{}'.format(
                     slugify(room_name), slugify(device.name), device.id)
                 if device.enabled and \
                         ('isPlugin' not in device or
-                         (not device.isPlugin or self._import_plugins)):
+                         (not device.isPlugin or self._import_plugins)) and \
+                        device.ha_id not in self._excluded_devices:
                     device.mapped_type = self._map_device_to_type(device)
+                    device.device_config = \
+                        self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
                 if device.mapped_type:
+                    device.unique_id_str = "{}.{}".format(
+                        self.hub_serial, device.id)
                     self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
                 else:
@@ -203,7 +256,8 @@ def setup(hass, config):
         FibaroController(config[DOMAIN][CONF_USERNAME],
                          config[DOMAIN][CONF_PASSWORD],
                          config[DOMAIN][CONF_URL],
-                         config[DOMAIN][CONF_PLUGINS])
+                         config[DOMAIN][CONF_PLUGINS],
+                         config[DOMAIN])
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
@@ -283,11 +337,14 @@ class FibaroDevice(Entity):
 
     def call_set_color(self, red, green, blue, white):
         """Set the color of Fibaro device."""
-        color_str = "{},{},{},{}".format(int(red), int(green),
-                                         int(blue), int(white))
+        red = int(max(0, min(255, red)))
+        green = int(max(0, min(255, green)))
+        blue = int(max(0, min(255, blue)))
+        white = int(max(0, min(255, white)))
+        color_str = "{},{},{},{}".format(red, green, blue, white)
         self.fibaro_device.properties.color = color_str
-        self.action("setColor", str(int(red)), str(int(green)),
-                    str(int(blue)), str(int(white)))
+        self.action("setColor", str(red), str(green),
+                    str(blue), str(white))
 
     def action(self, cmd, *args):
         """Perform an action on the Fibaro HC."""
@@ -324,7 +381,12 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def name(self):
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.fibaro_device.unique_id_str
+
+    @property
+    def name(self) -> Optional[str]:
         """Return the name of the device."""
         return self._name
 
@@ -357,5 +419,5 @@ class FibaroDevice(Entity):
         except (ValueError, KeyError):
             pass
 
-        attr['id'] = self.ha_id
+        attr['fibaro_id'] = self.fibaro_device.id
         return attr

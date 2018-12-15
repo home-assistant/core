@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
@@ -314,8 +315,11 @@ class NotifySetupFlow(SetupFlow):
             _generate_otp, self._secret, self._count)
 
         assert self._notify_service
-        await self._auth_module.async_notify(
-            code, self._notify_service, self._target)
+        try:
+            await self._auth_module.async_notify(
+                code, self._notify_service, self._target)
+        except ServiceNotFound:
+            return self.async_abort(reason='notify_service_not_exist')
 
         return self.async_show_form(
             step_id='setup',

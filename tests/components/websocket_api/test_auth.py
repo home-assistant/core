@@ -13,7 +13,7 @@ from tests.common import mock_coro
 from . import API_PASSWORD
 
 
-async def test_auth_via_msg(no_auth_websocket_client):
+async def test_auth_via_msg(no_auth_websocket_client, legacy_auth):
     """Test authenticating."""
     await no_auth_websocket_client.send_json({
         'type': TYPE_AUTH,
@@ -70,18 +70,16 @@ async def test_auth_active_with_token(hass, aiohttp_client, hass_access_token):
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active') as auth_active:
-            auth_active.return_value = True
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
-            await ws.send_json({
-                'type': TYPE_AUTH,
-                'access_token': hass_access_token
-            })
+        await ws.send_json({
+            'type': TYPE_AUTH,
+            'access_token': hass_access_token
+        })
 
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_OK
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_OK
 
 
 async def test_auth_active_user_inactive(hass, aiohttp_client,
@@ -99,18 +97,16 @@ async def test_auth_active_user_inactive(hass, aiohttp_client,
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active') as auth_active:
-            auth_active.return_value = True
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
-            await ws.send_json({
-                'type': TYPE_AUTH,
-                'access_token': hass_access_token
-            })
+        await ws.send_json({
+            'type': TYPE_AUTH,
+            'access_token': hass_access_token
+        })
 
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_INVALID
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_INVALID
 
 
 async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
@@ -124,18 +120,16 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active',
-                   return_value=True):
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
-            await ws.send_json({
-                'type': TYPE_AUTH,
-                'api_password': API_PASSWORD
-            })
+        await ws.send_json({
+            'type': TYPE_AUTH,
+            'api_password': API_PASSWORD
+        })
 
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_INVALID
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_INVALID
 
 
 async def test_auth_legacy_support_with_password(hass, aiohttp_client):
@@ -149,9 +143,7 @@ async def test_auth_legacy_support_with_password(hass, aiohttp_client):
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active',
-                   return_value=True),\
-             patch('homeassistant.auth.AuthManager.support_legacy',
+        with patch('homeassistant.auth.AuthManager.support_legacy',
                    return_value=True):
             auth_msg = await ws.receive_json()
             assert auth_msg['type'] == TYPE_AUTH_REQUIRED
@@ -176,15 +168,13 @@ async def test_auth_with_invalid_token(hass, aiohttp_client):
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active') as auth_active:
-            auth_active.return_value = True
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
-            await ws.send_json({
-                'type': TYPE_AUTH,
-                'access_token': 'incorrect'
-            })
+        await ws.send_json({
+            'type': TYPE_AUTH,
+            'access_token': 'incorrect'
+        })
 
-            auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == TYPE_AUTH_INVALID
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == TYPE_AUTH_INVALID

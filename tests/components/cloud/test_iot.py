@@ -411,7 +411,7 @@ async def test_refresh_token_expired(hass):
 async def test_webhook_msg(hass):
     """Test webhook msg."""
     cloud = Cloud(hass, MODE_DEV, None, None)
-    await cloud.prefs.async_initialize(True)
+    await cloud.prefs.async_initialize()
     await cloud.prefs.async_update(cloudhooks={
         'hello': {
             'webhook_id': 'mock-webhook-id',
@@ -451,3 +451,51 @@ async def test_webhook_msg(hass):
     assert await received[0].json() == {
         'hello': 'world'
     }
+
+
+async def test_send_message_not_connected(mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+
+    with pytest.raises(iot.NotConnected):
+        await cloud_iot.async_send_message('webhook', {'msg': 'yo'})
+
+
+async def test_send_message_no_answer(mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+    cloud_iot.state = iot.STATE_CONNECTED
+    cloud_iot.client = MagicMock(send_json=MagicMock(return_value=mock_coro()))
+
+    await cloud_iot.async_send_message('webhook', {'msg': 'yo'},
+                                       expect_answer=False)
+    assert not cloud_iot._response_handler
+    assert len(cloud_iot.client.send_json.mock_calls) == 1
+    msg = cloud_iot.client.send_json.mock_calls[0][1][0]
+    assert msg['handler'] == 'webhook'
+    assert msg['payload'] == {'msg': 'yo'}
+
+
+async def test_send_message_answer(loop, mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+    cloud_iot.state = iot.STATE_CONNECTED
+    cloud_iot.client = MagicMock(send_json=MagicMock(return_value=mock_coro()))
+
+    uuid = 5
+
+    with patch('homeassistant.components.cloud.iot.uuid.uuid4',
+               return_value=MagicMock(hex=uuid)):
+        send_task = loop.create_task(cloud_iot.async_send_message(
+            'webhook', {'msg': 'yo'}))
+        await asyncio.sleep(0)
+
+    assert len(cloud_iot.client.send_json.mock_calls) == 1
+    assert len(cloud_iot._response_handler) == 1
+    msg = cloud_iot.client.send_json.mock_calls[0][1][0]
+    assert msg['handler'] == 'webhook'
+    assert msg['payload'] == {'msg': 'yo'}
+
+    cloud_iot._response_handler[uuid].set_result({'response': True})
+    response = await send_task
+    assert response == {'response': True}

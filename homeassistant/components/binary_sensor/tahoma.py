@@ -41,6 +41,7 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
         self._state = None
         self._icon = None
         self._battery = None
+        self._available = False
 
     @property
     def is_on(self):
@@ -71,6 +72,11 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
             attr[ATTR_BATTERY_LEVEL] = self._battery
         return attr
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
     def update(self):
         """Update the state."""
         self.controller.get_states([self.tahoma_device])
@@ -82,11 +88,13 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
                 self._state = STATE_ON
 
         if 'core:SensorDefectState' in self.tahoma_device.active_states:
-            # Set to 'lowBattery' for low battery warning.
+            # 'lowBattery' for low battery warning. 'dead' for not available.
             self._battery = self.tahoma_device.active_states[
                 'core:SensorDefectState']
+            self._available = bool(self._battery != 'dead')
         else:
             self._battery = None
+            self._available = True
 
         if self._state == STATE_ON:
             self._icon = "mdi:fire"

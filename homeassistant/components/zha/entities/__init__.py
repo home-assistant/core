@@ -6,5 +6,5 @@ https://home-assistant.io/components/zha/
 """
 
 # flake8: noqa
-from .entity import ZhaEntity
 from .device_entity import ZhaDeviceEntity
+from .entity import ZhaEntity
