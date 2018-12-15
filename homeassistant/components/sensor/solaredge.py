@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
+    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['current_power']):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
@@ -60,8 +60,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     site_id = config[CONF_SITE_ID]
     platform_name = config[CONF_NAME]
 
-    _LOGGER.debug("Setting up SolarEdge Monitoring API")
-
     # Create new SolarEdge object to retrieve data
     api = solaredge.Solaredge(api_key)
 
@@ -70,23 +68,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         response = api.get_details(site_id)
 
         if response['details']['status'].lower() != 'active':
-            _LOGGER.debug("SolarEdge site is not active")
-            return False
+            _LOGGER.error("SolarEdge site is not active")
+            return 
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
-        _LOGGER.debug("Missing details data in solaredge response")
-        return False
+        _LOGGER.error("Missing details data in solaredge response")
+        return 
     except (ConnectTimeout, HTTPError):
-        _LOGGER.debug("Could not retrieve details from SolarEdge \
-         Monitoring API")
-        return False
+        _LOGGER.error("Could not retrieve details from SolarEdge Monitoring API")
+        return
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api, site_id)
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in config[CONF_MONITORED_VARIABLES]:
+    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
         sensor = SolarEdgeSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
@@ -104,7 +101,6 @@ class SolarEdgeSensor(Entity):
         self._state = None
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._name = SENSOR_TYPES[self.sensor_key][1]
         self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
 
     @property
@@ -127,10 +123,9 @@ class SolarEdgeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
+    def update(self):
         """Get the latest data from the sensor and update the state."""
-        _LOGGER.debug("async_update")
-        await self.hass.async_add_job(self.data.update)
+        self.data.update()
         self._state = self.data.data[self._json_key]
 
 
@@ -144,8 +139,6 @@ class SolarEdgeData:
         self.data = {}
         self.site_id = site_id
 
-        self.update()
-
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
@@ -155,20 +148,18 @@ class SolarEdgeData:
             data = self.api.get_overview(self.site_id)
             overview = data['overview']
         except KeyError:
-            _LOGGER.debug("Missing overview data, skipping update")
+            _LOGGER.error("Missing overview data, skipping update")
             return
         except (ConnectTimeout, HTTPError):
-            _LOGGER.debug("Could not retrieve data, skipping update")
+            _LOGGER.error("Could not retrieve data, skipping update")
             return
 
         self.data = {}
 
-        for item in overview:
-            value = overview[item]
+        for key, value in overview.items():
             if 'energy' in value:
-                self.data[item] = value['energy']
+                self.data[key] = value['energy']
             elif 'power' in value:
-                self.data[item] = value['power']
+                self.data[key] = value['power']
 
         _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
-        return
