@@ -15,6 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
+# Import config flow so that it's added to the registry
+from .config_flow import EsphomelibFlowHandler  # noqa
+
 if TYPE_CHECKING:
     from aioesphomeapi.client import APIClient, EntityInfo, \
         EntityState, DeviceInfo
