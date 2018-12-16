@@ -38,8 +38,8 @@ class TestUtil(unittest.TestCase):
         assert "we_are_we_are_a_test_calendar" == \
             util.slugify("We are, we are, a... Test Calendar")
         assert "test_aouss_aou" == util.slugify("Tèst_äöüß_ÄÖÜ")
-        assert "ying_shi_ma" == uils.slugify("影師嗎")
-        assert "test" == utils.slugify("けいふぉんと")
+        assert "ying_shi_ma" == util.slugify("影師嗎")
+        assert "test" == util.slugify("けいふぉんと")
 
     def test_repr_helper(self):
         """Test repr_helper."""
