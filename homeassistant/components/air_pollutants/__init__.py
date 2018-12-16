@@ -136,7 +136,7 @@ class AirPollutantsEntity(Entity):
 
         for prop, attr in PROP_TO_ATTR.items():
             value = getattr(self, prop)
-            if value:
+            if value is not None:
                 data[attr] = value
 
         return data
