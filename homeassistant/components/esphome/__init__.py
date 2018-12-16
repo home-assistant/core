@@ -19,11 +19,10 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from .config_flow import EsphomeFlowHandler  # noqa
 
 if TYPE_CHECKING:
-    from aioesphomeapi.client import APIClient, EntityInfo, \
-        EntityState, DeviceInfo
+    from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.0.0']
+REQUIREMENTS = ['aioesphomeapi==1.1.0']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -97,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi.client import APIClient, APIConnectionError
+    from aioesphomeapi import APIClient, APIConnectionError
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -187,7 +186,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
                                       cli: 'APIClient',
                                       entry: ConfigEntry, host: str):
     """Set up the re-connect logic for the API client."""
-    from aioesphomeapi.client import APIConnectionError
+    from aioesphomeapi import APIConnectionError
 
     async def try_connect(tries: int = 0, is_disconnect: bool = True) -> None:
         """Try connecting to the API client. Will retry if not successful."""

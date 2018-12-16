@@ -1,6 +1,6 @@
 """Test config flow."""
 from collections import namedtuple
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -11,9 +11,18 @@ MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
 
 
 @pytest.fixture(autouse=True)
+def aioesphomeapi_mock():
+    """Mock aioesphomeapi."""
+    with patch.dict('sys.modules', {
+        'aioesphomeapi': MagicMock(),
+    }):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_api_connection_error():
     """Mock out the try login method."""
-    with patch('aioesphomeapi.client.APIConnectionError',
+    with patch('aioesphomeapi.APIConnectionError',
                new_callable=lambda: OSError) as mock_error:
         yield mock_error
 
@@ -25,7 +34,7 @@ async def test_user_connection_works(hass):
     result = await flow.async_step_user(user_input=None)
     assert result['type'] == 'form'
 
-    with patch('aioesphomeapi.client.APIClient') as mock_client:
+    with patch('aioesphomeapi.APIClient') as mock_client:
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
             mock_client.host = host
@@ -67,7 +76,7 @@ async def test_user_connection_error(hass, mock_api_connection_error):
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.client.APIClient') as mock_client:
+    with patch('aioesphomeapi.APIClient') as mock_client:
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
             return mock_client
@@ -100,7 +109,7 @@ async def test_user_with_password(hass):
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.client.APIClient') as mock_client:
+    with patch('aioesphomeapi.APIClient') as mock_client:
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
             mock_client.password = password
@@ -141,7 +150,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error):
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.client.APIClient') as mock_client:
+    with patch('aioesphomeapi.APIClient') as mock_client:
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
             mock_client.password = password

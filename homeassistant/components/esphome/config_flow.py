@@ -87,7 +87,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     async def fetch_device_info(self):
         """Fetch device info from API and return any errors."""
-        from aioesphomeapi.client import APIClient, APIConnectionError
+        from aioesphomeapi import APIClient, APIConnectionError
 
         cli = APIClient(self.hass.loop, self._host, self._port, '')
 
@@ -106,7 +106,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     async def try_login(self):
         """Try logging in to device and return any errors."""
-        from aioesphomeapi.client import APIClient, APIConnectionError
+        from aioesphomeapi import APIClient, APIConnectionError
 
         cli = APIClient(self.hass.loop, self._host, self._port, self._password)
 
