@@ -142,6 +142,9 @@ class Auth:
     async def _async_update_preferences(self, access_token, refresh_token,
                                         expire_time):
         """Update user preferences."""
+        if self._prefs is None:
+            await self.async_load_preferences()
+
         if access_token is not None:
             self._prefs[STORAGE_ACCESS_TOKEN] = access_token
         if refresh_token is not None:
