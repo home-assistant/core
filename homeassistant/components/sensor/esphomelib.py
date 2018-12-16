@@ -1,17 +1,25 @@
 """Support for esphomelib sensors."""
 import logging
 import math
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from homeassistant.components.esphomelib import EsphomelibEntity, \
     platform_async_setup_entry
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
+
+if TYPE_CHECKING:
+    # pylint: disable=unused-import
+    from aioesphomeapi.client import SensorInfo, SensorState
 
 DEPENDENCIES = ['esphomelib']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistantType,
+                            entry: ConfigEntry, async_add_entities) -> None:
     """Set up esphomelib sensors based on a config entry."""
+    # pylint: disable=redefined-outer-name
     from aioesphomeapi.client import SensorInfo, SensorState
 
     await platform_async_setup_entry(
@@ -24,6 +32,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class EsphomelibSensor(EsphomelibEntity):
     """A sensor implementation for esphomelib."""
+
+    @property
+    def _static_info(self) -> 'SensorInfo':
+        return super()._static_info
+
+    @property
+    def _state(self) -> 'Optional[SensorState]':
+        return super()._state
 
     @property
     def icon(self) -> str:
@@ -41,6 +57,6 @@ class EsphomelibSensor(EsphomelibEntity):
             self._state.state, prec=self._static_info.accuracy_decimals)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         return self._static_info.unit_of_measurement

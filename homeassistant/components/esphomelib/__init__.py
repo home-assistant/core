@@ -1,7 +1,7 @@
 """Support for esphomelib devices."""
 import asyncio
 import logging
-from typing import Any, List, Optional, Dict
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 import attr
 import voluptuous as vol
@@ -9,11 +9,15 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
     EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import callback, Event
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+
+if TYPE_CHECKING:
+    from aioesphomeapi.client import APIClient, EntityInfo, \
+        EntityState, DeviceInfo
 
 DOMAIN = 'esphomelib'
 REQUIREMENTS = ['aioesphomeapi==1.0.0']
@@ -38,42 +42,46 @@ class RuntimeEntryData:
     """Store runtime data for esphomelib config entries."""
 
     entry_id = attr.ib(type=str)
-    client = attr.ib()
+    client = attr.ib(type='APIClient')
     reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
     state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     available = attr.ib(type=bool, default=False)
-    device_info = attr.ib(default=None)
+    device_info = attr.ib(type='DeviceInfo', default=None)
 
-    def async_update_entity(self, hass, component_key, key):
+    def async_update_entity(self, hass: HomeAssistantType, component_key: str,
+                            key: int) -> None:
         """Schedule the update of an entity."""
         signal = DISPATCHER_UPDATE_ENTITY.format(
             entry_id=self.entry_id, component_key=component_key, key=key)
         async_dispatcher_send(hass, signal)
 
-    def async_remove_entity(self, hass, component_key, key):
+    def async_remove_entity(self, hass: HomeAssistantType, component_key: str,
+                            key: int) -> None:
         """Schedule the removal of an entity."""
         signal = DISPATCHER_REMOVE_ENTITY.format(
             entry_id=self.entry_id, component_key=component_key, key=key)
         async_dispatcher_send(hass, signal)
 
-    def async_update_static_infos(self, hass, infos: List[Any]):
+    def async_update_static_infos(self, hass: HomeAssistantType,
+                                  infos: 'List[EntityInfo]') -> None:
         """Distribute an update of static infos to all platforms."""
         signal = DISPATCHER_ON_LIST.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal, infos)
 
-    def async_update_state(self, hass, state: Any):
+    def async_update_state(self, hass: HomeAssistantType,
+                           state: 'EntityState') -> None:
         """Distribute an update of state information to all platforms."""
         signal = DISPATCHER_ON_STATE.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal, state)
 
-    def async_update_device_state(self, hass):
+    def async_update_device_state(self, hass: HomeAssistantType) -> None:
         """Distribute an update of a core device state like availability."""
         signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Stub to allow setting up this component.
 
     Configuration through YAML is not supported at this time.
@@ -81,8 +89,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistantType,
+                            entry: ConfigEntry) -> bool:
     """Set up the esphomelib component."""
+    # pylint: disable=redefined-outer-name
     from aioesphomeapi.client import APIClient, APIConnectionError
 
     hass.data.setdefault(DOMAIN, {})
@@ -94,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     cli = APIClient(hass.loop, host, port, password)
     await cli.start()
 
-    async def on_stop(event):
+    async def on_stop(event: Event) -> None:
         """Cleanup the socket client on HA stop."""
         await _cleanup_instance(hass, entry)
 
@@ -109,11 +119,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host)
 
     @callback
-    def async_on_state(state):
+    def async_on_state(state: 'EntityState') -> None:
         """Send dispatcher updates when a new state is received."""
         entry_data.async_update_state(hass, state)
 
-    async def on_login():
+    async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
             entry_data.device_info = await cli.device_info()
@@ -150,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # tracked tasks (hass.loop.create_task). This way HA won't stall startup
     # forever until a connection is successful.
 
-    async def complete_setup():
+    async def complete_setup() -> None:
         """Complete the config entry setup."""
         tasks = []
         for component in HA_COMPONENTS:
@@ -167,12 +177,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli,
-                                      entry: ConfigEntry, host):
+async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
+                                      cli: 'APIClient',
+                                      entry: ConfigEntry, host: str):
     """Set up the re-connect logic for the API client."""
     from aioesphomeapi.client import APIConnectionError
 
-    async def try_connect(tries=0, is_disconnect=True):
+    async def try_connect(tries: int = 0, is_disconnect: bool = True) -> None:
         """Try connecting to the API client. Will retry if not successful."""
         if entry.entry_id not in hass.data[DOMAIN]:
             # When removing/disconnecting manually
@@ -212,7 +223,8 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType, cli,
     return try_connect
 
 
-async def _cleanup_instance(hass: HomeAssistantType, entry: ConfigEntry):
+async def _cleanup_instance(hass: HomeAssistantType,
+                            entry: ConfigEntry) -> None:
     """Cleanup the esphomelib client if it exists."""
     data = hass.data[DOMAIN].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
@@ -220,14 +232,15 @@ async def _cleanup_instance(hass: HomeAssistantType, entry: ConfigEntry):
     await data.client.stop()
 
 
-async def async_unload_entry(hass, config_entry) -> bool:
+async def async_unload_entry(hass: HomeAssistantType,
+                             entry: ConfigEntry) -> bool:
     """Unload an esphomelib config entry."""
-    await _cleanup_instance(hass, config_entry)
+    await _cleanup_instance(hass, entry)
 
     tasks = []
     for component in HA_COMPONENTS:
         tasks.append(hass.config_entries.async_forward_entry_unload(
-            config_entry, component))
+            entry, component))
     await asyncio.wait(tasks)
 
     return True
@@ -237,11 +250,11 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
                                      entry: ConfigEntry,
                                      async_add_entities,
                                      *,
-                                     component_key,
+                                     component_key: str,
                                      info_type,
                                      entity_type,
                                      state_type,
-                                     ):
+                                     ) -> None:
     """Set up an esphomelib platform.
 
     This method is in charge of receiving, distributing and storing
@@ -298,13 +311,13 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
 class EsphomelibEntity(Entity):
     """Define a generic esphomelib entity."""
 
-    def __init__(self, entry_id, component_key, key):
+    def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         kwargs = {
             'entry_id': self._entry_id,
@@ -328,24 +341,28 @@ class EsphomelibEntity(Entity):
         return self.hass.data[DOMAIN][self._entry_id]
 
     @property
-    def _static_info(self):
+    def _static_info(self) -> 'EntityInfo':
         return self._entry_data.info[self._component_key][self._key]
 
     @property
-    def _client(self):
+    def _device_info(self) -> 'DeviceInfo':
+        return self._entry_data.device_info
+
+    @property
+    def _client(self) -> 'APIClient':
         return self._entry_data.client
 
     @property
-    def _state(self):
+    def _state(self) -> 'Optional[EntityState]':
         try:
             return self._entry_data.state[self._component_key][self._key]
         except KeyError:
             return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the entity is available."""
-        device = self._entry_data.device_info
+        device = self._device_info
 
         if device.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
@@ -355,7 +372,7 @@ class EsphomelibEntity(Entity):
         return self._entry_data.available
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> Optional[str]:
         """Return a unique id identifying the entity."""
         if not self._static_info.unique_id:
             return None
@@ -367,6 +384,6 @@ class EsphomelibEntity(Entity):
         return self._static_info.name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Disable polling."""
         return False
