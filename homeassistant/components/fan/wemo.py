@@ -83,6 +83,12 @@ SET_HUMIDITY_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
+SERVICE_RESET_FILTER_LIFE = 'wemo_reset_filter_life'
+
+RESET_FILTER_LIFE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo humidifiers."""
@@ -111,21 +117,39 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def service_handle(service):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
-        if entity_ids:
-            humidifiers = [device for device in hass.data[DATA_KEY].values() if
-                           device.entity_id in entity_ids]
-        else:
-            humidifiers = hass.data[DATA_KEY].values()
+        if service.service == SERVICE_SET_HUMIDITY:
+            target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
-        for humidifier in humidifiers:
-            humidifier.set_humidity(target_humidity)
+            if entity_ids:
+                humidifiers = [device for device in
+                               hass.data[DATA_KEY].values() if
+                               device.entity_id in entity_ids]
+            else:
+                humidifiers = hass.data[DATA_KEY].values()
+
+            for humidifier in humidifiers:
+                humidifier.set_humidity(target_humidity)
+        elif service.service == SERVICE_RESET_FILTER_LIFE:
+            if entity_ids:
+                humidifiers = [device for device in
+                               hass.data[DATA_KEY].values() if
+                               device.entity_id in entity_ids]
+
+                for humidifier in humidifiers:
+                    humidifier.reset_filter_life()
+            else:
+                _LOGGER.error("Unable to reset WeMo Humidifier filter life %s",
+                              "- entity_ids is a required field.")
 
     # Register service(s)
     hass.services.register(
         DOMAIN, SERVICE_SET_HUMIDITY, service_handle,
         schema=SET_HUMIDITY_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESET_FILTER_LIFE, service_handle,
+        schema=RESET_FILTER_LIFE_SCHEMA)
 
 
 class WemoHumidifier(FanEntity):
@@ -134,6 +158,7 @@ class WemoHumidifier(FanEntity):
     def __init__(self, device):
         """Initialize the WeMo switch."""
         self.wemo = device
+
         self._state = None
         self._available = True
         self._update_lock = None
@@ -247,6 +272,7 @@ class WemoHumidifier(FanEntity):
         except asyncio.TimeoutError:
             _LOGGER.warning('Lost connection to %s', self.name)
             self._available = False
+            self.wemo.reconnect_with_device()
 
     async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
@@ -303,3 +329,7 @@ class WemoHumidifier(FanEntity):
             self.wemo.set_humidity(WEMO_HUMIDITY_60)
         elif humidity >= 100:
             self.wemo.set_humidity(WEMO_HUMIDITY_100)
+
+    def reset_filter_life(self: FanEntity) -> None:
+        """Reset the filter life to 100%."""
+        self.wemo.reset_filter_life()

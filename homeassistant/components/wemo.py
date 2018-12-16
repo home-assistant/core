@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.33']
+REQUIREMENTS = ['pywemo==0.4.32']
 
 DOMAIN = 'wemo'
 
@@ -96,6 +96,7 @@ def setup(hass, config):
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
+            _LOGGER.debug('Ignoring known device %s %s', service, discovery_info)
             return
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
