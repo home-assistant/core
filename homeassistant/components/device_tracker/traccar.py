@@ -89,7 +89,7 @@ class TraccarScanner:
             if device.get('category') is not None:
                 attr[ATTR_CATEGORY] = device.get('category')
             if device.get('speed') is not None:
-                attr[ATTR_SPEED] = device.get('speed')
+                attr[ATTR_SPEED] = device['speed']
             if device.get('battery') is not None:
                 attr[ATTR_BATTERY_LEVEL] = device.get('battery')
             if device.get('motion') is not None:
