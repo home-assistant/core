@@ -698,6 +698,7 @@ omit =
     homeassistant/components/sensor/bme680.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
+    homeassistant/components/sensor/brottsplatskartan.py
     homeassistant/components/sensor/buienradar.py
     homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/citybikes.py
