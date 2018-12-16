@@ -1,7 +1,6 @@
-# flake8: noqa pylint: skip-file
+# pylint: disable=W0621
 """Tests for the Daikin config flow."""
 import asyncio
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,8 +10,8 @@ from homeassistant.components.daikin.const import KEY_HOST, KEY_IP, KEY_MAC
 
 from tests.common import MockConfigEntry, MockDependency
 
-mac = 'AABBCCDDEEFF'
-host = '127.0.0.1'
+MAC = 'AABBCCDDEEFF'
+HOST = '127.0.0.1'
 
 
 def init_config_flow(hass):
@@ -38,19 +37,19 @@ async def test_user(hass, mock_daikin):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
-    result = await flow.async_step_user({KEY_HOST: host})
+    result = await flow.async_step_user({KEY_HOST: HOST})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == host
-    assert result['data'][KEY_HOST] == host
-    assert result['data'][KEY_MAC] == mac
+    assert result['title'] == HOST
+    assert result['data'][KEY_HOST] == HOST
+    assert result['data'][KEY_MAC] == MAC
 
 
 async def test_abort_if_already_setup(hass, mock_daikin):
     """Test we abort if Daikin is already setup."""
     flow = init_config_flow(hass)
-    MockConfigEntry(domain='daikin', data={KEY_MAC: mac}).add_to_hass(hass)
+    MockConfigEntry(domain='daikin', data={KEY_MAC: MAC}).add_to_hass(hass)
 
-    result = await flow.async_step_user({KEY_HOST: host})
+    result = await flow.async_step_user({KEY_HOST: HOST})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'already_configured'
 
@@ -63,22 +62,22 @@ async def test_import(hass, mock_daikin):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
-    result = await flow.async_step_import({KEY_HOST: host})
+    result = await flow.async_step_import({KEY_HOST: HOST})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == host
-    assert result['data'][KEY_HOST] == host
-    assert result['data'][KEY_MAC] == mac
+    assert result['title'] == HOST
+    assert result['data'][KEY_HOST] == HOST
+    assert result['data'][KEY_MAC] == MAC
 
 
 async def test_discovery(hass, mock_daikin):
     """Test discovery step."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_discovery({KEY_IP: host, KEY_MAC: mac})
+    result = await flow.async_step_discovery({KEY_IP: HOST, KEY_MAC: MAC})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == host
-    assert result['data'][KEY_HOST] == host
-    assert result['data'][KEY_MAC] == mac
+    assert result['title'] == HOST
+    assert result['data'][KEY_HOST] == HOST
+    assert result['data'][KEY_MAC] == MAC
 
 
 @pytest.mark.parametrize('s_effect,reason',
@@ -89,6 +88,6 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     flow = init_config_flow(hass)
     mock_daikin.Appliance.side_effect = s_effect
 
-    result = await flow.async_step_user({KEY_HOST: host})
+    result = await flow.async_step_user({KEY_HOST: HOST})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == reason
