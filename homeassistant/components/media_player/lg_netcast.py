@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.lg_netcast/
 """
 from datetime import timedelta
+from string import ascii_letters, digits
+from random import choice
 import logging
 
 from requests import RequestException
@@ -35,10 +37,13 @@ SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
                SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
+CONF_REFRESH_PREVIEW = 'refresh_preview'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_REFRESH_PREVIEW, default=False): cv.boolean,
 })
 
 
@@ -49,19 +54,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME)
+    refresh_preview = config.get(CONF_REFRESH_PREVIEW)
 
     client = LgNetCastClient(host, access_token)
 
-    add_entities([LgTVDevice(client, name)], True)
+    add_entities([LgTVDevice(client, name, refresh_preview)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):
     """Representation of a LG TV."""
 
-    def __init__(self, client, name):
+    def __init__(self, client, name, refresh_preview):
         """Initialize the LG TV device."""
         self._client = client
         self._name = name
+        self._refresh_preview = refresh_preview
         self._muted = False
         # Assume that the TV is in Play mode
         self._playing = True
@@ -170,7 +177,12 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return self._client.url + 'data?target=screen_image'
+        suffix = ''
+        if self._refresh_preview:
+            rand = ''.join([choice(ascii_letters + digits) for i in range(8)])
+            suffix = '&random={}'.format(rand)
+
+        return self._client.url + 'data?target=screen_image' + suffix
 
     def turn_off(self):
         """Turn off media player."""
