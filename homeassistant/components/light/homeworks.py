@@ -7,40 +7,22 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.components.homeworks import (
+    HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL,
+    CONF_DIMMERS, CONF_ADDR, CONF_RATE)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect)
-from homeassistant.components.homeworks import (
-    HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL)
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 
 DEPENDENCIES = ['homeworks']
 
 _LOGGER = logging.getLogger(__name__)
 
-FADE_RATE = 1.
-
-CONF_DIMMERS = 'dimmers'
-CONF_ADDR = 'addr'
-CONF_RATE = 'rate'
-
-CV_FADE_RATE = vol.All(vol.Coerce(float), vol.Range(min=0, max=20))
-
-DIMMER_SCHEMA = vol.Schema({
-    vol.Required(CONF_ADDR): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_RATE, default=FADE_RATE): CV_FADE_RATE,
-})
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DIMMERS): vol.All(cv.ensure_list, [DIMMER_SCHEMA])
-})
-
-
 def setup_platform(hass, config, add_entities, discover_info=None):
-    """Set up the Homeworks lights."""
+    """Set up Homeworks lights."""
     if discover_info is None:
         return
 
