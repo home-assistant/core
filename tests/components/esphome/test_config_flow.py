@@ -19,21 +19,9 @@ def aioesphomeapi_mock():
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_api_connection_error():
-    """Mock out the try login method."""
-    with patch('aioesphomeapi.APIConnectionError',
-               new_callable=lambda: OSError) as mock_error:
-        yield mock_error
-
-
-async def test_user_connection_works(hass):
-    """Test we can finish a config flow."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
-    assert result['type'] == 'form'
-
+@pytest.fixture
+def mock_client():
+    """Mock APIClient."""
     with patch('aioesphomeapi.APIClient') as mock_client:
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
@@ -44,15 +32,35 @@ async def test_user_connection_works(hass):
 
         mock_client.side_effect = mock_constructor
         mock_client.start.return_value = mock_coro()
-        mock_client.stop.return_value = mock_coro()
-        mock_client.device_info.return_value = mock_coro(
-            MockDeviceInfo(False, "test"))
         mock_client.connect.return_value = mock_coro()
+        mock_client.stop.return_value = mock_coro()
+        mock_client.login.return_value = mock_coro()
 
-        result = await flow.async_step_user(user_input={
-            'host': '127.0.0.1',
-            'port': 80,
-        })
+        yield mock_client
+
+
+@pytest.fixture(autouse=True)
+def mock_api_connection_error():
+    """Mock out the try login method."""
+    with patch('aioesphomeapi.APIConnectionError',
+               new_callable=lambda: OSError) as mock_error:
+        yield mock_error
+
+
+async def test_user_connection_works(hass, mock_client):
+    """Test we can finish a config flow."""
+    flow = config_flow.EsphomeFlowHandler()
+    flow.hass = hass
+    result = await flow.async_step_user(user_input=None)
+    assert result['type'] == 'form'
+
+    mock_client.device_info.return_value = mock_coro(
+        MockDeviceInfo(False, "test"))
+
+    result = await flow.async_step_user(user_input={
+        'host': '127.0.0.1',
+        'port': 80,
+    })
 
     assert result['type'] == 'create_entry'
     assert result['data'] == {
@@ -70,27 +78,19 @@ async def test_user_connection_works(hass):
     assert mock_client.password == ''
 
 
-async def test_user_connection_error(hass, mock_api_connection_error):
+async def test_user_connection_error(hass, mock_api_connection_error,
+                                     mock_client):
     """Test user step with connection error."""
     flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.APIClient') as mock_client:
-        def mock_constructor(loop, host, port, password):
-            """Fake the client constructor."""
-            return mock_client
+    mock_client.device_info.side_effect = mock_api_connection_error
 
-        mock_client.side_effect = mock_constructor
-        mock_client.start.return_value = mock_coro()
-        mock_client.stop.return_value = mock_coro()
-        mock_client.device_info.side_effect = mock_api_connection_error
-        mock_client.connect.return_value = mock_coro()
-
-        result = await flow.async_step_user(user_input={
-            'host': '127.0.0.1',
-            'port': 6053,
-        })
+    result = await flow.async_step_user(user_input={
+        'host': '127.0.0.1',
+        'port': 6053,
+    })
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
@@ -103,37 +103,26 @@ async def test_user_connection_error(hass, mock_api_connection_error):
     assert len(mock_client.stop.mock_calls) == 1
 
 
-async def test_user_with_password(hass):
+async def test_user_with_password(hass, mock_client):
     """Test user step with password."""
     flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.APIClient') as mock_client:
-        def mock_constructor(loop, host, port, password):
-            """Fake the client constructor."""
-            mock_client.password = password
-            return mock_client
+    mock_client.device_info.return_value = mock_coro(
+        MockDeviceInfo(True, "test"))
 
-        mock_client.side_effect = mock_constructor
-        mock_client.start.return_value = mock_coro()
-        mock_client.stop.return_value = mock_coro()
-        mock_client.device_info.return_value = mock_coro(
-            MockDeviceInfo(True, "test"))
-        mock_client.connect.return_value = mock_coro()
-        mock_client.login.return_value = mock_coro()
+    result = await flow.async_step_user(user_input={
+        'host': '127.0.0.1',
+        'port': 6053,
+    })
 
-        result = await flow.async_step_user(user_input={
-            'host': '127.0.0.1',
-            'port': 6053,
-        })
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'authenticate'
 
-        assert result['type'] == 'form'
-        assert result['step_id'] == 'authenticate'
-
-        result = await flow.async_step_authenticate(user_input={
-            'password': 'password1'
-        })
+    result = await flow.async_step_authenticate(user_input={
+        'password': 'password1'
+    })
 
     assert result['type'] == 'create_entry'
     assert result['data'] == {
@@ -144,36 +133,27 @@ async def test_user_with_password(hass):
     assert mock_client.password == 'password1'
 
 
-async def test_user_invalid_password(hass, mock_api_connection_error):
+async def test_user_invalid_password(hass, mock_api_connection_error,
+                                     mock_client):
     """Test user step with invalid password."""
     flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
-    with patch('aioesphomeapi.APIClient') as mock_client:
-        def mock_constructor(loop, host, port, password):
-            """Fake the client constructor."""
-            mock_client.password = password
-            return mock_client
+    mock_client.device_info.return_value = mock_coro(
+        MockDeviceInfo(True, "test"))
+    mock_client.login.side_effect = mock_api_connection_error
 
-        mock_client.side_effect = mock_constructor
-        mock_client.start.return_value = mock_coro()
-        mock_client.stop.return_value = mock_coro()
-        mock_client.device_info.return_value = mock_coro(
-            MockDeviceInfo(True, "test"))
-        mock_client.connect.return_value = mock_coro()
-        mock_client.login.side_effect = mock_api_connection_error
+    await flow.async_step_user(user_input={
+        'host': '127.0.0.1',
+        'port': 6053,
+    })
+    result = await flow.async_step_authenticate(user_input={
+        'password': 'invalid'
+    })
 
-        await flow.async_step_user(user_input={
-            'host': '127.0.0.1',
-            'port': 6053,
-        })
-        result = await flow.async_step_authenticate(user_input={
-            'password': 'invalid'
-        })
-
-        assert result['type'] == 'form'
-        assert result['step_id'] == 'authenticate'
-        assert result['errors'] == {
-            'base': 'invalid_password'
-        }
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'authenticate'
+    assert result['errors'] == {
+        'base': 'invalid_password'
+    }
