@@ -12,8 +12,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import (dispatcher_send,
-    async_dispatcher_connect)
+from homeassistant.helpers.dispatcher import (
+    dispatcher_send, async_dispatcher_connect)
 from homeassistant.util import slugify
 
 REQUIREMENTS = ['pyhomeworks==0.0.6']
@@ -51,8 +51,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Optional(CONF_DIMMERS): vol.All(cv.ensure_list, [DIMMER_SCHEMA]),
-        vol.Optional(CONF_KEYPADS): vol.All(cv.ensure_list, [KEYPAD_SCHEMA])
+        vol.Required(CONF_DIMMERS): vol.All(cv.ensure_list, [DIMMER_SCHEMA]),
+        vol.Optional(CONF_KEYPADS, default=[]): vol.All(cv.ensure_list,
+                                                        [KEYPAD_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,26 +62,17 @@ def setup(hass, base_config):
     """Start Homeworks controller."""
     from pyhomeworks.pyhomeworks import Homeworks
 
-    class HomeworksController(Homeworks):
-        """Interface between HASS and Homeworks controller."""
-
-        def __init__(self, host, port):
-            """Host and port of Lutron Homeworks controller."""
-            super().__init__(host, port, self.callback)
-
-        def callback(self, msg_type, values):
-            """Dispatch state changes."""
-            _LOGGER.debug('callback: %s, %s', msg_type, values)
-            addr = values[0]
-            signal = ENTITY_SIGNAL.format(addr)
-            dispatcher_send(hass, signal, msg_type, values)
-            _LOGGER.debug('callback returned')
+    def hw_callback(msg_type, values):
+        """Dispatch state changes."""
+        _LOGGER.debug('callback: %s, %s', msg_type, values)
+        addr = values[0]
+        signal = ENTITY_SIGNAL.format(addr)
+        dispatcher_send(hass, signal, msg_type, values)
 
     config = base_config.get(DOMAIN)
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-
-    controller = HomeworksController(host, port)
+    # host = config[CONF_HOST]
+    # port = config[CONF_PORT]
+    controller = Homeworks(config[CONF_HOST], config[CONF_PORT], hw_callback)
     hass.data[HOMEWORKS_CONTROLLER] = controller
 
     def cleanup(event):
@@ -88,14 +80,14 @@ def setup(hass, base_config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
-    dimmers = config.get(CONF_DIMMERS,[])
+    dimmers = config[CONF_DIMMERS]
     load_platform(hass, 'light', DOMAIN, {CONF_DIMMERS: dimmers}, base_config)
 
-    for key_config in config.get(CONF_KEYPADS,[]):
+    for key_config in config[CONF_KEYPADS]:
         addr = key_config[CONF_ADDR]
         name = key_config[CONF_NAME]
-        whatever = HomeworksKeypadEvent(hass, addr, name)
-        
+        HomeworksKeypadEvent(hass, addr, name)
+
     return True
 
 
@@ -107,6 +99,11 @@ class HomeworksDevice():
         self._addr = addr
         self._name = name
         self._controller = controller
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier."""
+        return 'homeworks.{}'.format(self._addr)
 
     @property
     def name(self):

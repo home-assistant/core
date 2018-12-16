@@ -920,9 +920,7 @@ pyhiveapi==0.2.14
 pyhomematic==0.1.51
 
 # homeassistant.components.homeworks
-# homeassistant.components.binary_sensor.homeworks
-# homeassistant.components.light.homeworks
-pyhomeworks==0.0.1
+pyhomeworks==0.0.6
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
