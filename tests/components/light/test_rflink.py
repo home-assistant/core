@@ -1,7 +1,7 @@
-"""Test for RFlink light components.
+"""Test for RFLink light components.
 
-Test setup of rflink lights component/platform. State tracking and
-control of Rflink switch devices.
+Test setup of RFLink lights component/platform. State tracking and
+control of RFLink switch devices.
 
 """
 
@@ -10,9 +10,10 @@ import asyncio
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from homeassistant.core import callback
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
+from homeassistant.core import callback, State, CoreState
 
+from tests.common import mock_restore_cache
 from ..test_rflink import mock_rflink
 
 DOMAIN = 'light'
@@ -44,7 +45,7 @@ CONFIG = {
 
 @asyncio.coroutine
 def test_default_setup(hass, monkeypatch):
-    """Test all basic functionality of the rflink switch component."""
+    """Test all basic functionality of the RFLink switch component."""
     # setup mocking rflink module
     event_callback, create, protocol, _ = yield from mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
@@ -119,7 +120,7 @@ def test_default_setup(hass, monkeypatch):
 
     assert hass.states.get(DOMAIN + '.protocol2_0_1').state == 'on'
 
-    # test changing state from HA propagates to Rflink
+    # test changing state from HA propagates to RFLink
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: DOMAIN + '.test'}))
@@ -175,7 +176,7 @@ def test_default_setup(hass, monkeypatch):
 
 @asyncio.coroutine
 def test_firing_bus_event(hass, monkeypatch):
-    """Incoming Rflink command events should be put on the HA event bus."""
+    """Incoming RFLink command events should be put on the HA event bus."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
@@ -560,3 +561,56 @@ def test_disable_automatic_add(hass, monkeypatch):
 
     # make sure new device is not added
     assert not hass.states.get(DOMAIN + '.protocol_0_0')
+
+
+@asyncio.coroutine
+def test_restore_state(hass, monkeypatch):
+    """Ensure states are restored on startup."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'NewKaku_12345678_0': {
+                    'name': 'l1',
+                    'type': 'hybrid',
+                },
+                'test_restore_2': {
+                    'name': 'l2',
+                },
+                'test_restore_3': {
+                    'name': 'l3',
+                },
+            },
+        },
+    }
+
+    mock_restore_cache(hass, (
+        State(DOMAIN + '.l1', STATE_ON, {ATTR_BRIGHTNESS: "123", }),
+        State(DOMAIN + '.l2', STATE_ON, {ATTR_BRIGHTNESS: "321", }),
+        State(DOMAIN + '.l3', STATE_OFF, ),
+    ))
+
+    hass.state = CoreState.starting
+
+    # setup mocking rflink module
+    _, _, _, _ = yield from mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    # dimmable light must restore brightness
+    state = hass.states.get(DOMAIN + '.l1')
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 123
+
+    # normal light do NOT must restore brightness
+    state = hass.states.get(DOMAIN + '.l2')
+    assert state
+    assert state.state == STATE_ON
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
+
+    # OFF state also restores (or not)
+    state = hass.states.get(DOMAIN + '.l3')
+    assert state
+    assert state.state == STATE_OFF

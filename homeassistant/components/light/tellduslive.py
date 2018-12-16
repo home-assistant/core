@@ -8,32 +8,50 @@ https://home-assistant.io/components/light.tellduslive/
 """
 import logging
 
+from homeassistant.components import light, tellduslive
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tellstick Net lights."""
-    if discovery_info is None:
-        return
-    add_entities(TelldusLiveLight(hass, light) for light in discovery_info)
+    """Old way of setting up TelldusLive.
+
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up tellduslive sensors dynamically."""
+    async def async_discover_light(device_id):
+        """Discover and add a discovered sensor."""
+        client = hass.data[tellduslive.DOMAIN]
+        async_add_entities([TelldusLiveLight(client, device_id)])
+
+    async_dispatcher_connect(
+        hass,
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN,
+                                                 tellduslive.DOMAIN),
+        async_discover_light,
+    )
 
 
 class TelldusLiveLight(TelldusLiveEntity, Light):
     """Representation of a Tellstick Net light."""
 
-    def __init__(self, hass, device_id):
+    def __init__(self, client, device_id):
         """Initialize the  Tellstick Net light."""
-        super().__init__(hass, device_id)
+        super().__init__(client, device_id)
         self._last_brightness = self.brightness
 
     def changed(self):
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
-        super().changed()
 
     @property
     def brightness(self):

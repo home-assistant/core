@@ -4,13 +4,12 @@ Entity for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-from homeassistant.helpers import entity
-from homeassistant.util import slugify
-from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.components.zha.const import (
-    DOMAIN, DATA_ZHA, DATA_ZHA_BRIDGE_ID
-)
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
+from homeassistant.core import callback
+from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.util import slugify
 
 
 class ZhaEntity(entity.Entity):
@@ -101,6 +100,11 @@ class ZhaEntity(entity.Entity):
             'identifiers': {(DOMAIN, ieee)},
             'manufacturer': self._endpoint.manufacturer,
             'model': self._endpoint.model,
-            'name': self._device_state_attributes['friendly_name'],
+            'name': self._device_state_attributes.get('friendly_name', ieee),
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
+
+    @callback
+    def zha_send_event(self, cluster, command, args):
+        """Relay entity events to hass."""
+        pass  # don't relay events from entities

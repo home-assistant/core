@@ -155,6 +155,7 @@ FLOWS = [
     'simplisafe',
     'smhi',
     'sonos',
+    'tellduslive',
     'tradfri',
     'twilio',
     'unifi',
