@@ -38,7 +38,7 @@ class EsphomelibSensor(EsphomelibEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> 'Optional[SensorState]':
+    def _state(self) -> Optional['SensorState']:
         return super()._state
 
     @property
