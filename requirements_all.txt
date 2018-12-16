@@ -427,7 +427,7 @@ geizhals==0.0.9
 geojson_client==0.3
 
 # homeassistant.components.sensor.geo_rss_events
-georss_client==0.4
+georss_client==0.5
 
 # homeassistant.components.device_tracker.googlehome
 ghlocalapi==0.3.5
