@@ -250,10 +250,10 @@ class Plant(Entity):
         async_track_state_change(self.hass, list(self._sensormap),
                                  self.state_changed)
 
-        for entity in self._sensormap:
-            state = self.hass.states.get(entity)
+        for entity_id in self._sensormap:
+            state = self.hass.states.get(entity_id)
             if state is not None:
-                self.state_changed(entity, None, state)
+                self.state_changed(entity_id, None, state)
 
     async def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
