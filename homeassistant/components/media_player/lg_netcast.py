@@ -179,7 +179,7 @@ class LgTVDevice(MediaPlayerDevice):
         """URL for obtaining a screen capture."""
         suffix = ''
         if self._refresh_preview:
-            rand = ''.join([choice(ascii_letters + digits) for _ in range(8)])
+            rand = ''.join(choice(ascii_letters + digits) for _ in range(8))
             suffix = '&random={}'.format(rand)
 
         return self._client.url + 'data?target=screen_image' + suffix
