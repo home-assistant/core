@@ -91,7 +91,7 @@ class TraccarScanner:
             if device.get('speed') is not None:
                 attr[ATTR_SPEED] = device['speed']
             if device.get('battery') is not None:
-                attr[ATTR_BATTERY_LEVEL] = device.get('battery')
+                attr[ATTR_BATTERY_LEVEL] = device['battery']
             if device.get('motion') is not None:
                 attr[ATTR_MOTION] = device['motion']
             await self._async_see(
