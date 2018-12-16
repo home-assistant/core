@@ -1,5 +1,4 @@
 """Config flow to configure esphomelib component."""
-import asyncio
 from collections import OrderedDict
 from typing import Optional
 
@@ -29,8 +28,7 @@ class EsphomelibFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             self._host = user_input['host']
             self._port = user_input['port']
-            error, device_info = await fetch_device_info(self._host,
-                                                         self._port)
+            error, device_info = await self.fetch_device_info()
             if error is not None:
                 return await self.async_step_user(error=error)
             self._name = device_info.name
@@ -70,7 +68,7 @@ class EsphomelibFlowHandler(config_entries.ConfigFlow):
         """Handle getting password for authentication."""
         if user_input is not None:
             self._password = user_input['password']
-            error = await try_login(self._host, self._port, self._password)
+            error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
             return self._async_get_entry()
@@ -87,43 +85,41 @@ class EsphomelibFlowHandler(config_entries.ConfigFlow):
             errors=errors
         )
 
+    async def fetch_device_info(self):
+        """Fetch device info from API and return any errors."""
+        from aioesphomeapi.client import APIClient, APIConnectionError
 
-async def fetch_device_info(host, port):
-    """Fetch device info from API and return any errors."""
-    from aioesphomeapi.client import APIClient, APIConnectionError
+        cli = APIClient(self.hass.loop, self._host, self._port, '')
 
-    cli = APIClient(asyncio.get_event_loop(), host, port, '')
+        try:
+            await cli.start()
+            await cli.connect()
+            device_info = await cli.device_info()
+        except APIConnectionError:
+            return 'connection_error', None
+        finally:
+            await cli.stop(force=True)
 
-    try:
-        await cli.start()
-        await cli.connect()
-        device_info = await cli.device_info()
-    except APIConnectionError:
-        return 'connection_error', None
-    finally:
-        await cli.stop(force=True)
+        return None, device_info
 
-    return None, device_info
+    async def try_login(self):
+        """Try logging in to device and return any errors."""
+        from aioesphomeapi.client import APIClient, APIConnectionError
 
+        cli = APIClient(self.hass.loop, self._host, self._port, self._password)
 
-async def try_login(host, port, password):
-    """Try logging in to device and return any errors."""
-    from aioesphomeapi.client import APIClient, APIConnectionError
+        try:
+            await cli.start()
+            await cli.connect()
+        except APIConnectionError:
+            await cli.stop(force=True)
+            return 'connection_error'
 
-    cli = APIClient(asyncio.get_event_loop(), host, port, password)
+        try:
+            await cli.login()
+        except APIConnectionError:
+            return 'invalid_password'
+        finally:
+            await cli.stop(force=True)
 
-    try:
-        await cli.start()
-        await cli.connect()
-    except APIConnectionError:
-        await cli.stop(force=True)
-        return 'connection_error'
-
-    try:
-        await cli.login()
-    except APIConnectionError:
-        return 'invalid_password'
-    finally:
-        await cli.stop(force=True)
-
-    return None
+        return None
