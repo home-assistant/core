@@ -5,8 +5,6 @@ https://home-assistant.io/components/light.homeworks/
 """
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.homeworks import (
     HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL,
     CONF_DIMMERS, CONF_ADDR, CONF_RATE)
@@ -20,6 +18,7 @@ from homeassistant.helpers.dispatcher import (
 DEPENDENCIES = ['homeworks']
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up Homeworks lights."""
