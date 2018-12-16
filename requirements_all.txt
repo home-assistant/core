@@ -132,6 +132,9 @@ alarmdecoder==1.13.2
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==2.1.0
 
+# homeassistant.components.sensor.ambient_station
+ambient_api==1.5.2
+
 # homeassistant.components.amcrest
 amcrest==1.2.3
 
@@ -331,7 +334,7 @@ edp_redy==0.0.3
 einder==0.3.1
 
 # homeassistant.components.sensor.eliqonline
-eliqonline==1.0.14
+eliqonline==1.2.2
 
 # homeassistant.components.elkm1
 elkm1-lib==0.7.13
@@ -340,7 +343,7 @@ elkm1-lib==0.7.13
 enocean==0.40
 
 # homeassistant.components.sensor.entur_public_transport
-enturclient==0.1.0
+enturclient==0.1.2
 
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
@@ -767,6 +770,9 @@ pizzapi==0.0.3
 # homeassistant.components.sensor.plex
 plexapi==3.0.6
 
+# homeassistant.components.plum_lightpad
+plumlightpad==0.0.11
+
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.4
@@ -926,7 +932,7 @@ pyeconet==0.0.6
 pyedimax==0.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.9
+pyeight==0.1.0
 
 # homeassistant.components.media_player.emby
 pyemby==1.5
@@ -1119,6 +1125,9 @@ pypollencom==2.2.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
+
+# homeassistant.components.sensor.nmbs
+pyrail==0.0.3
 
 # homeassistant.components.rainbird
 pyrainbird==0.1.6
@@ -1624,7 +1633,7 @@ watchdog==0.8.3
 waterfurnace==1.0.0
 
 # homeassistant.components.media_player.gpmdp
-websocket-client==0.37.0
+websocket-client==0.54.0
 
 # homeassistant.components.media_player.webostv
 websockets==6.0
