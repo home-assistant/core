@@ -1,7 +1,7 @@
 """Support for esphomelib devices."""
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
 
 import attr
 import voluptuous as vol
@@ -48,6 +48,7 @@ class RuntimeEntryData:
     info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     available = attr.ib(type=bool, default=False)
     device_info = attr.ib(type='DeviceInfo', default=None)
+    cleanup_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
 
     def async_update_entity(self, hass: HomeAssistantType, component_key: str,
                             key: int) -> None:
@@ -229,6 +230,8 @@ async def _cleanup_instance(hass: HomeAssistantType,
     data = hass.data[DOMAIN].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
+    for cleanup_callback in data.cleanup_callbacks:
+        cleanup_callback()
     await data.client.stop()
 
 
@@ -291,7 +294,9 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
         async_add_entities(add_entities)
 
     signal = DISPATCHER_ON_LIST.format(entry_id=entry.entry_id)
-    async_dispatcher_connect(hass, signal, async_list_entities)
+    entry_data.cleanup_callbacks.append(
+        async_dispatcher_connect(hass, signal, async_list_entities)
+    )
 
     @callback
     def async_entity_state(state):
@@ -305,7 +310,9 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
                                                   key=state.key))
 
     signal = DISPATCHER_ON_STATE.format(entry_id=entry.entry_id)
-    async_dispatcher_connect(hass, signal, async_entity_state)
+    entry_data.cleanup_callbacks.append(
+        async_dispatcher_connect(hass, signal, async_entity_state)
+    )
 
 
 class EsphomelibEntity(Entity):
@@ -316,6 +323,7 @@ class EsphomelibEntity(Entity):
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
+        self._remove_callbacks = []  # type: List[Callable[[], None]]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -324,17 +332,28 @@ class EsphomelibEntity(Entity):
             'component_key': self._component_key,
             'key': self._key,
         }
-        async_dispatcher_connect(self.hass,
-                                 DISPATCHER_UPDATE_ENTITY.format(**kwargs),
-                                 self.async_schedule_update_ha_state)
+        self._remove_callbacks.append(
+            async_dispatcher_connect(self.hass,
+                                     DISPATCHER_UPDATE_ENTITY.format(**kwargs),
+                                     self.async_schedule_update_ha_state)
+        )
 
-        async_dispatcher_connect(self.hass,
-                                 DISPATCHER_REMOVE_ENTITY.format(**kwargs),
-                                 self.async_remove)
+        self._remove_callbacks.append(
+            async_dispatcher_connect(self.hass,
+                                     DISPATCHER_REMOVE_ENTITY.format(**kwargs),
+                                     self.async_schedule_update_ha_state)
+        )
 
-        async_dispatcher_connect(self.hass,
-                                 DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
-                                 self.async_schedule_update_ha_state)
+        self._remove_callbacks.append(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
+                self.async_schedule_update_ha_state)
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Unregister callbacks."""
+        for remove_callback in self._remove_callbacks:
+            remove_callback()
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
