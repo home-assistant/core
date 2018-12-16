@@ -100,7 +100,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
-        if CONF_JSON_ATTRS in config:
+        if config.get(CONF_JSON_ATTRS):
             _LOGGER.warning('configuration variable "json_attributes" is '
                             'deprecated, replace with "json_attributes_topic"')
 
