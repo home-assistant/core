@@ -268,7 +268,7 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     entry_data.state[component_key] = {}
 
     @callback
-    def async_list_entities(infos: List[Any]):
+    def async_list_entities(infos: List['EntityInfo']):
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos = {}
@@ -299,15 +299,12 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     )
 
     @callback
-    def async_entity_state(state):
+    def async_entity_state(state: 'EntityState'):
         """Notify the appropriate entity of an updated state."""
         if not isinstance(state, state_type):
             return
         entry_data.state[component_key][state.key] = state
-        async_dispatcher_send(
-            hass, DISPATCHER_UPDATE_ENTITY.format(entry_id=entry.entry_id,
-                                                  component_key=component_key,
-                                                  key=state.key))
+        entry_data.async_update_entity(hass, component_key, state.key)
 
     signal = DISPATCHER_ON_STATE.format(entry_id=entry.entry_id)
     entry_data.cleanup_callbacks.append(
