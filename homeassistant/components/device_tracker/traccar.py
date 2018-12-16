@@ -85,7 +85,7 @@ class TraccarScanner:
             if device.get('address') is not None:
                 attr[ATTR_ADDRESS] = device['address']
             if device.get('geofence') is not None:
-                attr[ATTR_GEOFENCE] = device.get('geofence')
+                attr[ATTR_GEOFENCE] = device['geofence']
             if device.get('category') is not None:
                 attr[ATTR_CATEGORY] = device.get('category')
             if device.get('speed') is not None:
