@@ -70,8 +70,6 @@ def setup(hass, base_config):
         dispatcher_send(hass, signal, msg_type, values)
 
     config = base_config.get(DOMAIN)
-    # host = config[CONF_HOST]
-    # port = config[CONF_PORT]
     controller = Homeworks(config[CONF_HOST], config[CONF_PORT], hw_callback)
     hass.data[HOMEWORKS_CONTROLLER] = controller
 
