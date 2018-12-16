@@ -95,7 +95,9 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             await cli.start()
             await cli.connect()
             device_info = await cli.device_info()
-        except APIConnectionError:
+        except APIConnectionError as err:
+            if 'resolving' in str(err):
+                return 'resolve_error', None
             return 'connection_error', None
         finally:
             await cli.stop(force=True)
