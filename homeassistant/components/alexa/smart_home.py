@@ -77,7 +77,7 @@ HANDLERS = Registry()
 ENTITY_ADAPTERS = Registry()
 EVENT_ALEXA_SMART_HOME = 'alexa_smart_home'
 
-AUTH = None
+AUTH_KEY = "alexa.smart_home.auth"
 
 
 class _DisplayCategory:
@@ -1004,10 +1004,12 @@ def async_setup(hass, config):
     by the cloud component which will call async_handle_message directly.
     """
     if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
-        global AUTH
-        AUTH = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
+        hass.data[AUTH_KEY] = Auth(hass, config[CONF_CLIENT_ID],
+                                   config[CONF_CLIENT_SECRET])
 
-    async_get_access_token = AUTH.async_get_access_token if AUTH else None
+    async_get_access_token = \
+        hass.data[AUTH_KEY].async_get_access_token if AUTH_KEY in hass.data \
+        else None
 
     smart_home_config = Config(
         endpoint=config.get(CONF_ENDPOINT),
@@ -1017,7 +1019,7 @@ def async_setup(hass, config):
     )
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    if AUTH:
+    if AUTH_KEY in hass.data:
         hass.loop.create_task(
             async_enable_proactive_mode(hass, smart_home_config))
 
@@ -1441,8 +1443,8 @@ async def async_api_accept_grant(hass, config, directive, context):
     auth_code = directive.payload['grant']['code']
     _LOGGER.debug("AcceptGrant code: %s", auth_code)
 
-    if AUTH:
-        await AUTH.async_do_auth(auth_code)
+    if AUTH_KEY in hass.data:
+        await hass.data[AUTH_KEY].async_do_auth(auth_code)
         await async_enable_proactive_mode(hass, config)
 
     return directive.response(
