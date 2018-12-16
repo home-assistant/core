@@ -15,7 +15,7 @@ from homeassistant.components.fritzbox import (
     ATTR_STATE_WINDOW_OPEN)
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_COOL, STATE_HEAT,
-    STATE_MANUAL, STATE_OFF, STATE_ON, SUPPORT_OPERATION_MODE,
+    STATE_MANUAL, STATE_OFF, STATE_ON, STATE_AUTO, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
@@ -130,7 +130,7 @@ class FritzboxThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        if operation_mode == STATE_HEAT:
+        if operation_mode in (STATE_HEAT, STATE_AUTO):
             self.set_temperature(temperature=self._comfort_temperature)
         elif operation_mode in (STATE_ECO, STATE_COOL):
             self.set_temperature(temperature=self._eco_temperature)
