@@ -2,7 +2,7 @@
 Support for openSenseMap Air Pollutants data.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_pollutants_opensnesemap/
+https://home-assistant.io/components/air_pollutants_opensensemap/
 """
 from datetime import timedelta
 import logging
@@ -45,12 +45,11 @@ async def async_setup_platform(
 
     await osm_api.async_update()
 
-    try:
-        if name is None:
-            name = osm_api.api.data['name']
-    except KeyError:
-        _LOGGER.error("Station is not available")
-        return
+    if name is None:
+        if 'name' not in osm_api.api.data:
+            _LOGGER.error("Station %s is not available", station_id)
+            return
+        name = osm_api.api.data['name']
 
     async_add_entities([OpenSenseMapPollutants(name, osm_api)], True)
 
@@ -62,7 +61,6 @@ class OpenSenseMapPollutants(AirPollutantsEntity):
         """Initialize the air pollutants entity."""
         self._name = name
         self._osm = osm
-        self.data = None
 
     @property
     def name(self):
@@ -85,7 +83,7 @@ class OpenSenseMapPollutants(AirPollutantsEntity):
         return ATTRIBUTION
 
     async def async_update(self):
-        """Get the latest data from the Pi-hole API."""
+        """Get the latest data from the openSenseMap API."""
         await self._osm.async_update()
 
 
@@ -103,5 +101,5 @@ class OpenSenseMapData:
 
         try:
             await self.api.get_data()
-        except OpenSenseMapError:
-            _LOGGER.error("Unable to fetch data")
+        except OpenSenseMapError as err:
+            _LOGGER.error("Unable to fetch data: %s", err)
