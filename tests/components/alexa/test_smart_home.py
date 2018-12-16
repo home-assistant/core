@@ -1691,7 +1691,7 @@ async def test_report_state(hass, aioclient_mock):
 async def run_auth_get_access_token(hass, aioclient_mock, expires_in,
                                     client_id, client_secret,
                                     accept_grant_code, refresh_token):
-    """Helper to do auth and request a new token tests."""
+    """Do auth and request a new token for tests."""
     aioclient_mock.post(TEST_TOKEN_URL,
                         json={'access_token': 'the_access_token',
                               'refresh_token': refresh_token,
