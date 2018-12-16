@@ -261,7 +261,7 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
                                      component_key: str,
                                      info_type,
                                      entity_type,
-                                     state_type,
+                                     state_type
                                      ) -> None:
     """Set up an esphomelib platform.
 
