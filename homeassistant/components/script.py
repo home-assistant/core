@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS,
     EVENT_SCRIPT_STARTED, ATTR_NAME)
 from homeassistant.loader import bind_hass
+from homeassistant.helpers import extract_domain_configs
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
@@ -124,12 +125,15 @@ async def _async_process_config(hass, config, component):
 
     scripts = []
 
-    for object_id, cfg in config[DOMAIN].items():
-        alias = cfg.get(CONF_ALIAS, object_id)
-        script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
-        scripts.append(script)
-        hass.services.async_register(
-            DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA)
+    for config_key in extract_domain_configs(config, DOMAIN):
+
+        for object_id, cfg in config[config_key].items():
+            alias = cfg.get(CONF_ALIAS, object_id)
+            script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
+            scripts.append(script)
+            hass.services.async_register(
+                DOMAIN, object_id, service_handler,
+                schema=SCRIPT_SERVICE_SCHEMA)
 
     await component.async_add_entities(scripts)
 
