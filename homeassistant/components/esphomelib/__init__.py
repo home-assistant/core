@@ -105,16 +105,18 @@ async def async_setup_entry(hass: HomeAssistantType,
     cli = APIClient(hass.loop, host, port, password)
     await cli.start()
 
-    async def on_stop(event: Event) -> None:
-        """Cleanup the socket client on HA stop."""
-        await _cleanup_instance(hass, entry)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
-
     # Store client in per-config-entry hass.data
     entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id
+    )
+
+    async def on_stop(event: Event) -> None:
+        """Cleanup the socket client on HA stop."""
+        await _cleanup_instance(hass, entry)
+
+    entry_data.cleanup_callbacks.append(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
 
     try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host)
