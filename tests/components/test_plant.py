@@ -86,6 +86,20 @@ class TestPlant(unittest.TestCase):
         assert sensor.state == 'problem'
         assert sensor.state_attributes['problem'] == 'battery low'
 
+    def test_initial_states(self):
+        """Test plant initialises attributes if sensor already exists."""
+        self.hass.states.set(MOISTURE_ENTITY, 5,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        assert 5 == state.attributes[plant.READING_MOISTURE]
+
     def test_update_states(self):
         """Test updating the state of a sensor.
 
