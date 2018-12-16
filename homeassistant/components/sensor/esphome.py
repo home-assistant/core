@@ -1,9 +1,9 @@
-"""Support for esphomelib sensors."""
+"""Support for esphome sensors."""
 import logging
 import math
 from typing import Optional, TYPE_CHECKING
 
-from homeassistant.components.esphomelib import EsphomelibEntity, \
+from homeassistant.components.esphome import EsphomeEntity, \
     platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -12,26 +12,26 @@ if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi.client import SensorInfo, SensorState  # noqa
 
-DEPENDENCIES = ['esphomelib']
+DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
-    """Set up esphomelib sensors based on a config entry."""
+    """Set up esphome sensors based on a config entry."""
     # pylint: disable=redefined-outer-name
     from aioesphomeapi.client import SensorInfo, SensorState  # noqa
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='sensor',
-        info_type=SensorInfo, entity_type=EsphomelibSensor,
+        info_type=SensorInfo, entity_type=EsphomeSensor,
         state_type=SensorState
     )
 
 
-class EsphomelibSensor(EsphomelibEntity):
-    """A sensor implementation for esphomelib."""
+class EsphomeSensor(EsphomeEntity):
+    """A sensor implementation for esphome."""
 
     @property
     def _static_info(self) -> 'SensorInfo':

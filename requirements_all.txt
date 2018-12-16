@@ -95,7 +95,7 @@ aioautomatic==0.6.5
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
 
-# homeassistant.components.esphomelib
+# homeassistant.components.esphome
 aioesphomeapi==1.0.0
 
 # homeassistant.components.device_tracker.freebox

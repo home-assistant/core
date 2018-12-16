@@ -13,8 +13,8 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Please enter connection settings of your [esphomelib](https://esphomelib.com/) node.",
-                "title": "esphomelib"
+                "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node.",
+                "title": "ESPHome"
             },
             "authenticate": {
                 "data": {
@@ -24,6 +24,6 @@
                 "title": "Enter Password"
             }
         },
-        "title": "esphomelib"
+        "title": "ESPHome"
     }
 }

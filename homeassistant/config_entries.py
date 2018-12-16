@@ -138,7 +138,7 @@ FLOWS = [
     'cast',
     'deconz',
     'dialogflow',
-    'esphomelib',
+    'esphome',
     'hangouts',
     'homematicip_cloud',
     'hue',

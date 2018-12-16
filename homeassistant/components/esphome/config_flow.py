@@ -1,4 +1,4 @@
-"""Config flow to configure esphomelib component."""
+"""Config flow to configure esphome component."""
 from collections import OrderedDict
 from typing import Optional
 
@@ -8,9 +8,9 @@ from homeassistant import config_entries
 from homeassistant.helpers import ConfigType
 
 
-@config_entries.HANDLERS.register('esphomelib')
-class EsphomelibFlowHandler(config_entries.ConfigFlow):
-    """Handle a esphomelib config flow."""
+@config_entries.HANDLERS.register('esphome')
+class EsphomeFlowHandler(config_entries.ConfigFlow):
+    """Handle a esphome config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH

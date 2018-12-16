@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.esphomelib import config_flow
+from homeassistant.components.esphome import config_flow
 from tests.common import mock_coro
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -20,7 +20,7 @@ def mock_api_connection_error():
 
 async def test_user_connection_works(hass):
     """Test we can finish a config flow."""
-    flow = config_flow.EsphomelibFlowHandler()
+    flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
     assert result['type'] == 'form'
@@ -63,7 +63,7 @@ async def test_user_connection_works(hass):
 
 async def test_user_connection_error(hass, mock_api_connection_error):
     """Test user step with connection error."""
-    flow = config_flow.EsphomelibFlowHandler()
+    flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
@@ -96,7 +96,7 @@ async def test_user_connection_error(hass, mock_api_connection_error):
 
 async def test_user_with_password(hass):
     """Test user step with password."""
-    flow = config_flow.EsphomelibFlowHandler()
+    flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 
@@ -137,7 +137,7 @@ async def test_user_with_password(hass):
 
 async def test_user_invalid_password(hass, mock_api_connection_error):
     """Test user step with invalid password."""
-    flow = config_flow.EsphomelibFlowHandler()
+    flow = config_flow.EsphomeFlowHandler()
     flow.hass = hass
     await flow.async_step_user(user_input=None)
 

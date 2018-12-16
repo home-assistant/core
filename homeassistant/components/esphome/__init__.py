@@ -1,4 +1,4 @@
-"""Support for esphomelib devices."""
+"""Support for esphome devices."""
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
@@ -16,21 +16,21 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 # Import config flow so that it's added to the registry
-from .config_flow import EsphomelibFlowHandler  # noqa
+from .config_flow import EsphomeFlowHandler  # noqa
 
 if TYPE_CHECKING:
     from aioesphomeapi.client import APIClient, EntityInfo, \
         EntityState, DeviceInfo
 
-DOMAIN = 'esphomelib'
+DOMAIN = 'esphome'
 REQUIREMENTS = ['aioesphomeapi==1.0.0']
 
 
-DISPATCHER_UPDATE_ENTITY = 'esphomelib_{entry_id}_update_{component_key}_{key}'
-DISPATCHER_REMOVE_ENTITY = 'esphomelib_{entry_id}_remove_{component_key}_{key}'
-DISPATCHER_ON_LIST = 'esphomelib_{entry_id}_on_list'
-DISPATCHER_ON_DEVICE_UPDATE = 'esphomelib_{entry_id}_on_device_update'
-DISPATCHER_ON_STATE = 'esphomelib_{entry_id}_on_state'
+DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
+DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
+DISPATCHER_ON_LIST = 'esphome_{entry_id}_on_list'
+DISPATCHER_ON_DEVICE_UPDATE = 'esphome_{entry_id}_on_device_update'
+DISPATCHER_ON_STATE = 'esphome_{entry_id}_on_state'
 # The HA component types this integration supports
 HA_COMPONENTS = ['sensor']
 
@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 @attr.s
 class RuntimeEntryData:
-    """Store runtime data for esphomelib config entries."""
+    """Store runtime data for esphome config entries."""
 
     entry_id = attr.ib(type=str)
     client = attr.ib(type='APIClient')
@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry) -> bool:
-    """Set up the esphomelib component."""
+    """Set up the esphome component."""
     # pylint: disable=redefined-outer-name
     from aioesphomeapi.client import APIClient, APIConnectionError
 
@@ -216,7 +216,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
             await cli.connect()
             await cli.login()
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to esphomelib API for '%s' (%s)",
+            _LOGGER.info("Can't connect to esphome API for '%s' (%s)",
                          host, error)
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
@@ -231,7 +231,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
 
 async def _cleanup_instance(hass: HomeAssistantType,
                             entry: ConfigEntry) -> None:
-    """Cleanup the esphomelib client if it exists."""
+    """Cleanup the esphome client if it exists."""
     data = hass.data[DOMAIN].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
@@ -242,7 +242,7 @@ async def _cleanup_instance(hass: HomeAssistantType,
 
 async def async_unload_entry(hass: HomeAssistantType,
                              entry: ConfigEntry) -> bool:
-    """Unload an esphomelib config entry."""
+    """Unload an esphome config entry."""
     await _cleanup_instance(hass, entry)
 
     tasks = []
@@ -263,7 +263,7 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
                                      entity_type,
                                      state_type
                                      ) -> None:
-    """Set up an esphomelib platform.
+    """Set up an esphome platform.
 
     This method is in charge of receiving, distributing and storing
     info and state updates.
@@ -317,8 +317,8 @@ async def platform_async_setup_entry(hass: HomeAssistantType,
     )
 
 
-class EsphomelibEntity(Entity):
-    """Define a generic esphomelib entity."""
+class EsphomeEntity(Entity):
+    """Define a generic esphome entity."""
 
     def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
