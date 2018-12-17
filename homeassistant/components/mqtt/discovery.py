@@ -25,7 +25,7 @@ TOPIC_MATCHER = re.compile(
 SUPPORTED_COMPONENTS = [
     'binary_sensor', 'camera', 'cover', 'fan',
     'light', 'sensor', 'switch', 'lock', 'climate',
-    'alarm_control_panel']
+    'alarm_control_panel', 'vacuum']
 
 CONFIG_ENTRY_COMPONENTS = [
     'binary_sensor',
@@ -38,6 +38,7 @@ CONFIG_ENTRY_COMPONENTS = [
     'climate',
     'alarm_control_panel',
     'fan',
+    'vacuum'
 ]
 
 DEPRECATED_PLATFORM_TO_SCHEMA = {
@@ -67,12 +68,25 @@ ABBREVIATIONS = {
     'bri_scl': 'brightness_scale',
     'bri_stat_t': 'brightness_state_topic',
     'bri_val_tpl': 'brightness_value_template',
+    'bat_lev_t': 'battery_level_topic',
+    'bat_lev_tpl': 'battery_level_template',
+    'chrg_t': 'charging_topic',
+    'chrg_tpl': 'chargin_template',
     'clr_temp_cmd_t': 'color_temp_command_topic',
     'clr_temp_stat_t': 'color_temp_state_topic',
     'clr_temp_val_tpl': 'color_temp_value_template',
+    'cln_t': 'cleaning_topic',
+    'cln_tpl': 'cleaning_template',
     'cmd_t': 'command_topic',
     'curr_temp_t': 'current_temperature_topic',
     'dev_cla': 'device_class',
+    'dock_t': 'docked_topic',
+    'dock_tpl': 'docked_template',
+    'err_t': 'error_topic',
+    'err_tpl': 'error_template',
+    'fanspd_t': 'fan_speed_topic',
+    'fanspd_tpl': 'fan_speed_template',
+    'fanspd_lst': 'fan_speed_list',
     'fx_cmd_t': 'effect_command_topic',
     'fx_list': 'effect_list',
     'fx_stat_t': 'effect_state_topic',
@@ -122,6 +136,7 @@ ABBREVIATIONS = {
     'rgb_cmd_t': 'rgb_command_topic',
     'rgb_stat_t': 'rgb_state_topic',
     'rgb_val_tpl': 'rgb_value_template',
+    'send_cmd_t': 'send_command_topic',
     'send_if_off': 'send_if_off',
     'set_pos_tpl': 'set_position_template',
     'set_pos_t': 'set_position_topic',
@@ -135,6 +150,7 @@ ABBREVIATIONS = {
     'stat_open': 'state_open',
     'stat_t': 'state_topic',
     'stat_val_tpl': 'state_value_template',
+    'sup_feat': 'supported_features',
     'swing_mode_cmd_t': 'swing_mode_command_topic',
     'swing_mode_stat_tpl': 'swing_mode_state_template',
     'swing_mode_stat_t': 'swing_mode_state_topic',
