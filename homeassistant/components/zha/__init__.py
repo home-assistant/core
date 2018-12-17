@@ -152,11 +152,12 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
+    await radio.connect(usb_path, baudrate)
+    hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
+    APPLICATION_CONTROLLER = ControllerApplication(radio, database)
+    listener = ApplicationListener(hass, config)
+
     async def async_start_zha(_service_or_event):
-        await radio.connect(usb_path, baudrate)
-        hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
-        APPLICATION_CONTROLLER = ControllerApplication(radio, database)
-        listener = ApplicationListener(hass, config)
         APPLICATION_CONTROLLER.add_listener(listener)
         await APPLICATION_CONTROLLER.startup(auto_form=True)
 
