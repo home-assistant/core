@@ -1,9 +1,9 @@
-"""Support for esphomelib switches."""
+"""Support for ESPHome switches."""
 import logging
 
 from typing import TYPE_CHECKING, Optional
 
-from homeassistant.components.esphomelib import EsphomelibEntity, \
+from homeassistant.components.esphome import EsphomeEntity, \
     platform_async_setup_entry
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
@@ -11,28 +11,28 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi.client import SwitchInfo, SwitchState
+    from aioesphomeapi import SwitchInfo, SwitchState
 
-DEPENDENCIES = ['esphomelib']
+DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
-    """Set up esphomelib switches based on a config entry."""
+    """Set up ESPHome switches based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi.client import SwitchInfo, SwitchState
+    from aioesphomeapi import SwitchInfo, SwitchState
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='switch',
-        info_type=SwitchInfo, entity_type=EsphomelibSwitch,
+        info_type=SwitchInfo, entity_type=EsphomeSwitch,
         state_type=SwitchState
     )
 
 
-class EsphomelibSwitch(EsphomelibEntity, SwitchDevice):
-    """A switch implementation for esphomelib."""
+class EsphomeSwitch(EsphomeEntity, SwitchDevice):
+    """A switch implementation for ESPHome."""
 
     @property
     def _static_info(self) -> 'SwitchInfo':
