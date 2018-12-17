@@ -48,6 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
             dev.append(TibberSensorRT(home))
+        print(home.home_id)
 
     async_add_entities(dev, False)
 
