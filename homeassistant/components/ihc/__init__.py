@@ -75,25 +75,25 @@ IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
     vol.Optional(CONF_INFO, default=True): cv.boolean,
-    vol.Optional(CONF_BINARY_SENSORS, default=[]):
+    vol.Optional(CONF_BINARY_SENSOR, default=[]):
         vol.All(cv.ensure_list, [
             vol.All(
                 BINARY_SENSOR_SCHEMA,
                 validate_name)
         ]),
-    vol.Optional(CONF_LIGHTS, default=[]):
+    vol.Optional(CONF_LIGHT, default=[]):
         vol.All(cv.ensure_list, [
             vol.All(
                 LIGHT_SCHEMA,
                 validate_name)
         ]),
-    vol.Optional(CONF_SENSORS, default=[]):
+    vol.Optional(CONF_SENSOR, default=[]):
         vol.All(cv.ensure_list, [
             vol.All(
                 SENSOR_SCHEMA,
                 validate_name)
         ]),
-    vol.Optional(CONF_SWITCHES, default=[]):
+    vol.Optional(CONF_SWITCH, default=[]):
         vol.All(cv.ensure_list, [
             vol.All(
                 SWITCH_SCHEMA,
@@ -224,7 +224,7 @@ def get_manual_configuration(hass, config, conf, ihc_controller,
                         'type': sensor_cfg.get(CONF_TYPE),
                         'inverting': sensor_cfg.get(CONF_INVERTING),
                         'dimmable': sensor_cfg.get(CONF_DIMMABLE),
-                        'unit': sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
+                        'unit_of_measurement': sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
                     }
                 }
                 discovery_info[name] = device
