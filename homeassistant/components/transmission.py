@@ -13,7 +13,6 @@ from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -71,11 +70,11 @@ def setup(hass, config):
     track_time_interval(hass, refresh, SCAN_INTERVAL)
 
     sensorconfig = {
-        'sensors': config[DOMAIN].get(CONF_MONITORED_CONDITIONS),
-        'client_name': config[DOMAIN].get(CONF_NAME)}
+        'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
+        'client_name': config[DOMAIN][CONF_NAME]}
     discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig)
 
-    if config[DOMAIN].get(TURTLE_MODE) == True:
+    if config[DOMAIN][TURTLE_MODE] is True:
         discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig)
     return True
 
@@ -180,7 +179,7 @@ class TransmissionData:
         return len(self.completed_torrents)
 
     def set_alt_speed_enabled(self, is_enabled):
-        self._api.set_session(alt_speed_enabled = is_enabled)
+        self._api.set_session(alt_speed_enabled=is_enabled)
 
     def get_alt_speed_enabled(self):
         return self.get_session().alt_speed_enabled

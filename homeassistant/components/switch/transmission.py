@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
@@ -24,7 +25,7 @@ DEFAULT_NAME = 'Transmission Turtle Mode'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if (discovery_info is None):
-        _LOGGER.warning("Unable to connect to Transmission client.")
+        _LOGGING.warning("Unable to connect to Transmission client.")
         raise PlatformNotReady
 
     transmission_api = hass.data[DATA_TRANSMISSION]
