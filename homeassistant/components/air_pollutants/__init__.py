@@ -32,6 +32,21 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+PROP_TO_ATTR = {
+    'air_quality_index': ATTR_AIR_POLLUTANTS_AQI,
+    'attribution': ATTR_AIR_POLLUTANTS_ATTRIBUTION,
+    'carbon_dioxide': ATTR_AIR_POLLUTANTS_C02,
+    'carbon_monoxide': ATTR_AIR_POLLUTANTS_CO,
+    'nitrogen_oxide': ATTR_AIR_POLLUTANTS_N2O,
+    'nitrogen_monoxide': ATTR_AIR_POLLUTANTS_NO,
+    'nitrogen_dioxide': ATTR_AIR_POLLUTANTS_NO2,
+    'ozone': ATTR_AIR_POLLUTANTS_OZONE,
+    'particulate_matter_0_1': ATTR_AIR_POLLUTANTS_PM_0_1,
+    'particulate_matter_10': ATTR_AIR_POLLUTANTS_PM_10,
+    'particulate_matter_2_5': ATTR_AIR_POLLUTANTS_PM_2_5,
+    'sulphur_dioxide': ATTR_AIR_POLLUTANTS_SO2,
+}
+
 
 async def async_setup(hass, config):
     """Set up the air pollutants component."""
@@ -67,11 +82,6 @@ class AirPollutantsEntity(Entity):
     @property
     def particulate_matter_0_1(self):
         """Return the particulate matter 0.1 level."""
-        return None
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement of the temperature."""
         return None
 
     @property
@@ -124,49 +134,10 @@ class AirPollutantsEntity(Entity):
         """Return the state attributes."""
         data = {}
 
-        air_quality_index = self.air_quality_index
-        if air_quality_index is not None:
-            data[ATTR_AIR_POLLUTANTS_AQI] = air_quality_index
-
-        ozone = self.ozone
-        if ozone is not None:
-            data[ATTR_AIR_POLLUTANTS_OZONE] = ozone
-
-        particulate_matter_0_1 = self.particulate_matter_0_1
-        if particulate_matter_0_1 is not None:
-            data[ATTR_AIR_POLLUTANTS_PM_0_1] = particulate_matter_0_1
-
-        particulate_matter_10 = self.particulate_matter_10
-        if particulate_matter_10 is not None:
-            data[ATTR_AIR_POLLUTANTS_PM_10] = particulate_matter_10
-
-        sulphur_dioxide = self.sulphur_dioxide
-        if sulphur_dioxide is not None:
-            data[ATTR_AIR_POLLUTANTS_SO2] = sulphur_dioxide
-
-        nitrogen_oxide = self.nitrogen_oxide
-        if nitrogen_oxide is not None:
-            data[ATTR_AIR_POLLUTANTS_N2O] = nitrogen_oxide
-
-        nitrogen_monoxide = self.nitrogen_monoxide
-        if nitrogen_monoxide is not None:
-            data[ATTR_AIR_POLLUTANTS_NO] = nitrogen_monoxide
-
-        nitrogen_dioxide = self.nitrogen_dioxide
-        if nitrogen_dioxide is not None:
-            data[ATTR_AIR_POLLUTANTS_NO2] = nitrogen_dioxide
-
-        carbon_dioxide = self.carbon_dioxide
-        if carbon_dioxide is not None:
-            data[ATTR_AIR_POLLUTANTS_C02] = carbon_dioxide
-
-        carbon_monoxide = self.carbon_monoxide
-        if carbon_monoxide is not None:
-            data[ATTR_AIR_POLLUTANTS_CO] = carbon_monoxide
-
-        attribution = self.attribution
-        if attribution is not None:
-            data[ATTR_AIR_POLLUTANTS_ATTRIBUTION] = attribution
+        for prop, attr in PROP_TO_ATTR.items():
+            value = getattr(self, prop)
+            if value is not None:
+                data[attr] = value
 
         return data
 
