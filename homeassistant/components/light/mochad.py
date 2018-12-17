@@ -55,7 +55,12 @@ class MochadLight(Light):
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
 
         self._brightness = 0
-        self._state = self._get_device_status()
+        # Init with false to avoid locking HA for long on CM19A (goes from rf
+        # to pl via TM751, but not other way around)
+        if self._comm_type == 'pl':
+            self._state = self._get_device_status()
+        else:
+            self._state = False
         self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
 
     @property
