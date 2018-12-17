@@ -39,7 +39,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    return unicode_slug.slugify(text, separator='_')
+    return unicode_slug.slugify(text, separator='_')  # type: ignore
 
 
 def repr_helper(inp: Any) -> str:
