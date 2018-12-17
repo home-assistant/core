@@ -99,14 +99,15 @@ class RuntimeEntryData:
         if restored is None:
             return []
 
-        device_info = DeviceInfo(**restored.pop('device_info'))
-        self.device_info = device_info
+        self.device_info = _attr_obj_from_dict(DeviceInfo,
+                                               **restored.pop('device_info'))
         infos = []
         for comp_type, restored_infos in restored.items():
             if comp_type not in COMPONENT_TYPE_TO_INFO:
                 continue
             for info in restored_infos:
-                infos.append(COMPONENT_TYPE_TO_INFO[comp_type](**info))
+                cls = COMPONENT_TYPE_TO_INFO[comp_type]
+                infos.append(_attr_obj_from_dict(cls, **info))
         return infos
 
     async def async_save_to_store(self) -> None:
@@ -116,9 +117,14 @@ class RuntimeEntryData:
         }
 
         for comp_type, infos in self.info.items():
-            store_data[comp_type] = [attr.asdict(info) for info in infos]
+            store_data[comp_type] = [attr.asdict(info)
+                                     for info in infos.values()]
 
         await self.store.async_save(store_data)
+
+
+def _attr_obj_from_dict(cls, **kwargs):
+    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
