@@ -1,12 +1,12 @@
 """
-Support for the World Air Quality Index service.
+Component for handling Air Pollutants data for your location.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waqi/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/air_pollutants/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
 import voluptuous as vol
@@ -16,8 +16,31 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
+
 from homeassistant.components.air_pollutants import AirPollutantsEntity
+
+ATTR_DOMINENTPOL = 'dominentpol'
+ATTR_HUMIDITY = 'humidity'
+ATTR_NITROGEN_DIOXIDE = 'nitrogen_dioxide'
+ATTR_OZONE = 'ozone'
+ATTR_PM10 = 'pm_10'
+ATTR_PM2_5 = 'pm_2_5'
+ATTR_PRESSURE = 'pressure'
+ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
+
+KEY_TO_ATTR = {
+    'pm25': ATTR_PM2_5,
+    'pm10': ATTR_PM10,
+    'h': ATTR_HUMIDITY,
+    'p': ATTR_PRESSURE,
+    't': ATTR_TEMPERATURE,
+    'o3': ATTR_OZONE,
+    'no2': ATTR_NITROGEN_DIOXIDE,
+    'so2': ATTR_SULFUR_DIOXIDE,
+}
 
 REQUIREMENTS = ['waqiasync==1.0.0']
 
@@ -44,54 +67,41 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the requested World Air Quality Index locations."""
     import waqiasync
 
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config.get(CONF_LOCATIONS)
+    locations = config[CONF_LOCATIONS]
 
     client = waqiasync.WaqiClient(
         token, async_get_clientsession(hass), timeout=TIMEOUT)
+
     dev = []
     try:
         for location_name in locations:
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
-                device = WaqiAirPollutant(client, station)
+                waqi_air_pollutant = WaqiAirPollutant(client, station)
                 if not station_filter or \
-                    {device.uid,
-                     device.url,
-                     device.station_name} & set(station_filter):
-                    dev.append(device)
+                    {waqi_sensor.uid,
+                     waqi_sensor.url,
+                     waqi_sensor.station_name} & set(station_filter):
+                    dev.append(waqi_air_pollutant)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to WAQI servers.')
         raise PlatformNotReady
     async_add_entities(dev, True)
 
-
 class WaqiAirPollutant(AirPollutantsEntity):
-    """Implementation of a WAQI sensor."""
+    """Implementation of a WAQI Air Pollutant."""
 
     def __init__(self, client, station):
-        """Initialize the sensor."""
         self._client = client
-        try:
-            self.uid = station['uid']
-        except (KeyError, TypeError):
-            self.uid = None
-
-        try:
-            self.url = station['station']['url']
-        except (KeyError, TypeError):
-            self.url = None
-
-        try:
-            self.station_name = station['station']['name']
-        except (KeyError, TypeError):
-            self.station_name = None
-
+        self.uid = station.get('uid', None)
+        self.url = station.get('station').get('url', None)
+        self.station_name = station.get('station').get('name', None)
         self._data = None
-
+    
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -100,70 +110,75 @@ class WaqiAirPollutant(AirPollutantsEntity):
         return 'WAQI {}'.format(self.url if self.url else self.uid)
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return 'mdi:cloud'
-
-    @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        try:
-            return self._data.get('iaqi')['pm25']['v']
-        except KeyError:
-            return None
+        return None
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        try:
-            return self._data.get('iaqi')['pm10']['v']
-        except KeyError:
-            return None
+        return None
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement of the temperature."""
-        try:
-            return self._data.get('iaqi')['t']['v']
-        except KeyError:
-            return None
+        return None
 
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        try:
+        if self._data is not None:
             return self._data.get('aqi')
-        except KeyError:
-            return None
+        return None
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        try:
-            return self._data.get('iaqi')['o3']['v']
-        except KeyError:
-            return None
+        return None
 
     @property
     def attribution(self):
         """Return the attribution."""
-        return ATTRIBUTION
+        return None
 
     @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        try:
-            return self._data.get('iaqi')['so2']['v']
-        except KeyError:
-            return None
+        return None
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        try:
-            return self._data.get('iaqi')['no2']['v']
-        except KeyError:
-            return None
+        return None
+
+    @property
+    def state(self):
+        """Return the current state."""
+        return self.particulate_matter_2_5
+
+    # @property
+    # def device_state_attributes(self):
+    #     """Return the state attributes of the last update."""
+    #     attrs = {}
+
+    #     if self._data is not None:
+    #         try:
+    #             attrs[ATTR_ATTRIBUTION] = ' and '.join(
+    #                 [ATTRIBUTION] + [
+    #                     v['name'] for v in self._data.get('attributions', [])])
+
+    #             attrs[ATTR_TIME] = self._data['time']['s']
+    #             attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')
+
+    #             iaqi = self._data['iaqi']
+    #             for key in iaqi:
+    #                 if key in KEY_TO_ATTR:
+    #                     attrs[KEY_TO_ATTR[key]] = iaqi[key]['v']
+    #                 else:
+    #                     attrs[key] = iaqi[key]['v']
+    #             return attrs
+    #         except (IndexError, KeyError):
+    #             return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_update(self):
         """Get the latest data and updates the states."""
