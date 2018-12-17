@@ -12,11 +12,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_SENSORS)
+    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_SENSORS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
@@ -198,23 +196,3 @@ class MonzoObject:
         self._hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data)
-
-
-class MonzoEntity(Entity):
-    """Define a generic Monzo entity."""
-
-    def __init__(self, monzo):
-        """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._name = None
-        self.monzo = monzo
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name

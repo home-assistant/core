@@ -7,12 +7,12 @@ https://home-assistant.io/components/sensor.monzo/
 import logging
 
 from homeassistant.components.monzo import (
-    DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS, DOMAIN,
-    SENSORS, TOPIC_UPDATE, TYPE_BALANCE, TYPE_DAILY_SPEND, TYPE_POTS,
-    MonzoEntity)
+    DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS, DEFAULT_ATTRIBUTION, DOMAIN,
+    SENSORS, TOPIC_UPDATE, TYPE_BALANCE, TYPE_DAILY_SPEND, TYPE_POTS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.const import ATTR_ID
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import (ATTR_ID, ATTR_ATTRIBUTION)
 
 DEPENDENCIES = ['monzo']
 _LOGGER = logging.getLogger(__name__)
@@ -49,12 +49,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class MonzoSensor(MonzoEntity):
+class MonzoSensor(Entity):
     """Implementation of a Monzo sensor."""
 
     def __init__(self, monzo, sensor_type, name, icon, unit, account_id):
         """Initialize the Monzo sensor."""
-        super().__init__(monzo)
+        self.monzo = monzo
         self._dispatch_remove = None
         self._icon = icon
         self._name = name
@@ -63,7 +63,18 @@ class MonzoSensor(MonzoEntity):
         self._state = None
         self._unit = unit
 
-        self._attrs.update({ATTR_ID: account_id})
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
+                       ATTR_ID: account_id}
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attrs
 
     @property
     def unique_id(self) -> str:
