@@ -11,9 +11,12 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
     EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback, Event
 import homeassistant.helpers.device_registry as dr
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -22,7 +25,8 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from .config_flow import EsphomeFlowHandler  # noqa
 
 if TYPE_CHECKING:
-    from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo
+    from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo, \
+        ServiceCall
 
 DOMAIN = 'esphome'
 REQUIREMENTS = ['aioesphomeapi==1.2.0']
@@ -182,6 +186,26 @@ async def async_setup_entry(hass: HomeAssistantType,
         """Send dispatcher updates when a new state is received."""
         entry_data.async_update_state(hass, state)
 
+    @callback
+    def async_on_service_call(service: 'ServiceCall') -> None:
+        """Call service when user automation in ESPHome config is triggered."""
+        domain, service_name = service.service.split('.', 1)
+        service_data = service.data
+
+        if service.data_template:
+            try:
+                data_template = {key: Template(value) for key, value in
+                                 service.data_template.items()}
+                template.attach(hass, data_template)
+                service_data.update(template.render_complex(
+                    data_template, service.variables))
+            except TemplateError as ex:
+                _LOGGER.error('Error rendering data template: %s', ex)
+                return
+
+        hass.async_create_task(hass.services.async_call(
+            domain, service_name, service_data, blocking=True))
+
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
@@ -194,6 +218,7 @@ async def async_setup_entry(hass: HomeAssistantType,
             entity_infos = await cli.list_entities()
             entry_data.async_update_static_infos(hass, entity_infos)
             await cli.subscribe_states(async_on_state)
+            await cli.subscribe_service_calls(async_on_service_call)
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
