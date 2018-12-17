@@ -10,8 +10,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, \
-        TextSensorState
+    from aioesphomeapi import ( # noqa
+        SensorInfo, SensorState, TextSensorInfo, TextSensorState)
 
 DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
@@ -21,8 +21,8 @@ async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up esphome sensors based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, \
-        TextSensorState
+    from aioesphomeapi import (  # noqa
+        SensorInfo, SensorState, TextSensorInfo, TextSensorState)
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
