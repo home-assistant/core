@@ -98,17 +98,25 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-        from zigpy.zcl.clusters import general
+        from zigpy.zcl.clusters.general import OnOff, LevelControl
         self._in_listeners = {
-            general.OnOff.cluster_id: OnOffListener(self),
-            general.LevelControl.cluster_id: LevelListener(self),
+            OnOff.cluster_id: OnOffListener(
+                self,
+                self._in_clusters[OnOff.cluster_id]
+            ),
         }
 
-        import zigpy.zcl.clusters as zcl_clusters
-        if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
+        if LevelControl.cluster_id in self._in_clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
+            self._in_listeners.update({
+                LevelControl.cluster_id: LevelListener(
+                    self,
+                    self._in_clusters[LevelControl.cluster_id]
+                )
+            })
+        import zigpy.zcl.clusters as zcl_clusters
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
             color_capabilities = kwargs['color_capabilities']
             if color_capabilities & CAPABILITIES_COLOR_TEMP:

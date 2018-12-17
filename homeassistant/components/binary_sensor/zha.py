@@ -175,9 +175,12 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
         self._level = 0
         from zigpy.zcl.clusters import general
         self._out_listeners = {
-            general.OnOff.cluster_id: OnOffListener(self),
-            general.LevelControl.cluster_id: LevelListener(self),
+            general.OnOff.cluster_id: OnOffListener(
+                self,
+                self._out_clusters[general.OnOff.cluster_id]
+            )
         }
+
         out_clusters = kwargs.get('out_clusters')
         self._zcl_reporting = {}
         for cluster_id in [general.OnOff.cluster_id,
@@ -186,6 +189,14 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
                 continue
             cluster = out_clusters[cluster_id]
             self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
+
+        if general.LevelControl.cluster_id in out_clusters:
+            self._out_listeners.update({
+                general.LevelControl.cluster_id: LevelListener(
+                    self,
+                    out_clusters[general.LevelControl.cluster_id]
+                )
+            })
 
     @property
     def should_poll(self) -> bool:
