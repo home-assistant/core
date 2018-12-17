@@ -24,7 +24,7 @@ ATTRIBUTION = 'Data provided by openSenseMap'
 
 CONF_STATION_ID = 'station_id'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.string,
@@ -45,13 +45,13 @@ async def async_setup_platform(
 
     await osm_api.async_update()
 
-    if name is None:
-        if 'name' not in osm_api.api.data:
-            _LOGGER.error("Station %s is not available", station_id)
-            return
-        name = osm_api.api.data['name']
+    if 'name' not in osm_api.api.data:
+        _LOGGER.error("Station %s is not available", station_id)
+        return
 
-    async_add_entities([OpenSenseMapPollutants(name, osm_api)], True)
+    station_name = osm_api.api.data['name'] if name is None else name
+
+    async_add_entities([OpenSenseMapPollutants(station_name, osm_api)], True)
 
 
 class OpenSenseMapPollutants(AirPollutantsEntity):
@@ -94,7 +94,7 @@ class OpenSenseMapData:
         """Initialize the data object."""
         self.api = api
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the latest data from the Pi-hole."""
         from opensensemap_api.exceptions import OpenSenseMapError
