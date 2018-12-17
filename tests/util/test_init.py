@@ -31,15 +31,15 @@ class TestUtil(unittest.TestCase):
         assert "test_more" == util.slugify("Test More")
         assert "test_more" == util.slugify("Test_(More)")
         assert "test_more" == util.slugify("Tèst_Mörê")
-        assert "b827eb000000" == util.slugify("B8:27:EB:00:00:00")
-        assert "testcom" == util.slugify("test.com")
-        assert "greg_phone__exp_wayp1" == \
+        assert "b8_27_eb_00_00_00" == util.slugify("B8:27:EB:00:00:00")
+        assert "test_com" == util.slugify("test.com")
+        assert "greg_phone_exp_wayp1" == \
             util.slugify("greg_phone - exp_wayp1")
         assert "we_are_we_are_a_test_calendar" == \
             util.slugify("We are, we are, a... Test Calendar")
         assert "test_aouss_aou" == util.slugify("Tèst_äöüß_ÄÖÜ")
         assert "ying_shi_ma" == util.slugify("影師嗎")
-        assert "test" == util.slugify("けいふぉんと")
+        assert "keihuonto" == util.slugify("けいふぉんと")
 
     def test_repr_helper(self):
         """Test repr_helper."""
