@@ -1617,7 +1617,7 @@ vultr==0.1.2
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==1.1.6
 
-# homeassistant.components.sensor.waqi
+# homeassistant.components.air_pollutants.waqi
 waqiasync==1.0.0
 
 # homeassistant.components.cloud

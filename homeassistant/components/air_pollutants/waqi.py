@@ -24,22 +24,12 @@ from homeassistant.components.air_pollutants import AirPollutantsEntity
 
 ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
-ATTR_NITROGEN_DIOXIDE = 'nitrogen_dioxide'
-ATTR_OZONE = 'ozone'
-ATTR_PM10 = 'pm_10'
-ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
-ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
 
 KEY_TO_ATTR = {
-    'pm25': ATTR_PM2_5,
-    'pm10': ATTR_PM10,
     'h': ATTR_HUMIDITY,
     'p': ATTR_PRESSURE,
     't': ATTR_TEMPERATURE,
-    'o3': ATTR_OZONE,
-    'no2': ATTR_NITROGEN_DIOXIDE,
-    'so2': ATTR_SULFUR_DIOXIDE,
 }
 
 REQUIREMENTS = ['waqiasync==1.0.0']
@@ -112,17 +102,18 @@ class WaqiAirPollutant(AirPollutantsEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return None
+        try:
+            return self._data['iaqi']['pm25']['v']
+        except (IndexError, KeyError):
+            return None
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return None
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement of the temperature."""
-        return None
+        try:
+            return self._data['iaqi']['pm10']['v']
+        except (IndexError, KeyError):
+            return None
 
     @property
     def air_quality_index(self):
@@ -134,51 +125,58 @@ class WaqiAirPollutant(AirPollutantsEntity):
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return None
+        try:
+            return self._data['iaqi']['o3']['v']
+        except (IndexError, KeyError):
+            return None
 
     @property
     def attribution(self):
         """Return the attribution."""
-        return None
+        attribution = ATTRIBUTION
+        if self._data is not None:
+            try:
+                attribution = ' and '.join([ATTRIBUTION] + [
+                    v['name'] for v in self._data.get('attributions', [])])
+            except (IndexError, KeyError):
+                pass
+        return attribution
 
     @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        return None
+        try:
+            return self._data['iaqi']['so2']['v']
+        except (IndexError, KeyError):
+            return None
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return None
+        try:
+            return self._data['iaqi']['no2']['v']
+        except (IndexError, KeyError):
+            return None
 
     @property
-    def state(self):
-        """Return the current state."""
-        return self.particulate_matter_2_5
+    def device_state_attributes(self):
+        """Return the state attributes of the last update."""
+        attrs = {}
+        if self._data is not None:
+            try:
+                attrs[ATTR_TIME] = self._data['time']['s']
+                attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')
 
-    # @property
-    # def device_state_attributes(self):
-    #     """Return the state attributes of the last update."""
-    #     attrs = {}
+                iaqi = self._data['iaqi']
+                for key in iaqi:
+                    if key in KEY_TO_ATTR:
+                        attrs[KEY_TO_ATTR[key]] = iaqi[key]['v']
+                    else:
+                        attrs[key] = iaqi[key]['v']
 
-    #     if self._data is not None:
-    #         try:
-    #             attrs[ATTR_ATTRIBUTION] = ' and '.join(
-    #                 [ATTRIBUTION] + [
-    #                     v['name'] for v in self._data.get('attributions', [])])
-
-    #             attrs[ATTR_TIME] = self._data['time']['s']
-    #             attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')
-
-    #             iaqi = self._data['iaqi']
-    #             for key in iaqi:
-    #                 if key in KEY_TO_ATTR:
-    #                     attrs[KEY_TO_ATTR[key]] = iaqi[key]['v']
-    #                 else:
-    #                     attrs[key] = iaqi[key]['v']
-    #             return attrs
-    #         except (IndexError, KeyError):
-    #             return {ATTR_ATTRIBUTION: ATTRIBUTION}
+                return attrs
+            except (IndexError, KeyError):
+                pass
 
     async def async_update(self):
         """Get the latest data and updates the states."""
