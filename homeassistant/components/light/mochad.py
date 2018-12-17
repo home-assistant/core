@@ -67,7 +67,7 @@ class MochadLight(Light):
         """Get the status of the light from mochad."""
         from pymochad import device
 
-        if self._controller.connect_event.wait():
+        if self._controller.ctrl and self._controller.connect_event.wait():
             light = device.Device(self._controller.ctrl, self._address,
                                   comm_type=self._comm_type)
             with mochad.REQ_LOCK:
@@ -115,7 +115,7 @@ class MochadLight(Light):
         """Send cmd to pymochad controller."""
         from pymochad import device
 
-        if self._controller.connect_event.wait():
+        if self._controller.ctrl and self._controller.connect_event.wait():
             light = device.Device(self._controller.ctrl, self._address,
                                   comm_type=self._comm_type)
             light.send_cmd(cmd)
