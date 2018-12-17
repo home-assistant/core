@@ -1,11 +1,11 @@
 """Test config flow."""
 from collections import namedtuple
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.esphome import config_flow
-from tests.common import mock_coro
+from tests.common import mock_coro, MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
 
@@ -186,3 +186,67 @@ async def test_user_invalid_password(hass, mock_api_connection_error,
     assert result['errors'] == {
         'base': 'invalid_password'
     }
+
+
+async def test_discovery_initiation(hass, mock_client):
+    """Test discovery importing works."""
+    flow = config_flow.EsphomeFlowHandler()
+    flow.hass = hass
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {}
+    }
+    result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'user'
+
+    # Validate schema values
+    for key in result['data_schema'].schema:
+        if key == 'host':
+            assert key.default() == 'test8266.local'
+        elif key == 'port':
+            assert key.default() == 6053
+        else:
+            assert False
+
+
+async def test_discovery_already_configured_hostname(hass, mock_client):
+    """Test discovery aborts if already configured via hostname."""
+    MockConfigEntry(
+        domain='esphome',
+        data={'host': 'test8266.local', 'port': 6053, 'password': ''}
+    ).add_to_hass(hass)
+
+    flow = config_flow.EsphomeFlowHandler()
+    flow.hass = hass
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {}
+    }
+    result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
+
+
+async def test_discovery_already_configured_ip(hass, mock_client):
+    """Test discovery aborts if already configured via static IP."""
+    MockConfigEntry(
+        domain='esphome',
+        data={'host': '192.168.43.183', 'port': 6053, 'password': ''}
+    ).add_to_hass(hass)
+
+    flow = config_flow.EsphomeFlowHandler()
+    flow.hass = hass
+    service_info = {
+        'host': '192.168.43.183',
+        'port': 6053,
+        'hostname': 'test8266.local.',
+        'properties': {}
+    }
+    result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
