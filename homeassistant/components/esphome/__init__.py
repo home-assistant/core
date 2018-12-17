@@ -36,6 +36,7 @@ HA_COMPONENTS = [
     'binary_sensor',
     'cover',
     'fan',
+    'light',
 ]
 
 _LOGGER = logging.getLogger(__name__)
