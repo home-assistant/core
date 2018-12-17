@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi import SwitchInfo, SwitchState
+    from aioesphomeapi import SwitchInfo, SwitchState  # noqa
 
 DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome switches based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi import SwitchInfo, SwitchState
+    from aioesphomeapi import SwitchInfo, SwitchState  # noqa
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
