@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
     EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback, Event
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.1.0']
+REQUIREMENTS = ['aioesphomeapi==1.2.0']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -186,6 +187,8 @@ async def async_setup_entry(hass: HomeAssistantType,
         try:
             entry_data.device_info = await cli.device_info()
             entry_data.available = True
+            await _async_setup_device_registry(hass, entry,
+                                               entry_data.device_info)
             entry_data.async_update_device_state(hass)
 
             entity_infos = await cli.list_entities()
@@ -284,6 +287,26 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
 
     cli.on_disconnect = try_connect
     return try_connect
+
+
+async def _async_setup_device_registry(hass: HomeAssistantType,
+                                       entry: ConfigEntry,
+                                       device_info: 'DeviceInfo'):
+    """Set up device registry feature for a particular config entry."""
+    sw_version = device_info.esphome_core_version
+    if device_info.compilation_time:
+        sw_version += ' ({})'.format(device_info.compilation_time)
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, device_info.mac_address)
+        },
+        name=device_info.name,
+        manufacturer='espressif',
+        model=device_info.model,
+        sw_version=sw_version,
+    )
 
 
 async def _cleanup_instance(hass: HomeAssistantType,
@@ -455,6 +478,14 @@ class EsphomeEntity(Entity):
         if not self._static_info.unique_id:
             return None
         return self._static_info.unique_id
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            'connections': {(dr.CONNECTION_NETWORK_MAC,
+                             self._device_info.mac_address)}
+        }
 
     @property
     def name(self) -> str:
