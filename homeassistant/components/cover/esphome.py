@@ -1,11 +1,11 @@
-"""Support for esphomelib covers."""
+"""Support for ESPHome covers."""
 import logging
 
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components.cover import CoverDevice, SUPPORT_CLOSE, \
     SUPPORT_OPEN, SUPPORT_STOP
-from homeassistant.components.esphomelib import EsphomelibEntity, \
+from homeassistant.components.esphome import EsphomeEntity, \
     platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
@@ -13,22 +13,22 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi.client import CoverInfo, CoverState
+    from aioesphomeapi import CoverInfo, CoverState
 
-DEPENDENCIES = ['esphomelib']
+DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
-    """Set up esphomelib covers based on a config entry."""
+    """Set up ESPHome covers based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi.client import CoverInfo, CoverState
+    from aioesphomeapi import CoverInfo, CoverState
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='cover',
-        info_type=CoverInfo, entity_type=EsphomelibCover,
+        info_type=CoverInfo, entity_type=EsphomeCover,
         state_type=CoverState
     )
 
@@ -39,8 +39,8 @@ COVER_STATE_INT_TO_STR = {
 }
 
 
-class EsphomelibCover(EsphomelibEntity, CoverDevice):
-    """A cover implementation for esphomelib."""
+class EsphomeCover(EsphomeEntity, CoverDevice):
+    """A cover implementation for ESPHome."""
 
     @property
     def _static_info(self) -> 'CoverInfo':
