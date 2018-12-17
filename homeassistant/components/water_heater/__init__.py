@@ -45,6 +45,7 @@ SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
 SUPPORT_ON_OFF = 8
 
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
@@ -145,6 +146,9 @@ class WaterHeaterDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit,
                 self.precision),
@@ -188,6 +192,11 @@ class WaterHeaterDevice(Entity):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
+        return None
+ 
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
         return None
 
     @property
