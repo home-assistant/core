@@ -42,7 +42,8 @@ def test_forward_request(hassio_client):
     ])
 def test_auth_required_forward_request(hassio_noauth_client, build_type):
     """Test auth required for normal request."""
-    resp = yield from hassio_noauth_client.post("/api/hassio/{}".format(build_type))
+    resp = yield from hassio_noauth_client.post(
+        "/api/hassio/{}".format(build_type))
 
     # Check we got right response
     assert resp.status == 401
