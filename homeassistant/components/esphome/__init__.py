@@ -235,7 +235,7 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
                                        entry: ConfigEntry,
                                        device_info: 'DeviceInfo'):
     """Set up device registry feature for a particular config entry."""
-    sw_version = 'ESPHome v' + device_info.esphome_core_version
+    sw_version = device_info.esphome_core_version
     if device_info.compilation_time:
         sw_version += ' ({})'.format(device_info.compilation_time)
     device_registry = await dr.async_get_registry(hass)
