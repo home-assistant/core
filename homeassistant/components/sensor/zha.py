@@ -149,6 +149,7 @@ class Sensor(ZhaEntity):
 
 class GenericBatterySensor(Sensor):
     """ZHA generic battery sensor."""
+
     report_attribute = 32
     value_attribute = 33
     battery_sizes = {
@@ -203,7 +204,6 @@ class GenericBatterySensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-
         if self._state == 'unknown' or self._state is None:
             return 'unknown'
 
