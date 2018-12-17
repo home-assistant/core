@@ -980,6 +980,9 @@ pygogogate2==0.1.1
 # homeassistant.components.sensor.gtfs
 pygtfs==0.1.5
 
+# homeassistant.components.sensor.gtt
+pygtt==1.1.2
+
 # homeassistant.components.remote.harmony
 pyharmony==1.0.20
 
