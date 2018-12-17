@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devs = config.get(CONF_DEVICES)
     controller = hass.data[mochad.DOMAIN]
     add_entities([MochadLight(
-        hass, controller.ctrl_send, dev) for dev in devs])
+        hass, controller.ctrl_recv, dev) for dev in devs])
     return True
 
 
@@ -48,15 +48,12 @@ class MochadLight(Light):
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Light Device."""
-        from pymochad import device
-
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME,
                              'x10_light_dev_{}'.format(self._address))
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-        self.light = device.Device(ctrl, self._address,
-                                   comm_type=self._comm_type)
+
         self._brightness = 0
         self._state = self._get_device_status()
         self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
@@ -68,8 +65,16 @@ class MochadLight(Light):
 
     def _get_device_status(self):
         """Get the status of the light from mochad."""
-        with mochad.REQ_LOCK:
-            status = self.light.get_status().rstrip()
+
+        from pymochad import device
+
+        if self._controller.connect_event.wait():
+            light = device.Device(self._controller.ctrl, self._address,
+                                    comm_type=self._comm_type)
+            with mochad.REQ_LOCK:
+                status = light.get_status().rstrip()
+        else:
+            status='off'
         return status == 'on'
 
     @property
@@ -99,13 +104,22 @@ class MochadLight(Light):
         if self._brightness > brightness:
             bdelta = self._brightness - brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.light.send_cmd("dim {}".format(mochad_brightness))
-            self._controller.read_data()
+            self.send_cmd("dim {}".format(mochad_brightness))
+            self._controller.ctrl.read_data()
         elif self._brightness < brightness:
             bdelta = brightness - self._brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.light.send_cmd("bright {}".format(mochad_brightness))
-            self._controller.read_data()
+            self.send_cmd("bright {}".format(mochad_brightness))
+            self._controller.ctrl.read_data()
+
+    def send_cmd(self, cmd):
+        """Send cmd to pymochad controller."""
+        from pymochad import device
+
+        if self._controller.connect_event.wait():
+            light = device.Device(self._controller.ctrl, self._address,
+                                    comm_type=self._comm_type)
+            light.send_cmd(cmd)
 
     def turn_on(self, **kwargs):
         """Send the command to turn the light on."""
@@ -113,11 +127,11 @@ class MochadLight(Light):
         with mochad.REQ_LOCK:
             if self._brightness_levels > 32:
                 out_brightness = self._calculate_brightness_value(brightness)
-                self.light.send_cmd('xdim {}'.format(out_brightness))
-                self._controller.read_data()
+                self.send_cmd('xdim {}'.format(out_brightness))
+                self._controller.ctrl.read_data()
             else:
-                self.light.send_cmd("on")
-                self._controller.read_data()
+                self.send_cmd("on")
+                self._controller.ctrl.read_data()
                 # There is no persistence for X10 modules so a fresh on command
                 # will be full brightness
                 if self._brightness == 0:
@@ -129,8 +143,8 @@ class MochadLight(Light):
     def turn_off(self, **kwargs):
         """Send the command to turn the light on."""
         with mochad.REQ_LOCK:
-            self.light.send_cmd('off')
-            self._controller.read_data()
+            self.send_cmd('off')
+            self._controller.ctrl.read_data()
             # There is no persistence for X10 modules so we need to prepare
             # to track a fresh on command will full brightness
             if self._brightness_levels == 31:

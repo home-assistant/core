@@ -82,8 +82,6 @@ class MochadCtrl:
         _LOGGER.debug(
             "PyMochadMqtt controller created for mochad %s:%s and mqtt",
             host, port)
-        if self.ctrl_recv.connect_event.wait():
-            self.ctrl_send = self.ctrl_recv.ctrl
 
     @property
     def host(self):
