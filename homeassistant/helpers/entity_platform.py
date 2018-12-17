@@ -206,7 +206,6 @@ class EntityPlatform:
             return
 
         hass = self.hass
-        component_entities = set(hass.states.async_entity_ids(self.domain))
 
         device_registry = await \
             hass.helpers.device_registry.async_get_registry()
@@ -214,8 +213,7 @@ class EntityPlatform:
             hass.helpers.entity_registry.async_get_registry()
         tasks = [
             self._async_add_entity(entity, update_before_add,
-                                   component_entities, entity_registry,
-                                   device_registry)
+                                   entity_registry, device_registry)
             for entity in new_entities]
 
         # No entities for processing
@@ -235,8 +233,7 @@ class EntityPlatform:
         )
 
     async def _async_add_entity(self, entity, update_before_add,
-                                component_entities, entity_registry,
-                                device_registry):
+                                entity_registry, device_registry):
         """Add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
@@ -300,7 +297,8 @@ class EntityPlatform:
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id,
                 config_entry_id=config_entry_id,
-                device_id=device_id)
+                device_id=device_id,
+                known_object_ids=self.entities.keys())
 
             if entry.disabled:
                 self.logger.info(
@@ -329,27 +327,27 @@ class EntityPlatform:
             if self.entity_namespace is not None:
                 suggested_object_id = '{} {}'.format(self.entity_namespace,
                                                      suggested_object_id)
-
             entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id)
+                self.domain, suggested_object_id, self.entities.keys())
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
-        elif entity.entity_id in component_entities:
+        elif (entity.entity_id in self.entities or
+              entity.entity_id in self.hass.states.async_entity_ids(
+                  self.domain)):
             msg = 'Entity id already exists: {}'.format(entity.entity_id)
             if entity.unique_id is not None:
                 msg += '. Platform {} does not generate unique IDs'.format(
                     self.platform_name)
-            raise HomeAssistantError(
-                msg)
+            raise HomeAssistantError(msg)
 
-        self.entities[entity.entity_id] = entity
-        component_entities.add(entity.entity_id)
+        entity_id = entity.entity_id
+        self.entities[entity_id] = entity
+        entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
-        if hasattr(entity, 'async_added_to_hass'):
-            await entity.async_added_to_hass()
+        await entity.async_added_to_hass()
 
         await entity.async_update_ha_state()
 
@@ -365,7 +363,7 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [self._async_remove_entity(entity_id)
+        tasks = [self.async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
         await asyncio.wait(tasks, loop=self.hass.loop)
@@ -376,7 +374,7 @@ class EntityPlatform:
 
     async def async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
-        await self._async_remove_entity(entity_id)
+        await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
         if (self._async_unsub_polling is not None and
@@ -384,15 +382,6 @@ class EntityPlatform:
                         in self.entities.values())):
             self._async_unsub_polling()
             self._async_unsub_polling = None
-
-    async def _async_remove_entity(self, entity_id):
-        """Remove entity id from platform."""
-        entity = self.entities.pop(entity_id)
-
-        if hasattr(entity, 'async_will_remove_from_hass'):
-            await entity.async_will_remove_from_hass()
-
-        self.hass.states.async_remove(entity_id)
 
     async def _update_entity_states(self, now):
         """Update the states of all the polling entities.

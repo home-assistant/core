@@ -92,8 +92,8 @@ class TestNSWFuelStation(unittest.TestCase):
     def test_setup(self, mock_nsw_fuel):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
-            self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
-                'sensor': VALID_CONFIG}))
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': VALID_CONFIG})
 
         fake_entities = [
             'my_fake_station_p95',
@@ -102,16 +102,16 @@ class TestNSWFuelStation(unittest.TestCase):
 
         for entity_id in fake_entities:
             state = self.hass.states.get('sensor.{}'.format(entity_id))
-            self.assertIsNotNone(state)
+            assert state is not None
 
     @MockDependency('nsw_fuel')
     @patch('nsw_fuel.FuelCheckClient', new=FuelCheckClientMock)
     def test_sensor_values(self, mock_nsw_fuel):
         """Test retrieval of sensor values."""
-        self.assertTrue(setup_component(
-            self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG}))
+        assert setup_component(
+            self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG})
 
-        self.assertEqual('140.0', self.hass.states.get(
-            'sensor.my_fake_station_e10').state)
-        self.assertEqual('150.0', self.hass.states.get(
-            'sensor.my_fake_station_p95').state)
+        assert '140.0' == self.hass.states.get(
+            'sensor.my_fake_station_e10').state
+        assert '150.0' == self.hass.states.get(
+            'sensor.my_fake_station_p95').state

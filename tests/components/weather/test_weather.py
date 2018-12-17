@@ -20,11 +20,11 @@ class TestWeather(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        self.assertTrue(setup_component(self.hass, weather.DOMAIN, {
+        assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
                 'platform': 'demo',
             }
-        }))
+        })
 
     def tearDown(self):
         """Stop down everything that was started."""

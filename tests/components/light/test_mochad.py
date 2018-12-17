@@ -50,7 +50,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
                 ],
             }
         }
-        self.assertTrue(setup_component(self.hass, light.DOMAIN, good_config))
+        assert setup_component(self.hass, light.DOMAIN, good_config)
 
 
 class TestMochadLight(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestMochadLight(unittest.TestCase):
 
     def test_name(self):
         """Test the name."""
-        self.assertEqual('fake_light', self.light.name)
+        assert 'fake_light' == self.light.name
 
     def test_turn_on_with_no_brightness(self):
         """Test turn_on."""

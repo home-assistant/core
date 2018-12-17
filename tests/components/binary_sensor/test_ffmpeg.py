@@ -15,9 +15,6 @@ class TestFFmpegNoiseSetup:
         self.hass = get_test_home_assistant()
 
         self.config = {
-            'ffmpeg': {
-                'run_test': False,
-            },
             'binary_sensor': {
                 'platform': 'ffmpeg_noise',
                 'input': 'testinputvideo',
@@ -80,9 +77,6 @@ class TestFFmpegMotionSetup:
         self.hass = get_test_home_assistant()
 
         self.config = {
-            'ffmpeg': {
-                'run_test': False,
-            },
             'binary_sensor': {
                 'platform': 'ffmpeg_motion',
                 'input': 'testinputvideo',

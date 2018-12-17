@@ -48,11 +48,6 @@ STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
-STATE_ELECTRIC = 'electric'
-STATE_PERFORMANCE = 'performance'
-STATE_HIGH_DEMAND = 'high_demand'
-STATE_HEAT_PUMP = 'heat_pump'
-STATE_GAS = 'gas'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2
@@ -97,15 +92,15 @@ CONVERTIBLE_ATTRIBUTE = [
 _LOGGER = logging.getLogger(__name__)
 
 ON_OFF_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
 })
 SET_AUX_HEAT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
@@ -115,28 +110,28 @@ SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
         vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_OPERATION_MODE): cv.string,
     }
 ))
 SET_FAN_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
 })
 SET_HOLD_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_HOLD_MODE): cv.string,
 })
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
 })
 SET_SWING_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_SWING_MODE): cv.string,
 })
 
@@ -254,9 +249,11 @@ class ClimateDevice(Entity):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision)
 
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
             if supported_features & SUPPORT_TARGET_HUMIDITY_LOW:
                 data[ATTR_MIN_HUMIDITY] = self.min_humidity

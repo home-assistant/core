@@ -55,17 +55,15 @@ class TestMfiSensorSetup(unittest.TestCase):
         from mficlient.client import FailedToLogin
 
         mock_client.side_effect = FailedToLogin
-        self.assertFalse(
-            self.PLATFORM.setup_platform(
-                self.hass, dict(self.GOOD_CONFIG), None))
+        assert not self.PLATFORM.setup_platform(
+                self.hass, dict(self.GOOD_CONFIG), None)
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_connect(self, mock_client):
         """Test setup with connection failure."""
         mock_client.side_effect = requests.exceptions.ConnectionError
-        self.assertFalse(
-            self.PLATFORM.setup_platform(
-                self.hass, dict(self.GOOD_CONFIG), None))
+        assert not self.PLATFORM.setup_platform(
+                self.hass, dict(self.GOOD_CONFIG), None)
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_minimum(self, mock_client):
@@ -73,13 +71,11 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        self.assertEqual(mock_client.call_count, 1)
-        self.assertEqual(
-            mock_client.call_args,
+        assert mock_client.call_count == 1
+        assert mock_client.call_args == \
             mock.call(
                 'foo', 'user', 'pass', port=6443, use_tls=True, verify=True
             )
-        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_port(self, mock_client):
@@ -87,13 +83,11 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        self.assertEqual(mock_client.call_count, 1)
-        self.assertEqual(
-            mock_client.call_args,
+        assert mock_client.call_count == 1
+        assert mock_client.call_args == \
             mock.call(
                 'foo', 'user', 'pass', port=6123, use_tls=True, verify=True
             )
-        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_tls_disabled(self, mock_client):
@@ -103,13 +97,11 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]['ssl'] = False
         config[self.THING]['verify_ssl'] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        self.assertEqual(mock_client.call_count, 1)
-        self.assertEqual(
-            mock_client.call_args,
+        assert mock_client.call_count == 1
+        assert mock_client.call_args == \
             mock.call(
                 'foo', 'user', 'pass', port=6080, use_tls=False, verify=False
             )
-        )
 
     @mock.patch('mficlient.client.MFiClient')
     @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
@@ -142,59 +134,59 @@ class TestMfiSensor(unittest.TestCase):
 
     def test_name(self):
         """Test the name."""
-        self.assertEqual(self.port.label, self.sensor.name)
+        assert self.port.label == self.sensor.name
 
     def test_uom_temp(self):
         """Test the UOM temperature."""
         self.port.tag = 'temperature'
-        self.assertEqual(TEMP_CELSIUS, self.sensor.unit_of_measurement)
+        assert TEMP_CELSIUS == self.sensor.unit_of_measurement
 
     def test_uom_power(self):
         """Test the UOEM power."""
         self.port.tag = 'active_pwr'
-        self.assertEqual('Watts', self.sensor.unit_of_measurement)
+        assert 'Watts' == self.sensor.unit_of_measurement
 
     def test_uom_digital(self):
         """Test the UOM digital input."""
         self.port.model = 'Input Digital'
-        self.assertEqual('State', self.sensor.unit_of_measurement)
+        assert 'State' == self.sensor.unit_of_measurement
 
     def test_uom_unknown(self):
         """Test the UOM."""
         self.port.tag = 'balloons'
-        self.assertEqual('balloons', self.sensor.unit_of_measurement)
+        assert 'balloons' == self.sensor.unit_of_measurement
 
     def test_uom_uninitialized(self):
         """Test that the UOM defaults if not initialized."""
         type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
-        self.assertEqual('State', self.sensor.unit_of_measurement)
+        assert 'State' == self.sensor.unit_of_measurement
 
     def test_state_digital(self):
         """Test the digital input."""
         self.port.model = 'Input Digital'
         self.port.value = 0
-        self.assertEqual(mfi.STATE_OFF, self.sensor.state)
+        assert mfi.STATE_OFF == self.sensor.state
         self.port.value = 1
-        self.assertEqual(mfi.STATE_ON, self.sensor.state)
+        assert mfi.STATE_ON == self.sensor.state
         self.port.value = 2
-        self.assertEqual(mfi.STATE_ON, self.sensor.state)
+        assert mfi.STATE_ON == self.sensor.state
 
     def test_state_digits(self):
         """Test the state of digits."""
         self.port.tag = 'didyoucheckthedict?'
         self.port.value = 1.25
         with mock.patch.dict(mfi.DIGITS, {'didyoucheckthedict?': 1}):
-            self.assertEqual(1.2, self.sensor.state)
+            assert 1.2 == self.sensor.state
         with mock.patch.dict(mfi.DIGITS, {}):
-            self.assertEqual(1.0, self.sensor.state)
+            assert 1.0 == self.sensor.state
 
     def test_state_uninitialized(self):
         """Test the state of uninitialized sensors."""
         type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
-        self.assertEqual(mfi.STATE_OFF, self.sensor.state)
+        assert mfi.STATE_OFF == self.sensor.state
 
     def test_update(self):
         """Test the update."""
         self.sensor.update()
-        self.assertEqual(self.port.refresh.call_count, 1)
-        self.assertEqual(self.port.refresh.call_args, mock.call())
+        assert self.port.refresh.call_count == 1
+        assert self.port.refresh.call_args == mock.call()

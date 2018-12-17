@@ -9,31 +9,19 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.rflink import (
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, RflinkCommand)
+    CONF_ALIASES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
+    CONF_GROUP, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES,
+    CONF_SIGNAL_REPETITIONS, DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
-
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.const import CONF_NAME, STATE_OPEN
 
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONF_ALIASES = 'aliases'
-CONF_GROUP_ALIASES = 'group_aliases'
-CONF_GROUP = 'group'
-CONF_NOGROUP_ALIASES = 'nogroup_aliases'
-CONF_DEVICE_DEFAULTS = 'device_defaults'
-CONF_DEVICES = 'devices'
-CONF_AUTOMATIC_ADD = 'automatic_add'
-CONF_FIRE_EVENT = 'fire_event'
-CONF_IGNORE_DEVICES = 'ignore_devices'
-CONF_RECONNECT_INTERVAL = 'reconnect_interval'
-CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
-CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
@@ -55,37 +43,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def devices_from_config(domain_config, hass=None):
+def devices_from_config(domain_config):
     """Parse configuration and add Rflink cover devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = RflinkCover(device_id, hass, **device_config)
+        device = RflinkCover(device_id, **device_config)
         devices.append(device)
 
-        # Register entity (and aliases) to listen to incoming rflink events
-        # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASES]:
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
     return devices
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Rflink cover platform."""
-    async_add_entities(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config))
 
 
-class RflinkCover(RflinkCommand, CoverDevice):
+class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    async def async_added_to_hass(self):
+        """Restore RFLink cover state (OPEN/CLOSE)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_OPEN
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

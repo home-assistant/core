@@ -137,7 +137,7 @@ class LogiSensor(Entity):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[1]
 
-    async def update(self):
+    async def async_update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Pulling data from %s sensor", self._name)
         await self._camera.update()

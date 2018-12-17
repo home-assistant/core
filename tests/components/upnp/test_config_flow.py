@@ -176,6 +176,27 @@ async def test_config_entry_created(hass):
     assert result['title'] == 'Test device 1'
 
 
+async def test_flow_discovery_no_data(hass):
+    """Test creation of device with auto_config."""
+    flow = upnp_config_flow.UpnpFlowHandler()
+    flow.hass = hass
+
+    # auto_config active
+    hass.data[upnp.DOMAIN] = {
+        'auto_config': {
+            'active': True,
+            'enable_port_mapping': False,
+            'enable_sensors': True,
+        },
+    }
+
+    # discovered device
+    result = await flow.async_step_discovery({})
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'incomplete_device'
+
+
 async def test_flow_discovery_auto_config_sensors(hass):
     """Test creation of device with auto_config."""
     flow = upnp_config_flow.UpnpFlowHandler()

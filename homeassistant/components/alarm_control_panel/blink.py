@@ -25,23 +25,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     data = hass.data[BLINK_DATA]
 
-    # Current version of blinkpy API only supports one sync module.  When
-    # support for additional models is added, the sync module name should
-    # come from the API.
     sync_modules = []
-    sync_modules.append(BlinkSyncModule(data, 'sync'))
+    for sync_name, sync_module in data.sync.items():
+        sync_modules.append(BlinkSyncModule(data, sync_name, sync_module))
     add_entities(sync_modules, True)
 
 
 class BlinkSyncModule(AlarmControlPanel):
     """Representation of a Blink Alarm Control Panel."""
 
-    def __init__(self, data, name):
+    def __init__(self, data, name, sync):
         """Initialize the alarm control panel."""
         self.data = data
-        self.sync = data.sync
+        self.sync = sync
         self._name = name
         self._state = None
+
+    @property
+    def unique_id(self):
+        """Return the unique id for the sync module."""
+        return self.sync.serial
 
     @property
     def icon(self):
@@ -61,9 +64,11 @@ class BlinkSyncModule(AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-        }
+        attr = self.sync.attributes
+        attr['network_info'] = self.data.networks
+        attr['associated_cameras'] = list(self.sync.cameras.keys())
+        attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        return attr
 
     def update(self):
         """Update the state of the device."""

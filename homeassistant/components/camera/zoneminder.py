@@ -44,6 +44,7 @@ class ZoneMinderCamera(MjpegCamera):
         }
         super().__init__(device_info)
         self._is_recording = None
+        self._is_available = None
         self._monitor = monitor
 
     @property
@@ -55,8 +56,14 @@ class ZoneMinderCamera(MjpegCamera):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
         self._is_recording = self._monitor.is_recording
+        self._is_available = self._monitor.is_available
 
     @property
     def is_recording(self):
         """Return whether the monitor is in alarm mode."""
         return self._is_recording
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available

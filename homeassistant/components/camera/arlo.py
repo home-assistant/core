@@ -101,10 +101,12 @@ class ArloCam(Camera):
         await stream.open_camera(
             video.video_url, extra_cmd=self._ffmpeg_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()
 
     @property
     def name(self):

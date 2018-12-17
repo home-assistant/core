@@ -347,7 +347,7 @@ class RangeFilter(Filter):
     """
 
     def __init__(self, entity,
-                 lower_bound, upper_bound):
+                 lower_bound=None, upper_bound=None):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
@@ -356,7 +356,8 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
-        if self._upper_bound and new_state.state > self._upper_bound:
+        if (self._upper_bound is not None
+                and new_state.state > self._upper_bound):
 
             self._stats_internal['erasures_up'] += 1
 
@@ -365,7 +366,8 @@ class RangeFilter(Filter):
                           self._entity, new_state)
             new_state.state = self._upper_bound
 
-        elif self._lower_bound and new_state.state < self._lower_bound:
+        elif (self._lower_bound is not None
+              and new_state.state < self._lower_bound):
 
             self._stats_internal['erasures_low'] += 1
 

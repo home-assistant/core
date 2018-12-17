@@ -50,9 +50,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_min')
 
-        self.assertEqual(str(float(self.min)), state.state)
-        self.assertEqual(self.max, state.attributes.get('max_value'))
-        self.assertEqual(self.mean, state.attributes.get('mean'))
+        assert str(float(self.min)) == state.state
+        assert self.max == state.attributes.get('max_value')
+        assert self.mean == state.attributes.get('mean')
 
     def test_max_sensor(self):
         """Test the max sensor."""
@@ -79,9 +79,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_max')
 
-        self.assertEqual(str(float(self.max)), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.mean, state.attributes.get('mean'))
+        assert str(float(self.max)) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.mean == state.attributes.get('mean')
 
     def test_mean_sensor(self):
         """Test the mean sensor."""
@@ -108,9 +108,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(float(self.mean)), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
+        assert str(float(self.mean)) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
 
     def test_mean_1_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -138,9 +138,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(float(self.mean_1_digit)), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
+        assert str(float(self.mean_1_digit)) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
 
     def test_mean_4_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -168,9 +168,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(float(self.mean_4_digits)), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
+        assert str(float(self.mean_4_digits)) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
 
     def test_not_enough_sensor_value(self):
         """Test that there is nothing done if not enough values available."""
@@ -195,25 +195,25 @@ class TestMinMaxSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        assert STATE_UNKNOWN == state.state
 
         self.hass.states.set(entity_ids[1], self.values[1])
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
-        self.assertNotEqual(STATE_UNKNOWN, state.state)
+        assert STATE_UNKNOWN != state.state
 
         self.hass.states.set(entity_ids[2], STATE_UNKNOWN)
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
-        self.assertNotEqual(STATE_UNKNOWN, state.state)
+        assert STATE_UNKNOWN != state.state
 
         self.hass.states.set(entity_ids[1], STATE_UNKNOWN)
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        assert STATE_UNKNOWN == state.state
 
     def test_different_unit_of_measurement(self):
         """Test for different unit of measurement."""
@@ -240,8 +240,8 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual(str(float(self.values[0])), state.state)
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
+        assert str(float(self.values[0])) == state.state
+        assert '°C' == state.attributes.get('unit_of_measurement')
 
         self.hass.states.set(entity_ids[1], self.values[1],
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
@@ -249,8 +249,8 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual(STATE_UNKNOWN, state.state)
-        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+        assert STATE_UNKNOWN == state.state
+        assert 'ERR' == state.attributes.get('unit_of_measurement')
 
         self.hass.states.set(entity_ids[2], self.values[2],
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
@@ -258,8 +258,8 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual(STATE_UNKNOWN, state.state)
-        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+        assert STATE_UNKNOWN == state.state
+        assert 'ERR' == state.attributes.get('unit_of_measurement')
 
     def test_last_sensor(self):
         """Test the last sensor."""
@@ -285,8 +285,8 @@ class TestMinMaxSensor(unittest.TestCase):
             self.hass.states.set(entity_id, value)
             self.hass.block_till_done()
             state = self.hass.states.get('sensor.test_last')
-            self.assertEqual(str(float(value)), state.state)
+            assert str(float(value)) == state.state
 
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
-        self.assertEqual(self.mean, state.attributes.get('mean'))
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
+        assert self.mean == state.attributes.get('mean')

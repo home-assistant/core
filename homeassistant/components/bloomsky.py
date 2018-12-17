@@ -54,7 +54,7 @@ class BloomSky:
     """Handle all communication with the BloomSky API."""
 
     # API documentation at http://weatherlution.com/bloomsky-api/
-    API_URL = 'https://api.bloomsky.com/api/skydata'
+    API_URL = 'http://api.bloomsky.com/api/skydata'
 
     def __init__(self, api_key):
         """Initialize the BookSky."""

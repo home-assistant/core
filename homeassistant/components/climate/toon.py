@@ -8,12 +8,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.toon/
 """
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_PERFORMANCE,
+    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 import homeassistant.components.toon as toon_main
 from homeassistant.const import TEMP_CELSIUS
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
+HA_TOON = {
+    STATE_AUTO: 'Comfort',
+    STATE_HEAT: 'Home',
+    STATE_ECO: 'Away',
+    STATE_COOL: 'Sleep',
+}
+TOON_HA = {value: key for key, value in HA_TOON.items()}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,7 +42,7 @@ class ThermostatDevice(ClimateDevice):
         self._temperature = None
         self._setpoint = None
         self._operation_list = [
-            STATE_PERFORMANCE,
+            STATE_AUTO,
             STATE_HEAT,
             STATE_ECO,
             STATE_COOL,
@@ -58,8 +66,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation i.e. comfort, home, away."""
-        state = self.thermos.get_data('state')
-        return state
+        return TOON_HA.get(self.thermos.get_data('state'))
 
     @property
     def operation_list(self):
@@ -83,14 +90,7 @@ class ThermostatDevice(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        toonlib_values = {
-            STATE_PERFORMANCE: 'Comfort',
-            STATE_HEAT: 'Home',
-            STATE_ECO: 'Away',
-            STATE_COOL: 'Sleep',
-        }
-
-        self.thermos.set_state(toonlib_values[operation_mode])
+        self.thermos.set_state(HA_TOON[operation_mode])
 
     def update(self):
         """Update local state."""

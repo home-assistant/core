@@ -29,7 +29,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
-from . import config_flow # noqa  # pylint: disable=unused-import
+from . import config_flow  # noqa pylint: disable=unused-import
 from .const import (
     CONF_AUTOHEAL, CONF_DEBUG, CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH, CONF_CONFIG_PATH, CONF_NETWORK_KEY,
@@ -42,7 +42,7 @@ from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.10']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +65,9 @@ DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
+
+SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
+                       'lock', 'light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -220,7 +223,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_DEVICES].pop(
+    device = hass.data[DATA_DEVICES].get(
         discovery_info[const.DISCOVERY_DEVICE], None)
     if device is None:
         return False
@@ -338,6 +341,9 @@ async def async_setup_entry(hass, config_entry):
         entity = ZWaveNodeEntity(node, network)
 
         def _add_node_to_component():
+            if hass.data[DATA_DEVICES].get(entity.unique_id):
+                return
+
             name = node_name(node)
             generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
             node_config = device_config.get(generated_id)
@@ -346,6 +352,8 @@ async def async_setup_entry(hass, config_entry):
                     "Ignoring node entity %s due to device settings",
                     generated_id)
                 return
+
+            hass.data[DATA_DEVICES][entity.unique_id] = entity
             component.add_entities([entity])
 
         if entity.unique_id:
@@ -385,7 +393,7 @@ async def async_setup_entry(hass, config_entry):
     def network_complete_some_dead():
         """Handle the querying of all nodes on network."""
         _LOGGER.info("Z-Wave network is complete. All nodes on the network "
-                     "have been queried, but some node are marked dead")
+                     "have been queried, but some nodes are marked dead")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
 
     dispatcher.connect(
@@ -412,7 +420,7 @@ async def async_setup_entry(hass, config_entry):
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        _LOGGER.info("Z-Wwave remove_node have been initialized")
+        _LOGGER.info("Z-Wave remove_node have been initialized")
         network.controller.remove_node()
 
     def cancel_command(service):
@@ -777,6 +785,10 @@ async def async_setup_entry(hass, config_entry):
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK,
                                  start_zwave)
 
+    for entry_component in SUPPORTED_PLATFORMS:
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            config_entry, entry_component))
+
     return True
 
 
@@ -906,15 +918,12 @@ class ZWaveDeviceEntityValues():
 
         self._entity = device
 
-        dict_id = id(self)
-
         @callback
         def _on_ready(sec):
             _LOGGER.info(
                 "Z-Wave entity %s (node_id: %d) ready after %d seconds",
                 device.name, self._node.node_id, sec)
-            self._hass.async_add_job(discover_device, component, device,
-                                     dict_id)
+            self._hass.async_add_job(discover_device, component, device)
 
         @callback
         def _on_timeout(sec):
@@ -922,18 +931,25 @@ class ZWaveDeviceEntityValues():
                 "Z-Wave entity %s (node_id: %d) not ready after %d seconds, "
                 "continuing anyway",
                 device.name, self._node.node_id, sec)
-            self._hass.async_add_job(discover_device, component, device,
-                                     dict_id)
+            self._hass.async_add_job(discover_device, component, device)
 
-        async def discover_device(component, device, dict_id):
+        async def discover_device(component, device):
             """Put device in a dictionary and call discovery on it."""
-            self._hass.data[DATA_DEVICES][dict_id] = device
-            await discovery.async_load_platform(
-                self._hass, component, DOMAIN,
-                {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
+            if self._hass.data[DATA_DEVICES].get(device.unique_id):
+                return
+
+            self._hass.data[DATA_DEVICES][device.unique_id] = device
+            if component in SUPPORTED_PLATFORMS:
+                async_dispatcher_send(
+                    self._hass, 'zwave_new_{}'.format(component), device)
+            else:
+                await discovery.async_load_platform(
+                    self._hass, component, DOMAIN,
+                    {const.DISCOVERY_DEVICE: device.unique_id},
+                    self._zwave_config)
 
         if device.unique_id:
-            self._hass.add_job(discover_device, component, device, dict_id)
+            self._hass.add_job(discover_device, component, device)
         else:
             self._hass.add_job(check_has_unique_id, device, _on_ready,
                                _on_timeout, self._hass.loop)
@@ -1009,6 +1025,18 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.node_id)
+            },
+            'manufacturer': self.node.manufacturer_name,
+            'model': self.node.product_name,
+            'name': node_name(self.node),
+        }
 
     @property
     def name(self):

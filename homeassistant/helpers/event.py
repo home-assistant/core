@@ -6,7 +6,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
 from ..core import HomeAssistant, callback
 from ..const import (
-    ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+    ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL,
+    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from ..util import dt as dt_util
 from ..util.async_ import run_callback_threadsafe
 
@@ -274,12 +275,12 @@ def async_track_sunrise(hass, action, offset=None):
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, sunrise_automation_listener, get_astral_event_next(
-                hass, 'sunrise', offset=offset))
+                hass, SUN_EVENT_SUNRISE, offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
         hass, sunrise_automation_listener, get_astral_event_next(
-            hass, 'sunrise', offset=offset))
+            hass, SUN_EVENT_SUNRISE, offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""
@@ -303,12 +304,12 @@ def async_track_sunset(hass, action, offset=None):
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, sunset_automation_listener, get_astral_event_next(
-                hass, 'sunset', offset=offset))
+                hass, SUN_EVENT_SUNSET, offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
         hass, sunset_automation_listener, get_astral_event_next(
-            hass, 'sunset', offset=offset))
+            hass, SUN_EVENT_SUNSET, offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""

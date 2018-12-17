@@ -4,6 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,6 +155,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
+        self._unsub_set_no_motion = None
         if 'proto' not in device or int(device['proto'][0:1]) == 1:
             data_key = 'status'
         else:
@@ -166,6 +169,13 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         attrs = {ATTR_NO_MOTION_SINCE: self._no_motion_since}
         attrs.update(super().device_state_attributes)
         return attrs
+
+    @callback
+    def _async_set_no_motion(self, now):
+        """Set state to False."""
+        self._unsub_set_no_motion = None
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -188,11 +198,20 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return False
 
         if value == MOTION:
-            self._should_poll = True
-            if self.entity_id is not None:
-                self._hass.bus.fire('motion', {
-                    'entity_id': self.entity_id
-                })
+            if self._data_key == 'motion_status':
+                if self._unsub_set_no_motion:
+                    self._unsub_set_no_motion()
+                self._unsub_set_no_motion = async_call_later(
+                    self._hass,
+                    180,
+                    self._async_set_no_motion
+                )
+            else:
+                self._should_poll = True
+                if self.entity_id is not None:
+                    self._hass.bus.fire('xiaomi_aqara.motion', {
+                        'entity_id': self.entity_id
+                    })
 
             self._no_motion_since = 0
             if self._state:
@@ -338,6 +357,9 @@ class XiaomiVibration(XiaomiBinarySensor):
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
+        if value is None:
+            return False
+
         if value not in ('vibrate', 'tilt', 'free_fall'):
             _LOGGER.warning("Unsupported movement_type detected: %s",
                             value)
@@ -395,15 +417,13 @@ class XiaomiButton(XiaomiBinarySensor):
             _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
 
-        self._hass.bus.fire('click', {
+        self._hass.bus.fire('xiaomi_aqara.click', {
             'entity_id': self.entity_id,
             'click_type': click_type
         })
         self._last_action = click_type
 
-        if value in ['long_click_press', 'long_click_release']:
-            return True
-        return False
+        return True
 
 
 class XiaomiCube(XiaomiBinarySensor):
@@ -431,17 +451,25 @@ class XiaomiCube(XiaomiBinarySensor):
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if self._data_key in data:
-            self._hass.bus.fire('cube_action', {
+            self._hass.bus.fire('xiaomi_aqara.cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': data[self._data_key]
             })
             self._last_action = data[self._data_key]
 
         if 'rotate' in data:
-            self._hass.bus.fire('cube_action', {
+            self._hass.bus.fire('xiaomi_aqara.cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
                 'action_value': float(data['rotate'].replace(",", "."))
+            })
+            self._last_action = 'rotate'
+
+        if 'rotate_degree' in data:
+            self._hass.bus.fire('xiaomi_aqara.cube_action', {
+                'entity_id': self.entity_id,
+                'action_type': 'rotate',
+                'action_value': float(data['rotate_degree'].replace(",", "."))
             })
             self._last_action = 'rotate'
 

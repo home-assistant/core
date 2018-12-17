@@ -1,120 +1,98 @@
 """Test the Lovelace initialization."""
 from unittest.mock import patch
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components import frontend, lovelace
 
 
-async def test_deprecated_lovelace_ui(hass, hass_ws_client):
-    """Test lovelace_ui command."""
-    await async_setup_component(hass, 'lovelace')
+async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
+    """Test we load lovelace config from storage."""
+    assert await async_setup_component(hass, 'lovelace', {})
+    assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
+        'mode': 'storage'
+    }
+
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
-               return_value={'hello': 'world'}):
-        await client.send_json({
-            'id': 5,
-            'type': 'frontend/lovelace_config',
-        })
-        msg = await client.receive_json()
+    # Fetch data
+    await client.send_json({
+        'id': 5,
+        'type': 'lovelace/config'
+    })
+    response = await client.receive_json()
+    assert not response['success']
+    assert response['error']['code'] == 'config_not_found'
 
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success']
-    assert msg['result'] == {'hello': 'world'}
+    # Store new config
+    await client.send_json({
+        'id': 6,
+        'type': 'lovelace/config/save',
+        'config': {
+            'yo': 'hello'
+        }
+    })
+    response = await client.receive_json()
+    assert response['success']
+    assert hass_storage[lovelace.STORAGE_KEY]['data'] == {
+        'config': {'yo': 'hello'}
+    }
+
+    # Load new config
+    await client.send_json({
+        'id': 7,
+        'type': 'lovelace/config'
+    })
+    response = await client.receive_json()
+    assert response['success']
+
+    assert response['result'] == {
+        'yo': 'hello'
+    }
 
 
-async def test_deprecated_lovelace_ui_not_found(hass, hass_ws_client):
-    """Test lovelace_ui command cannot find file."""
-    await async_setup_component(hass, 'lovelace')
+async def test_lovelace_from_yaml(hass, hass_ws_client):
+    """Test we load lovelace config from yaml."""
+    assert await async_setup_component(hass, 'lovelace', {
+        'lovelace': {
+            'mode': 'YAML'
+        }
+    })
+    assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
+        'mode': 'yaml'
+    }
+
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
-               side_effect=FileNotFoundError):
+    # Fetch data
+    await client.send_json({
+        'id': 5,
+        'type': 'lovelace/config'
+    })
+    response = await client.receive_json()
+    assert not response['success']
+
+    assert response['error']['code'] == 'config_not_found'
+
+    # Store new config not allowed
+    await client.send_json({
+        'id': 6,
+        'type': 'lovelace/config/save',
+        'config': {
+            'yo': 'hello'
+        }
+    })
+    response = await client.receive_json()
+    assert not response['success']
+
+    # Patch data
+    with patch('homeassistant.components.lovelace.load_yaml', return_value={
+        'hello': 'yo'
+    }):
         await client.send_json({
-            'id': 5,
-            'type': 'frontend/lovelace_config',
+            'id': 7,
+            'type': 'lovelace/config'
         })
-        msg = await client.receive_json()
+        response = await client.receive_json()
 
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success'] is False
-    assert msg['error']['code'] == 'file_not_found'
-
-
-async def test_deprecated_lovelace_ui_load_err(hass, hass_ws_client):
-    """Test lovelace_ui command cannot find file."""
-    await async_setup_component(hass, 'lovelace')
-    client = await hass_ws_client(hass)
-
-    with patch('homeassistant.components.lovelace.load_yaml',
-               side_effect=HomeAssistantError):
-        await client.send_json({
-            'id': 5,
-            'type': 'frontend/lovelace_config',
-        })
-        msg = await client.receive_json()
-
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success'] is False
-    assert msg['error']['code'] == 'load_error'
-
-
-async def test_lovelace_ui(hass, hass_ws_client):
-    """Test lovelace_ui command."""
-    await async_setup_component(hass, 'lovelace')
-    client = await hass_ws_client(hass)
-
-    with patch('homeassistant.components.lovelace.load_yaml',
-               return_value={'hello': 'world'}):
-        await client.send_json({
-            'id': 5,
-            'type': 'lovelace/config',
-        })
-        msg = await client.receive_json()
-
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success']
-    assert msg['result'] == {'hello': 'world'}
-
-
-async def test_lovelace_ui_not_found(hass, hass_ws_client):
-    """Test lovelace_ui command cannot find file."""
-    await async_setup_component(hass, 'lovelace')
-    client = await hass_ws_client(hass)
-
-    with patch('homeassistant.components.lovelace.load_yaml',
-               side_effect=FileNotFoundError):
-        await client.send_json({
-            'id': 5,
-            'type': 'lovelace/config',
-        })
-        msg = await client.receive_json()
-
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success'] is False
-    assert msg['error']['code'] == 'file_not_found'
-
-
-async def test_lovelace_ui_load_err(hass, hass_ws_client):
-    """Test lovelace_ui command cannot find file."""
-    await async_setup_component(hass, 'lovelace')
-    client = await hass_ws_client(hass)
-
-    with patch('homeassistant.components.lovelace.load_yaml',
-               side_effect=HomeAssistantError):
-        await client.send_json({
-            'id': 5,
-            'type': 'lovelace/config',
-        })
-        msg = await client.receive_json()
-
-    assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
-    assert msg['success'] is False
-    assert msg['error']['code'] == 'load_error'
+    assert response['success']
+    assert response['result'] == {'hello': 'yo'}

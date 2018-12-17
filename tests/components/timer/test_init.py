@@ -1,12 +1,11 @@
 """The tests for the timer component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 import logging
 from datetime import timedelta
 
 from homeassistant.core import CoreState
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components.timer import (
     DOMAIN, CONF_DURATION, CONF_NAME, STATUS_ACTIVE, STATUS_IDLE,
     STATUS_PAUSED, CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED,
@@ -15,75 +14,62 @@ from homeassistant.components.timer import (
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
 from homeassistant.util.dt import utcnow
 
-from tests.common import (get_test_home_assistant, async_fire_time_changed)
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TestTimer(unittest.TestCase):
-    """Test the timer component."""
+async def test_config(hass):
+    """Test config."""
+    invalid_configs = [
+        None,
+        1,
+        {},
+        {'name with space': None},
+    ]
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    for cfg in invalid_configs:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_config(self):
-        """Test config."""
-        invalid_configs = [
-            None,
-            1,
-            {},
-            {'name with space': None},
-        ]
+async def test_config_options(hass):
+    """Test configuration options."""
+    count_start = len(hass.states.async_entity_ids())
 
-        for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+    _LOGGER.debug('ENTITIES @ start: %s', hass.states.async_entity_ids())
 
-    def test_config_options(self):
-        """Test configuration options."""
-        count_start = len(self.hass.states.entity_ids())
-
-        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
-
-        config = {
-            DOMAIN: {
-                'test_1': {},
-                'test_2': {
-                    CONF_NAME: 'Hello World',
-                    CONF_ICON: 'mdi:work',
-                    CONF_DURATION: 10,
-                }
+    config = {
+        DOMAIN: {
+            'test_1': {},
+            'test_2': {
+                CONF_NAME: 'Hello World',
+                CONF_ICON: 'mdi:work',
+                CONF_DURATION: 10,
             }
         }
+    }
 
-        assert setup_component(self.hass, 'timer', config)
-        self.hass.block_till_done()
+    assert await async_setup_component(hass, 'timer', config)
+    await hass.async_block_till_done()
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
-        self.hass.block_till_done()
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+    await hass.async_block_till_done()
 
-        state_1 = self.hass.states.get('timer.test_1')
-        state_2 = self.hass.states.get('timer.test_2')
+    state_1 = hass.states.get('timer.test_1')
+    state_2 = hass.states.get('timer.test_2')
 
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
+    assert state_1 is not None
+    assert state_2 is not None
 
-        self.assertEqual(STATUS_IDLE, state_1.state)
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+    assert STATUS_IDLE == state_1.state
+    assert ATTR_ICON not in state_1.attributes
+    assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.assertEqual(STATUS_IDLE, state_2.state)
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
-        self.assertEqual('0:00:10', state_2.attributes.get(ATTR_DURATION))
+    assert STATUS_IDLE == state_2.state
+    assert 'Hello World' == \
+        state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
+    assert '0:00:10' == state_2.attributes.get(ATTR_DURATION)
 
 
 @asyncio.coroutine

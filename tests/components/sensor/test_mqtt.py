@@ -47,9 +47,9 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual('100', state.state)
-        self.assertEqual('fav unit',
-                         state.attributes.get('unit_of_measurement'))
+        assert '100' == state.state
+        assert 'fav unit' == \
+            state.attributes.get('unit_of_measurement')
 
     @patch('homeassistant.core.dt_util.utcnow')
     def test_setting_sensor_value_expires(self, mock_utcnow):
@@ -67,7 +67,7 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('unknown', state.state)
+        assert 'unknown' == state.state
 
         now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
         mock_utcnow.return_value = now
@@ -76,7 +76,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         # Value was set correctly.
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('100', state.state)
+        assert '100' == state.state
 
         # Time jump +3s
         now = now + timedelta(seconds=3)
@@ -85,7 +85,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         # Value is not yet expired
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('100', state.state)
+        assert '100' == state.state
 
         # Next message resets timer
         mock_utcnow.return_value = now
@@ -94,7 +94,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         # Value was updated correctly.
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('101', state.state)
+        assert '101' == state.state
 
         # Time jump +3s
         now = now + timedelta(seconds=3)
@@ -103,7 +103,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         # Value is not yet expired
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('101', state.state)
+        assert '101' == state.state
 
         # Time jump +2s
         now = now + timedelta(seconds=2)
@@ -112,7 +112,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         # Value is expired now
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('unknown', state.state)
+        assert 'unknown' == state.state
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
         """Test the setting of the value via MQTT with JSON payload."""
@@ -131,7 +131,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual('100', state.state)
+        assert '100' == state.state
 
     def test_force_update_disabled(self):
         """Test force update option."""
@@ -155,11 +155,11 @@ class TestSensorMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
     def test_force_update_enabled(self):
         """Test force update option."""
@@ -184,41 +184,41 @@ class TestSensorMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
-        self.assertEqual(2, len(events))
+        assert 2 == len(events)
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'availability_topic': 'availability-topic'
             }
-        }))
+        })
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -227,22 +227,22 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_available': 'good',
                 'payload_not_available': 'nogood'
             }
-        }))
+        })
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def _send_time_changed(self, now):
         """Send a time changed event."""
@@ -265,8 +265,8 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual('100',
-                         state.attributes.get('val'))
+        assert '100' == \
+            state.attributes.get('val')
 
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
@@ -286,9 +286,8 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual(None,
-                         state.attributes.get('val'))
-        self.assertTrue(mock_logger.warning.called)
+        assert state.attributes.get('val') is None
+        assert mock_logger.warning.called
 
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
@@ -308,10 +307,9 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(None,
-                         state.attributes.get('val'))
-        self.assertTrue(mock_logger.warning.called)
-        self.assertTrue(mock_logger.debug.called)
+        assert state.attributes.get('val') is None
+        assert mock_logger.warning.called
+        assert mock_logger.debug.called
 
     def test_update_with_json_attrs_and_template(self):
         """Test attributes get extracted from a JSON result."""
@@ -331,9 +329,70 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        self.assertEqual('100',
-                         state.attributes.get('val'))
-        self.assertEqual('100', state.state)
+        assert '100' == \
+            state.attributes.get('val')
+        assert '100' == state.state
+
+    def test_setting_sensor_attribute_via_mqtt_json_topic(self):
+        """Test the setting of attribute via MQTT with JSON payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert '100' == \
+            state.attributes.get('val')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '[ "list", "of", "things"]')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'JSON result was not a dictionary')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', 'This is not JSON')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'Erroneous JSON: %s', 'This is not JSON')
 
     def test_invalid_device_class(self):
         """Test device_class option with invalid value."""
@@ -411,6 +470,39 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('sensor.beer')
+    assert state is None
+
+
+async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('sensor.milk')
     assert state is None
 
 

@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-variable
+        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:

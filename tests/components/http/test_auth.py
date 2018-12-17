@@ -1,5 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
-# pylint: disable=protected-access
+from datetime import timedelta
 from ipaddress import ip_network
 from unittest.mock import patch
 
@@ -7,7 +7,8 @@ import pytest
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 
-from homeassistant.components.http.auth import setup_auth
+from homeassistant.auth.providers import legacy_api_password
+from homeassistant.components.http.auth import setup_auth, async_sign_path
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.real_ip import setup_real_ip
 from homeassistant.const import HTTP_HEADER_HA_AUTH
@@ -33,7 +34,16 @@ async def mock_handler(request):
     """Return if request was authenticated."""
     if not request[KEY_AUTHENTICATED]:
         raise HTTPUnauthorized
-    return web.Response(status=200)
+
+    token = request.get('hass_refresh_token')
+    token_id = token.id if token else None
+    user = request.get('hass_user')
+    user_id = user.id if user else None
+
+    return web.json_response(status=200, data={
+        'refresh_token_id': token_id,
+        'user_id': user_id,
+    })
 
 
 @pytest.fixture
@@ -65,38 +75,41 @@ async def test_auth_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_access_without_password(app, aiohttp_client):
-    """Test access without password."""
-    setup_auth(app, [], False, api_password=None)
-    client = await aiohttp_client(app)
-
-    resp = await client.get('/')
-    assert resp.status == 200
-
-
-async def test_access_with_password_in_header(app, aiohttp_client):
+async def test_access_with_password_in_header(app, aiohttp_client,
+                                              legacy_auth, hass):
     """Test access with password in header."""
-    setup_auth(app, [], False, api_password=API_PASSWORD)
+    setup_auth(app, [], api_password=API_PASSWORD)
     client = await aiohttp_client(app)
+    user = await legacy_api_password.async_get_user(hass)
 
     req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
 
     req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: 'wrong-pass'})
     assert req.status == 401
 
 
-async def test_access_with_password_in_query(app, aiohttp_client):
+async def test_access_with_password_in_query(app, aiohttp_client, legacy_auth,
+                                             hass):
     """Test access with password in URL."""
-    setup_auth(app, [], False, api_password=API_PASSWORD)
+    setup_auth(app, [], api_password=API_PASSWORD)
     client = await aiohttp_client(app)
+    user = await legacy_api_password.async_get_user(hass)
 
     resp = await client.get('/', params={
         'api_password': API_PASSWORD
     })
     assert resp.status == 200
+    assert await resp.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
 
     resp = await client.get('/')
     assert resp.status == 401
@@ -107,15 +120,20 @@ async def test_access_with_password_in_query(app, aiohttp_client):
     assert resp.status == 401
 
 
-async def test_basic_auth_works(app, aiohttp_client):
+async def test_basic_auth_works(app, aiohttp_client, hass, legacy_auth):
     """Test access with basic authentication."""
-    setup_auth(app, [], False, api_password=API_PASSWORD)
+    setup_auth(app, [], api_password=API_PASSWORD)
     client = await aiohttp_client(app)
+    user = await legacy_api_password.async_get_user(hass)
 
     req = await client.get(
         '/',
         auth=BasicAuth('homeassistant', API_PASSWORD))
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
 
     req = await client.get(
         '/',
@@ -135,9 +153,9 @@ async def test_basic_auth_works(app, aiohttp_client):
     assert req.status == 401
 
 
-async def test_access_with_trusted_ip(app2, aiohttp_client):
+async def test_access_with_trusted_ip(app2, aiohttp_client, hass_owner_user):
     """Test access with an untrusted ip address."""
-    setup_auth(app2, TRUSTED_NETWORKS, False, api_password='some-pass')
+    setup_auth(app2, TRUSTED_NETWORKS, api_password='some-pass')
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -153,26 +171,44 @@ async def test_access_with_trusted_ip(app2, aiohttp_client):
         resp = await client.get('/')
         assert resp.status == 200, \
             "{} should be trusted".format(remote_addr)
+        assert await resp.json() == {
+            'refresh_token_id': None,
+            'user_id': hass_owner_user.id,
+        }
 
 
 async def test_auth_active_access_with_access_token_in_header(
         hass, app, aiohttp_client, hass_access_token):
     """Test access with access token in header."""
     token = hass_access_token
-    setup_auth(app, [], True, api_password=None)
+    setup_auth(app, [], api_password=None)
     client = await aiohttp_client(app)
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
 
     req = await client.get(
         '/', headers={'Authorization': 'Bearer {}'.format(token)})
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': refresh_token.id,
+        'user_id': refresh_token.user.id,
+    }
 
     req = await client.get(
         '/', headers={'AUTHORIZATION': 'Bearer {}'.format(token)})
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': refresh_token.id,
+        'user_id': refresh_token.user.id,
+    }
 
     req = await client.get(
         '/', headers={'authorization': 'Bearer {}'.format(token)})
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': refresh_token.id,
+        'user_id': refresh_token.user.id,
+    }
 
     req = await client.get(
         '/', headers={'Authorization': token})
@@ -190,9 +226,10 @@ async def test_auth_active_access_with_access_token_in_header(
     assert req.status == 401
 
 
-async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
+async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client,
+                                                  hass_owner_user):
     """Test access with an untrusted ip address."""
-    setup_auth(app2, TRUSTED_NETWORKS, True, api_password=None)
+    setup_auth(app2, TRUSTED_NETWORKS, None)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -208,43 +245,85 @@ async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
         resp = await client.get('/')
         assert resp.status == 200, \
             "{} should be trusted".format(remote_addr)
+        assert await resp.json() == {
+            'refresh_token_id': None,
+            'user_id': hass_owner_user.id,
+        }
 
 
-async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
-    """Test access using api_password should be blocked when auth.active."""
-    setup_auth(app, [], True, api_password=API_PASSWORD)
-    client = await aiohttp_client(app)
-
-    req = await client.get(
-        '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
-    assert req.status == 401
-
-    resp = await client.get('/', params={
-        'api_password': API_PASSWORD
-    })
-    assert resp.status == 401
-
-    req = await client.get(
-        '/',
-        auth=BasicAuth('homeassistant', API_PASSWORD))
-    assert req.status == 401
-
-
-async def test_auth_legacy_support_api_password_access(app, aiohttp_client):
+async def test_auth_legacy_support_api_password_access(
+        app, aiohttp_client, legacy_auth, hass):
     """Test access using api_password if auth.support_legacy."""
-    setup_auth(app, [], True, support_legacy=True, api_password=API_PASSWORD)
+    setup_auth(app, [], API_PASSWORD)
     client = await aiohttp_client(app)
+    user = await legacy_api_password.async_get_user(hass)
 
     req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
 
     resp = await client.get('/', params={
         'api_password': API_PASSWORD
     })
     assert resp.status == 200
+    assert await resp.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
 
     req = await client.get(
         '/',
         auth=BasicAuth('homeassistant', API_PASSWORD))
     assert req.status == 200
+    assert await req.json() == {
+        'refresh_token_id': None,
+        'user_id': user.id,
+    }
+
+
+async def test_auth_access_signed_path(
+        hass, app, aiohttp_client, hass_access_token):
+    """Test access with signed url."""
+    app.router.add_post('/', mock_handler)
+    app.router.add_get('/another_path', mock_handler)
+    setup_auth(app, [], None)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    signed_path = async_sign_path(
+        hass, refresh_token.id, '/', timedelta(seconds=5)
+    )
+
+    req = await client.get(signed_path)
+    assert req.status == 200
+    data = await req.json()
+    assert data['refresh_token_id'] == refresh_token.id
+    assert data['user_id'] == refresh_token.user.id
+
+    # Use signature on other path
+    req = await client.get(
+        '/another_path?{}'.format(signed_path.split('?')[1]))
+    assert req.status == 401
+
+    # We only allow GET
+    req = await client.post(signed_path)
+    assert req.status == 401
+
+    # Never valid as expired in the past.
+    expired_signed_path = async_sign_path(
+        hass, refresh_token.id, '/', timedelta(seconds=-5)
+    )
+
+    req = await client.get(expired_signed_path)
+    assert req.status == 401
+
+    # refresh token gone should also invalidate signature
+    await hass.auth.async_remove_refresh_token(refresh_token)
+    req = await client.get(signed_path)
+    assert req.status == 401

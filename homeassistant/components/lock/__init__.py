@@ -34,7 +34,7 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 LOCK_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
 
@@ -58,7 +58,7 @@ def is_locked(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for locks."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS)
 
     await component.async_setup(config)
@@ -77,6 +77,11 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
 class LockDevice(Entity):

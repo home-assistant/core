@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.1.0']
+REQUIREMENTS = ['netdisco==2.2.0']
 
 DOMAIN = 'discovery'
 
@@ -46,12 +46,13 @@ SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
-    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -63,8 +64,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
-    SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
@@ -86,6 +85,7 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
+    'lg_smart_device': ('media_player', 'lg_soundbar'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
     'freebox': ('device_tracker', 'freebox'),
 }
@@ -134,6 +134,7 @@ async def async_setup(hass, config):
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
         if discovery_hash in already_discovered:
+            logger.debug("Already discoverd service %s %s.", service, info)
             return
 
         already_discovered.add(discovery_hash)

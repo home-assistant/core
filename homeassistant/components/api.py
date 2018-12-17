@@ -9,7 +9,9 @@ import json
 import logging
 
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPBadRequest
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
@@ -20,7 +22,9 @@ from homeassistant.const import (
     URL_API_SERVICES, URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM,
     URL_API_TEMPLATE, __version__)
 import homeassistant.core as ha
-from homeassistant.exceptions import TemplateError
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.exceptions import (
+    TemplateError, Unauthorized, ServiceNotFound)
 from homeassistant.helpers import template
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
@@ -81,6 +85,8 @@ class APIEventStream(HomeAssistantView):
 
     async def get(self, request):
         """Provide a streaming interface for the event bus."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized()
         hass = request.app['hass']
         stop_obj = object()
         to_write = asyncio.Queue(loop=hass.loop)
@@ -141,6 +147,8 @@ class APIEventStream(HomeAssistantView):
             _LOGGER.debug("STREAM %s RESPONSE CLOSED", id(stop_obj))
             unsub_stream()
 
+        return response
+
 
 class APIConfigView(HomeAssistantView):
     """View to handle Configuration requests."""
@@ -183,7 +191,13 @@ class APIStatesView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get current states."""
-        return self.json(request.app['hass'].states.async_all())
+        user = request['hass_user']
+        entity_perm = user.permissions.check_entity
+        states = [
+            state for state in request.app['hass'].states.async_all()
+            if entity_perm(state.entity_id, 'read')
+        ]
+        return self.json(states)
 
 
 class APIEntityStateView(HomeAssistantView):
@@ -195,6 +209,10 @@ class APIEntityStateView(HomeAssistantView):
     @ha.callback
     def get(self, request, entity_id):
         """Retrieve state of entity."""
+        user = request['hass_user']
+        if not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise Unauthorized(entity_id=entity_id)
+
         state = request.app['hass'].states.get(entity_id)
         if state:
             return self.json(state)
@@ -202,6 +220,8 @@ class APIEntityStateView(HomeAssistantView):
 
     async def post(self, request, entity_id):
         """Update state of entity."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(entity_id=entity_id)
         hass = request.app['hass']
         try:
             data = await request.json()
@@ -234,6 +254,8 @@ class APIEntityStateView(HomeAssistantView):
     @ha.callback
     def delete(self, request, entity_id):
         """Remove entity."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(entity_id=entity_id)
         if request.app['hass'].states.async_remove(entity_id):
             return self.json_message("Entity removed.")
         return self.json_message("Entity not found.", HTTP_NOT_FOUND)
@@ -259,6 +281,8 @@ class APIEventView(HomeAssistantView):
 
     async def post(self, request, event_type):
         """Fire events."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized()
         body = await request.text()
         try:
             event_data = json.loads(body) if body else None
@@ -318,8 +342,11 @@ class APIDomainServicesView(HomeAssistantView):
                 "Data should be valid JSON.", HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
-            await hass.services.async_call(
-                domain, service, data, True, self.context(request))
+            try:
+                await hass.services.async_call(
+                    domain, service, data, True, self.context(request))
+            except (vol.Invalid, ServiceNotFound):
+                raise HTTPBadRequest()
 
         return self.json(changed_states)
 
@@ -344,6 +371,8 @@ class APITemplateView(HomeAssistantView):
 
     async def post(self, request):
         """Render a template."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized()
         try:
             data = await request.json()
             tpl = template.Template(data['template'], request.app['hass'])
@@ -361,6 +390,8 @@ class APIErrorLog(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve API error log."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized()
         return web.FileResponse(request.app['hass'].data[DATA_LOGGING])
 
 

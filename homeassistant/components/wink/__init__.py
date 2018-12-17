@@ -177,7 +177,7 @@ DIAL_STATE_SCHEMA = vol.Schema({
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel', 'scene'
+    'fan', 'alarm_control_panel', 'scene', 'water_heater'
 ]
 
 WINK_HUBS = []
@@ -686,6 +686,15 @@ class WinkDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self.wink.name()
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the Wink device."""
+        if hasattr(self.wink, 'capability') and \
+                self.wink.capability() is not None:
+            return "{}_{}".format(self.wink.object_id(),
+                                  self.wink.capability())
+        return self.wink.object_id()
 
     @property
     def available(self):

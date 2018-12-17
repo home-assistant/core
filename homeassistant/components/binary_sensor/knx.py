@@ -69,7 +69,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXBinarySensor(hass, device))
+        entities.append(KNXBinarySensor(device))
     async_add_entities(entities)
 
 
@@ -87,7 +87,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         reset_after=config.get(CONF_RESET_AFTER))
     hass.data[DATA_KNX].xknx.devices.add(binary_sensor)
 
-    entity = KNXBinarySensor(hass, binary_sensor)
+    entity = KNXBinarySensor(binary_sensor)
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
@@ -103,11 +103,9 @@ def async_add_entities_config(hass, config, async_add_entities):
 class KNXBinarySensor(BinarySensorDevice):
     """Representation of a KNX binary sensor."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize of KNX binary sensor."""
         self.device = device
-        self.hass = hass
-        self.async_register_callbacks()
         self.automations = []
 
     @callback
@@ -117,6 +115,10 @@ class KNXBinarySensor(BinarySensorDevice):
             """Call after device was updated."""
             await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
+
+    async def async_added_to_hass(self):
+        """Store register state change callback."""
+        self.async_register_callbacks()
 
     @property
     def name(self):

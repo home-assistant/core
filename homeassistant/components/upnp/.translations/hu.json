@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "one": "hiba",
+            "other": ""
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_sensors": "Forgalom \u00e9rz\u00e9kel\u0151k hozz\u00e1ad\u00e1sa",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Az UPnP/IGD be\u00e1ll\u00edt\u00e1si lehet\u0151s\u00e9gei"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

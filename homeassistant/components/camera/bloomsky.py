@@ -54,6 +54,11 @@ class BloomSkyCamera(Camera):
         return self._last_image
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._id
+
+    @property
     def name(self):
         """Return the name of this BloomSky device."""
         return self._name

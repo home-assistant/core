@@ -76,7 +76,7 @@ class MediaPlayer(HomeAccessory):
         self._flag[FEATURE_ON_OFF] = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def set_play_pause(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -85,7 +85,7 @@ class MediaPlayer(HomeAccessory):
         self._flag[FEATURE_PLAY_PAUSE] = True
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_PAUSE
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def set_play_stop(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -94,7 +94,7 @@ class MediaPlayer(HomeAccessory):
         self._flag[FEATURE_PLAY_STOP] = True
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_STOP
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def set_toggle_mute(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -103,7 +103,7 @@ class MediaPlayer(HomeAccessory):
         self._flag[FEATURE_TOGGLE_MUTE] = True
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_MEDIA_VOLUME_MUTED: value}
-        self.hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, params)
+        self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
