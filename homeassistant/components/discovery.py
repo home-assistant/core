@@ -52,13 +52,13 @@ SERVICE_DLNA_DMR = 'dlna_dmr'
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
+    'esphome': 'esphome',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
     SERVICE_IGD: 'upnp',
-    'esphome': 'esphome'
 }
 
 SERVICE_HANDLERS = {
