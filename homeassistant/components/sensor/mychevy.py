@@ -159,7 +159,7 @@ class EVSensor(Entity):
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
             for attr in self._extra_attrs:
-                self._state_attributes[attr] = getattr(self._car, attr, None)
+                self._state_attributes[attr] = getattr(self._car, attr)
             self.async_schedule_update_ha_state()
 
     @property
@@ -168,7 +168,7 @@ class EVSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
 
