@@ -10,7 +10,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -33,8 +33,8 @@ CONF_AVATAR_NAME = 'avatar_name'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]):
         vol.All(cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]),
-    vol.Optional(CONF_ACTIVITY_NAME, default=""): cv.string,
-    vol.Optional(CONF_AVATAR_NAME, default=""): cv.string,
+    vol.Optional(CONF_ACTIVITY_NAME): cv.string,
+    vol.Optional(CONF_AVATAR_NAME): cv.string,
 })
 
 
@@ -42,14 +42,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform for a Skybell device."""
     cond = config[CONF_MONITORED_CONDITIONS]
     names = {}
-    names[IMAGE_ACTIVITY] = config[CONF_ACTIVITY_NAME]
-    names[IMAGE_AVATAR] = config[CONF_AVATAR_NAME]
+    names[IMAGE_ACTIVITY] = config.get(CONF_ACTIVITY_NAME)
+    names[IMAGE_AVATAR] = config.get(CONF_AVATAR_NAME)
     skybell = hass.data.get(SKYBELL_DOMAIN)
 
     sensors = []
     for device in skybell.get_devices():
         for camera_type in cond:
-            sensors.append(SkybellCamera(device, type, names[camera_type]))
+            sensors.append(SkybellCamera(device, camera_type,
+                                         names.get(camera_type)))
 
     add_entities(sensors, True)
 
@@ -57,13 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SkybellCamera(SkybellDevice, Camera):
     """A camera implementation for Skybell devices."""
 
-    def __init__(self, device, camera_type, name=""):
+    def __init__(self, device, camera_type, name=None):
         """Initialize a camera for a Skybell device."""
         self._type = camera_type
         SkybellDevice.__init__(self, device)
         Camera.__init__(self)
-        if name != "":
-            self._name = self._device.name + " " + name
+        if name is not None:
+            self._name = "{} {}".format(self._device.name, name)
         else:
             self._name = self._device.name
         self._url = None
