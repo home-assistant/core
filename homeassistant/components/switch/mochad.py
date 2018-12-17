@@ -43,13 +43,11 @@ class MochadSwitch(SwitchDevice):
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Switch Device."""
-
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self._state = self._get_device_status()
-
 
     @property
     def name(self):
@@ -106,7 +104,6 @@ class MochadSwitch(SwitchDevice):
 
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
-
         from pymochad import device
 
         if self._controller.connect_event.wait():

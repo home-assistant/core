@@ -65,7 +65,6 @@ class MochadLight(Light):
 
     def _get_device_status(self):
         """Get the status of the light from mochad."""
-
         from pymochad import device
 
         if self._controller.connect_event.wait():
