@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi import CoverInfo, CoverState
+    from aioesphomeapi import CoverInfo, CoverState  # noqa
 
 DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome covers based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi import CoverInfo, CoverState
+    from aioesphomeapi import CoverInfo, CoverState  # noqa
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
