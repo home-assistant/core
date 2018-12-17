@@ -15,7 +15,7 @@ import homeassistant.util.color as color_util
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi import LightInfo, LightState
+    from aioesphomeapi import LightInfo, LightState  # noqa
 
 DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
     """Set up ESPHome lights based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi import LightInfo, LightState
+    from aioesphomeapi import LightInfo, LightState  # noqa
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
