@@ -1,8 +1,8 @@
-"""Support for esphomelib fans."""
+"""Support for ESPHome fans."""
 import logging
 from typing import List, Optional, TYPE_CHECKING
 
-from homeassistant.components.esphomelib import EsphomelibEntity, \
+from homeassistant.components.esphome import EsphomeEntity, \
     platform_async_setup_entry
 from homeassistant.components.fan import FanEntity, SPEED_HIGH, SPEED_LOW, \
     SPEED_MEDIUM, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, SPEED_OFF
@@ -11,22 +11,22 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi.client import FanInfo, FanState
+    from aioesphomeapi import FanInfo, FanState
 
-DEPENDENCIES = ['esphomelib']
+DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType,
                             entry: ConfigEntry, async_add_entities) -> None:
-    """Set up esphomelib fans based on a config entry."""
+    """Set up ESPHome fans based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi.client import FanInfo, FanState
+    from aioesphomeapi import FanInfo, FanState
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
         component_key='fan',
-        info_type=FanInfo, entity_type=EsphomelibFan,
+        info_type=FanInfo, entity_type=EsphomeFan,
         state_type=FanState
     )
 
@@ -39,8 +39,8 @@ FAN_SPEED_STR_TO_INT = {
 FAN_SPEED_INT_TO_STR = {v: k for k, v in FAN_SPEED_STR_TO_INT.items()}
 
 
-class EsphomelibFan(EsphomelibEntity, FanEntity):
-    """A fan implementation for esphomelib."""
+class EsphomeFan(EsphomeEntity, FanEntity):
+    """A fan implementation for ESPHome."""
 
     @property
     def _static_info(self) -> 'FanInfo':
