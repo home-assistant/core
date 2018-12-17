@@ -118,6 +118,9 @@ omit =
     homeassistant/components/ecovacs.py
     homeassistant/components/*/ecovacs.py
 
+    homeassistant/components/esphome/__init__.py
+    homeassistant/components/*/esphome.py
+
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 

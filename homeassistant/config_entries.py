@@ -139,6 +139,7 @@ FLOWS = [
     'daikin',
     'deconz',
     'dialogflow',
+    'esphome',
     'hangouts',
     'homematicip_cloud',
     'hue',
