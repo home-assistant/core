@@ -224,7 +224,8 @@ def get_manual_configuration(hass, config, conf, ihc_controller,
                         'type': sensor_cfg.get(CONF_TYPE),
                         'inverting': sensor_cfg.get(CONF_INVERTING),
                         'dimmable': sensor_cfg.get(CONF_DIMMABLE),
-                        'unit_of_measurement': sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
+                        'unit_of_measurement': sensor_cfg.get(
+                            CONF_UNIT_OF_MEASUREMENT)
                     }
                 }
                 discovery_info[name] = device
