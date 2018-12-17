@@ -6,6 +6,7 @@ https://home-assistant.io/components/tellduslive/
 """
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -52,7 +53,7 @@ async def async_setup_entry(hass, entry):
     conf = entry.data[KEY_SESSION]
 
     if KEY_HOST in conf:
-        session = await hass.async_add_executer_job(Session(**conf))
+        session = await hass.async_add_executer_job(partial(Session, **conf))
     else:
         session = Session(
             PUBLIC_KEY,
@@ -70,8 +71,7 @@ async def async_setup_entry(hass, entry):
 
     client = TelldusLiveClient(hass, entry, session)
     hass.data[DOMAIN] = client
-    await hass.async_add_executer_job(
-        async_add_hubs(hass, client, entry.entry_id))
+    await async_add_hubs(hass, client, entry.entry_id)
     hass.async_create_task(client.update())
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
@@ -140,7 +140,9 @@ class TelldusLiveClient:
 
     async def async_get_hubs(self):
         """Return hubs registered for the user."""
-        return self._client.get_clients() or []
+        clients = await self._hass.async_add_executor_job(
+            self._client.get_clients)
+        return clients or []
 
     @staticmethod
     def identify_device(device):
