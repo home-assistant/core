@@ -1,8 +1,8 @@
 """
 Component for handling Air Pollutants data for your location.
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/air_pollutants/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/air_pollutants.waqi/
 """
 import asyncio
 from datetime import timedelta
@@ -85,8 +85,8 @@ class WaqiAirPollutant(AirPollutantsEntity):
     def __init__(self, client, station):
         self._client = client
         self.uid = station.get('uid', None)
-        self.url = station.get('station').get('url', None)
-        self.station_name = station.get('station').get('name', None)
+        self.url = station.get('station', {}).get('url', None)
+        self.station_name = station.get('station', {}).get('name', None)
         self._data = None
     
     @property
