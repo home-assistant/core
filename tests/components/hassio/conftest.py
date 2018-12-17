@@ -27,7 +27,7 @@ def hassio_env():
 
 
 @pytest.fixture
-def hassio_client(hassio_env, hass, aiohttp_client, legacy_auth):
+def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     """Create mock hassio http client."""
     with patch('homeassistant.components.hassio.HassIO.update_hass_api',
                Mock(return_value=mock_coro({"result": "ok"}))), \
@@ -40,6 +40,15 @@ def hassio_client(hassio_env, hass, aiohttp_client, legacy_auth):
                 'api_password': API_PASSWORD
             }
         }))
+
+
+@pytest.fixture
+def hassio_client(hassio_stubs, hass, hass_client):
+    yield hass.loop.run_until_complete(hass_client())
+
+
+@pytest.fixture
+def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
     yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
