@@ -85,7 +85,7 @@ async def async_setup_entry(hass, entry):
 async def async_add_hubs(hass, client, entry_id):
     """Add the hubs associated with the current client to device_registry."""
     dev_reg = await hass.helpers.device_registry.async_get_registry()
-    for hub in client.get_hubs():
+    for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub['name'])
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
@@ -138,7 +138,7 @@ class TelldusLiveClient:
         self._config_entry = config_entry
         self._client = session
 
-    def get_hubs(self):
+    async def async_get_hubs(self):
         """Return hubs registered for the user."""
         return self._client.get_clients() or []
 
@@ -182,7 +182,7 @@ class TelldusLiveClient:
 
     async def update(self, *args):
         """Periodically poll the servers for current state."""
-        if not await self._hass.async_add_executer_job(self._client.update()):
+        if not await self._hass.async_add_executer_job(self._client.update):
             _LOGGER.warning('Failed request')
 
         dev_ids = {dev.device_id for dev in self._client.devices}
