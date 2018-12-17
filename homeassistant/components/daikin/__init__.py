@@ -130,3 +130,16 @@ class DaikinApi:
     def mac(self):
         """Return mac-address of device."""
         return self.device.values.get('mac')
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        info = self.device.values
+        return {
+            'connections': {('mac', self.mac)},
+            'identifieres': self.mac,
+            'manufacturer': 'Daikin',
+            'model': info.get('model'),
+            'name': info.get('name'),
+            'sw_version': info.get('ver').replace('_', '.'),
+        }
