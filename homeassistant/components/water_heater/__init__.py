@@ -193,7 +193,7 @@ class WaterHeaterDevice(Entity):
     def operation_list(self):
         """Return the list of available operation modes."""
         return None
- 
+
     @property
     def current_temperature(self):
         """Return the current temperature."""
