@@ -31,7 +31,10 @@ DISPATCHER_ON_LIST = 'esphome_{entry_id}_on_list'
 DISPATCHER_ON_DEVICE_UPDATE = 'esphome_{entry_id}_on_device_update'
 DISPATCHER_ON_STATE = 'esphome_{entry_id}_on_state'
 # The HA component types this integration supports
-HA_COMPONENTS = ['sensor']
+HA_COMPONENTS = [
+    'sensor',
+    'binary_sensor'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
