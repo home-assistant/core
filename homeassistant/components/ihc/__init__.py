@@ -49,7 +49,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_POSITION): cv.string,
     vol.Optional(CONF_NOTE): cv.string
-}, extra=vol.ALLOW_EXTRA)
+})
 
 
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
@@ -99,7 +99,7 @@ IHC_SCHEMA = vol.Schema({
                 SWITCH_SCHEMA,
                 validate_name)
         ]),
-}, extra=vol.ALLOW_EXTRA)
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(
