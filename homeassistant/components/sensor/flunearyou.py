@@ -118,7 +118,6 @@ class FluNearYouSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        _LOGGER.debug(self.fny.data)
         return bool(self.fny.data[self._category])
 
     @property
