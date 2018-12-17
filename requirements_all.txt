@@ -568,7 +568,7 @@ jsonrpc-websocket==0.6
 keyring==17.0.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.1
+keyrings.alt==3.1.1
 
 # homeassistant.components.lock.kiwi
 kiwiki-client==0.1.1
