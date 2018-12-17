@@ -10,9 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_MONITORED_VARIABLES, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME, STATE_IDLE)
+from homeassistant.const import (STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -22,7 +20,6 @@ DATA_TRANSMISSION = 'TRANSMISSION'
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
-DEFAULT_PORT = 9091
 
 SENSOR_TYPES = {
     'active_torrents': ['Active Torrents', None],
@@ -35,21 +32,11 @@ SENSOR_TYPES = {
     'started_torrents': ['Started Torrents', None],
 }
 
-SCAN_INTERVAL = timedelta(minutes=2)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
+    if (discovery_info is None):
+        _LOGGER.warning("Unable to connect to Transmission client.")
+        raise PlatformNotReady
 
     transmission_api = hass.data[DATA_TRANSMISSION]
     monitored_variables = discovery_info['sensors']
@@ -57,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for variable in monitored_variables:
-        dev.append(TransmissionSensor(variable, transmission_api, name, hass))
+        dev.append(TransmissionSensor(variable, transmission_api, name))
 
     add_entities(dev, True)
 
@@ -65,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
-    def __init__(self, sensor_type, transmission_api, client_name, hass):
+    def __init__(self, sensor_type, transmission_api, client_name):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self._state = None
@@ -74,8 +61,6 @@ class TransmissionSensor(Entity):
         self._data = None
         self.client_name = client_name
         self.type = sensor_type
-        self.started_torrents = []
-        self.first_run = True
 
     @property
     def name(self):
@@ -103,11 +88,9 @@ class TransmissionSensor(Entity):
         self._data = self._transmission_api.data
 
         if self.type == 'completed_torrents':
-            self._state = self._transmission_api.getCompletedTorrentCount()
+            self._state = self._transmission_api.get_completed_torrent_count()
         elif self.type == 'started_torrents':
-            self._state = self._transmission_api.getStartedTorrentCount()
-
-        self.first_run = False
+            self._state = self._transmission_api.get_started_torrent_count()
 
         if self.type == 'current_status':
             if self._data:
