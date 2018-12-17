@@ -234,8 +234,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
                 CONF_PAYLOAD_STOP,
                 CONF_PAYLOAD_CLEAN_SPOT,
                 CONF_PAYLOAD_LOCATE,
-                CONF_PAYLOAD_START_PAUSE,
-                CONF_PAYLOAD_PAUSE
+                CONF_PAYLOAD_START_PAUSE
             )
         }
         self._topics = {
