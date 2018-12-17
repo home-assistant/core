@@ -16,6 +16,8 @@ omit =
     homeassistant/components/ads/__init__.py
     homeassistant/components/*/ads.py
 
+    homeassistant/components/air_pollutants/waqi.py
+
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
