@@ -13,6 +13,8 @@ from homeassistant.core import callback, Event
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 # Import config flow so that it's added to the registry
@@ -30,6 +32,10 @@ DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
 DISPATCHER_ON_LIST = 'esphome_{entry_id}_on_list'
 DISPATCHER_ON_DEVICE_UPDATE = 'esphome_{entry_id}_on_device_update'
 DISPATCHER_ON_STATE = 'esphome_{entry_id}_on_state'
+
+STORAGE_KEY = 'esphome.{}'
+STORAGE_VERSION = 1
+
 # The HA component types this integration supports
 HA_COMPONENTS = [
     'sensor',
@@ -52,6 +58,7 @@ class RuntimeEntryData:
 
     entry_id = attr.ib(type=str)
     client = attr.ib(type='APIClient')
+    store = attr.ib(type=Store)
     reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
     state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
@@ -90,6 +97,42 @@ class RuntimeEntryData:
         signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal)
 
+    async def async_load_from_store(self) -> List['EntityInfo']:
+        """Load the retained data from store and return de-serialized data."""
+        # pylint: disable= redefined-outer-name
+        from aioesphomeapi import COMPONENT_TYPE_TO_INFO, DeviceInfo
+
+        restored = await self.store.async_load()
+        if restored is None:
+            return []
+
+        self.device_info = _attr_obj_from_dict(DeviceInfo,
+                                               **restored.pop('device_info'))
+        infos = []
+        for comp_type, restored_infos in restored.items():
+            if comp_type not in COMPONENT_TYPE_TO_INFO:
+                continue
+            for info in restored_infos:
+                cls = COMPONENT_TYPE_TO_INFO[comp_type]
+                infos.append(_attr_obj_from_dict(cls, **info))
+        return infos
+
+    async def async_save_to_store(self) -> None:
+        """Generate dynamic data to store and save it to the filesystem."""
+        store_data = {
+            'device_info': attr.asdict(self.device_info)
+        }
+
+        for comp_type, infos in self.info.items():
+            store_data[comp_type] = [attr.asdict(info)
+                                     for info in infos.values()]
+
+        await self.store.async_save(store_data)
+
+
+def _attr_obj_from_dict(cls, **kwargs):
+    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)})
+
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Stub to allow setting up this component.
@@ -115,9 +158,12 @@ async def async_setup_entry(hass: HomeAssistantType,
     await cli.start()
 
     # Store client in per-config-entry hass.data
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY.format(entry.entry_id),
+                  encoder=JSONEncoder)
     entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
         client=cli,
-        entry_id=entry.entry_id
+        entry_id=entry.entry_id,
+        store=store,
     )
 
     async def on_stop(event: Event) -> None:
@@ -145,6 +191,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             entity_infos = await cli.list_entities()
             entry_data.async_update_static_infos(hass, entity_infos)
             await cli.subscribe_states(async_on_state)
+
+            hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data: %s", err)
             # Re-connection logic will trigger after this
@@ -179,6 +227,9 @@ async def async_setup_entry(hass: HomeAssistantType,
             tasks.append(hass.config_entries.async_forward_entry_setup(
                 entry, component))
         await asyncio.wait(tasks)
+
+        infos = await entry_data.async_load_from_store()
+        entry_data.async_update_static_infos(hass, infos)
 
         # If first connect fails, the next re-connect will be scheduled
         # outside of _pending_task, in order not to delay HA startup
