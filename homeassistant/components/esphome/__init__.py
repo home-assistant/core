@@ -134,6 +134,8 @@ async def async_setup_entry(hass: HomeAssistantType,
         try:
             entry_data.device_info = await cli.device_info()
             entry_data.available = True
+            await _async_setup_device_registry(hass, entry,
+                                               entry_data.device_info)
             entry_data.async_update_device_state(hass)
 
             entity_infos = await cli.list_entities()
