@@ -145,7 +145,6 @@ class TelldusLiveClient:
             self._client.get_clients)
         return clients or []
 
-    @property
     def device_info(self, device_id):
         """Return device info."""
         return self._device_infos.get(device_id)
@@ -174,7 +173,7 @@ class TelldusLiveClient:
         component = self.identify_device(device)
         self._device_infos.update({
             device_id:
-            await self._hass.async_add_executer_job(device.info())
+            await self._hass.async_add_executor_job(device.info)
         })
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
             if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
@@ -194,7 +193,7 @@ class TelldusLiveClient:
 
     async def update(self, *args):
         """Periodically poll the servers for current state."""
-        if not await self._hass.async_add_executer_job(self._client.update):
+        if not await self._hass.async_add_executor_job(self._client.update):
             _LOGGER.warning('Failed request')
 
         dev_ids = {dev.device_id for dev in self._client.devices}
