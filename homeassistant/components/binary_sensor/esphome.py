@@ -9,7 +9,7 @@ from homeassistant.components.esphome import EsphomeEntity, \
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from aioesphomeapi import BinarySensorInfo, BinarySensorState
+    from aioesphomeapi import BinarySensorInfo, BinarySensorState  # noqa
 
 DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up ESPHome binary sensors based on a config entry."""
     # pylint: disable=redefined-outer-name
-    from aioesphomeapi import BinarySensorInfo, BinarySensorState
+    from aioesphomeapi import BinarySensorInfo, BinarySensorState  # noqa
 
     await platform_async_setup_entry(
         hass, entry, async_add_entities,
