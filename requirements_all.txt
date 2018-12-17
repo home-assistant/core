@@ -64,7 +64,7 @@ PyTransportNSW==0.1.1
 PyXiaomiGateway==0.11.1
 
 # homeassistant.components.rpi_gpio
-# RPi.GPIO==0.6.1
+# RPi.GPIO==0.6.5
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
