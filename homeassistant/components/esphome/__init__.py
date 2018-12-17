@@ -37,6 +37,7 @@ HA_COMPONENTS = [
     'cover',
     'fan',
     'light',
+    'switch',
 ]
 
 _LOGGER = logging.getLogger(__name__)
