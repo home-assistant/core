@@ -62,7 +62,7 @@ class MochadSwitch(SwitchDevice):
 
         if self._controller.connect_event.wait():
             switch = device.Device(self._controller.ctrl, self._address,
-                                    comm_type=self._comm_type)
+                                   comm_type=self._comm_type)
             switch.send_cmd(cmd)
 
     def turn_on(self, **kwargs):
@@ -111,9 +111,11 @@ class MochadSwitch(SwitchDevice):
 
         if self._controller.connect_event.wait():
             switch = device.Device(self._controller.ctrl, self._address,
-                                    comm_type=self._comm_type)
-        with mochad.REQ_LOCK:
-            status = switch.get_status().rstrip()
+                                   comm_type=self._comm_type)
+            with mochad.REQ_LOCK:
+                status = switch.get_status().rstrip()
+        else:
+            status = 'off'
         return status == 'on'
 
     @property

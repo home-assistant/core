@@ -70,11 +70,11 @@ class MochadLight(Light):
 
         if self._controller.connect_event.wait():
             light = device.Device(self._controller.ctrl, self._address,
-                                    comm_type=self._comm_type)
+                                  comm_type=self._comm_type)
             with mochad.REQ_LOCK:
                 status = light.get_status().rstrip()
         else:
-            status='off'
+            status = 'off'
         return status == 'on'
 
     @property
@@ -118,7 +118,7 @@ class MochadLight(Light):
 
         if self._controller.connect_event.wait():
             light = device.Device(self._controller.ctrl, self._address,
-                                    comm_type=self._comm_type)
+                                  comm_type=self._comm_type)
             light.send_cmd(cmd)
 
     def turn_on(self, **kwargs):
