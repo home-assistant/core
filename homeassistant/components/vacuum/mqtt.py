@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate, 
+    ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (	
@@ -175,7 +175,8 @@ async def _async_setup_entity(config, async_add_entities,
     async_add_entities([MqttVacuum(config, discovery_hash)])
 
 
-class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, VacuumDevice):
+class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+                 VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
     def __init__(self, config, discovery_hash):
@@ -201,10 +202,9 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, 
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)
-        
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -222,7 +222,8 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
         supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
-        self._supported_features = strings_to_services(supported_feature_strings)
+        self._supported_features = strings_to_services(
+          supported_feature_strings)
         self._qos = config.get(mqtt.CONF_QOS)
         self._retain = config.get(mqtt.CONF_RETAIN)
 
@@ -334,8 +335,8 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
 
         topics_list = set([topic for topic in self._topics.values() if topic])
         self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state, 
-            { "topic{}".format(i):{ 
+            self.hass, self._sub_state,
+            { "topic{}".format(i): {
                 "topic": topic,
                 "msg_callback": message_received,
                 "qos": self._qos
@@ -421,7 +422,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_TURN_ON], 
+                           self._payloads[CONF_PAYLOAD_TURN_ON],
                            self._qos, self._retain)
         self._status = 'Cleaning'
         self.async_schedule_update_ha_state()
@@ -432,7 +433,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_TURN_OFF], 
+                           self._payloads[CONF_PAYLOAD_TURN_OFF],
                            self._qos, self._retain)
         self._status = 'Turning Off'
         self.async_schedule_update_ha_state()
@@ -442,7 +443,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
-        mqtt.async_publish(self.hass, self._command_topic, 
+        mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_STOP],
                            self._qos, self._retain)
         self._status = 'Stopping the current task'
@@ -454,7 +455,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_CLEAN_SPOT], 
+                           self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
                            self._qos, self._retain)
         self._status = "Cleaning spot"
         self.async_schedule_update_ha_state()
@@ -465,7 +466,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_LOCATE], 
+                           self._payloads[CONF_PAYLOAD_LOCATE],
                            self._qos, self._retain)
         self._status = "Hi, I'm over here!"
         self.async_schedule_update_ha_state()
@@ -476,7 +477,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_START_PAUSE], 
+                           self._payloads[CONF_PAYLOAD_START_PAUSE],
                            self._qos, self._retain)
         self._status = 'Pausing/Resuming cleaning...'
         self.async_schedule_update_ha_state()
@@ -487,7 +488,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payloads[CONF_PAYLOAD_RETURN_TO_BASE], 
+                           self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
                            self._qos, self._retain)
         self._status = 'Returning home...'
         self.async_schedule_update_ha_state()
@@ -499,7 +500,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
         if not self._fan_speed_list or fan_speed not in self._fan_speed_list:
             return
 
-        mqtt.async_publish(self.hass, self._set_fan_speed_topic, 
+        mqtt.async_publish(self.hass, self._set_fan_speed_topic,
                            fan_speed, self._qos, self._retain)
         self._status = "Setting fan to {}...".format(fan_speed)
         self.async_schedule_update_ha_state()
@@ -509,7 +510,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Va
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        mqtt.async_publish(self.hass, self._send_command_topic, 
+        mqtt.async_publish(self.hass, self._send_command_topic,
                            command, self._qos, self._retain)
         self._status = "Sending command {}...".format(command)
         self.async_schedule_update_ha_state()
