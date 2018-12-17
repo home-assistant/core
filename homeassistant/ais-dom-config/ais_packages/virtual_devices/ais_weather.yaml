@@ -2,6 +2,21 @@ weather:
   - platform: yweather
     name: Pogoda
     woeid: 523920
+  - platform: darksky
+    api_key: c992285eeb9cc789c226c809794cf14e
+    forecast:
+      - 0
+      - pl
+    monitored_conditions:
+      - summary
+      - icon
+      - temperature
+    update_interval:
+        days: 0
+        hours: 1
+        minutes: 0
+        seconds: 0
+        milliseconds: 0
 
 sensor:
   - platform: template
@@ -35,7 +50,6 @@ sensor:
     - pressure
     - visibility
     - humidity
-
 group:
   ais_pogoda:
     name: Aktualne warunki pogodowe

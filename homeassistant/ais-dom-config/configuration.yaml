@@ -2,9 +2,9 @@ homeassistant:
   name: Asystent domowy
   unit_system: metric
   time_zone: Europe/Warsaw
-  latitude: 52.298519
-  longitude: 20.838871
-  elevation: 134
+  #latitude: 52.298519
+  #longitude: 20.838871
+  #elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
   customize_glob:

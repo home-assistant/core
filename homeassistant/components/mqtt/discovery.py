@@ -252,15 +252,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
                 component, 'mqtt'), payload)
-                # AIS dom, we are doing this here because the
-                # EVENT_PLATFORM_DISCOVERED is not always fired
-                # prepare ais dom menu
-                hass.async_add_job(
-                    hass.services.async_call(
-                        'ais_ai_service',
-                        'prepare_remote_menu'
-                    )
+            # AIS dom, we are doing this here because the
+            # EVENT_PLATFORM_DISCOVERED is not always fired
+            # prepare ais dom menu
+            hass.async_add_job(
+                hass.services.async_call(
+                    'ais_ai_service',
+                    'prepare_remote_menu'
                 )
+            )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
