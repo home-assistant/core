@@ -198,18 +198,15 @@ async def test_discovery_initiation(hass, mock_client):
         'hostname': 'test8266.local.',
         'properties': {}
     }
-    result = await flow.async_step_discovery(user_input=service_info)
-    assert result['type'] == 'form'
-    assert result['step_id'] == 'user'
 
-    # Validate schema values
-    for key in result['data_schema'].schema:
-        if key == 'host':
-            assert key.default() == 'test8266.local'
-        elif key == 'port':
-            assert key.default() == 6053
-        else:
-            assert False
+    mock_client.device_info.return_value = mock_coro(
+        MockDeviceInfo(False, "test8266"))
+
+    result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'create_entry'
+    assert result['title'] == 'test8266'
+    assert result['data']['host'] == 'test8266.local'
+    assert result['data']['port'] == 6053
 
 
 async def test_discovery_already_configured_hostname(hass, mock_client):

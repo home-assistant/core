@@ -56,7 +56,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
     async def async_step_discovery(self, user_input: ConfigType):
         """Handle discovery."""
         # mDNS hostname has additional '.' at end
-        hostname = user_input['hostname'].replace('.local.', '.local')
+        hostname = user_input['hostname'][:-1]
         hosts = (hostname, user_input['host'])
         for entry in self._async_current_entries():
             if entry.data['host'] in hosts:
@@ -66,9 +66,10 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
         # Prefer .local addresses (mDNS is available after all, otherwise
         # we wouldn't have received the discovery message)
-        self._host = hostname
-        self._port = user_input['port']
-        return await self.async_step_user()
+        return await self.async_step_user(user_input={
+            'host': hostname,
+            'port': user_input['port'],
+        })
 
     def _async_get_entry(self):
         return self.async_create_entry(
