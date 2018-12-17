@@ -1,6 +1,5 @@
 """Support for esphome devices."""
 import asyncio
-import copy
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
 
@@ -17,6 +16,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -194,7 +194,8 @@ async def async_setup_entry(hass: HomeAssistantType,
 
         if service.data_template:
             try:
-                data_template = copy.deepcopy(service.data_template)
+                data_template = {key: Template(value) for key, value in
+                                 service.data_template.items()}
                 template.attach(hass, data_template)
                 service_data.update(template.render_complex(
                     data_template, service.variables))
