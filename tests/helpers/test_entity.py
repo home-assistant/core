@@ -32,6 +32,7 @@ def test_generate_entity_id_given_keys():
         fmt, 'overwrite hidden true', current_ids=[
             'test.another_entity']) == 'test.overwrite_hidden_true'
 
+
 def test_async_update_support(hass):
     """Test async update getting called."""
     sync_update = []

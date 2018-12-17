@@ -299,4 +299,3 @@ async def test_throttle_async_update(hass):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.awair_score").state == "79"
-
