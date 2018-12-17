@@ -9,9 +9,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
-import homeassistant.components.zha.helpers as zha_helpers
+from homeassistant.components.zha.const import DATA_ZHA
 import homeassistant.components.zha.entities as zha_entities
 from homeassistant.core import callback
 
@@ -37,6 +35,7 @@ async def async_setup_entry(hass, entry, async_see):
 
 class ZhaDeviceTracker(zha_entities.ZhaEntity):
     """Zha device tracker."""
+
     _domain = DOMAIN
 
     def __init__(self, async_see, **kwargs):
