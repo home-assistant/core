@@ -107,18 +107,16 @@ async def _async_setup_occupancy(device_class, discovery_info):
     sensor = BinarySensor(device_class, **discovery_info)
 
     if discovery_info['new_join']:
-        from zigpy.exceptions import ZigbeeException
         from zigpy.zcl.clusters.measurement import OccupancySensing
-        endpoint = discovery_info['endpoint']
         in_clusters = discovery_info['in_clusters']
         cluster = in_clusters[OccupancySensing.cluster_id]
         await helpers.configure_reporting(
-                sensor.entity_id,
-                cluster,
-                0,
-                min_report=0,
-                max_report=900,
-                reportable_change=1
+            sensor.entity_id,
+            cluster,
+            0,
+            min_report=0,
+            max_report=900,
+            reportable_change=1
         )
 
     return sensor
