@@ -272,7 +272,6 @@ class WemoHumidifier(FanEntity):
         except asyncio.TimeoutError:
             _LOGGER.warning('Lost connection to %s', self.name)
             self._available = False
-            self.wemo.reconnect_with_device()
 
     async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
