@@ -173,10 +173,8 @@ async def async_setup_entry(hass, config_entry):
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={(
-                    CONNECTION_ZIGBEE,
-                    str(
-                        APPLICATION_CONTROLLER.ieee
-                    )
+                CONNECTION_ZIGBEE,
+                str(APPLICATION_CONTROLLER.ieee)
             )},
             identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
             name="Zigbee Coordinator",
