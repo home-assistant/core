@@ -133,6 +133,7 @@ class TelldusLiveClient:
     def __init__(self, hass, config_entry, session):
         """Initialize the Tellus data object."""
         self._known_devices = set()
+        self._device_infos = {}
 
         self._hass = hass
         self._config_entry = config_entry
@@ -143,6 +144,11 @@ class TelldusLiveClient:
         clients = await self._hass.async_add_executor_job(
             self._client.get_clients)
         return clients or []
+
+    @property
+    def device_info(self, device_id):
+        """Return device info."""
+        return self._device_infos.get(device_id)
 
     @staticmethod
     def identify_device(device):
@@ -166,6 +172,10 @@ class TelldusLiveClient:
         """Discover the component."""
         device = self._client.device(device_id)
         component = self.identify_device(device)
+        self._device_infos.update({
+            device_id:
+            await self._hass.async_add_executer_job(device.info())
+        })
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
             if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                 await self._hass.config_entries.async_forward_entry_setup(

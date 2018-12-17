@@ -115,7 +115,7 @@ class TelldusLiveEntity(Entity):
     @property
     def device_info(self):
         """Return device info."""
-        device = self.device.info()
+        device = self._client.device.info(self.device.device_id)
         return {
             'identifiers': {('tellduslive', self.device.device_id)},
             'name': self.device.name,
