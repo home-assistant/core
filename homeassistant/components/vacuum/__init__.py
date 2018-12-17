@@ -49,7 +49,7 @@ SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
 VACUUM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
