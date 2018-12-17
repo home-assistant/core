@@ -11,16 +11,12 @@ import logging
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-
 from homeassistant.components.air_pollutants import AirPollutantsEntity
+from homeassistant.const import ATTR_TEMPERATURE, CONF_TOKEN
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
@@ -72,15 +68,16 @@ async def async_setup_platform(hass, config, async_add_entities,
             for station in stations:
                 waqi_air_pollutant = WaqiAirPollutant(client, station)
                 if not station_filter or \
-                    {waqi_sensor.uid,
-                     waqi_sensor.url,
-                     waqi_sensor.station_name} & set(station_filter):
+                    {waqi_air_pollutant.uid,
+                     waqi_air_pollutant.url,
+                     waqi_air_pollutant.station_name} & set(station_filter):
                     dev.append(waqi_air_pollutant)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to WAQI servers.')
         raise PlatformNotReady
     async_add_entities(dev, True)
+
 
 class WaqiAirPollutant(AirPollutantsEntity):
     """Implementation of a WAQI Air Pollutant."""
