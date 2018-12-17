@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pypck==0.5.6']
+REQUIREMENTS = ['pypck==0.5.7']
 
 _LOGGER = logging.getLogger(__name__)
 
