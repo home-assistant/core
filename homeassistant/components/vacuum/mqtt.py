@@ -13,8 +13,8 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
-from homeassistant.components.vacuum import (	
-    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,    
+from homeassistant.components.vacuum import (
+    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice, DOMAIN)
@@ -158,7 +158,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT vacuum dynamically through MQTT discovery."""    
+    """Set up MQTT vacuum dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
         config = PLATFORM_SCHEMA(discovery_payload)
@@ -168,7 +168,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
 
-    
+
 async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT vacuum."""
@@ -335,12 +335,13 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         topics_list = set([topic for topic in self._topics.values() if topic])
         self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state,
-            { "topic{}".format(i): {
+            self.hass, self._sub_state, {
+              "topic{}".format(i): {
                 "topic": topic,
                 "msg_callback": message_received,
                 "qos": self._qos
-              } for i, topic in enumerate(topics_list) }
+              } for i, topic in enumerate(topics_list)
+            }
         )
         for topic in set(topics_list):
             await self.hass.components.mqtt.async_subscribe(
