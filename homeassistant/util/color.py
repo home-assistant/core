@@ -169,6 +169,7 @@ GAMUT_TYPE = Tuple[Tuple[float, float], Tuple[float, float],
 # Represents a CIE 1931 XY coordinate pair.
 XYPoint = namedtuple('XYPoint', ['x', 'y'])
 
+
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
@@ -181,7 +182,7 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-name
-def color_RGB_to_xy(iR: int, iG: int, iB: int, 
+def color_RGB_to_xy(iR: int, iG: int, iB: int,
                     Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float]:
     """Convert from RGB color to XY color."""
     return color_RGB_to_xy_brightness(iR, iG, iB, Gamut)[:2]
@@ -234,8 +235,9 @@ def color_RGB_to_xy_brightness(
     return round(x, 3), round(y, 3), brightness
 
 
-def color_xy_to_RGB(vX: float, vY: float,
-                    Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
+def color_xy_to_RGB(
+        vX: float, vY: float,
+        Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
     """Convert from XY to a normalized RGB."""
     return color_xy_brightness_to_RGB(vX, vY, 255, Gamut)
 
@@ -518,7 +520,7 @@ def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
 def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
     """
     Find the closest point from P to a line defined by A and B.
-    
+
     This point will be reproducible by the lamp
     as it is on the edge of the gamut.
     """
@@ -540,14 +542,14 @@ def get_closest_point_to_point(xy_tuple: Tuple[float, float],
                                Gamut: GAMUT_TYPE) -> Tuple[float, float]:
     """
     Get the closest matching color within the gamut of the light.
-    
+
     Should only be used if the supplied color is outside of the color gamut.
     """
     G_Red = XYPoint(Gamut[0][0], Gamut[0][1])
     G_Green = XYPoint(Gamut[1][0], Gamut[1][1])
     G_Blue = XYPoint(Gamut[2][0], Gamut[2][1])
     xy_point = XYPoint(xy_tuple[0], xy_tuple[1])
-    # Color is unreproducible,
+
     # find the closest point on each line in the CIE 1931 'triangle'.
     pAB = get_closest_point_to_line(G_Red, G_Green, xy_point)
     pAC = get_closest_point_to_line(G_Blue, G_Red, xy_point)
