@@ -223,6 +223,8 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.states.set('group.test', 'off', {
             'entity_id': ['light.test1', 'light.test2']})
+        self.hass.states.set('light.test1', 'off')
+        self.hass.states.set('light.test2', 'off')
 
         state.reproduce_state(self.hass, ha.State('group.test', 'on'))
 
