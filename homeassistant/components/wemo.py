@@ -141,7 +141,8 @@ def setup(hass, config):
             _LOGGER.error('Unable to access %s (%s)', url, err)
             continue
 
-        devices.append((url, device))
+        if device not in devices:
+            devices.append((url, device))
 
     if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
         _LOGGER.debug("Scanning for WeMo devices.")
