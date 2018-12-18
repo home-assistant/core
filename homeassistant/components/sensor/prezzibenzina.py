@@ -28,12 +28,20 @@ ATTRIBUTION = 'Data provided by PrezziBenzina.it'
 
 CONF_STATION = 'station'
 
+FUEL_TYPES = ['Benzina',
+              "Benzina speciale",
+              'Diesel',
+              "Diesel speciale",
+              'GPL',
+              'Metano']
+
 SCAN_INTERVAL = timedelta(minutes=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): cv.string,
     vol.Optional(CONF_NAME, None): cv.string,
-    vol.Optional(CONF_TYPES, None): cv.ensure_list
+    vol.Optional(CONF_TYPES, None):
+        vol.All(cv.ensure_list, [vol.In(FUEL_TYPES)])
 })
 
 
