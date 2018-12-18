@@ -504,12 +504,12 @@ def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
 
 
 def cross_product(p1: XYPoint, p2: XYPoint) -> float:
-    """Returns the cross product of two XYPoints."""
+    """Calculate the cross product of two XYPoints."""
     return (p1.x * p2.y - p1.y * p2.x)
 
 
 def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
-    """Returns the distance between two XYPoints."""
+    """Calculate the distance between two XYPoints."""
     dx = one.x - two.x
     dy = one.y - two.y
     return math.sqrt(dx * dx + dy * dy)
@@ -518,6 +518,7 @@ def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
 def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
     """
     Find the closest point from P to a line defined by A and B.
+    
     This point will be reproducible by the lamp
     as it is on the edge of the gamut.
     """
@@ -538,8 +539,9 @@ def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
 def get_closest_point_to_point(xy_tuple: Tuple[float, float],
                                Gamut: GAMUT_TYPE) -> Tuple[float, float]:
     """
-    Get the closest matching color within the gamut of the light,
-    if the supplied color is outside of the color gamut.
+    Get the closest matching color within the gamut of the light.
+    
+    Should only be used if the supplied color is outside of the color gamut.
     """
     G_Red = XYPoint(Gamut[0][0], Gamut[0][1])
     G_Green = XYPoint(Gamut[1][0], Gamut[1][1])
