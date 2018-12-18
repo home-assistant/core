@@ -78,7 +78,7 @@ HASS_FAN_SPEED_TO_WEMO = {v: k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
 SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
 
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_TARGET_HUMIDITY):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
@@ -125,21 +125,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                 hass.data[DATA_KEY].values() if
                                 device.entity_id in entity_ids])
 
-        if service.service == SERVICE_SET_HUMIDITY:
-            target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
+            if service.service == SERVICE_SET_HUMIDITY:
+                target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
-            if not humidifiers:
-                humidifiers.extend(hass.data[DATA_KEY].values())
-
-            for humidifier in humidifiers:
-                humidifier.set_humidity(target_humidity)
-        elif service.service == SERVICE_RESET_FILTER_LIFE:
-            if humidifiers:
+                for humidifier in humidifiers:
+                    humidifier.set_humidity(target_humidity)
+            elif service.service == SERVICE_RESET_FILTER_LIFE:
                 for humidifier in humidifiers:
                     humidifier.reset_filter_life()
-            else:
-                _LOGGER.error("Unable to reset WeMo Humidifier filter life %s",
-                              "- entity_ids is a required field.")
+        else:
+            _LOGGER.error("Unable to execute service %s %s",
+                          service.service,
+                          "- entity_ids is a required field.")
 
     # Register service(s)
     hass.services.register(

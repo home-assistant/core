@@ -163,7 +163,6 @@ class WemoLight(Light):
         """Turn the light off."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
         self.wemo.turn_off(transition=transitiontime)
-        self._is_on = False
 
     def _update(self, force_update=True):
         """Synchronize state with bridge."""
