@@ -118,25 +118,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
-        humidifiers = []
+        humidifiers = ([device for device in
+                        hass.data[DATA_KEY].values() if
+                        device.entity_id in entity_ids])
 
-        if entity_ids:
-            humidifiers.extend([device for device in
-                                hass.data[DATA_KEY].values() if
-                                device.entity_id in entity_ids])
+        if service.service == SERVICE_SET_HUMIDITY:
+            target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
-            if service.service == SERVICE_SET_HUMIDITY:
-                target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
-
-                for humidifier in humidifiers:
-                    humidifier.set_humidity(target_humidity)
-            elif service.service == SERVICE_RESET_FILTER_LIFE:
-                for humidifier in humidifiers:
-                    humidifier.reset_filter_life()
-        else:
-            _LOGGER.error("Unable to execute service %s "
-                          "- entity_ids is a required field.",
-                          service.service)
+            for humidifier in humidifiers:
+                humidifier.set_humidity(target_humidity)
+        elif service.service == SERVICE_RESET_FILTER_LIFE:
+            for humidifier in humidifiers:
+                humidifier.reset_filter_life()
 
     # Register service(s)
     hass.services.register(
