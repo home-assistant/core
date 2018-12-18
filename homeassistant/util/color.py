@@ -163,7 +163,7 @@ COLORS = {
 }
 
 # Represents the Gamut of a light, ((xR,yR), (xG,yG), (xB,yB))
-GAMUT_TYPE = Tuple[Tuple[float, float], Tuple[float, float],
+GamutType = Tuple[Tuple[float, float], Tuple[float, float],
                    Tuple[float, float]]
 
 # Represents a CIE 1931 XY coordinate pair.
@@ -183,7 +183,7 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 # pylint: disable=invalid-name
 def color_RGB_to_xy(iR: int, iG: int, iB: int,
-                    Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float]:
+                    Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert from RGB color to XY color."""
     return color_RGB_to_xy_brightness(iR, iG, iB, Gamut)[:2]
 
@@ -194,7 +194,7 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int,
 # pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
         iR: int, iG: int, iB: int,
-        Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float, int]:
+        Gamut: Optional[GamutType] = None) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
@@ -237,7 +237,7 @@ def color_RGB_to_xy_brightness(
 
 def color_xy_to_RGB(
         vX: float, vY: float,
-        Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
+        Gamut: Optional[GamutType] = None) -> Tuple[int, int, int]:
     """Convert from XY to a normalized RGB."""
     return color_xy_brightness_to_RGB(vX, vY, 255, Gamut)
 
@@ -246,7 +246,7 @@ def color_xy_to_RGB(
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(
         vX: float, vY: float, ibrightness: int,
-        Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
+        Gamut: Optional[GamutType] = None) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
     if Gamut:
         if not check_point_in_lamps_reach((vX, vY), Gamut):
@@ -366,14 +366,14 @@ def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
 
 
 def color_xy_to_hs(vX: float, vY: float,
-                   Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float]:
+                   Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY, Gamut))
     return h, s
 
 
 def color_hs_to_xy(iH: float, iS: float,
-                   Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float]:
+                   Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert an hs color to its xy representation."""
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
@@ -507,7 +507,7 @@ def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
 
 def cross_product(p1: XYPoint, p2: XYPoint) -> float:
     """Calculate the cross product of two XYPoints."""
-    return (p1.x * p2.y - p1.y * p2.x)
+    return float(p1.x * p2.y - p1.y * p2.x)
 
 
 def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
@@ -539,7 +539,7 @@ def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
 
 
 def get_closest_point_to_point(xy_tuple: Tuple[float, float],
-                               Gamut: GAMUT_TYPE) -> Tuple[float, float]:
+                               Gamut: GamutType) -> Tuple[float, float]:
     """
     Get the closest matching color within the gamut of the light.
 
@@ -563,11 +563,11 @@ def get_closest_point_to_point(xy_tuple: Tuple[float, float],
     lowest = dAB
     closest_point = pAB
 
-    if (dAC < lowest):
+    if dAC < lowest:
         lowest = dAC
         closest_point = pAC
 
-    if (dBC < lowest):
+    if dBC < lowest:
         lowest = dBC
         closest_point = pBC
 
@@ -579,7 +579,7 @@ def get_closest_point_to_point(xy_tuple: Tuple[float, float],
 
 
 def check_point_in_lamps_reach(p: Tuple[float, float],
-                               Gamut: GAMUT_TYPE) -> bool:
+                               Gamut: GamutType) -> bool:
     """Check if the provided XYPoint can be recreated by a Hue lamp."""
     v1 = XYPoint(Gamut[1][0] - Gamut[0][0], Gamut[1][1] - Gamut[0][1])
     v2 = XYPoint(Gamut[2][0] - Gamut[0][0], Gamut[2][1] - Gamut[0][1])
