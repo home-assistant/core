@@ -134,9 +134,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for humidifier in humidifiers:
                     humidifier.reset_filter_life()
         else:
-            _LOGGER.error("Unable to execute service %s %s",
-                          service.service,
-                          "- entity_ids is a required field.")
+            _LOGGER.error("Unable to execute service %s "
+                          "- entity_ids is a required field.",
+                          service.service)
 
     # Register service(s)
     hass.services.register(
@@ -154,11 +154,9 @@ class WemoHumidifier(FanEntity):
     def __init__(self, device):
         """Initialize the WeMo switch."""
         self.wemo = device
-
         self._state = None
         self._available = True
         self._update_lock = None
-
         self._fan_mode = None
         self._target_humidity = None
         self._current_humidity = None
@@ -166,9 +164,6 @@ class WemoHumidifier(FanEntity):
         self._filter_life = None
         self._filter_expired = None
         self._last_fan_on_mode = WEMO_FAN_MEDIUM
-
-        # look up model name, name, and serial number
-        # once as it incurs network traffic
         self._model_name = self.wemo.model_name
         self._name = self.wemo.name
         self._serialnumber = self.wemo.serialnumber

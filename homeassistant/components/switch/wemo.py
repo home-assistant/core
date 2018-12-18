@@ -67,9 +67,6 @@ class WemoSwitch(SwitchDevice):
         self._mode_string = None
         self._available = True
         self._update_lock = None
-
-        # look up model name, name, and serial number
-        # once as it incurs network traffic
         self._model_name = self.wemo.model_name
         self._name = self.wemo.name
         self._serialnumber = self.wemo.serialnumber

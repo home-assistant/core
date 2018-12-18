@@ -82,14 +82,10 @@ class WemoLight(Light):
         self._update_lights = update_lights
         self._available = True
         self._update_lock = None
-
         self._brightness = None
         self._hs_color = None
         self._color_temp = None
         self._is_on = None
-
-        # look up name and uniqueID
-        # once as it incurs network traffic
         self._name = self.wemo.name
         self._unique_id = self.wemo.uniqueID
 
@@ -209,11 +205,7 @@ class WemoDimmer(Light):
         self._state = None
         self._available = True
         self._update_lock = None
-
         self._brightness = None
-
-        # look up model name, name, and serial number
-        # once as it incurs network traffic
         self._model_name = self.wemo.model_name
         self._name = self.wemo.name
         self._serialnumber = self.wemo.serialnumber
