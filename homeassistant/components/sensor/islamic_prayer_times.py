@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 
 REQUIREMENTS = ['prayer_times_calculator==0.0.3']
 
@@ -173,10 +174,10 @@ class IslamicPrayerTimeSensor(Entity):
         self.prayer_times_data = prayer_times_data
         self._display_format = "%I:%M%p"
         self._name = self.sensor_type.capitalize()
+        self._device_class = DEVICE_CLASS_TIMESTAMP
         prayer_time = self.prayer_times_data.prayer_times[self._name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
-        self._state = pt_dt.strftime(self._display_format)
-        _LOGGER.debug("%s State: %s", self.sensor_type, self._state)
+        self._state = pt_dt.isoformat()
 
     @property
     def name(self):
@@ -198,11 +199,10 @@ class IslamicPrayerTimeSensor(Entity):
         """Disable polling."""
         return False
 
-    async def async_fire_prayer_event(self):
-        """Fire event for respective prayer time."""
-        _LOGGER.debug("Firing Event for: %s", self.sensor_type)
-        self.hass.bus.async_fire('islamic_prayer_time', {'prayer':
-                                                         self.sensor_type})
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @staticmethod
     def get_prayer_time_as_dt(prayer_time):
@@ -212,24 +212,8 @@ class IslamicPrayerTimeSensor(Entity):
         pt_dt = dt_util.parse_datetime(date_time_str)
         return pt_dt
 
-    async def async_set_event_trigger(self):
-        """Set a trigger for when to fire an event."""
-        today = datetime.today().strftime('%Y-%m-%d')
-        date_time_str = '{} {}'.format(str(today), self._state)
-        trigger_time = datetime.strptime(date_time_str, '%Y-%m-%d %I:%M%p')
-
-        if datetime.now() < trigger_time:
-            # Only create an event for prayers times in the future
-            _LOGGER.debug("Creating event trigger for: %s", self._name)
-
-            async_track_point_in_time(self.hass,
-                                      self.async_fire_prayer_event(),
-                                      trigger_time)
-
     async def async_update(self):
         """Update the sensor."""
         prayer_time = self.prayer_times_data.prayer_times[self.name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
-        self._state = pt_dt.strftime(self._display_format)
-        _LOGGER.debug("%s prayer time: %s", self.name, prayer_time)
-        await self.async_set_event_trigger()
+        self._state = pt_dt.isoformat()
