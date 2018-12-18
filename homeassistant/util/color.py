@@ -232,7 +232,7 @@ def color_RGB_to_xy_brightness(
             x = xy_closest[0]
             y = xy_closest[1]
 
-    return round(x, 3), round(y, 3), brightness
+    return round(x, 4), round(y, 4), brightness
 
 
 def color_xy_to_RGB(
