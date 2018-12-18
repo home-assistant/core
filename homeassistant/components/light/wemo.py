@@ -159,8 +159,6 @@ class WemoLight(Light):
         else:
             self.wemo.turn_on(transition=transitiontime)
 
-        self._is_on = True
-
     def turn_off(self, **kwargs):
         """Turn the light off."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
@@ -223,7 +221,7 @@ class WemoDimmer(Light):
 
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for %s", self.name)
+        _LOGGER.debug("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
         self.hass.add_job(
             self._async_locked_subscription_callback(not updated))

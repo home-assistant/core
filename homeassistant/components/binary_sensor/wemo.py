@@ -55,7 +55,7 @@ class WemoBinarySensor(BinarySensorDevice):
 
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo sensor."""
-        _LOGGER.info("Subscription update for %s", self.name)
+        _LOGGER.debug("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
         self.hass.add_job(
             self._async_locked_subscription_callback(not updated))
