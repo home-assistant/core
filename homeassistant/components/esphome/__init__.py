@@ -43,11 +43,11 @@ STORAGE_VERSION = 1
 
 # The HA component types this integration supports
 HA_COMPONENTS = [
-    'sensor',
     'binary_sensor',
     'cover',
     'fan',
     'light',
+    'sensor',
     'switch',
 ]
 
@@ -461,6 +461,7 @@ class EsphomeEntity(Entity):
         """Unregister callbacks."""
         for remove_callback in self._remove_callbacks:
             remove_callback()
+        self._remove_callbacks = []
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
