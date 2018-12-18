@@ -41,9 +41,10 @@ CONFIG_ENTRY_COMPONENTS = [
 ]
 
 DEPRECATED_PLATFORM_TO_SCHEMA = {
-    'mqtt': 'basic',
-    'mqtt_json': 'json',
-    'mqtt_template': 'template',
+    'light': {
+        'mqtt_json': 'json',
+        'mqtt_template': 'template',
+    }
 }
 
 
@@ -207,10 +208,11 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
-            if CONF_PLATFORM in payload:
+            if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]
-                if platform in DEPRECATED_PLATFORM_TO_SCHEMA:
-                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[platform]
+                if (component in DEPRECATED_PLATFORM_TO_SCHEMA and
+                        platform in DEPRECATED_PLATFORM_TO_SCHEMA[component]):
+                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[component][platform]
                     payload['schema'] = schema
                     _LOGGER.warning('"platform": "%s" is deprecated, '
                                     'replace with "schema":"%s"',
