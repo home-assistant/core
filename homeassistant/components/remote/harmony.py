@@ -26,7 +26,7 @@ REQUIREMENTS = ['pyharmony==1.0.22']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 8088
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=5)
 DEVICES = []
 CONF_DEVICE_CACHE = 'harmony_device_cache'
 
@@ -155,9 +155,12 @@ class HarmonyRemote(remote.RemoteDevice):
         """Complete the initialization."""
         import pyharmony
         _LOGGER.debug("HarmonyRemote added for: %s", self._name)
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            lambda event: self._client.disconnect(wait=True))
+
+        async def shutdown(event):
+            """Close connection on shutdown."""
+            await self._client.disconnect()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
         _LOGGER.debug("Connecting.")
         await self._client.connect()
