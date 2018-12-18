@@ -941,7 +941,7 @@ pyedimax==0.1
 pyeight==0.1.0
 
 # homeassistant.components.media_player.emby
-pyemby==1.5
+pyemby==1.6
 
 # homeassistant.components.envisalink
 pyenvisalink==3.7
