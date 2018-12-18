@@ -167,10 +167,7 @@ async def async_setup(hass, config):
         # Lookup entities who registered this device id as device id
         event_id = event.get('legrand_id', None)
 
-#        entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
-
-#        if entity_ids:
-        if hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
+        if hass.data[DATA_ENTITY_LOOKUP][event_type][event_id] is not None:
             # Propagate event
             _LOGGER.debug('passing event to %s', event_id)
             async_dispatcher_send(hass,
@@ -319,6 +316,7 @@ class LegrandInOneDevice(Entity):
         """Assume device state until first device event sets state."""
         return self._state is None
 
+    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
@@ -334,7 +332,7 @@ class LegrandInOneDevice(Entity):
         """Register update callback."""
         # Register id
         self.hass.data[DATA_ENTITY_LOOKUP][
-             EVENT_KEY_COMMAND][self.legrand_id].append(self)
+             EVENT_KEY_COMMAND][self.legrand_id] = {};
 
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
@@ -363,6 +361,9 @@ class LegrandInOneCommand(LegrandInOneDevice):
         return await self._protocol.send_packet(command_data)
 
     async def _async_handle_command(self, command, *args):
+
+        if not self.available:
+            raise HomeAssistantError('Cannot send command, not connected!')
 
         if command == 'turn_on':
             cmd = 'on'
@@ -400,9 +401,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
         """Send a command for device to iobl gateway."""
         _LOGGER.debug(
             "Sending command: %s to iobl device: %s", cmd, self.legrand_id)
-
-        if not self.available():
-            raise HomeAssistantError('Cannot send command, not connected!')
 
         # Puts command on outgoing buffer and returns straight away.
         # IOBL protocol/transport handles asynchronous writing of buffer
@@ -444,9 +442,10 @@ class SwitchableLegrandInOneDevice(LegrandInOneCommand):
         elif command in ['off']:
             self._state = False
 
+    @property
     def is_on(self):
         """Return true if device is on."""
-        if self.assumed_state():
+        if self.assumed_state:
             return False
         return self._state
 
