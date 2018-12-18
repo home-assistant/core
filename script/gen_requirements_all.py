@@ -101,7 +101,6 @@ TEST_REQUIREMENTS = (
     'regenmaschine',
     'restrictedpython',
     'rflink',
-    'rgbxy',
     'ring_doorbell',
     'rxv',
     'simplisafe-python',
