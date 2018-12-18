@@ -9,9 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK, SUPPORT_STOP, MediaPlayerDevice)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
@@ -20,7 +20,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.5']
+REQUIREMENTS = ['pyemby==1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,6 +237,8 @@ class EmbyDevice(MediaPlayerDevice):
             return MEDIA_TYPE_GENERIC_VIDEO
         if media_type == 'Audio':
             return MEDIA_TYPE_MUSIC
+        if media_type == 'TvChannel':
+            return MEDIA_TYPE_CHANNEL
         return None
 
     @property
