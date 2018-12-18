@@ -67,11 +67,12 @@ class AdsLight(Light):
             self._ads_hub.add_device_notification,
             self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
         )
-        self.hass.async_add_job(
-            self._ads_hub.add_device_notification,
-            self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
-            update_brightness
-        )
+        if self.ads_var_brightness is not None:
+            self.hass.async_add_job(
+                self._ads_hub.add_device_notification,
+                self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
+                update_brightness
+            )
 
     @property
     def name(self):
