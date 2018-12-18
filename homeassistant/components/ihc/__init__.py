@@ -18,8 +18,8 @@ from homeassistant.components.ihc.const import (
     SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_BINARY_SENSORS, CONF_ID, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SWITCHES, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_URL,
+    CONF_ID, CONF_NAME, CONF_PASSWORD,
+    CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_URL,
     CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
