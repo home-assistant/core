@@ -4,9 +4,10 @@ Support for Harmony Hub devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
+import asyncio
 import logging
-import time
 from datetime import timedelta
+from pathlib import Path
 
 import voluptuous as vol
 
@@ -46,7 +47,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 
 
 async def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+                               discovery_info=None):
     """Set up the Harmony platform."""
     host = None
     activity = None
@@ -152,7 +153,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
-        from pathlib import Path
+        import pyharmony
         _LOGGER.debug("HarmonyRemote added for: %s", self._name)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
@@ -163,7 +164,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._config = await self._client.get_config()
         if not Path(self._config_path).is_file():
             _LOGGER.debug("Writing harmony configuration to file: %s",
-                          out_path)
+                          self._config_path)
             pyharmony.ha_write_config_file(self._config, self._config_path)
 
         # Poll for initial state
