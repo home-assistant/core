@@ -83,7 +83,7 @@ class WaqiAirPollutant(AirPollutantsEntity):
     """Implementation of a WAQI Air Pollutant."""
 
     def __init__(self, client, station):
-        """Initialization of a WAQI Air Pollutant."""
+        """Initialize of a WAQI Air Pollutant."""
         self._client = client
         self.uid = station.get('uid', None)
         self.url = station.get('station', {}).get('url', None)
