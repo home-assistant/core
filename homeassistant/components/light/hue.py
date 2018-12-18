@@ -222,7 +222,7 @@ class HueLight(Light):
 
         if self.device_info:
             gamut_list = self.device_info['color_gamut']
-            self.gamut = tuple([tuple(x) for x in gamut_list]))
+            self.gamut = tuple([tuple(x) for x in gamut_list])
             self.gamut_typ = self.device_info['color_gamut_type']
         elif is_group:
             self.gamut = None
