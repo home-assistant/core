@@ -118,9 +118,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
-        humidifiers = ([device for device in
-                        hass.data[DATA_KEY].values() if
-                        device.entity_id in entity_ids])
+        humidifiers = [device for device in
+                       hass.data[DATA_KEY].values() if
+                       device.entity_id in entity_ids]
 
         if service.service == SERVICE_SET_HUMIDITY:
             target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
