@@ -48,6 +48,11 @@ class EsphomeSwitch(EsphomeEntity, SwitchDevice):
         return self._static_info.icon
 
     @property
+    def assumed_state(self) -> bool:
+        """Return true if we do optimistic updates."""
+        return self._static_info.optimistic
+
+    @property
     def is_on(self):
         """Return true if the switch is on."""
         if self._state is None:

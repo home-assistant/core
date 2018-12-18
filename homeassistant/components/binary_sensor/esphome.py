@@ -60,4 +60,4 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
         """Return True if entity is available."""
         if self._static_info.is_status_binary_sensor:
             return True
-        return super(EsphomeEntity, self).available
+        return super().available
