@@ -12,7 +12,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.air_pollutants import AirPollutantsEntity
-from homeassistant.const import ATTR_TEMPERATURE, CONF_TOKEN
+from homeassistant.const import ATTR_TEMPERATURE, ATTR_TIME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -83,12 +83,13 @@ class WaqiAirPollutant(AirPollutantsEntity):
     """Implementation of a WAQI Air Pollutant."""
 
     def __init__(self, client, station):
+        """Initialization of a WAQI Air Pollutant."""
         self._client = client
         self.uid = station.get('uid', None)
         self.url = station.get('station', {}).get('url', None)
         self.station_name = station.get('station', {}).get('name', None)
         self._data = None
-    
+
     @property
     def name(self):
         """Return the name of the sensor."""
