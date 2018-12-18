@@ -164,7 +164,7 @@ COLORS = {
 
 # Represents the Gamut of a light, ((xR,yR), (xG,yG), (xB,yB))
 GamutType = Tuple[Tuple[float, float], Tuple[float, float],
-                   Tuple[float, float]]
+                  Tuple[float, float]]
 
 # Represents a CIE 1931 XY coordinate pair.
 XYPoint = namedtuple('XYPoint', ['x', 'y'])
