@@ -143,13 +143,15 @@ def setup(hass, config):
                 _LOGGER.error('Unable to access %s (%s)', url, err)
                 continue
 
-            if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
+            if not [d[1] for d in devices
+                    if d[1].serialnumber == device.serialnumber]:
                 devices.append((url, device))
 
     if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
         _LOGGER.debug("Scanning for WeMo devices...")
         for device in pywemo.discover_devices():
-            if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
+            if not [d[1] for d in devices
+                    if d[1].serialnumber == device.serialnumber]:
                 devices.append((setup_url_for_device(device), device))
 
     for url, device in devices:
