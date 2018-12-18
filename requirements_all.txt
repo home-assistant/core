@@ -793,6 +793,9 @@ pocketcasts==0.1
 # homeassistant.components.sensor.postnl
 postnl_api==1.0.2
 
+# homeassistant.components.sensor.prezzibenzina
+prezzibenzina-py==1.1.4
+
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
