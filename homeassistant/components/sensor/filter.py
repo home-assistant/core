@@ -79,7 +79,7 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
-FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend({
+FILTER_RANGE_SCHEMA = vol.Schema({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
     vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
     vol.Optional(CONF_FILTER_UPPER_BOUND): vol.Coerce(float),
