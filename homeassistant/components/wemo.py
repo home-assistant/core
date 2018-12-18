@@ -125,33 +125,35 @@ def setup(hass, config):
 
     devices = []
 
-    for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-        url = setup_url_for_address(host, port)
+    if config.get(DOMAIN, {}).get(CONF_STATIC, []):
+        _LOGGER.debug("Scanning statically configured WeMo devices...")
+        for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+            url = setup_url_for_address(host, port)
 
-        if not url:
-            _LOGGER.error(
-                'Unable to get description url for %s',
-                '{}:{}'.format(host, port) if port else host)
-            continue
+            if not url:
+                _LOGGER.error(
+                    'Unable to get description url for %s',
+                    '{}:{}'.format(host, port) if port else host)
+                continue
 
-        try:
-            device = pywemo.discovery.device_from_description(url, None)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', url, err)
-            continue
+            try:
+                device = pywemo.discovery.device_from_description(url, None)
+            except (requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout) as err:
+                _LOGGER.error('Unable to access %s (%s)', url, err)
+                continue
 
-        if device not in devices:
-            devices.append((url, device))
+            if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
+                devices.append((url, device))
 
     if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
-        _LOGGER.debug("Scanning for WeMo devices.")
-        devices.extend(
-            (setup_url_for_device(device), device)
-            for device in pywemo.discover_devices())
+        _LOGGER.debug("Scanning for WeMo devices...")
+        for device in pywemo.discover_devices():
+            if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
+                devices.append((setup_url_for_device(device), device))
 
     for url, device in devices:
-        _LOGGER.debug('Adding wemo at %s:%i', device.host, device.port)
+        _LOGGER.debug('Adding WeMo device at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,
