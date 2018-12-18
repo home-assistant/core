@@ -1369,9 +1369,6 @@ restrictedpython==4.0b7
 # homeassistant.components.rflink
 rflink==0.0.37
 
-# homeassistant.components.light.hue
-rgbxy==0.5
-
 # homeassistant.components.ring
 ring_doorbell==0.2.2
 
