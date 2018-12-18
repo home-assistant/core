@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import MqttAvailability
+from homeassistant.components.mqtt import (
+    MqttAvailability, subscription)
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
@@ -145,131 +146,14 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the vacuum."""
-    name = config.get(CONF_NAME)
-    supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
-    supported_features = strings_to_services(supported_feature_strings)
-
-    qos = config.get(mqtt.CONF_QOS)
-    retain = config.get(mqtt.CONF_RETAIN)
-
-    command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
-    payload_turn_on = config.get(CONF_PAYLOAD_TURN_ON)
-    payload_turn_off = config.get(CONF_PAYLOAD_TURN_OFF)
-    payload_return_to_base = config.get(CONF_PAYLOAD_RETURN_TO_BASE)
-    payload_stop = config.get(CONF_PAYLOAD_STOP)
-    payload_clean_spot = config.get(CONF_PAYLOAD_CLEAN_SPOT)
-    payload_locate = config.get(CONF_PAYLOAD_LOCATE)
-    payload_start_pause = config.get(CONF_PAYLOAD_START_PAUSE)
-
-    battery_level_topic = config.get(CONF_BATTERY_LEVEL_TOPIC)
-    battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
-    if battery_level_template:
-        battery_level_template.hass = hass
-
-    charging_topic = config.get(CONF_CHARGING_TOPIC)
-    charging_template = config.get(CONF_CHARGING_TEMPLATE)
-    if charging_template:
-        charging_template.hass = hass
-
-    cleaning_topic = config.get(CONF_CLEANING_TOPIC)
-    cleaning_template = config.get(CONF_CLEANING_TEMPLATE)
-    if cleaning_template:
-        cleaning_template.hass = hass
-
-    docked_topic = config.get(CONF_DOCKED_TOPIC)
-    docked_template = config.get(CONF_DOCKED_TEMPLATE)
-    if docked_template:
-        docked_template.hass = hass
-
-    error_topic = config.get(CONF_ERROR_TOPIC)
-    error_template = config.get(CONF_ERROR_TEMPLATE)
-    if error_template:
-        error_template.hass = hass
-
-    fan_speed_topic = config.get(CONF_FAN_SPEED_TOPIC)
-    fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-    if fan_speed_template:
-        fan_speed_template.hass = hass
-
-    set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
-    fan_speed_list = config.get(CONF_FAN_SPEED_LIST)
-
-    send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
-
-    availability_topic = config.get(mqtt.CONF_AVAILABILITY_TOPIC)
-    payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
-    payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
-
-    async_add_entities([
-        MqttVacuum(
-            name, supported_features, qos, retain, command_topic,
-            payload_turn_on, payload_turn_off, payload_return_to_base,
-            payload_stop, payload_clean_spot, payload_locate,
-            payload_start_pause, battery_level_topic, battery_level_template,
-            charging_topic, charging_template, cleaning_topic,
-            cleaning_template, docked_topic, docked_template,
-            error_topic, error_template, fan_speed_topic,
-            fan_speed_template, set_fan_speed_topic, fan_speed_list,
-            send_command_topic, availability_topic, payload_available,
-            payload_not_available
-        ),
-    ])
+    async_add_entities([MqttVacuum(config, discovery_info)])
 
 
 class MqttVacuum(MqttAvailability, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
-    def __init__(
-            self, name, supported_features, qos, retain, command_topic,
-            payload_turn_on, payload_turn_off, payload_return_to_base,
-            payload_stop, payload_clean_spot, payload_locate,
-            payload_start_pause, battery_level_topic, battery_level_template,
-            charging_topic, charging_template, cleaning_topic,
-            cleaning_template, docked_topic, docked_template,
-            error_topic, error_template, fan_speed_topic,
-            fan_speed_template, set_fan_speed_topic, fan_speed_list,
-            send_command_topic, availability_topic, payload_available,
-            payload_not_available):
+    def __init__(self, config, discovery_info):
         """Initialize the vacuum."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
-
-        self._name = name
-        self._supported_features = supported_features
-        self._qos = qos
-        self._retain = retain
-
-        self._command_topic = command_topic
-        self._payload_turn_on = payload_turn_on
-        self._payload_turn_off = payload_turn_off
-        self._payload_return_to_base = payload_return_to_base
-        self._payload_stop = payload_stop
-        self._payload_clean_spot = payload_clean_spot
-        self._payload_locate = payload_locate
-        self._payload_start_pause = payload_start_pause
-
-        self._battery_level_topic = battery_level_topic
-        self._battery_level_template = battery_level_template
-
-        self._charging_topic = charging_topic
-        self._charging_template = charging_template
-
-        self._cleaning_topic = cleaning_topic
-        self._cleaning_template = cleaning_template
-
-        self._docked_topic = docked_topic
-        self._docked_template = docked_template
-
-        self._error_topic = error_topic
-        self._error_template = error_template
-
-        self._fan_speed_topic = fan_speed_topic
-        self._fan_speed_template = fan_speed_template
-
-        self._set_fan_speed_topic = set_fan_speed_topic
-        self._fan_speed_list = fan_speed_list
-        self._send_command_topic = send_command_topic
-
         self._cleaning = False
         self._charging = False
         self._docked = False
@@ -277,45 +161,113 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         self._status = 'Unknown'
         self._battery_level = 0
         self._fan_speed = 'unknown'
+        self._fan_speed_list = []
+        self._sub_state = None
+
+        # Load config
+        self._setup_from_config(config)
+
+        qos = config.get(mqtt.CONF_QOS)
+        availability_topic = config.get(mqtt.CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
+
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+
+    def _setup_from_config(self, config):
+        self._name = config.get(CONF_NAME)
+        supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
+        self._supported_features = strings_to_services(supported_feature_strings)
+        self._fan_speed_list = config.get(CONF_FAN_SPEED_LIST)
+        self._qos = config.get(mqtt.CONF_QOS)
+        self._retain = config.get(mqtt.CONF_RETAIN)
+
+        self._command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
+        self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
+        self._send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
+
+        self._payloads = {
+            key: config.get(key) for key in (
+                CONF_PAYLOAD_TURN_ON,
+                CONF_PAYLOAD_TURN_OFF,
+                CONF_PAYLOAD_RETURN_TO_BASE,
+                CONF_PAYLOAD_STOP,
+                CONF_PAYLOAD_CLEAN_SPOT,
+                CONF_PAYLOAD_LOCATE,
+                CONF_PAYLOAD_START_PAUSE
+            )
+        }
+        self._state_topics = {
+            key: config.get(key) for key in (
+                CONF_BATTERY_LEVEL_TOPIC,
+                CONF_CHARGING_TOPIC,
+                CONF_CLEANING_TOPIC,
+                CONF_DOCKED_TOPIC,
+                CONF_ERROR_TOPIC,
+                CONF_FAN_SPEED_TOPIC
+            )
+        }
+        self._templates = {
+            key: config.get(key) for key in (
+                CONF_BATTERY_LEVEL_TEMPLATE,
+                CONF_CHARGING_TEMPLATE,
+                CONF_CLEANING_TEMPLATE,
+                CONF_DOCKED_TEMPLATE,
+                CONF_ERROR_TEMPLATE,
+                CONF_FAN_SPEED_TEMPLATE
+            )
+        }
 
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        for tpl in self._templates.values():
+            if tpl is not None:
+                tpl.hass = self.hass
 
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT message."""
-            if topic == self._battery_level_topic and \
-                    self._battery_level_template:
-                battery_level = self._battery_level_template\
+            if topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC] and \
+                    self._templates[CONF_BATTERY_LEVEL_TEMPLATE]:
+                battery_level = self._templates[CONF_BATTERY_LEVEL_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
-            if topic == self._charging_topic and self._charging_template:
-                charging = self._charging_template\
+            if topic == self._state_topics[CONF_CHARGING_TOPIC] and \
+                    self._templates[CONF_CHARGING_TEMPLATE]:
+                charging = self._templates[CONF_CHARGING_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if charging is not None:
                     self._charging = cv.boolean(charging)
 
-            if topic == self._cleaning_topic and self._cleaning_template:
-                cleaning = self._cleaning_template \
+            if topic == self._state_topics[CONF_CLEANING_TOPIC] and \
+                    self._templates[CONF_CLEANING_TEMPLATE]:
+                cleaning = self._templates[CONF_CLEANING_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if cleaning is not None:
                     self._cleaning = cv.boolean(cleaning)
 
-            if topic == self._docked_topic and self._docked_template:
-                docked = self._docked_template \
+            if topic == self._state_topics[CONF_DOCKED_TOPIC] and \
+                    self._templates[CONF_DOCKED_TEMPLATE]:
+                docked = self._templates[CONF_DOCKED_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if docked is not None:
                     self._docked = cv.boolean(docked)
 
-            if topic == self._error_topic and self._error_template:
-                error = self._error_template \
+            if topic == self._state_topics[CONF_ERROR_TOPIC] and \
+                    self._templates[CONF_ERROR_TEMPLATE]:
+                error = self._templates[CONF_ERROR_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if error is not None:
@@ -333,8 +285,9 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             else:
                 self._status = "Stopped"
 
-            if topic == self._fan_speed_topic and self._fan_speed_template:
-                fan_speed = self._fan_speed_template\
+            if topic == self._state_topics[CONF_FAN_SPEED_TOPIC] and \
+                    self._templates[CONF_FAN_SPEED_TEMPLATE]:
+                fan_speed = self._templates[CONF_FAN_SPEED_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload, error_value=None)
                 if fan_speed is not None:
@@ -342,14 +295,15 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
             self.async_schedule_update_ha_state()
 
-        topics_list = [topic for topic in (self._battery_level_topic,
-                                           self._charging_topic,
-                                           self._cleaning_topic,
-                                           self._docked_topic,
-                                           self._fan_speed_topic) if topic]
-        for topic in set(topics_list):
-            await self.hass.components.mqtt.async_subscribe(
-                topic, message_received, self._qos)
+        topics_list = set([topic for topic in self._state_topics.values() if topic])
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state, 
+            { "topic{}".format(i):{ 
+                "topic": topic,
+                "msg_callback": message_received,
+                "qos": self._qos
+              } for i, topic in enumerate(topics_list) }
+        )
 
     @property
     def name(self):
@@ -417,7 +371,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_turn_on, self._qos, self._retain)
+                           self._payloads[CONF_PAYLOAD_TURN_ON],
+                           self._qos, self._retain)
         self._status = 'Cleaning'
         self.async_schedule_update_ha_state()
 
@@ -427,7 +382,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_turn_off, self._qos, self._retain)
+                           self._payloads[CONF_PAYLOAD_TURN_OFF],
+                           self._qos, self._retain)
         self._status = 'Turning Off'
         self.async_schedule_update_ha_state()
 
@@ -436,7 +392,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
-        mqtt.async_publish(self.hass, self._command_topic, self._payload_stop,
+        mqtt.async_publish(self.hass, self._command_topic,
+                           self._payloads[CONF_PAYLOAD_STOP],
                            self._qos, self._retain)
         self._status = 'Stopping the current task'
         self.async_schedule_update_ha_state()
@@ -447,7 +404,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_clean_spot, self._qos, self._retain)
+                           self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
+                           self._qos, self._retain)
         self._status = "Cleaning spot"
         self.async_schedule_update_ha_state()
 
@@ -457,7 +415,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_locate, self._qos, self._retain)
+                           self._payloads[CONF_PAYLOAD_LOCATE],
+                           self._qos, self._retain)
         self._status = "Hi, I'm over here!"
         self.async_schedule_update_ha_state()
 
@@ -467,7 +426,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_start_pause, self._qos, self._retain)
+                           self._payloads[CONF_PAYLOAD_START_PAUSE],
+                           self._qos, self._retain)
         self._status = 'Pausing/Resuming cleaning...'
         self.async_schedule_update_ha_state()
 
@@ -477,8 +437,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             return
 
         mqtt.async_publish(self.hass, self._command_topic,
-                           self._payload_return_to_base, self._qos,
-                           self._retain)
+                           self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
+                           self._qos, self._retain)
         self._status = 'Returning home...'
         self.async_schedule_update_ha_state()
 
@@ -489,9 +449,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         if not self._fan_speed_list or fan_speed not in self._fan_speed_list:
             return
 
-        mqtt.async_publish(
-            self.hass, self._set_fan_speed_topic, fan_speed, self._qos,
-            self._retain)
+        mqtt.async_publish(self.hass, self._set_fan_speed_topic,
+                           fan_speed, self._qos, self._retain)
         self._status = "Setting fan to {}...".format(fan_speed)
         self.async_schedule_update_ha_state()
 
@@ -500,8 +459,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        mqtt.async_publish(
-            self.hass, self._send_command_topic, command, self._qos,
-            self._retain)
+        mqtt.async_publish(self.hass, self._send_command_topic,
+                           command, self._qos, self._retain)
         self._status = "Sending command {}...".format(command)
         self.async_schedule_update_ha_state()
