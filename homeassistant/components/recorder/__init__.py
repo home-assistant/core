@@ -33,7 +33,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.14']
+REQUIREMENTS = ['sqlalchemy==1.2.15']
 
 _LOGGER = logging.getLogger(__name__)
 
