@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['rova==0.0.1']
+REQUIREMENTS = ['rova==0.0.2']
 
 # Config for rova requests.
 CONF_ZIP_CODE = 'zip_code'
@@ -45,17 +45,26 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Rova data service and sensors."""
-    import rova.rova as r
+    from rova.rova import Rova
+    from requests.exceptions import HTTPError, ConnectTimeout
 
     zip_code = config[CONF_ZIP_CODE]
     house_number = config[CONF_HOUSE_NUMBER]
     name = config[CONF_NAME]
 
     # Create new Rova object to  retrieve data
-    api = r.Rova(zip_code, house_number)
+    api = Rova(zip_code, house_number)
+
+    try:
+        if not api.is_rova_area():
+            _LOGGER.error("ROVA does not collect garbage in this area")
+            return
+    except (ConnectTimeout, HTTPError):
+        _LOGGER.error("Could not retrieve details from ROVA API")
+        return
 
     # Create rova data service which will retrieve and update the data.
-    data = RovaData(hass, api)
+    data = RovaData(api)
 
     # Create a new sensor for each garbage type.
     entities = []
@@ -103,9 +112,8 @@ class RovaSensor(Entity):
 class RovaData:
     """Get and update the latest data from the Rova API."""
 
-    def __init__(self, hass, api):
+    def __init__(self, api):
         """Initialize the data object."""
-        self.hass = hass
         self.api = api
         self.data = {}
 
@@ -119,8 +127,6 @@ class RovaData:
         except (ConnectTimeout, HTTPError):
             _LOGGER.error("Could not retrieve data, retry again later")
             return
-
-        _LOGGER.debug(items)
 
         self.data = {}
 
