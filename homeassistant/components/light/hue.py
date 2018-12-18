@@ -21,8 +21,6 @@ from homeassistant.components.light import (
     Light)
 from homeassistant.util import color
 
-REQUIREMENTS = ['rgbxy==0.5']
-
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -43,7 +41,8 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
-ATTR_COL_GAM_TYP = 'color_gamut_type'
+ATTR_GAMUT_TYP = 'color_gamut_type'
+ATTR_GAMUT = 'color_gamut'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -216,30 +215,23 @@ class HueLight(Light):
 
     def __init__(self, light, request_bridge_update, bridge, is_group=False):
         """Initialize the light."""
-        from rgbxy import Converter, GamutA, GamutB, GamutC
-
         self.light = light
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
         self.is_group = is_group
 
         if self.device_info:
-            self.col_gam_typ = self.device_info['color_gamut_type']
+            gamut_list = self.device_info['color_gamut']
+            self.gamut = tuple([tuple(x) for x in gamut_list]))
+            self.gamut_typ = self.device_info['color_gamut_type']
         elif is_group:
-            self.col_gam_typ = 'B'
+            self.gamut = None
+            self.gamut_typ = 'None'
         else:
-            self.col_gam_typ = 'None'
-
-        if self.col_gam_typ == 'A':
-            self.hue_converter = Converter(GamutA)
-        elif self.col_gam_typ == 'B':
-            self.hue_converter = Converter(GamutB)
-        elif self.col_gam_typ == 'C':
-            self.hue_converter = Converter(GamutC)
-        else:
-            err_msg = 'Can not match color gamut type "%s" of light "%s"'
-            _LOGGER.warning(err_msg, self.col_gam_typ, self.name)
-            self.hue_converter = Converter(GamutB)
+            err_msg = 'Can not get color gamut of light "%s"'
+            _LOGGER.warning(err_msg, self.name)
+            self.gamut = None
+            self.gamut_typ = 'None'
 
         if is_group:
             self.is_osram = False
@@ -279,8 +271,7 @@ class HueLight(Light):
         source = self.light.action if self.is_group else self.light.state
 
         if mode in ('xy', 'hs') and 'xy' in source:
-            rgb = self.hue_converter.xy_to_rgb(*source['xy'])
-            return color.color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
+            return color.color_xy_to_hs(*source['xy'], self.gamut)
 
         return None
 
@@ -359,8 +350,8 @@ class HueLight(Light):
                 # Philips hue bulb models respond differently to hue/sat
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
-                rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy_color = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
+                xy_color = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR],
+                                                self.gamut)
                 command['xy'] = xy_color
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
@@ -428,6 +419,8 @@ class HueLight(Light):
         attributes = {}
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
-        if self.col_gam_typ:
-            attributes[ATTR_COL_GAM_TYP] = self.col_gam_typ
+        if self.gamut_typ:
+            attributes[ATTR_GAMUT_TYP] = self.gamut_typ
+        if self.gamut:
+            attributes[ATTR_GAMUT] = self.gamut
         return attributes
