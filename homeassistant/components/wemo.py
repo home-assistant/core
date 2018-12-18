@@ -96,7 +96,8 @@ def setup(hass, config):
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
-            _LOGGER.debug('Ignoring known device %s %s', service, discovery_info)
+            _LOGGER.debug('Ignoring known device %s %s',
+                          service, discovery_info)
             return
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
