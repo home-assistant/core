@@ -799,6 +799,7 @@ omit =
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pollen.py
     homeassistant/components/sensor/postnl.py
+    homeassistant/components/sensor/prezzibenzina.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
