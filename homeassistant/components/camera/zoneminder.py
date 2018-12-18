@@ -6,7 +6,7 @@ https://home-assistant.io/components/camera.zoneminder/
 """
 import logging
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
 from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
@@ -28,19 +28,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cameras = []
     for monitor in monitors:
         _LOGGER.info("Initializing camera %s", monitor.id)
-        cameras.append(ZoneMinderCamera(monitor))
+        cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
     add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, monitor):
+    def __init__(self, monitor, verify_ssl):
         """Initialize as a subclass of MjpegCamera."""
         device_info = {
             CONF_NAME: monitor.name,
             CONF_MJPEG_URL: monitor.mjpeg_image_url,
-            CONF_STILL_IMAGE_URL: monitor.still_image_url
+            CONF_STILL_IMAGE_URL: monitor.still_image_url,
+            CONF_VERIFY_SSL: verify_ssl
         }
         super().__init__(device_info)
         self._is_recording = None
