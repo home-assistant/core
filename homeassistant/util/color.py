@@ -222,25 +222,31 @@ def color_RGB_to_xy_brightness(
 
     # Check if the given xy value is within the color-reach of the lamp.
     if Gamut:
-        in_reach = check_point_in_lamps_reach((x,y), Gamut)
+        in_reach = check_point_in_lamps_reach((x, y), Gamut)
         if not in_reach:
-            xy_closest = get_closest_point_to_point((x,y), Gamut)
+            xy_closest = get_closest_point_to_point((x, y), Gamut)
             x = xy_closest[0]
             y = xy_closest[1]
 
     return round(x, 3), round(y, 3), brightness
 
 
-def color_xy_to_RGB(vX: float, vY: float) -> Tuple[int, int, int]:
+def color_xy_to_RGB(vX: float, vY: float, Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
     """Convert from XY to a normalized RGB."""
-    return color_xy_brightness_to_RGB(vX, vY, 255)
+    return color_xy_brightness_to_RGB(vX, vY, 255, Gamut)
 
 
 # Converted to Python from Obj-C, original source from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
+                               ibrightness: int, Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
+    if Gamut:
+        if not check_point_in_lamps_reach((vX, vY), Gamut):
+            xy_closest = get_closest_point_to_point((vX, vY), Gamut)
+            vX = xy_closest[0]
+            vY = xy_closest[1]
+
     brightness = ibrightness / 255.
     if brightness == 0:
         return (0, 0, 0)
@@ -352,9 +358,9 @@ def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
     return color_hsv_to_RGB(iH, iS, 100)
 
 
-def color_xy_to_hs(vX: float, vY: float) -> Tuple[float, float]:
+def color_xy_to_hs(vX: float, vY: float, Gamut: Optional[GAMUT_TYPE] = None) -> Tuple[float, float]:
     """Convert an xy color to its hs representation."""
-    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
+    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY, Gamut))
     return h, s
 
 
