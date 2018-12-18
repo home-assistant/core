@@ -134,7 +134,7 @@ async def async_setup(hass, config):
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
         if discovery_hash in already_discovered:
-            logger.debug("Already discoverd service %s %s.", service, info)
+            logger.debug("Already discovered service %s %s.", service, info)
             return
 
         already_discovered.add(discovery_hash)
@@ -174,15 +174,15 @@ async def async_setup(hass, config):
         for result in results:
             hass.async_create_task(new_service_found(*result))
 
-        async_track_point_in_utc_time(hass, scan_devices,
-                                      dt_util.utcnow() + SCAN_INTERVAL)
+        async_track_point_in_utc_time(
+            hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL)
 
     @callback
     def schedule_first(event):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
 
-        # discovery local services
+        # Discovery for local services
         if 'HASSIO' in os.environ:
             hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
