@@ -1,8 +1,8 @@
 """
-Component for handling Air Pollutants data for your location.
+Component for handling Air Quality data for your location.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/air_pollutants/
+https://home-assistant.io/components/air_quality/
 """
 from datetime import timedelta
 import logging
@@ -13,43 +13,43 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AIR_POLLUTANTS_AQI = 'air_quality_index'
-ATTR_AIR_POLLUTANTS_ATTRIBUTION = 'attribution'
-ATTR_AIR_POLLUTANTS_C02 = 'carbon_dioxide'
-ATTR_AIR_POLLUTANTS_CO = 'carbon_monoxide'
-ATTR_AIR_POLLUTANTS_N2O = 'nitrogen_oxide'
-ATTR_AIR_POLLUTANTS_NO = 'nitrogen_monoxide'
-ATTR_AIR_POLLUTANTS_NO2 = 'nitrogen_dioxide'
-ATTR_AIR_POLLUTANTS_OZONE = 'ozone'
-ATTR_AIR_POLLUTANTS_PM_0_1 = 'particulate_matter_0_1'
-ATTR_AIR_POLLUTANTS_PM_10 = 'particulate_matter_10'
-ATTR_AIR_POLLUTANTS_PM_2_5 = 'particulate_matter_2_5'
-ATTR_AIR_POLLUTANTS_SO2 = 'sulphur_dioxide'
+ATTR_AIR_QUALITY_AQI = 'air_quality_index'
+ATTR_AIR_QUALITY_ATTRIBUTION = 'attribution'
+ATTR_AIR_QUALITY_C02 = 'carbon_dioxide'
+ATTR_AIR_QUALITY_CO = 'carbon_monoxide'
+ATTR_AIR_QUALITY_N2O = 'nitrogen_oxide'
+ATTR_AIR_QUALITY_NO = 'nitrogen_monoxide'
+ATTR_AIR_QUALITY_NO2 = 'nitrogen_dioxide'
+ATTR_AIR_QUALITY_OZONE = 'ozone'
+ATTR_AIR_QUALITY_PM_0_1 = 'particulate_matter_0_1'
+ATTR_AIR_QUALITY_PM_10 = 'particulate_matter_10'
+ATTR_AIR_QUALITY_PM_2_5 = 'particulate_matter_2_5'
+ATTR_AIR_QUALITY_SO2 = 'sulphur_dioxide'
 
-DOMAIN = 'air_pollutants'
+DOMAIN = 'air_quality'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 PROP_TO_ATTR = {
-    'air_quality_index': ATTR_AIR_POLLUTANTS_AQI,
-    'attribution': ATTR_AIR_POLLUTANTS_ATTRIBUTION,
-    'carbon_dioxide': ATTR_AIR_POLLUTANTS_C02,
-    'carbon_monoxide': ATTR_AIR_POLLUTANTS_CO,
-    'nitrogen_oxide': ATTR_AIR_POLLUTANTS_N2O,
-    'nitrogen_monoxide': ATTR_AIR_POLLUTANTS_NO,
-    'nitrogen_dioxide': ATTR_AIR_POLLUTANTS_NO2,
-    'ozone': ATTR_AIR_POLLUTANTS_OZONE,
-    'particulate_matter_0_1': ATTR_AIR_POLLUTANTS_PM_0_1,
-    'particulate_matter_10': ATTR_AIR_POLLUTANTS_PM_10,
-    'particulate_matter_2_5': ATTR_AIR_POLLUTANTS_PM_2_5,
-    'sulphur_dioxide': ATTR_AIR_POLLUTANTS_SO2,
+    'air_quality_index': ATTR_AIR_QUALITY_AQI,
+    'attribution': ATTR_AIR_QUALITY_ATTRIBUTION,
+    'carbon_dioxide': ATTR_AIR_QUALITY_C02,
+    'carbon_monoxide': ATTR_AIR_QUALITY_CO,
+    'nitrogen_oxide': ATTR_AIR_QUALITY_N2O,
+    'nitrogen_monoxide': ATTR_AIR_QUALITY_NO,
+    'nitrogen_dioxide': ATTR_AIR_QUALITY_NO2,
+    'ozone': ATTR_AIR_QUALITY_OZONE,
+    'particulate_matter_0_1': ATTR_AIR_QUALITY_PM_0_1,
+    'particulate_matter_10': ATTR_AIR_QUALITY_PM_10,
+    'particulate_matter_2_5': ATTR_AIR_QUALITY_PM_2_5,
+    'sulphur_dioxide': ATTR_AIR_QUALITY_SO2,
 }
 
 
 async def async_setup(hass, config):
-    """Set up the air pollutants component."""
+    """Set up the air quality component."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
@@ -66,8 +66,8 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class AirPollutantsEntity(Entity):
-    """ABC for air pollutants data."""
+class AirQualityEntity(Entity):
+    """ABC for air quality data."""
 
     @property
     def particulate_matter_2_5(self):

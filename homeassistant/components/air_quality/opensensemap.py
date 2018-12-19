@@ -1,16 +1,16 @@
 """
-Support for openSenseMap Air Pollutants data.
+Support for openSenseMap Air         data.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_pollutants_opensensemap/
+https://home-assistant.io/components/air_quality_opensensemap/
 """
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.air_pollutants import (
-    PLATFORM_SCHEMA, AirPollutantsEntity)
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA, AirQualityEntity)
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the openSenseMap air pollutants platform."""
+    """Set up the openSenseMap air quality platform."""
     from opensensemap_api import OpenSenseMap
 
     name = config.get(CONF_NAME)
@@ -51,20 +51,20 @@ async def async_setup_platform(
 
     station_name = osm_api.api.data['name'] if name is None else name
 
-    async_add_entities([OpenSenseMapPollutants(station_name, osm_api)], True)
+    async_add_entities([OpenSenseMapQuality(station_name, osm_api)], True)
 
 
-class OpenSenseMapPollutants(AirPollutantsEntity):
-    """Implementation of an openSenseMap air pollutants entity."""
+class OpenSenseMapQuality(AirQualityEntity):
+    """Implementation of an openSenseMap air quality entity."""
 
     def __init__(self, name, osm):
-        """Initialize the air pollutants entity."""
+        """Initialize the air quality entity."""
         self._name = name
         self._osm = osm
 
     @property
     def name(self):
-        """Return the name of the air pollutants entity."""
+        """Return the name of the air quality entity."""
         return self._name
 
     @property
