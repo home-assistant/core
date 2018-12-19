@@ -116,7 +116,7 @@ class TestBanSensor(unittest.TestCase):
             sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
         assert \
             sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
-        
+
     def test_ipv6_ban(self):
         """Test that log is parsed correctly for IPV6 bans."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
@@ -129,10 +129,11 @@ class TestBanSensor(unittest.TestCase):
 
         assert sensor.state == '2607:f0d0:1002:51::4'
         assert \
-            sensor.state_attributes[STATE_CURRENT_BANS] == ['2607:f0d0:1002:51::4']
+            sensor.state_attributes[STATE_CURRENT_BANS] == 
+            ['2607:f0d0:1002:51::4']
         assert \
             sensor.state_attributes[STATE_ALL_BANS] == ['2607:f0d0:1002:51::4']
-        
+
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
