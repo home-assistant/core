@@ -10,15 +10,18 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    MqttAvailability, subscription)
+    ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate,
+    subscription)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice)
+    VacuumDevice, DOMAIN)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,11 +148,30 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the vacuum."""
-    async_add_entities([MqttVacuum(config, discovery_info)])
+    """Set up MQTT vacuum through configuration.yaml."""
+    await _async_setup_entity(config, async_add_entities,
+                              discovery_info)
 
 
-class MqttVacuum(MqttAvailability, VacuumDevice):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT vacuum dynamically through MQTT discovery."""    
+    async def async_discover(discovery_payload):
+        """Discover and add a MQTT vacuum."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
+
+
+async def _async_setup_entity(config, async_add_entities,
+                              discovery_hash=None):
+    """Set up the MQTT vacuum."""
+    async_add_entities([MqttVacuum(config, discovery_hash)])
+
+
+class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
     def __init__(self, config, discovery_info):
@@ -174,6 +196,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_info,
+                                     self.discovery_update)
 
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
@@ -221,10 +245,23 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             )
         }
 
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._setup_from_config(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._subscribe_topics()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
