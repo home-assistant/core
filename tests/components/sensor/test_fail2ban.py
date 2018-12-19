@@ -130,7 +130,7 @@ class TestBanSensor(unittest.TestCase):
         assert sensor.state == '2607:f0d0:1002:51::4'
         assert \
             sensor.state_attributes[STATE_CURRENT_BANS] == \
-                ['2607:f0d0:1002:51::4']
+            ['2607:f0d0:1002:51::4']
         assert \
             sensor.state_attributes[STATE_ALL_BANS] == ['2607:f0d0:1002:51::4']
 
