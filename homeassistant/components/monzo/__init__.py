@@ -179,13 +179,19 @@ class MonzoObject:
         """Update sensor data."""
         if any(sensor_type in self.sensor_conditions for
                sensor_type in (TYPE_BALANCE, TYPE_DAILY_SPEND)):
-            account_id = self.client.get_first_account()['id']
-            balance = self.client.get_balance(account_id)
+            account = await self._hass.async_add_executor_job(
+                self.client.get_first_account)
+
+            account_id = account['id']
+            balance = await self._hass.async_add_executor_job(
+                self.client.get_balance, account_id)
+
             self.data[DATA_BALANCE] = balance
 
         if TYPE_POTS in self.sensor_conditions:
-            all_pots = self.client.get_pots()['pots']
-            open_pots = [pot for pot in all_pots if not pot['deleted']]
+            all_pots = await self._hass.async_add_executor_job(self.client.get_pots)
+
+            open_pots = [pot for pot in all_pots['pots'] if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
 
     def update_config_entry(self, new_token):
