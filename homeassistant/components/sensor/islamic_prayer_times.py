@@ -53,7 +53,7 @@ async def async_setup_platform(
                                                longitude,
                                                calc_method)
 
-    prayer_times = prayer_times_data.get_prayer_times()
+    prayer_times = prayer_times_data.get_new_prayer_times()
 
     sensors = []
     for sensor_type in config[CONF_SENSORS]:
@@ -126,7 +126,9 @@ async def schedule_future_update(hass, sensors, midnight_time,
 async def update_sensors(hass, sensors, prayer_times_data):
     """Update sensors with new prayer times."""
     # Update prayer times
-    prayer_times = prayer_times_data.get_prayer_times()
+    prayer_times = prayer_times_data.get_new_prayer_times()
+
+    _LOGGER.debug("New prayer times retrieved.  Updating sensors.")
 
     # Update all prayer times sensors
     for sensor in sensors:
@@ -145,9 +147,9 @@ class IslamicPrayerTimesData:
         self.latitude = latitude
         self.longitude = longitude
         self.calc_method = calc_method
-        self.prayer_times = None
+        self._prayer_times = None
 
-    def get_prayer_times(self):
+    def get_new_prayer_times(self):
         """Fetch prayer times for today."""
         from prayer_times_calculator import PrayerTimesCalculator
 
@@ -158,8 +160,12 @@ class IslamicPrayerTimesData:
                                      calculation_method=self.calc_method,
                                      date=str(today))
 
-        self.prayer_times = calc.fetch_prayer_times()
-        return self.prayer_times
+        self._prayer_times = calc.fetch_prayer_times()
+        return self._prayer_times
+
+    def get_prayer_times_info(self):
+        """Return the retrieved prayer times."""
+        return self._prayer_times
 
 
 class IslamicPrayerTimeSensor(Entity):
@@ -175,7 +181,8 @@ class IslamicPrayerTimeSensor(Entity):
         self._display_format = "%I:%M%p"
         self._name = self.sensor_type.capitalize()
         self._device_class = DEVICE_CLASS_TIMESTAMP
-        prayer_time = self.prayer_times_data.prayer_times[self._name]
+        prayer_time = self.prayer_times_data.get_prayer_times_info()[
+            self._name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
         self._state = pt_dt.isoformat()
 
@@ -214,6 +221,6 @@ class IslamicPrayerTimeSensor(Entity):
 
     async def async_update(self):
         """Update the sensor."""
-        prayer_time = self.prayer_times_data.prayer_times[self.name]
+        prayer_time = self.prayer_times_data.get_prayer_times_info()[self.name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
         self._state = pt_dt.isoformat()
