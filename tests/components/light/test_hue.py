@@ -691,7 +691,8 @@ def test_available():
     assert light.available is False
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=True),
         is_group=False,
@@ -700,7 +701,8 @@ def test_available():
     assert light.available is True
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=True,
