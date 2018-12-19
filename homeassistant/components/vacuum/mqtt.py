@@ -11,14 +11,15 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate,
-    subscription)
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice, DOMAIN)
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_DEVICE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -93,6 +94,7 @@ CONF_FAN_SPEED_TEMPLATE = 'fan_speed_template'
 CONF_SET_FAN_SPEED_TOPIC = 'set_fan_speed_topic'
 CONF_FAN_SPEED_LIST = 'fan_speed_list'
 CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Vacuum'
 DEFAULT_RETAIN = False
@@ -143,6 +145,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -171,7 +175,8 @@ async def _async_setup_entity(config, async_add_entities,
     async_add_entities([MqttVacuum(config, discovery_hash)])
 
 
-class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, VacuumDevice):
+class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+                 VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
     def __init__(self, config, discovery_info):
@@ -185,6 +190,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, VacuumDevice):
         self._fan_speed = 'unknown'
         self._fan_speed_list = []
         self._sub_state = None
+        self._unique_id = config.get(CONF_UNIQUE_ID)
 
         # Load config
         self._setup_from_config(config)
@@ -193,11 +199,13 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, VacuumDevice):
         availability_topic = config.get(mqtt.CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
+        device_config = config.get(CONF_DEVICE)
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
@@ -360,6 +368,11 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, VacuumDevice):
     def is_on(self):
         """Return true if vacuum is on."""
         return self._cleaning
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def status(self):

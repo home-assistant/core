@@ -937,3 +937,66 @@ async def test_discovery_update_vacuum(hass, mock_publish):
     assert state.name == 'Milk'
     state = hass.states.get('vacuum.milk')
     assert state is None
+
+
+async def test_unique_id(hass, mock_publish):
+    """Test unique id option only creates one vacuum per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+    # all vacuums group is 1, unique id created is 1
+
+
+async def test_entity_device_info_with_identifier(hass, mock_publish):
+    """Test MQTT vacuum device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'
