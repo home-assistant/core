@@ -24,9 +24,9 @@ from homeassistant.util import slugify
 
 # REQUIREMENTS = ['pyharmony==1.0.22']
 REQUIREMENTS = [
-    'https://github.com/ehendrix23/pyharmony/archive/'
-    '10d58ad8c89047f6278f559cced5cfbeac4b305f.zip'
-    '#pyharmony==1.0.22'
+    'https://github.com/home-assistant//pyharmony/archive/'
+    '4b27f8a35ea61123ef531ad078a4357cc26b00db.zip'
+    '#pyharmony==1.0.21b0'
 ]
 
 _LOGGER = logging.getLogger(__name__)
