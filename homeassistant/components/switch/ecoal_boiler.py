@@ -9,7 +9,7 @@ from typing import Optional
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.ecoal_boiler import (
-    DATA_ECOAL_BOILER, PUMP_IDNAMES, )
+    DATA_ECOAL_BOILER, AVAILABLE_PUMPS, )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +19,10 @@ DEPENDENCIES = ['ecoal_boiler']
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
-    _LOGGER.debug("discovery_info: %r", discovery_info)
     switches = []
-    for pump_id in PUMP_IDNAMES:     # pylint: disable=W0621
-        name = discovery_info.get(pump_id)
-        if name:
-            switches.append(EcoalSwitch(ecoal_contr, name, pump_id))
+    for pump_id in discovery_info:     # pylint: disable=W0621
+        name = AVAILABLE_PUMPS[pump_id]
+        switches.append(EcoalSwitch(ecoal_contr, name, pump_id))
     add_entities(switches, True)
 
 

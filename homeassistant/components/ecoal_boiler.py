@@ -23,39 +23,39 @@ DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
 
 
-# Available pump ids
+# Available pump ids with assigned HA names
 # Available as switches
-PUMP_IDNAMES = (
-    "central_heating_pump",
-    "domestic_hot_water_pump",
-    "central_heating_pump2",
-)
+AVAILABLE_PUMPS = {
+    "central_heating_pump": "Central heating pump",
+    "central_heating_pump2": "Central heating pump2",
+    "domestic_hot_water_pump": "Central hot water pump",
+}
 
-# Available temp sensor ids
+# Available temp sensor ids with assigned HA names
 # Available as sensors
-SENSOR_IDS = (
-    "outdoor_temp",
-    "indoor_temp",
-    "indoor2_temp",
-    "domestic_hot_water_temp",
-    "target_domestic_hot_water_temp",
-    "feedwater_in_temp",
-    "feedwater_out_temp",
-    "target_feedwater_temp",
-    "coal_feeder_temp",
-    "exhaust_temp",
-)
+AVAILABLE_SENSORS = {
+    "outdoor_temp": 'Outdoor temperature',
+    "indoor_temp": 'Indoor temperature',
+    "indoor2_temp": 'Indoor temperature 2',
+    "domestic_hot_water_temp": 'Domestic hot water temperature',
+    "target_domestic_hot_water_temp": 'Target hot water temperature',
+    "feedwater_in_temp": 'Feedwater input temperature',
+    "feedwater_out_temp": 'Feedwater output temperature',
+    "target_feedwater_temp": 'Target feedwater temperature',
+    "fuel_feeder_temp": 'Fuel feeder temperature',
+    "exhaust_temp": 'Exhaust temperature',
+}
 
 
 CONF_SWITCHES = 'switches'
-SWITCHES_SCHEMA = {}
-for pump_id in PUMP_IDNAMES:
-    SWITCHES_SCHEMA[vol.Optional(pump_id)] = cv.string
+SWITCHES_SCHEMA = []
+for pump_id in AVAILABLE_PUMPS.keys():
+    SWITCHES_SCHEMA.append(vol.Optional(pump_id))
 
 CONF_SENSORS = 'sensors'
-SENSORS_SCHEMA = {}
-for tempsensor_id in SENSOR_IDS:
-    SENSORS_SCHEMA[vol.Optional(tempsensor_id)] = cv.string
+SENSORS_SCHEMA = []
+for tempsensor_id in AVAILABLE_SENSORS.keys():
+    SENSORS_SCHEMA.append(vol.Optional(tempsensor_id))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.ecoal_boiler/
 """
 
 from homeassistant.components.ecoal_boiler import (
-        DATA_ECOAL_BOILER, SENSOR_IDS, )
+    DATA_ECOAL_BOILER, AVAILABLE_SENSORS, )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -17,10 +17,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ecoal sensors."""
     devices = []
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
-    for sensor_id in SENSOR_IDS:
-        name = discovery_info.get(sensor_id)
-        if name:
-            devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
+    for sensor_id in discovery_info:
+        name = AVAILABLE_SENSORS[sensor_id]
+        devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
     add_entities(devices, True)
 
 
