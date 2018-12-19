@@ -66,7 +66,6 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_PASSWORD): cv.string,
         vol.Optional(CONF_SWITCHES): SWITCHES_SCHEMA,
         vol.Optional(CONF_SENSORS): SENSORS_SCHEMA,
-        
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -90,12 +89,10 @@ def setup(hass, hass_config):
     sensors = conf.get(CONF_SENSORS)
     if sensors:
         load_platform(hass, 'sensor', DOMAIN, sensors, hass_config)
-    
+
     if ecoal_contr.version is None:
         # Wrong credentials nor network config
         return False
     _LOGGER.debug("Detected controller version: %r @%s",
                   ecoal_contr.version, host, )
-                  
-                  
     return True

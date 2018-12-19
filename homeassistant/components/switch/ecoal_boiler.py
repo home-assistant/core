@@ -8,12 +8,13 @@ import logging
 from typing import Optional
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.ecoal_boiler import (DATA_ECOAL_BOILER, 
-    PUMP_IDNAMES, )
+from homeassistant.components.ecoal_boiler import (
+    DATA_ECOAL_BOILER, PUMP_IDNAMES, )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ecoal_boiler']
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""

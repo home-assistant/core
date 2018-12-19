@@ -5,12 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecoal_boiler/
 """
 
-from homeassistant.components.ecoal_boiler import (DATA_ECOAL_BOILER, 
-    SENSOR_IDS, )
+from homeassistant.components.ecoal_boiler import (
+        DATA_ECOAL_BOILER, SENSOR_IDS, )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecoal_boiler']
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ecoal sensors."""
