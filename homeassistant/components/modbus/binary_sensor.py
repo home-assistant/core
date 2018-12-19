@@ -5,19 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.modbus/
 """
 import logging
-from typing import TYPE_CHECKING
-
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_SLAVE
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers import config_validation as cv
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from pymodbus.client.sync import BaseModbusClient
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
@@ -27,7 +21,7 @@ CONF_COILS = 'coils'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
-        vol.Required(CONF_HUB_NAME, default="default"): cv.string,
+        vol.Required(CONF_HUB_NAME, default='default'): cv.string,
         vol.Required(CONF_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_SLAVE): cv.positive_int
@@ -35,16 +29,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
         hub_name = coil.get(CONF_HUB_NAME)
         hub = hass.data[DOMAIN][hub_name]
-        sensors.append(
-            ModbusCoilSensor(hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE),
-                             coil.get(CONF_COIL)))
-    add_devices(sensors)
+        sensors.append(ModbusCoilSensor(
+            hub,
+            coil.get(CONF_NAME),
+            coil.get(CONF_SLAVE),
+            coil.get(CONF_COIL)))
+    add_entities(sensors)
 
 
 class ModbusCoilSensor(BinarySensorDevice):
@@ -52,7 +48,7 @@ class ModbusCoilSensor(BinarySensorDevice):
 
     def __init__(self, hub, name, slave, coil):
         """Initialize the modbus coil sensor."""
-        self._hub = hub  # type: BaseModbusClient
+        self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
