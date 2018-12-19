@@ -136,7 +136,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
-        import pyharmony
+        import pyharmony.client as harmony_client
 
         _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
@@ -146,7 +146,8 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = None
         self._default_activity = activity
         # self._client = pyharmony.get_client(host, port, self.new_activity)
-        self._client = pyharmony.client.HarmonyClient(host)
+        self._client = harmony_client.HarmonyClient(host)
+        self._config = None
         self._config_path = out_path
         self._delay_secs = delay_secs
         _LOGGER.debug("HarmonyRemote device init completed for: %s", name)
@@ -154,6 +155,7 @@ class HarmonyRemote(remote.RemoteDevice):
     async def async_added_to_hass(self):
         """Complete the initialization."""
         import pyharmony
+
         _LOGGER.debug("HarmonyRemote added for: %s", self._name)
 
         async def shutdown(event):
@@ -194,9 +196,12 @@ class HarmonyRemote(remote.RemoteDevice):
         return self._current_activity not in [None, 'PowerOff']
 
     async def async_update(self):
-        """Get current activity """
+        """Retrieve current activity from Hub."""
         import pyharmony
         _LOGGER.debug("Updating Harmony.")
+        if not self._config:
+            self._config = await self._client.get_config()
+
         activity_id = await self._client.get_current_activity()
         activity_name = pyharmony.activity_name(self._config, activity_id)
         _LOGGER.debug("%s activity reported as: %s", self._name, activity_name)
@@ -230,7 +235,7 @@ class HarmonyRemote(remote.RemoteDevice):
         await self._client.power_off()
 
     # pylint: disable=arguments-differ
-    async def send_command(self, commands, **kwargs):
+    async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         device = kwargs.get(ATTR_DEVICE)
         if device is None:
@@ -241,8 +246,9 @@ class HarmonyRemote(remote.RemoteDevice):
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
 
         for _ in range(num_repeats):
-            for command in commands:
-                await self._client.send_command(device, command)
+            for single_command in command:
+                _LOGGER.debug("Sending command %s", single_command)
+                await self._client.send_command(device, single_command)
                 await asyncio.sleep(delay_secs)
 
     async def sync(self):
