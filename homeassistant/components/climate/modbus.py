@@ -10,19 +10,16 @@ https://home-assistant.io/components/climate.modbus/
 """
 import logging
 import struct
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE)
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
-from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from pymodbus.client.sync import BaseModbusClient
+from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['modbus']
 
@@ -38,22 +35,15 @@ DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HUB_NAME, default="default"):
-        cv.string,
-    vol.Required(CONF_NAME):
-        cv.string,
-    vol.Required(CONF_SLAVE):
-        cv.positive_int,
-    vol.Required(CONF_TARGET_TEMP):
-        cv.positive_int,
-    vol.Required(CONF_CURRENT_TEMP):
-        cv.positive_int,
+    vol.Required(CONF_HUB_NAME, default="default"): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_SLAVE): cv.positive_int,
+    vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
     vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT):
         vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
-    vol.Optional(CONF_COUNT, default=2):
-        cv.positive_int,
-    vol.Optional(CONF_PRECISION, default=1):
-        cv.positive_int
+    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
+    vol.Optional(CONF_PRECISION, default=1): cv.positive_int
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
     modbus_slave = config.get(CONF_SLAVE)
@@ -73,10 +63,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub_name = config.get(CONF_HUB_NAME)
     hub = hass.data[DOMAIN][hub_name]
 
-    add_devices([
-        ModbusThermostat(hub, name, modbus_slave, target_temp_register,
-                         current_temp_register, data_type, count, precision)
-    ])
+    add_entities([ModbusThermostat(hub, name, modbus_slave,
+                                   target_temp_register, current_temp_register,
+                                   data_type, count, precision)], True)
 
 
 class ModbusThermostat(ClimateDevice):
@@ -85,7 +74,7 @@ class ModbusThermostat(ClimateDevice):
     def __init__(self, hub, name, modbus_slave, target_temp_register,
                  current_temp_register, data_type, count, precision):
         """Initialize the unit."""
-        self._hub = hub  # type: BaseModbusClient
+        self._hub = hub
         self._name = name
         self._slave = modbus_slave
         self._target_temperature_register = target_temp_register
@@ -97,26 +86,12 @@ class ModbusThermostat(ClimateDevice):
         self._precision = precision
         self._structure = '>f'
 
-        data_types = {
-            DATA_TYPE_INT: {
-                1: 'h',
-                2: 'i',
-                4: 'q'
-            },
-            DATA_TYPE_UINT: {
-                1: 'H',
-                2: 'I',
-                4: 'Q'
-            },
-            DATA_TYPE_FLOAT: {
-                1: 'e',
-                2: 'f',
-                4: 'd'
-            }
-        }
+        data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
+                      DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
+                      DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'}}
 
-        self._structure = '>{}'.format(
-            data_types[self._data_type][self._count])
+        self._structure = '>{}'.format(data_types[self._data_type]
+                                       [self._count])
 
     @property
     def supported_features(self):
