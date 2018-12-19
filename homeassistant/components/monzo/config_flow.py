@@ -78,7 +78,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
             return await self.async_step_link(user_input)
 
-        #return await self.async_step_init(user_input)
+        return self.async_abort(reason='redirect_failed')
 
     async def async_step_import(self, info):
         """Import existing auth from Monzo."""
