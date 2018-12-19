@@ -282,7 +282,7 @@ class HarmonyRemote(remote.RemoteDevice):
         _LOGGER.debug("Syncing hub with Harmony servers")
         await self._client.sync()
         await self._client.get_config()
-        self.write_config_file()
+        await self.hass.async_add_executor_job(self.write_config_file)
 
     def write_config_file(self):
         """Write Harmony configuration file."""
