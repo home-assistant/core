@@ -22,7 +22,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony==1.0.22']
+# REQUIREMENTS = ['pyharmony==1.0.22']
+REQUIREMENTS = ['https://github.com/ehendrix23/pyharmony/archive/websockets.zip'
+ '#pyharmony==1.0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
