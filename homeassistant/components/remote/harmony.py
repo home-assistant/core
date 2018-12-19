@@ -24,7 +24,8 @@ from homeassistant.util import slugify
 
 # REQUIREMENTS = ['pyharmony==1.0.22']
 REQUIREMENTS = [
-    'https://github.com/ehendrix23/pyharmony/archive/websockets.zip'
+    'https://github.com/ehendrix23/pyharmony/archive/'
+    '10d58ad8c89047f6278f559cced5cfbeac4b305f.zip'
     '#pyharmony==1.0.22'
 ]
 
