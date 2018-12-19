@@ -75,8 +75,6 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
                     discovery_info['color_capabilities'] |= \
                         CAPABILITIES_COLOR_TEMP
         zha_light = Light(**discovery_info)
-        if discovery_info['new_join']:
-            await zha_light.async_configure()
         entities.append(zha_light)
 
     async_add_entities(entities, update_before_add=True)

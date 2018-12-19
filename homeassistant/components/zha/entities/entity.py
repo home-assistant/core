@@ -25,7 +25,8 @@ class ZhaEntity(entity.Entity):
     _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, application_listener, unique_id, **kwargs):
+                 model, application_listener, unique_id, new_join=False,
+                 **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
         ieee = endpoint.device.ieee
@@ -54,6 +55,7 @@ class ZhaEntity(entity.Entity):
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
+        self._new_join = new_join
         self._state = None
         self._unique_id = unique_id
 
@@ -78,6 +80,9 @@ class ZhaEntity(entity.Entity):
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
 
         self._endpoint.device.zdo.add_listener(self)
+
+        if self._new_join:
+            self.hass.async_create_task(self.async_configure())
 
         self._initialized = True
 

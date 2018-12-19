@@ -46,10 +46,7 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     """Set up the ZHA switches."""
     entities = []
     for discovery_info in discovery_infos:
-        switch = Switch(**discovery_info)
-        if discovery_info['new_join']:
-            await switch.async_configure()
-        entities.append(switch)
+        entities.append(Switch(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -124,7 +121,7 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await helpers.safe_read(self._endpoint.on_off,
+        result = await helpers.safe_read(self.cluster,
                                          ['on_off'],
                                          allow_cache=False,
                                          only_cache=(not self._initialized))

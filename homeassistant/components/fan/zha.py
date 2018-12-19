@@ -70,10 +70,7 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     """Set up the ZHA fans."""
     entities = []
     for discovery_info in discovery_infos:
-        fan = ZhaFan(**discovery_info)
-        if discovery_info['new_join']:
-            await fan.async_configure()
-        entities.append(fan)
+        entities.append(ZhaFan(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 

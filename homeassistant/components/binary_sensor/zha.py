@@ -57,20 +57,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entities(hass, config_entry, async_add_entities,
                                 discovery_infos):
     """Set up the ZHA binary sensors."""
+    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.measurement import OccupancySensing
+    from zigpy.zcl.clusters.security import IasZone
+
     entities = []
     for discovery_info in discovery_infos:
-        from zigpy.zcl.clusters.general import OnOff
-        from zigpy.zcl.clusters.measurement import OccupancySensing
-        from zigpy.zcl.clusters.security import IasZone
         if IasZone.cluster_id in discovery_info['in_clusters']:
             entities.append(await _async_setup_iaszone(discovery_info))
         elif OccupancySensing.cluster_id in discovery_info['in_clusters']:
-            entities.append(await _async_setup_occupancy(
-                DEVICE_CLASS_OCCUPANCY,
-                discovery_info
-            ))
+            entities.append(
+                BinarySensor(DEVICE_CLASS_OCCUPANCY, **discovery_info))
         elif OnOff.cluster_id in discovery_info['out_clusters']:
-            entities.append(await _async_setup_remote(discovery_info))
+            entities.append(Remote(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -92,21 +91,6 @@ async def _async_setup_iaszone(discovery_info):
         pass
 
     return IasZoneSensor(device_class, **discovery_info)
-
-
-async def _async_setup_remote(discovery_info):
-    remote = Remote(**discovery_info)
-
-    if discovery_info['new_join']:
-        await remote.async_configure()
-    return remote
-
-
-async def _async_setup_occupancy(device_class, discovery_info):
-    sensor = BinarySensor(device_class, **discovery_info)
-    if discovery_info['new_join']:
-        await sensor.async_configure()
-    return sensor
 
 
 class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
