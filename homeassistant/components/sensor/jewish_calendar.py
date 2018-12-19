@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.8.5']
+REQUIREMENTS = ['hdate==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,6 +151,12 @@ class JewishCalSensor(Entity):
                                   timezone=self.timezone,
                                   diaspora=self.diaspora)
 
+        def make_zmanim(date):
+            return hdate.Zmanim(
+                date=date, location=location,
+                candle_lighting_offset=self.candle_lighting_offset,
+                havdalah_offset=self.havdalah_offset, hebrew=self._hebrew)
+
         if self.type == 'date':
             self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
@@ -160,50 +166,25 @@ class JewishCalSensor(Entity):
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
-        elif self.type == 'upcoming_shabbat_candle_lighting' or \
-                self.type == 'upcoming_candle_lighting':
-            # Start out with Shabbat/Friday.
-            # upcoming_shabbat returns the Saturday, so back up to the Friday
-            # for candle-lighting time.
-            start_day = date.upcoming_shabbat.previous_day
-            # If next yom tov is sooner, advance that.
-            if self.type == 'upcoming_candle_lighting':
-                next_erev_yom_tov = date.upcoming_yom_tov.previous_day
-                if next_erev_yom_tov < start_day:
-                    start_day = next_erev_yom_tov
-            times = hdate.Zmanim(
-                date=start_day.gdate, location=location,
-                hebrew=self._hebrew).zmanim
-            self._state = (times['sunset']
-                           - timedelta(minutes=self.candle_lighting_offset))
-        elif self.type == 'upcoming_shabbat_havdalah' or \
-                self.type == 'upcoming_havdalah':
-            end_day = date.upcoming_shabbat
-            if self.type == 'upcoming_havdalah':
-                next_yom_tov_end = date.upcoming_yom_tov
-                while (next_yom_tov_end.next_day.holiday_type
-                       == hdate.HolidayTypes.YOM_TOV):
-                    next_yom_tov_end = next_yom_tov_end.next_day
-                if next_yom_tov_end < end_day:
-                    end_day = next_yom_tov_end
-
-            times = hdate.Zmanim(
-                date=end_day.gdate, location=location,
-                hebrew=self._hebrew).zmanim
-            if self.havdalah_offset == 0:
-                self._state = times['three_stars']
-            else:
-                self._state = (times['sunset']
-                               + timedelta(minutes=self.havdalah_offset))
+        elif self.type == 'upcoming_shabbat_candle_lighting':
+            times = make_zmanim(date.upcoming_shabbat.previous_day.gdate)
+            print(date.upcoming_shabbat.gdate)
+            self._state = times.candle_lighting
+        elif self.type == 'upcoming_candle_lighting':
+            times = make_zmanim(date.upcoming_shabbat_or_yom_tov.first_day
+                                .previous_day.gdate)
+            self._state = times.candle_lighting
+        elif self.type == 'upcoming_shabbat_havdalah':
+            times = make_zmanim(date.upcoming_shabbat.gdate)
+            self._state = times.havdalah
+        elif self.type == 'upcoming_havdalah':
+            times = make_zmanim(date.upcoming_shabbat_or_yom_tov
+                                .last_day.gdate)
+            self._state = times.havdalah
         elif self.type == 'issur_melacha_in_effect':
-            self._state = hdate.Zmanim(
-                date=now, location=location,
-                shabbat_offset=self.candle_lighting_offset,
-                hebrew=self._hebrew).issur_melacha_in_effect
+            self._state = make_zmanim(now).issur_melacha_in_effect
         else:
-            times = hdate.Zmanim(
-                date=today, location=location,
-                hebrew=self._hebrew).zmanim
+            times = make_zmanim(today).zmanim
             self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)

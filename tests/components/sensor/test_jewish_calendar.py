@@ -192,7 +192,7 @@ class TestJewishCalenderSensor():
              'hebrew_holiday_name': "א' ראש השנה"}),
         make_nyc_test_params(
             dt(2018, 9, 10, 21, 25),
-            {'upcoming_candle_lighting': dt(2018, 9, 10, 18, 59),
+            {'upcoming_candle_lighting': dt(2018, 9, 9, 19, 1),
              'upcoming_havdalah': dt(2018, 9, 11, 19, 57),
              'upcoming_shabbat_candle_lighting': dt(2018, 9, 14, 18, 52),
              'upcoming_shabbat_havdalah': dt(2018, 9, 15, 19, 50),
@@ -228,7 +228,7 @@ class TestJewishCalenderSensor():
              'hebrew_holiday_name': 'שמיני עצרת'}),
         make_nyc_test_params(
             dt(2018, 10, 1, 21, 25),
-            {'upcoming_candle_lighting': dt(2018, 10, 1, 18, 23),
+            {'upcoming_candle_lighting': dt(2018, 9, 30, 18, 25),
              'upcoming_havdalah': dt(2018, 10, 2, 19, 20),
              'upcoming_shabbat_candle_lighting': dt(2018, 10, 5, 18, 17),
              'upcoming_shabbat_havdalah': dt(2018, 10, 6, 19, 13),
