@@ -88,7 +88,7 @@ light:
   brightness_scale: 99
 """
 import json
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
@@ -100,7 +100,7 @@ import homeassistant.core as ha
 
 from tests.common import (
     mock_coro, async_fire_mqtt_message, async_mock_mqtt_component,
-    MockConfigEntry)
+    MockConfigEntry, mock_registry)
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
@@ -677,3 +677,40 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'schema': 'json',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('light.beer', new_entity_id='light.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is None
+
+    state = hass.states.get('light.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
