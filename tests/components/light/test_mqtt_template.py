@@ -27,7 +27,7 @@ If your light doesn't support white value feature, omit `white_value_template`.
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
 import json
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
@@ -38,7 +38,7 @@ import homeassistant.core as ha
 
 from tests.common import (
     async_fire_mqtt_message, assert_setup_component, mock_coro,
-    async_mock_mqtt_component, MockConfigEntry)
+    async_mock_mqtt_component, MockConfigEntry, mock_registry)
 
 
 async def test_setup_fails(hass, mqtt_mock):
@@ -632,3 +632,42 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'schema': 'template',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'command_on_template': 'on,{{ transition }}',
+            'command_off_template': 'off,{{ transition|d }}',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('light.beer', new_entity_id='light.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is None
+
+    state = hass.states.get('light.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
