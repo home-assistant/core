@@ -93,7 +93,7 @@ async def async_add_hubs(hass, client, entry_id):
             config_entry_id=entry_id,
             identifiers={(DOMAIN, hub['id'])},
             manufacturer='Telldus',
-            name=hub.get('name', hub['ip']),
+            name=hub['name'],
             model=hub['type'],
             sw_version=hub['version'],
         )
