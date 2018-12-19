@@ -7,40 +7,21 @@ https://home-assistant.io/components/switch.ecoal_boiler/
 import logging
 from typing import Optional
 
-import voluptuous as vol
-
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.components.ecoal_boiler import DATA_ECOAL_BOILER
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.ecoal_boiler import (DATA_ECOAL_BOILER, 
+    PUMP_IDNAMES, )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ecoal_boiler']
 
-# Available ids
-PUMP_IDNAMES = (
-    "central_heating_pump",
-    "domestic_hot_water_pump",
-    "central_heating_pump2",
-)
-
-ENABLED_SCHEMA = {}
-for pump_id in PUMP_IDNAMES:
-    ENABLED_SCHEMA[vol.Optional(pump_id)] = cv.string
-CONF_ENABLE = "enable"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_ENABLE): ENABLED_SCHEMA}
-)
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
-    config_enable = config.get(CONF_ENABLE, {})
-    # _LOGGER.debug("config_enable: %r", config_enable)
+    _LOGGER.debug("discovery_info: %r", discovery_info)
     switches = []
     for pump_id in PUMP_IDNAMES:     # pylint: disable=W0621
-        name = config_enable.get(pump_id)
+        name = discovery_info.get(pump_id)
         if name:
             switches.append(EcoalSwitch(ecoal_contr, name, pump_id))
     add_entities(switches, True)

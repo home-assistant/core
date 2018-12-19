@@ -5,46 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecoal_boiler/
 """
 
-import voluptuous as vol
-
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.components.ecoal_boiler import DATA_ECOAL_BOILER
+from homeassistant.components.ecoal_boiler import (DATA_ECOAL_BOILER, 
+    SENSOR_IDS, )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ecoal_boiler']
-
-# Available temp sensor ids
-SENSOR_IDS = (
-    "outdoor_temp",
-    "indoor_temp",
-    "indoor2_temp",
-    "domestic_hot_water_temp",
-    "target_domestic_hot_water_temp",
-    "feedwater_in_temp",
-    "feedwater_out_temp",
-    "target_feedwater_temp",
-    "coal_feeder_temp",
-    "exhaust_temp",
-)
-
-ENABLED_SCHEMA = {}
-for tempsensor_id in SENSOR_IDS:
-    ENABLED_SCHEMA[vol.Optional(tempsensor_id)] = cv.string
-CONF_ENABLE = "enable"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_ENABLE): ENABLED_SCHEMA}
-)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ecoal sensors."""
     devices = []
-    config_enable = config.get(CONF_ENABLE, {})
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     for sensor_id in SENSOR_IDS:
-        name = config_enable.get(sensor_id)
+        name = discovery_info.get(sensor_id)
         if name:
             devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
     add_entities(devices, True)
