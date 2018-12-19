@@ -17,6 +17,7 @@ def pymochad_mock():
     with mock.patch.dict('sys.modules', {
         'pymochad': mock.MagicMock(),
         'pymochad.exceptions': mock.MagicMock(),
+        'pymochad_mqtt': mock.MagicMock(),
     }):
         yield
 
@@ -64,6 +65,7 @@ class TestMochadSwitch(unittest.TestCase):
         dev_dict = {'address': 'a1', 'name': 'fake_switch'}
         self.switch = mochad.MochadSwitch(self.hass, controller_mock,
                                           dev_dict)
+        self.switch.send_cmd=mock.MagicMock()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
