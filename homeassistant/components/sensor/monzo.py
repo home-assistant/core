@@ -128,6 +128,6 @@ class MonzoSensor(Entity):
                 pot = next(pot for pot in pots if
                            pot['id'] == self._unique_account_id)
             except StopIteration:
-                _LOGGER.error("Can't find pot matching tracked unique id: {}".format(
-                    self._unique_account_id))
+                _LOGGER.error("Can't find pot matching tracked unique id: %s",
+                              self._unique_account_id)
             self._state = pot['balance'] / 100
