@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, ATTR_ENTITY_ID,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_UNKNOWN, PRECISION_HALVES,
     PRECISION_TENTHS, PRECISION_WHOLE)
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -81,7 +82,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     max_temp = config.get(CONF_MAX_TEMP)
     target_temp = config.get(CONF_TARGET_TEMP)
     ac_mode = config.get(CONF_AC_MODE)
-    min_cycle_duration = config.get(CONF_MIN_DUR)
+    min_cycle_duration = get_deprecated(config, "Use steady switch instead",
+                                        CONF_MIN_DUR)
     cold_tolerance = config.get(CONF_COLD_TOLERANCE)
     hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
