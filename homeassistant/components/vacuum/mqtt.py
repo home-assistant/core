@@ -178,7 +178,9 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
         supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
-        self._supported_features = strings_to_services(supported_feature_strings)
+        self._supported_features = strings_to_services(
+            supported_feature_strings
+        )
         self._fan_speed_list = config.get(CONF_FAN_SPEED_LIST)
         self._qos = config.get(mqtt.CONF_QOS)
         self._retain = config.get(mqtt.CONF_RETAIN)
@@ -295,14 +297,17 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
             self.async_schedule_update_ha_state()
 
-        topics_list = set([topic for topic in self._state_topics.values() if topic])
+        topics_list = set([topic for
+                           topic in self._state_topics.values() if topic])
         self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state, 
-            { "topic{}".format(i):{ 
-                "topic": topic,
-                "msg_callback": message_received,
-                "qos": self._qos
-              } for i, topic in enumerate(topics_list) }
+            self.hass, self._sub_state,
+            { 
+                "topic{}".format(i): { 
+                    "topic": topic,
+                    "msg_callback": message_received,
+                    "qos": self._qos
+                } for i, topic in enumerate(topics_list) 
+            }
         )
 
     @property
