@@ -626,6 +626,7 @@ omit =
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/pjlink.py
     homeassistant/components/media_player/plex.py
+    homeassistant/components/media_player/ps4.py
     homeassistant/components/media_player/roku.py
     homeassistant/components/media_player/russound_rio.py
     homeassistant/components/media_player/russound_rnet.py
