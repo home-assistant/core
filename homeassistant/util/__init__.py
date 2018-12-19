@@ -10,9 +10,10 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unicodedata import normalize
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
                     Iterable, List, Dict, Iterator, Coroutine, MutableSet)
+
+import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
@@ -24,10 +25,6 @@ ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
-TBL_SLUGIFY = {
-    ord('ß'): 'ss'
-}
 
 
 def sanitize_filename(filename: str) -> str:
@@ -42,13 +39,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text)
-    text = text.lower()
-    text = text.replace(" ", "_")
-    text = text.translate(TBL_SLUGIFY)
-    text = RE_SLUGIFY.sub("", text)
-
-    return text
+    return unicode_slug.slugify(text, separator='_')  # type: ignore
 
 
 def repr_helper(inp: Any) -> str:

@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.0.9']
+REQUIREMENTS = ['pyeight==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
