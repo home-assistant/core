@@ -237,6 +237,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._state_workaround = False
         self._track_message_workaround = False
         self._previous_message = None
+        self._alarm_type_workaround = False
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
