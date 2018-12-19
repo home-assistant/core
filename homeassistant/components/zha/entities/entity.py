@@ -4,7 +4,7 @@ Entity for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-from asyncio import sleep
+import asyncio
 import logging
 from random import uniform
 
@@ -104,7 +104,7 @@ class ZhaEntity(entity.Entity):
                     manufacturer=manufacturer
                 )
                 skip_bind = True
-                await sleep(uniform(0.1, 0.5))
+                await asyncio.sleep(uniform(0.1, 0.5))
         _LOGGER.debug("%s: finished configuration", self.entity_id)
 
     def _get_cluster_from_report_config(self, cluster_key):
@@ -152,7 +152,7 @@ class ZhaEntity(entity.Entity):
             }
         }
         """
-        return dict()
+        return {}
 
     @property
     def unique_id(self) -> str:
