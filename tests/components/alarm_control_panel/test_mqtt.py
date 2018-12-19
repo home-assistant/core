@@ -1,6 +1,7 @@
 """The tests the MQTT alarm control panel component."""
 import json
 import unittest
+from unittest.mock import ANY
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
@@ -13,7 +14,7 @@ from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     assert_setup_component, async_fire_mqtt_message, async_mock_mqtt_component,
     async_setup_component, fire_mqtt_message, get_test_home_assistant,
-    mock_mqtt_component, MockConfigEntry)
+    mock_mqtt_component, MockConfigEntry, mock_registry)
 from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'
@@ -374,3 +375,40 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
+        alarm_control_panel.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity(
+        'alarm_control_panel.beer', new_entity_id='alarm_control_panel.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is None
+
+    state = hass.states.get('alarm_control_panel.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
