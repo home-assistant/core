@@ -7,8 +7,9 @@ https://home-assistant.io/components/sensor.monzo/
 import logging
 
 from homeassistant.components.monzo import (
-    DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS, DEFAULT_ATTRIBUTION, DOMAIN,
-    SENSORS, TOPIC_UPDATE, TYPE_BALANCE, TYPE_DAILY_SPEND, TYPE_POTS)
+    DATA_ACCOUNTID, DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS,
+    DEFAULT_ATTRIBUTION, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_BALANCE,
+    TYPE_DAILY_SPEND, TYPE_POTS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -41,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     MonzoSensor(
                         monzo, sensor_type, name, icon, unit, pot_id))
         else:
-            account_id = monzo.client.get_first_account()['id']
+            account_id = monzo.data[DATA_ACCOUNTID]
             sensors.append(
                 MonzoSensor(
                     monzo, sensor_type, name, icon, unit, account_id))

@@ -11,6 +11,7 @@ import time
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_SENSORS)
 from homeassistant.helpers import config_validation as cv
@@ -33,6 +34,7 @@ DATA_MONZO_LISTENER = 'data_listener'
 DATA_MONZO_CONFIG = 'monzo_config'
 DATA_BALANCE = 'balance'
 DATA_POTS = 'pots'
+DATA_ACCOUNTID = 'account_id'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Monzo'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
@@ -183,6 +185,8 @@ class MonzoObject:
                 self.client.get_first_account)
 
             account_id = account['id']
+            self.data[DATA_ACCOUNTID] = account_id
+
             balance = await self._hass.async_add_executor_job(
                 self.client.get_balance, account_id)
 
