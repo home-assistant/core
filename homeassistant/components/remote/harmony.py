@@ -223,11 +223,14 @@ class HarmonyRemote(remote.RemoteDevice):
         if activity:
             activity_id = None
             if activity.isdigit() or activity == '-1':
-                if self._client.get_activity_name(activity):
+                _LOGGER.debug("Activity is numeric")
+                if self._client.get_activity_name(int(activity)):
                     activity_id = activity
 
             if not activity_id:
-                activity_id = self._client.get_activity_id(activity)
+                _LOGGER.debug("Find activity ID based on name")
+                activity_id = self._client.get_activity_id(
+                    str(activity).strip())
 
             if not activity_id:
                 _LOGGER.error("Activity %s is invalid", activity)
@@ -252,11 +255,13 @@ class HarmonyRemote(remote.RemoteDevice):
 
         device_id = None
         if device.isdigit():
-            if self._client.get_device_name(device):
+            _LOGGER.debug("Device is numeric")
+            if self._client.get_device_name(int(device)):
                 device_id = device
 
         if not device_id:
-            device_id = self._client.get_activity_id(device)
+            _LOGGER.debug("Find device ID based on device name")
+            device_id = self._client.get_activity_id(str(device).strip())
 
         if not device_id:
             _LOGGER.error("Device  %s is invalid", device)
