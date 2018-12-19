@@ -11,7 +11,7 @@ import random
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_TOKEN
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -23,9 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_IDENTITY = 'identity'
 CONF_ATTRIBUTION = "Data provided by Discogs"
 
-NAME_COLLECTION_SENSOR = "Discogs Collection"
-NAME_WANTLIST_SENSOR = "Discogs Wantlist"
-NAME_RANDOM_RECORD = "Discogs Random Record"
+DEFAULT_NAME = 'Discogs'
 
 ICON_RECORD = 'mdi:album'
 ICON_PLAYER = 'mdi:record-player'
@@ -35,6 +33,7 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -44,33 +43,36 @@ async def async_setup_platform(hass, config, async_add_entities,
     import discogs_client
 
     token = config[CONF_TOKEN]
+    name = config[CONF_NAME]
 
     try:
         discogs_client = discogs_client.Client(
             SERVER_SOFTWARE, user_token=token)
+        discogs_client.identity()
     except discogs_client.exceptions.HTTPError:
         _LOGGER.error("API token is not valid")
         return
 
     async_add_entities([
-        DiscogsCollectionSensor(discogs_client),
-        DiscogsWantlistSensor(discogs_client),
-        DiscogsRandomRecordSensor(discogs_client),
+        DiscogsCollectionSensor(discogs_client, name),
+        DiscogsWantlistSensor(discogs_client, name),
+        DiscogsRandomRecordSensor(discogs_client, name),
     ], True)
 
 
 class DiscogsCollectionSensor(Entity):
     """Get a user's number of records in collection."""
 
-    def __init__(self, client):
+    def __init__(self, client, name):
         """Initialize the Discogs collection sensor."""
         self._client = client
+        self._name = name
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return NAME_COLLECTION_SENSOR
+        return "{} Collection".format(self._name)
 
     @property
     def state(self):
@@ -103,15 +105,16 @@ class DiscogsCollectionSensor(Entity):
 class DiscogsWantlistSensor(Entity):
     """Get a user's number of records in wantlist."""
 
-    def __init__(self, client):
+    def __init__(self, client, name):
         """Initialize the Discogs wantlist sensor."""
         self._client = client
+        self._name = name
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return NAME_WANTLIST_SENSOR
+        return return "{} Wantlist".format(self._name)
 
     @property
     def state(self):
@@ -144,16 +147,17 @@ class DiscogsWantlistSensor(Entity):
 class DiscogsRandomRecordSensor(Entity):
     """Suggest a random record from the user's collection."""
 
-    def __init__(self, client):
+    def __init__(self, client, name):
         """Initialize the Discogs random record sensor."""
         self._client = client
+        self._name = name
         self._state = None
         self._attrs = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return NAME_RANDOM_RECORD
+        return "{} Random Record".format(self._name)
 
     @property
     def state(self):
