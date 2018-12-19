@@ -62,11 +62,12 @@ class EcoalSwitch(SwitchDevice):
         status = self._ecoal_contr.get_cached_status()
         self._state = getattr(status, self._state_attr)
 
-    def reread_update(self) -> None:
-        """Fetch state of pump without using cache."""
-        # Get status without using cache
-        self._ecoal_contr.get_status()
-        self.update()
+    def invalidate_ecoal_cache(self):
+        """Invalidate ecoal interface cache.
+
+        Forces that next read from ecaol interface to not use cache.
+        """
+        self._ecoal_contr.status = None
 
     @property
     def is_on(self) -> bool:
@@ -76,11 +77,9 @@ class EcoalSwitch(SwitchDevice):
     def turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         self._contr_set_fun(1)
-        # Reread state without using cache.
-        self.reread_update()
+        self.invalidate_ecoal_cache()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         self._contr_set_fun(0)
-        # Reread state without using cache.
-        self.reread_update()
+        self.invalidate_ecoal_cache()
