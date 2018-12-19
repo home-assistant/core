@@ -7,8 +7,6 @@ https://home-assistant.io/components/sensor.fail2ban/
 import os
 import logging
 
-from datetime import timedelta
-
 import re
 import voluptuous as vol
 
