@@ -53,6 +53,8 @@ async def async_setup_entry(hass, entry):
     conf = entry.data[KEY_SESSION]
 
     if KEY_HOST in conf:
+        # Session(**conf) does blocking IO when
+        # communicating with local devices.
         session = await hass.async_add_executer_job(partial(Session, **conf))
     else:
         session = Session(
@@ -89,7 +91,6 @@ async def async_add_hubs(hass, client, entry_id):
         _LOGGER.debug("Connected hub %s", hub['name'])
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
-            connections={('IP', hub['ip'])},
             identifiers={(DOMAIN, hub['id'])},
             manufacturer='Telldus',
             name=hub.get('name', hub['ip']),
