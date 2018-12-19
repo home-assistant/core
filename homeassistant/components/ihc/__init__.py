@@ -77,7 +77,8 @@ IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
     vol.Optional(CONF_BINARY_SENSOR, default=[]):
-        vol.All(cv.ensure_list, [vol.All(BINARY_SENSOR_SCHEMA, validate_name)]),
+        vol.All(
+            cv.ensure_list, [vol.All(BINARY_SENSOR_SCHEMA, validate_name)]),
     vol.Optional(CONF_INFO, default=True): cv.boolean,
     vol.Optional(CONF_LIGHT, default=[]):
         vol.All(cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]),
@@ -183,7 +184,8 @@ def ihc_setup(hass, config, conf, controller_id):
     return True
 
 
-def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
+def get_manual_configuration(
+        hass, config, conf, ihc_controller, controller_id):
     """Get manual configuration for IHC devices."""
     for component in IHC_PLATFORMS:
         discovery_info = {}
