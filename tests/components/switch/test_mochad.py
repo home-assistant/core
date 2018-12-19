@@ -62,6 +62,7 @@ class TestMochadSwitch(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
+        controller_mock.ctrl = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_switch'}
         self.switch = mochad.MochadSwitch(self.hass, controller_mock,
                                           dev_dict)

@@ -60,6 +60,7 @@ class TestMochadLight(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
+        controller_mock.ctrl = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
                     'brightness_levels': 32}
         self.light = mochad.MochadLight(self.hass, controller_mock,
@@ -98,6 +99,7 @@ class TestMochadLight256Levels(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
+        controller_mock.ctrl = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
                     'brightness_levels': 256}
         self.light = mochad.MochadLight(self.hass, controller_mock,
@@ -131,6 +133,7 @@ class TestMochadLight64Levels(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
+        controller_mock.ctrl = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
                     'brightness_levels': 64}
         self.light = mochad.MochadLight(self.hass, controller_mock,
