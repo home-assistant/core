@@ -1,14 +1,14 @@
 """Local Monzo authentication."""
-import time
 import logging
+import time
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 
 from .const import (
-    DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT)
+    CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LAST_SAVED_AT,
+    CONF_REFRESH_TOKEN, DOMAIN)
 
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
 MONZO_AUTH_CALLBACK_NAME = 'api:monzo'

@@ -10,10 +10,10 @@ from homeassistant.components.monzo import (
     DATA_ACCOUNTID, DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS,
     DEFAULT_ATTRIBUTION, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_BALANCE,
     TYPE_DAILY_SPEND, TYPE_POTS)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (ATTR_ID, ATTR_ATTRIBUTION)
 
 DEPENDENCIES = ['monzo']
 _LOGGER = logging.getLogger(__name__)

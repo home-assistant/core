@@ -3,9 +3,8 @@
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET)
+from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, DOMAIN
 from .local_auth import MonzoAuthCallbackView
-
 
 MONZO_AUTH_START = '/api/monzo'
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'

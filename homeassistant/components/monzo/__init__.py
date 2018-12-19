@@ -11,17 +11,17 @@ import time
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_SENSORS)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
 from .const import (
-    DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT, CONF_EXPIRES_AT)
+    CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_EXPIRES_AT,
+    CONF_LAST_SAVED_AT, CONF_REFRESH_TOKEN, DOMAIN)
 
 REQUIREMENTS = ['monzo==0.8.0']
 
