@@ -103,18 +103,9 @@ async def _async_setup_remote(discovery_info):
 
 
 async def _async_setup_occupancy(device_class, discovery_info):
-
-    sensor = BinarySensor(
-        device_class,
-        {
-            'occupancy': {'occupancy': REPORT_CONFIG_IMMEDIATE}
-        },
-        **discovery_info
-    )
-
+    sensor = BinarySensor(device_class, **discovery_info)
     if discovery_info['new_join']:
         await sensor.async_configure()
-
     return sensor
 
 
@@ -345,11 +336,11 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
     _device_class = None
     value_attribute = 0
 
-    def __init__(self, device_class, report_config, **kwargs):
+    def __init__(self, device_class, **kwargs):
         """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_class = device_class
-        self._zcl_reporting = report_config
+        self._cluster = list(kwargs['in_clusters'].values())[0]
 
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
@@ -362,6 +353,16 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
     def should_poll(self) -> bool:
         """Let zha handle polling."""
         return False
+
+    @property
+    def cluster(self):
+        """Zigbee cluster for this entity."""
+        return self._cluster
+
+    @property
+    def zcl_reportintg_config(self):
+        """ZHA reporting configuration."""
+        return {self.cluster: {self.value_attribute: REPORT_CONFIG_IMMEDIATE}}
 
     @property
     def is_on(self) -> bool:
