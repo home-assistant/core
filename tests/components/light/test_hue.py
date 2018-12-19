@@ -727,10 +727,11 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'hs',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'hs',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -740,11 +741,12 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'xy',
-            'hue': 1234,
-            'sat': 123,
-            'xy': [0.4, 0.5]
-        }),
+                       'colormode': 'xy',
+                       'hue': 1234,
+                       'sat': 123,
+                       'xy': [0.4, 0.5]
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
