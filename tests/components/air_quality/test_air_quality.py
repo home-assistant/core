@@ -1,37 +1,37 @@
 """The tests for the Air Quality component."""
-from homeassistant.components.air_pollutants import (
+from homeassistant.components.air_quality import (
     ATTR_AIR_POLLUTANTS_ATTRIBUTION, ATTR_AIR_POLLUTANTS_N2O,
     ATTR_AIR_POLLUTANTS_OZONE, ATTR_AIR_POLLUTANTS_PM_10)
 from homeassistant.setup import async_setup_component
 
 
 async def test_state(hass):
-    """Test Air Pollutants state."""
+    """Test Air Quality state."""
     config = {
-        'air_pollutants': {
+        'air_quality': {
             'platform': 'demo',
         }
     }
 
-    assert await async_setup_component(hass, 'air_pollutants', config)
+    assert await async_setup_component(hass, 'air_quality', config)
 
-    state = hass.states.get('air_pollutants.demo_air_pollutants_home')
+    state = hass.states.get('air_quality.demo_air_quality_home')
     assert state is not None
 
     assert state.state == '14'
 
 
 async def test_attributes(hass):
-    """Test Air Pollutants attributes."""
+    """Test Air Quality attributes."""
     config = {
-        'air_pollutants': {
+        'air_quality': {
             'platform': 'demo',
         }
     }
 
-    assert await async_setup_component(hass, 'air_pollutants', config)
+    assert await async_setup_component(hass, 'air_quality', config)
 
-    state = hass.states.get('air_pollutants.demo_air_pollutants_office')
+    state = hass.states.get('air_quality.demo_air_quality_office')
     assert state is not None
 
     data = state.attributes

@@ -731,7 +731,7 @@ openevsewifi==0.4
 # homeassistant.components.media_player.openhome
 openhomedevice==0.4.2
 
-# homeassistant.components.air_pollutants.opensensemap
+# homeassistant.components.air_quality.opensensemap
 opensensemap-api==0.1.3
 
 # homeassistant.components.switch.orvibo
