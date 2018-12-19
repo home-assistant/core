@@ -4,13 +4,16 @@ weather:
     woeid: 523920
   - platform: darksky
     api_key: c992285eeb9cc789c226c809794cf14e
-    forecast:
-      - 0
-      - pl
+    forecast: 0
+    language: pl
+    units: si
     monitored_conditions:
       - summary
       - icon
       - temperature
+      - minutely_summary
+      - daily_summary
+      - hourly_summary
     update_interval:
         days: 0
         hours: 1
