@@ -9,7 +9,8 @@ import logging
 from homeassistant.components import light
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
@@ -73,7 +74,10 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
                         UNSUPPORTED_ATTRIBUTE):
                     discovery_info['color_capabilities'] |= \
                         CAPABILITIES_COLOR_TEMP
-        entities.append(Light(**discovery_info))
+        zha_light = Light(**discovery_info)
+        if discovery_info['new_join']:
+            await zha_light.async_configure()
+        entities.append(zha_light)
 
     async_add_entities(entities, update_before_add=True)
 
@@ -104,6 +108,19 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
                 self._hs_color = (0, 0)
+
+    @property
+    def zcl_reporting_config(self) -> dict:
+        """Return attribute reporting configuration."""
+        return {
+            'on_off': {'on_off': REPORT_CONFIG_IMMEDIATE},
+            'level': {'current_level': REPORT_CONFIG_ASAP},
+            'light_color': {
+                'current_x': REPORT_CONFIG_DEFAULT,
+                'current_y': REPORT_CONFIG_DEFAULT,
+                'color_temperature': REPORT_CONFIG_DEFAULT,
+            }
+        }
 
     @property
     def is_on(self) -> bool:
