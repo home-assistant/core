@@ -196,6 +196,18 @@ LIGHT_RESPONSE = {
     "1": LIGHT_1_ON,
     "2": LIGHT_2_OFF,
 }
+LIGHT_RAW = {
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
+}
 
 
 @pytest.fixture
@@ -668,7 +680,8 @@ async def test_light_turn_off_service(hass, mock_bridge):
 def test_available():
     """Test available property."""
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=False,
@@ -699,10 +712,11 @@ def test_hs_color():
     """Test hs_color property."""
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'ct',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'ct',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
