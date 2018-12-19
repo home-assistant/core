@@ -1488,6 +1488,9 @@ snapcast==2.0.9
 # homeassistant.components.sensor.socialblade
 socialbladeclient==0.2
 
+# homeassistant.components.sensor.solaredge
+solaredge==0.0.2
+
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
 
