@@ -177,8 +177,10 @@ class GenericBatterySensor(Sensor):
     def zcl_reporting_config(self) -> dict:
         """Return a dict of attribute reporting configuration."""
         return {
-            self.cluster: {self.value_attribute: self.report_config},
-            self.cluster: {self.report_attribute: self.report_config}
+            self.cluster: {
+                self.value_attribute: self.report_config,
+                self.report_attribute: self.report_config
+            }
         }
 
     async def async_update(self):
