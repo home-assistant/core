@@ -79,6 +79,11 @@ def setup(hass, hass_config):
     username = conf[CONF_USERNAME]
     passwd = conf[CONF_PASSWORD]
     ecoal_contr = ECoalController(host, username, passwd)
+    if ecoal_contr.version is None:
+        # Wrong credentials nor network config
+        return False
+    _LOGGER.debug("Detected controller version: %r @%s",
+                  ecoal_contr.version, host, )
     # Creating ECoalController instance makes HTTP request to controller.
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     # Setup switches
@@ -89,10 +94,4 @@ def setup(hass, hass_config):
     sensors = conf.get(CONF_SENSORS)
     if sensors:
         load_platform(hass, 'sensor', DOMAIN, sensors, hass_config)
-
-    if ecoal_contr.version is None:
-        # Wrong credentials nor network config
-        return False
-    _LOGGER.debug("Detected controller version: %r @%s",
-                  ecoal_contr.version, host, )
     return True

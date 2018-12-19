@@ -40,7 +40,7 @@ class EcoalSwitch(SwitchDevice):
         self._ecoal_contr = ecoal_contr
         self._name = name
         self._state_attr = state_attr
-        # NOTE: Ecoalcotroller holds convention that same postfix is used
+        # Ecoalcotroller holds convention that same postfix is used
         # to set attribute
         #   set_<attr>()
         # as attribute name in status instance:
