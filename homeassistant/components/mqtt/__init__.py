@@ -80,6 +80,7 @@ CONF_CONNECTIONS = 'connections'
 CONF_MANUFACTURER = 'manufacturer'
 CONF_MODEL = 'model'
 CONF_SW_VERSION = 'sw_version'
+CONF_VIA_HUB = 'via_hub'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -1031,5 +1032,8 @@ class MqttEntityDeviceInfo(Entity):
 
         if CONF_SW_VERSION in self._device_config:
             info['sw_version'] = self._device_config[CONF_SW_VERSION]
+
+        if CONF_VIA_HUB in self._device_config:
+            info['via_hub'] = self._device_config[CONF_VIA_HUB]
 
         return info
