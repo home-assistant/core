@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
-from .config_flow import configured_instances # noqa: F401
+from .config_flow import configured_instances  # noqa: F401
 from .const import (
     CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_EXPIRES_AT,
     CONF_LAST_SAVED_AT, CONF_REFRESH_TOKEN, DOMAIN)
