@@ -96,7 +96,7 @@ class ZhaEntity(entity.Entity):
     @callback
     def device_announce(self, device):
         """Handle device_announce zdo event."""
-        self.hass.async_create_task(self.async_update())
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @callback
     def permit_duration(self, permit_duration):
