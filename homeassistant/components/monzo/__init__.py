@@ -193,7 +193,8 @@ class MonzoObject:
             self.data[DATA_BALANCE] = balance
 
         if TYPE_POTS in self.sensor_conditions:
-            all_pots = await self._hass.async_add_executor_job(self.client.get_pots)
+            all_pots = await self._hass.async_add_executor_job(
+                self.client.get_pots)
 
             open_pots = [pot for pot in all_pots['pots'] if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
@@ -203,6 +204,5 @@ class MonzoObject:
         new_data = {**self.config_entry.data,
                     'tokens': new_token,
                     CONF_LAST_SAVED_AT: int(time.time())}
-        self._hass.config_entries.async_update_entry(
-            self.config_entry,
-            data=new_data)
+        self._hass.config_entries.async_update_entry(self.config_entry,
+                                                     data=new_data)
