@@ -199,6 +199,7 @@ class MonzoObject:
             open_pots = [pot for pot in all_pots['pots'] if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
 
+    @callback
     def update_config_entry(self, new_token):
         """Update config entry with refreshed token."""
         new_data = {**self.config_entry.data,
