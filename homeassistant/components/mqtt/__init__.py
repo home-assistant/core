@@ -225,6 +225,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_MODEL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SW_VERSION): cv.string,
+    vol.Optional(CONF_VIA_HUB): cv.string,
 }), validate_device_has_at_least_one_identifier)
 
 MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
