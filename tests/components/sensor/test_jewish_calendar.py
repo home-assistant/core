@@ -262,6 +262,56 @@ class TestJewishCalenderSensor():
              'upcoming_shabbat_havdalah': dt(2018, 10, 6, 18, 56),
              'weekly_portion': 'Bereshit',
              'hebrew_weekly_portion': 'בראשית'}),
+        make_nyc_test_params(
+            dt(2016, 6, 11, 8, 25),
+            {'upcoming_candle_lighting': dt(2016, 6, 10, 20, 7),
+             'upcoming_havdalah': dt(2016, 6, 13, 21, 17),
+             'upcoming_shabbat_candle_lighting': dt(2016, 6, 10, 20, 7),
+             'upcoming_shabbat_havdalah': None,
+             'weekly_portion': 'Bamidbar',
+             'hebrew_weekly_portion': 'במדבר',
+             'holiday_name': 'Erev Shavuot',
+             'hebrew_holiday_name': 'ערב שבועות'}),
+        make_nyc_test_params(
+            dt(2016, 6, 12, 8, 25),
+            {'upcoming_candle_lighting': dt(2016, 6, 10, 20, 7),
+             'upcoming_havdalah': dt(2016, 6, 13, 21, 17),
+             'upcoming_shabbat_candle_lighting': dt(2016, 6, 17, 20, 10),
+             'upcoming_shabbat_havdalah': dt(2016, 6, 18, 21, 19),
+             'weekly_portion': 'Nasso',
+             'hebrew_weekly_portion': 'נשא',
+             'holiday_name': 'Shavuot',
+             'hebrew_holiday_name': 'שבועות'}),
+        make_jerusalem_test_params(
+            dt(2017, 9, 21, 8, 25),
+            {'upcoming_candle_lighting': dt(2017, 9, 20, 18, 23),
+             'upcoming_havdalah': dt(2017, 9, 23, 19, 13),
+             'upcoming_shabbat_candle_lighting': dt(2017, 9, 22, 19, 14),
+             'upcoming_shabbat_havdalah': dt(2017, 9, 23, 19, 13),
+             'weekly_portion': "Ha'Azinu",
+             'hebrew_weekly_portion': 'האזינו',
+             'holiday_name': 'Rosh Hashana I',
+             'hebrew_holiday_name': "א' ראש השנה"}),
+        make_jerusalem_test_params(
+            dt(2017, 9, 22, 8, 25),
+            {'upcoming_candle_lighting': dt(2017, 9, 20, 18, 23),
+             'upcoming_havdalah': dt(2017, 9, 23, 19, 13),
+             'upcoming_shabbat_candle_lighting': dt(2017, 9, 22, 19, 14),
+             'upcoming_shabbat_havdalah': dt(2017, 9, 23, 19, 13),
+             'weekly_portion': "Ha'Azinu",
+             'hebrew_weekly_portion': 'האזינו',
+             'holiday_name': 'Rosh Hashana II',
+             'hebrew_holiday_name': "ב' ראש השנה"}),
+        make_jerusalem_test_params(
+            dt(2017, 9, 23, 8, 25),
+            {'upcoming_candle_lighting': dt(2017, 9, 20, 18, 23),
+             'upcoming_havdalah': dt(2017, 9, 23, 19, 13),
+             'upcoming_shabbat_candle_lighting': dt(2017, 9, 22, 19, 14),
+             'upcoming_shabbat_havdalah': dt(2017, 9, 23, 19, 13),
+             'weekly_portion': "Ha'Azinu",
+             'hebrew_weekly_portion': 'האזינו',
+             'holiday_name': '',
+             'hebrew_holiday_name': ''}),
     ]
 
     shabbat_test_ids = [
@@ -279,6 +329,13 @@ class TestJewishCalenderSensor():
         "upcoming_one_day_yom_tov_in_israel",
         "currently_one_day_yom_tov_in_israel",
         "after_one_day_yom_tov_in_israel",
+        # Type 1 = Sat/Sun/Mon
+        "currently_first_day_of_three_day_type1_yomtov_in_diaspora",
+        "currently_second_day_of_three_day_type1_yomtov_in_diaspora",
+        # Type 2 = Thurs/Fri/Sat
+        "currently_first_day_of_three_day_type2_yomtov_in_israel",
+        "currently_second_day_of_three_day_type2_yomtov_in_israel",
+        "currently_third_day_of_three_day_type2_yomtov_in_israel",
     ]
 
     @pytest.mark.parametrize(["now", "candle_lighting", "havdalah", "diaspora",

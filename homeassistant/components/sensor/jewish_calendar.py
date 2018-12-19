@@ -163,12 +163,12 @@ class JewishCalSensor(Entity):
             # Compute the weekly portion based on the upcoming shabbat.
             self._state = date.upcoming_shabbat.parasha
         elif self.type == 'holiday_name':
+            print(date)
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
         elif self.type == 'upcoming_shabbat_candle_lighting':
             times = make_zmanim(date.upcoming_shabbat.previous_day.gdate)
-            print(date.upcoming_shabbat.gdate)
             self._state = times.candle_lighting
         elif self.type == 'upcoming_candle_lighting':
             times = make_zmanim(date.upcoming_shabbat_or_yom_tov.first_day
