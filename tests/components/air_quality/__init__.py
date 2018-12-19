@@ -1,1 +1,1 @@
-"""The tests for Air Pollutants platforms."""
+"""The tests for Air Quality platforms."""

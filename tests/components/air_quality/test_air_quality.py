@@ -1,4 +1,4 @@
-"""The tests for the Air Pollutants component."""
+"""The tests for the Air Quality component."""
 from homeassistant.components.air_pollutants import (
     ATTR_AIR_POLLUTANTS_ATTRIBUTION, ATTR_AIR_POLLUTANTS_N2O,
     ATTR_AIR_POLLUTANTS_OZONE, ATTR_AIR_POLLUTANTS_PM_10)
