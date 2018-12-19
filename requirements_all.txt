@@ -509,7 +509,7 @@ homematicip==0.9.8
 httplib2==0.10.3
 
 # homeassistant.components.remote.harmony
-https://github.com/home-assistant//pyharmony/archive/4b27f8a35ea61123ef531ad078a4357cc26b00db.zip#pyharmony==1.0.21b0
+https://github.com/home-assistant/pyharmony/archive/31efd339a3c39e7b8f58e823a0eddb59013e03ae.zip#pyharmony==1.0.21b1
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.0.16
