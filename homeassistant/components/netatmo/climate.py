@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_HOME = 'home'
 CONF_ROOMS = 'rooms'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
