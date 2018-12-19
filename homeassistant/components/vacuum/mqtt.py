@@ -301,12 +301,12 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                            topic in self._state_topics.values() if topic])
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            { 
-                "topic{}".format(i): { 
+            {
+                "topic{}".format(i): {
                     "topic": topic,
                     "msg_callback": message_received,
                     "qos": self._qos
-                } for i, topic in enumerate(topics_list) 
+                } for i, topic in enumerate(topics_list)
             }
         )
 
