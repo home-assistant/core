@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -89,21 +89,7 @@ async def _async_setup_remote(discovery_info):
     remote = Remote(**discovery_info)
 
     if discovery_info['new_join']:
-        from zigpy.zcl.clusters.general import OnOff, LevelControl
-        out_clusters = discovery_info['out_clusters']
-        if OnOff.cluster_id in out_clusters:
-            cluster = out_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=0, max_report=600,
-                reportable_change=1
-            )
-        if LevelControl.cluster_id in out_clusters:
-            cluster = out_clusters[LevelControl.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=1, max_report=600,
-                reportable_change=1
-            )
-
+        await remote.async_configure()
     return remote
 
 
@@ -238,6 +224,14 @@ class Remote(ZhaEntity, BinarySensorDevice):
             general.OnOff.cluster_id: self.OnOffListener(self),
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
+        out_clusters = kwargs.get('out_clusters')
+        self._zcl_reporting = {}
+        for cluster_id in [general.OnOff.cluster_id,
+                           general.LevelControl.cluster_id]:
+            if cluster_id not in out_clusters:
+                continue
+            cluster = out_clusters[cluster_id]
+            self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
 
     @property
     def should_poll(self) -> bool:
@@ -256,6 +250,11 @@ class Remote(ZhaEntity, BinarySensorDevice):
             'level': self._state and self._level or 0
         })
         return self._device_state_attributes
+
+    @property
+    def zcl_reporting_config(self):
+        """Return ZCL attribute reporting configuration."""
+        return self._zcl_reporting
 
     def move_level(self, change):
         """Increment the level, setting state if appropriate."""
