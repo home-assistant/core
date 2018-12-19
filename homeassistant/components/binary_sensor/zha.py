@@ -104,20 +104,16 @@ async def _async_setup_remote(discovery_info):
 
 async def _async_setup_occupancy(device_class, discovery_info):
 
-    sensor = BinarySensor(device_class, **discovery_info)
+    sensor = BinarySensor(
+        device_class,
+        {
+            'occupancy': {'occupancy': REPORT_CONFIG_IMMEDIATE}
+        },
+        **discovery_info
+    )
 
     if discovery_info['new_join']:
-        from zigpy.zcl.clusters.measurement import OccupancySensing
-        in_clusters = discovery_info['in_clusters']
-        cluster = in_clusters[OccupancySensing.cluster_id]
-        await helpers.configure_reporting(
-            sensor.entity_id,
-            cluster,
-            0,
-            min_report=0,
-            max_report=900,
-            reportable_change=1
-        )
+        await sensor.async_configure()
 
     return sensor
 
@@ -349,10 +345,11 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
     _device_class = None
     value_attribute = 0
 
-    def __init__(self, device_class, **kwargs):
+    def __init__(self, device_class, report_config, **kwargs):
         """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_class = device_class
+        self._zcl_reporting = report_config
 
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
