@@ -86,7 +86,8 @@ class MonzoAuthCallbackView(HomeAssistantView):
             }
 
         hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            DOMAIN,
+            context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_CLIENT_ID: self.oauth.client_id,
                 CONF_CLIENT_SECRET: self.oauth.client_secret,
