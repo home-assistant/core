@@ -23,8 +23,10 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
 # REQUIREMENTS = ['pyharmony==1.0.22']
-REQUIREMENTS = ['https://github.com/ehendrix23/pyharmony/archive/websockets.zip'
- '#pyharmony==1.0.22']
+REQUIREMENTS = [
+    'https://github.com/ehendrix23/pyharmony/archive/websockets.zip'
+    '#pyharmony==1.0.22'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -251,7 +253,7 @@ class HarmonyRemote(remote.RemoteDevice):
         device_id = None
         if device.isdigit():
             if self._client.get_device_name(device):
-                    device_id = device
+                device_id = device
 
         if not device_id:
             device_id = self._client.get_activity_id(device)
