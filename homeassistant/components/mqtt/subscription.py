@@ -94,6 +94,4 @@ async def async_subscribe_topics(hass: HomeAssistantType,
 @bind_hass
 async def async_unsubscribe_topics(hass: HomeAssistantType, sub_state: dict):
     """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
-    await async_subscribe_topics(hass, sub_state, {})
-
-    return sub_state
+    return await async_subscribe_topics(hass, sub_state, {})

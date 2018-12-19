@@ -169,7 +169,8 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
