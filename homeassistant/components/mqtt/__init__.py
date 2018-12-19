@@ -878,7 +878,8 @@ class MqttAttributes(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         from .subscription import async_unsubscribe_topics
-        await async_unsubscribe_topics(self.hass, self._attributes_sub_state)
+        self._attributes_sub_state = await async_unsubscribe_topics(
+            self.hass, self._attributes_sub_state)
 
     @property
     def device_state_attributes(self):
@@ -947,7 +948,8 @@ class MqttAvailability(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         from .subscription import async_unsubscribe_topics
-        await async_unsubscribe_topics(self.hass, self._availability_sub_state)
+        self._availability_sub_state = await async_unsubscribe_topics(
+            self.hass, self._availability_sub_state)
 
     @property
     def available(self) -> bool:
