@@ -124,6 +124,10 @@ class MonzoSensor(Entity):
             self._state = balance['spend_today'] / 100
         elif self._sensor_type == TYPE_POTS:
             pots = self.monzo.data[DATA_POTS]
-            pot = next(pot for pot in pots if
-                       pot['id'] == self._unique_account_id)
+            try:
+                pot = next(pot for pot in pots if
+                           pot['id'] == self._unique_account_id)
+            except StopIteration:
+                _LOGGER.error("Can't find pot matching tracked unique id: {}".format(
+                    self._unique_account_id))
             self._state = pot['balance'] / 100
