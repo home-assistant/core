@@ -55,7 +55,7 @@ async def async_setup_entry(hass, entry):
     if KEY_HOST in conf:
         # Session(**conf) does blocking IO when
         # communicating with local devices.
-        session = await hass.async_add_executer_job(partial(Session, **conf))
+        session = await hass.async_add_executor_job(partial(Session, **conf))
     else:
         session = Session(
             PUBLIC_KEY,
