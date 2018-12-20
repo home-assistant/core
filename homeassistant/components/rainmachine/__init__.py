@@ -4,9 +4,11 @@ Support for RainMachine devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rainmachine/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -152,24 +154,25 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        client = await login(
-            config_entry.data[CONF_IP_ADDRESS],
-            config_entry.data[CONF_PASSWORD],
-            websession,
-            port=config_entry.data[CONF_PORT],
-            ssl=config_entry.data[CONF_SSL])
-        rainmachine = RainMachine(
-            client,
-            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
-            config_entry.data.get(CONF_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(SENSORS)),
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
-        )
-        await rainmachine.async_update()
-    except RainMachineError as err:
+        with async_timeout.timeout(4):
+            client = await login(
+                config_entry.data[CONF_IP_ADDRESS],
+                config_entry.data[CONF_PASSWORD],
+                websession,
+                port=config_entry.data[CONF_PORT],
+                ssl=config_entry.data[CONF_SSL])
+    except (asyncio.TimeoutError, RainMachineError) as err:
         _LOGGER.error('An error occurred: %s', err)
         raise ConfigEntryNotReady
+
+    rainmachine = RainMachine(
+        client,
+        config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
+            CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
+        config_entry.data.get(CONF_SENSORS, {}).get(
+            CONF_MONITORED_CONDITIONS, list(SENSORS)),
+        config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
+    await rainmachine.async_update()
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
 
