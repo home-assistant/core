@@ -73,7 +73,7 @@ ABBREVIATIONS = {
     'bat_lev_t': 'battery_level_topic',
     'bat_lev_tpl': 'battery_level_template',
     'chrg_t': 'charging_topic',
-    'chrg_tpl': 'chargin_template',
+    'chrg_tpl': 'charging_template',
     'clr_temp_cmd_t': 'color_temp_command_topic',
     'clr_temp_stat_t': 'color_temp_state_topic',
     'clr_temp_val_tpl': 'color_temp_value_template',
