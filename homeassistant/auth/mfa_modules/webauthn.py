@@ -1,7 +1,6 @@
 """WebAuthn-based auth module."""
 import base64
 import logging
-import string
 from typing import Any, Dict, Optional, Tuple
 
 import voluptuous as vol
