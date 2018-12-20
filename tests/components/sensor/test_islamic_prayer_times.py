@@ -114,14 +114,22 @@ async def test_islamic_prayer_times_data_get_prayer_times(hass):
                                          calc_method=CALC_METHOD)
 
         assert pt_data.get_new_prayer_times() == PRAYER_TIMES
-        assert pt_data.get_prayer_times_info() == PRAYER_TIMES
+        assert pt_data.prayer_times_info == PRAYER_TIMES
 
 
 async def test_islamic_prayer_times_sensor_update(hass):
     """Test Islamic prayer times sensor update."""
+    new_prayer_times = {"Fajr": "06:10",
+                        "Sunrise": "07:25",
+                        "Dhuhr": "12:30",
+                        "Asr": "15:32",
+                        "Maghrib": "17:45",
+                        "Isha": "18:53",
+                        "Midnight": "00:45"}
+
     with MockDependency('prayer_times_calculator') as mock_pt_calc:
         mock_pt_calc.PrayerTimesCalculator.return_value.fetch_prayer_times \
-            .return_value = PRAYER_TIMES
+            .side_effect = [PRAYER_TIMES, new_prayer_times]
 
         config = {
             'sensor': {
@@ -138,15 +146,6 @@ async def test_islamic_prayer_times_sensor_update(hass):
         assert state.state == pt_dt.isoformat()
 
         midnight = PRAYER_TIMES['Midnight']
-
-        new_prayer_times = {"Fajr": "06:10",
-                            "Sunrise": "07:25",
-                            "Dhuhr": "12:30",
-                            "Asr": "15:32",
-                            "Maghrib": "17:45",
-                            "Isha": "18:53",
-                            "Midnight": "00:45"}
-
         now = dt_util.as_local(dt_util.now())
         today = now.date()
 
@@ -156,10 +155,7 @@ async def test_islamic_prayer_times_sensor_update(hass):
 
         with patch(
                 'homeassistant.components.sensor.islamic_prayer_times'
-                '.dt_util.utcnow', return_value=future), patch(
-                    'homeassistant.components.sensor.islamic_prayer_times'
-                    '.IslamicPrayerTimesData.get_prayer_times_info',
-                    return_value=new_prayer_times):
+                '.dt_util.utcnow', return_value=future):
 
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
