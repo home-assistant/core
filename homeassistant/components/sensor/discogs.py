@@ -114,7 +114,7 @@ class DiscogsWantlistSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return return "{} Wantlist".format(self._name)
+        return "{} Wantlist".format(self._name)
 
     @property
     def state(self):
