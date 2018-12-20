@@ -154,7 +154,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT vacuum dynamically through MQTT discovery."""    
+    """Set up MQTT vacuum dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
         config = PLATFORM_SCHEMA(discovery_payload)
