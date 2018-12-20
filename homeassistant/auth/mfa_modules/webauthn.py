@@ -57,7 +57,7 @@ def _encode_bytes_to_string(data: Any) -> str:
     return encoded.decode('utf-8')
 
 
-def _decode_string_to_bytes(data: str) -> object:
+def _decode_string_to_bytes(data: str) -> Dict[str, Any]:
     """Decode UTF-8 string to bytes from CBOR and BASE64."""
     from fido2 import cbor
 
@@ -116,11 +116,11 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
 
-        self._users = None
+        self._users = None  # type: Optional[Dict[str, list]]
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True)
-        self._server = None
-        self._state = None
+        self._server = None  # type: fido2.server.Fido2Server
+        self._state = None  # type: Dict
 
     @property
     def input_schema(self) -> vol.Schema:
