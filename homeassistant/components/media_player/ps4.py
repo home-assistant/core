@@ -182,7 +182,7 @@ class PS4Device(MediaPlayerDevice):
                     self._source_list = list(sorted(self._games.values()))
                 else:
                     self.idle()
-                    if self._source_selected == app_name:
+                    if self._source_selected is not None:
                         self._source_selected = None
             else:
                 self.state_off()
