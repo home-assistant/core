@@ -11,15 +11,11 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED, mqtt as mqttvacuum)
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.discovery import async_start
-
-
 from tests.common import (
     mock_mqtt_component, async_mock_mqtt_component,
     async_fire_mqtt_message, MockConfigEntry)
 from tests.components.vacuum import common
 
-import logging
-_LOGGER = logging.getLogger(__name__)
 
 default_config = {
     CONF_PLATFORM: 'mqtt',
@@ -72,8 +68,6 @@ async def test_all_commands(hass, mock_publish):
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
     })
-
-    _LOGGER.info("ASYNC_SETUP_COMPONENT DONE")
 
     common.turn_on(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
