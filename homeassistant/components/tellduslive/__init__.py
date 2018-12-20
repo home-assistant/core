@@ -199,7 +199,8 @@ class TelldusLiveClient:
 
         dev_ids = {dev.device_id for dev in self._client.devices}
         new_devices = dev_ids - self._known_devices
-        await asyncio.gather(*[self._discover(d_id) for d_id in new_devices])
+        for d_id in new_devices:
+            await self._discover(d_id)
         self._known_devices |= new_devices
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
