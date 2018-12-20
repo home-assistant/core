@@ -1035,6 +1035,6 @@ class MqttEntityDeviceInfo(Entity):
             info['sw_version'] = self._device_config[CONF_SW_VERSION]
 
         if CONF_VIA_HUB in self._device_config:
-            info['via_hub'] = self._device_config[CONF_VIA_HUB]
+            info['via_hub'] = (DOMAIN, self._device_config[CONF_VIA_HUB])
 
         return info
