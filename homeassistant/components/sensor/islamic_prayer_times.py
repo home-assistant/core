@@ -178,7 +178,6 @@ class IslamicPrayerTimeSensor(Entity):
         self.sensor_type = sensor_type
         self.entity_id = self.ENTITY_ID_FORMAT.format(self.sensor_type)
         self.prayer_times_data = prayer_times_data
-        self._display_format = "%I:%M%p"
         self._name = self.sensor_type.capitalize()
         self._device_class = DEVICE_CLASS_TIMESTAMP
         prayer_time = self.prayer_times_data.get_prayer_times_info()[
