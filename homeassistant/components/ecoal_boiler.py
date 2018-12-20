@@ -8,7 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+                                 CONF_SWITCHES)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -28,7 +30,7 @@ DEFAULT_PASSWORD = "admin"
 AVAILABLE_PUMPS = {
     "central_heating_pump": "Central heating pump",
     "central_heating_pump2": "Central heating pump2",
-    "domestic_hot_water_pump": "Central hot water pump",
+    "domestic_hot_water_pump": "Domestic hot water pump",
 }
 
 # Available temp sensor ids with assigned HA names
@@ -46,16 +48,15 @@ AVAILABLE_SENSORS = {
     "exhaust_temp": 'Exhaust temperature',
 }
 
+SWITCH_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_PUMPS)):
+        vol.All(cv.ensure_list, [vol.In(AVAILABLE_PUMPS)])
+})
 
-CONF_SWITCHES = 'switches'
-SWITCHES_SCHEMA = []
-for pump_id in AVAILABLE_PUMPS.keys():
-    SWITCHES_SCHEMA.append(vol.Optional(pump_id))
-
-CONF_SENSORS = 'sensors'
-SENSORS_SCHEMA = []
-for tempsensor_id in AVAILABLE_SENSORS.keys():
-    SENSORS_SCHEMA.append(vol.Optional(tempsensor_id))
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_SENSORS)):
+        vol.All(cv.ensure_list, [vol.In(AVAILABLE_SENSORS)])
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -64,8 +65,8 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD,
                      default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_SWITCHES): SWITCHES_SCHEMA,
-        vol.Optional(CONF_SENSORS): SENSORS_SCHEMA,
+        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -87,11 +88,9 @@ def setup(hass, hass_config):
     # Creating ECoalController instance makes HTTP request to controller.
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     # Setup switches
-    switches = conf.get(CONF_SWITCHES)
-    if switches:
-        load_platform(hass, 'switch', DOMAIN, switches, hass_config)
+    switches = conf[CONF_SWITCHES][CONF_MONITORED_CONDITIONS]
+    load_platform(hass, 'switch', DOMAIN, switches, hass_config)
     # Setup temp sensors
-    sensors = conf.get(CONF_SENSORS)
-    if sensors:
-        load_platform(hass, 'sensor', DOMAIN, sensors, hass_config)
+    sensors = conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+    load_platform(hass, 'sensor', DOMAIN, sensors, hass_config)
     return True

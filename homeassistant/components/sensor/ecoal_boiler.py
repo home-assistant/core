@@ -4,11 +4,14 @@ Allows reading temperatures from ecoal/esterownik.pl controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecoal_boiler/
 """
+import logging
 
 from homeassistant.components.ecoal_boiler import (
     DATA_ECOAL_BOILER, AVAILABLE_SENSORS, )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ecoal_boiler']
 
