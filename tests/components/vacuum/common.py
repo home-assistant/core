@@ -25,7 +25,8 @@ def turn_on(hass, entity_id=None):
 def async_turn_on(hass, entity_id=None):
     """Turn all or specified vacuum on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, data))
 
 
 @bind_hass
@@ -39,7 +40,8 @@ def turn_off(hass, entity_id=None):
 def async_turn_off(hass, entity_id=None):
     """Turn all or specified vacuum off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, data))
 
 
 @bind_hass
@@ -53,7 +55,8 @@ def toggle(hass, entity_id=None):
 def async_toggle(hass, entity_id=None):
     """Toggle all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, data))
 
 
 @bind_hass
@@ -67,7 +70,8 @@ def locate(hass, entity_id=None):
 def async_locate(hass, entity_id=None):
     """Locate all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_LOCATE, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_LOCATE, data))
 
 
 @bind_hass
@@ -81,7 +85,8 @@ def clean_spot(hass, entity_id=None):
 def async_clean_spot(hass, entity_id=None):
     """Tell all or specified vacuum to perform a spot clean-up."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CLEAN_SPOT, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_CLEAN_SPOT, data))
 
 
 @bind_hass
@@ -95,7 +100,8 @@ def return_to_base(hass, entity_id=None):
 def async_return_to_base(hass, entity_id=None):
     """Tell all or specified vacuum to return to base."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RETURN_TO_BASE, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_RETURN_TO_BASE, data))
 
 
 @bind_hass
@@ -109,7 +115,8 @@ def start_pause(hass, entity_id=None):
 def async_start_pause(hass, entity_id=None):
     """Tell all or specified vacuum to start or pause the current task."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START_PAUSE, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_START_PAUSE, data))
 
 
 @bind_hass
@@ -123,7 +130,8 @@ def start(hass, entity_id=None):
 def async_start(hass, entity_id=None):
     """Tell all or specified vacuum to start or resume the current task."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_START, data))
 
 
 @bind_hass
@@ -137,7 +145,8 @@ def pause(hass, entity_id=None):
 def async_pause(hass, entity_id=None):
     """Tell all or the specified vacuum to pause the current task."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PAUSE, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, data))
 
 
 @bind_hass
@@ -151,7 +160,8 @@ def stop(hass, entity_id=None):
 def async_stop(hass, entity_id=None):
     """Stop all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_STOP, data))
 
 
 @bind_hass
@@ -166,7 +176,8 @@ def async_set_fan_speed(hass, fan_speed, entity_id=None):
     """Set fan speed for all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_FAN_SPEED] = fan_speed
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SET_FAN_SPEED, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_SET_FAN_SPEED, data))
 
 
 @bind_hass
