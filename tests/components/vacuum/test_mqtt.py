@@ -15,8 +15,6 @@ from tests.common import (
     async_fire_mqtt_message, MockConfigEntry)
 from tests.components.vacuum import common
 
-import logging
-_LOGGER = logging.getLogger(__name__)
 
 default_config = {
     CONF_PLATFORM: 'mqtt',
@@ -69,8 +67,6 @@ async def test_all_commands(hass, mock_publish):
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
     })
-
-    _LOGGER.info("ASYNC_SETUP_COMPONENT DONE")
 
     common.turn_on(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
