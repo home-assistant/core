@@ -27,7 +27,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
-DATA_TRANSMISSION = 'TRANSMISSION'
+DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
 DEFAULT_PORT = 9091
@@ -47,8 +47,8 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(TURTLE_MODE, default=False): cv.boolean,
@@ -61,17 +61,21 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 
 def setup(hass, config):
+    """Set up the Transmission Component."""
     hass.data[DATA_TRANSMISSION] = TransmissionData(hass, config)
     hass.data[DATA_TRANSMISSION].init_torrent_list()
 
     def refresh(event_time):
+        """Get the latest data from Transmission."""
         hass.data[DATA_TRANSMISSION].update()
 
     track_time_interval(hass, refresh, SCAN_INTERVAL)
 
     sensorconfig = {
+        'sensor_types': SENSOR_TYPES,
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
-        'client_name': config[DOMAIN][CONF_NAME]}
+        'client_name': config[DOMAIN][CONF_NAME],
+        'component_name': DATA_TRANSMISSION}
     discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig)
 
     if config[DOMAIN][TURTLE_MODE] is True:
@@ -132,6 +136,7 @@ class TransmissionData:
             _LOGGER.error("Unable to connect to Transmission client")
 
     def init_torrent_list(self):
+        """Initialize torrent lists."""
         self.torrents = self._api.get_torrents()
         self.completed_torrents = [
             x.name for x in self.torrents if x.status == "seeding"]
@@ -139,7 +144,7 @@ class TransmissionData:
             x.name for x in self.torrents if x.status == "downloading"]
 
     def check_completed_torrent(self):
-        """Get completed torrent functionality"""
+        """Get completed torrent functionality."""
         actual_torrents = self.torrents
         actual_completed_torrents = [
             var.name for var in actual_torrents if var.status == "seeding"]
@@ -156,7 +161,7 @@ class TransmissionData:
         self.completed_torrents = actual_completed_torrents
 
     def check_started_torrent(self):
-        """Get started torrent functionality"""
+        """Get started torrent functionality."""
         actual_torrents = self.torrents
         actual_started_torrents = [
             var.name for var
@@ -173,17 +178,22 @@ class TransmissionData:
         self.started_torrents = actual_started_torrents
 
     def get_started_torrent_count(self):
+        """Get the number of started torrents."""
         return len(self.started_torrents)
 
     def get_completed_torrent_count(self):
+        """Get the number of completed torrents."""
         return len(self.completed_torrents)
 
     def set_alt_speed_enabled(self, is_enabled):
+        """Set the alternative speed flag."""
         self._api.set_session(alt_speed_enabled=is_enabled)
 
     def get_alt_speed_enabled(self):
+        """Get the alternative speed flag."""
         return self.get_session().alt_speed_enabled
 
     @Throttle(SCAN_INTERVAL)
     def get_session(self):
+        """Get the Transmission session parameters."""
         return self._api.get_session()

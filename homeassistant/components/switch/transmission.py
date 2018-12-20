@@ -6,35 +6,30 @@ https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['transmission']
-DATA_TRANSMISSION = 'TRANSMISSION'
 
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission switch."""
-    if (discovery_info is None):
+    if discovery_info is None:
         _LOGGING.warning("Unable to connect to Transmission client.")
         raise PlatformNotReady
 
-    transmission_api = hass.data[DATA_TRANSMISSION]
+    component_name = discovery_info['component_name']
+    transmission_api = hass.data[component_name]
     name = discovery_info['client_name']
 
-    dev = []
-    dev.append(TransmissionSwitch(transmission_api, name))
+    add_entities([TransmissionSwitch(transmission_api, name)], True)
 
-    add_entities(dev, True)
 
 class TransmissionSwitch(ToggleEntity):
     """Representation of a Transmission switch."""
