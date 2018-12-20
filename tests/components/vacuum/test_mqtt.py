@@ -1,5 +1,4 @@
 """The tests for the Mqtt vacuum platform."""
-import json
 import pytest
 
 from homeassistant.setup import async_setup_component
