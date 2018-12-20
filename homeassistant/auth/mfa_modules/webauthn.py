@@ -49,7 +49,7 @@ def _create_server(hass: HomeAssistant) -> Any:
     return Fido2Server(relying_party)
 
 
-def _encode_bytes_to_string(data: Any) -> string:
+def _encode_bytes_to_string(data: Any) -> str:
     """Encode bytes to UTF-8 string with CBOR and BASE64."""
     from fido2 import cbor
 
@@ -57,7 +57,7 @@ def _encode_bytes_to_string(data: Any) -> string:
     return encoded.decode('utf-8')
 
 
-def _decode_string_to_bytes(data: str) -> Any:
+def _decode_string_to_bytes(data: str) -> object:
     """Decode UTF-8 string to bytes from CBOR and BASE64."""
     from fido2 import cbor
 
@@ -116,11 +116,11 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
 
-        self._users = None  # type: Optional[Dict[str, list]]
+        self._users = None
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True)
-        self._server = None  # type: fido2.server.Fido2Server
-        self._state = None  # type: Dict
+        self._server = None
+        self._state = None
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -244,7 +244,7 @@ class WebAuthnSetupFlow(SetupFlow):
         self._auth_module = auth_module  # type: WebAuthnAuthModule
         self._user = user  # type: User
         self._server = _create_server(auth_module.hass)
-        self._state = None  # type: Dict
+        self._state = None
         self._credentials = credentials  # type: list
         self._invalid_mfa_times = 0  # type: int
 
@@ -253,8 +253,8 @@ class WebAuthnSetupFlow(SetupFlow):
             -> Dict[str, Any]:
         """Handle steps of setup flow."""
         errors = {}  # type: Dict[str, str]
-        user_error = None  # type: str
-        token = None  # type: str
+        user_error = None
+        token = None
 
         if user_input:
             user_error = user_input.get(INPUT_FIELD_ERROR)
@@ -299,7 +299,7 @@ class WebAuthnSetupFlow(SetupFlow):
         self._state = state
         data = {
             'options': _encode_bytes_to_string(registration_data)
-        }
+        }  # type: Dict[str, str]
 
         return self.async_show_form(
             step_id='init',
