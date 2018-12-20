@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.transmission/
 """
 import logging
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import STATE_IDLE
 from homeassistant.helpers.entity import Entity
 
@@ -26,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     transmission_api = hass.data[component_name]
     monitored_variables = discovery_info['sensors']
     name = discovery_info['client_name']
-    SENSOR_TYPES = discovery_info['sensor_types']
+    sensor_types = discovery_info['sensor_types']
 
     dev = []
     for variable in monitored_variables:
@@ -34,8 +35,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             variable,
             transmission_api,
             name,
-            SENSOR_TYPES[variable][0],
-            SENSOR_TYPES[variable][1]))
+            sensor_types[variable][0],
+            sensor_types[variable][1]))
 
     add_entities(dev, True)
 
