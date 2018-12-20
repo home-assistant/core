@@ -93,6 +93,7 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Required(PARTITION_ATTR): cv.string,
 })
 
+
 async def async_setup(hass, config):
     """Set up for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
@@ -172,7 +173,6 @@ async def async_setup(hass, config):
         custom_function = call.data.get(CUSTOM_FUNCTION_ATTR)
         partition = call.data.get(PARTITION_ATTR)
         controller.command_output(code, partition, custom_function)
-
 
     controller.callback_zone_timer_dump = zones_updated_callback
     controller.callback_zone_state_change = zones_updated_callback
