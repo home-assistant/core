@@ -4,11 +4,9 @@ Support for RainMachine devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rainmachine/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -26,7 +24,7 @@ from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.0.7']
+REQUIREMENTS = ['regenmaschine==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,14 +152,13 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        with async_timeout.timeout(4):
-            client = await login(
-                config_entry.data[CONF_IP_ADDRESS],
-                config_entry.data[CONF_PASSWORD],
-                websession,
-                port=config_entry.data[CONF_PORT],
-                ssl=config_entry.data[CONF_SSL])
-    except (asyncio.TimeoutError, RainMachineError) as err:
+        client = await login(
+            config_entry.data[CONF_IP_ADDRESS],
+            config_entry.data[CONF_PASSWORD],
+            websession,
+            port=config_entry.data[CONF_PORT],
+            ssl=config_entry.data[CONF_SSL])
+    except RainMachineError as err:
         _LOGGER.error('An error occurred: %s', err)
         raise ConfigEntryNotReady
 
