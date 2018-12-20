@@ -42,8 +42,8 @@ CONFIG_FILE = '.ps4.conf'
 CONFIG_PORT = 987
 DEVICE_PORT = 997
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=15)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=30)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
