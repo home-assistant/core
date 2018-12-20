@@ -132,9 +132,9 @@ SENSOR_TYPES = {
     'moon_phase': ['Moon Phase', None, None, None, None, None,
                    'mdi:weather-night', ['daily']],
     'sunrise_time': ['Sunrise', None, None, None, None, None,
-                   'mdi:white-balance-sunny', ['daily']],
+                     'mdi:white-balance-sunny', ['daily']],
     'sunset_time': ['Sunset', None, None, None, None, None,
-                   'mdi:weather-night', ['daily']],
+                    'mdi:weather-night', ['daily']],
 }
 
 CONDITION_PICTURES = {
