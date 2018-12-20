@@ -68,6 +68,7 @@ TEST_REQUIREMENTS = (
     'libpurecoollink',
     'libsoundtouch',
     'luftdaten',
+    'mbddns',
     'mficlient',
     'numpy',
     'paho-mqtt',
