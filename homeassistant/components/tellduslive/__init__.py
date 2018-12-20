@@ -199,6 +199,7 @@ class TelldusLiveClient:
 
         dev_ids = {dev.device_id for dev in self._client.devices}
         new_devices = dev_ids - self._known_devices
+        # just await each discover as `gather` use up all HTTPAdapter pools
         for d_id in new_devices:
             await self._discover(d_id)
         self._known_devices |= new_devices
