@@ -163,10 +163,6 @@ class IslamicPrayerTimesData:
         self.prayer_times_info = calc.fetch_prayer_times()
         return self.prayer_times_info
 
-    # def get_prayer_times_info(self):
-    #     """Return the retrieved prayer times."""
-    #     return self._prayer_times
-
 
 class IslamicPrayerTimeSensor(Entity):
     """Representation of an Islamic prayer time sensor."""
