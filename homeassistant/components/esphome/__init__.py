@@ -16,6 +16,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
         ServiceCall
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.2.0']
+REQUIREMENTS = ['aioesphomeapi==1.3.0']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -70,6 +71,7 @@ class RuntimeEntryData:
     available = attr.ib(type=bool, default=False)
     device_info = attr.ib(type='DeviceInfo', default=None)
     cleanup_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
+    disconnect_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
 
     def async_update_entity(self, hass: HomeAssistantType, component_key: str,
                             key: int) -> None:
@@ -206,6 +208,23 @@ async def async_setup_entry(hass: HomeAssistantType,
         hass.async_create_task(hass.services.async_call(
             domain, service_name, service_data, blocking=True))
 
+    async def send_home_assistant_state(entity_id: str, _,
+                                        new_state: Optional[str]) -> None:
+        """Forward Home Assistant states to ESPHome."""
+        if new_state is None:
+            return
+        await cli.send_home_assistant_state(entity_id, new_state)
+
+    @callback
+    def async_on_state_subscription(entity_id: str) -> None:
+        """Subscribe and forward states for requested entities."""
+        unsub = async_track_state_change(
+            hass, entity_id, send_home_assistant_state)
+        entry_data.disconnect_callbacks.append(unsub)
+        # Send initial state
+        hass.async_create_task(send_home_assistant_state(
+            entity_id, None, hass.states.get(entity_id)))
+
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
@@ -219,6 +238,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             entry_data.async_update_static_infos(hass, entity_infos)
             await cli.subscribe_states(async_on_state)
             await cli.subscribe_service_calls(async_on_service_call)
+            await cli.subscribe_home_assistant_states(
+                async_on_state_subscription)
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
@@ -281,6 +302,9 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
             return
 
         data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+        for disconnect_cb in data.disconnect_callbacks:
+            disconnect_cb()
+        data.disconnect_callbacks = []
         data.available = False
         data.async_update_device_state(hass)
 
@@ -340,6 +364,8 @@ async def _cleanup_instance(hass: HomeAssistantType,
     data = hass.data[DOMAIN].pop(entry.entry_id)  # type: RuntimeEntryData
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
+    for disconnect_cb in data.disconnect_callbacks:
+        disconnect_cb()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.client.stop()
