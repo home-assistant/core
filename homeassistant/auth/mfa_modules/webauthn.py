@@ -15,8 +15,6 @@ from . import (
 
 # TODO: Update version after release
 # (and in requirements_all.txt and requirements_test_all.txt)
-# TODO: Tests
-# TODO: Проверить что работает при смене домена
 # REQUIREMENTS = ['fido2==0.4.0']
 REQUIREMENTS = [
     'https://github.com/Yubico/python-fido2/archive/master.zip#fido2==0.4.1'
@@ -47,8 +45,8 @@ def _create_server(hass: HomeAssistant) -> Any:
     from urllib.parse import urlparse
 
     parsed_uri = urlparse(hass.config.api.base_url)
-    rp = RelyingParty(parsed_uri.hostname)
-    return Fido2Server(rp)
+    relying_party = RelyingParty(parsed_uri.hostname)
+    return Fido2Server(relying_party)
 
 
 def _encode_bytes_to_string(data: Any) -> string:
@@ -103,7 +101,7 @@ def _decode_credentials(credentials: list) -> list:
 
 def _encode_credentials(credentials: list) -> list:
     """Create encoded credentials for saving."""
-    return list(map(lambda item: _encode_bytes_to_string(item), credentials))
+    return list(map(_encode_bytes_to_string, credentials))
 
 
 @MULTI_FACTOR_AUTH_MODULES.register('webauthn')

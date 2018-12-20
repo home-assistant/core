@@ -444,6 +444,17 @@ async def websocket_current_user(
     """Return the current user."""
     user = connection.user
     enabled_modules = await hass.auth.async_get_enabled_mfa(user)
+    mfa_modules = []
+
+    for module in hass.auth.auth_mfa_modules:
+        count = await module.async_get_count(user.id)
+        mfa_modules.append({
+            'id': module.id,
+            'name': module.name,
+            'multiple': module.multiple,
+            'count': count,
+            'enabled': module.id in enabled_modules,
+        })
 
     connection.send_message(
         websocket_api.result_message(msg['id'], {
@@ -453,13 +464,7 @@ async def websocket_current_user(
             'credentials': [{'auth_provider_type': c.auth_provider_type,
                              'auth_provider_id': c.auth_provider_id}
                             for c in user.credentials],
-            'mfa_modules': [{
-                'id': module.id,
-                'name': module.name,
-                'multiple': module.multiple,
-                'count': await module.async_get_count(user.id),
-                'enabled': module.id in enabled_modules,
-            } for module in hass.auth.auth_mfa_modules],
+            'mfa_modules': mfa_modules,
         }))
 
 
