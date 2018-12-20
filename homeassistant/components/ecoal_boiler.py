@@ -82,6 +82,8 @@ def setup(hass, hass_config):
     ecoal_contr = ECoalController(host, username, passwd)
     if ecoal_contr.version is None:
         # Wrong credentials nor network config
+        _LOGGER.error("Unable to read controller status from %s@%s"
+                      " (wrong host/credentials).", username, host, )
         return False
     _LOGGER.debug("Detected controller version: %r @%s",
                   ecoal_contr.version, host, )
