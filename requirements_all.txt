@@ -1009,6 +1009,9 @@ pyhiveapi==0.2.14
 # homeassistant.components.homematic
 pyhomematic==0.1.53
 
+# homeassistant.components.homeworks
+pyhomeworks==0.0.6
+
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
 
