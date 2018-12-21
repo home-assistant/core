@@ -19,7 +19,7 @@ DEPENDENCIES = ['ecoal_boiler']
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ecoal sensors."""
     if discovery_info is None:
-        return  
+        return
     devices = []
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     for sensor_id in discovery_info:
