@@ -193,7 +193,7 @@ class ShoppingData:
             raise KeyError
 
         lis['items'].append(item)
-        self._async_schedule_save()
+        self.save()
         return item
 
     @callback
@@ -212,7 +212,7 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
-        self._async_schedule_save()
+        self.save()
         return item
 
     @callback
@@ -224,7 +224,7 @@ class ShoppingData:
             raise KeyError
 
         lis['items'] = [itm for itm in lis['items'] if not itm['complete']]
-        self._async_schedule_save()
+        self.save()
 
     async def async_load(self):
         """Load lists."""
@@ -241,7 +241,7 @@ class ShoppingData:
             }]
 
     @callback
-    def _async_schedule_save(self) -> None:
+    def save(self) -> None:
         """Save users."""
         if self.lists is None:
             return
