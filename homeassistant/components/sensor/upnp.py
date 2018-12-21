@@ -10,7 +10,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.upnp.const import DOMAIN as DATA_UPNP
+from homeassistant.components.upnp.const import DOMAIN as DOMAIN_UPNP
 from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
 
 
@@ -73,8 +73,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(sensors, True)
 
     data = config_entry.data
-    udn = data['udn']
-    device = hass.data[DATA_UPNP]['devices'][udn]
+    if 'udn' in data:
+        udn = data['udn']
+    else:
+        # any device will do
+        udn = list(hass.data[DOMAIN_UPNP]['devices'].keys())[0]
+
+    device = hass.data[DOMAIN_UPNP]['devices'][udn]
     async_add_sensor(device)
 
 
@@ -99,6 +104,17 @@ class UpnpSensor(Entity):
             return
 
         self.hass.async_create_task(self.async_remove())
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            'identifiers': {
+                (DOMAIN_UPNP, self.unique_id)
+            },
+            'name': self.name,
+            'via_hub': (DOMAIN_UPNP, self._device.udn),
+        }
 
 
 class RawUPnPIGDSensor(UpnpSensor):
