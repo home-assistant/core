@@ -88,7 +88,8 @@ def _decode_credentials(credentials: list) -> list:
     from fido2.ctap2 import AttestedCredentialData
 
     return list(map(
-        lambda item: AttestedCredentialData(_decode_string_to_bytes(item)),  # type: ignore
+        lambda item: AttestedCredentialData(  # type: ignore
+            _decode_string_to_bytes(item)),
         credentials
     ))
 
