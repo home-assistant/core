@@ -62,23 +62,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api_key = config.get(CONF_API_KEY)
     station_id = config.get(CONF_STATION_ID)
 
-    aemetData = AemetData(api_key=api_key, station_id=station_id)
+    aemet_data = AemetData(api_key=api_key, station_id=station_id)
     try:
-        aemetData.update()
+        aemet_data.update()
     except (ValueError, TypeError) as err:
         _LOGGER.error("Received error from AEMET: %s", err)
         return False
 
-    add_entities([AemetSensor(aemetData, variable, name)
+    add_entities([AemetSensor(aemet_data, variable, name)
                   for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
 class AemetSensor(Entity):
     """Representation of a sensor in the AEMET service."""
 
-    def __init__(self, aemetData, variable, name):
+    def __init__(self, aemet_data, variable, name):
         """Initialize the sensor."""
-        self.aemetData = aemetData
+        self.aemet_data = aemet_data
         self.variable = variable
         self.client_name = name
 
@@ -90,7 +90,7 @@ class AemetSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.aemetData.get_data(self.variable)
+        return self.aemet_data.get_data(self.variable)
 
     @property
     def unit_of_measurement(self):
@@ -107,16 +107,16 @@ class AemetSensor(Entity):
         """Return the device state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_STATION_NAME: self.aemetData.get_data(ATTR_STATION_NAME),
-            ATTR_LATITUDE: self.aemetData.get_data(ATTR_LATITUDE),
-            ATTR_LONGITUDE: self.aemetData.get_data(ATTR_LONGITUDE),
-            ATTR_ELEVATION: self.aemetData.get_data(ATTR_ELEVATION),
-            ATTR_LAST_UPDATE: self.aemetData.get_data(ATTR_LAST_UPDATE),
+            ATTR_STATION_NAME: self.aemet_data.get_data(ATTR_STATION_NAME),
+            ATTR_LATITUDE: self.aemet_data.get_data(ATTR_LATITUDE),
+            ATTR_LONGITUDE: self.aemet_data.get_data(ATTR_LONGITUDE),
+            ATTR_ELEVATION: self.aemet_data.get_data(ATTR_ELEVATION),
+            ATTR_LAST_UPDATE: self.aemet_data.get_data(ATTR_LAST_UPDATE),
         }
 
     def update(self):
         """Delegate update to data class."""
-        self.aemetData.update()
+        self.aemet_data.update()
 
 
 class AemetData:
@@ -137,9 +137,9 @@ class AemetData:
         _LOGGER.debug("------- Updating AEMET sensor")
 
         endpoint_url = "{}{}".format(
-                            self.API_URL_BASE,
-                            self.API_STATION_ENDPOINT.format(self._station_id)
-                        )
+            self.API_URL_BASE,
+            self.API_STATION_ENDPOINT.format(self._station_id)
+        )
         params = {'api_key': self._api_key}
         main_rsp = requests.get(endpoint_url, params=params)
         if main_rsp.status_code != HTTP_OK:
