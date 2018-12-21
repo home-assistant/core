@@ -59,20 +59,25 @@ def devices_from_config(domain_config, hass):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IOBL cover platform."""
-    async_add_entities(devices_from_config(config, hass))
-
     async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
-        device_config = config[CONF_DEVICE_DEFAULTS]
+        device_config = {CONF_MEDIA : event['media'],
+                         CONF_COMM_MODE : event['mode'],
+                         'name' : event['legrand_id']}
+
         device = LegrandInOneCover(device_id, hass.data[IOBL_PROTOCOL_HANDLE],
                                    initial_event=event, **device_config)
         async_add_entities([device])
 
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][
-            DEVICE_TYPE_AUTOMATION] = add_new_device
+    if discovery_info is not None:
+        await add_new_device(discovery_info)
+    else:
+        async_add_entities(devices_from_config(config, hass))
+        if config[CONF_AUTOMATIC_ADD]:
+            hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][
+                DEVICE_TYPE_AUTOMATION] = 'cover'
 
 
 class LegrandInOneCover(LegrandInOneCommand, CoverDevice):

@@ -19,6 +19,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
@@ -167,7 +168,7 @@ async def async_setup(hass, config):
         # Lookup entities who registered this device id as device id
         event_id = event.get('legrand_id', None)
 
-        if hass.data[DATA_ENTITY_LOOKUP][event_type][event_id] is not None:
+        if event_id in hass.data[DATA_ENTITY_LOOKUP][event_type]:
             # Propagate event
             _LOGGER.debug('passing event to %s', event_id)
             async_dispatcher_send(hass,
@@ -183,8 +184,9 @@ async def async_setup(hass, config):
                 _LOGGER.debug('device_id not known, adding new device')
 
                 hass.async_create_task(
-                    hass.data[DATA_DEVICE_REGISTER][event_type][
-                        device_type](event))
+                    async_load_platform(hass, hass.data[DATA_DEVICE_REGISTER][
+                        event_type][device_type], DOMAIN,
+                                        event, config))
 
             else:
                 _LOGGER.debug(
@@ -332,7 +334,7 @@ class LegrandInOneDevice(Entity):
         """Register update callback."""
         # Register id
         self.hass.data[DATA_ENTITY_LOOKUP][
-             EVENT_KEY_COMMAND][self.legrand_id] = {};
+            EVENT_KEY_COMMAND][self.legrand_id] = {}
 
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
