@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import uuid
+from typing import Dict
 
 import voluptuous as vol
 
@@ -192,7 +193,7 @@ class ShoppingData:
             raise KeyError
 
         lis['items'].append(item)
-        self.hass.async_add_job(self.save)
+        self._async_schedule_save()
         return item
 
     @callback
@@ -211,7 +212,7 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
-        self.hass.async_add_job(self.save)
+        self._async_schedule_save()
         return item
 
     @callback
@@ -223,7 +224,7 @@ class ShoppingData:
             raise KeyError
 
         lis['items'] = [itm for itm in lis['items'] if not itm['complete']]
-        self.hass.async_add_job(self.save)
+        self._async_schedule_save()
 
     async def async_load(self):
         """Load lists."""
@@ -238,11 +239,18 @@ class ShoppingData:
                 'id': LIST_SYSTEM_INBOX,
                 'items': []
             }]
-            self.hass.async_add_job(self.save)
 
-    async def save(self):
-        """Save the items."""
-        await self._store.async_save(self.lists)
+    @callback
+    def _async_schedule_save(self) -> None:
+        """Save users."""
+        if self.lists is None:
+            return
+
+        self._store.async_delay_save(self._data_to_save, 1)
+
+    @callback
+    def _data_to_save(self) -> Dict:
+        return self.lists
 
 
 class AddItemIntent(intent.IntentHandler):
