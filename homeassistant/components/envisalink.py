@@ -168,8 +168,7 @@ async def async_setup(hass, config):
         controller.stop()
 
     async def handle_custom_function(call):
-        """Handler for the custom function service."""
-        _LOGGER.info("Sending command with code" + code)
+        """Handle custom/PGM service."""
         custom_function = call.data.get(CUSTOM_FUNCTION_ATTR)
         partition = call.data.get(PARTITION_ATTR)
         controller.command_output(code, partition, custom_function)
