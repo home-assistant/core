@@ -5,19 +5,22 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/somfy/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
-from pymfy.api.devices.base import SomfyDevice
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pymfy==0.4.1']
+REQUIREMENTS = ['pymfy==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 DOMAIN = 'somfy'
 
@@ -64,6 +67,7 @@ def setup(hass, config):
         request_configuration(hass, api)
 
     hass.data[DOMAIN]['api'] = api
+    update_all_devices(hass)
     for component in SOMFY_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
@@ -117,26 +121,35 @@ class SomfyAuthCallbackView(HomeAssistantView):
 class SomfyEntity(Entity):
     """Representation a base Somfy device."""
 
-    def __init__(self, somfy, hass):
+    def __init__(self, device, hass):
         """Initialize the Somfy device."""
         self.hass = hass
-        self.somfy = somfy
+        self.device = device
         self.api = hass.data[DOMAIN]['api']
 
     @property
     def unique_id(self):
         """Return the unique id for the camera sensor."""
-        return self.somfy.id
+        return self.device.id
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.somfy.name
+        return self.device.name
 
     def update(self):
-        """Update state of the device."""
-        from requests import HTTPError
-        try:
-            SomfyDevice(self.somfy, self.api).refresh_state()
-        except HTTPError as error:
-            _LOGGER.error("Cannot update device %s. %s.", self.name, error)
+        update_all_devices(self.hass)
+        devices = self.hass.data[DOMAIN]['devices']
+        self.device = next((d for d in devices if d.id == self.device.id),
+                           self.device)
+
+
+@Throttle(MIN_TIME_BETWEEN_UPDATES)
+def update_all_devices(hass):
+    """Update state of the device."""
+    from requests import HTTPError
+    try:
+        data = hass.data[DOMAIN]
+        data['devices'] = data['api'].get_devices()
+    except HTTPError as error:
+        _LOGGER.error("Cannot update devices %s.", error)
