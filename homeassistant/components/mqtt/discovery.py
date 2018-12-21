@@ -196,7 +196,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         if TOPIC_BASE in payload:
             base = payload[TOPIC_BASE]
             for key, value in payload.items():
-                if isinstance(value, str) and len(value) > 0:
+                if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):
                         payload[key] = "{}{}".format(base, value[1:])
                     if value[-1] == TOPIC_BASE and key.endswith('_topic'):
