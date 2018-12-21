@@ -305,7 +305,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             device_value = float(payload)
             percent_bright = \
                 device_value / self._config.get(CONF_BRIGHTNESS_SCALE)
-            self._brightness = int(percent_bright * 255)
+            self._brightness = percent_bright * 255
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
@@ -335,7 +335,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 percent_bright = \
                     float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._brightness = int(percent_bright * 255)
+                self._brightness = round(percent_bright * 255)
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
@@ -441,7 +441,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             device_value = float(payload)
             percent_white = \
                 device_value / self._config.get(CONF_WHITE_VALUE_SCALE)
-            self._white_value = int(percent_white * 255)
+            self._white_value = percent_white * 255
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
@@ -496,7 +496,10 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._brightness
+        brightness = self._brightness
+        if brightness:
+            brightness = round(brightness)
+        return brightness
 
     @property
     def hs_color(self):
@@ -511,7 +514,10 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def white_value(self):
         """Return the white property."""
-        return self._white_value
+        white_value = self._white_value
+        if white_value:
+            white_value = round(white_value)
+        return white_value
 
     @property
     def should_poll(self):
@@ -640,7 +646,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             device_brightness = \
-                int(percent_bright * self._config.get(CONF_BRIGHTNESS_SCALE))
+                round(percent_bright * self._config.get(CONF_BRIGHTNESS_SCALE))
             mqtt.async_publish(
                 self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
                 device_brightness, self._config.get(CONF_QOS),
@@ -701,7 +707,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
            self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None:
             percent_white = float(kwargs[ATTR_WHITE_VALUE]) / 255
             device_white_value = \
-                int(percent_white * self._config.get(CONF_WHITE_VALUE_SCALE))
+                round(percent_white * self._config.get(CONF_WHITE_VALUE_SCALE))
             mqtt.async_publish(
                 self.hass, self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC],
                 device_white_value, self._config.get(CONF_QOS),
