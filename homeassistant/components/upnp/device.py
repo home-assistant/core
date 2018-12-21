@@ -19,6 +19,27 @@ class Device:
         self._mapped_ports = []
 
     @classmethod
+    async def async_discover(cls, hass: HomeAssistantType):
+        """Discovery UPNP/IGD devices."""
+        _LOGGER.debug('Discovering UPnP/IGD devices')
+
+        # discover devices
+        from async_upnp_client.igd import IgdDevice
+        discovery_infos = await IgdDevice.async_discover()
+
+        # add extra info and store devices
+        devices = []
+        for discovery_info in discovery_infos:
+            discovery_info['udn'] = discovery_info['usn'].split('::')[0]
+            discovery_info['ssdp_description'] = discovery_info['location']
+            discovery_info['source'] = 'async_upnp_client'
+            _LOGGER.debug('Discovered device: %s', discovery_info)
+
+            devices.append(discovery_info)
+
+        return devices
+
+    @classmethod
     async def async_create_device(cls,
                                   hass: HomeAssistantType,
                                   ssdp_description: str):
@@ -34,7 +55,7 @@ class Device:
                               disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_description)
 
-        # wrap with async_upnp_client IgdDevice
+        # wrap with async_upnp_client.IgdDevice
         from async_upnp_client.igd import IgdDevice
         igd_device = IgdDevice(upnp_device, None)
 
@@ -49,6 +70,11 @@ class Device:
     def name(self):
         """Get the name."""
         return self._igd_device.name
+
+    @property
+    def manufacturer(self):
+        """Get the manufacturer."""
+        return self._igd_device.manufacturer
 
     async def async_add_port_mappings(self, ports, local_ip):
         """Add port mappings."""
