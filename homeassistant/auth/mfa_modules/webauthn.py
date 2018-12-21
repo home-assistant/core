@@ -38,7 +38,7 @@ def _create_server(hass: HomeAssistant) -> Any:
     from fido2.server import Fido2Server, RelyingParty
     from urllib.parse import urlparse
 
-    parsed_uri = urlparse(hass.config.api.base_url)
+    parsed_uri = urlparse(hass.config.api.base_url)  # type: ignore
     relying_party = RelyingParty(parsed_uri.hostname)
     return Fido2Server(relying_party)
 
@@ -56,7 +56,7 @@ def _decode_string_to_bytes(data: str) -> Dict[str, Any]:
     from fido2 import cbor
 
     decoded = base64.decodebytes(data.encode('utf-8'))
-    return cbor.loads(decoded)[0]
+    return cbor.loads(decoded)[0]  # type: ignore
 
 
 def _get_create_data(token: str) -> Tuple[Any, Any]:
@@ -88,7 +88,7 @@ def _decode_credentials(credentials: list) -> list:
     from fido2.ctap2 import AttestedCredentialData
 
     return list(map(
-        lambda item: AttestedCredentialData(_decode_string_to_bytes(item)),
+        lambda item: AttestedCredentialData(_decode_string_to_bytes(item)),  # type: ignore
         credentials
     ))
 
@@ -113,8 +113,8 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
         self._users = None  # type: Optional[Dict[str, list]]
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True)
-        self._server = None  # type: fido2.server.Fido2Server
-        self._state = None  # type: Dict
+        self._server = None  # type: Any
+        self._state = None  # type: Any
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -138,13 +138,13 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
     async def async_get_count(self, user_id: str) -> int:
         """Return count of added keys for multiple auth module."""
         await self._async_load()
-        return len(self._users.get(user_id, []))
+        return len(self._users.get(user_id, []))  # type: ignore
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module."""
         await self._async_load()
 
-        credentials_encoded = self._users.get(user_id, None)
+        credentials_encoded = self._users.get(user_id, None)  # type: ignore
         credentials = [] if credentials_encoded is None \
             else _decode_credentials(credentials_encoded)
 
@@ -154,7 +154,7 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
     async def async_setup_user(self, user_id: str, setup_data: list) -> Any:
         """Set up auth module for user."""
         await self._async_load()
-        self._users[user_id] = _encode_credentials(setup_data)
+        self._users[user_id] = _encode_credentials(setup_data)  # type: ignore
         await self._async_save()
 
     async def async_depose_user(self, user_id: str) -> None:
@@ -189,7 +189,7 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
         if not token:
             return False
 
-        credentials_encoded = self._users.get(user_id, None)
+        credentials_encoded = self._users.get(user_id, None)  # type: ignore
         if credentials_encoded is None:
             return False
 
@@ -214,7 +214,7 @@ class WebAuthnAuthModule(MultiFactorAuthModule):
         """Set additional data for client."""
         await self._async_load()
 
-        credentials_encoded = self._users.get(user_id, None)
+        credentials_encoded = self._users.get(user_id, None)  # type: ignore
         if credentials_encoded is None:
             return {}
 
