@@ -1,7 +1,7 @@
 """The tests for the Air Quality component."""
 from homeassistant.components.air_quality import (
-    ATTR_AIR_QUALITY_ATTRIBUTION, ATTR_AIR_QUALITY_N2O,
-    ATTR_AIR_QUALITY_OZONE, ATTR_AIR_QUALITY_PM_10)
+    ATTR_ATTRIBUTION, ATTR_N2O,
+    ATTR_OZONE, ATTR_PM_10)
 from homeassistant.setup import async_setup_component
 
 
@@ -35,8 +35,8 @@ async def test_attributes(hass):
     assert state is not None
 
     data = state.attributes
-    assert data.get(ATTR_AIR_QUALITY_PM_10) == 16
-    assert data.get(ATTR_AIR_QUALITY_N2O) is None
-    assert data.get(ATTR_AIR_QUALITY_OZONE) is None
-    assert data.get(ATTR_AIR_QUALITY_ATTRIBUTION) == \
+    assert data.get(ATTR_PM_10) == 16
+    assert data.get(ATTR_N2O) is None
+    assert data.get(ATTR_OZONE) is None
+    assert data.get(ATTR_ATTRIBUTION) == \
         'Powered by Home Assistant'

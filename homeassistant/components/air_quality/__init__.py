@@ -13,18 +13,18 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AIR_QUALITY_AQI = 'air_quality_index'
-ATTR_AIR_QUALITY_ATTRIBUTION = 'attribution'
-ATTR_AIR_QUALITY_C02 = 'carbon_dioxide'
-ATTR_AIR_QUALITY_CO = 'carbon_monoxide'
-ATTR_AIR_QUALITY_N2O = 'nitrogen_oxide'
-ATTR_AIR_QUALITY_NO = 'nitrogen_monoxide'
-ATTR_AIR_QUALITY_NO2 = 'nitrogen_dioxide'
-ATTR_AIR_QUALITY_OZONE = 'ozone'
-ATTR_AIR_QUALITY_PM_0_1 = 'particulate_matter_0_1'
-ATTR_AIR_QUALITY_PM_10 = 'particulate_matter_10'
-ATTR_AIR_QUALITY_PM_2_5 = 'particulate_matter_2_5'
-ATTR_AIR_QUALITY_SO2 = 'sulphur_dioxide'
+ATTR_AQI = 'air_quality_index'
+ATTR_ATTRIBUTION = 'attribution'
+ATTR_C02 = 'carbon_dioxide'
+ATTR_CO = 'carbon_monoxide'
+ATTR_N2O = 'nitrogen_oxide'
+ATTR_NO = 'nitrogen_monoxide'
+ATTR_NO2 = 'nitrogen_dioxide'
+ATTR_OZONE = 'ozone'
+ATTR_PM_0_1 = 'particulate_matter_0_1'
+ATTR_PM_10 = 'particulate_matter_10'
+ATTR_PM_2_5 = 'particulate_matter_2_5'
+ATTR_SO2 = 'sulphur_dioxide'
 
 DOMAIN = 'air_quality'
 
@@ -33,18 +33,18 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=30)
 
 PROP_TO_ATTR = {
-    'air_quality_index': ATTR_AIR_QUALITY_AQI,
-    'attribution': ATTR_AIR_QUALITY_ATTRIBUTION,
-    'carbon_dioxide': ATTR_AIR_QUALITY_C02,
-    'carbon_monoxide': ATTR_AIR_QUALITY_CO,
-    'nitrogen_oxide': ATTR_AIR_QUALITY_N2O,
-    'nitrogen_monoxide': ATTR_AIR_QUALITY_NO,
-    'nitrogen_dioxide': ATTR_AIR_QUALITY_NO2,
-    'ozone': ATTR_AIR_QUALITY_OZONE,
-    'particulate_matter_0_1': ATTR_AIR_QUALITY_PM_0_1,
-    'particulate_matter_10': ATTR_AIR_QUALITY_PM_10,
-    'particulate_matter_2_5': ATTR_AIR_QUALITY_PM_2_5,
-    'sulphur_dioxide': ATTR_AIR_QUALITY_SO2,
+    'air_quality_index': ATTR_AQI,
+    'attribution': ATTR_ATTRIBUTION,
+    'carbon_dioxide': ATTR_C02,
+    'carbon_monoxide': ATTR_CO,
+    'nitrogen_oxide': ATTR_N2O,
+    'nitrogen_monoxide': ATTR_NO,
+    'nitrogen_dioxide': ATTR_NO2,
+    'ozone': ATTR_OZONE,
+    'particulate_matter_0_1': ATTR_PM_0_1,
+    'particulate_matter_10': ATTR_PM_10,
+    'particulate_matter_2_5': ATTR_PM_2_5,
+    'sulphur_dioxide': ATTR_SO2,
 }
 
 
