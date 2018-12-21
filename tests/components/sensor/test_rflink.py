@@ -5,8 +5,6 @@ automatic sensor creation.
 
 """
 
-import asyncio
-
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL)
 from homeassistant.const import STATE_UNKNOWN
