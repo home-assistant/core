@@ -169,10 +169,12 @@ class PS4Device(MediaPlayerDevice):
             if state == 'Ok':
                 titleid = status.get('running-app-titleid')
                 name = status.get('running-app-name')
-                if titleid or name is not None:
+                if titleid and name is not None:
                     self._state = STATE_PLAYING
                     self._media_content_id = titleid
                     app_name = self.get_ps_store_data('title', name)
+                    if app_name is None:
+                        app_name = name
                     self._media_image = self.get_ps_store_data('art', app_name)
                     self._source = app_name
                     self._media_title = app_name
