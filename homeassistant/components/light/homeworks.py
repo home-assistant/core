@@ -45,7 +45,7 @@ class HomeworksLight(HomeworksDevice, Light):
         self._prev_level = 0
 
     async def async_added_to_hass(self):
-        """Called when entity is added to hass."""
+        """Call when entity is added to hass."""
         signal = ENTITY_SIGNAL.format(self._addr)
         _LOGGER.debug('connecting %s', signal)
         async_dispatcher_connect(
