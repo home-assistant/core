@@ -18,10 +18,10 @@ from homeassistant.components.light import (
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAvailability, MqttDiscoveryUpdate, subscription)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME, CONF_OPTIMISTIC,
-    CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_DEVICE, CONF_EFFECT, CONF_NAME,
+    CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -80,6 +80,7 @@ PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
     vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -89,8 +90,9 @@ async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,
     async_add_entities([MqttLightJson(config, discovery_hash)])
 
 
-class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light,
-                    RestoreEntity):
+# pylint: disable=too-many-ancestors
+class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate,
+                    MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, config, discovery_hash):
@@ -116,11 +118,13 @@ class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light,
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
+        device_config = config.get(CONF_DEVICE)
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -297,7 +301,8 @@ class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property

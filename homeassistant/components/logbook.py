@@ -60,7 +60,8 @@ CONFIG_SCHEMA = vol.Schema({
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED
+    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED,
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -466,6 +467,14 @@ def _exclude_events(events, entities_filter):
 
         elif event.event_type == EVENT_LOGBOOK_ENTRY:
             domain = event.data.get(ATTR_DOMAIN)
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
+            domain = 'automation'
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_SCRIPT_STARTED:
+            domain = 'script'
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
         elif event.event_type == EVENT_ALEXA_SMART_HOME:

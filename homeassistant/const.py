@@ -13,6 +13,9 @@ PLATFORM_FORMAT = '{}.{}'
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
+# Entity target all constant
+ENTITY_MATCH_ALL = 'all'
+
 # If no name is specified
 DEVICE_DEFAULT_NAME = 'Unnamed Device'
 

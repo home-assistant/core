@@ -1,10 +1,7 @@
 """The test for the geo rss events sensor platform."""
 import unittest
 from unittest import mock
-import sys
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from homeassistant.components import sensor
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME, \
@@ -37,9 +34,6 @@ VALID_CONFIG = {
 }
 
 
-# Until https://github.com/kurtmckee/feedparser/pull/131 is released.
-@pytest.mark.skipif(sys.version_info[:2] >= (3, 7),
-                    reason='Package incompatible with Python 3.7')
 class TestGeoRssServiceUpdater(unittest.TestCase):
     """Test the GeoRss service updater."""
 

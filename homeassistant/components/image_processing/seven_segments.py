@@ -69,7 +69,9 @@ class ImageProcessingSsocr(ImageProcessingEntity):
                 split_entity_id(camera_entity)[1])
         self._state = None
 
-        self.filepath = os.path.join(self.hass.config.config_dir, 'ocr.png')
+        self.filepath = os.path.join(self.hass.config.config_dir,
+                                     'ssocr-{0}.png'.format(
+                                         self._name.replace(' ', '_')))
         crop = ['crop', str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
                 str(config[CONF_WIDTH]), str(config[CONF_HEIGHT])]
         digits = ['-d', str(config.get(CONF_DIGITS, -1))]

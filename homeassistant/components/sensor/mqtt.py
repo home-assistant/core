@@ -14,8 +14,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
     MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
@@ -52,7 +52,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # This is an exception because MQTT is a message transport, not a protocol.
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -80,8 +81,8 @@ async def _async_setup_entity(config: ConfigType, async_add_entities,
     async_add_entities([MqttSensor(config, discovery_hash)])
 
 
-class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                 Entity):
+class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                 MqttEntityDeviceInfo, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, config, discovery_hash):
@@ -99,6 +100,11 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
+        if config.get(CONF_JSON_ATTRS):
+            _LOGGER.warning('configuration variable "json_attributes" is '
+                            'deprecated, replace with "json_attributes_topic"')
+
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
@@ -114,6 +120,7 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
@@ -171,7 +178,9 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @callback

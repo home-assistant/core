@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 import unittest
 
+import jinja2
 import voluptuous as vol
 import pytest
 
@@ -798,6 +799,7 @@ async def test_propagate_error_service_not_found(hass):
         await script_obj.async_run()
 
     assert len(events) == 0
+    assert script_obj._cur == -1
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -829,6 +831,7 @@ async def test_propagate_error_invalid_service_data(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
+    assert script_obj._cur == -1
 
 
 async def test_propagate_error_service_exception(hass):
@@ -859,3 +862,35 @@ async def test_propagate_error_service_exception(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
+    assert script_obj._cur == -1
+
+
+def test_log_exception():
+    """Test logged output."""
+    script_obj = script.Script(None, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+    script_obj._exception_step = 1
+
+    for exc, msg in (
+        (vol.Invalid("Invalid number"), 'Invalid data'),
+        (exceptions.TemplateError(jinja2.TemplateError('Unclosed bracket')),
+         'Error rendering template'),
+        (exceptions.Unauthorized(), 'Unauthorized'),
+        (exceptions.ServiceNotFound('light', 'turn_on'), 'Service not found'),
+        (ValueError("Cannot parse JSON"), 'Unknown error'),
+    ):
+        logger = mock.Mock()
+        script_obj.async_log_exception(logger, 'Test error', exc)
+
+        assert len(logger.mock_calls) == 1
+        p_format, p_msg_base, p_error_desc, p_action_type, p_step, p_error = \
+            logger.mock_calls[0][1]
+
+        assert p_error_desc == msg
+        assert p_action_type == script.ACTION_FIRE_EVENT
+        assert p_step == 2
+        if isinstance(exc, ValueError):
+            assert p_error == ""
+        else:
+            assert p_error == str(exc)

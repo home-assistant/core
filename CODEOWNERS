@@ -184,6 +184,8 @@ homeassistant/components/*/edp_redy.py @abmantis
 homeassistant/components/edp_redy.py @abmantis
 homeassistant/components/eight_sleep.py @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
+homeassistant/components/esphome/*.py @OttoWinter
+homeassistant/components/*/esphome.py @OttoWinter
 
 # H
 homeassistant/components/hive.py @Rendili @KJonline
