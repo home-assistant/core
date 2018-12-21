@@ -12,12 +12,7 @@ from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, MULTI_FACTOR_AUTH_MODULES,
     MultiFactorAuthModule, SetupFlow)
 
-# TODO: Update version after release
-# (and in requirements_all.txt and requirements_test_all.txt)
-# REQUIREMENTS = ['fido2==0.4.0']
-REQUIREMENTS = [
-    'https://github.com/Yubico/python-fido2/archive/master.zip#fido2==0.4.1'
-]
+REQUIREMENTS = ['fido2==0.5.0']
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
