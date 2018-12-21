@@ -383,7 +383,7 @@ class PS4Device(MediaPlayerDevice):
                 self._source_selected, source)
             return
 
-        for title_id, game in self._games.items:
+        for title_id, game in self._games.items():
             if source == game:
                 _LOGGER.debug(
                     "Starting PS4 game %s (%s) using source %s",
