@@ -164,6 +164,9 @@ omit =
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
 
+    homeassistant/components/homeworks.py
+    homeassistant/components/*/homeworks.py
+
     homeassistant/components/huawei_lte.py
     homeassistant/components/*/huawei_lte.py
 
