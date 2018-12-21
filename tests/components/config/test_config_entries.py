@@ -356,7 +356,8 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
                 }
             ],
             'description_placeholders': None,
-            'errors': None
+            'errors': None,
+            'data': None
         }
 
     hass_admin_user.groups = []
