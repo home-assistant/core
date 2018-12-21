@@ -18,6 +18,8 @@ DEPENDENCIES = ['ecoal_boiler']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
+    if discovery_info is None:
+        return
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     switches = []
     for pump_id in discovery_info:
