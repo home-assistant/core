@@ -358,6 +358,12 @@ def _scan_network_for_devices(hass, call):
             'topic': 'cmnd/dom/status',
             'payload': 0
         })
+        # fix for new robots, Tasmota 6.4.0
+        yield from hass.services.async_call('mqtt', 'publish', {
+            'topic': 'dom/cmnd/status',
+            'payload': 0
+        })
+
         yield from hass.services.async_call(
             'ais_shell_command', 'scan_network_for_devices')
     # 256

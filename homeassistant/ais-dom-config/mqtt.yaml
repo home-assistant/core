@@ -1,10 +1,10 @@
-# broker: 127.0.0.1
-broker: 192.168.2.222
+broker: 127.0.0.1
+# broker: 192.168.2.222
 port: 1883
 # client_id: Default is a random generated one.
 keepalive: 60
 discovery: true
-discovery_prefix: core_homeassistant
+discovery_prefix: homeassistant
 protocol: 3.1
 birth_message:
   topic: "tele/hass1/LWT"

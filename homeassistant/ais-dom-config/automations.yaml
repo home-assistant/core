@@ -11,12 +11,18 @@
    - delay: '5'
    - service: mqtt.publish
      data:
-       payload: ''
-       topic: cmnd/dom/power1
+       payload: 1
+       topic: dom/cmnd/SetOption19
+   - delay: '5'
    - service: mqtt.publish
      data:
-       payload: ''
-       topic: cmnd/dom/power2
+       payload: 0
+       topic: cmnd/dom/Status
+   - delay: '5'
+   - service: mqtt.publish
+     data:
+       payload: 0
+       topic: dom/cmnd/Status
    - delay: '5'
    - service: ais_updater.check_version
    - service: ais_ai_service.publish_command_to_frame
@@ -358,6 +364,11 @@
       data:
         payload: 0
         topic: cmnd/dom/status
+    - delay: '5'
+    - service: mqtt.publish
+      data:
+        payload: 0
+        topic: dom/cmnd/status
 
 - id: '201808231617123'
   alias: 'Select Device To Add'

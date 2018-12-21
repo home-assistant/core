@@ -226,6 +226,17 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
+
+        # AIS dom fix,
+        # add dev_cla to Temperature sensor
+        # unit_of_meas  °C and no dev_cla
+        if "unit_of_measurement" in payload:
+            if "°C" == payload["unit_of_measurement"] and "device_class" not in payload:
+                payload["device_class"] = "temperature"
+        if "value_template" in payload:
+            if payload["value_template"].startswith("{{value_json['ENERGY']"):
+                payload["device_class"] = "battery"
+
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
             # Dispatch update
             _LOGGER.info(
