@@ -286,7 +286,7 @@ class HomeData():
         """Get all the home names returned by NetAtmo API."""
         self.setup()
         for home in self.homedata.homes:
-            if 'modules' in self.homedata.homes[home]:
+            if 'therm_schedules' in self.homedata.homes[home]:
                 self.home_names.append(self.homedata.homes[home]['name'])
         return self.home_names
 
