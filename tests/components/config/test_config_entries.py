@@ -151,7 +151,8 @@ def test_initialize_flow(hass, client):
         },
         'errors': {
             'username': 'Should be unique.'
-        }
+        },
+        'data': None
     }
 
 
@@ -253,7 +254,8 @@ def test_two_step_flow(hass, client):
                 }
             ],
             'description_placeholders': None,
-            'errors': None
+            'errors': None,
+            'data': None
         }
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
