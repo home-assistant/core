@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Create solaredge data service which will retrieve and update the data.
-    data = SolarEdgeData(hass, api, site_id)
+    data = SolarEdgeData(api, site_id)
 
     # Create a new sensor for each sensor type.
     entities = []
@@ -132,12 +132,12 @@ class SolarEdgeSensor(Entity):
 class SolarEdgeData:
     """Get and update the latest data."""
 
-    def __init__(self, hass, api, site_id):
+    def __init__(self, api, site_id):
         """Initialize the data object."""
-        self.hass = hass
         self.api = api
-        self.data = {}
         self.site_id = site_id
+        
+        self.data = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
