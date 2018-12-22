@@ -349,6 +349,16 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
             self._state = bool(value)
             self.async_schedule_update_ha_state()
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        self._state = old_state.state == STATE_ON
+
     @property
     def should_poll(self) -> bool:
         """Let zha handle polling."""
