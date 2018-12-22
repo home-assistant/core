@@ -78,19 +78,32 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
-    # Create solaredge data service which will retrieve and update the data.
-    data = SolarEdgeData(api, site_id)
+    # Create sensor factory that will create sensors based on sensor_key.
+    sensor_factory = SolarEdgeSensorFactory(platform_name, site_id, api)
 
     # Create a new sensor for each sensor type.
     entities = []
     for sensor_key in config[CONF_MONITORED_CONDITIONS]:
-        sensor = SolarEdgeSensor(platform_name, sensor_key, data)
+        sensor = sensor_factory.create_sensor(sensor_key)
         entities.append(sensor)
 
     add_entities(entities, True)
 
 
-class SolarEdgeSensor(Entity):
+class SolarEdgeSensorFactory:
+
+    def __init__(self, platform_name, site_id, api):
+        self.platform_name = platform_name
+        
+        self.overview_data_service = SolarEdgeOverviewDataService(api, site_id)
+
+    def create_sensor(self, sensor_key):
+        if sensor_key in SENSOR_TYPES.keys():
+            return SolarEdgeOverviewSensor(self.platform_name, sensor_key, 
+                    self.overview_data_service)
+
+
+class SolarEdgeOverviewSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
     def __init__(self, platform_name, sensor_key, data):
@@ -129,7 +142,7 @@ class SolarEdgeSensor(Entity):
         self._state = self.data.data[self._json_key]
 
 
-class SolarEdgeData:
+class SolarEdgeOverviewDataService:
     """Get and update the latest data."""
 
     def __init__(self, api, site_id):
