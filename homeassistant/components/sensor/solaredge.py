@@ -24,6 +24,7 @@ CONF_SITE_ID = "site_id"
 
 OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
 DETAILS_UPDATE_DELAY = timedelta(hours=12)
+INVENTORY_UPDATE_DELAY = timedelta(hours=12)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -40,7 +41,10 @@ SENSOR_TYPES = {
                       'mdi:solar-power'],
     'current_power': ['currentPower', "Current Power", 'W',
                       'mdi:solar-power'],
-    'site_details': [None, 'Site details', None, None]
+    'site_details': [None, 'Site details', None, 
+                     None],
+    'inverter_details': ['inverters', 'Inverter', None, 
+                          None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -102,6 +106,7 @@ class SolarEdgeSensorFactory:
 
         self.overview_data_service = SolarEdgeOverviewDataService(api, site_id)
         self.details_data_service = SolarEdgeDetailsDataService(api, site_id)
+        self.inventory_data_service = SolarEdgeInventoryDataService(api, site_id)
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key."""
@@ -110,6 +115,9 @@ class SolarEdgeSensorFactory:
         if sensor_key == 'site_details':
             sensor = SolarEdgeDetailsSensor(self.platform_name, sensor_key,
                                             self.details_data_service)
+        elif sensor_key == 'inverter_details':
+            sensor = SolarEdgeInventorySensor(self.platform_name, sensor_key,
+                                              self.inventory_data_service)
         else:
             sensor = SolarEdgeOverviewSensor(self.platform_name, sensor_key,
                                              self.overview_data_service)
@@ -185,6 +193,29 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
         self.data_service.update()
         self._state = self.data_service.data
         self._attributes = self.data_service.attributes
+
+
+class SolarEdgeInventorySensor(SolarEdgeSensor):
+    """Representation of an SolarEdge Monitoring API inventory sensor."""
+
+    def __init__(self, platform_name, sensor_key, data_service):
+        """Initialize the inventory sensor."""
+        super().__init__(platform_name, sensor_key, data_service)
+
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+
+        self._attributes = {}
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    def update(self):
+        """Get the latest inventory data and update state and attributes."""
+        self.data_service.update()
+        self._state = self.data_service.data[self._json_key]
+        self._attributes = self.data_service.attributes[self._json_key]
 
 
 class SolarEdgeDataService:
@@ -264,3 +295,34 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
 
         _LOGGER.debug("Updated SolarEdge details data and attributes: %s, %s",
                       self.data, self.attributes)
+
+
+class SolarEdgeInventoryDataService(SolarEdgeDataService):
+    """Get and update the latest inventory data."""
+
+    @Throttle(INVENTORY_UPDATE_DELAY)
+    def update(self):
+        """Update the data from the SolarEdge Monitoring API."""
+        from requests.exceptions import HTTPError, ConnectTimeout
+
+        try:
+            data = self.api.get_inventory(self.site_id)
+            inventory = data['Inventory']
+        except KeyError:
+            _LOGGER.error("Missing inventory data, skipping update")
+            return
+        except (ConnectTimeout, HTTPError):
+            _LOGGER.error("Could not retrieve data, skipping update")
+            return
+
+        self.data = {}
+        self.attributes = {}
+
+        for key, value in inventory.items():
+            if key == 'inverters' and len(value) > 0:
+                self.data[key] = value[0]['name']
+                self.attributes[key] = value[0]
+
+        _LOGGER.debug("Updated SolarEdge inventory data and attributes: %s, %s",
+                      self.data, self.attributes)
+
