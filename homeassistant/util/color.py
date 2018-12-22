@@ -199,9 +199,9 @@ def color_RGB_to_xy_brightness(
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
 
-    R = iR / 255.0
-    B = iB / 255.0
-    G = iG / 255.0
+    R = iR / 255
+    B = iB / 255
+    G = iG / 255
 
     # Gamma correction
     R = pow((R + 0.055) / (1.0 + 0.055),
