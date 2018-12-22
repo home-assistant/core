@@ -36,8 +36,8 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
     from pyruter.api import Departures
-    _LOGGER.warning("The API used in this sensor is shutting down soon,"
-                    "you should consider starting to use the"
+    _LOGGER.warning("The API used in this sensor is shutting down soon, "
+                    "you should consider starting to use the "
                     "'entur_public_transport' sensor instead")
     stop_id = config[CONF_STOP_ID]
     destination = config.get(CONF_DESTINATION)
