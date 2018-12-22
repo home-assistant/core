@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.template as template_help
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
@@ -62,7 +63,7 @@ class LaunchLibrarySensor(Entity):
         try:
             data = self.launches.launches[0]
             self._state = data['name']
-            self._attributes['launch_time'] = data['start']
+            self._attributes['launch_time'] = template_help.timestamp_local(data['wsstamp'])
             self._attributes['agency'] = data['agency']
             agency_country_code = data['agency_country_code']
             self._attributes['agency_country_code'] = agency_country_code
