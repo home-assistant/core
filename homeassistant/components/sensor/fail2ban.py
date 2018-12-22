@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.fail2ban/
 import os
 import logging
 
+from datetime import timedelta
+
 import re
 import voluptuous as vol
 
@@ -26,6 +28,7 @@ DEFAULT_LOG = '/var/log/fail2ban.log'
 
 STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
+SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
