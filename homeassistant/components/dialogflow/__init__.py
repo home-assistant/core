@@ -95,13 +95,28 @@ config_entry_flow.register_webhook_flow(
     }
 )
 
+
 def get_api_version(message):
-    return 'V1' if message.get('id') is not None else 'V2'
+    if message.get('id') is not None:
+        return 'V1'
+
+    if message.get('responseId') is not None:
+        return 'V2'
+
+    return None
+
 
 def dialogflow_error_response(message, error):
     """Return a response saying the error message."""
     api_version = get_api_version(message)
-    req = message.get('queryResult') if api_version == 'V2' else message.get('result')
+    req = {}
+
+    if api_version == 'V2':
+        req = message.get('queryResult')
+
+    elif api_version == 'V1':
+        req = message.get('result')
+
     parameters = req.get('parameters').copy()
     dialogflow_response = DialogflowResponse(parameters, api_version)
     dialogflow_response.add_speech(error)
