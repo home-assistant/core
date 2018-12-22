@@ -11,7 +11,9 @@ from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.const import STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +95,7 @@ async def _async_setup_remote(discovery_info):
     return remote
 
 
-class BinarySensor(ZhaEntity, BinarySensorDevice):
+class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
     """The ZHA Binary Sensor."""
 
     _domain = DOMAIN
@@ -133,6 +135,19 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             res = self._ias_zone_cluster.enroll_response(0, 0)
             self.hass.async_add_job(res)
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        if old_state.state == STATE_ON:
+            self._state = 3
+        else:
+            self._state = 0
+
     async def async_update(self):
         """Retrieve latest state."""
         from zigpy.types.basic import uint16_t
@@ -146,7 +161,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Remote(ZhaEntity, BinarySensorDevice):
+class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN
@@ -217,7 +232,6 @@ class Remote(ZhaEntity, BinarySensorDevice):
     def __init__(self, **kwargs):
         """Initialize Switch."""
         super().__init__(**kwargs)
-        self._state = False
         self._level = 0
         from zigpy.zcl.clusters import general
         self._out_listeners = {
@@ -276,6 +290,18 @@ class Remote(ZhaEntity, BinarySensorDevice):
         if self._level == 0:
             self._level = 255
         self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        if 'level' in old_state.attributes:
+            self._level = old_state.attributes['level']
+        self._state = old_state.state == STATE_ON
 
     async def async_update(self):
         """Retrieve latest state."""
