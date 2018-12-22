@@ -220,18 +220,7 @@ class HueLight(Light):
         self.bridge = bridge
         self.is_group = is_group
 
-        if self.device_info:
-            gamut_list = self.device_info['color_gamut']
-            self.gamut = tuple([tuple(x) for x in gamut_list])
-            self.gamut_typ = self.device_info['color_gamut_type']
-        elif is_group:
-            self.gamut = None
-            self.gamut_typ = 'None'
-        else:
-            err_msg = 'Can not get color gamut of light "%s"'
-            _LOGGER.warning(err_msg, self.name)
-            self.gamut = None
-            self.gamut_typ = 'None'
+        (self.gamut_typ, self.gamut) = self.get_gamut()
 
         if is_group:
             self.is_osram = False
@@ -327,11 +316,8 @@ class HueLight(Light):
             # productname added in Hue Bridge API 1.24
             # (published 03/05/2018)
             'model': self.light.productname or self.light.modelid,
-            'model_id': self.light.modelid,
             # Not yet exposed as properties in aiohue
             'sw_version': self.light.raw['swversion'],
-            'color_gamut_type': light_spec['colorgamuttype'],
-            'color_gamut': light_spec['colorgamut'],
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
 
@@ -424,3 +410,20 @@ class HueLight(Light):
         if self.gamut:
             attributes[ATTR_GAMUT] = self.gamut
         return attributes
+
+    def get_gamut(self):
+        """Return the gamut information of the light."""
+        if self.is_group:
+            return ('None', None)
+
+        try:
+            light_spec = self.light.raw['capabilities']['control']
+            color_gamut_type = light_spec['colorgamuttype']
+            color_gamut = tuple([tuple(x) for x in light_spec['colorgamut']])
+        except KeyError:
+            err_msg = 'Can not get color gamut of light "%s"'
+            _LOGGER.warning(err_msg, self.name)
+            color_gamut = None
+            color_gamut_type = 'None'
+
+        return (color_gamut_type, color_gamut)
