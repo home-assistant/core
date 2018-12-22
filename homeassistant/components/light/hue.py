@@ -305,8 +305,6 @@ class HueLight(Light):
         if self.light.type in ('LightGroup', 'Room'):
             return None
 
-        light_spec = self.light.raw['capabilities']['control']
-
         return {
             'identifiers': {
                 (hue.DOMAIN, self.unique_id)
