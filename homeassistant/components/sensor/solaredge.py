@@ -22,12 +22,14 @@ REQUIREMENTS = ['solaredge==0.0.2']
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"
 
-UPDATE_DELAY = timedelta(minutes=10)
+OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
+DETAILS_UPDATE_DELAY = timedelta(hours=12)
+
 SCAN_INTERVAL = timedelta(minutes=10)
 
-# Supported sensor types:
+# Supported overview sensor types:
 # Key: ['json_key', 'name', unit, icon]
-SENSOR_TYPES = {
+OVERVIEW_SENSOR_TYPES = {
     'life_time_data': ['lifeTimeData', "Lifetime energy", 'Wh',
                        'mdi:solar-power'],
     'last_year_data': ['lastYearData', "Energy this year", 'Wh',
@@ -40,12 +42,29 @@ SENSOR_TYPES = {
                       'mdi:solar-power']
 }
 
+# Supported details sensor types:
+# Key: ['json_key', 'name', unit, icon]
+DETAILS_SENSOR_TYPES = {
+    'id': ['id', 'Id', None, None],
+    'name': ['name', 'Name', None, None],
+    'account_id': ['accountId', "Account Id", None, None],
+    'status': ['status', 'Status', None, None],
+    'peak_power': ['peakPower', "Peak power", None, None],
+    'last_update_time': ['lastUpdateTime', "Last update time", None, None],
+    'installation_date': ['installationDate', "Installation date", None, None],
+    'pto_date': ['ptoDate', "Permission to operate date", None, None],
+    'notes': ['notes', 'Notes', None, None],
+    'type': ['type', 'Type', None, None],
+    'location': ['location', 'Location', None, None],
+    'primary_module': ['primaryModule', "Primary module", None, None]
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
+    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,30 +110,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class SolarEdgeSensorFactory:
+    """Factory which creates sensors based on the sensor_key"""
 
     def __init__(self, platform_name, site_id, api):
+        """Initialize the factory"""
         self.platform_name = platform_name
         
         self.overview_data_service = SolarEdgeOverviewDataService(api, site_id)
+        self.details_data_service = SolarEdgeDetailsDataService(api, site_id)
 
     def create_sensor(self, sensor_key):
-        if sensor_key in SENSOR_TYPES.keys():
+        """Create and return a sensor based on the sensor_key"""
+        if sensor_key in OVERVIEW_SENSOR_TYPES.keys():
             return SolarEdgeOverviewSensor(self.platform_name, sensor_key, 
                     self.overview_data_service)
+        elif sensor_key in DETAILS_SENSOR_TYPES.keys():
+            return SolarEdgeDetailsSensor(self.platform_name, sensor_key,
+                    self.details_data_service)
 
 
-class SolarEdgeOverviewSensor(Entity):
-    """Representation of an SolarEdge Monitoring API sensor."""
+class SolarEdgeSensor(Entity):
+    """Abstract class for a solaredge sensor"""
 
-    def __init__(self, platform_name, sensor_key, data):
-        """Initialize the sensor."""
+    def __init__(self, platform_name, sensor_key, data_service):
         self.platform_name = platform_name
         self.sensor_key = sensor_key
-        self.data = data
+        self.data_service = data_service
         self._state = None
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
 
     @property
     def name(self):
@@ -129,7 +151,7 @@ class SolarEdgeOverviewSensor(Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        return self._icon
 
     @property
     def state(self):
@@ -138,11 +160,36 @@ class SolarEdgeOverviewSensor(Entity):
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._state = self.data.data[self._json_key]
+        self.data_service.update()
+        self._state = self.data_service.data[self._json_key]
 
 
-class SolarEdgeOverviewDataService:
+
+class SolarEdgeOverviewSensor(SolarEdgeSensor):
+    """Representation of an SolarEdge Monitoring API overview sensor."""
+
+    def __init__(self, platform_name, sensor_key, data_service):
+        """Initialize the overview sensor."""
+        super().__init__(platform_name, sensor_key, data_service)
+
+        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
+        self._unit_of_measurement = OVERVIEW_SENSOR_TYPES[self.sensor_key][2]
+        self._icon = OVERVIEW_SENSOR_TYPES[self.sensor_key][3]
+
+
+class SolarEdgeDetailsSensor(SolarEdgeSensor):
+    """Representation of an SolarEdge Monitoring API details sensor."""
+
+    def __init__(self, platform_name, sensor_key, data):
+        """Initialize the details sensor."""
+        super().__init__(platform_name, sensor_key, data_service)
+        
+        self._json_key = DETAILS_SENSOR_TYPES[self.sensor_key][0]
+        self._unit_of_measurement = DETAILS_SENSOR_TYPES[self.sensor_key][2]
+        self._icon = DETAILS_SENSOR_TYPES[self.sensor_key][3]
+
+
+class SolarEdgeDataService:
     """Get and update the latest data."""
 
     def __init__(self, api, site_id):
@@ -152,7 +199,11 @@ class SolarEdgeOverviewDataService:
         
         self.data = {}
 
-    @Throttle(UPDATE_DELAY)
+
+class SolarEdgeOverviewDataService(SolarEdgeDataService):
+    """Get and update the latest overview data."""
+
+    @Throttle(OVERVIEW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
         from requests.exceptions import HTTPError, ConnectTimeout
@@ -170,9 +221,42 @@ class SolarEdgeOverviewDataService:
         self.data = {}
 
         for key, value in overview.items():
+            if key in ['lifeTimeData', 'lastYearData', 'lastMonthData', 'lastDayData']:
+                data = value['energy']
+            elif key in ['currentPower']:
+                data = value['power']
+            else:
+                data = value
+            self.data[key] = data
+
+        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+
+
+class SolarEdgeDetailsDataService(SolarEdgeDataService):
+    """Get and update the latest details data."""
+
+    @Throttle(DETAILS_UPDATE_DELAY)
+    def update(self):
+        """Update the data from the SolarEdge Monitoring API."""
+        from requests.exceptions import HTTPError, ConnectTimeout
+
+        try:
+            data = self.api.get_details(self.site_id)
+            details = data['details']
+        except KeyError:
+            _LOGGER.error("Missing details data, skipping update")
+            return
+        except (ConnectTimeout, HTTPError):
+            _LOGGER.error("Could not retrieve data, skipping update")
+            return
+
+        self.data = {}
+
+        for key, value in details.items():
             if 'energy' in value:
                 self.data[key] = value['energy']
             elif 'power' in value:
                 self.data[key] = value['power']
 
-        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+        _LOGGER.debug("Updated SolarEdge details data: %s", self.data)
+
