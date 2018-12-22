@@ -29,7 +29,7 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 # Supported overview sensor types:
 # Key: ['json_key', 'name', unit, icon]
-OVERVIEW_SENSOR_TYPES = {
+SENSOR_TYPES = {
     'life_time_data': ['lifeTimeData', "Lifetime energy", 'Wh',
                        'mdi:solar-power'],
     'last_year_data': ['lastYearData', "Energy this year", 'Wh',
@@ -39,13 +39,8 @@ OVERVIEW_SENSOR_TYPES = {
     'last_day_data': ['lastDayData', "Energy today", 'Wh',
                       'mdi:solar-power'],
     'current_power': ['currentPower', "Current Power", 'W',
-                      'mdi:solar-power']
-}
-
-# Supported details sensor types:
-# Key: ['name', unit, icon]
-DETAILS_SENSOR_TYPES = {
-    'site_details': ['Site details', None, None]
+                      'mdi:solar-power'],
+    'site_details': [None, 'Site details', None, None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES), vol.In(DETAILS_SENSOR_TYPES)])
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,10 +105,10 @@ class SolarEdgeSensorFactory:
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key"""
-        if sensor_key in OVERVIEW_SENSOR_TYPES.keys():
+        if sensor_key in ['life_time_data', 'last_year_data', 'last_month_data', 'last_day_data', 'current_power']:
             return SolarEdgeOverviewSensor(self.platform_name, sensor_key, 
                     self.overview_data_service)
-        elif sensor_key in DETAILS_SENSOR_TYPES.keys():
+        elif sensor_key == 'site_details':
             return SolarEdgeDetailsSensor(self.platform_name, sensor_key,
                     self.details_data_service)
 
@@ -156,9 +151,9 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
         """Initialize the overview sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = OVERVIEW_SENSOR_TYPES[self.sensor_key][2]
-        self._icon = OVERVIEW_SENSOR_TYPES[self.sensor_key][3]
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._icon = SENSOR_TYPES[self.sensor_key][3]
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
@@ -175,8 +170,8 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
        
         self._attributes = {}
 
-        self._unit_of_measurement = DETAILS_SENSOR_TYPES[self.sensor_key][1]
-        self._icon = DETAILS_SENSOR_TYPES[self.sensor_key][2]
+        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._icon = SENSOR_TYPES[self.sensor_key][3]
 
     @property
     def state_attributes(self):
