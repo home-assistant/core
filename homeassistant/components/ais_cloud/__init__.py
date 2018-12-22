@@ -171,6 +171,8 @@ def async_setup(hass, config):
                 hass.async_add_job(
                     hass.services.async_call('ais_cloud', 'get_players')
                 )
+
+            _LOGGER.info("Discovered device prepare remote menu!")
             # prepare menu
             hass.async_add_job(
                 hass.services.async_call(
@@ -240,21 +242,21 @@ def async_setup(hass, config):
                 'icon': 'mdi:open-in-new',
                 'friendly_name': 'Konfiguracja usług'
             })
-        yield from hass.services.async_call(
-            'group',
-            'set_visibility', {
-                "entity_id": "group.dom_cloud",
-                "visible": True
-                })
+        # yield from hass.services.async_call(
+        #     'group',
+        #     'set_visibility', {
+        #         "entity_id": "group.dom_cloud",
+        #         "visible": True
+        #         })
 
-    else:
-        # Hide the group ais cloud group
-        yield from hass.services.async_call(
-            'group',
-            'set_visibility', {
-                "entity_id": "group.dom_cloud",
-                "visible": False
-                })
+    # else:
+    #     # Hide the group ais cloud group
+    #     yield from hass.services.async_call(
+    #         'group',
+    #         'set_visibility', {
+    #             "entity_id": "group.dom_cloud",
+    #             "visible": False
+    #             })
     return True
 
 
@@ -281,7 +283,7 @@ class AisCloudWS:
                 self.fomatCloudToken(token)
                 return token
         except Exception as e:
-            _LOGGER.error("Exception: " + str(e))
+            _LOGGER.info("Exception: getCurrentToken " + str(e))
         return None
 
     def getCloudToken(self, login, password):
@@ -297,7 +299,7 @@ class AisCloudWS:
             self.fomatCloudToken(token)
             return token
         except Exception as e:
-            _LOGGER.error("Exception: " + str(e))
+            _LOGGER.info("Exception: getCloudToken " + str(e))
         return None
 
     def ask(self, question, org_answer):
