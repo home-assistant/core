@@ -33,6 +33,9 @@ STATUS_PAUSED = 'paused'
 
 EVENT_TIMER_FINISHED = 'timer.finished'
 EVENT_TIMER_CANCELLED = 'timer.cancelled'
+EVENT_TIMER_STARTED = 'timer.started'
+EVENT_TIMER_RESTARTED = 'timer.restarted'
+EVENT_TIMER_PAUSED = 'timer.paused'
 
 SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
@@ -158,6 +161,10 @@ class Timer(RestoreEntity):
         if duration:
             newduration = duration
 
+        event = EVENT_TIMER_STARTED
+        if self._state == STATUS_PAUSED:
+            event = EVENT_TIMER_RESTARTED
+
         self._state = STATUS_ACTIVE
         # pylint: disable=redefined-outer-name
         start = dt_util.utcnow()
@@ -170,6 +177,10 @@ class Timer(RestoreEntity):
             else:
                 self._remaining = self._duration
             self._end = start + self._duration
+
+        self._hass.bus.async_fire(event,
+                                  {"entity_id": self.entity_id})
+
         self._listener = async_track_point_in_utc_time(self._hass,
                                                        self.async_finished,
                                                        self._end)
@@ -185,6 +196,8 @@ class Timer(RestoreEntity):
         self._remaining = self._end - dt_util.utcnow()
         self._state = STATUS_PAUSED
         self._end = None
+        self._hass.bus.async_fire(EVENT_TIMER_PAUSED,
+                                  {"entity_id": self.entity_id})
         await self.async_update_ha_state()
 
     async def async_cancel(self):

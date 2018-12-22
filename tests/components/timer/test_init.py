@@ -9,7 +9,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.timer import (
     DOMAIN, CONF_DURATION, CONF_NAME, STATUS_ACTIVE, STATUS_IDLE,
     STATUS_PAUSED, CONF_ICON, ATTR_DURATION, EVENT_TIMER_FINISHED,
-    EVENT_TIMER_CANCELLED, SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL,
+    EVENT_TIMER_CANCELLED, EVENT_TIMER_STARTED, EVENT_TIMER_RESTARTED,
+    EVENT_TIMER_PAUSED, SERVICE_START, SERVICE_PAUSE, SERVICE_CANCEL,
     SERVICE_FINISH)
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID)
 from homeassistant.util.dt import utcnow
@@ -94,6 +95,105 @@ def test_methods_and_events(hass):
         """Fake event listener for trigger."""
         results.append(event)
 
+    hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+
+    steps = [
+        {
+            'call': SERVICE_START,
+            'state': STATUS_ACTIVE,
+            'event': EVENT_TIMER_STARTED,
+        },
+        {
+            'call': SERVICE_PAUSE,
+            'state': STATUS_PAUSED,
+            'event': EVENT_TIMER_PAUSED,
+        },
+        {
+            'call': SERVICE_START,
+            'state': STATUS_ACTIVE,
+            'event': EVENT_TIMER_RESTARTED,
+        },
+        {
+            'call': SERVICE_CANCEL,
+            'state': STATUS_IDLE,
+            'event': EVENT_TIMER_CANCELLED,
+        },
+        {
+            'call': SERVICE_START,
+            'state': STATUS_ACTIVE,
+            'event': EVENT_TIMER_STARTED,
+        },
+        {
+            'call': SERVICE_FINISH,
+            'state': STATUS_IDLE,
+            'event': EVENT_TIMER_FINISHED,
+        },
+        {
+            'call': SERVICE_START,
+            'state': STATUS_ACTIVE,
+            'event': EVENT_TIMER_STARTED,
+        },
+        {
+            'call': SERVICE_PAUSE,
+            'state': STATUS_PAUSED,
+            'event': EVENT_TIMER_PAUSED,
+        },
+        {
+            'call': SERVICE_CANCEL,
+            'state': STATUS_IDLE,
+            'event': EVENT_TIMER_CANCELLED,
+        }
+    ]
+
+    expectedEvents = 0
+    for step in steps:
+        if step['call'] is not None:
+            yield from hass.services.async_call(
+                DOMAIN,
+                step['call'],
+                {CONF_ENTITY_ID: 'timer.test1'}
+            )
+            yield from hass.async_block_till_done()
+
+        state = hass.states.get('timer.test1')
+        assert state
+        if step['state'] is not None:
+            assert state.state == step['state']
+
+        if step['event'] is not None:
+            expectedEvents += 1
+            assert results[-1].event_type == step['event']
+            assert len(results) == expectedEvents
+
+
+@asyncio.coroutine
+def test_wait_till_timer_expires(hass):
+    """Test for a timer to end."""
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'test1': {
+                CONF_DURATION: 10,
+            }
+        }})
+
+    state = hass.states.get('timer.test1')
+    assert state
+    assert state.state == STATUS_IDLE
+
+    results = []
+
+    def fake_event_listener(event):
+        """Fake event listener for trigger."""
+        results.append(event)
+
+    hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
 
@@ -106,35 +206,8 @@ def test_methods_and_events(hass):
     assert state
     assert state.state == STATUS_ACTIVE
 
-    yield from hass.services.async_call(DOMAIN,
-                                        SERVICE_PAUSE,
-                                        {CONF_ENTITY_ID: 'timer.test1'})
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('timer.test1')
-    assert state
-    assert state.state == STATUS_PAUSED
-
-    yield from hass.services.async_call(DOMAIN,
-                                        SERVICE_CANCEL,
-                                        {CONF_ENTITY_ID: 'timer.test1'})
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('timer.test1')
-    assert state
-    assert state.state == STATUS_IDLE
-
+    assert results[-1].event_type == EVENT_TIMER_STARTED
     assert len(results) == 1
-    assert results[-1].event_type == EVENT_TIMER_CANCELLED
-
-    yield from hass.services.async_call(DOMAIN,
-                                        SERVICE_START,
-                                        {CONF_ENTITY_ID: 'timer.test1'})
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('timer.test1')
-    assert state
-    assert state.state == STATUS_ACTIVE
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
     yield from hass.async_block_till_done()
@@ -143,29 +216,8 @@ def test_methods_and_events(hass):
     assert state
     assert state.state == STATUS_IDLE
 
+    assert results[-1].event_type == EVENT_TIMER_FINISHED
     assert len(results) == 2
-    assert results[-1].event_type == EVENT_TIMER_FINISHED
-
-    yield from hass.services.async_call(DOMAIN,
-                                        SERVICE_START,
-                                        {CONF_ENTITY_ID: 'timer.test1'})
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('timer.test1')
-    assert state
-    assert state.state == STATUS_ACTIVE
-
-    yield from hass.services.async_call(DOMAIN,
-                                        SERVICE_FINISH,
-                                        {CONF_ENTITY_ID: 'timer.test1'})
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('timer.test1')
-    assert state
-    assert state.state == STATUS_IDLE
-
-    assert len(results) == 3
-    assert results[-1].event_type == EVENT_TIMER_FINISHED
 
 
 @asyncio.coroutine
