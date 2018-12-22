@@ -97,8 +97,8 @@ def test_send_no_wait(hass, monkeypatch):
             'platform': 'rflink',
             'devices': {
                 'protocol_0_0': {
-                        'name': 'test',
-                        'aliases': ['test_alias_0_0'],
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
                 },
             },
         },
@@ -129,8 +129,8 @@ def test_cover_send_no_wait(hass, monkeypatch):
             'platform': 'rflink',
             'devices': {
                 'RTS_0100F2_0': {
-                        'name': 'test',
-                        'aliases': ['test_alias_0_0'],
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
                 },
             },
         },
@@ -274,8 +274,8 @@ def test_error_when_not_connected(hass, monkeypatch):
             'platform': 'rflink',
             'devices': {
                 'protocol_0_0': {
-                        'name': 'test',
-                        'aliases': ['test_alias_0_0'],
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
                 },
             },
         },
@@ -285,7 +285,7 @@ def test_error_when_not_connected(hass, monkeypatch):
     failures = [False, True, False]
 
     # setup mocking rflink module
-    _, mock_create, _, disconnect_callback = yield from mock_rflink(
+    _, _, _, disconnect_callback = yield from mock_rflink(
         hass, config, domain, monkeypatch, failures=failures)
 
     # rflink initiated disconnect
