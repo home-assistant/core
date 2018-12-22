@@ -103,10 +103,6 @@ class ZhaEntity(entity.Entity):
         """Handle permit_duration zdo event."""
         pass
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        pass
-
     @property
     def device_info(self):
         """Return a device description for device registry."""
