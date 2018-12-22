@@ -360,7 +360,7 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
         return self._cluster
 
     @property
-    def zcl_reportintg_config(self):
+    def zcl_reporting_config(self):
         """ZHA reporting configuration."""
         return {self.cluster: {self.value_attribute: REPORT_CONFIG_IMMEDIATE}}
 
