@@ -241,6 +241,7 @@ class Light(ZhaEntity, light.Light):
         if value < 0 or value > 255:
             return
         self._brightness = value
+        self.async_schedule_update_ha_state()
 
     @property
     def hs_color(self):
