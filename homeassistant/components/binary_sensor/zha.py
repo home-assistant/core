@@ -28,6 +28,7 @@ CLASS_MAPPING = {
     0x002b: 'gas',
     0x002d: 'vibration',
 }
+DEVICE_CLASS_OCCUPANCY = 'occupancy'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -59,9 +60,15 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     entities = []
     for discovery_info in discovery_infos:
         from zigpy.zcl.clusters.general import OnOff
+        from zigpy.zcl.clusters.measurement import OccupancySensing
         from zigpy.zcl.clusters.security import IasZone
         if IasZone.cluster_id in discovery_info['in_clusters']:
             entities.append(await _async_setup_iaszone(discovery_info))
+        elif OccupancySensing.cluster_id in discovery_info['in_clusters']:
+            entities.append(await _async_setup_occupancy(
+                DEVICE_CLASS_OCCUPANCY,
+                discovery_info
+            ))
         elif OnOff.cluster_id in discovery_info['out_clusters']:
             entities.append(await _async_setup_remote(discovery_info))
 
@@ -84,7 +91,7 @@ async def _async_setup_iaszone(discovery_info):
         # If we fail to read from the device, use a non-specific class
         pass
 
-    return BinarySensor(device_class, **discovery_info)
+    return IasZoneSensor(device_class, **discovery_info)
 
 
 async def _async_setup_remote(discovery_info):
@@ -95,8 +102,15 @@ async def _async_setup_remote(discovery_info):
     return remote
 
 
-class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
-    """The ZHA Binary Sensor."""
+async def _async_setup_occupancy(device_class, discovery_info):
+    sensor = BinarySensor(device_class, **discovery_info)
+    if discovery_info['new_join']:
+        await sensor.async_configure()
+    return sensor
+
+
+class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
+    """The IasZoneSensor Binary Sensor."""
 
     _domain = DOMAIN
 
@@ -313,3 +327,61 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
             only_cache=(not self._initialized)
         )
         self._state = result.get('on_off', self._state)
+
+
+class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
+    """ZHA switch."""
+
+    _domain = DOMAIN
+    _device_class = None
+    value_attribute = 0
+
+    def __init__(self, device_class, **kwargs):
+        """Initialize the ZHA binary sensor."""
+        super().__init__(**kwargs)
+        self._device_class = device_class
+        self._cluster = list(kwargs['in_clusters'].values())[0]
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        if attribute == self.value_attribute:
+            self._state = bool(value)
+            self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        self._state = old_state.state == STATE_ON
+
+    @property
+    def should_poll(self) -> bool:
+        """Let zha handle polling."""
+        return False
+
+    @property
+    def cluster(self):
+        """Zigbee cluster for this entity."""
+        return self._cluster
+
+    @property
+    def zcl_reporting_config(self):
+        """ZHA reporting configuration."""
+        return {self.cluster: {self.value_attribute: REPORT_CONFIG_IMMEDIATE}}
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        if self._state is None:
+            return False
+        return self._state
+
+    @property
+    def device_class(self) -> str:
+        """Return device class from component DEVICE_CLASSES."""
+        return self._device_class
