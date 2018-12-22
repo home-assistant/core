@@ -28,7 +28,7 @@ class ClusterListener:
     """Listener for a Zigbee cluster."""
 
     def __init__(self, entity, cluster):
-        """Initialize OnOffListener."""
+        """Initialize ClusterListener."""
         self._entity = entity
         self._cluster = cluster
 
