@@ -63,7 +63,8 @@ class LaunchLibrarySensor(Entity):
         try:
             data = self.launches.launches[0]
             self._state = data['name']
-            self._attributes['launch_time'] = template_help.timestamp_local(data['wsstamp'])
+            self._attributes['launch_time'] = template_help.timestamp_local(
+                data['wsstamp'])
             self._attributes['agency'] = data['agency']
             agency_country_code = data['agency_country_code']
             self._attributes['agency_country_code'] = agency_country_code
