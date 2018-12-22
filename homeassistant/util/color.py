@@ -505,6 +505,9 @@ def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
     return math.floor(1000000 / kelvin_temperature)
 
 
+# The following 5 functions are adapted from rgbxy provided by Benjamin Knight
+# License: The MIT License (MIT), 2014.
+# https://github.com/benknight/hue-python-rgb-converter
 def cross_product(p1: XYPoint, p2: XYPoint) -> float:
     """Calculate the cross product of two XYPoints."""
     return float(p1.x * p2.y - p1.y * p2.x)
