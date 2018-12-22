@@ -130,14 +130,12 @@ async def async_handle_message(hass, message):
 
     if api_version == 'V2':
         req = message.get('queryResult')
-        all_required_parameters_present = req.get('allRequiredParamsPresent', False)
-        if not all_required_parameters_present:
+        if not req.get('allRequiredParamsPresent', False):
             return None
 
     elif api_version == 'V1':
         req = message.get('result')
-        action_incomplete = req.get('actionIncomplete', True)
-        if action_incomplete:
+        if req.get('actionIncomplete', True):
             return None
 
     else:
