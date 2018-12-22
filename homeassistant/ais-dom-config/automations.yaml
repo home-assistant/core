@@ -4,6 +4,7 @@
   - event: start
     platform: homeassistant
   action:
+   - delay: '30'
    - service: mqtt.publish
      data:
        payload: 1
