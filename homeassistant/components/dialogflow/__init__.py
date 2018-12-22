@@ -97,6 +97,7 @@ config_entry_flow.register_webhook_flow(
 
 
 def get_api_version(message):
+    """Help determine the version of Dialogflow request."""
     if message.get('id') is not None:
         return 'V1'
 
