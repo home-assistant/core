@@ -43,20 +43,9 @@ OVERVIEW_SENSOR_TYPES = {
 }
 
 # Supported details sensor types:
-# Key: ['json_key', 'name', unit, icon]
+# Key: ['name', unit, icon]
 DETAILS_SENSOR_TYPES = {
-    'id': ['id', 'Id', None, None],
-    'name': ['name', 'Name', None, None],
-    'account_id': ['accountId', "Account Id", None, None],
-    'status': ['status', 'Status', None, None],
-    'peak_power': ['peakPower', "Peak power", None, None],
-    'last_update_time': ['lastUpdateTime', "Last update time", None, None],
-    'installation_date': ['installationDate', "Installation date", None, None],
-    'pto_date': ['ptoDate', "Permission to operate date", None, None],
-    'notes': ['notes', 'Notes', None, None],
-    'type': ['type', 'Type', None, None],
-    'location': ['location', 'Location', None, None],
-    'primary_module': ['primaryModule', "Primary module", None, None]
+    'site_details': ['Site details', None, None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -64,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES)])
+    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES), vol.In(DETAILS_SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +125,7 @@ class SolarEdgeSensor(Entity):
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data_service = data_service
+        
         self._state = None
 
     @property
@@ -158,12 +148,6 @@ class SolarEdgeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def update(self):
-        """Get the latest data from the sensor and update the state."""
-        self.data_service.update()
-        self._state = self.data_service.data[self._json_key]
-
-
 
 class SolarEdgeOverviewSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API overview sensor."""
@@ -176,17 +160,34 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
         self._unit_of_measurement = OVERVIEW_SENSOR_TYPES[self.sensor_key][2]
         self._icon = OVERVIEW_SENSOR_TYPES[self.sensor_key][3]
 
+    def update(self):
+        """Get the latest data from the sensor and update the state."""
+        self.data_service.update()
+        self._state = self.data_service.data[self._json_key]
+
 
 class SolarEdgeDetailsSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
-    def __init__(self, platform_name, sensor_key, data):
+    def __init__(self, platform_name, sensor_key, data_service):
         """Initialize the details sensor."""
         super().__init__(platform_name, sensor_key, data_service)
-        
-        self._json_key = DETAILS_SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = DETAILS_SENSOR_TYPES[self.sensor_key][2]
-        self._icon = DETAILS_SENSOR_TYPES[self.sensor_key][3]
+       
+        self._attributes = {}
+
+        self._unit_of_measurement = DETAILS_SENSOR_TYPES[self.sensor_key][1]
+        self._icon = DETAILS_SENSOR_TYPES[self.sensor_key][2]
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+    
+    def update(self):
+        """Get the latest details and update state and attributes"""
+        self.data_service.update()
+        self._state = self.data_service.data
+        self._attributes = self.data_service.attributes
 
 
 class SolarEdgeDataService:
@@ -198,7 +199,7 @@ class SolarEdgeDataService:
         self.site_id = site_id
         
         self.data = {}
-
+        self.attributes = {}
 
 class SolarEdgeOverviewDataService(SolarEdgeDataService):
     """Get and update the latest overview data."""
@@ -251,12 +252,15 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             return
 
         self.data = {}
+        self.attributes = {}
 
         for key, value in details.items():
-            if 'energy' in value:
-                self.data[key] = value['energy']
-            elif 'power' in value:
-                self.data[key] = value['power']
+            if key in ['primaryModule']:
+                self.attributes.update(value)
+            elif key in ['peakPower', 'type', 'name', 'lastUpdateTime', 'installationDate']:
+                self.attributes[key] = value
+            elif key == 'status':
+                self.data = value
 
-        _LOGGER.debug("Updated SolarEdge details data: %s", self.data)
+        _LOGGER.debug("Updated SolarEdge details data and attributes: %s, %s", self.data, self.attributes)
 
