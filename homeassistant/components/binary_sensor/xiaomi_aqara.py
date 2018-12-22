@@ -412,7 +412,7 @@ class XiaomiButton(XiaomiBinarySensor):
         elif value == 'shake':
             click_type = 'shake'
         elif value in ['long_click', 'long_both_click']:
-            return False
+            click_type = 'long'
         else:
             _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
