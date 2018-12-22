@@ -74,7 +74,7 @@ class OnOffListener(ClusterListener):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
-            self._entity.set_state(value)
+            self._entity.set_state(bool(value))
 
 
 class LevelListener(ClusterListener):
