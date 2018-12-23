@@ -511,7 +511,7 @@ home-assistant-frontend==20181219.0
 homeassistant-pyozw==0.1.1
 
 # homeassistant.components.homekit_controller
-# homekit==0.10
+# homekit==0.12.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
