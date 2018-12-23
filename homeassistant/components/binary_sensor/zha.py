@@ -122,11 +122,6 @@ class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
         self._ias_zone_cluster = self._in_clusters[IasZone.cluster_id]
 
     @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
-
-    @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self._state is None:
@@ -262,11 +257,6 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
             self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
 
     @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
-
-    @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state
@@ -358,11 +348,6 @@ class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
 
         _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
         self._state = old_state.state == STATE_ON
-
-    @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
 
     @property
     def cluster(self):

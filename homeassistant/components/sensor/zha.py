@@ -118,11 +118,6 @@ class Sensor(ZhaEntity):
         return self._cluster
 
     @property
-    def should_poll(self) -> bool:
-        """State gets pushed from device."""
-        return False
-
-    @property
     def state(self) -> str:
         """Return the state of the entity."""
         if isinstance(self._state, float):

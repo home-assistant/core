@@ -164,6 +164,11 @@ class ZhaEntity(entity.Entity):
         """Return device specific state attributes."""
         return self._device_state_attributes
 
+    @property
+    def should_poll(self) -> bool:
+        """Let ZHA handle polling."""
+        return False
+
     @callback
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""

@@ -151,14 +151,6 @@ class ZhaFan(ZhaEntity, FanEntity):
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
         attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
