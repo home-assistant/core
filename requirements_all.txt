@@ -1671,7 +1671,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.knx
-xknx==0.9.1
+xknx==0.9.3
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.startca
