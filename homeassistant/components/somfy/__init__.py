@@ -110,9 +110,7 @@ class SomfyAuthCallbackView(HomeAssistantView):
         response = web.HTTPFound('/')
 
         try:
-            url = str(request.url)
-            url = url.replace('https', 'http')
-            hass.data[DOMAIN][API].request_token(url)
+            hass.data[DOMAIN][API].request_token(str(request.url))
             hass.async_add_job(setup, hass, self.config)
             hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
             hass.components.persistent_notification.create(
