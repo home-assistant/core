@@ -65,11 +65,11 @@ def setup(hass, config):
         hass.http.register_view(SomfyAuthCallbackView(
             config, api.request_token))
         request_configuration(hass, api)
-
-    hass.data[DOMAIN]['api'] = api
-    update_all_devices(hass)
-    for component in SOMFY_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    else:
+        hass.data[DOMAIN]['api'] = api
+        update_all_devices(hass)
+        for component in SOMFY_COMPONENTS:
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
