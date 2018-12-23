@@ -7,9 +7,9 @@ https://home-assistant.io/components/cover.velux/
 
 from homeassistant.components.cover import (
     ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
-    CoverDevice)
-from homeassistant.core import callback
+    SUPPORT_STOP, CoverDevice)
 from homeassistant.components.velux import DATA_VELUX
+from homeassistant.core import callback
 
 DEPENDENCIES = ['velux']
 
@@ -58,7 +58,7 @@ class VeluxCover(CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE | \
-            SUPPORT_SET_POSITION
+            SUPPORT_SET_POSITION | SUPPORT_STOP
 
     @property
     def current_cover_position(self):
@@ -90,3 +90,7 @@ class VeluxCover(CoverDevice):
             from pyvlx import Position
             await self.node.set_position(
                 Position(position_percent=position_percent))
+
+    async def async_stop_cover(self, **kwargs):
+        """Stop the cover."""
+        await self.node.stop()
