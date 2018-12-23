@@ -266,11 +266,3 @@ class Light(ZhaEntity, light.Light):
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
