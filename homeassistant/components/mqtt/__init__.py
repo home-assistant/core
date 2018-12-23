@@ -21,8 +21,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_NAME)
+    CONF_DEVICE, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL,
+    CONF_USERNAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_NAME)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -1000,9 +1000,37 @@ class MqttDiscoveryUpdate(Entity):
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
-    def __init__(self, device_config: Optional[ConfigType]) -> None:
+    def __init__(self, device_config: Optional[ConfigType],
+                 config_entry=None) -> None:
         """Initialize the device mixin."""
         self._device_config = device_config
+        self._config_entry = config_entry
+
+    async def device_info_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._device_config = config.get(CONF_DEVICE)
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        config_entry_id = self._config_entry.entry_id
+        device_info = self.device_info
+
+        if config_entry_id is not None and device_info is not None:
+            processed_dev_info = {
+                'config_entry_id': config_entry_id
+            }
+            for key in (
+                    'connections',
+                    'identifiers',
+                    'manufacturer',
+                    'model',
+                    'name',
+                    'sw_version',
+                    'via_hub',
+            ):
+                if key in device_info:
+                    processed_dev_info[key] = device_info[key]
+
+            device_registry.async_get_or_create(**processed_dev_info)
 
     @property
     def device_info(self):
