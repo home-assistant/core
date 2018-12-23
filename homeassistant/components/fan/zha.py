@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     FanEntity)
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -79,6 +79,19 @@ class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN
+    value_attribute = 0  # fan_mode
+
+    @property
+    def zcl_reporting_config(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {self.value_attribute: REPORT_CONFIG_OP}
+        }
+
+    @property
+    def cluster(self):
+        """Fan ZCL Cluster."""
+        return self._endpoint.fan
 
     @property
     def supported_features(self) -> int:
@@ -129,16 +142,17 @@ class ZhaFan(ZhaEntity, FanEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await helpers.safe_read(self._endpoint.fan, ['fan_mode'],
+        result = await helpers.safe_read(self.cluster, ['fan_mode'],
                                          allow_cache=False,
                                          only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
+        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
+                      self.entity_id, self.cluster.name, attr_name, value)
+        if attribute == self.value_attribute:
+            self._state = VALUE_TO_SPEED.get(value, self._state)
+            self.async_schedule_update_ha_state()

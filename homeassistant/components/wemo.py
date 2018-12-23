@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.33']
+REQUIREMENTS = ['pywemo==0.4.34']
 
 DOMAIN = 'wemo'
 
@@ -96,6 +96,8 @@ def setup(hass, config):
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
+            _LOGGER.debug('Ignoring known device %s %s',
+                          service, discovery_info)
             return
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
@@ -123,6 +125,7 @@ def setup(hass, config):
 
     devices = []
 
+    _LOGGER.debug("Scanning statically configured WeMo devices...")
     for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
         url = setup_url_for_address(host, port)
 
@@ -139,16 +142,19 @@ def setup(hass, config):
             _LOGGER.error('Unable to access %s (%s)', url, err)
             continue
 
-        devices.append((url, device))
+        if not [d[1] for d in devices
+                if d[1].serialnumber == device.serialnumber]:
+            devices.append((url, device))
 
     if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
-        _LOGGER.debug("Scanning for WeMo devices.")
-        devices.extend(
-            (setup_url_for_device(device), device)
-            for device in pywemo.discover_devices())
+        _LOGGER.debug("Scanning for WeMo devices...")
+        for device in pywemo.discover_devices():
+            if not [d[1] for d in devices
+                    if d[1].serialnumber == device.serialnumber]:
+                devices.append((setup_url_for_device(device), device))
 
     for url, device in devices:
-        _LOGGER.debug('Adding wemo at %s:%i', device.host, device.port)
+        _LOGGER.debug('Adding WeMo device at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,

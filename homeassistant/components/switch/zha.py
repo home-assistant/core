@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -44,18 +44,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entities(hass, config_entry, async_add_entities,
                                 discovery_infos):
     """Set up the ZHA switches."""
-    from zigpy.zcl.clusters.general import OnOff
     entities = []
     for discovery_info in discovery_infos:
-        switch = Switch(**discovery_info)
-        if discovery_info['new_join']:
-            in_clusters = discovery_info['in_clusters']
-            cluster = in_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
-                switch.entity_id, cluster, switch.value_attribute,
-                min_report=0, max_report=600, reportable_change=1
-            )
-        entities.append(switch)
+        entities.append(Switch(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -77,9 +68,16 @@ class Switch(ZhaEntity, SwitchDevice):
             self.async_schedule_update_ha_state()
 
     @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
+    def zcl_reporting_config(self) -> dict:
+        """Retrun a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {'on_off': REPORT_CONFIG_IMMEDIATE}
+        }
+
+    @property
+    def cluster(self):
+        """Entity's cluster."""
+        return self._endpoint.on_off
 
     @property
     def is_on(self) -> bool:
@@ -118,7 +116,7 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await helpers.safe_read(self._endpoint.on_off,
+        result = await helpers.safe_read(self.cluster,
                                          ['on_off'],
                                          allow_cache=False,
                                          only_cache=(not self._initialized))

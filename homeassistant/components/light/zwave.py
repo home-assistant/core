@@ -19,20 +19,31 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-AEOTEC = 0x86
-AEOTEC_ZW098_LED_BULB = 0x62
-AEOTEC_ZW098_LED_BULB_LIGHT = (AEOTEC, AEOTEC_ZW098_LED_BULB)
-
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
+# Some bulbs have an independent warm and cool white light LEDs. These need
+# to be treated differently, aka the zw098 workaround. Ensure these are added
+# to DEVICE_MAPPINGS below.
+# (Manufacturer ID, Product ID) from
+# https://github.com/OpenZWave/open-zwave/blob/master/config/manufacturer_specific.xml
+AEOTEC_ZW098_LED_BULB_LIGHT = (0x86, 0x62)
+AEOTEC_ZWA001_LED_BULB_LIGHT = (0x371, 0x1)
+AEOTEC_ZWA002_LED_BULB_LIGHT = (0x371, 0x2)
+HANK_HKZW_RGB01_LED_BULB_LIGHT = (0x208, 0x4)
+ZIPATO_RGB_BULB_2_LED_BULB_LIGHT = (0x131, 0x3)
+
 WORKAROUND_ZW098 = 'zw098'
 
 DEVICE_MAPPINGS = {
-    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098
+    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    AEOTEC_ZWA001_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    AEOTEC_ZWA002_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    HANK_HKZW_RGB01_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    ZIPATO_RGB_BULB_2_LED_BULB_LIGHT: WORKAROUND_ZW098
 }
 
 # Generate midpoint color temperatures for bulbs that have limited

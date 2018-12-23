@@ -15,14 +15,13 @@ from homeassistant.components.climate import (
     STATE_FAN_ONLY, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
     ClimateDevice)
-from homeassistant.components.daikin import (
-    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_TARGET_TEMPERATURE,
-    daikin_api_setup)
+from homeassistant.components.daikin import DOMAIN as DAIKIN_DOMAIN
+from homeassistant.components.daikin.const import (
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydaikin==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,18 +59,18 @@ HA_ATTR_TO_DAIKIN = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Daikin HVAC platform."""
-    if discovery_info is not None:
-        host = discovery_info.get('ip')
-        name = None
-        _LOGGER.debug("Discovered a Daikin AC on %s", host)
-    else:
-        host = config.get(CONF_HOST)
-        name = config.get(CONF_NAME)
-        _LOGGER.debug("Added Daikin AC on %s", host)
+    """Old way of setting up the Daikin HVAC platform.
 
-    api = daikin_api_setup(hass, host, name)
-    add_entities([DaikinClimate(api)], True)
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Daikin climate based on config_entry."""
+    daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    async_add_entities([DaikinClimate(daikin_api)])
 
 
 class DaikinClimate(ClimateDevice):
@@ -266,3 +265,8 @@ class DaikinClimate(ClimateDevice):
     def update(self):
         """Retrieve latest state."""
         self._api.update()
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info

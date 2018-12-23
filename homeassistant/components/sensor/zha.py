@@ -9,7 +9,8 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT, REPORT_CONFIG_RPT_CHANGE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,11 +62,14 @@ async def make_sensor(discovery_info):
     )
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
+    from zigpy.zcl.clusters.general import PowerConfiguration
     in_clusters = discovery_info['in_clusters']
     if 'sub_component' in discovery_info:
         sensor = discovery_info['sub_component'](**discovery_info)
     elif RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
+    elif PowerConfiguration.cluster_id in in_clusters:
+        sensor = GenericBatterySensor(**discovery_info)
     elif TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
     elif PressureMeasurement.cluster_id in in_clusters:
@@ -80,13 +84,6 @@ async def make_sensor(discovery_info):
     else:
         sensor = Sensor(**discovery_info)
 
-    if discovery_info['new_join']:
-        cluster = list(in_clusters.values())[0]
-        await helpers.configure_reporting(
-            sensor.entity_id, cluster, sensor.value_attribute,
-            reportable_change=sensor.min_reportable_change
-        )
-
     return sensor
 
 
@@ -95,12 +92,28 @@ class Sensor(ZhaEntity):
 
     _domain = DOMAIN
     value_attribute = 0
-    min_reportable_change = 1
+    min_report_interval = REPORT_CONFIG_MIN_INT
+    max_report_interval = REPORT_CONFIG_MAX_INT
+    min_reportable_change = REPORT_CONFIG_RPT_CHANGE
+    report_config = (min_report_interval, max_report_interval,
+                     min_reportable_change)
+
+    def __init__(self, **kwargs):
+        """Init ZHA Sensor instance."""
+        super().__init__(**kwargs)
+        self._cluster = list(kwargs['in_clusters'].values())[0]
 
     @property
-    def should_poll(self) -> bool:
-        """State gets pushed from device."""
-        return False
+    def zcl_reporting_config(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {self.value_attribute: self.report_config}
+        }
+
+    @property
+    def cluster(self):
+        """Return Sensor's cluster."""
+        return self._cluster
 
     @property
     def state(self) -> str:
@@ -119,12 +132,77 @@ class Sensor(ZhaEntity):
     async def async_update(self):
         """Retrieve latest state."""
         result = await helpers.safe_read(
-            list(self._in_clusters.values())[0],
+            self.cluster,
             [self.value_attribute],
             allow_cache=False,
             only_cache=(not self._initialized)
         )
         self._state = result.get(self.value_attribute, self._state)
+
+
+class GenericBatterySensor(Sensor):
+    """ZHA generic battery sensor."""
+
+    report_attribute = 32
+    value_attribute = 33
+    battery_sizes = {
+        0: 'No battery',
+        1: 'Built in',
+        2: 'Other',
+        3: 'AA',
+        4: 'AAA',
+        5: 'C',
+        6: 'D',
+        7: 'CR2',
+        8: 'CR123A',
+        9: 'CR2450',
+        10: 'CR2032',
+        11: 'CR1632',
+        255: 'Unknown'
+    }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
+
+    @property
+    def zcl_reporting_config(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {
+                self.value_attribute: self.report_config,
+                self.report_attribute: self.report_config
+            }
+        }
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        result = await helpers.safe_read(
+            self._endpoint.power,
+            [
+                'battery_size',
+                'battery_quantity',
+                'battery_percentage_remaining'
+            ],
+            allow_cache=False,
+            only_cache=(not self._initialized)
+        )
+        self._device_state_attributes['battery_size'] = self.battery_sizes.get(
+            result.get('battery_size', 255), 'Unknown')
+        self._device_state_attributes['battery_quantity'] = result.get(
+            'battery_quantity', 'Unknown')
+        self._state = result.get('battery_percentage_remaining', self._state)
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown' or self._state is None:
+            return None
+
+        return self._state
 
 
 class TemperatureSensor(Sensor):
@@ -251,6 +329,6 @@ class ElectricalMeasurementSensor(Sensor):
         _LOGGER.debug("%s async_update", self.entity_id)
 
         result = await helpers.safe_read(
-            self._endpoint.electrical_measurement, ['active_power'],
+            self.cluster, ['active_power'],
             allow_cache=False, only_cache=(not self._initialized))
         self._state = result.get('active_power', self._state)

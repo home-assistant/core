@@ -101,7 +101,7 @@ hdate==0.7.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181211.0
+home-assistant-frontend==20181219.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -121,6 +121,9 @@ libsoundtouch==0.7.2
 
 # homeassistant.components.luftdaten
 luftdaten==0.3.4
+
+# homeassistant.components.mythicbeastsdns
+mbddns==0.1.2
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
@@ -221,7 +224,7 @@ pyunifi==2.13
 pywebpush==1.6.0
 
 # homeassistant.components.rainmachine
-regenmaschine==1.0.7
+regenmaschine==1.1.0
 
 # homeassistant.components.python_script
 restrictedpython==4.0b7
@@ -249,7 +252,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.14
+sqlalchemy==1.2.15
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
