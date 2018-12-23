@@ -446,9 +446,9 @@ class Icloud(DeviceScanner):
         self.api.authenticate()
         for device in self.api.devices:
             if str(device) == str(self.devices[devicename]):
-                _LOGGER.info("Playing Lost iPhone sound for %s",devicename)
+                _LOGGER.info("Playing Lost iPhone sound for %s", devicename)
                 device.play_sound()
-        
+
     def update_icloud(self, devicename=None):
         """Request device information from iCloud and update device_tracker."""
         from pyicloud.exceptions import PyiCloudNoDevicesException
