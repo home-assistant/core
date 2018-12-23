@@ -8,7 +8,7 @@ from pymfy.api.devices.category import Category
 from pymfy.api.devices.roller_shutter import RollerShutter
 
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.somfy import DOMAIN, SomfyEntity
+from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES
 
 DEPENDENCIES = ['somfy']
 
@@ -18,7 +18,7 @@ CATEGORIES = {Category.ROLLER_SHUTTER.value, Category.INTERIOR_BLIND.value,
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Somfy cover platform."""
-    devices = hass.data[DOMAIN]['devices']
+    devices = hass.data[DOMAIN][DEVICES]
     for cover in devices:
         if CATEGORIES & set(cover.categories):
             add_entities([SomfyCover(cover, hass)])

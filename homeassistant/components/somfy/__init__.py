@@ -16,6 +16,10 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+API = 'api'
+
+DEVICES = 'devices'
+
 REQUIREMENTS = ['pymfy==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +30,10 @@ DOMAIN = 'somfy'
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
+
+NOTIFICATION_CB_ID = 'somfy_cb_notification'
+NOTIFICATION_OK_ID = 'somfy_ok_notification'
+NOTIFICATION_TITLE = 'Somfy Setup'
 
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
@@ -62,29 +70,23 @@ def setup(hass, config):
                    redirect_uri, hass.config.path(DEFAULT_CACHE_PATH))
 
     if not api.token:
+        authorization_url, _ = api.get_authorization_url()
+        hass.components.persistent_notification.create(
+            'In order to authorize Home Assistant to view your Somfy devices'
+            ' you must visit this <a href="{}" target="_blank">link</a>.'
+            .format(authorization_url),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_CB_ID
+        )
         hass.http.register_view(SomfyAuthCallbackView(
             config, api.request_token))
-        request_configuration(hass, api)
     else:
-        hass.data[DOMAIN]['api'] = api
+        hass.data[DOMAIN][API] = api
         update_all_devices(hass)
         for component in SOMFY_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
-
-
-def request_configuration(hass, api):
-    """Request Spotify authorization."""
-    configurator = hass.components.configurator
-    url, _ = api.get_authorization_url()
-    hass.data[DOMAIN]['configurator'] = configurator.request_config(
-        'Somfy', lambda _: None,
-        link_name='Link Somfy account',
-        link_url=url,
-        description='To link your Somfy account, '
-                    'click the link, login, and authorize:',
-        submit_caption='I authorized successfully')
 
 
 class SomfyAuthCallbackView(HomeAssistantView):
@@ -105,17 +107,17 @@ class SomfyAuthCallbackView(HomeAssistantView):
         from aiohttp import web
 
         hass = request.app['hass']
-
-        response_message = """Somfy has been successfully authorized!
-         You can close this window now! For the best results you should reboot
-         HomeAssistant"""
-        html_response = """<html><head><title>Somfy Auth</title></head>
-                <body><h1>{}</h1></body></html>"""
+        response = web.HTTPFound('/states')
 
         self.request_token(str(request.url))
         hass.async_add_job(setup, hass, self.config)
-        return web.Response(text=html_response.format(response_message),
-                            content_type='text/html')
+        hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
+        hass.components.persistent_notification.create(
+            "Somfy has been successfully authorized!",
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_CB_ID
+        )
+        return response
 
 
 class SomfyEntity(Entity):
@@ -125,7 +127,7 @@ class SomfyEntity(Entity):
         """Initialize the Somfy device."""
         self.hass = hass
         self.device = device
-        self.api = hass.data[DOMAIN]['api']
+        self.api = hass.data[DOMAIN][API]
 
     @property
     def unique_id(self):
@@ -139,7 +141,7 @@ class SomfyEntity(Entity):
 
     def update(self):
         update_all_devices(self.hass)
-        devices = self.hass.data[DOMAIN]['devices']
+        devices = self.hass.data[DOMAIN][DEVICES]
         self.device = next((d for d in devices if d.id == self.device.id),
                            self.device)
 
@@ -150,6 +152,6 @@ def update_all_devices(hass):
     from requests import HTTPError
     try:
         data = hass.data[DOMAIN]
-        data['devices'] = data['api'].get_devices()
+        data[DEVICES] = data[API].get_devices()
     except HTTPError as error:
         _LOGGER.error("Cannot update devices %s.", error)
