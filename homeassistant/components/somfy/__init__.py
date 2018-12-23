@@ -75,7 +75,7 @@ def setup(hass, config):
         hass.components.persistent_notification.create(
             'In order to authorize Home Assistant to view your Somfy devices'
             ' you must visit this <a href="{}" target="_blank">link</a>.'
-                .format(authorization_url),
+            .format(authorization_url),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_CB_ID
         )
@@ -131,7 +131,7 @@ class SomfyAuthCallbackView(HomeAssistantView):
 
 
 class SomfyEntity(Entity):
-    """Representation a base Somfy device."""
+    """Representation of a generic Somfy device."""
 
     def __init__(self, device, hass):
         """Initialize the Somfy device."""
@@ -141,7 +141,7 @@ class SomfyEntity(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique id for the camera sensor."""
+        """Return the unique id base on the id returned by Somfy."""
         return self.device.id
 
     @property
