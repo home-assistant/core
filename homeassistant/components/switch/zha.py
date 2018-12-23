@@ -83,11 +83,6 @@ class Switch(ZhaEntity, SwitchDevice):
         return self._endpoint.on_off
 
     @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
-
-    @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
         if self._state is None:
