@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fritzconnection==0.6.5']
@@ -33,6 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Fritzbox WiFi switch platform."""
+
     import fritzconnection as fc
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -49,7 +52,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     add_entities([FritzBoxWifiSwitch(conn, name, interface)], True)
 
+
 class FritzBoxWifiSwitch(SwitchDevice):
+    """The switch class for Fritzbox WiFi switches."""
+
     def __init__(self, conn, name, interface):
         self._conn = conn
         self._name = name
@@ -64,7 +70,8 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        self._info = self._conn.call_action('WLANConfiguration:{}'.format(self._interface), 'GetInfo')
+        self._info = self._conn.call_action(
+            'WLANConfiguration:{}'.format(self._interface), 'GetInfo')
         info = self._info.get('NewEnable')
         if info == '1':
             _LOGGER.info('Guest Wifi On')
@@ -76,12 +83,14 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         _LOGGER.info('Turning on guest Wifi')
-        self._conn.call_action('WLANConfiguration:{}'.format(self._interface), 'SetEnable', NewEnable=1)
+        self._conn.call_action(
+            'WLANConfiguration:{}'.format(self._interface),
+            'SetEnable', NewEnable=1)
         self._state = True
-
 
     def turn_off(self, **kwargs):
         _LOGGER.info('Turning off guest WiFI')
-        self._conn.call_action('WLANConfiguration:{}'.format(self._interface), 'SetEnable', NewEnable=0)
+        self._conn.call_action(
+            'WLANConfiguration:{}'.format(self._interface),
+            'SetEnable', NewEnable=0)
         self._state = False
-
