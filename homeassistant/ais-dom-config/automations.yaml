@@ -1,10 +1,11 @@
 - id: '201807081853001'
   alias: 'Asystent domowy Witamy'
+  initial_state: True
   trigger:
   - event: start
     platform: homeassistant
   action:
-   - delay: '30'
+   - delay: '5'
    - service: mqtt.publish
      data:
        payload: 1
@@ -26,7 +27,7 @@
    - service: frontend.set_theme
      data:
          name: ais
-   - delay: '30'
+   - delay: '5'
    - service: ais_ai_service.prepare_remote_menu
    - delay: '5'
    - service: ais_shell_command.init_local_sdcard
@@ -37,14 +38,20 @@
        ip: 127.0.0.1
    - delay: '5'
    - service: ais_drives_service.refresh_files
+   - delay: '1'
    - service: ais_ai_service.welcome_home
+   - delay: '1'
    - service: ais_bookmarks.get_favorites
+   - delay: '1'
    - service: ais_bookmarks.get_bookmarks
+   - delay: '1'
    - service: ais_cloud.get_radio_types
+   - delay: '1'
    - service: ais_cloud.get_podcast_types
 
 - id: '201807081853002'
   alias: 'Keyboard Command Received'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: event
@@ -56,6 +63,7 @@
 
 - id: '201807081853003'
   alias: 'Command Message Received'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: event
@@ -67,6 +75,7 @@
 
 - id: '201807081853004'
   alias: 'Command Message Received MQTT'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: mqtt
@@ -78,6 +87,7 @@
 
 - id: '201807081853005'
   alias: 'Button Event Received MQTT'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: mqtt
@@ -89,6 +99,7 @@
 
 - id: '201807081858006'
   alias: 'Get RSS Help Items For Selected Topic'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -100,6 +111,7 @@
 
 - id: '201807081858007'
   alias: 'Get Books'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -111,6 +123,7 @@
 
 - id: '201807081858008'
   alias: 'Get Chapters'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -122,6 +135,7 @@
 
 - id: '201807081858009'
   alias: 'Select Book Chapter'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -133,6 +147,7 @@
 
 - id: '201807081858010'
   alias: 'Select Book Player'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -144,6 +159,7 @@
 
 - id: '201807081905011'
   alias: 'Ask The Question'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -159,6 +175,7 @@
 
 - id: '201807081905012'
   alias: 'Search YouTube Tracks'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -173,6 +190,7 @@
 
 - id: '201807081905013'
   alias: 'Select YouTube Track Name'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -187,6 +205,7 @@
 
 - id: '201807081905014'
   alias: 'Select Music Player'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -198,6 +217,7 @@
 
 - id: '201807081916015'
   alias: 'Get RSS News Channels'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -209,6 +229,7 @@
 
 - id: '201807081916016'
   alias: 'Get RSS News Items'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -220,6 +241,7 @@
 
 - id: '201807081916017'
   alias: 'Select RSS News Item'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -231,6 +253,7 @@
 
 - id: '201807081916018'
   alias: 'Select Rss News Player'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -242,6 +265,7 @@
 
 - id: '201807081919019'
   alias: 'Get Podcast Names'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -253,6 +277,7 @@
 
 - id: '201807081919019'
   alias: 'Get Podcast Tracks'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -264,6 +289,7 @@
 
 - id: '201807081919020'
   alias: 'Select Podcast Track'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -275,6 +301,7 @@
 
 - id: '201807081919021'
   alias: 'Select Podcast Player'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -286,6 +313,7 @@
 
 - id: '201807081923022'
   alias: 'Get Radio Names'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -297,6 +325,7 @@
 
 - id: '201807081923023'
   alias: 'Select Radio Name'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -308,6 +337,7 @@
 
 - id: '201807081923024'
   alias: 'Select Radio Player'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -319,6 +349,7 @@
 
 - id: '201807081923025'
   alias: 'Change Player Speed'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -331,6 +362,7 @@
 
 - id: '201807181643234'
   alias: 'Select Local Folder'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -345,6 +377,7 @@
 
 - id: '201808231519123'
   alias: 'Search For Sensors'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: event
@@ -354,15 +387,11 @@
     - service: mqtt.publish
       data:
         payload: 0
-        topic: cmnd/dom/status
-    - delay: '5'
-    - service: mqtt.publish
-      data:
-        payload: 0
         topic: dom/cmnd/status
 
 - id: '201808231617123'
   alias: 'Select Device To Add'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -377,6 +406,7 @@
 
 - id: '201809171610123'
   alias: 'Select Bookmark To Play'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -391,6 +421,7 @@
 
 - id: '201809171615123'
   alias: 'Select Favorite To Play'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: state
@@ -405,6 +436,7 @@
 
 - id: '201809291519123'
   alias: 'Flush logs'
+  initial_state: True
   hide_entity: True
   trigger:
     platform: time
@@ -414,6 +446,7 @@
 
 - id: '201809061229123'
   alias: 'Add a bookmark'
+  initial_state: True
   hide_entity: true
   trigger:
     platform: event
@@ -427,6 +460,7 @@
 
 - id: '20181205122942123'
   alias: 'Execute process command web hook'
+  initial_state: True
   hide_entity: true
   trigger:
      platform: webhook

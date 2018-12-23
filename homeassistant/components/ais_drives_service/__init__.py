@@ -83,12 +83,17 @@ class LocalData:
 
     @staticmethod
     def list_dir(path):
-        dirs = os.listdir(path)
         dirs_filtered = []
-        for d in dirs:
-            if not d.startswith('.'):
-                dirs_filtered.append(d)
-        return dirs_filtered
+        try:
+            dirs = os.listdir(path)
+            for d in dirs:
+                if not d.startswith('.'):
+                    dirs_filtered.append(d)
+            return dirs_filtered
+        except Exception as e:
+            _LOGGER.error("list_dir error: " + str(e))
+            return dirs_filtered
+
 
     def refresh_files(self, call):
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)

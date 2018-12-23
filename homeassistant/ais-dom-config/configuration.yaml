@@ -180,5 +180,5 @@ script: !include scripts.yaml
 ais_bookmarks:
 
 # set up Zeroconf and make AIS dom discoverable
-ais_mdns:
+# ais_mdns:
 
