@@ -413,7 +413,6 @@ class Dummy():
     def __init__(self):
         """Init Cred Server."""
         self.iswakeup = False
-        self.got_creds = False
         self.response = {
             'host-id': self.host_id,
             'host-type': 'PS4',
@@ -423,7 +422,7 @@ class Dummy():
         self.start()
 
     def start(self):
-        """Start Server."""
+        """Start Cred Server."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock = sock
@@ -434,41 +433,43 @@ class Dummy():
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((self.UDP_IP, self.DDP_PORT))
-        except socket.error:
-            _LOGGER.debug("PS4-Waker Bind Timeout")
+        except socket.error as error:
+            _LOGGER.error(
+                "Could not bind to port %s; \
+                Ensure port is accessible and unused, %s",
+                self.DDP_PORT, error)
             return
 
     def listen(self):
         """Listen and respond to requests."""
-        if self.got_creds is False:
-            sock = self.sock
-            pings = 0
-            while pings < 10:
+        sock = self.sock
+        pings = 0
+        while pings < 10:
+            try:
+                response = sock.recvfrom(1024)
+            except socket.error:
+                sock.close()
+                pings += 1
+            data = response[0]
+            address = response[1]
+            if not data:
+                pings += 1
+                break
+            if parse_ddp_response(data, 'search') == 'search':
+                _LOGGER.debug("Search from: %s", address)
+                msg = self.get_ddp_message(self.standby, self.response)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                 try:
-                    response = sock.recvfrom(1024)
+                    sock.sendto(msg.encode('utf-8'), address)
                 except socket.error:
                     sock.close()
-                    pings += 1
-                data = response[0]
-                address = response[1]
-                if not data:
-                    pings += 1
-                    break
-                if parse_ddp_response(data, 'search') == 'search':
-                    _LOGGER.debug("Search from: %s", address)
-                    msg = self.get_ddp_message(self.standby, self.response)
-                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                    try:
-                        sock.sendto(msg.encode('utf-8'), address)
-                    except socket.error:
-                        sock.close()
-                if parse_ddp_response(data, 'wakeup') == 'wakeup':
-                    self.iswakeup = True
-                    _LOGGER.debug("Wakeup from: %s", address)
-                    creds = get_creds(data)
-                    sock.close()
-                    return creds
-            return
+            if parse_ddp_response(data, 'wakeup') == 'wakeup':
+                self.iswakeup = True
+                _LOGGER.debug("Wakeup from: %s", address)
+                creds = get_creds(data)
+                sock.close()
+                return creds
+        return
 
     def get_ddp_message(self, status, data=None):
         """Get DDP message."""
