@@ -12,6 +12,9 @@ from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.components.zha.entities.listeners import (
+    OnOffListener, LevelListener
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
@@ -74,9 +77,8 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
                         UNSUPPORTED_ATTRIBUTE):
                     discovery_info['color_capabilities'] |= \
                         CAPABILITIES_COLOR_TEMP
+
         zha_light = Light(**discovery_info)
-        if discovery_info['new_join']:
-            await zha_light.async_configure()
         entities.append(zha_light)
 
     async_add_entities(entities, update_before_add=True)
@@ -94,12 +96,25 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
+        from zigpy.zcl.clusters.general import OnOff, LevelControl
+        self._in_listeners = {
+            OnOff.cluster_id: OnOffListener(
+                self,
+                self._in_clusters[OnOff.cluster_id]
+            ),
+        }
 
-        import zigpy.zcl.clusters as zcl_clusters
-        if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
+        if LevelControl.cluster_id in self._in_clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
+            self._in_listeners.update({
+                LevelControl.cluster_id: LevelListener(
+                    self,
+                    self._in_clusters[LevelControl.cluster_id]
+                )
+            })
+        import zigpy.zcl.clusters as zcl_clusters
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
             color_capabilities = kwargs['color_capabilities']
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
@@ -128,6 +143,11 @@ class Light(ZhaEntity, light.Light):
         if self._state is None:
             return False
         return bool(self._state)
+
+    def set_state(self, state):
+        """Set the state."""
+        self._state = state
+        self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -198,8 +218,15 @@ class Light(ZhaEntity, light.Light):
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
+        duration = kwargs.get(light.ATTR_TRANSITION)
         try:
-            res = await self._endpoint.on_off.off()
+            supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
+            if duration and supports_level:
+                res = await self._endpoint.level.move_to_level_with_on_off(
+                    0, duration*10
+                )
+            else:
+                res = await self._endpoint.on_off.off()
             _LOGGER.debug("%s was turned off: %s", self.entity_id, res)
         except DeliveryError as ex:
             _LOGGER.error("%s: Unable to turn the light off: %s",
@@ -213,6 +240,13 @@ class Light(ZhaEntity, light.Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    def set_level(self, value):
+        """Set the brightness of this light between 0..255."""
+        if value < 0 or value > 255:
+            return
+        self._brightness = value
+        self.async_schedule_update_ha_state()
 
     @property
     def hs_color(self):
@@ -266,11 +300,3 @@ class Light(ZhaEntity, light.Light):
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False

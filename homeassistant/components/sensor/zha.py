@@ -62,11 +62,14 @@ async def make_sensor(discovery_info):
     )
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
+    from zigpy.zcl.clusters.general import PowerConfiguration
     in_clusters = discovery_info['in_clusters']
     if 'sub_component' in discovery_info:
         sensor = discovery_info['sub_component'](**discovery_info)
     elif RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
+    elif PowerConfiguration.cluster_id in in_clusters:
+        sensor = GenericBatterySensor(**discovery_info)
     elif TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
     elif PressureMeasurement.cluster_id in in_clusters:
@@ -80,9 +83,6 @@ async def make_sensor(discovery_info):
         return sensor
     else:
         sensor = Sensor(**discovery_info)
-
-    if discovery_info['new_join']:
-        await sensor.async_configure()
 
     return sensor
 
@@ -116,11 +116,6 @@ class Sensor(ZhaEntity):
         return self._cluster
 
     @property
-    def should_poll(self) -> bool:
-        """State gets pushed from device."""
-        return False
-
-    @property
     def state(self) -> str:
         """Return the state of the entity."""
         if isinstance(self._state, float):
@@ -143,6 +138,71 @@ class Sensor(ZhaEntity):
             only_cache=(not self._initialized)
         )
         self._state = result.get(self.value_attribute, self._state)
+
+
+class GenericBatterySensor(Sensor):
+    """ZHA generic battery sensor."""
+
+    report_attribute = 32
+    value_attribute = 33
+    battery_sizes = {
+        0: 'No battery',
+        1: 'Built in',
+        2: 'Other',
+        3: 'AA',
+        4: 'AAA',
+        5: 'C',
+        6: 'D',
+        7: 'CR2',
+        8: 'CR123A',
+        9: 'CR2450',
+        10: 'CR2032',
+        11: 'CR1632',
+        255: 'Unknown'
+    }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
+
+    @property
+    def zcl_reporting_config(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {
+                self.value_attribute: self.report_config,
+                self.report_attribute: self.report_config
+            }
+        }
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        result = await helpers.safe_read(
+            self._endpoint.power,
+            [
+                'battery_size',
+                'battery_quantity',
+                'battery_percentage_remaining'
+            ],
+            allow_cache=False,
+            only_cache=(not self._initialized)
+        )
+        self._device_state_attributes['battery_size'] = self.battery_sizes.get(
+            result.get('battery_size', 255), 'Unknown')
+        self._device_state_attributes['battery_quantity'] = result.get(
+            'battery_quantity', 'Unknown')
+        self._state = result.get('battery_percentage_remaining', self._state)
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown' or self._state is None:
+            return None
+
+        return self._state
 
 
 class TemperatureSensor(Sensor):
