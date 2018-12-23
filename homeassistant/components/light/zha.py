@@ -198,8 +198,15 @@ class Light(ZhaEntity, light.Light):
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
+        duration = kwargs.get(light.ATTR_TRANSITION)
         try:
-            res = await self._endpoint.on_off.off()
+            supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
+            if duration and supports_level:
+                res = await self._endpoint.level.move_to_level_with_on_off(
+                    0, duration*10
+                )
+            else:
+                res = await self._endpoint.on_off.off()
             _LOGGER.debug("%s was turned off: %s", self.entity_id, res)
         except DeliveryError as ex:
             _LOGGER.error("%s: Unable to turn the light off: %s",
