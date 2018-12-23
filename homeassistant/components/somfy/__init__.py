@@ -68,20 +68,19 @@ def setup(hass, config):
     api = SomfyApi(conf.get(CONF_CLIENT_ID),
                    conf.get(CONF_CLIENT_SECRET),
                    redirect_uri, hass.config.path(DEFAULT_CACHE_PATH))
+    hass.data[DOMAIN][API] = api
 
     if not api.token:
         authorization_url, _ = api.get_authorization_url()
         hass.components.persistent_notification.create(
             'In order to authorize Home Assistant to view your Somfy devices'
             ' you must visit this <a href="{}" target="_blank">link</a>.'
-            .format(authorization_url),
+                .format(authorization_url),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_CB_ID
         )
-        hass.http.register_view(SomfyAuthCallbackView(
-            config, api.request_token))
+        hass.http.register_view(SomfyAuthCallbackView(config))
     else:
-        hass.data[DOMAIN][API] = api
         update_all_devices(hass)
         for component in SOMFY_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -96,27 +95,38 @@ class SomfyAuthCallbackView(HomeAssistantView):
     name = 'auth:somfy:callback'
     requires_auth = False
 
-    def __init__(self, config, request_token):
+    def __init__(self, config):
         """Initialize the OAuth callback view."""
         self.config = config
-        self.request_token = request_token
 
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
         from aiohttp import web
+        from oauthlib.oauth2 import MismatchingStateError
+        from oauthlib.oauth2 import InsecureTransportError
 
         hass = request.app['hass']
-        response = web.HTTPFound('/states')
+        response = web.HTTPFound('/')
 
-        self.request_token(str(request.url))
-        hass.async_add_job(setup, hass, self.config)
-        hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
-        hass.components.persistent_notification.create(
-            "Somfy has been successfully authorized!",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_CB_ID
-        )
+        try:
+            url = str(request.url)
+            url = url.replace('https', 'http')
+            hass.data[DOMAIN][API].request_token(url)
+            hass.async_add_job(setup, hass, self.config)
+            hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
+            hass.components.persistent_notification.create(
+                "Somfy has been successfully authorized!",
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_CB_ID
+            )
+        except MismatchingStateError:
+            _LOGGER.error("OAuth state not equal in request and response.",
+                          exc_info=True)
+        except InsecureTransportError:
+            _LOGGER.error("Somfy redirect URI %s is insecure.", request.url,
+                          exc_info=True)
+
         return response
 
 
@@ -153,5 +163,5 @@ def update_all_devices(hass):
     try:
         data = hass.data[DOMAIN]
         data[DEVICES] = data[API].get_devices()
-    except HTTPError as error:
-        _LOGGER.error("Cannot update devices %s.", error)
+    except HTTPError:
+        _LOGGER.warning("Cannot update devices.", exc_info=True)
