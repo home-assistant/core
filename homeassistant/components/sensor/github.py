@@ -205,24 +205,24 @@ class GitHubData():
             self.open_issues = json.dumps(open_issues)
 
             open_pull_requests = []
-            for pr in repo.get_pulls(state='open', sort='created'):
+            for _pr in repo.get_pulls(state='open', sort='created'):
                 labels = []
-                for label in pr.labels:
+                for label in _pr.labels:
                     labels.append(label.name)
                 open_pull_requests.append({
-                    "number": pr.number,
-                    "title": pr.title,
-                    "url": pr.html_url,
-                    "body": pr.body,
+                    "number": _pr.number,
+                    "title": _pr.title,
+                    "url": _pr.html_url,
+                    "body": _pr.body,
                     "labels": labels,
-                    "assignee": pr.assignee,
-                    "milestone": pr.milestone,
-                    "comments": pr.comments,
+                    "assignee": _pr.assignee,
+                    "milestone": _pr.milestone,
+                    "comments": _pr.comments,
                     "user": {
-                        "login": pr.user.login,
-                        "name": pr.user.name,
-                        "avatar_url": pr.user.avatar_url,
-                        "url": pr.user.html_url
+                        "login": _pr.user.login,
+                        "name": _pr.user.name,
+                        "avatar_url": _pr.user.avatar_url,
+                        "url": _pr.user.html_url
                     }
                 })
             self.open_pull_requests = json.dumps(open_pull_requests)
