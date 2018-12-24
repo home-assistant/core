@@ -135,7 +135,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             if self._value_template is not None:
                 payload = \
                     self._value_template.async_render_with_possible_json_value(
-                    payload)
+                        payload)
 
             """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
