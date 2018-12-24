@@ -136,7 +136,8 @@ class GitHubSensor(Entity):
 class GitHubData():
     """GitHub Data object."""
 
-    def __init__(self, interval, repository, access_token=None, username=None, password=None):
+    def __init__(self, interval, repository, access_token=None, username=None,
+                 password=None):
         """Set up GitHub."""
         import github
 
