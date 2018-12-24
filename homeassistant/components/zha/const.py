@@ -15,6 +15,7 @@ DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
 DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
+APPLICATION_CONTROLLER = 'application_controller'
 
 COMPONENTS = [
     'binary_sensor',
