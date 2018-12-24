@@ -49,12 +49,23 @@ class SomfyCover(SomfyEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
-        return 100 - RollerShutter(self.device, self.api).get_position()
+        position = None
+        try:
+            shutter = RollerShutter(self.device, self.api)
+            position = 100 - shutter.get_position()
+        except StopIteration:
+            pass
+        return position
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return RollerShutter(self.device, self.api).is_closed()
+        is_closed = None
+        try:
+            is_closed = RollerShutter(self.device, self.api).is_closed()
+        except StopIteration:
+            pass
+        return is_closed
 
     @property
     def current_cover_tilt_position(self):
