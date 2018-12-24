@@ -49,20 +49,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     sensors = []
     for repository in config[CONF_REPOS]:
-        if CONF_ACCESS_TOKEN in config:
-            data = GitHubData(
-                interval=interval,
-                repository=repository,
-                access_token=config[CONF_ACCESS_TOKEN]
-            )
-        elif CONF_USERNAME in config and CONF_PASSWORD in config:
-            data = GitHubData(
-                interval=interval,
-                repository=repository,
-                username=config[CONF_USERNAME],
-                password=config[CONF_PASSWORD]
-            )
-        sensors.append(GitHubSensor(data))
+        sensors.append(GitHubSensor(GitHubData(
+            interval=interval,
+            repository=repository,
+            access_token=config.get(CONF_ACCESS_TOKEN),
+            username=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD)
+        )))
     add_entities(sensors, True)
 
 
