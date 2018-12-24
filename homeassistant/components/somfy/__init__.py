@@ -149,6 +149,7 @@ class SomfyEntity(Entity):
         return self.device.name
 
     def update(self):
+        """Update the device with the latest data."""
         update_all_devices(self.hass)
         devices = self.hass.data[DOMAIN][DEVICES]
         self.device = next((d for d in devices if d.id == self.device.id),
@@ -157,7 +158,7 @@ class SomfyEntity(Entity):
 
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
 def update_all_devices(hass):
-    """Update state of the device."""
+    """Update all the devices."""
     from requests import HTTPError
     try:
         data = hass.data[DOMAIN]
