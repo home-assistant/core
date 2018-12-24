@@ -130,7 +130,8 @@ def setup(hass, config):
     devices = []
 
     async def async_discover_wemo_devices(hass, config):
-        """Run discovery in an async context so initial setup can complete quickly."""
+        """Run discovery in an async context so
+        initial setup can complete quickly."""
         _LOGGER.debug("Scanning statically configured WeMo devices...")
         for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
             url = setup_url_for_address(host, port)
@@ -160,7 +161,8 @@ def setup(hass, config):
                     devices.append((setup_url_for_device(device), device))
 
         for url, device in devices:
-            _LOGGER.debug('Adding WeMo device at %s:%i', device.host, device.port)
+            _LOGGER.debug('Adding WeMo device at %s:%i',
+                          device.host, device.port)
 
             discovery_info = {
                 'model_name': device.model_name,
