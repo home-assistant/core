@@ -155,7 +155,7 @@ class TestHDDTempSensor(unittest.TestCase):
         """Test hddtemp one disk configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_ONE_DISK)
 
-        state = self.hass.states.get('sensor.hd_temperature_devsdd1')
+        state = self.hass.states.get('sensor.hd_temperature_dev_sdd1')
 
         reference = self.reference[state.attributes.get('device')]
 
@@ -173,7 +173,7 @@ class TestHDDTempSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_WRONG_DISK)
 
         assert len(self.hass.states.all()) == 1
-        state = self.hass.states.get('sensor.hd_temperature_devsdx1')
+        state = self.hass.states.get('sensor.hd_temperature_dev_sdx1')
         assert state.attributes.get('friendly_name') == \
             'HD Temperature ' + '/dev/sdx1'
 
@@ -183,9 +183,9 @@ class TestHDDTempSensor(unittest.TestCase):
         assert setup_component(self.hass,
                                'sensor', VALID_CONFIG_MULTIPLE_DISKS)
 
-        for sensor in ['sensor.hd_temperature_devsda1',
-                       'sensor.hd_temperature_devsdb1',
-                       'sensor.hd_temperature_devsdc1']:
+        for sensor in ['sensor.hd_temperature_dev_sda1',
+                       'sensor.hd_temperature_dev_sdb1',
+                       'sensor.hd_temperature_dev_sdc1']:
 
             state = self.hass.states.get(sensor)
 

@@ -9,9 +9,14 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.const import STATE_ON
+from homeassistant.components.zha.entities.listeners import (
+    OnOffListener, LevelListener
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +31,7 @@ CLASS_MAPPING = {
     0x002b: 'gas',
     0x002d: 'vibration',
 }
+DEVICE_CLASS_OCCUPANCY = 'occupancy'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -54,14 +60,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entities(hass, config_entry, async_add_entities,
                                 discovery_infos):
     """Set up the ZHA binary sensors."""
+    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.measurement import OccupancySensing
+    from zigpy.zcl.clusters.security import IasZone
+
     entities = []
     for discovery_info in discovery_infos:
-        from zigpy.zcl.clusters.general import OnOff
-        from zigpy.zcl.clusters.security import IasZone
         if IasZone.cluster_id in discovery_info['in_clusters']:
             entities.append(await _async_setup_iaszone(discovery_info))
+        elif OccupancySensing.cluster_id in discovery_info['in_clusters']:
+            entities.append(
+                BinarySensor(DEVICE_CLASS_OCCUPANCY, **discovery_info))
         elif OnOff.cluster_id in discovery_info['out_clusters']:
-            entities.append(await _async_setup_remote(discovery_info))
+            entities.append(Remote(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -82,33 +93,11 @@ async def _async_setup_iaszone(discovery_info):
         # If we fail to read from the device, use a non-specific class
         pass
 
-    return BinarySensor(device_class, **discovery_info)
+    return IasZoneSensor(device_class, **discovery_info)
 
 
-async def _async_setup_remote(discovery_info):
-    remote = Remote(**discovery_info)
-
-    if discovery_info['new_join']:
-        from zigpy.zcl.clusters.general import OnOff, LevelControl
-        out_clusters = discovery_info['out_clusters']
-        if OnOff.cluster_id in out_clusters:
-            cluster = out_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=0, max_report=600,
-                reportable_change=1
-            )
-        if LevelControl.cluster_id in out_clusters:
-            cluster = out_clusters[LevelControl.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=1, max_report=600,
-                reportable_change=1
-            )
-
-    return remote
-
-
-class BinarySensor(ZhaEntity, BinarySensorDevice):
-    """The ZHA Binary Sensor."""
+class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
+    """The IasZoneSensor Binary Sensor."""
 
     _domain = DOMAIN
 
@@ -118,11 +107,6 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         self._device_class = device_class
         from zigpy.zcl.clusters.security import IasZone
         self._ias_zone_cluster = self._in_clusters[IasZone.cluster_id]
-
-    @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
 
     @property
     def is_on(self) -> bool:
@@ -147,6 +131,19 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             res = self._ias_zone_cluster.enroll_response(0, 0)
             self.hass.async_add_job(res)
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        if old_state.state == STATE_ON:
+            self._state = 3
+        else:
+            self._state = 0
+
     async def async_update(self):
         """Retrieve latest state."""
         from zigpy.types.basic import uint16_t
@@ -160,89 +157,39 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Remote(ZhaEntity, BinarySensorDevice):
+class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN
 
-    class OnOffListener:
-        """Listener for the OnOff Zigbee cluster."""
-
-        def __init__(self, entity):
-            """Initialize OnOffListener."""
-            self._entity = entity
-
-        def cluster_command(self, tsn, command_id, args):
-            """Handle commands received to this cluster."""
-            if command_id in (0x0000, 0x0040):
-                self._entity.set_state(False)
-            elif command_id in (0x0001, 0x0041, 0x0042):
-                self._entity.set_state(True)
-            elif command_id == 0x0002:
-                self._entity.set_state(not self._entity.is_on)
-
-        def attribute_updated(self, attrid, value):
-            """Handle attribute updates on this cluster."""
-            if attrid == 0:
-                self._entity.set_state(value)
-
-        def zdo_command(self, *args, **kwargs):
-            """Handle ZDO commands on this cluster."""
-            pass
-
-        def zha_send_event(self, cluster, command, args):
-            """Relay entity events to hass."""
-            pass  # don't let entities fire events
-
-    class LevelListener:
-        """Listener for the LevelControl Zigbee cluster."""
-
-        def __init__(self, entity):
-            """Initialize LevelListener."""
-            self._entity = entity
-
-        def cluster_command(self, tsn, command_id, args):
-            """Handle commands received to this cluster."""
-            if command_id in (0x0000, 0x0004):  # move_to_level, -with_on_off
-                self._entity.set_level(args[0])
-            elif command_id in (0x0001, 0x0005):  # move, -with_on_off
-                # We should dim slowly -- for now, just step once
-                rate = args[1]
-                if args[0] == 0xff:
-                    rate = 10  # Should read default move rate
-                self._entity.move_level(-rate if args[0] else rate)
-            elif command_id in (0x0002, 0x0006):  # step, -with_on_off
-                # Step (technically may change on/off)
-                self._entity.move_level(-args[1] if args[0] else args[1])
-
-        def attribute_update(self, attrid, value):
-            """Handle attribute updates on this cluster."""
-            if attrid == 0:
-                self._entity.set_level(value)
-
-        def zdo_command(self, *args, **kwargs):
-            """Handle ZDO commands on this cluster."""
-            pass
-
-        def zha_send_event(self, cluster, command, args):
-            """Relay entity events to hass."""
-            pass  # don't let entities fire events
-
     def __init__(self, **kwargs):
         """Initialize Switch."""
         super().__init__(**kwargs)
-        self._state = False
         self._level = 0
         from zigpy.zcl.clusters import general
         self._out_listeners = {
-            general.OnOff.cluster_id: self.OnOffListener(self),
-            general.LevelControl.cluster_id: self.LevelListener(self),
+            general.OnOff.cluster_id: OnOffListener(
+                self,
+                self._out_clusters[general.OnOff.cluster_id]
+            )
         }
 
-    @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
+        out_clusters = kwargs.get('out_clusters')
+        self._zcl_reporting = {}
+        for cluster_id in [general.OnOff.cluster_id,
+                           general.LevelControl.cluster_id]:
+            if cluster_id not in out_clusters:
+                continue
+            cluster = out_clusters[cluster_id]
+            self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
+
+        if general.LevelControl.cluster_id in out_clusters:
+            self._out_listeners.update({
+                general.LevelControl.cluster_id: LevelListener(
+                    self,
+                    out_clusters[general.LevelControl.cluster_id]
+                )
+            })
 
     @property
     def is_on(self) -> bool:
@@ -256,6 +203,11 @@ class Remote(ZhaEntity, BinarySensorDevice):
             'level': self._state and self._level or 0
         })
         return self._device_state_attributes
+
+    @property
+    def zcl_reporting_config(self):
+        """Return ZCL attribute reporting configuration."""
+        return self._zcl_reporting
 
     def move_level(self, change):
         """Increment the level, setting state if appropriate."""
@@ -278,6 +230,18 @@ class Remote(ZhaEntity, BinarySensorDevice):
             self._level = 255
         self.async_schedule_update_ha_state()
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        if 'level' in old_state.attributes:
+            self._level = old_state.attributes['level']
+        self._state = old_state.state == STATE_ON
+
     async def async_update(self):
         """Retrieve latest state."""
         from zigpy.zcl.clusters.general import OnOff
@@ -288,3 +252,56 @@ class Remote(ZhaEntity, BinarySensorDevice):
             only_cache=(not self._initialized)
         )
         self._state = result.get('on_off', self._state)
+
+
+class BinarySensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
+    """ZHA switch."""
+
+    _domain = DOMAIN
+    _device_class = None
+    value_attribute = 0
+
+    def __init__(self, device_class, **kwargs):
+        """Initialize the ZHA binary sensor."""
+        super().__init__(**kwargs)
+        self._device_class = device_class
+        self._cluster = list(kwargs['in_clusters'].values())[0]
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        if attribute == self.value_attribute:
+            self._state = bool(value)
+            self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        old_state = await self.async_get_last_state()
+        if self._state is not None or old_state is None:
+            return
+
+        _LOGGER.debug("%s restoring old state: %s", self.entity_id, old_state)
+        self._state = old_state.state == STATE_ON
+
+    @property
+    def cluster(self):
+        """Zigbee cluster for this entity."""
+        return self._cluster
+
+    @property
+    def zcl_reporting_config(self):
+        """ZHA reporting configuration."""
+        return {self.cluster: {self.value_attribute: REPORT_CONFIG_IMMEDIATE}}
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        if self._state is None:
+            return False
+        return self._state
+
+    @property
+    def device_class(self) -> str:
+        """Return device class from component DEVICE_CLASSES."""
+        return self._device_class

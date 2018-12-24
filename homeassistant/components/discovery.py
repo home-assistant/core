@@ -44,14 +44,18 @@ SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
+SERVICE_IGD = 'igd'
+SERVICE_DLNA_DMR = 'dlna_dmr'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
+    SERVICE_IGD: 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -63,7 +67,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
-    SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
@@ -92,7 +95,7 @@ SERVICE_HANDLERS = {
 
 OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_HOMEKIT: ('homekit_controller', None),
-    'dlna_dmr': ('media_player', 'dlna_dmr'),
+    SERVICE_DLNA_DMR: ('media_player', 'dlna_dmr'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -134,7 +137,7 @@ async def async_setup(hass, config):
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
         if discovery_hash in already_discovered:
-            logger.debug("Already discoverd service %s %s.", service, info)
+            logger.debug("Already discovered service %s %s.", service, info)
             return
 
         already_discovered.add(discovery_hash)
@@ -174,15 +177,15 @@ async def async_setup(hass, config):
         for result in results:
             hass.async_create_task(new_service_found(*result))
 
-        async_track_point_in_utc_time(hass, scan_devices,
-                                      dt_util.utcnow() + SCAN_INTERVAL)
+        async_track_point_in_utc_time(
+            hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL)
 
     @callback
     def schedule_first(event):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
 
-        # discovery local services
+        # Discovery for local services
         if 'HASSIO' in os.environ:
             hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
