@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.knx/
 """
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
-        float, vol.Range(min=0, max=2)),
+                     float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
         vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
@@ -248,6 +248,7 @@ class KNXClimate(ClimateDevice):
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(operation_mode)
             await self.device.mode.set_operation_mode(knx_operation_mode)
+            await self.async_update_ha_state()
 
     @property
     def is_on(self):
