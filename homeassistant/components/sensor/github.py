@@ -47,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GitHub sensor platform."""
-
     if config.get(CONF_ACCESS_TOKEN) is None \
             and config.get(CONF_USERNAME) is None:
         # Error if there is no authentication set
