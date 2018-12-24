@@ -41,10 +41,10 @@ SENSOR_TYPES = {
                       'mdi:solar-power'],
     'current_power': ['currentPower', "Current Power", 'W',
                       'mdi:solar-power'],
-    'site_details': [None, 'Site details', None, 
+    'site_details': [None, 'Site details', None,
                      None],
-    'inverter_details': ['inverters', 'Inverter', None, 
-                          None]
+    'inverter_details': ['inverters', 'Inverter', None,
+                         None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -106,7 +106,8 @@ class SolarEdgeSensorFactory:
 
         self.overview_data_service = SolarEdgeOverviewDataService(api, site_id)
         self.details_data_service = SolarEdgeDetailsDataService(api, site_id)
-        self.inventory_data_service = SolarEdgeInventoryDataService(api, site_id)
+        self.inventory_data_service = SolarEdgeInventoryDataService(api,
+                                                                    site_id)
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key."""
@@ -260,7 +261,7 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
-        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+        _LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
 
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
@@ -293,7 +294,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             elif key == 'status':
                 self.data = value
 
-        _LOGGER.debug("Updated SolarEdge details data and attributes: %s, %s",
+        _LOGGER.debug("Updated SolarEdge details: %s, %s",
                       self.data, self.attributes)
 
 
@@ -319,10 +320,9 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
         self.attributes = {}
 
         for key, value in inventory.items():
-            if key == 'inverters' and len(value) > 0:
+            if key == 'inverters' and value:
                 self.data[key] = value[0]['name']
                 self.attributes[key] = value[0]
 
-        _LOGGER.debug("Updated SolarEdge inventory data and attributes: %s, %s",
+        _LOGGER.debug("Updated SolarEdge inventory: %s, %s",
                       self.data, self.attributes)
-
