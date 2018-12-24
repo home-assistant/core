@@ -120,7 +120,7 @@ def get_credentials(hass, config):
         credentials = creds[host]
     except KeyError:
         credentials = None
-        _LOGGER.debug("No credentials found for %s", (host))
+        _LOGGER.debug("No credentials found for %s", host)
     return credentials
 
 
@@ -178,6 +178,10 @@ class PS4Device(MediaPlayerDevice):
                     self._media_image = self.get_ps_store_data('art', app_name)
                     self._source = app_name
                     self._media_title = app_name
+                    if titleid in self._games:
+                        store = self._games[titleid]
+                        if store != app_name:
+                            self._games.pop(titleid)
                     if titleid not in self._games:
                         self.add_games(titleid, app_name)
                         self._games = self.load_games()
