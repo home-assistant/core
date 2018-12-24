@@ -75,8 +75,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up for WeMo devices."""
+    _LOGGER.debug("Beginning setup of WeMo component...")
+
     import pywemo
 
+    # Keep track of WeMo device subscriptions for push updates
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
     SUBSCRIPTION_REGISTRY.start()
@@ -89,7 +92,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     def discovery_dispatch(service, discovery_info):
-        """Dispatcher for WeMo discovery events."""
+        """Dispatcher for incoming WeMo discovery events."""
         # name, model, location, mac
         model_name = discovery_info.get('model_name')
         serial = discovery_info.get('serial')
@@ -99,7 +102,8 @@ def setup(hass, config):
             _LOGGER.debug('Ignoring known device %s %s',
                           service, discovery_info)
             return
-        _LOGGER.debug('Discovered unique device %s', serial)
+
+        _LOGGER.debug('Discovered unique WeMo device: %s', serial)
         KNOWN_DEVICES.append(serial)
 
         component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
@@ -125,43 +129,50 @@ def setup(hass, config):
 
     devices = []
 
-    _LOGGER.debug("Scanning statically configured WeMo devices...")
-    for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-        url = setup_url_for_address(host, port)
+    async def async_discover_wemo_devices(hass, config):
+        """Run discovery in an async context so initial setup can complete quickly."""
+        _LOGGER.debug("Scanning statically configured WeMo devices...")
+        for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+            url = setup_url_for_address(host, port)
 
-        if not url:
-            _LOGGER.error(
-                'Unable to get description url for %s',
-                '{}:{}'.format(host, port) if port else host)
-            continue
+            if not url:
+                _LOGGER.error(
+                    'Unable to get description url for WeMo at: %s',
+                    '{}:{}'.format(host, port) if port else host)
+                continue
 
-        try:
-            device = pywemo.discovery.device_from_description(url, None)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', url, err)
-            continue
+            try:
+                device = pywemo.discovery.device_from_description(url, None)
+            except (requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout) as err:
+                _LOGGER.error('Unable to access WeMo at %s (%s)', url, err)
+                continue
 
-        if not [d[1] for d in devices
-                if d[1].serialnumber == device.serialnumber]:
-            devices.append((url, device))
-
-    if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
-        _LOGGER.debug("Scanning for WeMo devices...")
-        for device in pywemo.discover_devices():
             if not [d[1] for d in devices
                     if d[1].serialnumber == device.serialnumber]:
-                devices.append((setup_url_for_device(device), device))
+                devices.append((url, device))
 
-    for url, device in devices:
-        _LOGGER.debug('Adding WeMo device at %s:%i', device.host, device.port)
+        if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
+            _LOGGER.debug("Scanning for WeMo devices...")
+            for device in pywemo.discover_devices():
+                if not [d[1] for d in devices
+                        if d[1].serialnumber == device.serialnumber]:
+                    devices.append((setup_url_for_device(device), device))
 
-        discovery_info = {
-            'model_name': device.model_name,
-            'serial': device.serialnumber,
-            'mac_address': device.mac,
-            'ssdp_description': url,
-        }
+        for url, device in devices:
+            _LOGGER.debug('Adding WeMo device at %s:%i', device.host, device.port)
 
-        discovery.discover(hass, SERVICE_WEMO, discovery_info)
+            discovery_info = {
+                'model_name': device.model_name,
+                'serial': device.serialnumber,
+                'mac_address': device.mac,
+                'ssdp_description': url,
+            }
+
+            discovery.discover(hass, SERVICE_WEMO, discovery_info)
+
+    hass.add_job(async_discover_wemo_devices, hass, config)
+
+    _LOGGER.debug("Setup of WeMo component has finished.")
+
     return True
