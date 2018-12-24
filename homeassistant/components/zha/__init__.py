@@ -28,8 +28,7 @@ from .const import (
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
     DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType,
-    EVENTABLE_CLUSTERS, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS,
-    APPLICATION_CONTROLLER)
+    EVENTABLE_CLUSTERS, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -154,7 +153,6 @@ async def async_setup_entry(hass, config_entry):
     )
 
     application_controller = ControllerApplication(radio, database)
-    hass.data[DATA_ZHA][APPLICATION_CONTROLLER] = application_controller
     listener = ApplicationListener(hass, config)
     application_controller.add_listener(listener)
     await application_controller.startup(auto_form=True)
