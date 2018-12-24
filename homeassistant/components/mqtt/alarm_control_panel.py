@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CODE_ARM_REQUIRED='code_arm_required'
+CONF_CODE_ARM_REQUIRED = 'code_arm_required'
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
@@ -73,7 +73,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     await _async_setup_entity(config, value_template, async_add_entities)
 
 
-async def async_setup_entry(hass, config_entry, value_template, async_add_entities):
+async def async_setup_entry(hass, config_entry, value_template,
+                            async_add_entities):
     """Set up MQTT alarm control panel dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
@@ -132,7 +133,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         @callback
         def message_received(topic, payload, qos):
             if self._value_template is not None:
-                payload = self._value_template.async_render_with_possible_json_value(
+                payload = \
+                    self._value_template.async_render_with_possible_json_value(
                     payload)
 
             """Run when new MQTT message has been received."""
