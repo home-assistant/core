@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ARM_CODE_REQUIRED='arm_code_required'
+CONF_CODE_ARM_REQUIRED='code_arm_required'
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ARM_CODE_REQUIRED, default=True): cv.boolean,
+    vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -207,7 +207,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        if (self._config.get(CONF_ARM_CODE_REQUIRED) and
+        if (self._config.get(CONF_CODE_ARM_REQUIRED) and
                 not self._validate_code(code, 'arming home')):
             return
         mqtt.async_publish(
@@ -221,7 +221,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        if (self._config.get(CONF_ARM_CODE_REQUIRED) and
+        if (self._config.get(CONF_CODE_ARM_REQUIRED) and
                 not self._validate_code(code, 'arming away')):
             return
         mqtt.async_publish(
