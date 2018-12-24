@@ -35,11 +35,12 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
 
     def update_characteristics(self, characteristics):
         """Synchronise the switch state with Home Assistant."""
-        import homekit  # pylint: disable=import-error
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
 
         for characteristic in characteristics:
             ctype = characteristic['type']
-            ctype = homekit.CharacteristicsTypes.get_short(ctype)
+            ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "on":
                 self._chars['on'] = characteristic['iid']
                 self._on = characteristic['value']
