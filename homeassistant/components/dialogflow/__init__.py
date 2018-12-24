@@ -19,6 +19,9 @@ DOMAIN = 'dialogflow'
 
 SOURCE = "Home Assistant Dialogflow"
 
+V1 = 'V1'
+V2 = 'V2'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {}
 }, extra=vol.ALLOW_EXTRA)
@@ -99,10 +102,10 @@ config_entry_flow.register_webhook_flow(
 def get_api_version(message):
     """Help determine the version of Dialogflow request."""
     if message.get('id') is not None:
-        return 'V1'
+        return V1
 
     if message.get('responseId') is not None:
-        return 'V2'
+        return V2
 
     return None
 
@@ -112,10 +115,10 @@ def dialogflow_error_response(message, error):
     api_version = get_api_version(message)
     req = {}
 
-    if api_version == 'V2':
+    if api_version == V2:
         req = message.get('queryResult')
 
-    elif api_version == 'V1':
+    elif api_version == V1:
         req = message.get('result')
 
     parameters = req.get('parameters').copy()
@@ -129,12 +132,12 @@ async def async_handle_message(hass, message):
     api_version = get_api_version(message)
     req = {}
 
-    if api_version == 'V2':
+    if api_version == V2:
         req = message.get('queryResult')
         if not req.get('allRequiredParamsPresent', False):
             return None
 
-    elif api_version == 'V1':
+    elif api_version == V1:
         req = message.get('result')
         if req.get('actionIncomplete', True):
             return None
@@ -187,7 +190,7 @@ class DialogflowResponse:
 
     def as_dict(self):
         """Return response in a Dialogflow valid dictionary."""
-        if self.api_version == 'V2':
+        if self.api_version == V2:
             return {
                 'fulfillmentText': self.speech,
                 'fulfillmentMessages': [
@@ -200,7 +203,7 @@ class DialogflowResponse:
                 'source': SOURCE
             }
 
-        if self.api_version == 'V1':
+        if self.api_version == V1:
             return {
                 'speech': self.speech,
                 'displayText': self.speech,
