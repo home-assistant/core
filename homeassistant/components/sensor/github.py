@@ -21,6 +21,7 @@ REQUIREMENTS = ['PyGithub==1.43.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
 
 ATTR_PATH = 'path'
@@ -37,8 +38,8 @@ DEFAULT_NAME = 'GitHub'
 SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Exclusive(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
+    vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REPOS): cv.ensure_list
 })
@@ -46,6 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GitHub sensor platform."""
+
+    if config.get(CONF_ACCESS_TOKEN) is None \
+            and config.get(CONF_USERNAME) is None:
+        # Error if there is no authentication set
+        _LOGGER.error("You have not set an access_token or a username.")
+        return
+
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     sensors = []
     for repository in config[CONF_REPOS]:
