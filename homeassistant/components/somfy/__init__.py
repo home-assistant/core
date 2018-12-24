@@ -20,7 +20,7 @@ API = 'api'
 
 DEVICES = 'devices'
 
-REQUIREMENTS = ['pymfy==0.4.2']
+REQUIREMENTS = ['pymfy==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,7 +110,8 @@ class SomfyAuthCallbackView(HomeAssistantView):
         response = web.HTTPFound('/')
 
         try:
-            hass.data[DOMAIN][API].request_token(str(request.url))
+            code = request.query.get('code')
+            hass.data[DOMAIN][API].request_token(code=code)
             hass.async_add_job(setup, hass, self.config)
             hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
             hass.components.persistent_notification.create(
