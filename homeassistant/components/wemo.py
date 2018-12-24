@@ -86,7 +86,7 @@ def setup(hass, config):
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
-        _LOGGER.debug("Shutting down subscriptions.")
+        _LOGGER.debug("Shutting down WeMo event subscriptions.")
         SUBSCRIPTION_REGISTRY.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
