@@ -511,7 +511,7 @@ home-assistant-frontend==20181219.0
 homeassistant-pyozw==0.1.1
 
 # homeassistant.components.homekit_controller
-# homekit==0.10
+# homekit==0.12.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -1068,7 +1068,7 @@ pyloopenergy==0.0.18
 pylutron-caseta==0.5.0
 
 # homeassistant.components.lutron
-pylutron==0.1.0
+pylutron==0.2.0
 
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4

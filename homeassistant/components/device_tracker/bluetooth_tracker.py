@@ -24,9 +24,15 @@ BT_PREFIX = 'BT_'
 
 CONF_REQUEST_RSSI = 'request_rssi'
 
+CONF_DEVICE_ID = "device_id"
+
+DEFAULT_DEVICE_ID = -1
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TRACK_NEW): cv.boolean,
-    vol.Optional(CONF_REQUEST_RSSI): cv.boolean
+    vol.Optional(CONF_REQUEST_RSSI): cv.boolean,
+    vol.Optional(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID):
+        vol.All(vol.Coerce(int), vol.Range(min=-1))
 })
 
 
@@ -44,11 +50,13 @@ def setup_scanner(hass, config, see, discovery_info=None):
         see(mac="{}{}".format(BT_PREFIX, mac), host_name=name,
             attributes=attributes, source_type=SOURCE_TYPE_BLUETOOTH)
 
+    device_id = config.get(CONF_DEVICE_ID)
+
     def discover_devices():
         """Discover Bluetooth devices."""
         result = bluetooth.discover_devices(
             duration=8, lookup_names=True, flush_cache=True,
-            lookup_class=False)
+            lookup_class=False, device_id=device_id)
         _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
         return result
 
