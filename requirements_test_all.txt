@@ -122,6 +122,9 @@ libsoundtouch==0.7.2
 # homeassistant.components.luftdaten
 luftdaten==0.3.4
 
+# homeassistant.components.mythicbeastsdns
+mbddns==0.1.2
+
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
@@ -221,7 +224,7 @@ pyunifi==2.13
 pywebpush==1.6.0
 
 # homeassistant.components.rainmachine
-regenmaschine==1.0.7
+regenmaschine==1.1.0
 
 # homeassistant.components.python_script
 restrictedpython==4.0b7
