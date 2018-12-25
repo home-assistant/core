@@ -39,34 +39,24 @@ OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
 PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
                              '\\.(?P<type>m|g)?(?P<id>\\d+)$')
 
-CONNECTION_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
-    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.Any(*DIM_MODES),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CONNECTIONS): vol.Schema([CONNECTION_SCHEMA])
-    })
-}, extra=vol.ALLOW_EXTRA)
+def has_unique_connection_names(connections):
+    """Validate that all connection names are unique.
 
+    Use 'pchk' as default connection_name (or add a numeric suffix if
+    pchk' is already in use.
+    """
+    for suffix, connection in enumerate(connections):
+        connection_name = connection.get(CONF_NAME)
+        if connection_name is None:
+            if suffix == 0:
+                connection[CONF_NAME] = DEFAULT_NAME
+            else:
+                connection[CONF_NAME] = '{}{:d}'.format(DEFAULT_NAME, suffix)
 
-def get_connection(connections, connection_id=None):
-    """Return the connection object from list."""
-    if connection_id is None:
-        connection = connections[0]
-    else:
-        for connection in connections:
-            if connection.connection_id == connection_id:
-                break
-        else:
-            raise ValueError('Unknown connection_id.')
-    return connection
+    schema = vol.Schema(vol.Unique())
+    schema([connection.get(CONF_NAME) for connection in connections])
+    return connections
 
 
 def is_address(value):
@@ -92,6 +82,37 @@ def is_address(value):
     raise vol.error.Invalid('Not a valid address string.')
 
 
+CONNECTION_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
+    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.Any(*DIM_MODES),
+    vol.Optional(CONF_NAME): cv.string
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_CONNECTIONS): vol.All(
+            cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA])
+    })
+}, extra=vol.ALLOW_EXTRA)
+
+
+def get_connection(connections, connection_id=None):
+    """Return the connection object from list."""
+    if connection_id is None:
+        connection = connections[0]
+    else:
+        for connection in connections:
+            if connection.connection_id == connection_id:
+                break
+        else:
+            raise ValueError('Unknown connection_id.')
+    return connection
+
+
 async def async_setup(hass, config):
     """Set up the LCN component."""
     import pypck
@@ -102,17 +123,8 @@ async def async_setup(hass, config):
 
     conf_connections = config[DOMAIN][CONF_CONNECTIONS]
     connections = []
-    connection_names = []
     for conf_connection in conf_connections:
-        # use 'pchk' as default connection_id (or add a numeric suffix if
-        # pchk' is already in use
-        connection_name = conf_connection[CONF_NAME]
-        if connection_name == DEFAULT_NAME:
-            while connection_name in connection_names:
-                suffix = connection_name.strip(DEFAULT_NAME)
-                c_id = 1 if not suffix else int(suffix) + 1
-                connection_name = '{}{:d}'.format(DEFAULT_NAME, c_id)
-        connection_names.append(connection_name)
+        connection_name = conf_connection.get(CONF_NAME)
 
         settings = {'SK_NUM_TRIES': conf_connection[CONF_SK_NUM_TRIES],
                     'DIM_MODE': pypck.lcn_defs.OutputPortDimMode[
