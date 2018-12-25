@@ -16,7 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_VISIBILITY)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, HTTP_OK, LENGTH_CENTIMETERS,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
