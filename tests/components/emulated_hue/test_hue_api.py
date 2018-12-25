@@ -123,6 +123,14 @@ def hass_hue(loop, hass):
         script_entity.entity_id, script_entity.state, attributes=attrs
     )
 
+    # Expose cover
+    cover_entity = hass.states.get('cover.living_room_window')
+    attrs = dict(cover_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(
+        cover_entity.entity_id, cover_entity.state, attributes=attrs
+    )
+
     return hass
 
 
@@ -174,6 +182,7 @@ def test_discover_lights(hue_client):
     assert 'media_player.lounge_room' in devices
     assert 'fan.living_room_fan' in devices
     assert 'fan.ceiling_fan' not in devices
+    assert 'cover.living_room_window' in devices
 
 
 @asyncio.coroutine
@@ -333,19 +342,7 @@ def test_put_light_state_cover(hass_hue, hue_client):
 
     COVER_ID = "cover.living_room_window"
 
-    hass_hue.states.async_set(
-        COVER_ID, const.STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: 4, cover.ATTR_CURRENT_POSITION: 100, 
-        emulated_hue.ATTR_EMULATED_HUE: True})
-
-    cover_state = hass_hue.states.get(COVER_ID)
-    assert cover_state
-    assert cover_state.attributes.get(ATTR_SUPPORTED_FEATURES) == 4
-    assert cover_state.attributes.get(emulated_hue.ATTR_EMULATED_HUE) == True
-    assert cover_state.attributes.get(cover.ATTR_CURRENT_POSITION) == 100
-
-
-    level = 69
+    level = 55
     brightness = round(level * 255 / 100)
 
     cover_result = yield from perform_put_light_state(
@@ -357,10 +354,7 @@ def test_put_light_state_cover(hass_hue, hue_client):
     assert cover_result.status == 200
     assert len(cover_result_json) == 2
     assert cover_result_json[0]['success']['/lights/cover.living_room_window/state/on'] == True
-    assert cover_result_json[1]['success']['/lights/cover.living_room_window/state/bri'] == brightness
-
-
-    # hass_hue.async_block_till_done()
+    assert cover_result_json[1]['success']['/lights/cover.living_room_window/state/bri'] == level
 
     read_brightness = yield from perform_get_light_state(hue_client, COVER_ID, 200)
     assert read_brightness['state']['on'] == True
