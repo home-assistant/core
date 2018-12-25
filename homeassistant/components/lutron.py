@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron==0.1.0']
+REQUIREMENTS = ['pylutron==0.2.0']
 
 DOMAIN = 'lutron'
 
@@ -36,7 +36,10 @@ def setup(hass, base_config):
     from pylutron import Lutron
 
     hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {'light': [], 'cover': []}
+    hass.data[LUTRON_DEVICES] = {'light': [],
+                                 'cover': [],
+                                 'switch': [],
+                                 'scene': []}
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -51,10 +54,23 @@ def setup(hass, base_config):
         for output in area.outputs:
             if output.type == 'SYSTEM_SHADE':
                 hass.data[LUTRON_DEVICES]['cover'].append((area.name, output))
-            else:
+            elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
+            else:
+                hass.data[LUTRON_DEVICES]['switch'].append((area.name, output))
+        for keypad in area.keypads:
+            for button in keypad.buttons:
+                # This is the best way to determine if a button does anything
+                # useful until pylutron is updated to provide information on
+                # which buttons actually control scenes.
+                for led in keypad.leds:
+                    if (led.number == button.number and
+                            button.name != 'Unknown Button' and
+                            button.button_type in ('SingleAction', 'Toggle')):
+                        hass.data[LUTRON_DEVICES]['scene'].append(
+                            (area.name, button, led))
 
-    for component in ('light', 'cover'):
+    for component in ('light', 'cover', 'switch', 'scene'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
 
@@ -70,12 +86,13 @@ class LutronDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
-            self._controller.subscribe, self._lutron_device,
-            self._update_callback
+        self.hass.async_add_executor_job(
+            self._lutron_device.subscribe,
+            self._update_callback,
+            None
         )
 
-    def _update_callback(self, _device):
+    def _update_callback(self, _device, _context, _event, _params):
         """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
 
