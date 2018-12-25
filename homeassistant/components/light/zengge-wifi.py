@@ -14,7 +14,6 @@ DEFAULT_NAME = "Zengge Bulb"
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
 
@@ -25,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     Lights = []
     for address, device_config in config[CONF_DEVICES].items():
-        Lights.append(ZenggeWifiLight(device_config[CONF_HOST], device_config[CONF_NAME]))
+        Lights.append(ZenggeWifiLight(address, device_config[CONF_NAME]))
     add_entities(Lights)
 
 
