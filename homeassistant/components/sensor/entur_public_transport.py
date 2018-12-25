@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['enturclient==0.1.2']
+REQUIREMENTS = ['enturclient==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ API_CLIENT_NAME = 'homeassistant-homeassistant'
 CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
+CONF_WHITELIST_LINES = 'line_whitelist'
 
 DEFAULT_NAME = 'Entur'
 DEFAULT_ICON_KEY = 'bus'
@@ -36,7 +37,9 @@ DEFAULT_ICON_KEY = 'bus'
 ICONS = {
     'air': 'mdi:airplane',
     'bus': 'mdi:bus',
+    'metro': 'mdi:subway',
     'rail': 'mdi:train',
+    'tram': 'mdi:tram',
     'water': 'mdi:ferry',
 }
 
@@ -47,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+    vol.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
 })
 
 
@@ -70,6 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from enturclient.consts import CONF_NAME as API_NAME
 
     expand = config.get(CONF_EXPAND_PLATFORMS)
+    line_whitelist = config.get(CONF_WHITELIST_LINES)
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
     stop_ids = config.get(CONF_STOP_IDS)
@@ -77,7 +82,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
-    data = EnturPublicTransportData(API_CLIENT_NAME, stops, quays, expand)
+    data = EnturPublicTransportData(API_CLIENT_NAME,
+                                    stops,
+                                    quays,
+                                    expand,
+                                    line_whitelist)
     data.update()
 
     proxy = EnturProxy(data)
@@ -128,7 +137,6 @@ class EnturPublicTransportSensor(Entity):
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
-        self._data = None
         self._state = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes = {
@@ -169,20 +177,18 @@ class EnturPublicTransportSensor(Entity):
 
         self.api.update()
 
-        self._data = self.api.get_stop_info(self._stop)
-        if self._data is not None:
-            attrs = self._data[ATTR]
+        data = self.api.get_stop_info(self._stop)
+        if data is not None and ATTR in data:
+            attrs = data[ATTR]
             self._attributes.update(attrs)
 
             if ATTR_NEXT_UP_AT in attrs:
                 self._attributes[ATTR_NEXT_UP_IN] = \
                     due_in_minutes(attrs[ATTR_NEXT_UP_AT])
 
-            if CONF_LOCATION in self._data and self._show_on_map:
-                self._attributes[CONF_LATITUDE] = \
-                    self._data[CONF_LOCATION][LAT]
-                self._attributes[CONF_LONGITUDE] = \
-                    self._data[CONF_LOCATION][LONG]
+            if CONF_LOCATION in data and self._show_on_map:
+                self._attributes[CONF_LATITUDE] = data[CONF_LOCATION][LAT]
+                self._attributes[CONF_LONGITUDE] = data[CONF_LOCATION][LONG]
 
             if ATTR_EXPECTED_AT in attrs:
                 self._state = due_in_minutes(attrs[ATTR_EXPECTED_AT])
@@ -190,4 +196,6 @@ class EnturPublicTransportSensor(Entity):
                 self._state = None
 
             self._icon = ICONS.get(
-                self._data[CONF_TRANSPORT_MODE], ICONS[DEFAULT_ICON_KEY])
+                data[CONF_TRANSPORT_MODE], ICONS[DEFAULT_ICON_KEY])
+        else:
+            self._state = None
