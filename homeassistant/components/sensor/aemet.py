@@ -23,6 +23,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['python-aemet==0.1.2']
+
 _LOGGER = getLogger(__name__)
 
 ATTR_ELEVATION = 'elevation'
@@ -127,37 +129,24 @@ class AemetData:
 
     def __init__(self, api_key, station_id):
         """Initialize the data object."""
+        from aemet import Aemet
+
         self._station_id = station_id
-        self._api_key = api_key
+        self._aemet_api = Aemet(api_key=api_key)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
-        _LOGGER.debug("------- Updating AEMET sensor")
-
-        endpoint_url = "{}{}".format(
-            self.API_URL_BASE,
-            self.API_STATION_ENDPOINT.format(self._station_id)
-        )
-        params = {'api_key': self._api_key}
-        main_rsp = requests.get(endpoint_url, params=params)
-        if main_rsp.status_code != HTTP_OK:
-            _LOGGER.error("Invalid response: %s", main_rsp.status_code)
-            return
-
-        main_result = main_rsp.json()
-        if main_result['estado'] == HTTP_OK:
-            hashed_endpoint = main_result["datos"]
-            data_rsp = requests.get(hashed_endpoint)
-            if data_rsp.status_code != HTTP_OK:
-                _LOGGER.error("Invalid response: %s", data_rsp.status_code)
-            data_result = data_rsp.json()
-            last_update = data_result[-1]
+        try:
+            last_update = self._aemet_api.get_observacion_convencional(
+                estacion=self._station_id,
+                raw=True
+            )
             self.set_data(last_update)
-            _LOGGER.debug(last_update)
-        else:
-            _LOGGER.error("Invalid response: %s", main_rsp.status_code)
+
+        except (ValueError, TypeError) as err:
+            _LOGGER.error("Received error from AEMET: %s", err)
 
     def set_data(self, record):
         """Set data using the last record from API."""
