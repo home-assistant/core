@@ -13,8 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN,
-    STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pynx584==0.4']
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([NX584Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return False
+        return
 
 
 class NX584Alarm(alarm.AlarmControlPanel):
@@ -61,7 +60,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
         # talk to the API and trigger a requests exception for setup_platform()
         # to catch
         self._alarm.list_zones()
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):
@@ -86,11 +85,11 @@ class NX584Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
-            self._state = STATE_UNKNOWN
+            self._state = None
             zones = []
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
-            self._state = STATE_UNKNOWN
+            self._state = None
             zones = []
 
         bypassed = False
