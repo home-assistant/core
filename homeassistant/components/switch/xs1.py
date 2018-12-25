@@ -4,7 +4,6 @@ Support for XS1 switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.xs1/
 """
-from functools import partial
 import logging
 
 from homeassistant.components.xs1 import (
