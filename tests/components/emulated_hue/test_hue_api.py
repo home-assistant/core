@@ -344,7 +344,6 @@ def test_put_light_state_media_player(hass_hue, hue_client):
 
 async def test_close_cover(hass_hue, hue_client):
     """Test opening cover ."""
-
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
@@ -387,7 +386,6 @@ async def test_close_cover(hass_hue, hue_client):
 
 async def test_set_position_cover(hass_hue, hue_client):
     """Test setting postion cover ."""
-
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
@@ -421,9 +419,9 @@ async def test_set_position_cover(hass_hue, hue_client):
 
     assert len(cover_result_json) == 2
     assert True, cover_result_json[0]\
-        ['success']['/lights/cover.living_room_window/state/on']
+['success']['/lights/cover.living_room_window/state/on']
     assert cover_result_json[1]['success']\
-        ['/lights/cover.living_room_window/state/bri'] == level
+['/lights/cover.living_room_window/state/bri'] == level
 
     for _ in range(100):
         future = dt_util.utcnow() + timedelta(seconds=1)
