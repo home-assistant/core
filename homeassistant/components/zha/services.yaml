@@ -13,3 +13,14 @@ remove:
     ieee_address:
       description: IEEE address of the node to remove
       example: "00:0d:6f:00:05:7d:2d:34"
+
+reconfigure_device:
+  description: >- 
+    Reconfigure ZHA device (heal device). Use this if you are having issues 
+    with the device. If the device in question is a battery powered device
+    please ensure it is awake and accepting commands when you use this
+    service. 
+  fields:
+    ieee_address:
+      description: IEEE address of the device to reconfigure
+      example: "00:0d:6f:00:05:7d:2d:34"

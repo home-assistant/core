@@ -61,12 +61,14 @@ ATTR_IEEE = 'ieee_address'
 
 SERVICE_PERMIT = 'permit'
 SERVICE_REMOVE = 'remove'
+SERVICE_RECONFIGURE_DEVICE = 'reconfigure_device'
+IEEE_SERVICE = 'ieee_based_service'
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
         vol.Optional(ATTR_DURATION, default=60):
             vol.All(vol.Coerce(int), vol.Range(1, 254)),
     }),
-    SERVICE_REMOVE: vol.Schema({
+    IEEE_SERVICE: vol.Schema({
         vol.Required(ATTR_IEEE): cv.string,
     }),
 }
@@ -198,7 +200,21 @@ async def async_setup_entry(hass, config_entry):
         await application_controller.remove(ieee)
 
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
-                                 schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+                                 schema=SERVICE_SCHEMAS[IEEE_SERVICE])
+
+    async def reconfigure_device(service):
+        """Reconfigure a ZHA device entity by its ieee address."""
+        ieee = service.data.get(ATTR_IEEE)
+        entities = listener.get_entities_for_ieee(ieee)
+        _LOGGER.info("Reconfiguring device with ieee_address: %s", ieee)
+        for entity in entities:
+            if hasattr(entity, 'async_configure'):
+                hass.async_create_task(entity.async_configure())
+
+    hass.services.async_register(DOMAIN, SERVICE_RECONFIGURE_DEVICE,
+                                 reconfigure_device, schema=SERVICE_SCHEMAS[
+                                     IEEE_SERVICE
+                                 ])
 
     def zha_shutdown(event):
         """Close radio."""
@@ -285,6 +301,29 @@ class ApplicationListener:
             self._hass.async_create_task(device_entity.async_remove())
         if device.ieee in self._events:
             self._events.pop(device.ieee)
+
+    def get_device_entity(self, ieee_str):
+        """Return ZHADeviceEntity for given ieee."""
+        ieee = self.convert_ieee(ieee_str)
+        if ieee in self._device_registry:
+            entities = self._device_registry[ieee]
+            entity = next(
+                ent for ent in entities if isinstance(ent, ZhaDeviceEntity))
+            return entity
+        return None
+
+    def get_entities_for_ieee(self, ieee_str):
+        """Return list of entities for given ieee."""
+        ieee = self.convert_ieee(ieee_str)
+        if ieee in self._device_registry:
+            return self._device_registry[ieee]
+        return []
+
+    @staticmethod
+    def convert_ieee(ieee_str):
+        """Convert given ieee string to EmberEUI64."""
+        from bellows.types import EmberEUI64, uint8_t
+        return EmberEUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
