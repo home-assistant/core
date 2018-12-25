@@ -70,11 +70,13 @@ async def test_all_commands(hass, mock_publish):
 
     common.turn_on(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'turn_on', 0, False)
     mock_publish.async_publish.reset_mock()
 
     common.turn_off(hass, 'vacuum.mqtttest')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'turn_off', 0, False)
@@ -82,11 +84,13 @@ async def test_all_commands(hass, mock_publish):
 
     common.stop(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'stop', 0, False)
     mock_publish.async_publish.reset_mock()
 
     common.clean_spot(hass, 'vacuum.mqtttest')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'clean_spot', 0, False)
@@ -94,11 +98,13 @@ async def test_all_commands(hass, mock_publish):
 
     common.locate(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'locate', 0, False)
     mock_publish.async_publish.reset_mock()
 
     common.start_pause(hass, 'vacuum.mqtttest')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'start_pause', 0, False)
@@ -106,17 +112,20 @@ async def test_all_commands(hass, mock_publish):
 
     common.return_to_base(hass, 'vacuum.mqtttest')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/command', 'return_to_base', 0, False)
     mock_publish.async_publish.reset_mock()
 
     common.set_fan_speed(hass, 'high', 'vacuum.mqtttest')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/set_fan_speed', 'high', 0, False)
     mock_publish.async_publish.reset_mock()
 
     common.send_command(hass, '44 FE 93', entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/send_command', '44 FE 93', 0, False)
@@ -140,6 +149,7 @@ async def test_status(hass, mock_publish):
     }"""
     async_fire_mqtt_message(hass, 'vacuum/state', message)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_ON == state.state
     assert 'mdi:battery-50' == \
@@ -156,6 +166,7 @@ async def test_status(hass, mock_publish):
     }"""
 
     async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_OFF == state.state
@@ -217,11 +228,13 @@ async def test_default_availability_payload(hass, mock_publish):
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_UNAVAILABLE != state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('vacuum.mqtttest')
@@ -245,11 +258,13 @@ async def test_custom_availability_payload(hass, mock_publish):
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_UNAVAILABLE != state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('vacuum.mqtttest')
