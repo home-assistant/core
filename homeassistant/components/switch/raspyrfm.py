@@ -2,15 +2,15 @@
 Support for switch devices that can be controlled using the RaspyRFM rc module.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch/raspyrfm/
+https://home-assistant.io/components/switch.raspyrfm/
 """
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PLATFORM, CONF_PORT, CONF_SWITCHES,
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES,
     DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -25,11 +25,9 @@ CONF_CHANNEL_CONFIG = 'channel_config'
 DEFAULT_HOST = '127.0.0.1'
 
 # define configuration parameters
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'raspyrfm',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=None):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
     vol.Optional(CONF_GATEWAY_MODEL): cv.string,
     vol.Required(CONF_SWITCHES, default=[]): vol.Schema([{
@@ -41,10 +39,8 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RaspyRFM switch."""
-    _LOGGER.info("initializing RaspyRFM Switch")
-
     from raspyrfm_client import RaspyRFMClient
     from raspyrfm_client.device_implementations.controlunit. \
         controlunit_constants import ControlUnitModel
@@ -57,10 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     gateway_manufacturer = config.get(CONF_GATEWAY_MANUFACTURER,
                                       Manufacturer.SEEGEL_SYSTEME.value)
     gateway_model = config.get(CONF_GATEWAY_MODEL, GatewayModel.RASPYRFM.value)
-    host = config.get(CONF_HOST, DEFAULT_HOST)
+    host = config[CONF_HOST]
     port = config.get(CONF_PORT)
 
-    switches = config.get(CONF_SWITCHES)
+    switches = config[CONF_SWITCHES]
 
     # create raspyrfm client
     raspyrfm_client = RaspyRFMClient()
@@ -72,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switch_entities = []
     for switch in switches:
-        name = config.get(CONF_NAME)
+        name = config[CONF_NAME]
         controlunit_manufacturer = switch.get(CONF_CONTROLUNIT_MANUFACTURER)
         controlunit_model = switch.get(CONF_CONTROLUNIT_MODEL)
         channel_config = switch.get(CONF_CHANNEL_CONFIG)
@@ -83,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         # convert any key thats not a string into a string (needed for api)
         channel = {}
-        for key in channel_config:
+        for key, val in channel_config.items():
             channel[str(key)] = channel_config[key]
 
         # setup channel
@@ -94,9 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         switch_entities.append(switch)
 
     # add it to home assistant
-    add_devices(switch_entities)
-
-    return True
+    add_entities(switch_entities)
 
 
 class RaspyRFMSwitch(SwitchDevice):
