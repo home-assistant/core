@@ -16,11 +16,11 @@ from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
     HueAllLightsStateView, HueOneLightChangeView)
-from homeassistant.const import STATE_ON, STATE_OFF, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import STATE_ON, STATE_OFF
 
 import homeassistant.util.dt as dt_util
 from datetime import timedelta
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -341,9 +341,10 @@ def test_put_light_state_media_player(hass_hue, hue_client):
     assert walkman.state == 'playing'
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
 
+
 async def test_close_cover(hass_hue, hue_client):
     """Test opening cover ."""
-    
+
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
@@ -386,7 +387,7 @@ async def test_close_cover(hass_hue, hue_client):
 
 async def test_set_position_cover(hass_hue, hue_client):
     """Test setting postion cover ."""
-    
+
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
@@ -419,8 +420,10 @@ async def test_set_position_cover(hass_hue, hue_client):
     cover_result_json = await cover_result.json()
 
     assert len(cover_result_json) == 2
-    assert cover_result_json[0]['success']['/lights/cover.living_room_window/state/on'] == True
-    assert cover_result_json[1]['success']['/lights/cover.living_room_window/state/bri'] == level
+    assert True, cover_result_json[0]\
+        ['success']['/lights/cover.living_room_window/state/on']
+    assert cover_result_json[1]['success']\
+        ['/lights/cover.living_room_window/state/bri'] == level
 
     for _ in range(100):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -431,7 +434,6 @@ async def test_set_position_cover(hass_hue, hue_client):
     cover_test_2 = hass_hue.states.get(COVER_ID)
     assert cover_test_2.state == 'open'
     assert cover_test_2.attributes.get('current_position') == level
-
 
 
 @asyncio.coroutine
