@@ -1,9 +1,18 @@
+"""
+Support for Zengge Wi-Fi bulbs.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.zengge-wifi/
+"""
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.light import Light, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, ATTR_WHITE_VALUE, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, CONF_DEVICES
+from homeassistant.components.light import (Light, SUPPORT_COLOR, SUPPORT_WHITE_VALUE,
+                                            ATTR_WHITE_VALUE, PLATFORM_SCHEMA,
+                                            ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS)
+from homeassistant.const import CONF_NAME, CONF_DEVICES
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -21,15 +30,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    Lights = []
+    """Set up the Zengge Wi-Fi platform."""
+    lights = []
     for address, device_config in config[CONF_DEVICES].items():
-        Lights.append(ZenggeWifiLight(address, device_config[CONF_NAME]))
-    add_entities(Lights)
+        lights.append(ZenggeWifiLight(address, device_config[CONF_NAME]))
+    add_entities(lights)
 
 
 class ZenggeWifiLight(Light):
-
+    """Representation of a Zengge Wi-Fi light."""
     def __init__(self, host, name):
         import zenggewifi
         self._bulb = zenggewifi.ZenggeWifiBulb(host)
@@ -54,11 +65,11 @@ class ZenggeWifiLight(Light):
     @property
     def is_on(self):
         return self._state
-    
+
     @property
     def hs_color(self):
         return self._hs_color
-    
+
     @property
     def brightness(self):
         return self._brightness
@@ -69,20 +80,22 @@ class ZenggeWifiLight(Light):
 
     @property
     def supported_features(self):
-        return (SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_WHITE_VALUE)
+        return SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_WHITE_VALUE
 
     @property
     def should_poll(self):
         return True
-    
+
     @property
     def assumed_state(self):
         return False
-    
+
     def set_rgb(self, red, green, blue):
+        """Sets the RGB color."""
         return self._bulb.set_rgb(red, green, blue)
 
     def set_white(self, white):
+        """Sets the Warmwhite color."""
         return self._bulb.set_white(white)
 
     def turn_on(self, **kwargs):
@@ -95,27 +108,30 @@ class ZenggeWifiLight(Light):
 
         if white is not None:
             self._white = white
-        
+
         if hs_color is not None:
             self._white = 0
             self._hs_color = hs_color
-        
+
         if brightness is not None:
             self._brightness = brightness
-        
+
         if self._white != 0:
             self.set_white(white)
         else:
-            rgb = color_util.color_hsv_to_RGB(self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100)
+            rgb = color_util.color_hsv_to_RGB(self._hs_color[0], self._hs_color[1],
+                                              self._brightness / 255 * 100)
             self.set_rgb(*rgb)
         from datetime import datetime
         self.update_time = datetime.now()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
+        """Turns the bulb off."""
         self._state = False
         self._bulb.off()
 
     def update(self):
+        """Retrieves the current state of the bulb."""
         from datetime import datetime
         if (datetime.now() - self.update_time).seconds < 2:
             from time import sleep
