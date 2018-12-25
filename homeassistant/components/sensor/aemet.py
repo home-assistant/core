@@ -8,7 +8,6 @@ https://home-assistant.io/components/sensor.aemet/
 from datetime import timedelta
 from logging import getLogger
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
