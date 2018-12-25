@@ -9,9 +9,11 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_TARGET_TEMPERATURE, STATE_HEAT,
+    STATE_IDLE, STATE_MANUAL, STATE_DRY,
+    STATE_FAN_ONLY, STATE_ECO, ClimateDevice)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import callback
 
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
@@ -74,6 +76,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
 })
 
+# Map KNX operation modes to HA modes. This list might not be full.
+OPERATION_MODES = {
+    # Map DPT 201.100 HVAC operating modes
+    "Frost Protection": STATE_MANUAL,
+    "Night": STATE_IDLE,
+    "Standby": STATE_ECO,
+    "Comfort": STATE_HEAT,
+    # Map DPT 201.104 HVAC control modes
+    "Fan only": STATE_FAN_ONLY,
+    "Dehumidification": STATE_DRY
+}
+
+OPERATION_MODES_INV = dict((
+    reversed(item) for item in OPERATION_MODES.items()))
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -90,12 +107,12 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXClimate(hass, device))
+        entities.append(KNXClimate(device))
     async_add_entities(entities)
 
 
 @callback
-def async_add_entities_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
     import xknx
 
@@ -144,18 +161,15 @@ def async_add_entities_config(hass, config, async_add_devices):
         mode=climate_mode)
     hass.data[DATA_KNX].xknx.devices.add(climate)
 
-    async_add_devices([KNXClimate(hass, climate)])
+    async_add_entities([KNXClimate(climate)])
 
 
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize of a KNX climate device."""
         self.device = device
-        self.hass = hass
-        self.async_register_callbacks()
-
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -168,7 +182,7 @@ class KNXClimate(ClimateDevice):
             support |= SUPPORT_ON_OFF
         return support
 
-    def async_register_callbacks(self):
+    async def async_added_to_hass(self):
         """Register callbacks to update hass after device was changed."""
         async def after_update_callback(device):
             """Call after device was updated."""
@@ -232,13 +246,13 @@ class KNXClimate(ClimateDevice):
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         if self.device.mode.supports_operation_mode:
-            return self.device.mode.operation_mode.value
+            return OPERATION_MODES.get(self.device.mode.operation_mode.value)
         return None
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [operation_mode.value for
+        return [OPERATION_MODES.get(operation_mode.value) for
                 operation_mode in
                 self.device.mode.operation_modes]
 
@@ -246,7 +260,8 @@ class KNXClimate(ClimateDevice):
         """Set operation mode."""
         if self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode
-            knx_operation_mode = HVACOperationMode(operation_mode)
+            knx_operation_mode = HVACOperationMode(
+                OPERATION_MODES_INV.get(operation_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
 
@@ -255,7 +270,7 @@ class KNXClimate(ClimateDevice):
         """Return true if the device is on."""
         if self.device.supports_on_off:
             return self.device.is_on
-        return STATE_UNKNOWN
+        return None
 
     async def async_turn_on(self):
         """Turn on."""
