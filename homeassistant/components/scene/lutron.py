@@ -16,7 +16,7 @@ DEPENDENCIES = ['lutron']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Lutron lights."""
+    """Set up the Lutron scenes."""
     devs = []
     for scene_data in hass.data[LUTRON_DEVICES]['scene']:
         (area_name, keypad_name, device, led) = scene_data
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class LutronScene(LutronDevice, Scene):
-    """Representation of a Lutron Switch."""
+    """Representation of a Lutron Scene."""
 
     def __init__(self,
                  area_name,
