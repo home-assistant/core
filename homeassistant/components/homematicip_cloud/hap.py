@@ -139,7 +139,7 @@ class HomematicipHAP:
             self.set_all_to_unavailable()
         elif not self._accesspoint_connected:
             # Now the HOME_CHANGED event has fired indicating the access
-            # point has reconnected to the could again.
+            # point has reconnected to the cloud again.
             # Explicitly getting an update as device states might have
             # changed during access point disconnect."""
 
