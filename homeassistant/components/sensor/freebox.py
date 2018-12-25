@@ -2,7 +2,7 @@
 Support for Freebox devices (Freebox v6 and Freebox mini 4K).
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/freebox/
+https://home-assistant.io/components/sensor.freebox/
 """
 import logging
 
