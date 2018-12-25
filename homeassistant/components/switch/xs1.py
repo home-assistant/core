@@ -7,8 +7,8 @@ https://home-assistant.io/components/switch.xs1/
 from functools import partial
 import logging
 
-from homeassistant.components.xs1 import ACTUATORS, XS1DeviceEntity
-from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
+from homeassistant.components.xs1 import (
+    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity)
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['xs1']

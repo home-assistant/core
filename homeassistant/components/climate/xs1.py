@@ -9,8 +9,7 @@ import logging
 
 from homeassistant.components.climate import ATTR_TEMPERATURE, ClimateDevice
 from homeassistant.components.xs1 import (
-    ACTUATORS, SENSORS, XS1DeviceEntity)
-from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
+    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
 

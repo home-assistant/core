@@ -7,10 +7,9 @@ https://home-assistant.io/components/sensor.xs1/
 
 import logging
 
+from homeassistant.components.xs1 import (
+    DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
 from homeassistant.helpers.entity import Entity
-
-from homeassistant.components.xs1 import SENSORS, XS1DeviceEntity
-from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
