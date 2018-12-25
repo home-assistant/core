@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pypck==0.5.8']
+REQUIREMENTS = ['pypck==0.5.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,11 @@ OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
 # Regex for address validation
 PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
                              '\\.(?P<type>m|g)?(?P<id>\\d+)$')
+
+
+def in_upper(ls):
+    """Validates if value is in given list. Returns upper case."""
+    return vol.All(vol.In(ls), lambda val: val.upper())
 
 
 def has_unique_connection_names(connections):
@@ -88,7 +93,7 @@ CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
-    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.Any(*DIM_MODES),
+    vol.Optional(CONF_DIM_MODE, default='steps50'): in_upper(DIM_MODES),
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -119,7 +124,6 @@ async def async_setup(hass, config):
     from pypck.connection import PchkConnectionManager
 
     hass.data[DATA_LCN] = {}
-    hass.data[DATA_LCN][LIB_LCN] = pypck
 
     conf_connections = config[DOMAIN][CONF_CONNECTIONS]
     connections = []
@@ -128,7 +132,7 @@ async def async_setup(hass, config):
 
         settings = {'SK_NUM_TRIES': conf_connection[CONF_SK_NUM_TRIES],
                     'DIM_MODE': pypck.lcn_defs.OutputPortDimMode[
-                        conf_connection[CONF_DIM_MODE].upper()]}
+                        conf_connection[CONF_DIM_MODE]]}
 
         connection = PchkConnectionManager(hass.loop,
                                            conf_connection[CONF_HOST],
@@ -140,12 +144,12 @@ async def async_setup(hass, config):
 
         # establish connection to PCHK server
         try:
-            await hass.async_create_task(connection.async_connect())
+            await hass.async_create_task(connection.async_connect(timeout=15))
             connections.append(connection)
-            _LOGGER.info('LCN connected to "{:s}"'.format(connection_name))
+            _LOGGER.info('LCN connected to "%s"', connection_name)
         except TimeoutError:
-            _LOGGER.error('Connection to PCHK server "{:s}" failed.'.format(
-                connection_name))
+            _LOGGER.error('Connection to PCHK server "%s" failed.',
+                          connection_name)
             return False
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
@@ -155,15 +159,23 @@ async def async_setup(hass, config):
 class LcnDevice(Entity):
     """Parent class for all devices associated with the LCN component."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize the LCN device."""
-        self.hass = hass
-        self.pypck = hass.data[DATA_LCN][LIB_LCN]
+        import pypck
+        self.pypck = pypck
+        self.config = config
         self._name = config[CONF_NAME]
 
-        address, connection_id = config[CONF_ADDRESS]
+    @property
+    def should_poll(self) -> bool:
+        """Lcn device entity pushes its state to HA."""
+        return False
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        address, connection_id = self.config[CONF_ADDRESS]
         addr = self.pypck.lcn_addr.LcnAddr(*address)
-        connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
+        connections = self.hass.data[DATA_LCN][CONF_CONNECTIONS]
         connection = get_connection(connections, connection_id)
 
         self.address_connection = connection.get_address_conn(addr)

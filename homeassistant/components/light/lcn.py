@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.lcn import (
     CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS, LcnDevice,
-    is_address)
+    in_upper, is_address)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION, Light)
@@ -21,39 +21,41 @@ DEPENDENCIES = ['lcn']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
-    vol.Required(CONF_OUTPUT): vol.Any(*(OUTPUT_PORTS)),
+    vol.Required(CONF_OUTPUT): in_upper(OUTPUT_PORTS),
     vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
     vol.Optional(CONF_TRANSITION, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=0., max=486.)),
+        vol.All(vol.Coerce(float), vol.Range(min=0., max=486.),
+                lambda value: value * 1000),
 })
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN light platform."""
-    device = LcnOutputLight(hass, config)
+    device = LcnOutputLight(config)
     async_add_entities([device])
-    return True
 
 
 class LcnOutputLight(LcnDevice, Light):
     """Representation of a LCN light for output ports."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize the LCN light."""
-        LcnDevice.__init__(self, hass, config)
+        super().__init__(config)
 
-        self.output = self.pypck.lcn_defs.OutputPort[
-            config[CONF_OUTPUT].upper()]
+        self.output = self.pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
 
         self._transition = self.pypck.lcn_defs.time_to_ramp_value(
-            config[CONF_TRANSITION] * 1000)
+            config[CONF_TRANSITION])
         self.dimmable = config[CONF_DIMMABLE]
 
         self._brightness = 255
         self._is_on = None
         self._is_dimming_to_zero = False
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         self.hass.async_create_task(
             self.address_connection.activate_status_request_handler(
                 self.output))
