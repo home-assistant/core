@@ -259,7 +259,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 if brightness is not None:
                     domain = entity.domain
                     service = SERVICE_SET_COVER_POSITION
-                    data[ATTR_POSITION] = 33
+                    data[ATTR_POSITION] = brightness
 
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
