@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
         vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
         vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
-        vol.Required(CONF_CHANNEL_CONFIG): cv.match_all,
+        vol.Required(CONF_CHANNEL_CONFIG): cv.Dict,
     }])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -69,9 +69,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switch_entities = []
     for switch in switches:
         name = config[CONF_NAME]
-        controlunit_manufacturer = switch.get(CONF_CONTROLUNIT_MANUFACTURER)
-        controlunit_model = switch.get(CONF_CONTROLUNIT_MODEL)
-        channel_config = switch.get(CONF_CHANNEL_CONFIG)
+        controlunit_manufacturer = switch[CONF_CONTROLUNIT_MANUFACTURER]
+        controlunit_model = switch[CONF_CONTROLUNIT_MODEL]
+        channel_config = switch[CONF_CHANNEL_CONFIG]
 
         controlunit = raspyrfm_client.get_controlunit(
             Manufacturer(controlunit_manufacturer),
