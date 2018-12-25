@@ -1,6 +1,5 @@
 """Common functions for RFLink component tests and generic platform tests."""
 
-import asyncio
 from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
@@ -18,7 +17,7 @@ async def mock_rflink(hass, config, domain, monkeypatch, failures=None):
         return True
     protocol.send_command_ack = Mock(wraps=send_command_ack)
 
-    async def send_command(*command):
+    def send_command(*command):
         return True
     protocol.send_command = Mock(wraps=send_command)
 
@@ -278,8 +277,6 @@ async def test_error_when_not_connected(hass, monkeypatch):
 
     # rflink initiated disconnect
     disconnect_callback(None)
-
-    await asyncio.sleep(0, loop=hass.loop)
 
     success = await hass.services.async_call(
         domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})
