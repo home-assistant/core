@@ -418,10 +418,10 @@ async def test_set_position_cover(hass_hue, hue_client):
     cover_result_json = await cover_result.json()
 
     assert len(cover_result_json) == 2
-    assert True, cover_result_json[0]\
-['success']['/lights/cover.living_room_window/state/on']
-    assert cover_result_json[1]['success']\
-['/lights/cover.living_room_window/state/bri'] == level
+    assert True, cover_result_json[0]['success'][
+        '/lights/cover.living_room_window/state/on']
+    assert cover_result_json[1]['success'][
+        '/lights/cover.living_room_window/state/bri'] == level
 
     for _ in range(100):
         future = dt_util.utcnow() + timedelta(seconds=1)
