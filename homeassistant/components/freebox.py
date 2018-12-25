@@ -37,13 +37,9 @@ async def async_setup(hass, config):
 
     async def discovery_dispatch(service, discovery_info):
         if conf is None:
-            _LOGGER.info("Discovered Freebox server: %s:%s",
-                         discovery_info.get('properties',
-                                            {}).get('api_domain'),
-                         discovery_info.get('properties',
-                                            {}).get('https_port'))
             host = discovery_info.get('properties', {}).get('api_domain')
             port = discovery_info.get('properties', {}).get('https_port')
+            _LOGGER.info("Discovered Freebox server: %s:%s", host, port)
             await async_setup_freebox(hass, config, host, port)
 
     discovery.async_listen(hass, SERVICE_FREEBOX, discovery_dispatch)
