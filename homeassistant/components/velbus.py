@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-velbus==2.0.19']
+REQUIREMENTS = ['python-velbus==2.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,8 @@ async def async_setup(hass, config):
         discovery_info = {
             'switch': [],
             'binary_sensor': [],
-            'temp_sensor': []
+            'climate': [],
+            'sensor': []
         }
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
@@ -60,10 +61,12 @@ async def async_setup(hass, config):
                         ))
         load_platform(hass, 'switch', DOMAIN,
                       discovery_info['switch'], config)
+        load_platform(hass, 'climate', DOMAIN,
+                      discovery_info['climate'], config)
         load_platform(hass, 'binary_sensor', DOMAIN,
                       discovery_info['binary_sensor'], config)
         load_platform(hass, 'sensor', DOMAIN,
-                      discovery_info['temp_sensor'], config)
+                      discovery_info['sensor'], config)
 
     controller.scan(callback)
 

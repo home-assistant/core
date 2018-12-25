@@ -7,7 +7,9 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
+    CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
+    ATTR_SUPPORTED_FEATURES
+)
 from homeassistant.components import (
     climate,
     cover,
@@ -15,17 +17,21 @@ from homeassistant.components import (
     group,
     input_boolean,
     light,
+    lock,
     media_player,
     scene,
     script,
     switch,
+    vacuum,
 )
+
 
 from . import trait
 from .const import (
-    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
+    TYPE_LIGHT, TYPE_LOCK, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
+    TYPE_THERMOSTAT, TYPE_FAN,
     CONF_ALIASES, CONF_ROOM_HINT,
-    ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
+    ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR
 )
 from .helpers import SmartHomeError
@@ -36,14 +42,16 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN_TO_GOOGLE_TYPES = {
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_SWITCH,
-    fan.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
+    lock.DOMAIN: TYPE_LOCK,
     media_player.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
+    vacuum.DOMAIN: TYPE_VACUUM,
 }
 
 
@@ -77,7 +85,7 @@ class _GoogleEntity:
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        return [Trait(self.hass, state) for Trait in trait.TRAITS
+        return [Trait(self.hass, state, self.config) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
     @callback
@@ -165,7 +173,7 @@ class _GoogleEntity:
 
         if not executed:
             raise SmartHomeError(
-                ERR_NOT_SUPPORTED,
+                ERR_FUNCTION_NOT_SUPPORTED,
                 'Unable to execute {} for {}'.format(command,
                                                      self.state.entity_id))
 
@@ -213,7 +221,7 @@ async def _process(hass, config, message):
             'requestId': request_id,
             'payload': {'errorCode': err.code}
         }
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Unexpected error')
         return {
             'requestId': request_id,
@@ -229,6 +237,9 @@ async def async_devices_sync(hass, config, payload):
     """
     devices = []
     for state in hass.states.async_all():
+        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            continue
+
         if not config.should_expose(state):
             continue
 
@@ -324,3 +335,11 @@ async def handle_devices_execute(hass, config, payload):
         })
 
     return {'commands': final_results}
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return {
+        'requestId': message.get('requestId'),
+        'payload': {'errorCode': 'deviceTurnedOff'}
+    }

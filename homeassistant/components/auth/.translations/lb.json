@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Keen Notifikatioun's D\u00e9ngscht disponibel."
+            },
+            "error": {
+                "invalid_code": "Ong\u00ebltege Code, prob\u00e9iert w.e.g. nach emol."
+            },
+            "step": {
+                "init": {
+                    "description": "Wielt w.e.g. een Notifikatioun's D\u00e9ngscht aus:",
+                    "title": "Eemolegt Passwuert ariichte wat vun engem Notifikatioun's Komponente versch\u00e9ckt g\u00ebtt"
+                },
+                "setup": {
+                    "description": "Een eemolegt Passwuert ass vun **notify.{notify_service}** gesch\u00e9ckt ginn. Gitt et w.e.g hei \u00ebnnen dr\u00ebnner an:",
+                    "title": "Astellungen iwwerpr\u00e9iwen"
+                }
+            },
+            "title": "Eemolegt Passwuert Notifikatioun"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Ong\u00ebltege Login, prob\u00e9iert w.e.g. nach emol. Falls d\u00ebse Feeler Message \u00ebmmer er\u00ebm optr\u00ebtt dann iwwerpr\u00e9ift op d'Z\u00e4it vum Home Assistant System richteg ass."

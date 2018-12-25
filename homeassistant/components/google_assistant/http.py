@@ -6,19 +6,18 @@ https://home-assistant.io/components/google_assistant/
 """
 import logging
 
-from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
-    CONF_ACCESS_TOKEN,
+    CONF_ALLOW_UNLOCK,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
-    CONF_AGENT_USER_ID,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
     )
@@ -31,16 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_register_http(hass, cfg):
     """Register HTTP views for Google Assistant."""
-    access_token = cfg.get(CONF_ACCESS_TOKEN)
     expose_by_default = cfg.get(CONF_EXPOSE_BY_DEFAULT)
     exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS)
-    agent_user_id = cfg.get(CONF_AGENT_USER_ID)
     entity_config = cfg.get(CONF_ENTITY_CONFIG) or {}
+    allow_unlock = cfg.get(CONF_ALLOW_UNLOCK, False)
 
     def is_exposed(entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
         if entity.attributes.get('view') is not None:
             # Ignore entities that are views
+            return False
+
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         explicit_expose = \
@@ -57,9 +58,8 @@ def async_register_http(hass, cfg):
 
         return is_default_exposed or explicit_expose
 
-    gass_config = Config(is_exposed, agent_user_id, entity_config)
     hass.http.register_view(
-        GoogleAssistantView(access_token, gass_config))
+        GoogleAssistantView(is_exposed, entity_config, allow_unlock))
 
 
 class GoogleAssistantView(HomeAssistantView):
@@ -67,20 +67,21 @@ class GoogleAssistantView(HomeAssistantView):
 
     url = GOOGLE_ASSISTANT_API_ENDPOINT
     name = 'api:google_assistant'
-    requires_auth = False  # Uses access token from oauth flow
+    requires_auth = True
 
-    def __init__(self, access_token, gass_config):
+    def __init__(self, is_exposed, entity_config, allow_unlock):
         """Initialize the Google Assistant request handler."""
-        self.access_token = access_token
-        self.gass_config = gass_config
+        self.is_exposed = is_exposed
+        self.entity_config = entity_config
+        self.allow_unlock = allow_unlock
 
     async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
-        auth = request.headers.get(AUTHORIZATION, None)
-        if 'Bearer {}'.format(self.access_token) != auth:
-            return self.json_message("missing authorization", status_code=401)
-
         message = await request.json()  # type: dict
+        config = Config(self.is_exposed,
+                        self.allow_unlock,
+                        request['hass_user'].id,
+                        self.entity_config)
         result = await async_handle_message(
-            request.app['hass'], self.gass_config, message)
+            request.app['hass'], config, message)
         return self.json(result)

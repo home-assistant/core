@@ -36,9 +36,13 @@ def test_forward_request(hassio_client):
 
 
 @asyncio.coroutine
-def test_auth_required_forward_request(hassio_client):
+@pytest.mark.parametrize(
+    'build_type', [
+        'supervisor/info', 'homeassistant/update', 'host/info'
+    ])
+def test_auth_required_forward_request(hassio_client, build_type):
     """Test auth required for normal request."""
-    resp = yield from hassio_client.post('/api/hassio/beer')
+    resp = yield from hassio_client.post("/api/hassio/{}".format(build_type))
 
     # Check we got right response
     assert resp.status == 401
@@ -98,15 +102,15 @@ def test_forward_request_no_auth_for_logo(hassio_client):
 
 @asyncio.coroutine
 def test_forward_log_request(hassio_client):
-    """Test fetching normal log path."""
+    """Test fetching normal log path doesn't remove ANSI color escape codes."""
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
     with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
             patch('homeassistant.components.hassio.http.'
-                  '_create_response_log') as mresp:
-        mresp.return_value = 'response'
+                  '_create_response') as mresp:
+        mresp.return_value = '\033[32mresponse\033[0m'
         resp = yield from hassio_client.get('/api/hassio/beer/logs', headers={
                 HTTP_HEADER_HA_AUTH: API_PASSWORD
             })
@@ -114,7 +118,7 @@ def test_forward_log_request(hassio_client):
     # Check we got right response
     assert resp.status == 200
     body = yield from resp.text()
-    assert body == 'response'
+    assert body == '\033[32mresponse\033[0m'
 
     # Check we forwarded command
     assert len(mresp.mock_calls) == 1

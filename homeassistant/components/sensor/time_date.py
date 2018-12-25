@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.time_date/
 """
 from datetime import timedelta
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -37,9 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Time and Date sensor."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")

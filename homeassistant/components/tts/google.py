@@ -17,7 +17,7 @@ import yarl
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['gTTS-token==1.1.1']
+REQUIREMENTS = ['gTTS-token==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ SUPPORT_LANGUAGES = [
     'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
     'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
     'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
-    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk', 'bg-BG'
+    'es-mx', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk', 'bg-BG'
 ]
 
 DEFAULT_LANG = 'en'

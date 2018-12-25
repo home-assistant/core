@@ -66,7 +66,7 @@ class TestSleepIQ(unittest.TestCase):
                  json=load_fixture('sleepiq-login-failed.json'))
 
         response = sleepiq.setup(self.hass, self.config)
-        self.assertFalse(response)
+        assert not response
 
     def test_setup_component_no_login(self):
         """Test the setup when no login is configured."""

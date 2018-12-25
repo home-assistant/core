@@ -4,7 +4,6 @@ import logging
 import os
 from subprocess import PIPE, Popen
 import sys
-
 from typing import Optional
 
 _LOGGER = logging.getLogger(__name__)

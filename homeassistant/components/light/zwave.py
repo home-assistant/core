@@ -7,13 +7,14 @@ https://home-assistant.io/components/light.zwave/
 import logging
 
 from threading import Timer
+from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, DOMAIN, Light)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +44,22 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave lights."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Light from Config Entry."""
+    @callback
+    def async_add_light(light):
+        """Add Z-Wave Light."""
+        async_add_entities([light])
+
+    async_dispatcher_connect(hass, 'zwave_new_light', async_add_light)
+
+
 def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
@@ -61,6 +78,16 @@ def brightness_state(value):
     if value.data > 0:
         return round((value.data / 99) * 255), STATE_ON
     return 0, STATE_OFF
+
+
+def byte_to_zwave_brightness(value):
+    """Convert brightness in 0-255 scale to 0-99 scale.
+
+    `value` -- (int) Brightness byte value from 0-255.
+    """
+    if value > 0:
+        return max(1, int((value / 255) * 99))
+    return 0
 
 
 def ct_to_hs(temp):
@@ -187,7 +214,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 99)
+            brightness = byte_to_zwave_brightness(self._brightness)
         else:
             brightness = 255
 

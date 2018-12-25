@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No es pot connectar amb la passarel\u00b7la d'enlla\u00e7",
+            "invalid_key": "Ha fallat el registre amb la clau proporcionada. Si aix\u00f2 continua passant, intenteu reiniciar la passarel\u00b7la d'enlla\u00e7.",
+            "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "security_code": "Codi de seguretat"
+                },
+                "description": "Podeu trobar el codi de seguretat a la part posterior de la vostra passarel\u00b7la d'enlla\u00e7.",
+                "title": "Introdu\u00efu el codi de seguretat"
+            }
+        },
+        "title": "IKEA TR\u00c5DFRI"
+    }
+}

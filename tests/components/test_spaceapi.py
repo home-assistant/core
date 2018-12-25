@@ -56,7 +56,7 @@ SENSOR_OUTPUT = {
 
 
 @pytest.fixture
-def mock_client(hass, aiohttp_client):
+def mock_client(hass, hass_client):
     """Start the Home Assistant HTTP component."""
     with patch('homeassistant.components.spaceapi',
                return_value=mock_coro(True)):
@@ -70,7 +70,7 @@ def mock_client(hass, aiohttp_client):
     hass.states.async_set('test.hum1', 88,
                           attributes={'unit_of_measurement': '%'})
 
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return hass.loop.run_until_complete(hass_client())
 
 
 async def test_spaceapi_get(hass, mock_client):

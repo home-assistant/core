@@ -4,31 +4,27 @@ Support for Blink system camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.blink/
 """
-from datetime import timedelta
 import logging
 
-import requests
-
-from homeassistant.components.blink import DOMAIN
+from homeassistant.components.blink import BLINK_DATA, DEFAULT_BRAND
 from homeassistant.components.camera import Camera
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['blink']
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
+ATTR_VIDEO_CLIP = 'video'
+ATTR_IMAGE = 'image'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink Camera."""
     if discovery_info is None:
         return
-
-    data = hass.data[DOMAIN].blink
-    devs = list()
-    for name in data.cameras:
-        devs.append(BlinkCamera(hass, config, data, name))
+    data = hass.data[BLINK_DATA]
+    devs = []
+    for name, camera in data.cameras.items():
+        devs.append(BlinkCamera(data, name, camera))
 
     add_entities(devs)
 
@@ -36,15 +32,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
-    def __init__(self, hass, config, data, name):
+    def __init__(self, data, name, camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self.hass = hass
-        self._name = name
-        self.notifications = self.data.cameras[self._name].notifications
+        self._name = "{} {}".format(BLINK_DATA, name)
+        self._camera = camera
+        self._unique_id = "{}-camera".format(camera.serial)
         self.response = None
-
+        self.current_image = None
+        self.last_image = None
         _LOGGER.debug("Initialized blink camera %s", self._name)
 
     @property
@@ -52,30 +49,34 @@ class BlinkCamera(Camera):
         """Return the camera name."""
         return self._name
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def request_image(self):
-        """Request a new image from Blink servers."""
-        _LOGGER.debug("Requesting new image from blink servers")
-        image_url = self.check_for_motion()
-        header = self.data.cameras[self._name].header
-        self.response = requests.get(image_url, headers=header, stream=True)
+    @property
+    def unique_id(self):
+        """Return the unique camera id."""
+        return self._unique_id
 
-    def check_for_motion(self):
-        """Check if motion has been detected since last update."""
-        self.data.refresh()
-        notifs = self.data.cameras[self._name].notifications
-        if notifs > self.notifications:
-            # We detected motion at some point
-            self.data.last_motion()
-            self.notifications = notifs
-            # Returning motion image currently not working
-            # return self.data.cameras[self._name].motion['image']
-        elif notifs < self.notifications:
-            self.notifications = notifs
+    @property
+    def device_state_attributes(self):
+        """Return the camera attributes."""
+        return self._camera.attributes
 
-        return self.data.camera_thumbs[self._name]
+    def enable_motion_detection(self):
+        """Enable motion detection for the camera."""
+        self._camera.set_motion_detect(True)
+
+    def disable_motion_detection(self):
+        """Disable motion detection for the camera."""
+        self._camera.set_motion_detect(False)
+
+    @property
+    def motion_detection_enabled(self):
+        """Return the state of the camera."""
+        return self._camera.motion_enabled
+
+    @property
+    def brand(self):
+        """Return the camera brand."""
+        return DEFAULT_BRAND
 
     def camera_image(self):
         """Return a still image response from the camera."""
-        self.request_image()
-        return self.response.content
+        return self._camera.image_from_cache.content

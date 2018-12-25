@@ -12,6 +12,7 @@
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
 # not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
+# unnecessary-pass - readability for functions which only contain pass
 disable=
   abstract-class-little-used,
   abstract-method,
@@ -32,6 +33,7 @@ disable=
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
+  unnecessary-pass,
   unused-argument
 
 [REPORTS]
@@ -41,6 +43,9 @@ reports=no
 # For attrs
 ignored-classes=_CountingAttr
 generated-members=botocore.errorfactory
+
+[FORMAT]
+expected-line-ending-format=LF
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

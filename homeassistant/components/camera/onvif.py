@@ -46,6 +46,7 @@ DIR_LEFT = "LEFT"
 DIR_RIGHT = "RIGHT"
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
+PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
 
@@ -65,17 +66,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_PTZ_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT]),
-    ATTR_TILT: vol.In([DIR_UP, DIR_DOWN]),
-    ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN])
+    ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
+    ATTR_TILT: vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
+    ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE])
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
-    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
-        return
-
     def handle_ptz(service):
         """Handle PTZ service call."""
         pan = service.data.get(ATTR_PAN, None)
@@ -92,8 +90,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for camera in target_cameras:
             camera.perform_ptz(pan, tilt, zoom)
 
-    hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
-                                 schema=SERVICE_PTZ_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_PTZ, handle_ptz,
+                           schema=SERVICE_PTZ_SCHEMA)
     add_entities([ONVIFHassCamera(hass, config)])
 
 
@@ -220,10 +218,12 @@ class ONVIFHassCamera(Camera):
         await stream.open_camera(
             self._input, extra_cmd=self._ffmpeg_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()
 
     @property
     def name(self):

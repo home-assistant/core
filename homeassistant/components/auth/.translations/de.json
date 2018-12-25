@@ -1,8 +1,27 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Keine Benachrichtigungsdienste verf\u00fcgbar."
+            },
+            "error": {
+                "invalid_code": "Ung\u00fcltiger Code, bitte versuche es erneut."
+            },
+            "step": {
+                "init": {
+                    "description": "Bitte w\u00e4hle einen der Benachrichtigungsdienste:",
+                    "title": "Einmal Passwort f\u00fcr Notify einrichten"
+                },
+                "setup": {
+                    "description": "Ein Einmal-Passwort wurde per ** notify gesendet. {notify_service} **. Bitte gebe es unten ein:",
+                    "title": "\u00dcberpr\u00fcfe das Setup"
+                }
+            },
+            "title": "Benachrichtig f\u00fcr One-Time Password"
+        },
         "totp": {
             "error": {
-                "invalid_code": "Ung\u00fcltiger Code, bitte versuche es erneut. Wenn Sie diesen Fehler regelm\u00e4\u00dfig erhalten, stelle sicher, dass die Uhr deines Home Assistant-Systems korrekt ist."
+                "invalid_code": "Ung\u00fcltiger Code, bitte versuche es erneut. Wenn du diesen Fehler regelm\u00e4\u00dfig erhalten, stelle sicher, dass die Uhr deines Home Assistant-Systems korrekt ist."
             },
             "step": {
                 "init": {

@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.notify import smtp
 
 from tests.common import get_test_home_assistant
+import re
 
 
 class MockSMTP(smtp.MailNotificationService):
@@ -45,14 +46,14 @@ class TestNotifySmtp(unittest.TestCase):
                     'Message-Id: <[^@]+@[^>]+>\n'
                     '\n'
                     'Test msg$')
-        self.assertRegex(msg, expected)
+        assert re.search(expected, msg)
 
     @patch('email.utils.make_msgid', return_value='<mock@mock>')
     def test_mixed_email(self, mock_make_msgid):
         """Test build of mixed text email behavior."""
         msg = self.mailer.send_message('Test msg',
                                        data={'images': ['test.jpg']})
-        self.assertTrue('Content-Type: multipart/related' in msg)
+        assert 'Content-Type: multipart/related' in msg
 
     @patch('email.utils.make_msgid', return_value='<mock@mock>')
     def test_html_email(self, mock_make_msgid):
@@ -73,4 +74,4 @@ class TestNotifySmtp(unittest.TestCase):
         msg = self.mailer.send_message('Test msg',
                                        data={'html': html,
                                              'images': ['test.jpg']})
-        self.assertTrue('Content-Type: multipart/related' in msg)
+        assert 'Content-Type: multipart/related' in msg

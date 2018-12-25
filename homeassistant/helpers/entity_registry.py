@@ -10,6 +10,7 @@ timer.
 from collections import OrderedDict
 from itertools import chain
 import logging
+from typing import Optional
 import weakref
 
 import attr
@@ -31,7 +32,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = 'core.entity_registry'
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -86,6 +87,11 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
+    def async_get(self, entity_id: str) -> Optional[RegistryEntry]:
+        """Get EntityEntry for an entity_id."""
+        return self.entities.get(entity_id)
+
+    @callback
     def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
         """Check if an entity_id is currently registered."""
         for entity in self.entities.values():
@@ -95,7 +101,8 @@ class EntityRegistry:
         return None
 
     @callback
-    def async_generate_entity_id(self, domain, suggested_object_id):
+    def async_generate_entity_id(self, domain, suggested_object_id,
+                                 known_object_ids=None):
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
@@ -103,27 +110,24 @@ class EntityRegistry:
         return ensure_unique_string(
             '{}.{}'.format(domain, slugify(suggested_object_id)),
             chain(self.entities.keys(),
-                  self.hass.states.async_entity_ids(domain))
+                  self.hass.states.async_entity_ids(domain),
+                  known_object_ids if known_object_ids else [])
         )
 
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
                             suggested_object_id=None, config_entry_id=None,
-                            device_id=None):
+                            device_id=None, known_object_ids=None):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
-            entry = self.entities[entity_id]
-            if entry.config_entry_id == config_entry_id:
-                return entry
-
-            self._async_update_entity(
+            return self._async_update_entity(
                 entity_id, config_entry_id=config_entry_id,
                 device_id=device_id)
-            return self.entities[entity_id]
 
         entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
+            domain, suggested_object_id or '{}_{}'.format(platform, unique_id),
+            known_object_ids)
 
         entity = RegistryEntry(
             entity_id=entity_id,
@@ -190,7 +194,7 @@ class EntityRegistry:
         for listener_ref in new.update_listeners:
             listener = listener_ref()
             if listener is None:
-                to_remove.append(listener)
+                to_remove.append(listener_ref)
             else:
                 try:
                     listener.async_registry_updated(old, new)
@@ -245,6 +249,7 @@ class EntityRegistry:
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
                 'name': entry.name,
+                'disabled_by': entry.disabled_by,
             } for entry in self.entities.values()
         ]
 
@@ -253,10 +258,9 @@ class EntityRegistry:
     @callback
     def async_clear_config_entry(self, config_entry):
         """Clear config entry from registry entries."""
-        for entry in self.entities.values():
+        for entity_id, entry in self.entities.items():
             if config_entry == entry.config_entry_id:
-                entry.config_entry_id = None
-                self.async_schedule_save()
+                self._async_update_entity(entity_id, config_entry_id=None)
 
 
 @bind_hass

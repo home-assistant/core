@@ -178,10 +178,10 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             assert len(devices) == 2
             assert devices[0].name == "First"
             assert devices[0].dev_id == "First"
-            self.assertFalse(devices[0].data.include_all_day)
+            assert not devices[0].data.include_all_day
             assert devices[1].name == "Second"
             assert devices[1].dev_id == "Second"
-            self.assertFalse(devices[1].data.include_all_day)
+            assert not devices[1].data.include_all_day
 
         caldav.setup_platform(self.hass,
                               {
@@ -226,7 +226,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             assert len(devices) == 1
             assert devices[0].name == "HomeOffice"
             assert devices[0].dev_id == "Second HomeOffice"
-            self.assertTrue(devices[0].data.include_all_day)
+            assert devices[0].data.include_all_day
 
         caldav.setup_platform(self.hass,
                               {
@@ -247,9 +247,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                DEVICE_DATA,
                                                self.calendar)
 
-        self.assertEqual(cal.name, DEVICE_DATA["name"])
-        self.assertEqual(cal.state, STATE_ON)
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.name == DEVICE_DATA["name"]
+        assert cal.state == STATE_ON
+        assert cal.device_state_attributes == {
             "message": "This is a normal event",
             "all_day": False,
             "offset_reached": False,
@@ -257,7 +257,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
     def test_just_ended_event(self, mock_now):
@@ -266,9 +266,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                DEVICE_DATA,
                                                self.calendar)
 
-        self.assertEqual(cal.name, DEVICE_DATA["name"])
-        self.assertEqual(cal.state, STATE_ON)
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.name == DEVICE_DATA["name"]
+        assert cal.state == STATE_ON
+        assert cal.device_state_attributes == {
             "message": "This is a normal event",
             "all_day": False,
             "offset_reached": False,
@@ -276,7 +276,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 00))
     def test_ongoing_event_different_tz(self, mock_now):
@@ -285,9 +285,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                DEVICE_DATA,
                                                self.calendar)
 
-        self.assertEqual(cal.name, DEVICE_DATA["name"])
-        self.assertEqual(cal.state, STATE_ON)
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.name == DEVICE_DATA["name"]
+        assert cal.state == STATE_ON
+        assert cal.device_state_attributes == {
             "message": "Enjoy the sun",
             "all_day": False,
             "offset_reached": False,
@@ -295,7 +295,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "description": "Sunny day",
             "end_time": "2017-11-27 17:30:00",
             "location": "San Francisco",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(8, 30))
     def test_ongoing_event_with_offset(self, mock_now):
@@ -304,8 +304,8 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                DEVICE_DATA,
                                                self.calendar)
 
-        self.assertEqual(cal.state, STATE_OFF)
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.state == STATE_OFF
+        assert cal.device_state_attributes == {
             "message": "This is an offset event",
             "all_day": False,
             "offset_reached": True,
@@ -313,7 +313,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 11:00:00",
             "location": "Hamburg",
             "description": "Surprisingly shiny",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_matching_filter(self, mock_now):
@@ -324,9 +324,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "This is a normal event")
 
-        self.assertEqual(cal.state, STATE_OFF)
-        self.assertFalse(cal.offset_reached())
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.state == STATE_OFF
+        assert not cal.offset_reached()
+        assert cal.device_state_attributes == {
             "message": "This is a normal event",
             "all_day": False,
             "offset_reached": False,
@@ -334,7 +334,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_matching_filter_real_regexp(self, mock_now):
@@ -345,9 +345,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "^This.*event")
 
-        self.assertEqual(cal.state, STATE_OFF)
-        self.assertFalse(cal.offset_reached())
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.state == STATE_OFF
+        assert not cal.offset_reached()
+        assert cal.device_state_attributes == {
             "message": "This is a normal event",
             "all_day": False,
             "offset_reached": False,
@@ -355,7 +355,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-        })
+        }
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(20, 00))
     def test_filter_matching_past_event(self, mock_now):
@@ -366,7 +366,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "This is a normal event")
 
-        self.assertEqual(cal.data.event, None)
+        assert cal.data.event is None
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_no_result_with_filtering(self, mock_now):
@@ -377,7 +377,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "This is a non-existing event")
 
-        self.assertEqual(cal.data.event, None)
+        assert cal.data.event is None
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
     def test_all_day_event_returned(self, mock_now):
@@ -387,9 +387,9 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                self.calendar,
                                                True)
 
-        self.assertEqual(cal.name, DEVICE_DATA["name"])
-        self.assertEqual(cal.state, STATE_ON)
-        self.assertEqual(cal.device_state_attributes, {
+        assert cal.name == DEVICE_DATA["name"]
+        assert cal.state == STATE_ON
+        assert cal.device_state_attributes == {
             "message": "This is an all day event",
             "all_day": True,
             "offset_reached": False,
@@ -397,4 +397,4 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-28 00:00:00",
             "location": "Hamburg",
             "description": "What a beautiful day",
-        })
+        }

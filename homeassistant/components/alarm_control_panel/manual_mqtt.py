@@ -4,7 +4,6 @@ Support for manual alarms controllable via MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual_mqtt/
 """
-import asyncio
 import copy
 import datetime
 import logging
@@ -336,11 +335,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
         return state_attr
 
-    def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_added_to_hass(self):
+        """Subscribe to MQTT events."""
         async_track_state_change(
             self.hass, self.entity_id, self._async_state_changed_listener
         )
@@ -360,11 +356,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                 _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
 
-        return mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._command_topic, message_received, self._qos)
 
-    @asyncio.coroutine
-    def _async_state_changed_listener(self, entity_id, old_state, new_state):
+    async def _async_state_changed_listener(self, entity_id, old_state,
+                                            new_state):
         """Publish state change to MQTT."""
         mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True)

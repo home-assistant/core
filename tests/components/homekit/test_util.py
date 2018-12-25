@@ -4,7 +4,8 @@ import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, TYPE_OUTLET)
+    FEATURE_PLAY_PAUSE, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+    TYPE_SWITCH, TYPE_VALVE)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
@@ -23,7 +24,8 @@ from tests.common import async_mock_service
 
 def test_validate_entity_config():
     """Test validate entities."""
-    configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
+    configs = [None, [], 'string', 12345,
+               {'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
@@ -57,8 +59,19 @@ def test_validate_entity_config():
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}
     assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
         {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_SHOWER}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_SHOWER}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_SWITCH}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_SWITCH}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_VALVE}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_VALVE}}
 
 
 def test_validate_media_player_features():
@@ -86,13 +99,13 @@ def test_convert_to_float():
 def test_temperature_to_homekit():
     """Test temperature conversion from HA to HomeKit."""
     assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.5
 
 
 def test_temperature_to_states():
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, TEMP_CELSIUS) == 20.0
-    assert temperature_to_states(20.2, TEMP_FAHRENHEIT) == 68.4
+    assert temperature_to_states(20.2, TEMP_FAHRENHEIT) == 68.5
 
 
 def test_density_to_air_quality():

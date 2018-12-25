@@ -8,11 +8,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN)
-from homeassistant.exceptions import PlatformNotReady
+
+REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'
@@ -142,7 +142,7 @@ class XiaomiAirQualityMonitor(Entity):
         from miio import DeviceException
 
         try:
-            state = await self.hass.async_add_job(self._device.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True

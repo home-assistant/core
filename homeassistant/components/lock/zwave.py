@@ -4,13 +4,14 @@ Z-Wave platform that handles simple door locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.zwave/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,22 +29,38 @@ SERVICE_CLEAR_USERCODE = 'clear_usercode'
 POLYCONTROL = 0x10E
 DANALOCK_V2_BTZE = 0x2
 POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
-WORKAROUND_V2BTZE = 'v2btze'
+WORKAROUND_V2BTZE = 1
+WORKAROUND_DEVICE_STATE = 2
+WORKAROUND_TRACK_MESSAGE = 4
 
 DEVICE_MAPPINGS = {
-    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE
+    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE,
+    # Kwikset 914TRL ZW500
+    (0x0090, 0x440): WORKAROUND_DEVICE_STATE,
+    # Yale YRD210
+    (0x0129, 0x0209): WORKAROUND_DEVICE_STATE,
+    (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE,
+    (0x0129, 0x0000): WORKAROUND_DEVICE_STATE,
+    # Yale YRD220 (as reported by adrum in PR #17386)
+    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE,
+    # Schlage BE469
+    (0x003B, 0x5044): WORKAROUND_DEVICE_STATE | WORKAROUND_TRACK_MESSAGE,
+    # Schlage FE599NX
+    (0x003B, 0x504C): WORKAROUND_DEVICE_STATE,
 }
 
 LOCK_NOTIFICATION = {
     '1': 'Manual Lock',
     '2': 'Manual Unlock',
-    '3': 'RF Lock',
-    '4': 'RF Unlock',
     '5': 'Keypad Lock',
     '6': 'Keypad Unlock',
     '11': 'Lock Jammed',
     '254': 'Unknown Event'
 }
+NOTIFICATION_RF_LOCK = '3'
+NOTIFICATION_RF_UNLOCK = '4'
+LOCK_NOTIFICATION[NOTIFICATION_RF_LOCK] = 'RF Lock'
+LOCK_NOTIFICATION[NOTIFICATION_RF_UNLOCK] = 'RF Unlock'
 
 LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
@@ -52,8 +69,6 @@ LOCK_ALARM_TYPE = {
     '19': 'Unlocked with Keypad by user ',
     '21': 'Manually Locked ',
     '22': 'Manually Unlocked ',
-    '24': 'Locked by RF',
-    '25': 'Unlocked by RF',
     '27': 'Auto re-lock',
     '33': 'User deleted: ',
     '112': 'Master code changed or User added: ',
@@ -65,6 +80,10 @@ LOCK_ALARM_TYPE = {
     '168': 'Critical Battery Level',
     '169': 'Battery too low to operate'
 }
+ALARM_RF_LOCK = '24'
+ALARM_RF_UNLOCK = '25'
+LOCK_ALARM_TYPE[ALARM_RF_LOCK] = 'Locked by RF'
+LOCK_ALARM_TYPE[ALARM_RF_UNLOCK] = 'Unlocked by RF'
 
 MANUAL_LOCK_ALARM_LEVEL = {
     '1': 'by Key Cylinder or Inside thumb turn',
@@ -119,12 +138,20 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Set up the Z-Wave Lock platform."""
-    yield from zwave.async_setup_platform(
-        hass, config, async_add_entities, discovery_info)
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave locks."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Lock from Config Entry."""
+    @callback
+    def async_add_lock(lock):
+        """Add Z-Wave Lock."""
+        async_add_entities([lock])
+
+    async_dispatcher_connect(hass, 'zwave_new_lock', async_add_lock)
 
     network = hass.data[zwave.const.DATA_NETWORK]
 
@@ -206,6 +233,9 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._notification = None
         self._lock_status = None
         self._v2btze = None
+        self._state_workaround = False
+        self._track_message_workaround = False
+        self._previous_message = None
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -214,20 +244,30 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             specific_sensor_key = (int(self.node.manufacturer_id, 16),
                                    int(self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_V2BTZE:
+                workaround = DEVICE_MAPPINGS[specific_sensor_key]
+                if workaround & WORKAROUND_V2BTZE:
                     self._v2btze = 1
                     _LOGGER.debug("Polycontrol Danalock v2 BTZE "
                                   "workaround enabled")
+                if workaround & WORKAROUND_DEVICE_STATE:
+                    self._state_workaround = True
+                    _LOGGER.debug(
+                        "Notification device state workaround enabled")
+                if workaround & WORKAROUND_TRACK_MESSAGE:
+                    self._track_message_workaround = True
+                    _LOGGER.debug("Message tracking workaround enabled")
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
         self._state = self.values.primary.data
-        _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
+        _LOGGER.debug("lock state set to %s", self._state)
         if self.values.access_control:
             notification_data = self.values.access_control.data
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
-
+            if self._state_workaround:
+                self._state = LOCK_STATUS.get(str(notification_data))
+                _LOGGER.debug("workaround: lock state set to %s", self._state)
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
@@ -236,16 +276,37 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                         "Lock state set from Access Control value and is %s, "
                         "get=%s", str(notification_data), self.state)
 
+        if self._track_message_workaround:
+            this_message = self.node.stats['lastReceivedMessage'][5]
+
+            if this_message == zwave.const.COMMAND_CLASS_DOOR_LOCK:
+                self._state = self.values.primary.data
+                _LOGGER.debug("set state to %s based on message tracking",
+                              self._state)
+                if self._previous_message == \
+                        zwave.const.COMMAND_CLASS_DOOR_LOCK:
+                    if self._state:
+                        self._notification = \
+                            LOCK_NOTIFICATION[NOTIFICATION_RF_LOCK]
+                        self._lock_status = \
+                            LOCK_ALARM_TYPE[ALARM_RF_LOCK]
+                    else:
+                        self._notification = \
+                            LOCK_NOTIFICATION[NOTIFICATION_RF_UNLOCK]
+                        self._lock_status = \
+                            LOCK_ALARM_TYPE[ALARM_RF_UNLOCK]
+                    return
+
+            self._previous_message = this_message
+
         if not self.values.alarm_type:
             return
 
         alarm_type = self.values.alarm_type.data
-        _LOGGER.debug("Lock alarm_type is %s", str(alarm_type))
         if self.values.alarm_level:
             alarm_level = self.values.alarm_level.data
         else:
             alarm_level = None
-        _LOGGER.debug("Lock alarm_level is %s", str(alarm_level))
 
         if not alarm_type:
             return

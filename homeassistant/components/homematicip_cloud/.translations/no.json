@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Tilgangspunktet er allerede konfigurert",
-            "conection_aborted": "Kunne ikke koble til HMIP serveren",
             "connection_aborted": "Kunne ikke koble til HMIP serveren",
             "unknown": "Ukjent feil oppstod."
         },

@@ -4,7 +4,6 @@ Support for AlarmDecoder zone states- represented as binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.alarmdecoder/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -64,8 +63,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._relay_addr = relay_addr
         self._relay_chan = relay_chan
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_ZONE_FAULT, self._fault_callback)

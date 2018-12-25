@@ -4,7 +4,6 @@ Support for Prometheus metrics export.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/prometheus/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -139,6 +138,15 @@ class PrometheusMetrics:
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_input_boolean(self, state):
+        metric = self._metric(
+            'input_boolean_state',
+            self.prometheus_client.Gauge,
+            'State of the input boolean (0/1)',
+        )
+        value = state_helper.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_device_tracker(self, state):
         metric = self._metric(
             'device_tracker_state',
@@ -265,8 +273,7 @@ class PrometheusView(HomeAssistantView):
         """Initialize Prometheus view."""
         self.prometheus_client = prometheus_client
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 

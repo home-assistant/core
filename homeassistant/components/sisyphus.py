@@ -54,12 +54,12 @@ async def async_setup(hass, config):
         tables[name] = table
         _LOGGER.debug("Connected to %s at %s", name, host)
 
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'light', DOMAIN, {
                 CONF_NAME: name,
             }, config
         ))
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'media_player', DOMAIN, {
                 CONF_NAME: name,
                 CONF_HOST: host,

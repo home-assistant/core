@@ -1,18 +1,16 @@
 """The tests for the MQTT room presence sensor."""
 import json
 import datetime
-import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS,
                                            DEFAULT_QOS)
 from homeassistant.const import (CONF_NAME, CONF_PLATFORM)
 from homeassistant.util import dt
 
-from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
+from tests.common import async_fire_mqtt_message
 
 DEVICE_ID = '123TESTMAC'
 NAME = 'test_device'
@@ -46,63 +44,53 @@ REALLY_FAR_MESSAGE = {
 }
 
 
-class TestMQTTRoomSensor(unittest.TestCase):
-    """Test the room presence sensor."""
+async def send_message(hass, topic, message):
+    """Test the sending of a message."""
+    async_fire_mqtt_message(
+        hass, topic, json.dumps(message))
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        mock_mqtt_component(self.hass)
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
-            sensor.DOMAIN: {
-                CONF_PLATFORM: 'mqtt_room',
-                CONF_NAME: NAME,
-                CONF_DEVICE_ID: DEVICE_ID,
-                CONF_STATE_TOPIC: 'room_presence',
-                CONF_QOS: DEFAULT_QOS,
-                CONF_TIMEOUT: 5
-            }}))
 
-        # Clear state between tests
-        self.hass.states.set(SENSOR_STATE, None)
+async def assert_state(hass, room):
+    """Test the assertion of a room state."""
+    state = hass.states.get(SENSOR_STATE)
+    assert state.state == room
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def send_message(self, topic, message):
-        """Test the sending of a message."""
-        fire_mqtt_message(
-            self.hass, topic, json.dumps(message))
-        self.hass.block_till_done()
+async def assert_distance(hass, distance):
+    """Test the assertion of a distance state."""
+    state = hass.states.get(SENSOR_STATE)
+    assert state.attributes.get('distance') == distance
 
-    def assert_state(self, room):
-        """Test the assertion of a room state."""
-        state = self.hass.states.get(SENSOR_STATE)
-        self.assertEqual(state.state, room)
 
-    def assert_distance(self, distance):
-        """Test the assertion of a distance state."""
-        state = self.hass.states.get(SENSOR_STATE)
-        self.assertEqual(state.attributes.get('distance'), distance)
+async def test_room_update(hass, mqtt_mock):
+    """Test the updating between rooms."""
+    assert await async_setup_component(hass, sensor.DOMAIN, {
+        sensor.DOMAIN: {
+            CONF_PLATFORM: 'mqtt_room',
+            CONF_NAME: NAME,
+            CONF_DEVICE_ID: DEVICE_ID,
+            CONF_STATE_TOPIC: 'room_presence',
+            CONF_QOS: DEFAULT_QOS,
+            CONF_TIMEOUT: 5
+        }})
 
-    def test_room_update(self):
-        """Test the updating between rooms."""
-        self.send_message(BEDROOM_TOPIC, FAR_MESSAGE)
-        self.assert_state(BEDROOM)
-        self.assert_distance(10)
+    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+    await assert_state(hass, BEDROOM)
+    await assert_distance(hass, 10)
 
-        self.send_message(LIVING_ROOM_TOPIC, NEAR_MESSAGE)
-        self.assert_state(LIVING_ROOM)
-        self.assert_distance(1)
+    await send_message(hass, LIVING_ROOM_TOPIC, NEAR_MESSAGE)
+    await assert_state(hass, LIVING_ROOM)
+    await assert_distance(hass, 1)
 
-        self.send_message(BEDROOM_TOPIC, FAR_MESSAGE)
-        self.assert_state(LIVING_ROOM)
-        self.assert_distance(1)
+    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+    await assert_state(hass, LIVING_ROOM)
+    await assert_distance(hass, 1)
 
-        time = dt.utcnow() + datetime.timedelta(seconds=7)
-        with patch('homeassistant.helpers.condition.dt_util.utcnow',
-                   return_value=time):
-            self.send_message(BEDROOM_TOPIC, FAR_MESSAGE)
-            self.assert_state(BEDROOM)
-            self.assert_distance(10)
+    time = dt.utcnow() + datetime.timedelta(seconds=7)
+    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+               return_value=time):
+        await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+        await assert_state(hass, BEDROOM)
+        await assert_distance(hass, 10)

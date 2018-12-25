@@ -186,6 +186,6 @@ def _logbook_filtering(hass, last_changed, last_updated):
 
     # pylint: disable=protected-access
     events = logbook._exclude_events(events, {})
-    list(logbook.humanify(events))
+    list(logbook.humanify(None, events))
 
     return timer() - start

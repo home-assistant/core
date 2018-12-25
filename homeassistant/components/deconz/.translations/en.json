@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Host",
-                    "port": "Port (default value: '80')"
+                    "port": "Port"
                 },
                 "title": "Define deCONZ gateway"
             },

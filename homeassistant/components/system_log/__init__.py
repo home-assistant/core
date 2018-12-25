@@ -4,7 +4,6 @@ Support for system log.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/system_log/
 """
-import asyncio
 from collections import deque
 from io import StringIO
 import logging
@@ -134,8 +133,7 @@ class LogErrorHandler(logging.Handler):
                 self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the logger component."""
     conf = config.get(DOMAIN)
     if conf is None:
@@ -147,8 +145,7 @@ def async_setup(hass, config):
 
     hass.http.register_view(AllErrorsView(handler))
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle logger services."""
         if service.service == 'clear':
             handler.records.clear()
@@ -159,8 +156,7 @@ def async_setup(hass, config):
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
 
-    @asyncio.coroutine
-    def async_shutdown_handler(event):
+    async def async_shutdown_handler(event):
         """Remove logging handler when Home Assistant is shutdown."""
         # This is needed as older logger instances will remain
         logging.getLogger().removeHandler(handler)
@@ -188,8 +184,7 @@ class AllErrorsView(HomeAssistantView):
         """Initialize a new AllErrorsView."""
         self.handler = handler
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Get all errors and warnings."""
         # deque is not serializable (it's just "list-like") so it must be
         # converted to a list before it can be serialized to json

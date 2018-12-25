@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Storitve obve\u0161\u010danja niso na voljo."
+            },
+            "error": {
+                "invalid_code": "Neveljavna koda, poskusite znova."
+            },
+            "step": {
+                "init": {
+                    "description": "Izberite eno od storitev obve\u0161\u010danja:",
+                    "title": "Nastavite enkratno geslo, ki ga dostavite z obvestilno komponento"
+                },
+                "setup": {
+                    "description": "Enkratno geslo je poslal **notify.{notify_service} **. Prosimo, vnesite ga spodaj:",
+                    "title": "Preverite nastavitev"
+                }
+            },
+            "title": "Obvesti Enkratno Geslo"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Neveljavna koda, prosimo, poskusite znova. \u010ce dobite to sporo\u010dilo ve\u010dkrat, prosimo poskrbite, da bo ura va\u0161ega Home Assistenta to\u010dna."

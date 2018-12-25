@@ -4,7 +4,6 @@ Support for UpCloud.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upcloud/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -129,8 +128,7 @@ class UpCloudServerEntity(Entity):
         except (AttributeError, KeyError, TypeError):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback)

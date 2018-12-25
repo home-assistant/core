@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import pytest
 
+from homeassistant.core import DOMAIN as HASS_DOMAIN
 from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
 import homeassistant.components as component
@@ -89,7 +90,7 @@ async def test_register_before_setup(hass):
     assert intent.text_input == 'I would like the Grolsch beer'
 
 
-async def test_http_processing_intent(hass, aiohttp_client):
+async def test_http_processing_intent(hass, hass_client):
     """Test processing intent via HTTP API."""
     class TestIntentHandler(intent.IntentHandler):
         """Test Intent Handler."""
@@ -119,7 +120,7 @@ async def test_http_processing_intent(hass, aiohttp_client):
     })
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     resp = await client.post('/api/conversation/process', json={
         'text': 'I would like the Grolsch beer'
     })
@@ -152,7 +153,7 @@ async def test_turn_on_intent(hass, sentence):
     assert result
 
     hass.states.async_set('light.kitchen', 'off')
-    calls = async_mock_service(hass, 'homeassistant', 'turn_on')
+    calls = async_mock_service(hass, HASS_DOMAIN, 'turn_on')
 
     await hass.services.async_call(
         'conversation', 'process', {
@@ -162,7 +163,7 @@ async def test_turn_on_intent(hass, sentence):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == 'homeassistant'
+    assert call.domain == HASS_DOMAIN
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': 'light.kitchen'}
 
@@ -203,7 +204,7 @@ async def test_turn_off_intent(hass, sentence):
     assert result
 
     hass.states.async_set('light.kitchen', 'on')
-    calls = async_mock_service(hass, 'homeassistant', 'turn_off')
+    calls = async_mock_service(hass, HASS_DOMAIN, 'turn_off')
 
     await hass.services.async_call(
         'conversation', 'process', {
@@ -213,7 +214,7 @@ async def test_turn_off_intent(hass, sentence):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == 'homeassistant'
+    assert call.domain == HASS_DOMAIN
     assert call.service == 'turn_off'
     assert call.data == {'entity_id': 'light.kitchen'}
 
@@ -228,7 +229,7 @@ async def test_toggle_intent(hass, sentence):
     assert result
 
     hass.states.async_set('light.kitchen', 'on')
-    calls = async_mock_service(hass, 'homeassistant', 'toggle')
+    calls = async_mock_service(hass, HASS_DOMAIN, 'toggle')
 
     await hass.services.async_call(
         'conversation', 'process', {
@@ -238,12 +239,12 @@ async def test_toggle_intent(hass, sentence):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == 'homeassistant'
+    assert call.domain == HASS_DOMAIN
     assert call.service == 'toggle'
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api(hass, aiohttp_client):
+async def test_http_api(hass, hass_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -251,9 +252,9 @@ async def test_http_api(hass, aiohttp_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     hass.states.async_set('light.kitchen', 'off')
-    calls = async_mock_service(hass, 'homeassistant', 'turn_on')
+    calls = async_mock_service(hass, HASS_DOMAIN, 'turn_on')
 
     resp = await client.post('/api/conversation/process', json={
         'text': 'Turn the kitchen on'
@@ -262,12 +263,12 @@ async def test_http_api(hass, aiohttp_client):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == 'homeassistant'
+    assert call.domain == HASS_DOMAIN
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api_wrong_data(hass, aiohttp_client):
+async def test_http_api_wrong_data(hass, hass_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -275,7 +276,7 @@ async def test_http_api_wrong_data(hass, aiohttp_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     resp = await client.post('/api/conversation/process', json={
         'text': 123

@@ -49,10 +49,9 @@ def setup(hass, config):
 
     # It doesn't really matter why we're not able to get the status, just that
     # we can't.
-    # pylint: disable=broad-except
     try:
         DATA.update(no_throttle=True)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Failure while testing APCUPSd status retrieval.")
         return False
     return True

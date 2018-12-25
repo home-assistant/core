@@ -4,7 +4,6 @@ Support for Satel Integra alarm, using ETHM module: https://www.satel.pl/en/ .
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.satel_integra/
 """
-import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -18,9 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['satel_integra']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up for Satel Integra alarm panels."""
     if not discovery_info:
         return
@@ -39,8 +37,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._state = None
         self._arm_home_mode = arm_home_mode
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
@@ -74,21 +71,18 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         if code:
-            yield from self.hass.data[DATA_SATEL].disarm(code)
+            await self.hass.data[DATA_SATEL].disarm(code)
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:
-            yield from self.hass.data[DATA_SATEL].arm(code)
+            await self.hass.data[DATA_SATEL].arm(code)
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
-            yield from self.hass.data[DATA_SATEL].arm(
+            await self.hass.data[DATA_SATEL].arm(
                 code, self._arm_home_mode)

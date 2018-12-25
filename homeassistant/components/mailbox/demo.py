@@ -4,7 +4,6 @@ Asterisk Voicemail interface.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/mailbox.asteriskvm/
 """
-import asyncio
 from hashlib import sha1
 import logging
 import os
@@ -15,13 +14,12 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "DemoMailbox"
+MAILBOX_NAME = "DemoMailbox"
 
 
-@asyncio.coroutine
-def async_get_handler(hass, config, discovery_info=None):
+async def async_get_handler(hass, config, discovery_info=None):
     """Set up the Demo mailbox."""
-    return DemoMailbox(hass, DOMAIN)
+    return DemoMailbox(hass, MAILBOX_NAME)
 
 
 class DemoMailbox(Mailbox):
@@ -54,8 +52,17 @@ class DemoMailbox(Mailbox):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
-    @asyncio.coroutine
-    def async_get_media(self, msgid):
+    @property
+    def can_delete(self):
+        """Return if messages can be deleted."""
+        return True
+
+    @property
+    def has_media(self):
+        """Return if messages have attached media files."""
+        return True
+
+    async def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
         if msgid not in self._messages:
             raise StreamError("Message not found")
@@ -65,8 +72,7 @@ class DemoMailbox(Mailbox):
         with open(audio_path, 'rb') as file:
             return file.read()
 
-    @asyncio.coroutine
-    def async_get_messages(self):
+    async def async_get_messages(self):
         """Return a list of the current messages."""
         return sorted(self._messages.values(),
                       key=lambda item: item['info']['origtime'],

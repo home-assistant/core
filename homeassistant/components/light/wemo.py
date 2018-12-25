@@ -4,7 +4,6 @@ Support for Belkin WeMo lights.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.wemo/
 """
-import asyncio
 import logging
 from datetime import timedelta
 import requests
@@ -160,13 +159,12 @@ class WemoDimmer(Light):
         self._brightness = None
         self._state = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update callback."""
         wemo = self.hass.components.wemo
         # The register method uses a threading condition, so call via executor.
-        # and yield from to wait until the task is done.
-        yield from self.hass.async_add_job(
+        # and await to wait until the task is done.
+        await self.hass.async_add_job(
             wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
         # The on method just appends to a defaultdict list.
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)

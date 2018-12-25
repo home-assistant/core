@@ -1,21 +1,24 @@
 """Provide configuration end points for Customize."""
-import asyncio
 
 from homeassistant.components.config import EditKeyBasedConfigView
-from homeassistant.components import async_reload_core_config
+from homeassistant.components import SERVICE_RELOAD_CORE_CONFIG
 from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.core import DOMAIN
 
 import homeassistant.helpers.config_validation as cv
 
 CONFIG_PATH = 'customize.yaml'
 
 
-@asyncio.coroutine
-def async_setup(hass):
+async def async_setup(hass):
     """Set up the Customize config API."""
+    async def hook(hass):
+        """post_write_hook for Config View that reloads groups."""
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+
     hass.http.register_view(CustomizeConfigView(
         'customize', 'config', CONFIG_PATH, cv.entity_id, dict,
-        post_write_hook=async_reload_core_config
+        post_write_hook=hook
     ))
 
     return True

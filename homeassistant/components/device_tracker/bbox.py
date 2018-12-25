@@ -5,18 +5,29 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bbox/
 """
 from collections import namedtuple
-import logging
 from datetime import timedelta
+import logging
 
-import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN, DeviceScanner
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_HOST = '192.168.1.254'
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+})
 
 
 def get_scanner(hass, config):
@@ -33,6 +44,9 @@ class BboxDeviceScanner(DeviceScanner):
     """This class scans for devices connected to the bbox."""
 
     def __init__(self, config):
+        """Get host from config."""
+        self.host = config[CONF_HOST]
+
         """Initialize the scanner."""
         self.last_results = []  # type: List[Device]
 
@@ -64,7 +78,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         import pybbox
 
-        box = pybbox.Bbox()
+        box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()
 
         now = dt_util.now()

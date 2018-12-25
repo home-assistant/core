@@ -5,8 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
-    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN, SWITCH_TYPES)
+    CONF_ALLOW_DECONZ_GROUPS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
+    COVER_TYPES, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -28,16 +28,18 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_light(lights):
         """Add light from deCONZ."""
         entities = []
         for light in lights:
-            if light.type not in SWITCH_TYPES:
-                entities.append(DeconzLight(light))
+            if light.type not in COVER_TYPES + SWITCH_TYPES:
+                entities.append(DeconzLight(light, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
     @callback
@@ -47,22 +49,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         allow_group = config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
         for group in groups:
             if group.lights and allow_group:
-                entities.append(DeconzLight(group))
+                entities.append(DeconzLight(group, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
-    async_add_light(hass.data[DATA_DECONZ].lights.values())
-    async_add_group(hass.data[DATA_DECONZ].groups.values())
+    async_add_light(gateway.api.lights.values())
+    async_add_group(gateway.api.groups.values())
 
 
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light):
+    def __init__(self, light, gateway):
         """Set up light and add update callback to get data from websocket."""
         self._light = light
+        self.gateway = gateway
+        self.unsub_dispatcher = None
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -80,10 +84,14 @@ class DeconzLight(Light):
     async def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._light.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect light object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._light.remove_callback(self.async_update_callback)
         self._light = None
 
@@ -140,7 +148,7 @@ class DeconzLight(Light):
     @property
     def available(self):
         """Return True if light is available."""
-        return self._light.reachable
+        return self.gateway.available and self._light.reachable
 
     @property
     def should_poll(self):
@@ -213,6 +221,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -220,4 +229,5 @@ class DeconzLight(Light):
             'model': self._light.modelid,
             'name': self._light.name,
             'sw_version': self._light.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

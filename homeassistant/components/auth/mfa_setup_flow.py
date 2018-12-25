@@ -64,7 +64,7 @@ def websocket_setup_mfa(
         if flow_id is not None:
             result = await flow_manager.async_configure(
                 flow_id, msg.get('user_input'))
-            connection.send_message_outside(
+            connection.send_message(
                 websocket_api.result_message(
                     msg['id'], _prepare_result_json(result)))
             return
@@ -72,7 +72,7 @@ def websocket_setup_mfa(
         mfa_module_id = msg.get('mfa_module_id')
         mfa_module = hass.auth.get_auth_mfa_module(mfa_module_id)
         if mfa_module is None:
-            connection.send_message_outside(websocket_api.error_message(
+            connection.send_message(websocket_api.error_message(
                 msg['id'], 'no_module',
                 'MFA module {} is not found'.format(mfa_module_id)))
             return
@@ -80,7 +80,7 @@ def websocket_setup_mfa(
         result = await flow_manager.async_init(
             mfa_module_id, data={'user_id': connection.user.id})
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(
                 msg['id'], _prepare_result_json(result)))
 
@@ -99,13 +99,13 @@ def websocket_depose_mfa(
             await hass.auth.async_disable_user_mfa(
                 connection.user, msg['mfa_module_id'])
         except ValueError as err:
-            connection.send_message_outside(websocket_api.error_message(
+            connection.send_message(websocket_api.error_message(
                 msg['id'], 'disable_failed',
                 'Cannot disable MFA Module {}: {}'.format(
                     mfa_module_id, err)))
             return
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(
                 msg['id'], 'done'))
 

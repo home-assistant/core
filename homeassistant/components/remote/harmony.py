@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
 import asyncio
+import json
 import logging
-import time
+from datetime import timedelta
+from pathlib import Path
 
 import voluptuous as vol
 
@@ -20,11 +22,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony==1.0.20']
+# REQUIREMENTS = ['pyharmony==1.0.22']
+REQUIREMENTS = [
+    'https://github.com/home-assistant/pyharmony/archive/'
+    '31efd339a3c39e7b8f58e823a0eddb59013e03ae.zip'
+    '#pyharmony==1.0.21b1'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 5222
+DEFAULT_PORT = 8088
+SCAN_INTERVAL = timedelta(seconds=5)
 DEVICES = []
 CONF_DEVICE_CACHE = 'harmony_device_cache'
 
@@ -44,7 +52,8 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Harmony platform."""
     host = None
     activity = None
@@ -96,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs)
         DEVICES.append(device)
-        add_entities([device])
+        async_add_entities([device])
         register_services(hass)
     except (ValueError, AttributeError):
         raise PlatformNotReady
@@ -104,12 +113,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def register_services(hass):
     """Register all services for harmony devices."""
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SYNC, _sync_service,
         schema=HARMONY_SYNC_SCHEMA)
 
 
-def _apply_service(service, service_func, *service_func_args):
+async def _apply_service(service, service_func, *service_func_args):
     """Handle services to apply."""
     entity_ids = service.data.get('entity_id')
 
@@ -120,12 +129,12 @@ def _apply_service(service, service_func, *service_func_args):
         _devices = DEVICES
 
     for device in _devices:
-        service_func(device, *service_func_args)
+        await service_func(device, *service_func_args)
         device.schedule_update_ha_state(True)
 
 
-def _sync_service(service):
-    _apply_service(service, HarmonyRemote.sync)
+async def _sync_service(service):
+    await _apply_service(service, HarmonyRemote.sync)
 
 
 class HarmonyRemote(remote.RemoteDevice):
@@ -133,8 +142,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
-        import pyharmony
-        from pathlib import Path
+        import pyharmony.client as harmony_client
 
         _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
@@ -143,24 +151,30 @@ class HarmonyRemote(remote.RemoteDevice):
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-        self._client = pyharmony.get_client(host, port, self.new_activity)
+        # self._client = pyharmony.get_client(host, port, self.new_activity)
+        self._client = harmony_client.HarmonyClient(host)
         self._config_path = out_path
-        self._config = self._client.get_config()
-        if not Path(self._config_path).is_file():
-            _LOGGER.debug("Writing harmony configuration to file: %s",
-                          out_path)
-            pyharmony.ha_write_config_file(self._config, self._config_path)
         self._delay_secs = delay_secs
+        _LOGGER.debug("HarmonyRemote device init completed for: %s", name)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Complete the initialization."""
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            lambda event: self._client.disconnect(wait=True))
+        _LOGGER.debug("HarmonyRemote added for: %s", self._name)
+
+        async def shutdown(event):
+            """Close connection on shutdown."""
+            await self._client.disconnect()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
+        _LOGGER.debug("Connecting.")
+        await self._client.connect()
+        await self._client.get_config()
+        if not Path(self._config_path).is_file():
+            self.write_config_file()
 
         # Poll for initial state
-        self.new_activity(self._client.get_current_activity())
+        self.new_activity(await self._client.get_current_activity())
 
     @property
     def name(self):
@@ -170,7 +184,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def should_poll(self):
         """Return the fact that we should not be polled."""
-        return False
+        return True
 
     @property
     def device_state_attributes(self):
@@ -182,52 +196,101 @@ class HarmonyRemote(remote.RemoteDevice):
         """Return False if PowerOff is the current activity, otherwise True."""
         return self._current_activity not in [None, 'PowerOff']
 
+    async def async_update(self):
+        """Retrieve current activity from Hub."""
+        _LOGGER.debug("Updating Harmony.")
+        if not self._client.config:
+            await self._client.get_config()
+
+        activity_id = await self._client.get_current_activity()
+        activity_name = self._client.get_activity_name(activity_id)
+        _LOGGER.debug("%s activity reported as: %s", self._name, activity_name)
+        self._current_activity = activity_name
+        self._state = bool(self._current_activity != 'PowerOff')
+        return
+
     def new_activity(self, activity_id):
         """Call for updating the current activity."""
-        import pyharmony
-        activity_name = pyharmony.activity_name(self._config, activity_id)
+        activity_name = self._client.get_activity_name(activity_id)
         _LOGGER.debug("%s activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
         self._state = bool(self._current_activity != 'PowerOff')
         self.schedule_update_ha_state()
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
-        import pyharmony
         activity = kwargs.get(ATTR_ACTIVITY, self._default_activity)
 
         if activity:
-            activity_id = pyharmony.activity_id(self._config, activity)
-            self._client.start_activity(activity_id)
+            activity_id = None
+            if activity.isdigit() or activity == '-1':
+                _LOGGER.debug("Activity is numeric")
+                if self._client.get_activity_name(int(activity)):
+                    activity_id = activity
+
+            if not activity_id:
+                _LOGGER.debug("Find activity ID based on name")
+                activity_id = self._client.get_activity_id(
+                    str(activity).strip())
+
+            if not activity_id:
+                _LOGGER.error("Activity %s is invalid", activity)
+                return
+
+            await self._client.start_activity(activity_id)
             self._state = True
         else:
             _LOGGER.error("No activity specified with turn_on service")
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Start the PowerOff activity."""
-        self._client.power_off()
+        await self._client.power_off()
 
     # pylint: disable=arguments-differ
-    def send_command(self, commands, **kwargs):
+    async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         device = kwargs.get(ATTR_DEVICE)
         if device is None:
             _LOGGER.error("Missing required argument: device")
             return
 
+        device_id = None
+        if device.isdigit():
+            _LOGGER.debug("Device is numeric")
+            if self._client.get_device_name(int(device)):
+                device_id = device
+
+        if not device_id:
+            _LOGGER.debug("Find device ID based on device name")
+            device_id = self._client.get_activity_id(str(device).strip())
+
+        if not device_id:
+            _LOGGER.error("Device  %s is invalid", device)
+            return
+
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
 
         for _ in range(num_repeats):
-            for command in commands:
-                self._client.send_command(device, command)
-                time.sleep(delay_secs)
+            for single_command in command:
+                _LOGGER.debug("Sending command %s", single_command)
+                await self._client.send_command(device, single_command)
+                await asyncio.sleep(delay_secs)
 
-    def sync(self):
+    async def sync(self):
         """Sync the Harmony device with the web service."""
-        import pyharmony
         _LOGGER.debug("Syncing hub with Harmony servers")
-        self._client.sync()
-        self._config = self._client.get_config()
+        await self._client.sync()
+        await self._client.get_config()
+        await self.hass.async_add_executor_job(self.write_config_file)
+
+    def write_config_file(self):
+        """Write Harmony configuration file."""
         _LOGGER.debug("Writing hub config to file: %s", self._config_path)
-        pyharmony.ha_write_config_file(self._config, self._config_path)
+        try:
+            with open(self._config_path, 'w+', encoding='utf-8') as file_out:
+                json.dump(self._client.json_config, file_out,
+                          sort_keys=True, indent=4)
+        except IOError as exc:
+            _LOGGER.error("Unable to write HUB configuration to %s: %s",
+                          self._config_path, exc)

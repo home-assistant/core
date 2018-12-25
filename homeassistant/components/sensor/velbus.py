@@ -6,8 +6,6 @@ https://home-assistant.io/components/sensor.velbus/
 """
 import logging
 
-from homeassistant.const import (
-    TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 
@@ -25,24 +23,24 @@ async def async_setup_platform(hass, config, async_add_entities,
     for sensor in discovery_info:
         module = hass.data[VELBUS_DOMAIN].get_module(sensor[0])
         channel = sensor[1]
-        sensors.append(VelbusTempSensor(module, channel))
+        sensors.append(VelbusSensor(module, channel))
     async_add_entities(sensors)
 
 
-class VelbusTempSensor(VelbusEntity):
-    """Representation of a temperature sensor."""
+class VelbusSensor(VelbusEntity):
+    """Representation of a sensor."""
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
+        return self._module.get_class(self._channel)
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._module.getCurTemp()
+        return self._module.get_state(self._channel)
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TEMP_CELSIUS
+        return self._module.get_unit(self._channel)

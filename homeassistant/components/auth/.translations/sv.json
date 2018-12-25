@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Inga tillg\u00e4ngliga meddelande tj\u00e4nster."
+            },
+            "error": {
+                "invalid_code": "Ogiltig kod, var god f\u00f6rs\u00f6k igen."
+            },
+            "step": {
+                "init": {
+                    "description": "Var god v\u00e4lj en av notifieringstj\u00e4nsterna:",
+                    "title": "Konfigurera ett eng\u00e5ngsl\u00f6senord levererat genom notifieringskomponenten"
+                },
+                "setup": {
+                    "description": "Ett eng\u00e5ngsl\u00f6senord har skickats av **notify.{notify_service}**. V\u00e4nligen ange det nedan:",
+                    "title": "Verifiera inst\u00e4llningen"
+                }
+            },
+            "title": "Meddela eng\u00e5ngsl\u00f6senord"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Ogiltig kod, f\u00f6rs\u00f6k igen. Om du flera g\u00e5nger i rad f\u00e5r detta fel, se till att klockan i din Home Assistant \u00e4r korrekt inst\u00e4lld."

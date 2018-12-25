@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Brak dost\u0119pnych us\u0142ug powiadamiania."
+            },
+            "error": {
+                "invalid_code": "Nieprawid\u0142owy kod, spr\u00f3buj ponownie."
+            },
+            "step": {
+                "init": {
+                    "description": "Prosz\u0119 wybra\u0107 jedn\u0105 z us\u0142ugi powiadamiania:",
+                    "title": "Skonfiguruj has\u0142o jednorazowe dostarczone przez komponent powiadomie\u0144"
+                },
+                "setup": {
+                    "description": "Has\u0142o jednorazowe zosta\u0142o wys\u0142ane przez **notify.{notify_service}**. Wpisz je poni\u017cej:",
+                    "title": "Sprawd\u017a konfiguracj\u0119"
+                }
+            },
+            "title": "Powiadomienie z has\u0142em jednorazowym"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Nieprawid\u0142owy kod, spr\u00f3buj ponownie. Je\u015bli b\u0142\u0105d b\u0119dzie si\u0119 powtarza\u0142, upewnij si\u0119, \u017ce czas zegara systemu Home Assistant jest prawid\u0142owy."

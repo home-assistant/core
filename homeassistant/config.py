@@ -6,8 +6,7 @@ import logging
 import os
 import re
 import shutil
-# pylint: disable=unused-import
-from typing import (  # noqa: F401
+from typing import (  # noqa: F401 pylint: disable=unused-import
     Any, Tuple, Optional, Dict, List, Union, Callable, Sequence, Set)
 from types import ModuleType
 import voluptuous as vol
@@ -106,8 +105,9 @@ map:
 # Track the sun
 sun:
 
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech
@@ -172,7 +172,7 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
+        {cv.string: vol.Any(dict, list, None)})  # Component configuration
 })
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
@@ -332,7 +332,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
-    configuration by itself.
+    configuration by itself. Include package merge.
 
     This method is a coroutine.
     """
@@ -341,7 +341,10 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         if path is None:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
-        return load_yaml_config_file(path)
+        config = load_yaml_config_file(path)
+        core_config = config.get(CONF_CORE, {})
+        merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+        return config
 
     return await hass.async_add_executor_job(_load_hass_yaml_config)
 
@@ -445,7 +448,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
-    if domain != 'homeassistant':
+    if domain != CONF_CORE:
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
@@ -476,7 +479,7 @@ async def async_process_ha_core_config(
                 auth_conf.append({'type': 'trusted_networks'})
 
         mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
-            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'}
+            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
         ])
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
@@ -663,7 +666,10 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(hass, comp_name)
+            # If component name is given with a trailing description, remove it
+            # when looking for component
+            domain = comp_name.split(' ')[0]
+            component = get_component(hass, domain)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")

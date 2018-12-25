@@ -66,9 +66,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Yr.no sensor."""
     elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
     forecast = config.get(CONF_FORECAST)
@@ -92,8 +91,9 @@ def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    async_track_utc_time_change(hass, weather.updating_devices, minute=31)
-    yield from weather.fetching_data()
+    async_track_utc_time_change(hass, weather.updating_devices,
+                                minute=31, second=0)
+    await weather.fetching_data()
 
 
 class YrSensor(Entity):
@@ -156,8 +156,7 @@ class YrData:
         self.data = {}
         self.hass = hass
 
-    @asyncio.coroutine
-    def fetching_data(self, *_):
+    async def fetching_data(self, *_):
         """Get the latest data from yr.no."""
         import xmltodict
 
@@ -169,12 +168,12 @@ class YrData:
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from websession.get(
+                resp = await websession.get(
                     self._url, params=self._urlparams)
             if resp.status != 200:
                 try_again('{} returned {}'.format(resp.url, resp.status))
                 return
-            text = yield from resp.text()
+            text = await resp.text()
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             try_again(err)
@@ -186,11 +185,10 @@ class YrData:
             try_again(err)
             return
 
-        yield from self.updating_devices()
+        await self.updating_devices()
         async_call_later(self.hass, 60*60, self.fetching_data)
 
-    @asyncio.coroutine
-    def updating_devices(self, *_):
+    async def updating_devices(self, *_):
         """Find the current data from self.data."""
         if not self.data:
             return
@@ -256,4 +254,4 @@ class YrData:
                     tasks.append(dev.async_update_ha_state())
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks, loop=self.hass.loop)

@@ -15,8 +15,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
+from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, User, UserMeta  # noqa: F401
-from ..mfa_modules import SESSION_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = 'auth_prov_reqs_processed'
@@ -171,6 +171,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self._auth_manager = auth_provider.hass.auth  # type: ignore
         self.available_mfa_modules = {}  # type: Dict[str, str]
         self.created_at = dt_util.utcnow()
+        self.invalid_mfa_times = 0
         self.user = None  # type: Optional[User]
 
     async def async_step_init(
@@ -178,7 +179,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             -> Dict[str, Any]:
         """Handle the first step of login flow.
 
-        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_show_form(step_id='init') if user_input is None.
         Return await self.async_finish(flow_result) if login init step pass.
         """
         raise NotImplementedError
@@ -212,6 +213,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
             self, user_input: Optional[Dict[str, str]] = None) \
             -> Dict[str, Any]:
         """Handle the step of mfa validation."""
+        assert self.user
+
         errors = {}
 
         auth_module = self._auth_manager.get_auth_mfa_module(
@@ -221,25 +224,38 @@ class LoginFlow(data_entry_flow.FlowHandler):
             # will show invalid_auth_module error
             return await self.async_step_select_mfa_module(user_input={})
 
+        if user_input is None and hasattr(auth_module,
+                                          'async_initialize_login_mfa_step'):
+            try:
+                await auth_module.async_initialize_login_mfa_step(self.user.id)
+            except HomeAssistantError:
+                _LOGGER.exception('Error initializing MFA step')
+                return self.async_abort(reason='unknown_error')
+
         if user_input is not None:
-            expires = self.created_at + SESSION_EXPIRATION
+            expires = self.created_at + MFA_SESSION_EXPIRATION
             if dt_util.utcnow() > expires:
                 return self.async_abort(
                     reason='login_expired'
                 )
 
-            result = await auth_module.async_validation(
-                self.user.id, user_input)  # type: ignore
+            result = await auth_module.async_validate(
+                self.user.id, user_input)
             if not result:
                 errors['base'] = 'invalid_code'
+                self.invalid_mfa_times += 1
+                if self.invalid_mfa_times >= auth_module.MAX_RETRY_TIME > 0:
+                    return self.async_abort(
+                        reason='too_many_retry'
+                    )
 
             if not errors:
                 return await self.async_finish(self.user)
 
         description_placeholders = {
             'mfa_module_name': auth_module.name,
-            'mfa_module_id': auth_module.id
-        }  # type: Dict[str, str]
+            'mfa_module_id': auth_module.id,
+        }  # type: Dict[str, Optional[str]]
 
         return self.async_show_form(
             step_id='mfa',

@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_USERNAME, CONF_VALUE_TEMPLATE)
 
-REQUIREMENTS = ['pysnmp==4.4.5']
+REQUIREMENTS = ['pysnmp==4.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ class SnmpSensor(Entity):
         if value is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(
+            value = self._value_template.async_render_with_possible_json_value(
                 value, STATE_UNKNOWN)
 
         self._state = value

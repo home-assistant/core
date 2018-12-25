@@ -4,12 +4,16 @@ Fans on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/fan.zha/
 """
-import asyncio
 import logging
-from homeassistant.components import zha
+
 from homeassistant.components.fan import (
-    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+    DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
+    FanEntity)
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['zha']
 
@@ -38,18 +42,40 @@ VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST)}
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Set up the Zigbee Home Automation fans."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
-
-    async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old way of setting up Zigbee Home Automation fans."""
+    pass
 
 
-class ZhaFan(zha.Entity, FanEntity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation fan from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    fans = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
+    if fans is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    fans.values())
+        del hass.data[DATA_ZHA][DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA fans."""
+    entities = []
+    for discovery_info in discovery_infos:
+        entities.append(ZhaFan(**discovery_info))
+
+    async_add_entities(entities, update_before_add=True)
+
+
+class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN
@@ -76,32 +102,36 @@ class ZhaFan(zha.Entity, FanEntity):
             return False
         return self._state != SPEED_OFF
 
-    @asyncio.coroutine
-    def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM
 
-        yield from self.async_set_speed(speed)
+        await self.async_set_speed(speed)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        yield from self.async_set_speed(SPEED_OFF)
+        await self.async_set_speed(SPEED_OFF)
 
-    @asyncio.coroutine
-    def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        yield from self._endpoint.fan.write_attributes({
-            'fan_mode': SPEED_TO_VALUE[speed]})
+        from zigpy.exceptions import DeliveryError
+        try:
+            await self._endpoint.fan.write_attributes(
+                {'fan_mode': SPEED_TO_VALUE[speed]}
+            )
+        except DeliveryError as ex:
+            _LOGGER.error("%s: Could not set speed: %s", self.entity_id, ex)
+            return
 
         self._state = speed
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
+        result = await helpers.safe_read(self._endpoint.fan, ['fan_mode'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
 

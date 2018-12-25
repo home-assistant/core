@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS)
 
 
-REQUIREMENTS = ['envoy_reader==0.2']
+REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {

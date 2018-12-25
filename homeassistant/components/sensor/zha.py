@@ -4,12 +4,15 @@ Sensors on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zha/
 """
-import asyncio
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components import zha
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,20 +20,40 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Set up Zigbee Home Automation sensors."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
-
-    sensor = yield from make_sensor(discovery_info)
-    async_add_entities([sensor], update_before_add=True)
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old way of setting up Zigbee Home Automation sensors."""
+    pass
 
 
-@asyncio.coroutine
-def make_sensor(discovery_info):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation sensor from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
+    if sensors is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    sensors.values())
+        del hass.data[DATA_ZHA][DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA sensors."""
+    entities = []
+    for discovery_info in discovery_infos:
+        entities.append(await make_sensor(discovery_info))
+
+    async_add_entities(entities, update_before_add=True)
+
+
+async def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
     from zigpy.zcl.clusters.measurement import (
         RelativeHumidity, TemperatureMeasurement, PressureMeasurement,
@@ -39,7 +62,9 @@ def make_sensor(discovery_info):
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
     in_clusters = discovery_info['in_clusters']
-    if RelativeHumidity.cluster_id in in_clusters:
+    if 'sub_component' in discovery_info:
+        sensor = discovery_info['sub_component'](**discovery_info)
+    elif RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
     elif TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
@@ -57,15 +82,15 @@ def make_sensor(discovery_info):
 
     if discovery_info['new_join']:
         cluster = list(in_clusters.values())[0]
-        yield from cluster.bind()
-        yield from cluster.configure_reporting(
-            sensor.value_attribute, 300, 600, sensor.min_reportable_change,
+        await helpers.configure_reporting(
+            sensor.entity_id, cluster, sensor.value_attribute,
+            reportable_change=sensor.min_reportable_change
         )
 
     return sensor
 
 
-class Sensor(zha.Entity):
+class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
     _domain = DOMAIN
@@ -93,9 +118,11 @@ class Sensor(zha.Entity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(
+        result = await helpers.safe_read(
             list(self._in_clusters.values())[0],
-            [self.value_attribute]
+            [self.value_attribute],
+            allow_cache=False,
+            only_cache=(not self._initialized)
         )
         self._state = result.get(self.value_attribute, self._state)
 
@@ -223,8 +250,7 @@ class ElectricalMeasurementSensor(Sensor):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
-        result = await zha.safe_read(
-            self._endpoint.electrical_measurement,
-            ['active_power'],
-            allow_cache=False)
+        result = await helpers.safe_read(
+            self._endpoint.electrical_measurement, ['active_power'],
+            allow_cache=False, only_cache=(not self._initialized))
         self._state = result.get('active_power', self._state)

@@ -6,8 +6,8 @@ https://home-assistant.io/components/binary_sensor.deconz/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz.const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
+    DOMAIN as DECONZ_DOMAIN)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -24,6 +24,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_sensor(sensors):
         """Add binary sensor from deCONZ."""
@@ -33,29 +35,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
             if sensor.type in DECONZ_BINARY_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
-                entities.append(DeconzBinarySensor(sensor))
+                entities.append(DeconzBinarySensor(sensor, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
+    async_add_sensor(gateway.api.sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor."""
 
-    def __init__(self, sensor):
+    def __init__(self, sensor, gateway):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
+        self.gateway = gateway
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._sensor.remove_callback(self.async_update_callback)
         self._sensor = None
 
@@ -100,7 +108,7 @@ class DeconzBinarySensor(BinarySensorDevice):
     @property
     def available(self):
         """Return True if sensor is available."""
-        return self._sensor.reachable
+        return self.gateway.available and self._sensor.reachable
 
     @property
     def should_poll(self):
@@ -127,6 +135,7 @@ class DeconzBinarySensor(BinarySensorDevice):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -134,4 +143,5 @@ class DeconzBinarySensor(BinarySensorDevice):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

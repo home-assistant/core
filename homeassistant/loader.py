@@ -15,9 +15,7 @@ import importlib
 import logging
 import sys
 from types import ModuleType
-
-# pylint: disable=unused-import
-from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # NOQA
+from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # noqa pylint: disable=unused-import
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
@@ -211,8 +209,9 @@ def load_order_component(hass,  # type: HomeAssistant
                          comp_name: str) -> OrderedSet:
     """Return an OrderedSet of components in the correct order of loading.
 
-    Raises HomeAssistantError if a circular dependency is detected.
-    Returns an empty list if component could not be loaded.
+    Returns an empty list if a circular dependency is detected
+    or the component could not be loaded. In both cases, the error is
+    logged.
 
     Async friendly.
     """

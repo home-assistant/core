@@ -12,6 +12,8 @@ from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homekit_controller']
 
+OUTLET_IN_USE = "outlet_in_use"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,11 +31,11 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         """Initialise the switch."""
         super().__init__(*args)
         self._on = None
+        self._outlet_in_use = None
 
     def update_characteristics(self, characteristics):
         """Synchronise the switch state with Home Assistant."""
-        # pylint: disable=import-error
-        import homekit
+        import homekit  # pylint: disable=import-error
 
         for characteristic in characteristics:
             ctype = characteristic['type']
@@ -43,6 +45,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
                 self._on = characteristic['value']
             elif ctype == "outlet-in-use":
                 self._chars['outlet-in-use'] = characteristic['iid']
+                self._outlet_in_use = characteristic['value']
 
     @property
     def is_on(self):
@@ -63,3 +66,11 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
                             'iid': self._chars['on'],
                             'value': False}]
         self.put_characteristics(characteristics)
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        if self._outlet_in_use is not None:
+            return {
+                OUTLET_IN_USE: self._outlet_in_use,
+            }

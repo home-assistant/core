@@ -8,9 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from urllib.parse import urlparse
-
-# pylint: disable=unused-import
-from typing import Dict  # noqa: F401
+from typing import Dict  # noqa: F401 pylint: disable=unused-import
 
 import voluptuous as vol
 
@@ -26,7 +24,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==6.0']
+REQUIREMENTS = ['pylgtv==0.1.9', 'websockets==6.0']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)

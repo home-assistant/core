@@ -17,7 +17,7 @@ async def test_validating_mfa(hass):
     await totp_auth_module.async_setup_user('test-user', {})
 
     with patch('pyotp.TOTP.verify', return_value=True):
-        assert await totp_auth_module.async_validation(
+        assert await totp_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE})
 
 
@@ -29,7 +29,7 @@ async def test_validating_mfa_invalid_code(hass):
     await totp_auth_module.async_setup_user('test-user', {})
 
     with patch('pyotp.TOTP.verify', return_value=False):
-        assert await totp_auth_module.async_validation(
+        assert await totp_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE}) is False
 
 
@@ -40,7 +40,7 @@ async def test_validating_mfa_invalid_user(hass):
     })
     await totp_auth_module.async_setup_user('test-user', {})
 
-    assert await totp_auth_module.async_validation(
+    assert await totp_auth_module.async_validate(
         'invalid-user', {'code': MOCK_CODE}) is False
 
 

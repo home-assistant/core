@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Aucun service de notification disponible."
+            },
+            "error": {
+                "invalid_code": "Code invalide. Veuillez essayer \u00e0 nouveau."
+            },
+            "step": {
+                "init": {
+                    "description": "Veuillez s\u00e9lectionner l'un des services de notification:",
+                    "title": "Configurer un mot de passe \u00e0 usage unique d\u00e9livr\u00e9 par le composant notify"
+                },
+                "setup": {
+                    "description": "Un mot de passe unique a \u00e9t\u00e9 envoy\u00e9 par **notify.{notify_service}**. Veuillez le saisir ci-dessous :",
+                    "title": "V\u00e9rifier la configuration"
+                }
+            },
+            "title": "Notifier un mot de passe unique"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Code invalide. Veuillez essayez \u00e0 nouveau. Si cette erreur persiste, assurez-vous que l'horloge de votre syst\u00e8me Home Assistant est correcte."

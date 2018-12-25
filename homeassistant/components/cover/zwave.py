@@ -4,20 +4,35 @@ Support for Z-Wave cover components.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
 """
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 import logging
+from homeassistant.core import callback
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
-from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
-from homeassistant.components.zwave import workaround
+from homeassistant.components.zwave import (
+    ZWaveDeviceEntity, workaround)
 from homeassistant.components.cover import CoverDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave covers."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Cover from Config Entry."""
+    @callback
+    def async_add_cover(cover):
+        """Add Z-Wave Cover."""
+        async_add_entities([cover])
+
+    async_dispatcher_connect(hass, 'zwave_new_cover', async_add_cover)
 
 
 def get_device(hass, values, node_config, **kwargs):

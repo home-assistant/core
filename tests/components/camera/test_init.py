@@ -7,13 +7,15 @@ import pytest
 
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.components import camera, http, websocket_api
+from homeassistant.components import camera, http
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component,
     mock_coro)
+from tests.components.camera import common
 
 
 @pytest.fixture
@@ -126,7 +128,7 @@ def test_snapshot_service(hass, mock_camera):
     with patch('homeassistant.components.camera.open', mopen, create=True), \
             patch.object(hass.config, 'is_allowed_path',
                          return_value=True):
-        hass.components.camera.async_snapshot('/tmp/bla')
+        common.async_snapshot(hass, '/tmp/bla')
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write
@@ -149,7 +151,7 @@ async def test_webocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == websocket_api.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result']['content_type'] == 'image/jpeg'
     assert msg['result']['content'] == \
