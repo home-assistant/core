@@ -53,12 +53,10 @@ class FreeboxDeviceScanner(DeviceScanner):
 
     async def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [result.name for result in self.last_results if
-                        result.id == device]
-
-        if filter_named:
-            return filter_named[0]
-        return None
+        name = next((
+            result.name for result in self.last_results
+            if result.id == device), None)
+        return name
 
     async def async_update_info(self):
         """Ensure the information from the Freebox router is up to date."""
