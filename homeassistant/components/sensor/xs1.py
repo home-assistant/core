@@ -2,33 +2,31 @@
 Support for XS1 sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xs1/
+https://home-assistant.io/components/sensor.xs1/
 """
 
 import logging
 
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.components.xs1 import DOMAIN, SENSORS, XS1DeviceEntity
+from homeassistant.components.xs1 import SENSORS, XS1DeviceEntity
+from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the sensor platform."""
-    _LOGGER.debug("initializing XS1 Sensor")
+    """Set up the XS1 sensor platform."""
 
-    sensors = hass.data[DOMAIN][SENSORS]
-
-    _LOGGER.debug("Adding Sensor devices...")
+    sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
 
     sensor_entities = []
     for sensor in sensors:
         sensor_entities.append(XS1Sensor(sensor))
 
-    async_add_devices(sensor_entities)
+    async_add_entities(sensor_entities)
 
 
 class XS1Sensor(XS1DeviceEntity, Entity):

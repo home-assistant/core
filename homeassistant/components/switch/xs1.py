@@ -2,26 +2,26 @@
 Support for XS1 switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xs1/
+https://home-assistant.io/components/switch.xs1/
 """
 from functools import partial
 import logging
 
-from homeassistant.components.xs1 import ACTUATORS, DOMAIN, XS1DeviceEntity
+from homeassistant.components.xs1 import ACTUATORS, XS1DeviceEntity
+from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the XS1 platform."""
-    _LOGGER.debug("initializing XS1 Switch")
+    """Set up the XS1 switch platform."""
 
     from xs1_api_client.api_constants import ActuatorType
 
-    actuators = hass.data[DOMAIN][ACTUATORS]
+    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
 
     switch_entities = []
     for actuator in actuators:
@@ -29,9 +29,7 @@ async def async_setup_platform(hass, config, async_add_devices,
                 (actuator.type() == ActuatorType.DIMMER):
             switch_entities.append(XS1SwitchEntity(actuator))
 
-    async_add_devices(switch_entities)
-
-    _LOGGER.debug("Added Switches!")
+    async_add_entities(switch_entities)
 
 
 class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
@@ -47,14 +45,10 @@ class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
         """Return true if switch is on."""
         return self.device.value() == 100
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
-        await self.hass.async_add_executor_job(
-            partial(self.device.turn_on))
-        self.async_schedule_update_ha_state()
+        self.device.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
-        await self.hass.async_add_executor_job(
-            partial(self.device.turn_off))
-        self.async_schedule_update_ha_state()
+        self.device.turn_off()

@@ -2,14 +2,15 @@
 Support for XS1 climate devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xs1/
+https://home-assistant.io/components/climate.xs1/
 """
 from functools import partial
 import logging
 
 from homeassistant.components.climate import ATTR_TEMPERATURE, ClimateDevice
 from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN, SENSORS, XS1DeviceEntity)
+    ACTUATORS, SENSORS, XS1DeviceEntity)
+from homeassistant.components.xs1 import DOMAIN as COMPONENT_DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -17,15 +18,14 @@ DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the XS1 platform."""
-    _LOGGER.debug("initializing XS1 Thermostat")
+    """Set up the XS1 thermostat platform."""
 
     from xs1_api_client.api_constants import ActuatorType
 
-    actuators = hass.data[DOMAIN][ACTUATORS]
-    sensors = hass.data[DOMAIN][SENSORS]
+    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
+    sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
 
     thermostat_entities = []
     for actuator in actuators:
@@ -43,9 +43,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             thermostat_entities.append(
                 XS1ThermostatEntity(actuator, matching_sensor, 8, 25))
 
-    async_add_devices(thermostat_entities)
-
-    _LOGGER.debug("Added Thermostats!")
+    async_add_entities(thermostat_entities)
 
 
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):

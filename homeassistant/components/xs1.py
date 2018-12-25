@@ -32,8 +32,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_USERNAME, default=None): cv.string,
-        vol.Optional(CONF_PASSWORD, default=None): cv.string
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -68,9 +68,9 @@ async def async_setup(hass, config):
     """Set up XS1 Component."""
     _LOGGER.debug("Initializing XS1")
 
-    host = config[DOMAIN].get(CONF_HOST)
-    port = config[DOMAIN].get(CONF_PORT)
-    ssl = config[DOMAIN].get(CONF_SSL, False)
+    host = config[DOMAIN][CONF_HOST]
+    port = config[DOMAIN][CONF_PORT]
+    ssl = config[DOMAIN][CONF_SSL]
     user = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
@@ -93,7 +93,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][ACTUATORS] = actuators
     hass.data[DOMAIN][SENSORS] = sensors
 
-    _LOGGER.debug("loading components for XS1 platform...")
+    _LOGGER.debug("Loading components for XS1 platform...")
     # load components for supported devices
     for component in XS1_COMPONENTS:
         hass.async_create_task(
