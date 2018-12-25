@@ -582,6 +582,7 @@ omit =
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
+    homeassistant/components/light/zengge-wifi.py
     homeassistant/components/lirc.py
     homeassistant/components/lock/kiwi.py
     homeassistant/components/lock/lockitron.py

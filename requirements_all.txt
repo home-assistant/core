@@ -1725,3 +1725,6 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.0
+
+# homeassistant.components.light.zengge-wifi
+zenggewifi==0.0.3
