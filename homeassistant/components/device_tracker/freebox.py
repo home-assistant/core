@@ -62,7 +62,7 @@ class FreeboxDeviceScanner(DeviceScanner):
 
     async def async_update_info(self):
         """Ensure the information from the Freebox router is up to date."""
-        _LOGGER.info('Checking Devices')
+        _LOGGER.debug('Checking Devices')
 
         hosts = await self.connection.lan.get_hosts_list()
 
