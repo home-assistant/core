@@ -25,7 +25,7 @@ from homeassistant.util import slugify
 # REQUIREMENTS = ['aioharmony==0.1.00']
 REQUIREMENTS = [
     'https://github.com/ehendrix23/aioharmony/archive/dev.zip#aioharmony==0'
-    '.0.6'
+    '.0.7'
 ]
 
 _LOGGER = logging.getLogger(__name__)
