@@ -242,20 +242,26 @@ class GitHubData():
 
             self.available = True
         except self._github.BadCredentialsException as err:
-            _LOGGER.error("Bad Credentials: %s", err)
+            _LOGGER.error("Bad Credentials for %s: %s",
+                          self.repository_path, err)
             self.available = False
         except self._github.UnknownObjectException as err:
-            _LOGGER.error("UnknownObjectException: %s", err)
+            _LOGGER.error("UnknownObjectException for %s: %s",
+                          self.repository_path, err)
             self.available = False
         except self._github.RateLimitExceededException as err:
-            _LOGGER.error("RateLimitExceededException: %s", err)
+            _LOGGER.error("RateLimitExceededException for %s: %s",
+                          self.repository_path, err)
             self.available = False
         except self._github.BadAttributeException as err:
-            _LOGGER.error("BadAttributeException: %s", err)
+            _LOGGER.error("BadAttributeException for %s: %s",
+                          self.repository_path, err)
             self.available = False
         except self._github.TwoFactorException as err:
-            _LOGGER.error("TwoFactorException: %s", err)
+            _LOGGER.error("TwoFactorException for %s: %s",
+                          self.repository_path, err)
             self.available = False
         except self._github.GithubException as err:
-            _LOGGER.error("GithubException: %s", err)
+            _LOGGER.error("GithubException for %s: %s",
+                          self.repository_path, err)
             self.available = False
