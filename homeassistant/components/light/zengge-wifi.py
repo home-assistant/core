@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.light import (Light, SUPPORT_COLOR, SUPPORT_WHITE_VALUE,
                                             ATTR_WHITE_VALUE, PLATFORM_SCHEMA,
                                             ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS)
-from homeassistant.const import CONF_NAME, CONF_DEVICES
+from homeassistant.const import CONF_NAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -22,21 +22,15 @@ DEFAULT_NAME = "Zengge Bulb"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zengge Wi-Fi platform."""
-    lights = []
-    for address, device_config in config[CONF_DEVICES].items():
-        lights.append(ZenggeWifiLight(address, device_config[CONF_NAME]))
-    add_entities(lights)
+    add_entities([ZenggeWifiLight(config[CONF_HOST], config[CONF_NAME])], True)
 
 
 class ZenggeWifiLight(Light):
