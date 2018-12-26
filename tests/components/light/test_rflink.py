@@ -377,9 +377,10 @@ async def test_type_toggle(hass, monkeypatch):
     event_callback, _, _, _ = await mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
+    # default value = 'off'
     assert hass.states.get(DOMAIN + '.toggle_test').state == 'off'
 
-    # test sending on command to toggle alias
+    # test sending 'on' command, must set state = 'on'
     event_callback({
         'id': 'toggle_0_0',
         'command': 'on',
@@ -388,11 +389,30 @@ async def test_type_toggle(hass, monkeypatch):
 
     assert hass.states.get(DOMAIN + '.toggle_test').state == 'on'
 
-    # test sending group command to group alias
+    # test sending again 'on' command, must set state = 'off'
     event_callback({
         'id': 'toggle_0_0',
         'command': 'on',
     })
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.toggle_test').state == 'off'
+
+    # test async_turn_off, must set state = 'on' ('off' + toggle)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {
+                                     ATTR_ENTITY_ID: DOMAIN + '.toggle_test',
+                                     ATTR_BRIGHTNESS: 128,
+                                 }))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.toggle_test').state == 'on'
+
+    # test async_turn_on, must set state = 'off' (yes, sounds crazy)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
+                                 {ATTR_ENTITY_ID: DOMAIN + '.toggle_test'}))
     await hass.async_block_till_done()
 
     assert hass.states.get(DOMAIN + '.toggle_test').state == 'off'
@@ -574,6 +594,10 @@ async def test_restore_state(hass, monkeypatch):
                     'name': 'l4',
                     'type': 'dimmable',
                 },
+                'test_restore_5': {
+                    'name': 'l5',
+                    'type': 'dimmable',
+                },
             },
         },
     }
@@ -582,6 +606,7 @@ async def test_restore_state(hass, monkeypatch):
         State(DOMAIN + '.l1', STATE_ON, {ATTR_BRIGHTNESS: "123", }),
         State(DOMAIN + '.l2', STATE_ON, {ATTR_BRIGHTNESS: "321", }),
         State(DOMAIN + '.l3', STATE_OFF, ),
+        State(DOMAIN + '.l5', STATE_ON, {ATTR_BRIGHTNESS: "222", }),
     ))
 
     hass.state = CoreState.starting
@@ -589,7 +614,7 @@ async def test_restore_state(hass, monkeypatch):
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    # dimmable light must restore brightness
+    # hybrid light must restore brightness
     state = hass.states.get(DOMAIN + '.l1')
     assert state
     assert state.state == STATE_ON
@@ -612,3 +637,9 @@ async def test_restore_state(hass, monkeypatch):
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_BRIGHTNESS)
     assert state.attributes['assumed_state']
+
+    # test coverage for dimmable light
+    state = hass.states.get(DOMAIN + '.l5')
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 222
