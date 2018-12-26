@@ -1138,7 +1138,7 @@ pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.9.0
+pyowm==2.10.0
 
 # homeassistant.components.media_player.pjlink
 pypjlink2==1.2.0
