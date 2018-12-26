@@ -1,5 +1,5 @@
 """
-Fritzbox (Guest) WiFi Switch
+Fritzbox (Guest) WiFi Switch.
 
 Support for switching Fritzbox (Guest) Wifi on and off.
 For more details about this platform, please refer to the documentation at
@@ -86,14 +86,14 @@ class FritzBoxWifiSwitch(SwitchDevice):
         return self._state
 
     def turn_on(self, **kwargs):
-        """Turning on guest Wifi"""
+        """Turn the specified Wifi on."""
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=1)
         self._state = True
 
     def turn_off(self, **kwargs):
-        """Turning off guest WiFI"""
+        """Turn the specified WiFI off."""
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=0)
