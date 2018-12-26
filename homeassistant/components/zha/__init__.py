@@ -12,6 +12,7 @@ import types
 import voluptuous as vol
 
 from homeassistant import config_entries, const as ha_const
+
 from homeassistant.components.zha.entities import ZhaDeviceEntity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -22,6 +23,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import const as zha_const
 from .event import ZhaEvent
+from . import api
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
@@ -55,24 +57,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ENABLE_QUIRKS, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-ATTR_DURATION = 'duration'
-ATTR_IEEE = 'ieee_address'
-
-SERVICE_PERMIT = 'permit'
-SERVICE_REMOVE = 'remove'
-SERVICE_RECONFIGURE_DEVICE = 'reconfigure_device'
-IEEE_SERVICE = 'ieee_based_service'
-SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema({
-        vol.Optional(ATTR_DURATION, default=60):
-            vol.All(vol.Coerce(int), vol.Range(1, 254)),
-    }),
-    IEEE_SERVICE: vol.Schema({
-        vol.Required(ATTR_IEEE): cv.string,
-    }),
-}
-
 
 # Zigbee definitions
 CENTICELSIUS = 'C-100'
@@ -182,39 +166,7 @@ async def async_setup_entry(hass, config_entry):
                 config_entry, component)
         )
 
-    async def permit(service):
-        """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        _LOGGER.info("Permitting joins for %ss", duration)
-        await application_controller.permit(duration)
-
-    hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
-
-    async def remove(service):
-        """Remove a node from the network."""
-        from bellows.types import EmberEUI64, uint8_t
-        ieee = service.data.get(ATTR_IEEE)
-        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
-        _LOGGER.info("Removing node %s", ieee)
-        await application_controller.remove(ieee)
-
-    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
-                                 schema=SERVICE_SCHEMAS[IEEE_SERVICE])
-
-    async def reconfigure_device(service):
-        """Reconfigure a ZHA device entity by its ieee address."""
-        ieee = service.data.get(ATTR_IEEE)
-        entities = listener.get_entities_for_ieee(ieee)
-        _LOGGER.info("Reconfiguring device with ieee_address: %s", ieee)
-        for entity in entities:
-            if hasattr(entity, 'async_configure'):
-                hass.async_create_task(entity.async_configure())
-
-    hass.services.async_register(DOMAIN, SERVICE_RECONFIGURE_DEVICE,
-                                 reconfigure_device, schema=SERVICE_SCHEMAS[
-                                     IEEE_SERVICE
-                                 ])
+    await api.async_load_api(hass, application_controller, listener)
 
     def zha_shutdown(event):
         """Close radio."""
@@ -226,8 +178,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
+    await api.async_unload_api(hass)
 
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
     for unsub_dispatcher in dispatchers:
@@ -324,6 +275,11 @@ class ApplicationListener:
         """Convert given ieee string to EmberEUI64."""
         from bellows.types import EmberEUI64, uint8_t
         return EmberEUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])
+
+    @property
+    def device_registry(self) -> str:
+        """Return devices."""
+        return self._device_registry
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""

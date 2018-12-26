@@ -9,14 +9,19 @@ import logging
 from random import uniform
 
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, ATTR_CLUSTER_ID, ATTR_ATTRIBUTE,
+    ATTR_VALUE, ATTR_MANUFACTURER, ATTR_COMMAND, SERVER, ATTR_COMMAND_TYPE,
+    ATTR_ARGS, IN, OUT, CLIENT_COMMANDS, SERVER_COMMANDS)
 from homeassistant.components.zha.helpers import bind_configure_reporting
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_SUFFIX = 'entity_suffix'
 
 
 class ZhaEntity(entity.Entity):
@@ -38,9 +43,9 @@ class ZhaEntity(entity.Entity):
                 slugify(model),
                 ieeetail,
                 endpoint.endpoint_id,
-                kwargs.get('entity_suffix', ''),
+                kwargs.get(ENTITY_SUFFIX, ''),
             )
-            self._device_state_attributes['friendly_name'] = "{} {}".format(
+            self._device_state_attributes[CONF_FRIENDLY_NAME] = "{} {}".format(
                 manufacturer,
                 model,
             )
@@ -49,7 +54,7 @@ class ZhaEntity(entity.Entity):
                 self._domain,
                 ieeetail,
                 endpoint.endpoint_id,
-                kwargs.get('entity_suffix', ''),
+                kwargs.get(ENTITY_SUFFIX, ''),
             )
 
         self._endpoint = endpoint
@@ -69,9 +74,16 @@ class ZhaEntity(entity.Entity):
         self.manufacturer_code = None
         application_listener.register_entity(ieee, self)
 
-    async def _get_cluster(self, cluster_id, cluster_type='in'):
+    async def get_clusters(self):
+        """Get zigbee clusters from this entity."""
+        return {
+            IN: self._in_clusters,
+            OUT: self._out_clusters
+        }
+
+    async def _get_cluster(self, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
-        if cluster_type == 'in':
+        if cluster_type == IN:
             cluster = self._in_clusters[cluster_id]
         else:
             cluster = self._out_clusters[cluster_id]
@@ -80,7 +92,7 @@ class ZhaEntity(entity.Entity):
                             cluster_id, self.entity_id)
         return cluster
 
-    async def get_cluster_attributes(self, cluster_id, cluster_type='in'):
+    async def get_cluster_attributes(self, cluster_id, cluster_type=IN):
         """Get zigbee attributes for specified cluster."""
         cluster = await self._get_cluster(cluster_id, cluster_type)
         if cluster is None:
@@ -88,9 +100,9 @@ class ZhaEntity(entity.Entity):
         return cluster.attributes
 
     async def write_zigbe_attribute(self, cluster_id, attribute, value,
-                                    manufacturer=None):
+                                    cluster_type=IN, manufacturer=None):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = await self._get_cluster(cluster_id)
+        cluster = await self._get_cluster(cluster_id, cluster_type)
         if cluster is None:
             return
 
@@ -112,32 +124,32 @@ class ZhaEntity(entity.Entity):
         except DeliveryError as exc:
             _LOGGER.debug(
                 'failed to set attribute: %s %s %s %s %s',
-                '{}: {}'.format('value', value),
-                '{}: {}'.format('attribute', attribute),
-                '{}: {}'.format('cluster_id', cluster_id),
-                '{}: {}'.format('entity_id', self.entity_id),
+                '{}: {}'.format(ATTR_VALUE, value),
+                '{}: {}'.format(ATTR_ATTRIBUTE, attribute),
+                '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
+                '{}: {}'.format(ATTR_ENTITY_ID, self.entity_id),
                 exc
             )
 
-    async def get_cluster_commands(self, cluster_id, cluster_type='in'):
+    async def get_cluster_commands(self, cluster_id, cluster_type=IN):
         """Get zigbee commands for specified cluster."""
         cluster = await self._get_cluster(cluster_id, cluster_type)
         if cluster is None:
             return
         return {
-            'client_commands': cluster.client_commands,
-            'server_commands': cluster.server_commands,
+            CLIENT_COMMANDS: cluster.client_commands,
+            SERVER_COMMANDS: cluster.server_commands,
         }
 
     async def issue_cluster_command(self, cluster_id, command, command_type,
-                                    args, cluster_type='in',
+                                    args, cluster_type=IN,
                                     manufacturer=None):
         """Issue a command against specified zigbee cluster on this entity."""
         cluster = await self._get_cluster(cluster_id, cluster_type)
         if cluster is None:
             return
         response = None
-        if command_type == 'server':
+        if command_type == SERVER:
             response = await cluster.command(command, *args,
                                              manufacturer=manufacturer,
                                              expect_reply=True)
@@ -146,13 +158,13 @@ class ZhaEntity(entity.Entity):
 
         _LOGGER.debug(
             'Issued cluster command: %s %s %s %s %s %s %s',
-            '{}: {}'.format('cluster_id', cluster_id),
-            '{}: {}'.format('command', command),
-            '{}: {}'.format('command_type', command_type),
-            '{}: {}'.format('args', args),
-            '{}: {}'.format('cluster_type', cluster_type),
-            '{}: {}'.format('manufacturer', manufacturer),
-            '{}: {}'.format('entity_id', self.entity_id)
+            '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
+            '{}: {}'.format(ATTR_COMMAND, command),
+            '{}: {}'.format(ATTR_COMMAND_TYPE, command_type),
+            '{}: {}'.format(ATTR_ARGS, args),
+            '{}: {}'.format(ATTR_CLUSTER_ID, cluster_type),
+            '{}: {}'.format(ATTR_MANUFACTURER, manufacturer),
+            '{}: {}'.format(ATTR_ENTITY_ID, self.entity_id)
         )
         return response
 
@@ -288,9 +300,12 @@ class ZhaEntity(entity.Entity):
         return {
             'connections': {(CONNECTION_ZIGBEE, ieee)},
             'identifiers': {(DOMAIN, ieee)},
-            'manufacturer': self._endpoint.manufacturer,
+            ATTR_MANUFACTURER: self._endpoint.manufacturer,
             'model': self._endpoint.model,
-            'name': self._device_state_attributes.get('friendly_name', ieee),
+            'name': self._device_state_attributes.get(
+                CONF_FRIENDLY_NAME,
+                ieee
+            ),
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
