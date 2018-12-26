@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME)
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -60,8 +59,10 @@ def _create_controller_api(host, port, ssl, user, password):
             ssl=ssl,
             user=user,
             password=password)
-    except ConnectionError:
-        raise PlatformNotReady
+    except ConnectionError as e:
+        _LOGGER.error("Failed to create XS1 api client "
+                      "because of a connection error: %s", e)
+        return None
 
 
 async def async_setup(hass, config):
@@ -75,10 +76,11 @@ async def async_setup(hass, config):
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     # initialize XS1 API
-
     xs1 = await hass.async_add_executor_job(
         partial(_create_controller_api,
                 host, port, ssl, user, password))
+    if xs1 is None:
+        return False
 
     _LOGGER.debug(
         "Establishing connection to XS1 gateway and retrieving data...")
