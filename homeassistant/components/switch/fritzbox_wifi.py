@@ -1,4 +1,6 @@
 """
+Fritzbox (Guest) WiFi Switch
+
 Support for switching Fritzbox (Guest) Wifi on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.fritzbox_wifi/
@@ -35,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fritzbox WiFi switch platform."""
-
     import fritzconnection as fc
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -58,7 +59,6 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     def __init__(self, conn, name, interface):
         """Init individual Fritzbox WiFi switches."""
-
         self._conn = conn
         self._name = name
         self._interface = interface
@@ -87,7 +87,6 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turning on guest Wifi"""
-
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=1)
@@ -95,7 +94,6 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turning off guest WiFI"""
-
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=0)
