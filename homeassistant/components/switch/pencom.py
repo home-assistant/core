@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Pencom relay platform (pencompy)."""
     from pencompy.pencompy import Pencompy
 
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         board = relay[CONF_BOARD]
         addr = relay[CONF_ADDR]
         devs.append(PencomRelay(hub, board, addr, name))
-    add_devices(devs, True)
+    add_entities(devs, True)
 
 
 class PencomRelay(SwitchDevice):
@@ -97,5 +97,5 @@ class PencomRelay(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return supported attributes."""
-        return {"Board": self._board,
-                "Addr": self._addr}
+        return {"board": self._board,
+                "addr": self._addr}
