@@ -69,6 +69,93 @@ class ZhaEntity(entity.Entity):
         self.manufacturer_code = None
         application_listener.register_entity(ieee, self)
 
+    async def _get_cluster(self, cluster_id, cluster_type='in'):
+        """Get zigbee cluster from this entity."""
+        if cluster_type == 'in':
+            cluster = self._in_clusters[cluster_id]
+        else:
+            cluster = self._out_clusters[cluster_id]
+        if cluster is None:
+            _LOGGER.warning('in_cluster with id: %s not found on entity: %s',
+                            cluster_id, self.entity_id)
+        return cluster
+
+    async def get_cluster_attributes(self, cluster_id, cluster_type='in'):
+        """Get zigbee attributes for specified cluster."""
+        cluster = await self._get_cluster(cluster_id, cluster_type)
+        if cluster is None:
+            return
+        return cluster.attributes
+
+    async def write_zigbe_attribute(self, cluster_id, attribute, value,
+                                    manufacturer=None):
+        """Write a value to a zigbee attribute for a cluster in this entity."""
+        cluster = await self._get_cluster(cluster_id)
+        if cluster is None:
+            return
+
+        from zigpy.exceptions import DeliveryError
+        try:
+            response = await cluster.write_attributes(
+                {attribute: value},
+                manufacturer=manufacturer
+            )
+            _LOGGER.debug(
+                'set: %s for attr: %s to cluster: %s for entity: %s - res: %s',
+                value,
+                attribute,
+                cluster_id,
+                self.entity_id,
+                response
+            )
+            return response
+        except DeliveryError as exc:
+            _LOGGER.debug(
+                'failed to set attribute: %s %s %s %s %s',
+                '{}: {}'.format('value', value),
+                '{}: {}'.format('attribute', attribute),
+                '{}: {}'.format('cluster_id', cluster_id),
+                '{}: {}'.format('entity_id', self.entity_id),
+                exc
+            )
+
+    async def get_cluster_commands(self, cluster_id, cluster_type='in'):
+        """Get zigbee commands for specified cluster."""
+        cluster = await self._get_cluster(cluster_id, cluster_type)
+        if cluster is None:
+            return
+        return {
+            'client_commands': cluster.client_commands,
+            'server_commands': cluster.server_commands,
+        }
+
+    async def issue_cluster_command(self, cluster_id, command, command_type,
+                                    args, cluster_type='in',
+                                    manufacturer=None):
+        """Issue a command against specified zigbee cluster on this entity."""
+        cluster = await self._get_cluster(cluster_id, cluster_type)
+        if cluster is None:
+            return
+        response = None
+        if command_type == 'server':
+            response = await cluster.command(command, *args,
+                                             manufacturer=manufacturer,
+                                             expect_reply=True)
+        else:
+            response = await cluster.client_command(command, *args)
+
+        _LOGGER.debug(
+            'Issued cluster command: %s %s %s %s %s %s %s',
+            '{}: {}'.format('cluster_id', cluster_id),
+            '{}: {}'.format('command', command),
+            '{}: {}'.format('command_type', command_type),
+            '{}: {}'.format('args', args),
+            '{}: {}'.format('cluster_type', cluster_type),
+            '{}: {}'.format('manufacturer', manufacturer),
+            '{}: {}'.format('entity_id', self.entity_id)
+        )
+        return response
+
     async def async_added_to_hass(self):
         """Handle entity addition to hass.
 
