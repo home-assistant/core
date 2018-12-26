@@ -34,7 +34,7 @@ SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
 '''Defaults'''
- DEFAULT_NAME = "PlayStation 4"
+DEFAULT_NAME = "PlayStation 4"
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
