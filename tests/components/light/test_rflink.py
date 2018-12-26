@@ -389,7 +389,7 @@ async def test_type_toggle(hass, monkeypatch):
 
     assert hass.states.get(DOMAIN + '.toggle_test').state == 'on'
 
-    # test sending again 'on' command, must set state = 'off'
+    # test sending 'on' command again, must set state = 'off'
     event_callback({
         'id': 'toggle_0_0',
         'command': 'on',
@@ -401,10 +401,7 @@ async def test_type_toggle(hass, monkeypatch):
     # test async_turn_off, must set state = 'on' ('off' + toggle)
     hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
-                                 {
-                                     ATTR_ENTITY_ID: DOMAIN + '.toggle_test',
-                                     ATTR_BRIGHTNESS: 128,
-                                 }))
+                                 {ATTR_ENTITY_ID: DOMAIN + '.toggle_test'}))
     await hass.async_block_till_done()
 
     assert hass.states.get(DOMAIN + '.toggle_test').state == 'on'
