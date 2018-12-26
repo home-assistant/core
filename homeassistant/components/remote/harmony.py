@@ -22,10 +22,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-# REQUIREMENTS = ['pyharmony==1.0.22']
+# REQUIREMENTS = ['aioharmony==0.1.00']
 REQUIREMENTS = [
     'https://github.com/ehendrix23/aioharmony/archive/dev.zip#aioharmony==0'
-    '.0.5'
+    '.0.6'
 ]
 
 _LOGGER = logging.getLogger(__name__)
