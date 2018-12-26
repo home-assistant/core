@@ -65,21 +65,16 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
-
     """Set up MQTT alarm control panel through configuration.yaml."""
-    await _async_setup_entity(config, value_template, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
-async def async_setup_entry(hass, config_entry, value_template,
-                            async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT alarm control panel dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, value_template, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -87,23 +82,22 @@ async def async_setup_entry(hass, config_entry, value_template,
         async_discover)
 
 
-async def _async_setup_entity(config, value_template, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(config, value_template, discovery_hash)])
+    async_add_entities([MqttAlarm(config, discovery_hash)])
 
 
 class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 MqttEntityDeviceInfo, alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, value_template, discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
         self._state = None
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
-        self._value_template = value_template
 
         device_config = config.get(CONF_DEVICE)
 
@@ -130,12 +124,15 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+        template = self._config.get(CONF_VALUE_TEMPLATE)
+        if template is not None:
+            template.hass = self.hass
+
         @callback
         def message_received(topic, payload, qos):
-            if self._value_template is not None:
-                payload = \
-                    self._value_template.async_render_with_possible_json_value(
-                        payload)
+            if template is not None:
+                payload = template.async_render_with_possible_json_value(
+                    payload)
 
             """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
