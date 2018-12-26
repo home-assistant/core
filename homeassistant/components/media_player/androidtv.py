@@ -172,7 +172,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_ADB_SERVER_IP not in config:
         atv = AndroidTV(host)
-        if atv.connect() is False:
+        if not atv.available:
             # "python-adb" with adbkey
             if CONF_ADBKEY in config:
                 adbkey = config[CONF_ADBKEY]
