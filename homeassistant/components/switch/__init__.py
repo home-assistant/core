@@ -39,7 +39,7 @@ PROP_TO_ATTR = {
 }
 
 SWITCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 _LOGGER = logging.getLogger(__name__)

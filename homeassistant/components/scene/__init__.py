@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = vol.Schema(
     ), extra=vol.ALLOW_EXTRA)
 
 SCENE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 

@@ -86,18 +86,9 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._state = False
         self._sub_state = None
 
-        self._name = None
-        self._icon = None
-        self._state_topic = None
-        self._command_topic = None
-        self._qos = None
-        self._retain = None
-        self._payload_on = None
-        self._payload_off = None
         self._state_on = None
         self._state_off = None
         self._optimistic = None
-        self._template = None
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
         # Load config
@@ -106,9 +97,10 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, self._qos,
+        MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -129,32 +121,28 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._name = config.get(CONF_NAME)
-        self._icon = config.get(CONF_ICON)
-        self._state_topic = config.get(CONF_STATE_TOPIC)
-        self._command_topic = config.get(CONF_COMMAND_TOPIC)
-        self._qos = config.get(CONF_QOS)
-        self._retain = config.get(CONF_RETAIN)
-        self._payload_on = config.get(CONF_PAYLOAD_ON)
-        self._payload_off = config.get(CONF_PAYLOAD_OFF)
+        self._config = config
+
         state_on = config.get(CONF_STATE_ON)
-        self._state_on = state_on if state_on else self._payload_on
+        self._state_on = state_on if state_on else config.get(CONF_PAYLOAD_ON)
+
         state_off = config.get(CONF_STATE_OFF)
-        self._state_off = state_off if state_off else self._payload_off
+        self._state_off = state_off if state_off else \
+            config.get(CONF_PAYLOAD_OFF)
+
         self._optimistic = config.get(CONF_OPTIMISTIC)
-        config.get(CONF_UNIQUE_ID)
-        self._template = config.get(CONF_VALUE_TEMPLATE)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        if self._template is not None:
-            self._template.hass = self.hass
+        template = self._config.get(CONF_VALUE_TEMPLATE)
+        if template is not None:
+            template.hass = self.hass
 
         @callback
         def state_message_received(topic, payload, qos):
             """Handle new MQTT state messages."""
-            if self._template is not None:
-                payload = self._template.async_render_with_possible_json_value(
+            if template is not None:
+                payload = template.async_render_with_possible_json_value(
                     payload)
             if payload == self._state_on:
                 self._state = True
@@ -163,15 +151,16 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
             self.async_schedule_update_ha_state()
 
-        if self._state_topic is None:
+        if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
             self._sub_state = await subscription.async_subscribe_topics(
                 self.hass, self._sub_state,
-                {'state_topic': {'topic': self._state_topic,
-                                 'msg_callback': state_message_received,
-                                 'qos': self._qos}})
+                {CONF_STATE_TOPIC:
+                 {'topic': self._config.get(CONF_STATE_TOPIC),
+                  'msg_callback': state_message_received,
+                  'qos': self._config.get(CONF_QOS)}})
 
         if self._optimistic:
             last_state = await self.async_get_last_state()
@@ -180,7 +169,8 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
@@ -191,7 +181,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def is_on(self):
@@ -211,7 +201,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on.
@@ -219,8 +209,11 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_on, self._qos,
-            self._retain)
+            self.hass,
+            self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_ON),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
@@ -232,8 +225,11 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_off, self._qos,
-            self._retain)
+            self.hass,
+            self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_OFF),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False

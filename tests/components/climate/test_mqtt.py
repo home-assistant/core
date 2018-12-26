@@ -1,6 +1,8 @@
 """The tests for the mqtt climate component."""
-import unittest
 import copy
+import json
+import unittest
+from unittest.mock import ANY
 
 import pytest
 import voluptuous as vol
@@ -16,9 +18,10 @@ from homeassistant.components.climate import (
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.components.mqtt.discovery import async_start
-from tests.common import (get_test_home_assistant, mock_mqtt_component,
-                          async_fire_mqtt_message, fire_mqtt_message,
-                          mock_component, MockConfigEntry)
+from tests.common import (
+    async_fire_mqtt_message, async_mock_mqtt_component, async_setup_component,
+    fire_mqtt_message, get_test_home_assistant, mock_component,
+    mock_mqtt_component, MockConfigEntry, mock_registry)
 from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
@@ -671,6 +674,29 @@ class TestMQTTClimate(unittest.TestCase):
         assert 0.01 == temp_step
 
 
+async def test_unique_id(hass):
+    """Test unique id option only creates one climate per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, climate.DOMAIN, {
+        climate.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(climate.DOMAIN)) == 1
+
+
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     """Test removal of discovered climate."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -721,3 +747,77 @@ async def test_discovery_update_climate(hass, mqtt_mock, caplog):
 
     state = hass.states.get('climate.milk')
     assert state is None
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT climate device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, climate.DOMAIN, {
+        climate.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'mode_state_topic': 'test-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('climate.beer', new_entity_id='climate.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is None
+
+    state = hass.states.get('climate.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
