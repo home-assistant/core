@@ -16,6 +16,9 @@ from homeassistant.util.temperature import convert as convert_temperature
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
+MIN_TEMP = 8
+MAX_TEMP = 25
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -40,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                     break
 
             thermostat_entities.append(
-                XS1ThermostatEntity(actuator, matching_sensor, 8, 25))
+                XS1ThermostatEntity(actuator, matching_sensor))
 
     async_add_entities(thermostat_entities)
 
@@ -48,13 +51,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     """Representation of a XS1 thermostat."""
 
-    def __init__(self, device, sensor, min_temp: int, max_temp: int):
+    def __init__(self, device, sensor):
         """Initialize the actuator."""
         super().__init__(device)
         self.sensor = sensor
-
-        self._min_temp = min_temp
-        self._max_temp = max_temp
 
     @property
     def name(self):
@@ -82,20 +82,12 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(
-            self._min_temp,
-            TEMP_CELSIUS,
-            self.unit_of_measurement
-        )
+        return MIN_TEMP
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(
-            self._max_temp,
-            TEMP_CELSIUS,
-            self.unit_of_measurement
-        )
+        return MAX_TEMP
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
