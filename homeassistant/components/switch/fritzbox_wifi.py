@@ -57,6 +57,8 @@ class FritzBoxWifiSwitch(SwitchDevice):
     """The switch class for Fritzbox WiFi switches."""
 
     def __init__(self, conn, name, interface):
+        """Init individual Fritzbox WiFi switches."""
+
         self._conn = conn
         self._name = name
         self._interface = interface
@@ -66,10 +68,12 @@ class FritzBoxWifiSwitch(SwitchDevice):
 
     @property
     def name(self):
+        """Return the name of the wifi switch."""
         return self._name
 
     @property
     def is_on(self):
+        """Return true if switch is on."""
         self._info = self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface), 'GetInfo')
         info = self._info.get('NewEnable')
@@ -82,14 +86,16 @@ class FritzBoxWifiSwitch(SwitchDevice):
         return self._state
 
     def turn_on(self, **kwargs):
-        _LOGGER.info('Turning on guest Wifi')
+        """Turning on guest Wifi"""
+
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=1)
         self._state = True
 
     def turn_off(self, **kwargs):
-        _LOGGER.info('Turning off guest WiFI')
+        """Turning off guest WiFI"""
+
         self._conn.call_action(
             'WLANConfiguration:{}'.format(self._interface),
             'SetEnable', NewEnable=0)
