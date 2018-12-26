@@ -1210,7 +1210,7 @@ pyteleloisirs==3.4
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.sensor.aemet
-python-aemet==0.1.2
+python-aemet==0.1.4
 
 # homeassistant.components.sensor.blockchain
 python-blockchain-api==0.0.2

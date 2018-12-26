@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-aemet==0.1.2']
+REQUIREMENTS = ['python-aemet==0.1.4']
 
 _LOGGER = getLogger(__name__)
 
