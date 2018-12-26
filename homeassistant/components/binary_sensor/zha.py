@@ -176,12 +176,6 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
 
         out_clusters = kwargs.get('out_clusters')
         self._zcl_reporting = {}
-        for cluster_id in [general.OnOff.cluster_id,
-                           general.LevelControl.cluster_id]:
-            if cluster_id not in out_clusters:
-                continue
-            cluster = out_clusters[cluster_id]
-            self._zcl_reporting[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
 
         if general.LevelControl.cluster_id in out_clusters:
             self._out_listeners.update({
@@ -229,6 +223,19 @@ class Remote(RestoreEntity, ZhaEntity, BinarySensorDevice):
         if self._level == 0:
             self._level = 255
         self.async_schedule_update_ha_state()
+
+    async def async_configure(self):
+        """Bind clusters."""
+        from zigpy.zcl.clusters import general
+        await helpers.bind_cluster(
+            self.entity_id,
+            self._out_clusters[general.OnOff.cluster_id]
+        )
+        if general.LevelControl.cluster_id in self._out_clusters:
+            await helpers.bind_cluster(
+                self.entity_id,
+                self._out_clusters[general.LevelControl.cluster_id]
+            )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
