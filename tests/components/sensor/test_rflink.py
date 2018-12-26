@@ -136,8 +136,7 @@ async def test_entity_availability(hass, monkeypatch):
 
 
 async def test_aliasses(hass, monkeypatch):
-    """Validate the response to sensor's alias
-    (and the remove_deprecated function)."""
+    """Validate the response to sensor's alias (with aliasses)."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
