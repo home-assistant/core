@@ -152,6 +152,7 @@ class JewishCalSensor(Entity):
                                   diaspora=self.diaspora)
 
         def make_zmanim(date):
+            """Helper function for creating a Zmanim object."""
             return hdate.Zmanim(
                 date=date, location=location,
                 candle_lighting_offset=self.candle_lighting_offset,
