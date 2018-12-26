@@ -307,7 +307,7 @@ class ConfiguredDoorBird():
     def get_event_data(self):
         """Get data to pass along with HA event."""
         return {
-            'timestamp': datetime.datetime.now(),
+            'timestamp': datetime.datetime.now().isoformat(),
             'live_video_url': self._device.live_video_url,
             'live_image_url': self._device.live_image_url,
             'rtsp_live_video_url': self._device.rtsp_live_video_url,
