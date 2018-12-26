@@ -69,4 +69,3 @@ class FreeboxDeviceScanner(DeviceScanner):
                         if device['active']]
 
         self.last_results = last_results
-        return True
