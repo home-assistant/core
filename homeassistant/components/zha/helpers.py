@@ -32,6 +32,23 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
         return {}
 
 
+async def bind_cluster(entity_id, cluster):
+    """Bind a zigbee cluster."""
+    from zigpy.exceptions import DeliveryError
+
+    cluster_name = cluster.ep_attribute
+    try:
+        res = await cluster.bind()
+        _LOGGER.debug(
+            "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
+        )
+    except DeliveryError as ex:
+        _LOGGER.debug(
+            "%s: Failed to bind '%s' cluster: %s",
+            entity_id, cluster_name, str(ex)
+        )
+
+
 async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
                               min_report=REPORT_CONFIG_MIN_INT,
                               max_report=REPORT_CONFIG_MAX_INT,
@@ -46,18 +63,6 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
 
     attr_name = cluster.attributes.get(attr, [attr])[0]
     cluster_name = cluster.ep_attribute
-    if not skip_bind:
-        try:
-            res = await cluster.bind()
-            _LOGGER.debug(
-                "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
-            )
-        except DeliveryError as ex:
-            _LOGGER.debug(
-                "%s: Failed to bind '%s' cluster: %s",
-                entity_id, cluster_name, str(ex)
-            )
-
     try:
         res = await cluster.configure_reporting(attr, min_report,
                                                 max_report, reportable_change,
@@ -72,6 +77,26 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
             "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
             entity_id, attr_name, cluster_name, str(ex)
         )
+
+
+async def bind_configure_reporting(entity_id, cluster, attr, skip_bind=False,
+                                   min_report=REPORT_CONFIG_MIN_INT,
+                                   max_report=REPORT_CONFIG_MAX_INT,
+                                   reportable_change=REPORT_CONFIG_RPT_CHANGE,
+                                   manufacturer=None):
+    """Bind cluster and configure attribute reporting for a cluster.
+
+    while swallowing the DeliverError exceptions in case of unreachable
+    devices.
+    """
+    if not skip_bind:
+        await bind_cluster(entity_id, cluster)
+
+    await configure_reporting(entity_id, cluster, attr, skip_bind=False,
+                              min_report=REPORT_CONFIG_MIN_INT,
+                              max_report=REPORT_CONFIG_MAX_INT,
+                              reportable_change=REPORT_CONFIG_RPT_CHANGE,
+                              manufacturer=None)
 
 
 async def check_zigpy_connection(usb_path, radio_type, database_path):
