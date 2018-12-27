@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymitv==1.4.2']
+REQUIREMENTS = ['pymitv==1.4.3']
 
 DEFAULT_NAME = "Xiaomi TV"
 
