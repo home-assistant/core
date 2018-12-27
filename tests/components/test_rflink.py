@@ -186,8 +186,16 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
     # no arguments
     hass.async_create_task(
         hass.services.async_call(domain, SERVICE_SEND_COMMAND, {}))
+
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list == []
+
+    # bad command (no_command)
+    success = await hass.services.async_call(
+        domain, SERVICE_SEND_COMMAND, {
+            'device_id': 'newkaku_0000c6c2_1',
+            'command': 'no_command'})
+    assert not success, 'send command should not succeed for unknown command'
 
 
 async def test_reconnecting_after_disconnect(hass, monkeypatch):
@@ -277,6 +285,34 @@ async def test_error_when_not_connected(hass, monkeypatch):
 
     # rflink initiated disconnect
     disconnect_callback(None)
+
+    success = await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})
+    assert not success, 'changing state should not succeed when disconnected'
+
+
+async def test_another_error_when_not_connected(hass, monkeypatch):
+    """Sending command should error when not connected."""
+    domain = 'switch'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+            CONF_RECONNECT_INTERVAL: 0,
+        },
+        domain: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, _, disconnect_callback = await mock_rflink(
+        hass, config, domain, monkeypatch, failures=[True])
 
     success = await hass.services.async_call(
         domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})
