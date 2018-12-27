@@ -12,7 +12,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN, EVENT_STATE_CHANGED)
+    CONF_SSL, CONF_VERIFY_SSL, CONF_HOST, CONF_NAME,
+    CONF_PORT, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
@@ -32,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -44,6 +46,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     token = conf.get(CONF_TOKEN)
     use_ssl = conf.get(CONF_SSL)
+    verify_ssl = conf.get(CONF_VERIFY_SSL)
     name = conf.get(CONF_NAME)
 
     if use_ssl:
@@ -85,7 +88,7 @@ def setup(hass, config):
             }
             requests.post(event_collector,
                           data=json.dumps(payload, cls=JSONEncoder),
-                          headers=headers, timeout=10)
+                          headers=headers, timeout=10, verify=verify_ssl)
         except requests.exceptions.RequestException as error:
             _LOGGER.exception("Error saving event to Splunk: %s", error)
 
