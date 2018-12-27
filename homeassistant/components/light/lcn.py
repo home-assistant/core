@@ -123,6 +123,8 @@ class LcnOutputLight(LcnDevice, Light):
         if isinstance(input_obj, self.pypck.inputs.ModStatusOutput):
             if input_obj.get_output_id() == self.output.value:
                 self._brightness = int(input_obj.get_percent() / 100.*255)
+                if self.brightness == 0:
+                    self._is_dimming_to_zero = False
                 if not self._is_dimming_to_zero:
                     self._is_on = self.brightness > 0
                 self.async_schedule_update_ha_state()
