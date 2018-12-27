@@ -11,8 +11,10 @@ import re
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+    CONF_ADDRESS, CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pypck==0.5.9']
@@ -21,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'lcn'
 DATA_LCN = 'lcn'
-LIB_LCN = 'pypck'
 DEFAULT_NAME = 'pchk'
 
 CONF_SK_NUM_TRIES = 'sk_num_tries'
@@ -40,7 +41,7 @@ PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
 
 
 def in_upper(values):
-    """Validate if value is in given list. Returns upper case."""
+    """Validate if value is in given list. Return upper case."""
     return vol.All(vol.In(values), lambda val: val.upper())
 
 
@@ -86,6 +87,16 @@ def is_address(value):
     raise vol.error.Invalid('Not a valid address string.')
 
 
+LIGHTS_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_OUTPUT): in_upper(OUTPUT_PORTS),
+    vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_TRANSITION, default=0):
+        vol.All(vol.Coerce(float), vol.Range(min=0., max=486.),
+                lambda value: value * 1000),
+})
+
 CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.port,
@@ -99,7 +110,9 @@ CONNECTION_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
-            cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA])
+            cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
+        vol.Optional(CONF_LIGHTS, default=[]): vol.All(
+            cv.ensure_list, [LIGHTS_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -141,8 +154,8 @@ async def async_setup(hass, config):
                                            settings=settings,
                                            connection_id=connection_name)
 
-        # establish connection to PCHK server
         try:
+            # establish connection to PCHK server
             await hass.async_create_task(connection.async_connect(timeout=15))
             connections.append(connection)
             _LOGGER.info('LCN connected to "%s"', connection_name)
@@ -152,6 +165,9 @@ async def async_setup(hass, config):
             return False
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
+
+    load_platform(hass, 'light', DOMAIN, config[DOMAIN][CONF_LIGHTS], config)
+
     return True
 
 

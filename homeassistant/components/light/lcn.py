@@ -5,43 +5,32 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lcn/
 """
 
-import voluptuous as vol
-
 from homeassistant.components.lcn import (
     CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS, LcnDevice, get_connection, in_upper, is_address)
+    LcnDevice, get_connection)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION, Light)
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+    ATTR_BRIGHTNESS, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION,
+    Light)
+from homeassistant.const import CONF_ADDRESS
 
 DEPENDENCIES = ['lcn']
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ADDRESS): is_address,
-    vol.Required(CONF_OUTPUT): in_upper(OUTPUT_PORTS),
-    vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
-    vol.Optional(CONF_TRANSITION, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=0., max=486.),
-                lambda value: value * 1000),
-})
 
-
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN light platform."""
     import pypck
-    address, connection_id = config[CONF_ADDRESS]
-    addr = pypck.lcn_addr.LcnAddr(*address)
-    connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
-    connection = get_connection(connections, connection_id)
 
-    address_connection = connection.get_address_conn(addr)
+    devices = []
+    for config in discovery_info:
+        address, connection_id = config[CONF_ADDRESS]
+        addr = pypck.lcn_addr.LcnAddr(*address)
+        connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
+        connection = get_connection(connections, connection_id)
+        address_connection = connection.get_address_conn(addr)
 
-    device = LcnOutputLight(config, address_connection)
-    async_add_entities([device])
+        devices.append(LcnOutputLight(config, address_connection))
+    async_add_entities(devices)
 
 
 class LcnOutputLight(LcnDevice, Light):
