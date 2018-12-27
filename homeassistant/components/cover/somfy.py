@@ -14,7 +14,6 @@ DEPENDENCIES = ['somfy']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Somfy cover platform."""
-
     from pymfy.api.devices.category import Category
     categories = {Category.ROLLER_SHUTTER.value, Category.INTERIOR_BLIND.value,
                   Category.EXTERIOR_BLIND.value}
@@ -39,7 +38,7 @@ class SomfyCover(SomfyEntity, CoverDevice):
         RollerShutter(self.device, self.api).open()
 
     def stop_cover(self, **kwargs):
-        """Stop the cover"""
+        """Stop the cover."""
         from pymfy.api.devices.roller_shutter import RollerShutter
         RollerShutter(self.device, self.api).stop()
 
@@ -84,23 +83,23 @@ class SomfyCover(SomfyEntity, CoverDevice):
             orientation = Blind(self.device, self.api).orientation
         except StopIteration:
             pass
-        return orientation
+        return 100 - orientation
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        orientation = kwargs.get(ATTR_TILT_POSITION)
+        orientation = 100 - kwargs.get(ATTR_TILT_POSITION)
         from pymfy.api.devices.blind import Blind
         Blind(self.device, self.api).orientation = orientation
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
         from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 100
+        Blind(self.device, self.api).orientation = 0
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 0
+        Blind(self.device, self.api).orientation = 100
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
