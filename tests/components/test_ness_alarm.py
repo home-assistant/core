@@ -233,6 +233,6 @@ def mock_nessclient():
     _mock_factory.return_value = _mock_instance
 
     with MockDependency('nessclient'), \
-         patch('nessclient.Client', new=_mock_factory, create=True), \
-         patch('nessclient.ArmingState', new=MockArmingState):
+        patch('nessclient.Client', new=_mock_factory, create=True), \
+            patch('nessclient.ArmingState', new=MockArmingState):
         yield _mock_instance
