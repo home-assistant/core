@@ -61,6 +61,9 @@ defusedxml==0.5.0
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.12
 
+# homeassistant.components.device_tracker.ee_brightbox
+eebrightbox==0.0.4
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.7
 
@@ -265,6 +268,9 @@ srpenergy==1.0.5
 
 # homeassistant.components.statsd
 statsd==3.2.1
+
+# homeassistant.components.device_tracker.ee_brightbox
+timeago==1.0.8
 
 # homeassistant.components.camera.uvc
 uvcclient==0.11.0
