@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_ADDRESS, CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pypck==0.5.9']
@@ -38,11 +38,6 @@ OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
 # Regex for address validation
 PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
                              '\\.(?P<type>m|g)?(?P<id>\\d+)$')
-
-
-def in_upper(values):
-    """Validate if value is in given list. Return upper case."""
-    return vol.All(vol.In(values), lambda val: val.upper())
 
 
 def has_unique_connection_names(connections):
@@ -90,7 +85,7 @@ def is_address(value):
 LIGHTS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
-    vol.Required(CONF_OUTPUT): in_upper(OUTPUT_PORTS),
+    vol.Required(CONF_OUTPUT): vol.All(vol.In(OUTPUT_PORTS), vol.Upper),
     vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
     vol.Optional(CONF_TRANSITION, default=0):
         vol.All(vol.Coerce(float), vol.Range(min=0., max=486.),
@@ -103,7 +98,8 @@ CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
-    vol.Optional(CONF_DIM_MODE, default='steps50'): in_upper(DIM_MODES),
+    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.All(vol.In(DIM_MODES),
+                                                            vol.Upper),
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -166,7 +162,9 @@ async def async_setup(hass, config):
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
 
-    load_platform(hass, 'light', DOMAIN, config[DOMAIN][CONF_LIGHTS], config)
+    hass.async_create_task(
+        async_load_platform(hass, 'light', DOMAIN,
+                            config[DOMAIN][CONF_LIGHTS], config))
 
     return True
 

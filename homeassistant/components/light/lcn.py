@@ -109,11 +109,13 @@ class LcnOutputLight(LcnDevice, Light):
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
-        if isinstance(input_obj, self.pypck.inputs.ModStatusOutput):
-            if input_obj.get_output_id() == self.output.value:
-                self._brightness = int(input_obj.get_percent() / 100.*255)
-                if self.brightness == 0:
-                    self._is_dimming_to_zero = False
-                if not self._is_dimming_to_zero:
-                    self._is_on = self.brightness > 0
-                self.async_schedule_update_ha_state()
+        if not isinstance(input_obj, self.pypck.inputs.ModStatusOutput) or \
+                input_obj.get_output_id() != self.output.value:
+            return
+
+        self._brightness = int(input_obj.get_percent() / 100.*255)
+        if self.brightness == 0:
+            self._is_dimming_to_zero = False
+        if not self._is_dimming_to_zero:
+            self._is_on = self.brightness > 0
+        self.async_schedule_update_ha_state()
