@@ -76,7 +76,7 @@ def setup(hass, config):
         hass.components.persistent_notification.create(
             'In order to authorize Home Assistant to view your Somfy devices'
             ' you must visit this <a href="{}" target="_blank">link</a>.'
-                .format(authorization_url),
+            .format(authorization_url),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_CB_ID
         )
