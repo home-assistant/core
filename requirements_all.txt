@@ -95,11 +95,11 @@ aioautomatic==0.6.5
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
 
-# homeassistant.components.freebox
-aiofreepybox==0.0.6
-
 # homeassistant.components.esphome
 aioesphomeapi==1.3.0
+
+# homeassistant.components.freebox
+aiofreepybox==0.0.6
 
 # homeassistant.components.camera.yi
 aioftp==0.10.1
