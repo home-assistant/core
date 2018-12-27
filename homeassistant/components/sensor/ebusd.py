@@ -27,8 +27,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for condition in monitored_conditions:
-        dev.append(Ebusd(ebusd_api, 
-          discovery_info['sensor_types'][condition], name))
+        dev.append(Ebusd(
+            ebusd_api, discovery_info['sensor_types'][condition], name))
 
     add_entities(dev, True)
 

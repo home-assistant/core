@@ -40,8 +40,8 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-      vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
   })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -54,8 +54,8 @@ def setup(hass, config):
     name = config[DOMAIN].get(CONF_NAME)
     circuit = config[DOMAIN].get(CONF_CIRCUIT)
     monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
-    server_address = (config[DOMAIN].get(CONF_HOST), 
-      config[DOMAIN].get(CONF_PORT))
+    server_address = (
+        config[DOMAIN].get(CONF_HOST), config[DOMAIN].get(CONF_PORT))
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,16 +65,18 @@ def setup(hass, config):
         sock.connect(server_address)
         sock.close()
 
-        sensorConfig = {'monitored_conditions': monitored_conditions, 
-           'client_name' : name, 
+        sensorConfig = {
+           'monitored_conditions': monitored_conditions,
+           'client_name': name,
            'sensor_types': SENSOR_TYPES[circuit]
         }
         load_platform(hass, 'sensor', DOMAIN, sensorConfig, config)
 
-        hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DATA_EBUSD].write)
+        hass.services.register(
+            DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DATA_EBUSD].write)
 
         _LOGGER.debug("Ebusd component setup completed.")
-        return True        
+        return True
     except socket.timeout:
         raise PlatformNotReady
     except socket.error:
