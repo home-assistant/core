@@ -881,6 +881,9 @@ pyW800rf32==0.1
 # homeassistant.components.ads
 pyads==2.2.6
 
+# homeassistant.components.sensor.aftership
+pyaftership==0.1.2
+
 # homeassistant.components.sensor.airvisual
 pyairvisual==2.0.1
 
