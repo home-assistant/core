@@ -86,10 +86,6 @@ async def test_alarm_disarm(hass, mock_nessclient):
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
-    on_state_change = mock_nessclient.on_state_change.call_args[0][0]
-    on_state_change(MockArmingState.DISARMED)
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         alarm_control_panel.DOMAIN, SERVICE_ALARM_DISARM, blocking=True,
         service_data={
@@ -102,10 +98,6 @@ async def test_alarm_disarm(hass, mock_nessclient):
 async def test_alarm_arm_away(hass, mock_nessclient):
     """Test disarm."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    on_state_change = mock_nessclient.on_state_change.call_args[0][0]
-    on_state_change(MockArmingState.DISARMED)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -122,10 +114,6 @@ async def test_alarm_arm_home(hass, mock_nessclient):
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
-    on_state_change = mock_nessclient.on_state_change.call_args[0][0]
-    on_state_change(MockArmingState.DISARMED)
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         alarm_control_panel.DOMAIN, SERVICE_ALARM_ARM_HOME, blocking=True,
         service_data={
@@ -138,10 +126,6 @@ async def test_alarm_arm_home(hass, mock_nessclient):
 async def test_alarm_trigger(hass, mock_nessclient):
     """Test disarm."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    on_state_change = mock_nessclient.on_state_change.call_args[0][0]
-    on_state_change(MockArmingState.DISARMED)
     await hass.async_block_till_done()
 
     await hass.services.async_call(

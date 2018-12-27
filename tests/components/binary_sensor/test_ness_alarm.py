@@ -24,13 +24,3 @@ async def test_handle_zone_change_different_zone(hass):
     assert sensor.is_on is False
     sensor._handle_zone_change(ZoneChangedData(zone_id=2, state=True))
     assert sensor.is_on is False
-
-
-async def test_zone_availability(hass):
-    """Test zone is unavailable until a zone update is handled."""
-    sensor = NessZoneBinarySensor(zone_id=1, name='Zone 1', zone_type='motion')
-    sensor.hass = hass
-
-    assert sensor.available is False
-    sensor._handle_zone_change(ZoneChangedData(zone_id=1, state=True))
-    assert sensor.available is True

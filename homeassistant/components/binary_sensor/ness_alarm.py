@@ -47,17 +47,11 @@ class NessZoneBinarySensor(BinarySensorDevice):
         self._name = name
         self._type = zone_type
         self._state = 0
-        self._available = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change)
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def name(self):
@@ -83,6 +77,5 @@ class NessZoneBinarySensor(BinarySensorDevice):
     def _handle_zone_change(self, data: ZoneChangedData):
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
-            self._available = True
             self._state = data.state
             self.async_schedule_update_ha_state()

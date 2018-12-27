@@ -37,18 +37,6 @@ async def test_handle_arming_state_change(hass, mock_arming_state):
         assert mock_update_ha_state.call_count == 1
 
 
-async def test_availability(hass, mock_arming_state):
-    """Test entity is unavailable until a zone update is handled."""
-    alarm_panel = NessAlarmPanel(client=Mock(), name='Alarm Panel')
-    alarm_panel.hass = hass
-    mock_update_ha_state = Mock()
-    alarm_panel.async_schedule_update_ha_state = mock_update_ha_state
-
-    assert alarm_panel.available is False
-    alarm_panel._handle_arming_state_change(MockArmingState.ARMED)
-    assert alarm_panel.available is True
-
-
 @pytest.fixture
 def mock_arming_state():
     """Mock nessclient ArmingState enum."""

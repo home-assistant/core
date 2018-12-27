@@ -39,18 +39,12 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
         self._client = client
         self._name = name
         self._state = None
-        self._available = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_ARMING_STATE_CHANGED,
             self._handle_arming_state_change)
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def name(self):
@@ -93,7 +87,6 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
         """Handle arming state update."""
         from nessclient import ArmingState
 
-        self._available = True
         if arming_state == ArmingState.UNKNOWN:
             self._state = None
         elif arming_state == ArmingState.DISARMED:
