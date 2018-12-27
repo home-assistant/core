@@ -67,7 +67,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._available = False
         self._battery_level = None
         self._robot_serial = self.robot.serial
-        self._robot_alert = None
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -83,7 +82,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
         _LOGGER.debug('self._state=%s', self._state)
-        self._robot_alert = ALERTS.get(self._state['alert'])
+        robot_alert = ALERTS.get(self._state['alert'])
         if self._state['state'] == 1:
             if self._state['details']['isCharging']:
                 self._clean_state = STATE_DOCKED
@@ -96,16 +95,16 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                 self._clean_state = STATE_IDLE
                 self._status_state = 'Stopped'
 
-            if self._robot_alert is not None:
-                self._status_state = self._robot_alert
+            if robot_alert is not None:
+                self._status_state = robot_alert
         elif self._state['state'] == 2:
-            if self._robot_alert is None:
+            if robot_alert is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
                     MODE.get(self._state['cleaning']['mode'])
                     + ' ' + ACTION.get(self._state['action']))
             else:
-                self._status_state = self._robot_alert
+                self._status_state = robot_alert
         elif self._state['state'] == 3:
             self._clean_state = STATE_PAUSED
             self._status_state = 'Paused'
