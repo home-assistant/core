@@ -89,15 +89,14 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         """Return the maximum temperature."""
         return MAX_TEMP
 
-    async def async_set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        await self.hass.async_add_executor_job(
-            partial(self.device.set_value, temp))
+        self.device.set_value(temp)
 
         if self.sensor is not None:
-            self.async_schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     async def async_update(self):
         """Also update the sensor when available."""
