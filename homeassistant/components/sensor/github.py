@@ -32,6 +32,7 @@ ATTR_BRANCHES = 'branches'
 ATTR_OPEN_ISSUES = 'open_issues'
 ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
 ATTR_LAST_COMMIT = 'last_commit'
+ATTR_LATEST_RELEASE = 'latest_release'
 
 DEFAULT_NAME = 'GitHub'
 
@@ -81,6 +82,7 @@ class GitHubSensor(Entity):
         self._open_issues = None
         self._open_pull_requests = None
         self._last_commit = None
+        self._latest_release = None
         self._github_data = github_data
 
     @property
@@ -109,7 +111,8 @@ class GitHubSensor(Entity):
             ATTR_BRANCHES: self._branches,
             ATTR_OPEN_ISSUES: self._open_issues,
             ATTR_OPEN_PULL_REQUESTS: self._open_pull_requests,
-            ATTR_LAST_COMMIT: self._last_commit
+            ATTR_LAST_COMMIT: self._last_commit,
+            ATTR_LATEST_RELEASE: self._latest_release
         }
 
     @property
@@ -130,6 +133,7 @@ class GitHubSensor(Entity):
         self._open_issues = self._github_data.open_issues
         self._open_pull_requests = self._github_data.open_pull_requests
         self._last_commit = self._github_data.last_commit
+        self._latest_release = self._github_data.latest_release
         self._available = self._github_data.available
 
 
@@ -165,6 +169,7 @@ class GitHubData():
         self.open_issues = None
         self.open_pull_requests = None
         self.last_commit = None
+        self.latest_release = None
         self.available = False
 
     def _update(self):
@@ -239,6 +244,17 @@ class GitHubData():
                     "url": last_commit.author.html_url
                 }
             })
+
+            releases = repo.get_releases()
+            if releases and releases.totalCount > 0:
+                self.latest_release = json.dumps({
+                    "title": releases[0].title,
+                    "tag": releases[0].tag_name,
+                    "url": releases[0].html_url,
+                    "created_at": str(releases[0].created_at),
+                    "published_at": str(releases[0].published_at),
+                    "body": releases[0].body
+                })
 
             self.available = True
         except self._github.BadCredentialsException as err:
