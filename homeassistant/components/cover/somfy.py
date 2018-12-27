@@ -80,10 +80,10 @@ class SomfyCover(SomfyEntity, CoverDevice):
         orientation = None
         try:
             from pymfy.api.devices.blind import Blind
-            orientation = Blind(self.device, self.api).orientation
+            orientation = 100 - Blind(self.device, self.api).orientation
         except StopIteration:
             pass
-        return 100 - orientation
+        return orientation
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
