@@ -21,7 +21,6 @@ MAX_TEMP = 25
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the XS1 thermostat platform."""
-
     from xs1_api_client.api_constants import ActuatorType
 
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]

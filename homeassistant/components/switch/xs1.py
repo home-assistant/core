@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the XS1 switch platform."""
-
     from xs1_api_client.api_constants import ActuatorType
 
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
