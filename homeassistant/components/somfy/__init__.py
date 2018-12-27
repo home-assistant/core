@@ -60,6 +60,7 @@ def setup(hass, config):
     from pymfy.api.somfy_api import SomfyApi
 
     hass.data[DOMAIN] = {}
+    is_ready = False
 
     # This is called to create the redirect so the user can Authorize Home .
     redirect_uri = '{}{}'.format(
@@ -75,17 +76,19 @@ def setup(hass, config):
         hass.components.persistent_notification.create(
             'In order to authorize Home Assistant to view your Somfy devices'
             ' you must visit this <a href="{}" target="_blank">link</a>.'
-            .format(authorization_url),
+                .format(authorization_url),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_CB_ID
         )
         hass.http.register_view(SomfyAuthCallbackView(config))
+        is_ready = True
     else:
-        update_all_devices(hass)
-        for component in SOMFY_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
+        if update_all_devices(hass):
+            is_ready = True
+            for component in SOMFY_COMPONENTS:
+                discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-    return True
+    return is_ready
 
 
 class SomfyAuthCallbackView(HomeAssistantView):
@@ -165,3 +168,5 @@ def update_all_devices(hass):
         data[DEVICES] = data[API].get_devices()
     except HTTPError:
         _LOGGER.warning("Cannot update devices.", exc_info=True)
+        return False
+    return True
