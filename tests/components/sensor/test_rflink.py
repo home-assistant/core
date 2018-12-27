@@ -81,30 +81,37 @@ async def test_race_condition(hass, monkeypatch):
     # test event for new unconfigured sensor
     event_callback({
         'id': 'test2',
-        'sensor': 'temperature',
-        'value': 20,
-        'unit': '°C',
+        'sensor': 'humidity',
+        'value': 65,
+        'unit': '%',
     })
     event_callback({
         'id': 'test2',
-        'sensor': 'temperature',
-        'value': 21,
-        'unit': '°C',
-    })
-    event_callback({
-        'id': 'test2',
-        'sensor': 'temperature',
-        'value': 22,
-        'unit': '°C',
+        'sensor': 'humidity',
+        'value': 66,
+        'unit': '%',
     })
     await hass.async_block_till_done()
 
     # test  state of new sensor
     new_sensor = hass.states.get('sensor.test2')
     assert new_sensor
-    assert new_sensor.state == '20'
-    assert new_sensor.attributes['unit_of_measurement'] == '°C'
-    assert new_sensor.attributes['icon'] == 'mdi:thermometer'
+    assert new_sensor.state == '65'
+    assert new_sensor.attributes['unit_of_measurement'] == '%'
+    assert new_sensor.attributes['icon'] == 'mdi:water-percent'
+
+    event_callback({
+        'id': 'test2',
+        'sensor': 'humidity',
+        'value': 67,
+        'unit': '%',
+    })
+    await hass.async_block_till_done()
+
+    # test  state of new sensor
+    new_sensor = hass.states.get('sensor.test2')
+    assert new_sensor
+    assert new_sensor.state == '67'
 
 
 async def test_disable_automatic_add(hass, monkeypatch):
