@@ -15,6 +15,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     async_dispatcher_connect)
@@ -24,7 +25,7 @@ DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.7.4']
+REQUIREMENTS = ['volvooncall==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,19 +70,19 @@ RESOURCES = [
     'engine_start',
     'last_trip',
     'is_engine_running',
-    'doors.hood_open',
-    'doors.front_left_door_open',
-    'doors.front_right_door_open',
-    'doors.rear_left_door_open',
-    'doors.rear_right_door_open',
-    'windows.front_left_window_open',
-    'windows.front_right_window_open',
-    'windows.rear_left_window_open',
-    'windows.rear_right_window_open',
-    'tyre_pressure.front_left_tyre_pressure',
-    'tyre_pressure.front_right_tyre_pressure',
-    'tyre_pressure.rear_left_tyre_pressure',
-    'tyre_pressure.rear_right_tyre_pressure',
+    'doors_hood_open',
+    'doors_front_left_door_open',
+    'doors_front_right_door_open',
+    'doors_rear_left_door_open',
+    'doors_rear_right_door_open',
+    'windows_front_left_window_open',
+    'windows_front_right_window_open',
+    'windows_rear_left_window_open',
+    'windows_rear_right_window_open',
+    'tyre_pressure_front_left_tyre_pressure',
+    'tyre_pressure_front_right_tyre_pressure',
+    'tyre_pressure_rear_left_tyre_pressure',
+    'tyre_pressure_rear_right_tyre_pressure',
     'any_door_open',
     'any_window_open'
 ]
@@ -106,16 +107,23 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
+    session = async_get_clientsession(hass)
+
     from volvooncall import Connection
     connection = Connection(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_SERVICE_URL),
-        config[DOMAIN].get(CONF_REGION))
+        session=session,
+        username=config[DOMAIN].get(CONF_USERNAME),
+        password=config[DOMAIN].get(CONF_PASSWORD),
+        service_url=config[DOMAIN].get(CONF_SERVICE_URL),
+        region=config[DOMAIN].get(CONF_REGION))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
     data = hass.data[DATA_KEY] = VolvoData(config)
+
+    def is_enabled(attr):
+        """Return true if the user has enabled the resource."""
+        return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
 
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
@@ -125,17 +133,13 @@ async def async_setup(hass, config):
             mutable=config[DOMAIN][CONF_MUTABLE],
             scandinavian_miles=config[DOMAIN][CONF_SCANDINAVIAN_MILES])
 
-        def is_enabled(attr):
-            """Return true if the user has enabled the resource."""
-            return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
-
         for instrument in (
                 instrument
                 for instrument in dashboard.instruments
                 if instrument.component in COMPONENTS and
                 is_enabled(instrument.slug_attr)):
 
-            data.instruments.append(instrument)
+            data.instruments.add(instrument)
 
             hass.async_create_task(
                 discovery.async_load_platform(
@@ -174,7 +178,7 @@ class VolvoData:
     def __init__(self, config):
         """Initialize the component state."""
         self.vehicles = set()
-        self.instruments = []
+        self.instruments = set()
         self.config = config[DOMAIN]
         self.names = self.config.get(CONF_NAME)
 

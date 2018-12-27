@@ -515,8 +515,30 @@ async def test_available(hass, platforms, main_dtv, mock_now):
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
 
-    # Make update fail (i.e. DVR offline)
+    # Make update fail 1st time
     next_update = next_update + timedelta(minutes=5)
+    with patch.object(
+            main_dtv, 'get_standby', side_effect=requests.RequestException), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
+
+    # Make update fail 2nd time within 1 minute
+    next_update = next_update + timedelta(seconds=30)
+    with patch.object(
+            main_dtv, 'get_standby', side_effect=requests.RequestException), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
+
+    # Make update fail 3rd time more then a minute after 1st failure
+    next_update = next_update + timedelta(minutes=1)
     with patch.object(
             main_dtv, 'get_standby', side_effect=requests.RequestException), \
             patch('homeassistant.util.dt.utcnow', return_value=next_update):

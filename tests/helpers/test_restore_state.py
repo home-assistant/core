@@ -198,3 +198,23 @@ async def test_load_error(hass):
         state = await entity.async_get_last_state()
 
     assert state is None
+
+
+async def test_state_saved_on_remove(hass):
+    """Test that we save entity state on removal."""
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = 'input_boolean.b0'
+    await entity.async_added_to_hass()
+
+    hass.states.async_set('input_boolean.b0', 'on')
+
+    data = await RestoreStateData.async_get_instance(hass)
+
+    # No last states should currently be saved
+    assert not data.last_states
+
+    await entity.async_will_remove_from_hass()
+
+    # We should store the input boolean state when it is removed
+    assert data.last_states['input_boolean.b0'].state.state == 'on'

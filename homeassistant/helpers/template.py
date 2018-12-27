@@ -149,7 +149,8 @@ class Template:
             error_value).result()
 
     def async_render_with_possible_json_value(self, value,
-                                              error_value=_SENTINEL):
+                                              error_value=_SENTINEL,
+                                              variables=None):
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -159,9 +160,9 @@ class Template:
         if self._compiled is None:
             self._ensure_compiled()
 
-        variables = {
-            'value': value
-        }
+        variables = dict(variables or {})
+        variables['value'] = value
+
         try:
             variables['value_json'] = json.loads(value)
         except ValueError:
@@ -170,8 +171,10 @@ class Template:
         try:
             return self._compiled.render(variables).strip()
         except jinja2.TemplateError as ex:
-            _LOGGER.error("Error parsing value: %s (value: %s, template: %s)",
-                          ex, value, self.template)
+            if error_value is _SENTINEL:
+                _LOGGER.error(
+                    "Error parsing value: %s (value: %s, template: %s)",
+                    ex, value, self.template)
             return value if error_value is _SENTINEL else error_value
 
     def _ensure_compiled(self):

@@ -3,7 +3,7 @@ import json
 import unittest
 
 from datetime import timedelta, datetime
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import mock_mqtt_component, fire_mqtt_message, \
     assert_setup_component, async_fire_mqtt_message, \
-    async_mock_mqtt_component, MockConfigEntry
+    async_mock_mqtt_component, MockConfigEntry, mock_registry
 from tests.common import get_test_home_assistant, mock_component
 
 
@@ -333,6 +333,67 @@ class TestSensorMQTT(unittest.TestCase):
             state.attributes.get('val')
         assert '100' == state.state
 
+    def test_setting_sensor_attribute_via_mqtt_json_topic(self):
+        """Test the setting of attribute via MQTT with JSON payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert '100' == \
+            state.attributes.get('val')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', '[ "list", "of", "things"]')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'JSON result was not a dictionary')
+
+    @patch('homeassistant.components.mqtt._LOGGER')
+    def test_update_with_json_attrs_topic_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'json_attributes_topic': 'attr-topic'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'attr-topic', 'This is not JSON')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        assert state.attributes.get('val') is None
+        mock_logger.warning.assert_called_with(
+            'Erroneous JSON: %s', 'This is not JSON')
+
     def test_invalid_device_class(self):
         """Test device_class option with invalid value."""
         with assert_setup_component(0):
@@ -481,3 +542,38 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, sensor.DOMAIN, {
+        sensor.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'state_topic': 'test-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('sensor.beer', new_entity_id='sensor.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.beer')
+    assert state is None
+
+    state = hass.states.get('sensor.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')

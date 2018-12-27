@@ -21,7 +21,7 @@ from homeassistant.config import (
 from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.4',)
+REQUIREMENTS = ('colorlog==4.0.2',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -326,11 +326,6 @@ def check_ha_config_file(hass):
     merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     core_config.pop(CONF_PACKAGES, None)
-
-    # Ensure we have no None values after merge
-    for key, value in config.items():
-        if not value:
-            config[key] = {}
 
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())

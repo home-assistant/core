@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.helpers.event import async_track_point_in_time
 
-REQUIREMENTS = ['TwitterAPI==2.5.4']
+REQUIREMENTS = ['TwitterAPI==2.5.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +78,25 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message_callback(self, message, media_id=None):
         """Tweet a message, optionally with media."""
         if self.user:
-            resp = self.api.request('direct_messages/new',
-                                    {'user': self.user,
-                                     'text': message,
-                                     'media_ids': media_id})
+            user_resp = self.api.request(
+                'users/lookup', {'screen_name': self.user})
+            user_id = user_resp.json()[0]['id']
+            if user_resp.status_code != 200:
+                self.log_error_resp(user_resp)
+            else:
+                _LOGGER.debug("Message posted: %s", user_resp.json())
+
+            event = {
+                'event': {
+                    'type': 'message_create',
+                    'message_create': {
+                        'target': {'recipient_id': user_id},
+                        'message_data': {'text': message},
+                    }
+                }
+            }
+            resp = self.api.request(
+                'direct_messages/events/new', json.dumps(event))
         else:
             resp = self.api.request('statuses/update',
                                     {'status': message,

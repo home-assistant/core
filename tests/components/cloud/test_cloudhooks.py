@@ -17,7 +17,7 @@ def mock_cloudhooks(hass):
     cloud.iot = Mock(async_send_message=Mock(return_value=mock_coro()))
     cloud.cloudhook_create_url = 'https://webhook-create.url'
     cloud.prefs = prefs.CloudPreferences(hass)
-    hass.loop.run_until_complete(cloud.prefs.async_initialize(True))
+    hass.loop.run_until_complete(cloud.prefs.async_initialize())
     return cloudhooks.Cloudhooks(cloud)
 
 

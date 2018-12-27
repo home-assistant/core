@@ -32,7 +32,7 @@ async def test_default_setup(hass, aioclient_mock):
     metrics = {'co2': ['1232.0', 'ppm'],
                'temperature': ['21.1', TEMP_CELSIUS],
                'humidity': ['49.5', '%'],
-               'pm25': ['144.8', 'µg/m3'],
+               'pm2_5': ['144.8', 'µg/m3'],
                'voc': ['340.7', 'ppb'],
                'index': ['138.9', '%']}
 

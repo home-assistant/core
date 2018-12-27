@@ -25,7 +25,7 @@ ATTR_CHANGED_BY = 'changed_by'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ALARM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
 
