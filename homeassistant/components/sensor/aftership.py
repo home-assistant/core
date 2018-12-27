@@ -1,5 +1,5 @@
 """
-Gives a sensor of all non-delivered packages recorded in AfterShip.
+Support for non-delivered packages recorded in AfterShip.
 
 For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/sensor.aftership/
@@ -22,12 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Information provided by AfterShip'
 
-DEFAULT_NAME = 'aftership'
-
-CONF_TITLE = 'title'
 CONF_SLUG = 'slug'
-
+CONF_TITLE = 'title'
 CONF_TRACKING_NUMBER = 'tracking_number'
+
+DEFAULT_NAME = 'aftership'
 
 ICON = 'mdi:package-variant-closed'
 
@@ -36,7 +35,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    })
+})
 
 
 async def async_setup_platform(
@@ -57,8 +56,7 @@ async def async_setup_platform(
                       aftership.meta)
         return
 
-    sensors = [AfterShipSensor(aftership, name)]
-    async_add_entities(sensors, True)
+    async_add_entities([AfterShipSensor(aftership, name)], True)
 
 
 class AfterShipSensor(Entity):
@@ -102,11 +100,11 @@ class AfterShipSensor(Entity):
         await self.aftership.get_trackings()
 
         if not self.aftership.meta:
-            _LOGGER.error("Unkown errors when querying. See logs for details.")
+            _LOGGER.error("Unknown errors when querying")
             return
         if self.aftership.meta['code'] != 200:
-            _LOGGER.error("Errors when querying AfterShip. %s",
-                          str(self.aftership.meta))
+            _LOGGER.error(
+                "Errors when querying AfterShip. %s", str(self.aftership.meta))
             return
 
         status_to_ignore = {'delivered'}
