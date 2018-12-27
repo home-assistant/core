@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymitv==1.4.0']
+REQUIREMENTS = ['pymitv==1.4.3']
 
 DEFAULT_NAME = "Xiaomi TV"
 
@@ -93,15 +93,17 @@ class XiaomiTV(MediaPlayerDevice):
         because the TV won't accept any input when turned off. Thus, the user
         would be unable to turn the TV back on, unless it's done manually.
         """
-        self._tv.sleep()
+        if self._state is not STATE_OFF:
+            self._tv.sleep()
 
-        self._state = STATE_OFF
+            self._state = STATE_OFF
 
     def turn_on(self):
         """Wake the TV back up from sleep."""
-        self._tv.wake()
+        if self._state is not STATE_ON:
+            self._tv.wake()
 
-        self._state = STATE_ON
+            self._state = STATE_ON
 
     def volume_up(self):
         """Increase volume by one."""
