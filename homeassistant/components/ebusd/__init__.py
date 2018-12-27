@@ -11,14 +11,11 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS,
-    STATE_ON, STATE_OFF)
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import Throttle
 
 from .const import (
@@ -44,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
+      vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
   })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -57,7 +54,8 @@ def setup(hass, config):
     name = config[DOMAIN].get(CONF_NAME)
     circuit = config[DOMAIN].get(CONF_CIRCUIT)
     monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
-    server_address = (config[DOMAIN].get(CONF_HOST), config[DOMAIN].get(CONF_PORT))
+    server_address = (config[DOMAIN].get(CONF_HOST), 
+      config[DOMAIN].get(CONF_PORT))
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

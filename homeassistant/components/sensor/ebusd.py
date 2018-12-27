@@ -7,11 +7,8 @@ https://github.com/john30/ebusd
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.const import (
     STATE_ON, STATE_OFF)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ebusd']
@@ -21,15 +18,17 @@ DATA_EBUSD = 'EBUSD'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ebus sensor"""
-    ebusd_api = hass.data[DATA_EBUSD];
+    ebusd_api = hass.data[DATA_EBUSD]
     monitored_conditions = discovery_info['monitored_conditions']
     name = discovery_info['client_name']
 
     dev = []
     for condition in monitored_conditions:
-        dev.append(Ebusd(ebusd_api, discovery_info['sensor_types'][condition], name))
+        dev.append(Ebusd(ebusd_api, 
+          discovery_info['sensor_types'][condition], name))
 
     add_entities(dev, True)
 
