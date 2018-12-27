@@ -58,11 +58,13 @@ CONF_INTERVAL = 'update_interval'
 CONF_CHARGING_INTERVAL = 'update_interval_charging'
 CONF_CLIMATE_INTERVAL = 'update_interval_climate'
 CONF_REGION = 'region'
+CONF_REFRESH_ATTEMPTS = 'refresh_attempts'
 CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
 CONF_FORCE_MILES = 'force_miles'
 DEFAULT_INTERVAL = 30
 DEFAULT_CHARGING_INTERVAL = 15
 DEFAULT_CLIMATE_INTERVAL = 5
+DEFAULT_REFRESH_ATTEMPTS = 4
 
 CHECK_INTERVAL = 10
 
@@ -77,7 +79,8 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_CHARGING_INTERVAL): cv.positive_int,
         vol.Optional(CONF_CLIMATE_INTERVAL,
                      default=DEFAULT_CLIMATE_INTERVAL): cv.positive_int,
-        vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
+        vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean,
+        vol.Optional(CONF_REFRESH_ATTEMPTS, default=DEFAULT_REFRESH_ATTEMPTS): cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -203,23 +206,21 @@ class LeafDataStore:
         battery_response = self.get_battery()
         _LOGGER.debug("Got battery data for Leaf")
 
-        if battery_response.answer['status'] == 200:
-            if int(battery_response.battery_capacity) > 100:
-                self.data[DATA_BATTERY] = (
-                    battery_response.battery_percent * 0.05
+        if battery_response is not None:
+            _LOGGER.debug("Battery Response: ")
+            _LOGGER.debug(battery_response.__dict__)
+            if battery_response.answer['status'] == 200:
+                if int(battery_response.battery_capacity) > 100:
+                    self.data[DATA_BATTERY] = battery_response.battery_percent * 0.05
+                else:
+                    self.data[DATA_BATTERY] = battery_response.battery_percent
+
+                self.data[DATA_CHARGING] = battery_response.is_charging
+                self.data[DATA_PLUGGED_IN] = battery_response.is_connected
+                self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
+                self.data[DATA_RANGE_AC_OFF] = (
+                    battery_response.cruising_range_ac_off_km
                 )
-            else:
-                self.data[DATA_BATTERY] = battery_response.battery_percent
-
-            self.data[DATA_CHARGING] = battery_response.is_charging
-            self.data[DATA_PLUGGED_IN] = battery_response.is_connected
-            self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
-            self.data[DATA_RANGE_AC_OFF] = (
-                battery_response.cruising_range_ac_off_km
-            )
-
-        _LOGGER.debug("Battery Response: ")
-        _LOGGER.debug(battery_response.__dict__)
 
         climate_response = self.get_climate()
 
@@ -252,8 +253,18 @@ class LeafDataStore:
     def get_battery(self):
         request = self.leaf.request_update()
         battery_status = self.leaf.get_status_from_update(request)
+
+        i = 0
+
         while battery_status is None:
-            _LOGGER.debug("Battery data not in yet.")
+            if i >= self.config[DOMAIN][CONF_REFRESH_ATTEMPTS]:
+                _LOGGER.debug("Climate Data failed to arrive within %d attempts",
+                              self.config[DOMAIN][CONF_REFRESH_ATTEMPTS])
+                break
+
+            i += 1
+
+            _LOGGER.debug("Battery data not in yet (Attempt %d)", i)
             time.sleep(5)
             battery_status = self.leaf.get_status_from_update(request)
 
@@ -272,8 +283,17 @@ class LeafDataStore:
             climate_result = self.leaf.get_start_climate_control_result(
                 request)
 
+            i = 0
+
             while climate_result is None:
-                _LOGGER.debug("Climate data not in yet.")
+                if i >= self.config[DOMAIN][CONF_REFRESH_ATTEMPTS]:
+                    _LOGGER.debug("Climate Data failed to arrive within %d attempts",
+                                  self.config[DOMAIN][CONF_REFRESH_ATTEMPTS])
+                    break
+
+                i += 1
+
+                _LOGGER.debug("Climate data not in yet (Attempt %d)", i)
                 time.sleep(5)
                 climate_result = self.leaf.get_start_climate_control_result(
                     request)
@@ -287,8 +307,17 @@ class LeafDataStore:
             request = self.leaf.stop_climate_control()
             climate_result = self.leaf.get_stop_climate_control_result(request)
 
+            i = 0
+
             while climate_result is None:
-                _LOGGER.debug("Climate data not in yet.")
+                if i >= self.config[DOMAIN][CONF_REFRESH_ATTEMPTS]:
+                    _LOGGER.debug("Climate Data failed to arrive within %d attempts",
+                                  self.config[DOMAIN][CONF_REFRESH_ATTEMPTS])
+                    break
+
+                i += 1
+
+                _LOGGER.debug("Climate data not in yet (Attempt %d)", i)
                 time.sleep(5)
                 climate_result = self.leaf.get_stop_climate_control_result(
                     request)
