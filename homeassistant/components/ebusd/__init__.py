@@ -65,12 +65,12 @@ def setup(hass, config):
         sock.connect(server_address)
         sock.close()
 
-        sensorConfig = {
+        sensor_config = {
            'monitored_conditions': monitored_conditions,
            'client_name': name,
            'sensor_types': SENSOR_TYPES[circuit]
         }
-        load_platform(hass, 'sensor', DOMAIN, sensorConfig, config)
+        load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
         hass.services.register(
             DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DATA_EBUSD].write)
