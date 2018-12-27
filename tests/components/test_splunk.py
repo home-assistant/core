@@ -31,6 +31,7 @@ class TestSplunk(unittest.TestCase):
                 'port': 123,
                 'token': 'secret',
                 'ssl': 'False',
+                'verify_ssl': 'True',
                 'name': 'hostname',
             }
         }
@@ -88,10 +89,9 @@ class TestSplunk(unittest.TestCase):
         }
 
         for in_, out in valid.items():
-            state = mock.MagicMock(state=in_,
-                                   domain='fake',
-                                   object_id='entity',
-                                   attributes={'datetime_attr': now})
+            state = mock.MagicMock(
+                state=in_, domain='fake', object_id='entity',
+                attributes={'datetime_attr': now})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
 
             try:
@@ -118,6 +118,5 @@ class TestSplunk(unittest.TestCase):
                 mock.call(
                     payload['host'], data=json.dumps(payload),
                     headers={'Authorization': 'Splunk secret'},
-                    timeout=10
-                )
+                    timeout=10, verify=True)
             self.mock_post.reset_mock()
