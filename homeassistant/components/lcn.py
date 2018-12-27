@@ -11,8 +11,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -40,9 +39,9 @@ PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
                              '\\.(?P<type>m|g)?(?P<id>\\d+)$')
 
 
-def in_upper(ls):
-    """Validates if value is in given list. Returns upper case."""
-    return vol.All(vol.In(ls), lambda val: val.upper())
+def in_upper(values):
+    """Validate if value is in given list. Returns upper case."""
+    return vol.All(vol.In(values), lambda val: val.upper())
 
 
 def has_unique_connection_names(connections):
@@ -159,11 +158,12 @@ async def async_setup(hass, config):
 class LcnDevice(Entity):
     """Parent class for all devices associated with the LCN component."""
 
-    def __init__(self, config):
+    def __init__(self, config, address_connection):
         """Initialize the LCN device."""
         import pypck
         self.pypck = pypck
         self.config = config
+        self.address_connection = address_connection
         self._name = config[CONF_NAME]
 
     @property
@@ -173,12 +173,6 @@ class LcnDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        address, connection_id = self.config[CONF_ADDRESS]
-        addr = self.pypck.lcn_addr.LcnAddr(*address)
-        connections = self.hass.data[DATA_LCN][CONF_CONNECTIONS]
-        connection = get_connection(connections, connection_id)
-
-        self.address_connection = connection.get_address_conn(addr)
         self.address_connection.register_for_inputs(
             self.input_received)
 

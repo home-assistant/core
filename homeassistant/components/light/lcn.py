@@ -8,8 +8,8 @@ https://home-assistant.io/components/light.lcn/
 import voluptuous as vol
 
 from homeassistant.components.lcn import (
-    CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS, LcnDevice,
-    in_upper, is_address)
+    CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
+    OUTPUT_PORTS, LcnDevice, get_connection, in_upper, is_address)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION, Light)
@@ -32,16 +32,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN light platform."""
-    device = LcnOutputLight(config)
+    import pypck
+    address, connection_id = config[CONF_ADDRESS]
+    addr = pypck.lcn_addr.LcnAddr(*address)
+    connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
+    connection = get_connection(connections, connection_id)
+
+    address_connection = connection.get_address_conn(addr)
+
+    device = LcnOutputLight(config, address_connection)
     async_add_entities([device])
 
 
 class LcnOutputLight(LcnDevice, Light):
     """Representation of a LCN light for output ports."""
 
-    def __init__(self, config):
+    def __init__(self, config, address_connection):
         """Initialize the LCN light."""
-        super().__init__(config)
+        super().__init__(config, address_connection)
 
         self.output = self.pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
 
