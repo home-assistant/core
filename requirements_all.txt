@@ -829,7 +829,7 @@ protobuf==3.6.1
 psutil==5.4.8
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.2
+pubnubsub-handler==1.0.3
 
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
