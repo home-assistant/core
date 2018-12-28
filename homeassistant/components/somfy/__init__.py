@@ -20,7 +20,7 @@ API = 'api'
 
 DEVICES = 'devices'
 
-REQUIREMENTS = ['pymfy==0.4.3']
+REQUIREMENTS = ['pymfy==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,6 +157,11 @@ class SomfyEntity(Entity):
         devices = self.hass.data[DOMAIN][DEVICES]
         self.device = next((d for d in devices if d.id == self.device.id),
                            self.device)
+
+    def has_capability(self, capability):
+        """Test if device has a capability."""
+        capabilities = self.device.capabilities
+        return bool([c for c in capabilities if c.name == capability])
 
 
 @Throttle(MIN_TIME_BETWEEN_UPDATES)

@@ -52,12 +52,10 @@ class SomfyCover(SomfyEntity, CoverDevice):
     def current_cover_position(self):
         """Return the current position of cover shutter."""
         position = None
-        try:
+        if self.has_capability('position'):
             from pymfy.api.devices.roller_shutter import RollerShutter
             shutter = RollerShutter(self.device, self.api)
             position = 100 - shutter.get_position()
-        except StopIteration:
-            pass
         return position
 
     @property
@@ -78,11 +76,9 @@ class SomfyCover(SomfyEntity, CoverDevice):
         None is unknown, 0 is closed, 100 is fully open.
         """
         orientation = None
-        try:
+        if self.has_capability('rotation'):
             from pymfy.api.devices.blind import Blind
             orientation = 100 - Blind(self.device, self.api).orientation
-        except StopIteration:
-            pass
         return orientation
 
     def set_cover_tilt_position(self, **kwargs):
