@@ -10,10 +10,14 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_WEMO
-from homeassistant.helpers import discovery
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.helpers.event import async_track_point_in_utc_time
+import homeassistant.util.dt as dt_util
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['pywemo==0.4.34']
 
@@ -73,25 +77,43 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up for WeMo devices."""
     _LOGGER.debug("Beginning setup of WeMo component...")
 
     import pywemo
+
+    # Keep track of WeMo devices
+    devices = []
 
     # Keep track of WeMo device subscriptions for push updates
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
     SUBSCRIPTION_REGISTRY.start()
 
+    @callback
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions.")
         SUBSCRIPTION_REGISTRY.stop()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
-    def discovery_dispatch(service, discovery_info):
+    async def setup_url_for_device(device):
+        """Determine setup.xml url for given device."""
+        return 'http://{}:{}/setup.xml'.format(device.host, device.port)
+
+    async def setup_url_for_address(host, port):
+        """Determine setup.xml url for given host and port pair."""
+        if not port:
+            port = pywemo.ouimeaux_device.probe_wemo(host)
+
+        if not port:
+            return None
+
+        return 'http://{}:{}/setup.xml'.format(host, port)
+
+    async def discovery_dispatch(service, discovery_info):
         """Dispatcher for incoming WeMo discovery events."""
         # name, model, location, mac
         model_name = discovery_info.get('model_name')
@@ -108,32 +130,16 @@ def setup(hass, config):
 
         component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
 
-        discovery.load_platform(hass, component, DOMAIN, discovery_info,
-                                config)
+        await discovery.async_load_platform(hass, component, DOMAIN,
+                                            discovery_info, config)
 
-    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
+    discovery.async_listen(hass, SERVICE_WEMO, discovery_dispatch)
 
-    def setup_url_for_device(device):
-        """Determine setup.xml url for given device."""
-        return 'http://{}:{}/setup.xml'.format(device.host, device.port)
-
-    def setup_url_for_address(host, port):
-        """Determine setup.xml url for given host and port pair."""
-        if not port:
-            port = pywemo.ouimeaux_device.probe_wemo(host)
-
-        if not port:
-            return None
-
-        return 'http://{}:{}/setup.xml'.format(host, port)
-
-    devices = []
-
-    async def async_discover_wemo_devices(hass, config):
+    async def discover_wemo_devices(now):
         """Run discovery in an async context so setup can complete quickly."""
         _LOGGER.debug("Scanning statically configured WeMo devices...")
         for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-            url = setup_url_for_address(host, port)
+            url = await setup_url_for_address(host, port)
 
             if not url:
                 _LOGGER.error(
@@ -157,7 +163,7 @@ def setup(hass, config):
             for device in pywemo.discover_devices():
                 if not [d[1] for d in devices
                         if d[1].serialnumber == device.serialnumber]:
-                    devices.append((setup_url_for_device(device), device))
+                    devices.append((await setup_url_for_device(device), device))
 
         for url, device in devices:
             _LOGGER.debug('Adding WeMo device at %s:%i',
@@ -170,9 +176,14 @@ def setup(hass, config):
                 'ssdp_description': url,
             }
 
-            discovery.discover(hass, SERVICE_WEMO, discovery_info)
+            await discovery.async_discover(hass, SERVICE_WEMO, discovery_info)
 
-    hass.add_job(async_discover_wemo_devices, hass, config)
+    @callback
+    def schedule_first_discovery(event):
+        """Schedule the first discovery when Home Assistant starts up."""
+        async_track_point_in_utc_time(hass, discover_wemo_devices, dt_util.utcnow())
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_discovery)
 
     _LOGGER.debug("Setup of WeMo component has finished.")
 
