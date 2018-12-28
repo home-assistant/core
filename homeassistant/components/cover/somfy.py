@@ -87,19 +87,19 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        orientation = 100 - kwargs.get(ATTR_TILT_POSITION)
+        orientation = kwargs.get(ATTR_TILT_POSITION)
         from pymfy.api.devices.blind import Blind
         Blind(self.device, self.api).orientation = orientation
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
         from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 0
+        Blind(self.device, self.api).orientation = 100
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 100
+        Blind(self.device, self.api).orientation = 0
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
