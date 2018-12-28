@@ -291,29 +291,44 @@ async def test_error_when_not_connected(hass, monkeypatch):
     assert not success, 'changing state should not succeed when disconnected'
 
 
-async def test_another_error_when_not_connected(hass, monkeypatch):
-    """Sending command should error when not connected."""
-    domain = 'switch'
+async def test_race_condition(hass, monkeypatch):
+    """Test race condition for unknown components."""
+    domain = 'light'
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
-            CONF_RECONNECT_INTERVAL: 0,
         },
         domain: {
             'platform': 'rflink',
-            'devices': {
-                'protocol_0_0': {
-                    'name': 'test',
-                    'aliases': ['test_alias_0_0'],
-                },
-            },
         },
     }
-
     # setup mocking rflink module
-    _, _, _, disconnect_callback = await mock_rflink(
-        hass, config, domain, monkeypatch, failures=[True])
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, domain, monkeypatch)
 
-    success = await hass.services.async_call(
-        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})
-    assert not success, 'changing state should not succeed when disconnected'
+    # test event for new unconfigured sensor
+    event_callback({
+        'id': 'test3',
+        'command': 'off',
+    })
+    event_callback({
+        'id': 'test3',
+        'command': 'on',
+    })
+    await hass.async_block_till_done()
+
+    # test  state of new sensor
+    new_sensor = hass.states.get(domain+'.test3')
+    assert new_sensor
+    assert new_sensor.state == 'off'
+
+    event_callback({
+        'id': 'test3',
+        'command': 'on',
+    })
+    await hass.async_block_till_done()
+
+    # test  state of new sensor
+    new_sensor = hass.states.get(domain+'.test3')
+    assert new_sensor
+    assert new_sensor.state == 'on'
