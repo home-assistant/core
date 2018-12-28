@@ -76,7 +76,6 @@ SERVICE_SCHEMAS = {
 CENTICELSIUS = 'C-100'
 
 # Internal definitions
-APPLICATION_CONTROLLER = None
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -113,8 +112,6 @@ async def async_setup_entry(hass, config_entry):
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612
         import zhaquirks  # noqa
-
-    global APPLICATION_CONTROLLER
 
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
@@ -155,12 +152,12 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
-    APPLICATION_CONTROLLER = ControllerApplication(radio, database)
+    application_controller = ControllerApplication(radio, database)
     listener = ApplicationListener(hass, config)
-    APPLICATION_CONTROLLER.add_listener(listener)
-    await APPLICATION_CONTROLLER.startup(auto_form=True)
+    application_controller.add_listener(listener)
+    await application_controller.startup(auto_form=True)
 
-    for device in APPLICATION_CONTROLLER.devices.values():
+    for device in application_controller.devices.values():
         hass.async_create_task(
             listener.async_device_initialized(device, False))
 
@@ -168,14 +165,14 @@ async def async_setup_entry(hass, config_entry):
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
-        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
+        connections={(CONNECTION_ZIGBEE, str(application_controller.ieee))},
+        identifiers={(DOMAIN, str(application_controller.ieee))},
         name="Zigbee Coordinator",
         manufacturer="ZHA",
         model=radio_description,
     )
 
-    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
+    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(application_controller.ieee)
 
     for component in COMPONENTS:
         hass.async_create_task(
@@ -187,7 +184,7 @@ async def async_setup_entry(hass, config_entry):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
         _LOGGER.info("Permitting joins for %ss", duration)
-        await APPLICATION_CONTROLLER.permit(duration)
+        await application_controller.permit(duration)
 
     hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
                                  schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
@@ -198,7 +195,7 @@ async def async_setup_entry(hass, config_entry):
         ieee = service.data.get(ATTR_IEEE)
         ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
         _LOGGER.info("Removing node %s", ieee)
-        await APPLICATION_CONTROLLER.remove(ieee)
+        await application_controller.remove(ieee)
 
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
                                  schema=SERVICE_SCHEMAS[SERVICE_REMOVE])

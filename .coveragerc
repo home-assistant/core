@@ -112,6 +112,9 @@ omit =
     homeassistant/components/evohome.py
     homeassistant/components/*/evohome.py
 
+    homeassistant/components/freebox.py
+    homeassistant/components/*/freebox.py
+
     homeassistant/components/fritzbox.py
     homeassistant/components/*/fritzbox.py
 
@@ -509,7 +512,6 @@ omit =
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
-    homeassistant/components/device_tracker/freebox.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
     homeassistant/components/device_tracker/googlehome.py
@@ -694,6 +696,7 @@ omit =
     homeassistant/components/route53.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/scene/lifx_cloud.py
+    homeassistant/components/sensor/aftership.py
     homeassistant/components/sensor/airvisual.py
     homeassistant/components/sensor/alpha_vantage.py
     homeassistant/components/sensor/ambient_station.py
@@ -884,6 +887,7 @@ omit =
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
+    homeassistant/components/switch/pencom.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rest.py
