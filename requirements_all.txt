@@ -1344,6 +1344,9 @@ pytradfri[async]==6.0.1
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
 
+# homeassistant.components.device_tracker.ubee
+pyubee==0.1
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
 

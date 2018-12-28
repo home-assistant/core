@@ -536,6 +536,7 @@ omit =
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/traccar.py
     homeassistant/components/device_tracker/trackr.py
+    homeassistant/components/device_tracker/ubee.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
