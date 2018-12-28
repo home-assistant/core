@@ -891,7 +891,7 @@ pyairvisual==2.0.1
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.2.2
+pyarlo==0.2.3
 
 # homeassistant.components.netatmo
 pyatmo==1.4
