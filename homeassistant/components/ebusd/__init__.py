@@ -35,14 +35,14 @@ SERVICE_EBUSD_WRITE = 'ebusd_write'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 CONFIG_SCHEMA = vol.Schema({
-  DOMAIN: vol.Schema({
-    vol.Required(CONF_CIRCUIT): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-        cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
-  })
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_CIRCUIT): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES['700'])])
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -66,9 +66,9 @@ def setup(hass, config):
         sock.close()
 
         sensor_config = {
-           'monitored_conditions': monitored_conditions,
-           'client_name': name,
-           'sensor_types': SENSOR_TYPES[circuit]
+            'monitored_conditions': monitored_conditions,
+            'client_name': name,
+            'sensor_types': SENSOR_TYPES[circuit]
         }
         load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
