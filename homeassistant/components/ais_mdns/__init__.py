@@ -69,13 +69,13 @@ def setup(hass, config):
 
     zero_config.register_service(http_info)
 
-    # MQTT
-    mqtt_info = ServiceInfo("_mqtt._tcp.local.",
-                            host_name + "._mqtt._tcp.local.",
-                            ip, 1883, 0, 0,
-                            params, host_name + ".local.")
-
-    zero_config.register_service(mqtt_info)
+    # MQTT is moved to the android
+    # mqtt_info = ServiceInfo("_mqtt._tcp.local.",
+    #                         host_name + "._mqtt._tcp.local.",
+    #                         ip, 1883, 0, 0,
+    #                         params, host_name + ".local.")
+    #
+    # zero_config.register_service(mqtt_info)
 
     # FTP
     ftp_info = ServiceInfo("_ftp._tcp.local.",
@@ -90,7 +90,7 @@ def setup(hass, config):
         """Stop Zeroconf."""
         zero_config.unregister_service(hass_info)
         zero_config.unregister_service(http_info)
-        zero_config.unregister_service(mqtt_info)
+        # zero_config.unregister_service(mqtt_info)
         zero_config.unregister_service(ftp_info)
         zero_config.close()
 

@@ -35,3 +35,8 @@ group:
       - input_select.ais_youtube_track_name
       - input_select.ais_music_player
 
+
+#media_player:
+#  - platform: spotify
+#    client_id: a4411ad8e40a479fbf8c58082e5dbe94
+#    client_secret:
