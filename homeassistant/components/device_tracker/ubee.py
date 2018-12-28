@@ -48,11 +48,8 @@ class UbeeDeviceScanner(DeviceScanner):
         self.mac2name = {}
 
         self.ubee = Ubee(self.host, self.username, self.password)
-
         _LOGGER.info("Logging in")
-
         results = self.get_connected_devices()
-
         self.success_init = results is not None
 
         if self.success_init:
@@ -83,7 +80,6 @@ class UbeeDeviceScanner(DeviceScanner):
             return
 
         _LOGGER.info("Scanning")
-
         results = self.get_connected_devices()
 
         if results is None:
