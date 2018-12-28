@@ -29,10 +29,9 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
         connection = get_connection(connections, connection_id)
         address_connection = connection.get_address_conn(addr)
 
-        output = config[CONF_OUTPUT].lower()
-        if output in OUTPUT_PORTS:
+        if config[CONF_OUTPUT] in OUTPUT_PORTS:
             device = LcnOutputLight(config, address_connection)
-        else:
+        else:  # in RELAY_PORTS
             device = LcnRelayLight(config, address_connection)
 
         devices.append(device)
