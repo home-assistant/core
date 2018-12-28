@@ -59,9 +59,9 @@ def _create_controller_api(host, port, ssl, user, password):
             ssl=ssl,
             user=user,
             password=password)
-    except ConnectionError as e:
+    except ConnectionError as error:
         _LOGGER.error("Failed to create XS1 api client "
-                      "because of a connection error: %s", e)
+                      "because of a connection error: %s", error)
         return None
 
 
