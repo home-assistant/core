@@ -2,9 +2,9 @@ homeassistant:
   name: Asystent domowy
   unit_system: metric
   time_zone: Europe/Warsaw
-  #latitude: 52.298519
-  #longitude: 20.838871
-  #elevation: 134
+  latitude: 52.298519
+  longitude: 20.838871
+  elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
   customize_glob:
@@ -36,11 +36,6 @@ introduction:
 # for restore_state on input_select (radio stations etc.)
 recorder:
   purge_keep_days: 5
-  include:
-    domains:
-      - sensor
-      - switch
-      - media_player
   exclude:
     entities:
       - sensor.time
@@ -66,11 +61,6 @@ recorder:
       - input_select.ais_bookmark_last_played
       - input_select.ais_bookmark_favorites
 history:
-  include:
-    domains:
-      - sensor
-      - switch
-      - media_player
   exclude:
     entities:
       - sensor.time
@@ -180,5 +170,5 @@ script: !include scripts.yaml
 ais_bookmarks:
 
 # set up Zeroconf and make AIS dom discoverable
-# ais_mdns:
+ais_mdns:
 

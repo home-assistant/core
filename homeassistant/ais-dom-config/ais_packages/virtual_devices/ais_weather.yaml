@@ -2,18 +2,12 @@ weather:
   - platform: yweather
     name: Pogoda
     woeid: 523920
+
   - platform: darksky
     api_key: c992285eeb9cc789c226c809794cf14e
     forecast: 0
     language: pl
     units: si
-    monitored_conditions:
-      - summary
-      - icon
-      - temperature
-      - minutely_summary
-      - daily_summary
-      - hourly_summary
     update_interval:
         days: 0
         hours: 1
@@ -22,6 +16,22 @@ weather:
         milliseconds: 0
 
 sensor:
+  - platform: darksky
+    api_key: c992285eeb9cc789c226c809794cf14e
+    forecast: 0
+    language: pl
+    units: si
+    monitored_conditions:
+      # A human-readable text summary for the next two days.
+      - hourly_summary
+      # A human-readable text summary for the next week.
+      - daily_summary
+    update_interval:
+      days: 0
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
   - platform: template
     sensors:
       pogoda_info:
