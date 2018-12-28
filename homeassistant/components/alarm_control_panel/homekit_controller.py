@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
         add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
-            True)
+                     True)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
