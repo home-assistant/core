@@ -21,7 +21,7 @@ class ZhaDeviceEntity(entity.Entity):
             'nwk': '0x{0:04x}'.format(device.nwk),
             'ieee': str(device.ieee),
             'lqi': device.lqi,
-            'rssi': device.rssi,
+            'rssi': device.rssi
         }
 
         ieee = device.ieee

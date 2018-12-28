@@ -14,7 +14,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False,
+                    manufacturer=None):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -25,7 +26,8 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
-            only_cache=only_cache
+            only_cache=only_cache,
+            manufacturer=manufacturer
         )
         return result
     except Exception:  # pylint: disable=broad-except

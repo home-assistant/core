@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.zha.entities import ZhaDeviceEntity
-from homeassistant.components.zha.helpers import safe_read
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from .const import (
@@ -59,7 +58,7 @@ SERVICE_SCHEMAS = {
         vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
         vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
         vol.Required(ATTR_VALUE): cv.string,
-        vol.Required(ATTR_MANUFACTURER): cv.positive_int,
+        vol.Optional(ATTR_MANUFACTURER): object,
     }),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema({
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -68,7 +67,7 @@ SERVICE_SCHEMAS = {
         vol.Required(ATTR_COMMAND): cv.positive_int,
         vol.Required(ATTR_COMMAND_TYPE): cv.string,
         vol.Optional(ATTR_ARGS, default=''): cv.string,
-        vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        vol.Optional(ATTR_MANUFACTURER): object,
     }),
 }
 
@@ -102,6 +101,7 @@ SCHEMA_WS_READ_CLUSTER_ATTRIBUTE = \
             vol.Required(ATTR_CLUSTER_ID): int,
             vol.Required(ATTR_CLUSTER_TYPE): str,
             vol.Required(ATTR_ATTRIBUTE): int,
+            vol.Optional(ATTR_MANUFACTURER): object,
         })
 
 WS_ENTITY_CLUSTER_COMMANDS = 'zha/entities/clusters/commands'
@@ -140,7 +140,7 @@ async def async_load_api(hass, application_controller, listener):
         """Reconfigure a ZHA device entity by its ieee address."""
         ieee = service.data.get(ATTR_IEEE_ADDRESS)
         entities = listener.get_entities_for_ieee(ieee)
-        _LOGGER.info("Reconfiguring device with ieee_address: %s", ieee)
+        _LOGGER.debug("Reconfiguring device with ieee_address: %s", ieee)
         for entity in entities:
             if hasattr(entity, 'async_configure'):
                 hass.async_create_task(entity.async_configure())
@@ -157,7 +157,7 @@ async def async_load_api(hass, application_controller, listener):
         cluster_type = service.data.get(ATTR_CLUSTER_TYPE)
         attribute = service.data.get(ATTR_ATTRIBUTE)
         value = service.data.get(ATTR_VALUE)
-        manufacturer = service.data.get(ATTR_MANUFACTURER)
+        manufacturer = await _get_manufacturer(service.data)
         component = hass.data.get(entity_id.split('.')[0])
         entity = component.get_entity(entity_id)
         response = None
@@ -193,9 +193,7 @@ async def async_load_api(hass, application_controller, listener):
         command = service.data.get(ATTR_COMMAND)
         command_type = service.data.get(ATTR_COMMAND_TYPE)
         args = service.data.get(ATTR_ARGS)
-        manufacturer = service.data.get(ATTR_MANUFACTURER)
-        if manufacturer == '':
-            manufacturer = None
+        manufacturer = await _get_manufacturer(service.data)
         component = hass.data.get(entity_id.split('.')[0])
         entity = component.get_entity(entity_id)
         response = None
@@ -373,31 +371,44 @@ async def async_load_api(hass, application_controller, listener):
         entity = component.get_entity(entity_id)
         clusters = await entity.get_clusters()
         cluster = clusters[cluster_type][cluster_id]
-        response = None
+        manufacturer = await _get_manufacturer(msg)
+        success = failure = None
         if entity is not None:
-            response = await safe_read(
-                cluster,
+            success, failure = await cluster.read_attributes(
                 [attribute],
                 allow_cache=False,
-                only_cache=False
+                only_cache=False,
+                manufacturer=manufacturer
             )
-        _LOGGER.info("Read attribute for: %s %s %s %s %s",
-                     "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
-                     "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
-                     "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
-                     "{}: [{}]".format(ATTR_ATTRIBUTE, attribute),
-                     "{}: [{}]".format(RESPONSE,
-                                       str(response.get(attribute)))
-                     )
+        _LOGGER.debug("Read attribute for: %s %s %s %s %s %s %s",
+                      "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
+                      "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
+                      "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
+                      "{}: [{}]".format(ATTR_ATTRIBUTE, attribute),
+                      "{}: [{}]".format(ATTR_MANUFACTURER, manufacturer),
+                      "{}: [{}]".format(RESPONSE,
+                                        str(success.get(attribute))),
+                      "{}: [{}]".format('failure', failure)
+                      )
         connection.send_message(websocket_api.result_message(
             msg[ID],
-            str(response.get(attribute))
+            str(success.get(attribute))
         ))
 
     hass.components.websocket_api.async_register_command(
         WS_READ_CLUSTER_ATTRIBUTE, websocket_read_zigbee_cluster_attributes,
         SCHEMA_WS_READ_CLUSTER_ATTRIBUTE
     )
+
+
+async def _get_manufacturer(data):
+    """Get manufacturer value from data."""
+    manufacturer = None
+    if ATTR_MANUFACTURER in data:
+        manufacturer = data[ATTR_MANUFACTURER]
+        if manufacturer == '':
+            manufacturer = None
+    return manufacturer
 
 
 async def async_unload_api(hass):
