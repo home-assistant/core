@@ -750,7 +750,7 @@ class PlexClient(MediaPlayerDevice):
 
         media = None
         if media_type == 'MUSIC':
-            media = self.device.server.library.section(
+            media = self.device._server.library.section(
                 src['library_name']).get(src['artist_name']).album(
                     src['album_name']).get(src['track_name'])
         elif media_type == 'EPISODE':
@@ -758,9 +758,9 @@ class PlexClient(MediaPlayerDevice):
                 src['library_name'], src['show_name'],
                 src['season_number'], src['episode_number'])
         elif media_type == 'PLAYLIST':
-            media = self.device.server.playlist(src['playlist_name'])
+            media = self.device._server.playlist(src['playlist_name'])
         elif media_type == 'VIDEO':
-            media = self.device.server.library.section(
+            media = self.device._server.library.section(
                 src['library_name']).get(src['video_name'])
 
         import plexapi.playlist
@@ -778,13 +778,13 @@ class PlexClient(MediaPlayerDevice):
         target_season = None
         target_episode = None
 
-        show = self.device.server.library.section(library_name).get(
+        show = self.device._server.library.section(library_name).get(
             show_name)
 
         if not season_number:
             playlist_name = "{} - {} Episodes".format(
                 self.entity_id, show_name)
-            return self.device.server.createPlaylist(
+            return self.device._server.createPlaylist(
                 playlist_name, show.episodes())
 
         for season in show.seasons():
@@ -801,7 +801,7 @@ class PlexClient(MediaPlayerDevice):
             if not episode_number:
                 playlist_name = "{} - {} Season {} Episodes".format(
                     self.entity_id, show_name, str(season_number))
-                return self.device.server.createPlaylist(
+                return self.device._server.createPlaylist(
                     playlist_name, target_season.episodes())
 
             for episode in target_season.episodes():
@@ -826,15 +826,15 @@ class PlexClient(MediaPlayerDevice):
 
         import plexapi.playqueue
         playqueue = plexapi.playqueue.PlayQueue.create(
-            self.device.server, media, **params)
+            self.device._server, media, **params)
 
         # Delete dynamic playlists used to build playqueue (ex. play tv season)
         if delete:
             media.delete()
 
-        server_url = self.device.server.baseurl.split(':')
+        server_url = self.device._server._baseurl.split(':')
         self.device.sendCommand('playback/playMedia', **dict({
-            'machineIdentifier': self.device.server.machineIdentifier,
+            'machineIdentifier': self.device._server.machineIdentifier,
             'address': server_url[1].strip('/'),
             'port': server_url[-1],
             'key': media.key,
