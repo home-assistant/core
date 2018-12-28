@@ -44,8 +44,8 @@ async def test_setup_platform(hass, mock_nessclient):
     assert hass.states.get('binary_sensor.zone_1') is not None
     assert hass.states.get('binary_sensor.zone_2') is not None
 
-    mock_nessclient.keepalive.assert_called_once()
-    mock_nessclient.update.assert_called_once()
+    assert mock_nessclient.keepalive.call_count == 1
+    assert mock_nessclient.update.call_count == 1
 
 
 async def test_panic_service(hass, mock_nessclient):
