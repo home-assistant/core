@@ -4,21 +4,22 @@ from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
-    CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND)
+    CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND, RflinkCommand)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_STOP_COVER)
 
 
-async def mock_rflink(hass, config, domain, monkeypatch, failures=None):
+async def mock_rflink(hass, config, domain, monkeypatch, failures=None,
+                      failcommand=False):
     """Create mock RFLink asyncio protocol, test component setup."""
     transport, protocol = (Mock(), Mock())
 
     async def send_command_ack(*command):
-        return True
+        return not failcommand
     protocol.send_command_ack = Mock(wraps=send_command_ack)
 
     def send_command(*command):
-        return True
+        return not failcommand
     protocol.send_command = Mock(wraps=send_command)
 
     async def create_rflink_connection(*args, **kwargs):
@@ -291,6 +292,31 @@ async def test_error_when_not_connected(hass, monkeypatch):
     assert not success, 'changing state should not succeed when disconnected'
 
 
+async def test_async_send_command_error(hass, monkeypatch):
+    """Sending command should error when protocol fails."""
+    domain = 'rflink'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, failcommand=True)
+
+    success = await hass.services.async_call(
+        domain, SERVICE_SEND_COMMAND, {
+            'device_id': 'newkaku_0000c6c2_1',
+            'command': SERVICE_TURN_OFF})
+    await hass.async_block_till_done()
+    assert not success, 'send command should not succeed if failcommand=True'
+    assert (protocol.send_command_ack.call_args_list[0][0][0]
+            == 'newkaku_0000c6c2_1')
+    assert (protocol.send_command_ack.call_args_list[0][0][1]
+            == SERVICE_TURN_OFF)
+
+
 async def test_race_condition(hass, monkeypatch):
     """Test race condition for unknown components."""
     domain = 'light'
@@ -332,3 +358,14 @@ async def test_race_condition(hass, monkeypatch):
     new_sensor = hass.states.get(domain+'.test3')
     assert new_sensor
     assert new_sensor.state == 'on'
+
+
+async def test_not_connected(hass, monkeypatch):
+    """Test Error when sending commands to a disconnected device."""
+    import pytest
+    from homeassistant.core import HomeAssistantError
+
+    test_device = RflinkCommand('DUMMY_DEVICE')
+    RflinkCommand.set_rflink_protocol(None)
+    with pytest.raises(HomeAssistantError):
+        await test_device._async_handle_command('turn_on')
