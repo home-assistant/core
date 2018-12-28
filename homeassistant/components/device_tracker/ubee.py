@@ -88,7 +88,6 @@ class UbeeDeviceScanner(DeviceScanner):
 
     def get_connected_devices(self):
         """List connected devices with pyubee."""
-
         if not self.ubee.session_active():
             self.ubee.login()
 
