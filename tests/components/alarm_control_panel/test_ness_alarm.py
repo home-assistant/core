@@ -41,7 +41,7 @@ async def test_handle_arming_state_change(hass, mock_arming_state):
 def mock_arming_state():
     """Mock nessclient ArmingState enum."""
     with MockDependency('nessclient'), \
-        patch('nessclient.ArmingState', new=MockArmingState) as mock:
+            patch('nessclient.ArmingState', new=MockArmingState) as mock:
         yield mock
 
 
