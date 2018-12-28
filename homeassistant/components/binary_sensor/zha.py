@@ -81,10 +81,6 @@ async def _async_setup_iaszone(discovery_info):
     device_class = None
     from zigpy.zcl.clusters.security import IasZone
     cluster = discovery_info['in_clusters'][IasZone.cluster_id]
-    if discovery_info['new_join']:
-        await cluster.bind()
-        ieee = cluster.endpoint.device.application.ieee
-        await cluster.write_attributes({'cie_addr': ieee})
 
     try:
         zone_type = await cluster['zone_type']
@@ -143,6 +139,14 @@ class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
             self._state = 3
         else:
             self._state = 0
+
+    async def async_configure(self):
+        """Configure IAS device."""
+        _LOGGER.debug("%s: is being configured...", self.entity_id)
+        await self._ias_zone_cluster.bind()
+        ieee = self._ias_zone_cluster.endpoint.device.application.ieee
+        await self._ias_zone_cluster.write_attributes({'cie_addr': ieee})
+        _LOGGER.debug("%s: Finished configuration.", self.entity_id)
 
     async def async_update(self):
         """Retrieve latest state."""
