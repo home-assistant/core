@@ -163,7 +163,8 @@ async def async_setup(hass, config):
             for device in pywemo.discover_devices():
                 if not [d[1] for d in devices
                         if d[1].serialnumber == device.serialnumber]:
-                    devices.append((await setup_url_for_device(device), device))
+                    devices.append((await setup_url_for_device(device),
+                                    device))
 
         for url, device in devices:
             _LOGGER.debug('Adding WeMo device at %s:%i',
@@ -181,9 +182,12 @@ async def async_setup(hass, config):
     @callback
     def schedule_first_discovery(event):
         """Schedule the first discovery when Home Assistant starts up."""
-        async_track_point_in_utc_time(hass, discover_wemo_devices, dt_util.utcnow())
+        async_track_point_in_utc_time(hass,
+                                      discover_wemo_devices,
+                                      dt_util.utcnow())
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_discovery)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                               schedule_first_discovery)
 
     _LOGGER.debug("Setup of WeMo component has finished.")
 
