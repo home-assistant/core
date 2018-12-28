@@ -978,6 +978,9 @@ pyenvisalink==3.8
 # homeassistant.components.climate.ephember
 pyephember==0.2.0
 
+# homeassistant.components.light.everlights
+pyeverlights==0.1.0
+
 # homeassistant.components.sensor.fido
 pyfido==2.1.1
 
