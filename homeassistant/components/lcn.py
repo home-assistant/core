@@ -107,8 +107,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
-        vol.Optional(CONF_LIGHTS, default=[]): vol.All(
-            cv.ensure_list, [LIGHTS_SCHEMA])
+        vol.Required(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
