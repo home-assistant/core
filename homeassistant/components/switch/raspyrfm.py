@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
         vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
         vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
-        vol.Required(CONF_CHANNEL_CONFIG): cv.Dict,
+        vol.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
     }])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -49,26 +49,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from raspyrfm_client.device_implementations.manufacturer_constants \
         import Manufacturer
 
-    # read configuration
     gateway_manufacturer = config.get(CONF_GATEWAY_MANUFACTURER,
                                       Manufacturer.SEEGEL_SYSTEME.value)
     gateway_model = config.get(CONF_GATEWAY_MODEL, GatewayModel.RASPYRFM.value)
     host = config[CONF_HOST]
     port = config.get(CONF_PORT)
-
     switches = config[CONF_SWITCHES]
 
-    # create raspyrfm client
     raspyrfm_client = RaspyRFMClient()
-
-    # try to get controlunit from client
     gateway = raspyrfm_client.get_gateway(Manufacturer(gateway_manufacturer),
                                           GatewayModel(gateway_model), host,
                                           port)
-
     switch_entities = []
     for switch in switches:
-        name = config[CONF_NAME]
+        name = switch[CONF_NAME]
         controlunit_manufacturer = switch[CONF_CONTROLUNIT_MANUFACTURER]
         controlunit_model = switch[CONF_CONTROLUNIT_MODEL]
         channel_config = switch[CONF_CHANNEL_CONFIG]
@@ -77,19 +71,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             Manufacturer(controlunit_manufacturer),
             ControlUnitModel(controlunit_model))
 
-        # convert any key thats not a string into a string (needed for api)
-        channel = {}
-        for key, val in channel_config.items():
-            channel[str(key)] = channel_config[key]
+        controlunit.set_channel_config(**channel_config)
 
-        # setup channel
-        controlunit.set_channel_config(**channel)
-
-        # create switch object
         switch = RaspyRFMSwitch(raspyrfm_client, name, gateway, controlunit)
         switch_entities.append(switch)
 
-    # add it to home assistant
     add_entities(switch_entities)
 
 
