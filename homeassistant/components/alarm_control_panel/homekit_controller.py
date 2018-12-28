@@ -10,8 +10,8 @@ from homeassistant.components.homekit_controller import (HomeKitEntity,
                                                          KNOWN_ACCESSORIES)
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED)
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -41,7 +41,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit Alarm Control Panel support."""
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)], True)
+        add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
+            True)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
@@ -61,10 +62,12 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
             ctype = characteristic['type']
             ctype = homekit.CharacteristicsTypes.get_short(ctype)
             if ctype == "security-system-state.current":
-                self._chars['security-system-state.current'] = characteristic['iid']
+                self._chars['security-system-state.current'] = \
+                    characteristic['iid']
                 self._state = CURRENT_STATE_MAP[characteristic['value']]
             elif ctype == "security-system-state.target":
-                self._chars['security-system-state.target'] = characteristic['iid']
+                self._chars['security-system-state.target'] = \
+                    characteristic['iid']
             elif ctype == "battery-level":
                 self._chars['battery-level'] = characteristic['iid']
                 self._battery_level = characteristic['value']
