@@ -26,7 +26,7 @@ DEFAULT_NAME = 'Xiaomi Miio Device'
 DATA_KEY = 'fan.xiaomi_miio'
 
 CONF_MODEL = 'model'
-MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
+MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v7'
 MODEL_AIRPURIFIER_V3 = 'zhimi.airpurifier.v3'
 MODEL_AIRHUMIDIFIER_V1 = 'zhimi.humidifier.v1'
 MODEL_AIRHUMIDIFIER_CA = 'zhimi.humidifier.ca1'
@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.airpurifier.v3',
          'zhimi.airpurifier.v5',
          'zhimi.airpurifier.v6',
+         'zhimi.airpurifier.v7',
          'zhimi.airpurifier.mc1',
          'zhimi.humidifier.v1',
          'zhimi.humidifier.ca1',
