@@ -1,5 +1,5 @@
 """
-Energy meter from a power sensor
+Energy meter from a power sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.energy/
@@ -9,18 +9,16 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN, CONF_TYPE, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ENTITY_ID)
+    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PERIODICITY = 'periodicity' #TODO reset meter periodically
+ATTR_PERIODICITY = 'periodicity'  # TODO reset meter periodically
 
 CONF_POWER_SENSOR = 'power_sensor'
 CONF_ROUND_DIGITS = 'round'
@@ -40,15 +38,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the energy sensor."""
+    meter = EnergySensor(hass, config[CONF_POWER_SENSOR],
+                  config.get(CONF_NAME),
+                  config[CONF_ROUND_DIGITS])
+    
+    async_add_entities([meter])
 
-    async_add_entities(
-        [EnergySensor(hass, config[CONF_POWER_SENSOR],
-                      config.get(CONF_NAME),
-                      config[CONF_ROUND_DIGITS])],
-        True)
-
-    return True
-
+    def reset_meter(service):
+        _LOGGER.debug(service.data.get('entity_id'))
+        meter.reset()
+    hass.services.async_register(DOMAIN, "reset_meter", reset_meter)
 
 class EnergySensor(RestoreEntity):
     """Representation of an energy sensor."""
@@ -58,15 +57,18 @@ class EnergySensor(RestoreEntity):
         self._hass = hass
         self._power_sensor_id = entity_id
         self._round_digits = round_digits
-        self._state = 0 
+        self._state = 0
 
         if name:
             self._name = name
         else:
             self._name = '{} meter'.format(entity_id)
 
-        self._unit_of_measurement = "kWh" 
-        self._unit_of_measurement_scale = None 
+        self._unit_of_measurement = "kWh"
+        self._unit_of_measurement_scale = None
+
+    def reset(self):
+        self._state = 0
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -76,7 +78,7 @@ class EnergySensor(RestoreEntity):
             self._state = float(state.state)
 
         @callback
-        def async_calc_energy_from_power_sensor(entity, old_state, new_state):
+        def async_calc_energy(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if old_state is None:
                 return
@@ -85,18 +87,18 @@ class EnergySensor(RestoreEntity):
                 unit_of_measurement = new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT)
                 if unit_of_measurement == UNIT_WATTS:
-                    self._unit_of_measurement_scale = 1000    
+                    self._unit_of_measurement_scale = 1000
                 if unit_of_measurement == UNIT_KILOWATTS:
-                    self._unit_of_measurement_scale = 1    
+                    self._unit_of_measurement_scale = 1
 
             try:
-                """Calculate energy as the Riemann integral of previous measures."""
-                elapsed_time_seconds = (new_state.last_updated-old_state.last_updated).total_seconds()
-                _LOGGER.debug("elapsed_time_seconds = %s", elapsed_time_seconds)
-                print(elapsed_time_seconds)
-                area = (float(new_state.state) + float(old_state.state))*elapsed_time_seconds/2
-                kWh = area / (self._unit_of_measurement_scale * 3600)
-                self._state += kWh
+                # energy as the Riemann integral of previous measures.
+                elapsed_time = (new_state.last_updated
+                                - old_state.last_updated).total_seconds()
+                area = (float(new_state.state)
+                        + float(old_state.state))*elapsed_time/2
+                kwh = area / (self._unit_of_measurement_scale * 3600)
+                self._state += kwh
 
             except ValueError:
                 _LOGGER.warning("Unable to store state. "
@@ -105,8 +107,7 @@ class EnergySensor(RestoreEntity):
             self._hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
-            self._hass, self._power_sensor_id, async_calc_energy_from_power_sensor)
-
+            self._hass, self._power_sensor_id, async_calc_energy)
 
     @property
     def name(self):
@@ -116,10 +117,7 @@ class EnergySensor(RestoreEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state is not None:
-            return round(self._state, self._round_digits)
-        else:
-            return 0
+        return round(self._state, self._round_digits)
 
     @property
     def unit_of_measurement(self):
