@@ -206,6 +206,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     @property
     def available(self):
+        """Return True if connected to Hub, otherwise False."""
         return self._available
 
     def new_activity(self, activity_info: tuple) -> None:
