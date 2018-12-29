@@ -196,47 +196,29 @@ sensor.rss_news_text:
   friendly_name: Tekst strony
 media_player.wbudowany_glosnik:
   friendly_name: Podłączony głośnik
-sensor.yweather_condition:
-  friendly_name: Pogoda
-sensor.yweather_temperature:
-  friendly_name: Temperatura
-sensor.yweather_temperature_max:
-  friendly_name: Temperatura dzisiaj maksymalnie
-sensor.yweather_temperature_min:
-  friendly_name: Temperatura dzisiaj minimalnie
-sensor.yweather_wind_speed:
-  friendly_name: Prędkość wiatru
-  icon: mdi:weather-windy
-sensor.yweather_pressure:
-  friendly_name: Ciśnienie
-  icon: mdi:nature
-  unit_of_measurement: hPa
-sensor.yweather_humidity:
-  friendly_name: Wilgotność
-  icon: mdi:water-percent
-sensor.yweather_visibility:
-  friendly_name: Widoczność
-sensor.yw_day1_condition:
-  friendly_name: Pogoda jutro
-sensor.yw_day1_temperature_max:
-  friendly_name: Temperatura jutro maksymalnie
-sensor.yw_day1_temperature_min:
-  friendly_name: Temperatura jutro minimalnie
-sensor.yw_day1_wind_speed:
-  friendly_name: Prędkość wiatru jutro
-  icon: mdi:weather-windy
-sensor.yw_day1_pressure:
-  friendly_name: Ciśnienie jutro
-  icon: mdi:nature
-  unit_of_measurement: hPa
-sensor.yw_day1_humidity:
-  friendly_name: Wilgotność jutro
-  icon: mdi:water-percent
-sensor.yw_day1_visibility:
-  friendly_name: Widoczność jutro
 sensor.ais_drives_info:
   custom_ui_state_card: state-card-text
   friendly_name: "Stan dysków:"
+
+#
+sensor.dark_sky_hourly_summary:
+  friendly_name: "Pogoda dzisiaj"
+sensor.dark_sky_daily_summary:
+  friendly_name: "Prognoza pogody"
+sensor.dark_sky_temperature:
+    friendly_name: Temperatura
+sensor.dark_sky_apparent_temperature:
+      friendly_name: Temperatura odczuwalna
+sensor.dark_sky_wind_speed:
+    friendly_name: Prędkość wiatru
+sensor.dark_sky_humidity:
+    friendly_name: Wilgotność
+sensor.dark_sky_pressure:
+    friendly_name: Ciśnienie
+sensor.dark_sky_visibility:
+    friendly_name: Widoczność
+
+
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
   context_answer: OK, wybrano informację o wersji. Możesz nawigować pilotem by sprawdzić
@@ -294,9 +276,6 @@ group.all_devices:
 group.ais_pogoda:
   remote_group_view: Twój Dom
   order: 5
-group.ais_pogoda_48:
-  order: 6
-  remote_group_view: Twój Dom
 group.all_automations:
   order: 7
   hidden: true

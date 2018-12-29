@@ -1,142 +1,39 @@
 weather:
-  - platform: yweather
-    name: Pogoda
-    woeid: 523920
+  - platform: openweathermap
+    api_key: use_ais_dom_api_key
+
+sensor:
   - platform: darksky
-    api_key: c992285eeb9cc789c226c809794cf14e
+    api_key: use_ais_dom_api_key
+    mode: daily
     forecast: 0
     language: pl
     units: si
     monitored_conditions:
-      - summary
-      - icon
-      - temperature
-      - minutely_summary
-      - daily_summary
+      # A human-readable text summary for the next two days.
       - hourly_summary
+      # A human-readable text summary for the next week.
+      - daily_summary
+      - temperature
+      # feels like
+      - apparent_temperature
+      - wind_speed
+      - cloud_cover
+      - humidity
+      - pressure
+      - visibility
     update_interval:
-        days: 0
-        hours: 1
-        minutes: 0
-        seconds: 0
-        milliseconds: 0
+      hours: 2
 
-sensor:
-  - platform: template
-    sensors:
-      pogoda_info:
-        friendly_name: "Informacja o pogodzie"
-        value_template: "Aktualna pogoda w Twojej lokalizacji{{- '' -}}{%- for entity_id in states.group.ais_pogoda.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %};{{- ' ' -}} {% endif -%} {%- if loop.first %}{%- else -%}{{ states[parts[0]][parts[1]].name }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }}{% endif -%}{%- endfor %}"
-  - platform: template
-    sensors:
-      prognoza_info:
-        friendly_name: "Informacja o prognozie pogody"
-        value_template: Prognoza pogody na jutro w Twojej lokalizacji{{- '' -}}{%- for entity_id in states.group.ais_pogoda_48.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %}; {{- ' ' -}} {% endif -%} {%- if loop.first %}{%- else -%}{{ states[parts[0]][parts[1]].name|replace("jutro","") }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }}{% endif -%} {%- endfor %}
-  - platform: yweather
-    monitored_conditions:
-    - weather
-    - temp_min
-    - temp_max
-    - wind_speed
-    - pressure
-    - visibility
-    - humidity
-    - temperature
-  - platform: yweather
-    forecast: 1
-    name: yw_day1
-    monitored_conditions:
-    - weather
-    - temp_min
-    - temp_max
-    - wind_speed
-    - pressure
-    - visibility
-    - humidity
 group:
   ais_pogoda:
-    name: Aktualne warunki pogodowe
+    name: Pogoda
     entities:
-      - sensor.yweather_condition
-      - sensor.yweather_temperature
-      - sensor.yweather_temperature_max
-      - sensor.yweather_temperature_min
-      - sensor.yweather_pressure
-      - sensor.yweather_humidity
-      - sensor.yweather_wind_speed
-      - sensor.yweather_visibility
-  ais_pogoda_48:
-    name: Prognoza pogody na jutro
-    entities:
-      - sensor.yw_day1_condition
-      - sensor.yw_day1_temperature_max
-      - sensor.yw_day1_temperature_min
-      - sensor.yw_day1_pressure
-      - sensor.yw_day1_humidity
-      - sensor.yw_day1_wind_speed
-      - sensor.yw_day1_visibility
-
-#sensor:
-#  - platform: template
-#    sensors:
-#      pogoda_info:
-#        friendly_name: "Informacja o pogodzie"
-#        value_template: "Aktualna pogoda w Twojej lokalizacji:{{- ' ' -}}{%- for entity_id in states.group.ais_pogoda.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %}, {{- ' ' -}} {% endif -%} {{ states[parts[0]][parts[1]].name }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }}{%- endfor %}"
-#  - platform: template
-#    sensors:
-#      prognoza_info:
-#        friendly_name: "Informacja o prognozie pogody"
-#        value_template: Prognoza pogody na jutro w Twojej lokalizacji:{{- ' ' -}}{%- for entity_id in states.group.ais_pogoda_48.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %}, {{- ' ' -}} {% endif -%} {{ states[parts[0]][parts[1]].name|replace("jutro","") }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }} {%- endfor %}
-#  - platform: yr
-#    name: Prognoza 48
-#    forecast: 48
-#    monitored_conditions:
-#      - temperature
-#      - symbol
-#      - precipitation
-#      - windSpeed
-#      - pressure
-#      - windDirection
-#      - humidity
-#      - fog
-#      - cloudiness
-#      - dewpointTemperature
-#  - platform: yr
-#    name: Pogoda
-#    monitored_conditions:
-#      - temperature
-#      - symbol
-#      - precipitation
-#      - windSpeed
-#      - pressure
-#      - windDirection
-#      - humidity
-#      - fog
-#      - cloudiness
-#      - dewpointTemperature
-
-#group:
-#  ais_pogoda:
-#    name: Aktualne warunki pogodowe
-#    entities:
-#      - sensor.pogoda_temperature
-#      - sensor.pogoda_precipitation
-#      - sensor.pogoda_wind_speed
-#      - sensor.pogoda_pressure
-#      - sensor.pogoda_wind_direction
-#      - sensor.pogoda_humidity
-#      - sensor.pogoda_fog
-#      - sensor.pogoda_cloudiness
-#      - sensor.pogoda_dewpoint_temperature
-#  ais_pogoda_48:
-#    name: Prognoza pogody na jutro
-#    entities:
-#      - sensor.prognoza_48_temperature
-#      - sensor.prognoza_48_precipitation
-#      - sensor.prognoza_48_wind_speed
-#      - sensor.prognoza_48_pressure
-#      - sensor.prognoza_48_wind_direction
-#      - sensor.prognoza_48_humidity
-#      - sensor.prognoza_48_fog
-#      - sensor.prognoza_48_cloudiness
-#      - sensor.prognoza_48_dewpoint_temperature
+      - sensor.dark_sky_hourly_summary
+      - sensor.dark_sky_temperature
+      - sensor.dark_sky_apparent_temperature
+      - sensor.dark_sky_wind_speed
+      - sensor.dark_sky_humidity
+      - sensor.dark_sky_pressure
+      - sensor.dark_sky_visibility
+      - sensor.dark_sky_daily_summary

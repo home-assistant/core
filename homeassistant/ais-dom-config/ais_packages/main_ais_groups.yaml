@@ -9,7 +9,9 @@ group:
       - sun.sun
       - group.ais_wyszukiwarka
       - media_player.wbudowany_glosnik
-      - sensor.yweather_condition
+      #- sensor.yweather_condition
+      - sensor.dark_sky_hourly_summary
+      - sensor.dark_sky_daily_summary
       - group.all_switches
       - group.all_lights
       - group.all_automations
@@ -21,8 +23,9 @@ group:
     view: yes
     icon: mdi:weather-partlycloudy
     entities:
-      - weather.pogoda
-      - weather.dark_sky
+      - weather.openweathermap
+      - sensor.dark_sky_hourly_summary
+      - sensor.dark_sky_daily_summary
 
   audio_player:
     name: Odtwarzacz

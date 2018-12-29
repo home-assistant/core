@@ -1086,14 +1086,12 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     async_register(hass, INTENT_GET_WEATHER, [
-            'pogoda',
+            '[aktualna] pogoda',
             'pogoda w {location}',
             'pogoda we {location}',
             'jaka jest pogoda',
             'jaka jest pogoda w {location}',
-            'jaka jest pogoda we {location}',
-            'czy jest słonecznie w {location}',
-            'czy jest słonecznie we {location}'
+            'jaka jest pogoda we {location}'
     ])
     async_register(hass, INTENT_GET_WEATHER_48, [
             'prognoza pogody',
@@ -1102,9 +1100,7 @@ async def async_setup(hass, config):
             'pogoda jutro w {location}',
             'pogoda jutro we {location}',
             'jaka będzie pogoda',
-            'jaka będzie pogoda w {location}',
-            'jaka będzie pogoda we {location}',
-            'czy będzie słonecznie w {location}'
+            'jaka będzie pogoda w {location}'
     ])
     async_register(hass, INTENT_LAMPS_ON, [
             'włącz światła',
@@ -2095,23 +2091,25 @@ class AisGetWeather(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         # weather = hass.states.get('sensor.pogoda_info').state
-        weather = "Aktualna pogoda w Twojej lokalizacji: "
+        weather = "Pogoda "
         attr = hass.states.get('group.ais_pogoda').attributes
         for a in attr['entity_id']:
             w = hass.states.get(a)
-            if a == 'sensor.yweather_condition':
-                cc = w.attributes['condition_code']
-                weather += ais_global.G_Y_WEATHER_CODES.get(int(cc), " ").capitalize() + "; "
+            if a == 'sensor.dark_sky_hourly_summary':
+                weather += " " + w.state + " "
+            elif a == 'sensor.dark_sky_daily_summary':
+                weather += " " + w.state + " "
             else:
                 weather += w.attributes['friendly_name'] + " " + w.state + " "
-                if w.attributes['unit_of_measurement'] == 'hPa':
-                    weather += "hektopascala; "
-                elif w.attributes['unit_of_measurement'] == 'km/h':
-                    weather += "kilometrów na godzinę; "
-                elif w.attributes['unit_of_measurement'] == 'km':
-                    weather += "kilometra; "
-                else:
-                    weather += w.attributes['unit_of_measurement'] + "; "
+                if 'unit_of_measurement' in w.attributes:
+                    if w.attributes['unit_of_measurement'] == 'hPa':
+                        weather += "hektopascala; "
+                    elif w.attributes['unit_of_measurement'] == 'km/h':
+                        weather += "kilometrów na godzinę; "
+                    elif w.attributes['unit_of_measurement'] == 'km':
+                        weather += "kilometra; "
+                    else:
+                        weather += w.attributes['unit_of_measurement'] + "; "
         return weather, True
 
 
@@ -2123,24 +2121,7 @@ class AisGetWeather48(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        # weather = hass.states.get('sensor.prognoza_info').state
-        weather = "Prognoza pogody na jutro w Twojej lokalizacji: "
-        attr = hass.states.get('group.ais_pogoda_48').attributes
-        for a in attr['entity_id']:
-            w = hass.states.get(a)
-            if a == 'sensor.yw_day1_condition':
-                cc = w.attributes['condition_code']
-                weather += ais_global.G_Y_WEATHER_CODES.get(int(cc), " ").capitalize() + "; "
-            else:
-                weather += w.attributes['friendly_name'] + " " + w.state + " "
-                if w.attributes['unit_of_measurement'] == 'hPa':
-                    weather += "hektopascala; "
-                elif w.attributes['unit_of_measurement'] == 'km/h':
-                    weather += "kilometrów na godzinę; "
-                elif w.attributes['unit_of_measurement'] == 'km':
-                    weather += "kilometra; "
-                else:
-                    weather += w.attributes['unit_of_measurement'] + "; "
+        weather = hass.states.get('sensor.dark_sky_daily_summary').state
         return weather, True
 
 
