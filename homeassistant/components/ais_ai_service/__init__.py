@@ -538,8 +538,6 @@ def set_next_position(hass):
         _curr = float(CURR_ENTITIE_POSITION)
         CURR_ENTITIE_POSITION = str(round(min(_curr+_step, _max), 2))
         _say_it(hass, str(CURR_ENTITIE_POSITION), None)
-    elif CURR_ENTITIE.startswith('media_player.'):
-        hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
 
 
 
@@ -576,8 +574,6 @@ def set_prev_position(hass):
         _curr = float(CURR_ENTITIE_POSITION)
         CURR_ENTITIE_POSITION = str(round(max(_curr-_step, _min), 2))
         _say_it(hass, str(CURR_ENTITIE_POSITION), None)
-    elif CURR_ENTITIE.startswith('media_player.'):
-        hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
 
 
 def select_entity(hass, long_press):
@@ -611,7 +607,7 @@ def select_entity(hass, long_press):
                 return
             else:
                 # we will change this item directly
-                if CURR_ENTITIE.startswith('media_player.'):
+                if CURR_ENTITIE.startswith("media_player."):
                     # play / pause on selected player
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == 'playing':
@@ -737,7 +733,7 @@ def can_entity_be_entered(hass, entity):
 
 def set_on_dpad_down(hass, long_press):
     #
-    if CURR_ENTITIE is not None and CURR_ENTITIE_ENTERED is True:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -763,7 +759,7 @@ def set_on_dpad_down(hass, long_press):
 
 def set_on_dpad_up(hass, long_press):
     #
-    if CURR_ENTITIE is not None and CURR_ENTITIE_ENTERED is True:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -789,7 +785,7 @@ def set_on_dpad_up(hass, long_press):
 
 def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
-    if long_press and CURR_ENTITIE is not None and CURR_ENTITIE_ENTERED is True:
+    if long_press and CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # seek back on remote
             _LOGGER.info("seek back in the player - info from remote")
@@ -811,13 +807,16 @@ def set_focus_on_prev_entity(hass, long_press):
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
         set_prev_position(hass)
     else:
-        # entity not selected or no way to change the entity, go to next one
-        set_prev_entity(hass)
+        if CURR_ENTITIE.startswith("media_player."):
+            hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
+        else:
+            # entity not selected or no way to change the entity, go to next one
+            set_prev_entity(hass)
 
 
 def set_focus_on_next_entity(hass, long_press):
     # next on joystick
-    if long_press and CURR_ENTITIE is not None and CURR_ENTITIE_ENTERED is True:
+    if long_press and CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # seek next on remote
             _LOGGER.info("seek next in the player - info from remote")
@@ -839,8 +838,11 @@ def set_focus_on_next_entity(hass, long_press):
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
         set_next_position(hass)
     else:
-        # entity not selected or no way to change the entity, go to next one
-        set_next_entity(hass)
+        if CURR_ENTITIE.startswith("media_player."):
+            hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
+        else:
+            # entity not selected or no way to change the entity, go to next one
+            set_next_entity(hass)
 
 
 def go_up_in_menu(hass):
@@ -906,7 +908,7 @@ def go_to_player(hass, say):
         if group['entity_id'] == 'group.audio_player':
             set_curr_group(hass, group)
             set_curr_entity(hass, 'media_player.wbudowany_glosnik')
-            CURR_ENTITIE_ENTERED = True
+            CURR_ENTITIE_ENTERED = False
             if say:
                 _say_it(hass, "Sterowanie odtwarzaczem", None)
 
