@@ -1,13 +1,9 @@
 """Constants for ebus component."""
 DOMAIN = 'ebusd'
 
-READ_COMMAND = 'read -m {2} -c {0} {1}\n'
-WRITE_COMMAND = 'write -c {0} {1} {2}\n'
+#  SensorTypes:
+#  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
 
-"""
-  SensorTypes:
-  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
-"""
 SENSOR_TYPES = {
     '700': {
         'ActualFlowTemperatureDesired':

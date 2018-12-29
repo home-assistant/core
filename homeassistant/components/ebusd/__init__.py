@@ -1,8 +1,8 @@
 """
 Support for Ebusd daemon for communication with eBUS heating systems.
 
-For more details about ebusd deamon, please refer to the documentation at
-https://github.com/john30/ebusd
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/ebus/
 """
 
 from datetime import timedelta
@@ -18,10 +18,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-from .const import (
-    DOMAIN, SENSOR_TYPES, READ_COMMAND, WRITE_COMMAND)
+from .const import (DOMAIN, SENSOR_TYPES)
 
-REQUIREMENTS = ['ebusdpy==0.0.4']
+REQUIREMENTS = ['ebusdpy==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +47,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the ebusd component."""
-    if DOMAIN not in config:
-        return True
-
     conf = config[DOMAIN]
     name = conf.get(CONF_NAME)
     circuit = conf.get(CONF_CIRCUIT)
@@ -59,12 +55,9 @@ def setup(hass, config):
         conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        import ebusdpy
+        ebusdpy.init(server_address)
         hass.data[DATA_EBUSD] = EbusdData(server_address, circuit)
-
-        sock.settimeout(5)
-        sock.connect(server_address)
-        sock.close()
 
         sensor_config = {
             'monitored_conditions': monitored_conditions,
@@ -79,9 +72,9 @@ def setup(hass, config):
         _LOGGER.debug("Ebusd component setup completed.")
         return True
     except socket.timeout:
-        raise PlatformNotReady
+        return False
     except socket.error:
-        raise PlatformNotReady
+        return False
 
 
 class EbusdData:
@@ -97,11 +90,10 @@ class EbusdData:
     def update(self, name):
         """Call the Ebusd API to update the data."""
         import ebusdpy
-        command = READ_COMMAND.format(self._circuit, name, CACHE_TTL)
 
         try:
-            _LOGGER.debug("Opening socket to ebusd %s: %s", name, command)
-            command_result = ebusdpy.send_command(self._address, command)
+            _LOGGER.debug("Opening socket to ebusd %s: %s", name)
+            command_result = ebusdpy.read(self._address, self._circuit, name, CACHE_TTL)
             if 'not found' in command_result:
                 _LOGGER.warning("Element not found: %s", name)
                 raise RuntimeError("Element not found")
@@ -119,11 +111,10 @@ class EbusdData:
         import ebusdpy
         name = call.data.get('name')
         value = call.data.get('value')
-        command = WRITE_COMMAND.format(self._circuit, name, value)
 
         try:
-            _LOGGER.debug("Opening socket to ebusd %s: %s", name, command)
-            command_result = ebusdpy.send_command(self._address, command)
+            _LOGGER.debug("Opening socket to ebusd %s: %s", name)
+            command_result = ebusdpy.write(self._address, self._circuit, name, value)
             if 'done' not in command_result:
                 _LOGGER.warning('Write command failed: %s', name)
         except socket.timeout:

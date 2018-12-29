@@ -13,7 +13,6 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ebusd']
 
-DOMAIN = 'ebusd'
 DATA_EBUSD = 'EBUSD'
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,16 +30,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ebusd_api, discovery_info['sensor_types'][condition], name))
 
     add_entities(dev, True)
-
-
-def timer_format(string):
-    """Datetime formatter."""
-    _r = []
-    _s = string.split(';')
-    for i in range(0, len(_s) // 2):
-        if(_s[i * 2] != '-:-' and _s[i * 2] != _s[(i * 2) + 1]):
-            _r.append(_s[i * 2] + '/' + _s[(i * 2) + 1])
-    return ' - '.join(_r)
 
 
 class Ebusd(Entity):
@@ -83,21 +72,6 @@ class Ebusd(Entity):
             if self._name not in self.data.value:
                 return
 
-            if self._type == 0:
-                self._state = format(
-                    float(self.data.value[self._name]), '.1f')
-            elif self._type == 1:
-                self._state = timer_format(self.data.value[self._name])
-            elif self._type == 2:
-                if self.data.value[self._name] == 1:
-                    self._state = STATE_ON
-                else:
-                    self._state = STATE_OFF
-            elif self._type == 3:
-                self._state = self.data.value[self._name]
-            elif self._type == 4:
-                if 'ok' not in self.data.value[self._name].split(';'):
-                    return
-                self._state = self.data.value[self._name].partition(';')[0]
+            self._state = self.data.value[self._name]
         except RuntimeError:
             _LOGGER.debug("EbusdData.update exception")
