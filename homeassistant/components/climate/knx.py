@@ -47,6 +47,21 @@ DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEPENDENCIES = ['knx']
 
+# Map KNX operation modes to HA modes. This list might not be full.
+OPERATION_MODES = {
+    # Map DPT 201.100 HVAC operating modes
+    "Frost Protection": STATE_MANUAL,
+    "Night": STATE_IDLE,
+    "Standby": STATE_ECO,
+    "Comfort": STATE_HEAT,
+    # Map DPT 201.104 HVAC control modes
+    "Fan only": STATE_FAN_ONLY,
+    "Dehumidification": STATE_DRY
+}
+
+OPERATION_MODES_INV = dict((
+    reversed(item) for item in OPERATION_MODES.items()))
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
@@ -71,25 +86,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODES): cv.ensure_list_csv,
+    vol.Optional(CONF_OPERATION_MODES): vol.All(cv.ensure_list,
+                                                [vol.In(OPERATION_MODES)]),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
 })
-
-# Map KNX operation modes to HA modes. This list might not be full.
-OPERATION_MODES = {
-    # Map DPT 201.100 HVAC operating modes
-    "Frost Protection": STATE_MANUAL,
-    "Night": STATE_IDLE,
-    "Standby": STATE_ECO,
-    "Comfort": STATE_HEAT,
-    # Map DPT 201.104 HVAC control modes
-    "Fan only": STATE_FAN_ONLY,
-    "Dehumidification": STATE_DRY
-}
-
-OPERATION_MODES_INV = dict((
-    reversed(item) for item in OPERATION_MODES.items()))
 
 
 async def async_setup_platform(hass, config, async_add_entities,
