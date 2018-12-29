@@ -76,8 +76,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up for WeMo devices."""
-    _LOGGER.debug("Beginning setup of WeMo component...")
-
     import pywemo
 
     # Keep track of WeMo devices
@@ -90,7 +88,7 @@ def setup(hass, config):
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
-        _LOGGER.debug("Shutting down WeMo event subscriptions.")
+        _LOGGER.debug("Shutting down WeMo event subscriptions")
         SUBSCRIPTION_REGISTRY.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
@@ -132,7 +130,7 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     def discover_wemo_devices(now):
-        """Run discovery in an async context so setup can complete quickly."""
+        """Run discovery for WeMo devices."""
         _LOGGER.debug("Beginning WeMo device discovery...")
         _LOGGER.debug("Adding statically configured WeMo devices...")
         for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
@@ -176,11 +174,9 @@ def setup(hass, config):
 
             discovery.discover(hass, SERVICE_WEMO, discovery_info)
 
-        _LOGGER.debug("WeMo device discovery has finished.")
+        _LOGGER.debug("WeMo device discovery has finished")
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                          discover_wemo_devices)
-
-    _LOGGER.debug("Setup of WeMo component has finished.")
 
     return True
