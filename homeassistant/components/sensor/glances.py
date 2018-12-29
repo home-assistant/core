@@ -181,7 +181,7 @@ class GlancesSensor(Entity):
                 for sensor in value['sensors']:
                     if sensor['label'] in ['CPU', "Package id 0",
                                            "Physical id 0", "cpu-thermal 1",
-                                           "exynos-therm 1"]:
+                                           "exynos-therm 1", "soc_thermal 1"]:
                         self._state = sensor['value']
             elif self.type == 'docker_active':
                 count = 0
