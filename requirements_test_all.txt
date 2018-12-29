@@ -52,7 +52,10 @@ caldav==0.5.0
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==5.0.3
 
+# homeassistant.components.ihc
+# homeassistant.components.namecheapdns
 # homeassistant.components.device_tracker.upc_connect
+# homeassistant.components.sensor.ohmconnect
 defusedxml==0.5.0
 
 # homeassistant.components.sensor.dsmr
