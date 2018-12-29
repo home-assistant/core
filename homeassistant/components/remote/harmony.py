@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['aioharmony==0.1.00']
+REQUIREMENTS = ['aioharmony==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
