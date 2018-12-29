@@ -6,7 +6,6 @@ https://home-assistant.io/components/ihc/
 """
 import logging
 import os.path
-import xml.etree.ElementTree
 
 import voluptuous as vol
 
@@ -24,7 +23,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.2.0']
+REQUIREMENTS = ['ihcsdk==2.2.0', 'defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,11 +216,13 @@ def get_manual_configuration(
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
                            controller_id):
     """Auto setup of IHC products from the IHC project file."""
+    from defusedxml import ElementTree
+
     project_xml = ihc_controller.get_project()
     if not project_xml:
         _LOGGER.error("Unable to read project from IHC controller")
         return False
-    project = xml.etree.ElementTree.fromstring(project_xml)
+    project = ElementTree.fromstring(project_xml)
 
     # if an auto setup file exist in the configuration it will override
     yaml_path = hass.config.path(AUTO_SETUP_YAML)
