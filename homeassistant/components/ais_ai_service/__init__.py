@@ -681,7 +681,7 @@ def select_entity(hass, long_press):
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
         elif CURR_ENTITIE.startswith('input_text.'):
-            _say_it(hass, "Powiedz co mam zrobić?", None)
+            _say_it(hass, "Wpisz tekst", None)
         elif CURR_ENTITIE.startswith('script.'):
             hass.services.call(
                 'script',
@@ -705,7 +705,8 @@ def can_entity_be_changed(hass, entity):
         "switch.",
         "input_number.",
         "script.",
-        "light."
+        "light.",
+        "input_text."
     )):
         return True
     else:
