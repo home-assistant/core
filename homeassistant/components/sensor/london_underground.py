@@ -119,15 +119,17 @@ def parse_api_response(response):
     data_dict = dict.fromkeys(lines)
 
     for line in response:
+
         statuses = [status['statusSeverityDescription']
                     for status in line['lineStatuses']]
         state = ' + '.join(sorted(set(statuses)))
 
-        if state == 'Good Service':
+        if state == 'Good Service':   # if good status, this is the only status returned
             reason = 'Nothing to report'
         else:
-            reason = ' *** '.join(
-                [status['reason'] for status in line['lineStatuses']])
+            reason = ' *** '.join([status['disruption']['additionalInfo']
+                                    for status in line['lineStatuses']])
+            reason = reason.replace('\r\n', ' ')
 
         attr = {'State': state, 'Description': reason}
         data_dict[line['name']] = attr
