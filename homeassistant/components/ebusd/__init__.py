@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS)
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
@@ -92,8 +91,9 @@ class EbusdData:
         import ebusdpy
 
         try:
-            _LOGGER.debug("Opening socket to ebusd %s: %s", name)
-            command_result = ebusdpy.read(self._address, self._circuit, name, CACHE_TTL)
+            _LOGGER.debug("Opening socket to ebusd %s", name)
+            command_result = ebusdpy.read(
+                self._address, self._circuit, name, CACHE_TTL)
             if 'not found' in command_result:
                 _LOGGER.warning("Element not found: %s", name)
                 raise RuntimeError("Element not found")
@@ -113,8 +113,9 @@ class EbusdData:
         value = call.data.get('value')
 
         try:
-            _LOGGER.debug("Opening socket to ebusd %s: %s", name)
-            command_result = ebusdpy.write(self._address, self._circuit, name, value)
+            _LOGGER.debug("Opening socket to ebusd %s", name)
+            command_result = ebusdpy.write(
+                self._address, self._circuit, name, value)
             if 'done' not in command_result:
                 _LOGGER.warning('Write command failed: %s', name)
         except socket.timeout:

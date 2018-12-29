@@ -7,8 +7,6 @@ https://github.com/john30/ebusd
 
 import logging
 
-from homeassistant.const import (
-    STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ebusd']
