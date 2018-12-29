@@ -51,11 +51,12 @@ def setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    name = config[DOMAIN].get(CONF_NAME)
-    circuit = config[DOMAIN].get(CONF_CIRCUIT)
-    monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
+    conf = config[DOMAIN]
+    name = conf.get(CONF_NAME)
+    circuit = conf.get(CONF_CIRCUIT)
+    monitored_conditions = conf.get(CONF_MONITORED_CONDITIONS)
     server_address = (
-        config[DOMAIN].get(CONF_HOST), config[DOMAIN].get(CONF_PORT))
+        conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -95,7 +95,7 @@ omit =
     homeassistant/components/*/ecobee.py
 
     homeassistant/components/ebusd/*
-     homeassistant/components/*/ebusd.py
+    homeassistant/components/*/ebusd.py
 
     homeassistant/components/edp_redy.py
     homeassistant/components/*/edp_redy.py
