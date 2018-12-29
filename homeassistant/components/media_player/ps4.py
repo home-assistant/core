@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['ps4_python3==1.0.1']
+REQUIREMENTS = ['ps4python3==1.0.3']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -33,14 +33,11 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
-'''Defaults'''
-DEFAULT_NAME = "PlayStation 4"
+DEFAULT_NAME = "Playstation 4"
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
 CONFIG_FILE = '.ps4.conf'
-CONFIG_PORT = 987
-DEVICE_PORT = 997
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=10)
@@ -51,14 +48,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def request_configuration(hass, config, add_devices):
+def request_configuration(hass, config, add_devices, _creds):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     host = config.get(CONF_HOST)
 
     def connect_callback(data):
         """Run after creds are saved. Pair with PS4."""
-        import ps4_python3 as pyps4
+        import ps4python3 as pyps4
         pin = data.get('pin')
         if len(pin) != 8:
             configurator.notify_errors(_CONFIGURING[host],
@@ -101,12 +98,12 @@ def request_configuration(hass, config, add_devices):
             )
 
     if host not in _CONFIGURING:
-        credentials = Dummy()
+        credentials = _creds
 
     _CONFIGURING[host] = configurator.request_config(
         NOTIFICATION_TITLE, configuration_callback,
-        description="Press start to begin config.\
-        In PS4 Second Screen App, refresh devices and select 'PS4-Waker'",
+        description="Press start to begin config. Then\
+        in PS4 Second Screen App, refresh devices and select 'PS4-Waker'",
         submit_caption='Start'
     )
 
@@ -120,13 +117,13 @@ def get_credentials(hass, config):
         credentials = creds[host]
     except KeyError:
         credentials = None
-        _LOGGER.debug("No credentials found for %s", host)
+        _LOGGER.debug("No credentials found for %s", (host))
     return credentials
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the PS4 platform."""
-    import ps4_python3 as pyps4
+    import ps4python3 as pyps4
     host = config.get(CONF_HOST)
     creds = None
     creds = get_credentials(hass, config)
@@ -138,7 +135,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         games_file = hass.config.path(GAMES_FILE)
         add_devices([PS4Device(name, host, ps4, games_file)], True)
     elif creds is None:
-        request_configuration(hass, config, add_devices)
+        _creds = pyps4.Credentials()
+        request_configuration(hass, config, add_devices, _creds)
         return True
 
 
@@ -172,10 +170,11 @@ class PS4Device(MediaPlayerDevice):
                 if titleid and name is not None:
                     self._state = STATE_PLAYING
                     self._media_content_id = titleid
-                    app_name = self.get_ps_store_data('title', name)
+                    app_name = self._ps4.get_ps_store_data('title', name)
                     if app_name is None:
                         app_name = name
-                    self._media_image = self.get_ps_store_data('art', app_name)
+                    self._media_image = self._ps4.get_ps_store_data(
+                        'art', app_name)
                     self._source = app_name
                     self._media_title = app_name
                     if titleid in self._games:
@@ -238,60 +237,6 @@ class PS4Device(MediaPlayerDevice):
             game = {titleid: app_name}
             games.update(game)
             self.save_games(games)
-
-    def get_ps_store_data(self, data_type, title):
-        """Store coverart from PS store in games map."""
-        import requests
-        import urllib
-
-        req = None
-        headers = {
-            'User-Agent':
-                'Mozilla/5.0 '
-                '(Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                '(KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36'
-        }
-
-        if title is not None:
-            title = urllib.parse.quote(title.encode('utf-8'))
-            url = 'https://store.playstation.com/'\
-                'valkyrie-api/en/US/19/faceted-search/'\
-                '{0}?query={0}&platform=ps4'.format(title)
-            try:
-                req = requests.get(url, headers=headers)
-            except requests.exceptions.HTTPError as error:
-                _LOGGER.error("PS cover art HTTP error, %s", error)
-                return
-            except requests.exceptions.RequestException as error:
-                _LOGGER.error("PS cover art request failed, %s", error)
-                return
-
-        for item in req.json()['included']:
-            sku = False
-            parse_id = None
-            if 'attributes' in item:
-                game = item['attributes']
-                if 'game-content-type' in game and \
-                   game['game-content-type'] in \
-                   ['App', 'Game', 'Full Game', 'PSN Game']:
-                    if 'default-sku-id' in game:
-                        sku = True
-            if sku is True:
-                full_id = game['default-sku-id']
-                full_id = full_id.split("-")
-                full_id = full_id[1]
-                full_id = full_id.split("_")
-                parse_id = full_id[0]
-            if parse_id == self._media_content_id:
-                if data_type == 'title':
-                    title_parse = game['name']
-                    return title_parse
-                if data_type == 'art':
-                    cover_art = None
-                    if 'thumbnail-url-base' in game:
-                        cover = 'thumbnail-url-base'
-                        cover_art = game[cover]
-                        return cover_art
 
     @property
     def entity_picture(self):
@@ -394,117 +339,3 @@ class PS4Device(MediaPlayerDevice):
                     game, title_id, source)
                 self._ps4.start_title(title_id)
                 return
-
-
-class Dummy():
-    """The PS4 Credentials object."""
-
-    standby = '620 Server Standby'
-    host_id = '1234567890AB'
-    host_name = 'PS4-Waker'
-    UDP_IP = '0.0.0.0'
-    REQ_PORT = DEVICE_PORT
-    DDP_PORT = CONFIG_PORT
-    DDP_VERSION = '00020020'
-    msg = None
-
-    """
-    PS4 listens on ports 987 and 997 (Priveleged).
-    Must run command on python path:
-    "sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python3.5"
-    """
-
-    def __init__(self):
-        """Init Cred Server."""
-        self.iswakeup = False
-        self.response = {
-            'host-id': self.host_id,
-            'host-type': 'PS4',
-            'host-name': self.host_name,
-            'host-request-port': DEVICE_PORT
-        }
-        self.start()
-
-    def start(self):
-        """Start Cred Server."""
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock = sock
-        except socket.error:
-            _LOGGER.error("Failed to create socket")
-            return
-        sock.settimeout(30)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            sock.bind((self.UDP_IP, self.DDP_PORT))
-        except socket.error as error:
-            _LOGGER.error(
-                "Could not bind to port %s; \
-                Ensure port is accessible and unused, %s",
-                self.DDP_PORT, error)
-            return
-
-    def listen(self):
-        """Listen and respond to requests."""
-        sock = self.sock
-        pings = 0
-        while pings < 10:
-            try:
-                response = sock.recvfrom(1024)
-            except socket.error:
-                sock.close()
-                pings += 1
-            data = response[0]
-            address = response[1]
-            if not data:
-                pings += 1
-                break
-            if parse_ddp_response(data, 'search') == 'search':
-                _LOGGER.debug("Search from: %s", address)
-                msg = self.get_ddp_message(self.standby, self.response)
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                try:
-                    sock.sendto(msg.encode('utf-8'), address)
-                except socket.error:
-                    sock.close()
-            if parse_ddp_response(data, 'wakeup') == 'wakeup':
-                self.iswakeup = True
-                _LOGGER.debug("Wakeup from: %s", address)
-                creds = get_creds(data)
-                sock.close()
-                return creds
-        return
-
-    def get_ddp_message(self, status, data=None):
-        """Get DDP message."""
-        msg = u'HTTP/1.1 {}\n'.format(status)
-        if data:
-            for key, value in data.items():
-                msg += u'{}:{}\n'.format(key, value)
-        msg += u'device-discovery-protocol-version:{}\n'.format(
-            self.DDP_VERSION)
-        return msg
-
-
-def parse_ddp_response(response, listen_type):
-    """Parse the response."""
-    rsp = response.decode('utf-8')
-    if listen_type == 'search':
-        if 'SRCH' in rsp:
-            return 'search'
-    elif listen_type == 'wakeup':
-        if 'WAKEUP' in rsp:
-            return 'wakeup'
-
-
-def get_creds(response):
-    """Return creds."""
-    keys = {}
-    data = response.decode('utf-8')
-    for line in data.splitlines():
-        line = line.strip()
-        if ":" in line:
-            value = line.split(':')
-            keys[value[0]] = value[1]
-    cred = keys['user-credential']
-    return cred
