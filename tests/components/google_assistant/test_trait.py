@@ -654,6 +654,53 @@ async def test_scene_script(hass):
     }
 
 
+async def test_temperature_control_climate(hass):
+    """Test TemperatureControl trait support for climate domain - set."""
+    assert trait.TemperatureControlTrait.supported(climate.DOMAIN, 0)
+    assert not trait.TemperatureControlTrait.supported(
+        climate.DOMAIN, climate.SUPPORT_OPERATION_MODE)
+
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureControlTrait(hass, State(
+        'climate.bla', climate.STATE_AUTO, {
+            climate.ATTR_CURRENT_TEMPERATURE: 20,
+            climate.ATTR_TEMPERATURE: 18,
+            climate.ATTR_MIN_TEMP: 10,
+            climate.ATTR_MAX_TEMP: 35
+        }), BASIC_CONFIG)
+    assert trt.sync_attributes() == {
+        'temperatureRange': {
+            'minThresholdCelsius': 10,
+            'maxThresholdCelsius': 35
+            },
+        'temperatureUnitForUX': 'C',
+    }
+    assert trt.query_attributes() == {
+        'temperatureAmbientCelsius': 20,
+        'temperatureSetpointCelsius': 18
+    }
+    assert trt.can_execute(trait.COMMAND_SET_TEMPERATURE, {})
+
+    calls = async_mock_service(
+        hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_SET_TEMPERATURE, {
+            'temperature': -100,
+        })
+    assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+
+    await trt.execute(trait.COMMAND_SET_TEMPERATURE, {
+        'temperature': 25
+    })
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+        climate.ATTR_TEMPERATURE: 25,
+    }
+
+
 async def test_temperature_setting_climate_range(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
     assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0)

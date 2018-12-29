@@ -40,6 +40,7 @@ TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
 TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
+TRAIT_TEMPERATURE_CONTROL = PREFIX_TRAITS + 'TemperatureControl'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
@@ -53,6 +54,7 @@ COMMAND_PAUSEUNPAUSE = PREFIX_COMMANDS + 'PauseUnpause'
 COMMAND_BRIGHTNESS_ABSOLUTE = PREFIX_COMMANDS + 'BrightnessAbsolute'
 COMMAND_COLOR_ABSOLUTE = PREFIX_COMMANDS + 'ColorAbsolute'
 COMMAND_ACTIVATE_SCENE = PREFIX_COMMANDS + 'ActivateScene'
+COMMAND_SET_TEMPERATURE = PREFIX_COMMANDS + 'SetTemperature'
 COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetpoint')
 COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
@@ -496,6 +498,86 @@ class StartStopTrait(_Trait):
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
                     }, blocking=True)
+
+
+@register_trait
+class TemperatureControlTrait(_Trait):
+    """Trait to offer temperature control functionality.
+
+    https://developers.google.com/actions/smarthome/traits/temperaturecontrol
+    """
+
+    name = TRAIT_TEMPERATURE_CONTROL
+    commands = [
+        COMMAND_SET_TEMPERATURE
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != climate.DOMAIN:
+            return False
+
+        # climate devices that don't provide a operation mode qualify, else
+        # they will use the TemperatureSetting trait
+        return not features & climate.SUPPORT_OPERATION_MODE
+
+    def sync_attributes(self):
+        """Return temperature attributes for a sync request."""
+        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
+        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
+        return {
+            'temperatureRange': {
+                'minThresholdCelsius': min_temp,
+                'maxThresholdCelsius': max_temp,
+            },
+            'temperatureUnitForUX': _google_temp_unit(
+                self.hass.config.units.temperature_unit)
+        }
+
+    def query_attributes(self):
+        """Return temperature query attributes."""
+        attrs = self.state.attributes
+        response = {}
+
+        unit = self.hass.config.units.temperature_unit
+
+        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+        if current_temp is not None:
+            response['temperatureAmbientCelsius'] = \
+                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1)
+
+        target_temp = attrs.get(climate.ATTR_TEMPERATURE)
+        response['temperatureSetpointCelsius'] = round(
+            temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
+
+        return response
+
+    async def execute(self, command, params):
+        """Execute a temperature command."""
+        # All sent in temperatures are always in Celsius
+        unit = self.hass.config.units.temperature_unit
+        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
+        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
+
+        if command == COMMAND_SET_TEMPERATURE:
+            temp = temp_util.convert(
+                params['temperature'], TEMP_CELSIUS,
+                unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp = round(temp)
+
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Temperature should be between {} and {}".format(min_temp,
+                                                                     max_temp))
+
+            await self.hass.services.async_call(
+                climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_TEMPERATURE: temp
+                }, blocking=True)
 
 
 @register_trait
