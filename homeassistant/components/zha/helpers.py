@@ -33,7 +33,11 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
 
 
 async def bind_cluster(entity_id, cluster):
-    """Bind a zigbee cluster."""
+    """Bind a zigbee cluster.
+
+    This also swallows DeliveryError exceptions that are thrown when devices
+    are unreachable.
+    """
     from zigpy.exceptions import DeliveryError
 
     cluster_name = cluster.ep_attribute
@@ -56,8 +60,8 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
                               manufacturer=None):
     """Configure attribute reporting for a cluster.
 
-    while swallowing the DeliverError exceptions in case of unreachable
-    devices.
+    This also swallows DeliveryError exceptions that are thrown when devices
+    are unreachable.
     """
     from zigpy.exceptions import DeliveryError
 
@@ -84,10 +88,10 @@ async def bind_configure_reporting(entity_id, cluster, attr, skip_bind=False,
                                    max_report=REPORT_CONFIG_MAX_INT,
                                    reportable_change=REPORT_CONFIG_RPT_CHANGE,
                                    manufacturer=None):
-    """Bind cluster and configure attribute reporting for a cluster.
+    """Bind and configure zigbee attribute reporting for a cluster.
 
-    while swallowing the DeliverError exceptions in case of unreachable
-    devices.
+    This also swallows DeliveryError exceptions that are thrown when devices
+    are unreachable.
     """
     if not skip_bind:
         await bind_cluster(entity_id, cluster)
