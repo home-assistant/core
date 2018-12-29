@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 def filter_urllib3_logging():
-    """Filter header errors from urllib3 due to a urllib3 bug"""
+    """Filter header errors from urllib3 due to a urllib3 bug."""
     urllib3_logger = logging.getLogger("urllib3.connectionpool")
     if not any(isinstance(x, NoHeaderErrorFilter)
                for x in urllib3_logger.filters):
