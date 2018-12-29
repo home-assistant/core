@@ -50,9 +50,9 @@ class IliadSensor(Entity):
         """Initialize the IliadItaly sensor."""
         from aioiliad.IliadData import IliadData
         self._iliad = iliad
-        self._iliad
         self._iliaddata = IliadData(self._iliad)
         self._data = None
+        self._state = None
 
     @property
     def name(self):
