@@ -23,7 +23,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FROM_NUMBER):
         vol.All(cv.string,
                 vol.Match(r"^\+?[1-9]\d{1,14}$|"
-                          r"^(?=.{1,11}$)[a-zA-Z0-9\s]*[a-zA-Z][a-zA-Z0-9\s]*$")),
+                          r"^(?=.{1,11}$)[a-zA-Z0-9\s]*"
+                          r"[a-zA-Z][a-zA-Z0-9\s]*$")),
 })
 
 
