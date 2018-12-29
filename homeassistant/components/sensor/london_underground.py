@@ -124,11 +124,11 @@ def parse_api_response(response):
                     for status in line['lineStatuses']]
         state = ' + '.join(sorted(set(statuses)))
 
-        if state == 'Good Service':   # if good status, this is the only status returned
+        if state == 'Good Service':
             reason = 'Nothing to report'
         else:
             reason = ' *** '.join([status['disruption']['additionalInfo']
-                                    for status in line['lineStatuses']])
+                for status in line['lineStatuses']])
             reason = reason.replace('\r\n', ' ')
 
         attr = {'State': state, 'Description': reason}
