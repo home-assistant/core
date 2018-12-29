@@ -4,17 +4,17 @@ Sensor to get Iliad Italy personal data.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.iliad_italy/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['aioiliad==0.1.1']
 
@@ -39,6 +39,9 @@ async def async_setup_platform(
                   async_get_clientsession(hass),
                   hass.loop)
     await iliad.login()
+    if not iliad.is_logged_in():
+        _LOGGER.error("Check username and password")
+        return
 
     async_add_entities([IliadSensor(iliad)], True)
 
