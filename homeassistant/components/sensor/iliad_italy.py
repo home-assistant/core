@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.iliad_italy/
 """
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,6 +15,8 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.util.dt as dt_util
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['aioiliad==0.1.1']
 
@@ -36,6 +38,7 @@ async def async_setup_platform(
     from aioiliad import Iliad
     iliad = Iliad(conf[CONF_USERNAME], conf[CONF_PASSWORD], async_get_clientsession(hass), hass.loop)
     await iliad.login()
+
     async_add_entities([IliadSensor(iliad)], True)
 
 
@@ -53,7 +56,7 @@ class IliadSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Iliad"
+        return "Iliad {}".format(self._data['info']['utente'])
 
     @property
     def icon(self):
@@ -67,14 +70,37 @@ class IliadSensor(Entity):
     
     @property
     def unit_of_measurement(self):
-        return "€"
+        """Return the unit of measurement of the sensor."""
+        return '€'
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {
+            'next_renewal':
+                dt_util.utc_from_timestamp(
+                    self._data['info']['rinnovo']).isoformat(),
+            'italy_sent_sms': self._data['italy']['sms'],
+            'italy_over_plan_sms': self._data['italy']['sms_extra'],
+            'italy_sent_mms': self._data['italy']['mms'],
+            'italy_over_plan_mms': self._data['italy']['mms_extra'],
+            'italy_calls_seconds': self._data['italy']['chiamate'],
+            'italy_over_plan_calls': self._data['italy']['chiamate_extra'],
+            'italy_data': self._data['italy']['internet'],
+            'italy_data_max': self._data['italy']['internet_max'],
+            'italy_data_over_plan': self._data['italy']['internet_over'],
+            
+            'abroad_sent_sms': self._data['estero']['sms'],
+            'abroad_over_plan_sms': self._data['estero']['sms_extra'],
+            'abroad_sent_mms': self._data['estero']['mms'],
+            'abroad_over_plan_mms': self._data['estero']['mms_extra'],
+            'abroad_calls_seconds': self._data['estero']['chiamate'],
+            'abroad_over_plan_calls': self._data['estero']['chiamate_extra'],
+            'abroad_data': self._data['estero']['internet'],
+            'abroad_data_max': self._data['estero']['internet_max'],
+            'abroad_data_over_plan': self._data['estero']['internet_over'],
         }
-        return self._data
+        return attr
 
     async def async_update(self):
         """Update device state."""
