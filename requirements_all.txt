@@ -334,7 +334,7 @@ dsmr_parser==0.12
 dweepy==0.3.0
 
 # homeassistant.components.ebusd
-ebusdpy==0.0.4
+ebusdpy==0.0.10
 
 # homeassistant.components.edp_redy
 edp_redy==0.0.3
