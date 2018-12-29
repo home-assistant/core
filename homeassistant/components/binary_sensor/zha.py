@@ -142,11 +142,10 @@ class IasZoneSensor(RestoreEntity, ZhaEntity, BinarySensorDevice):
 
     async def async_configure(self):
         """Configure IAS device."""
-        _LOGGER.debug("%s: is being configured...", self.entity_id)
         await self._ias_zone_cluster.bind()
         ieee = self._ias_zone_cluster.endpoint.device.application.ieee
         await self._ias_zone_cluster.write_attributes({'cie_addr': ieee})
-        _LOGGER.debug("%s: Finished configuration.", self.entity_id)
+        _LOGGER.debug("%s: finished configuration", self.entity_id)
 
     async def async_update(self):
         """Retrieve latest state."""
