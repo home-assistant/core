@@ -146,11 +146,6 @@ class LcnRelayLight(LcnDevice, Light):
                 self.output))
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return 0
-
-    @property
     def is_on(self):
         """Return True if entity is on."""
         return self._is_on
