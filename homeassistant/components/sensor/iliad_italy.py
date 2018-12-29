@@ -15,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.util.dt as dt_util
-from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['aioiliad==0.1.1']
 
@@ -36,7 +34,10 @@ async def async_setup_platform(
         hass, conf, async_add_entities, discovery_info=None):
     """Set up the Iliad Italy platform."""
     from aioiliad import Iliad
-    iliad = Iliad(conf[CONF_USERNAME], conf[CONF_PASSWORD], async_get_clientsession(hass), hass.loop)
+    iliad = Iliad(conf[CONF_USERNAME],
+                  conf[CONF_PASSWORD],
+                  async_get_clientsession(hass),
+                  hass.loop)
     await iliad.login()
 
     async_add_entities([IliadSensor(iliad)], True)
@@ -67,7 +68,7 @@ class IliadSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
@@ -89,7 +90,7 @@ class IliadSensor(Entity):
             'italy_data': self._data['italy']['internet'],
             'italy_data_max': self._data['italy']['internet_max'],
             'italy_data_over_plan': self._data['italy']['internet_over'],
-            
+
             'abroad_sent_sms': self._data['estero']['sms'],
             'abroad_over_plan_sms': self._data['estero']['sms_extra'],
             'abroad_sent_mms': self._data['estero']['mms'],
