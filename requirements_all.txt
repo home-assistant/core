@@ -111,6 +111,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.5.0
 
+# homeassistant.components.sensor.iliad_italy
+aioiliad==0.1.1
+
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
 
