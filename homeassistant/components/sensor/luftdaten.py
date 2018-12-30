@@ -37,8 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(
             LuftdatenSensor(
                 luftdaten, sensor_type, name, icon, unit,
-                entry.data[CONF_SHOW_ON_MAP])
-        )
+                entry.data[CONF_SHOW_ON_MAP]))
 
     async_add_entities(sensors, True)
 
