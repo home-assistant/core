@@ -83,6 +83,8 @@ async def async_setup_freebox(hass, config, host, port):
             hass, 'sensor', DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(
             hass, 'device_tracker', DOMAIN, {}, config))
+        hass.async_create_task(async_load_platform(
+            hass, 'switch', DOMAIN, {}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""
