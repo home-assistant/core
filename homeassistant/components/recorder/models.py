@@ -17,7 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 6
 COLUMN_EVENT_TYPE_SIZE = 64
 
 _LOGGER = logging.getLogger(__name__)
