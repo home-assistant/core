@@ -28,7 +28,8 @@ from .const import DOMAIN
 from .const import LOGGER as _LOGGER
 from .device import Device
 
-REQUIREMENTS = ['async-upnp-client==0.13.7']
+
+REQUIREMENTS = ['async-upnp-client==0.13.8']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'

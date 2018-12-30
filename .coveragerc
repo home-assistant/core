@@ -303,6 +303,8 @@ omit =
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
+    homeassistant/components/*/raspyrfm.py
+
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 

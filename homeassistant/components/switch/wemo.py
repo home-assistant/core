@@ -35,7 +35,7 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo switches."""
     from pywemo import discovery
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             raise PlatformNotReady
 
         if device:
-            add_entities_callback([WemoSwitch(device)])
+            add_entities([WemoSwitch(device)])
 
 
 class WemoSwitch(SwitchDevice):
