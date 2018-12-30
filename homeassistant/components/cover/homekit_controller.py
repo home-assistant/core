@@ -119,7 +119,6 @@ class HomeKitCover(HomeKitEntity, CoverDevice):
                                 'value': MODE_HASS_TO_HOMEKIT[STATE_STOPPED]}]
             self.put_characteristics(characteristics)
 
-
     @property
     def name(self):
         """Return the name of the cover."""
