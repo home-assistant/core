@@ -1010,7 +1010,7 @@ pygtt==1.1.2
 pyhaversion==2.0.3
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.1.8
+pyhik==0.1.9
 
 # homeassistant.components.hive
 pyhiveapi==0.2.14
