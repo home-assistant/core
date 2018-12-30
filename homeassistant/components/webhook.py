@@ -108,11 +108,11 @@ class WebhookView(HomeAssistantView):
 
     async def post(self, request, webhook_id):
         """Handle webhook POST call."""
-        await self.handle(request, webhook_id)
+        return await self.handle(request, webhook_id)
 
     async def get(self, request, webhook_id):
         """Handle webhook GET call."""
-        await self.handle(request, webhook_id)
+        return await self.handle(request, webhook_id)
 
 
 @callback
