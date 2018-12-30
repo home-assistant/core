@@ -25,34 +25,6 @@ reconfigure_device:
       description: IEEE address of the device to reconfigure
       example: "00:0d:6f:00:05:7d:2d:34"
 
-get_zigbee_cluster_attributes:
-  description: >- 
-    Get attributes for the specified cluster on the specified entity. 
-  fields:
-    entity_id:
-      description: Entity id
-      example: "binary_sensor.centralite_3130_00e8fb4e_1"
-    cluster_id:
-      description: ZCL cluster to retrieve attributes for
-      example: 6
-    cluster_type:
-      description: type of the cluster (in or out)
-      example: "out"
-
-get_zigbee_cluster_commands:
-  description: >- 
-    Get commands for the specified cluster on the specified entity. 
-  fields:
-    entity_id:
-      description: Entity id
-      example: "binary_sensor.centralite_3130_00e8fb4e_1"
-    cluster_id:
-      description: ZCL cluster to retrieve attributes for
-      example: 6
-    cluster_type:
-      description: type of the cluster (in or out)
-      example: "out"
-
 set_zigbee_cluster_attribute:
   description: >- 
     Set attribute value for the specified cluster on the specified entity. 
