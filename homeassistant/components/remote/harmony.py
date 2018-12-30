@@ -224,12 +224,12 @@ class HarmonyRemote(remote.RemoteDevice):
         self.new_activity(self._client.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
-    def got_connected(self, _=None):
+    async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
         _LOGGER.debug("%s: connected to the HUB.", self._name)
         if not self._available:
             # We were disconnected before.
-            self.new_config()
+            await self.new_config()
         self._available = True
 
     async def got_disconnected(self, _=None):
