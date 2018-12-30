@@ -105,7 +105,7 @@ aiofreepybox==0.0.6
 aioftp==0.12.0
 
 # homeassistant.components.remote.harmony
-aioharmony==0.1.1
+aioharmony==0.1.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
