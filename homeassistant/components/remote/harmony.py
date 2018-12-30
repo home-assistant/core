@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['aioharmony==0.1.1']
+REQUIREMENTS = ['aioharmony==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,6 +216,7 @@ class HarmonyRemote(remote.RemoteDevice):
                       activity_name)
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
+        self._available = True
         self.async_schedule_update_ha_state()
 
     async def new_config(self, _=None):
@@ -224,13 +225,12 @@ class HarmonyRemote(remote.RemoteDevice):
         self.new_activity(self._client.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
-    def got_connected(self, _=None):
+    async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
         _LOGGER.debug("%s: connected to the HUB.", self._name)
         if not self._available:
             # We were disconnected before.
-            self.new_config()
-        self._available = True
+            await self.new_config()
 
     async def got_disconnected(self, _=None):
         """Notification that we're disconnected from the HUB."""
