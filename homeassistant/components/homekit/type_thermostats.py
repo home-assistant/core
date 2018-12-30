@@ -89,7 +89,7 @@ class Thermostat(HomeAccessory):
 
         # Display units characteristic
         self.char_display_units = serv_thermostat.configure_char(
-            CHAR_TEMP_DISPLAY_UNITS, value=0)
+            CHAR_TEMP_DISPLAY_UNITS, value=UNIT_HASS_TO_HOMEKIT[self._unit])
 
         # If the device supports it: high and low temperature characteristics
         self.char_cooling_thresh_temp = None
