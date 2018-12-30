@@ -34,7 +34,7 @@ DEVICES = []
 CONF_DEVICE_CACHE = 'harmony_device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
-SERVICE_CHANGE_CHANNEL = 'change_channel'
+SERVICE_CHANGE_CHANNEL = 'harmony_change_channel'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string,
@@ -50,7 +50,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 })
 
 HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_CHANNEL): cv.positive_int
 })
 
