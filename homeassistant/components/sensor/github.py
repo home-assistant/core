@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_PASSWORD, CONF_PATH, CONF_NAME,
-    CONF_SERVER, CONF_SCAN_INTERVAL)
+    CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
