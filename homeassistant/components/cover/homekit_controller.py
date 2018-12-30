@@ -3,7 +3,6 @@
 Support for Homekit Garage Covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homekit_controller/
-https://developer.apple.com/documentation/homekit/hmservicetypegaragedooropener
 """
 import logging
 
@@ -39,7 +38,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
         add_entities([HomeKitCover(accessory, discovery_info)], True)
 
-
 class HomeKitCover(HomeKitEntity, CoverDevice):
     """Representation of a Homekit cover."""
 
@@ -73,12 +71,6 @@ class HomeKitCover(HomeKitEntity, CoverDevice):
             elif ctype == "name":
                 self._chars['name'] = characteristic['iid']
                 self._name = characteristic['value']
-            elif ctype == "position.hold":
-                _LOGGER.debug(" position.hold %s", characteristic)
-                # position.hold {'iid': 14, 'type': '0000006F-0000-1000-8000-0026BB765***', 'perms': ['pw'], 'format': 'bool'}
-                # https://developer.apple.com/documentation/homekit/hmcharacteristictypeholdposition
-                # self._chars['position.hold'] = characteristic['iid']
-                # self._position_hold = characteristic['value']
 
     @property
     def is_closed(self):
