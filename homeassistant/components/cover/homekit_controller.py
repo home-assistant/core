@@ -6,9 +6,10 @@ https://home-assistant.io/components/cover.homekit_controller/
 """
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
-from homeassistant.components.cover import (CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
+from homeassistant.components.homekit_controller import (
+    HomeKitEntity, KNOWN_ACCESSORIES)
+from homeassistant.components.cover import (
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, STATE_CLOSING, STATE_OPENING)
     
