@@ -26,6 +26,7 @@ async def async_setup_platform(
 
 class FbxWifiSwitch(ToggleEntity):
     """Representation of a freebox wifi switch."""
+
     def __init__(self, fbx):
         """Initilize the Wifi switch."""
         self._name = 'Freebox WiFi'
