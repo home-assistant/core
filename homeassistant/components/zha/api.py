@@ -30,7 +30,6 @@ ATTR_DURATION = 'duration'
 ATTR_IEEE_ADDRESS = 'ieee_address'
 ATTR_IEEE = 'ieee'
 
-
 SERVICE_PERMIT = 'permit'
 SERVICE_REMOVE = 'remove'
 SERVICE_RECONFIGURE_DEVICE = 'reconfigure_device'
