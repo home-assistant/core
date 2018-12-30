@@ -10,7 +10,7 @@ from random import uniform
 
 from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
-from homeassistant.components.zha.helpers import configure_reporting
+from homeassistant.components.zha.helpers import bind_configure_reporting
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -100,7 +100,7 @@ class ZhaEntity(entity.Entity):
             skip_bind = False  # bind cluster only for the 1st configured attr
             for attr, details in attrs.items():
                 min_report_interval, max_report_interval, change = details
-                await configure_reporting(
+                await bind_configure_reporting(
                     self.entity_id, cluster, attr,
                     min_report=min_report_interval,
                     max_report=max_report_interval,
