@@ -248,7 +248,7 @@ def setup(hass, config):
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    pairing_file = os.path.join(data_dir, 'pairings.json')
+    pairing_file = os.path.join(data_dir, 'pairing.json')
     if os.path.exists(pairing_file):
         controller.load_data(pairing_file)
 
