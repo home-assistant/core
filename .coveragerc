@@ -213,6 +213,9 @@ omit =
     homeassistant/components/lametric.py
     homeassistant/components/*/lametric.py
 
+    homeassistant/components/lcn.py
+    homeassistant/components/*/lcn.py
+
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
 
@@ -299,6 +302,8 @@ omit =
 
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
+
+    homeassistant/components/*/raspyrfm.py
 
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
