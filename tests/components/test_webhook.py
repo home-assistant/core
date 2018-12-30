@@ -139,7 +139,8 @@ async def test_getting_webhook(hass, mock_client):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register(webhook_id, handle)
+    hass.components.webhook.async_register(
+        'test', "Test hook", webhook_id, handle)
 
     resp = await mock_client.get('/api/webhook/{}'.format(webhook_id))
     assert resp.status == 200
