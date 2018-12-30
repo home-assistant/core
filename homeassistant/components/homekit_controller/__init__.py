@@ -24,6 +24,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'outlet': 'switch',
     'switch': 'switch',
     'thermostat': 'climate',
+    'garage-door-opener': 'cover',
 }
 
 HOMEKIT_IGNORE = [
