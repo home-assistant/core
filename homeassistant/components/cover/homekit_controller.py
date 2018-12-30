@@ -39,6 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
         add_entities([HomeKitCover(accessory, discovery_info)], True)
 
+
 class HomeKitCover(HomeKitEntity, CoverDevice):
     """Representation of a Homekit cover."""
 
