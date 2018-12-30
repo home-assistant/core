@@ -127,7 +127,7 @@ class HomeKitCover(HomeKitEntity, CoverDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return not self._door_state_current in [STATE_UNKNOWN]
+        return self._door_state_current not in [STATE_UNKNOWN]
 
     @property
     def device_state_attributes(self):
