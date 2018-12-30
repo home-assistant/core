@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyatv==0.3.10']
+REQUIREMENTS = ['pyatv==0.3.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,14 +77,13 @@ def request_configuration(hass, config, atv, credentials):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
-    @asyncio.coroutine
-    def configuration_callback(callback_data):
+    async def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         from pyatv import exceptions
         pin = callback_data.get('pin')
 
         try:
-            yield from atv.airplay.finish_authentication(pin)
+            await atv.airplay.finish_authentication(pin)
             hass.components.persistent_notification.async_create(
                 'Authentication succeeded!<br /><br />Add the following '
                 'to credentials: in your apple_tv configuration:<br /><br />'
@@ -108,11 +107,10 @@ def request_configuration(hass, config, atv, credentials):
     )
 
 
-@asyncio.coroutine
-def scan_for_apple_tvs(hass):
+async def scan_for_apple_tvs(hass):
     """Scan for devices and present a notification of the ones found."""
     import pyatv
-    atvs = yield from pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
+    atvs = await pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
 
     devices = []
     for atv in atvs:
@@ -132,14 +130,12 @@ def scan_for_apple_tvs(hass):
         notification_id=NOTIFICATION_SCAN_ID)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Apple TV component."""
     if DATA_APPLE_TV not in hass.data:
         hass.data[DATA_APPLE_TV] = {}
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle service calls."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
@@ -158,17 +154,16 @@ def async_setup(hass, config):
                 continue
 
             atv = device.atv
-            credentials = yield from atv.airplay.generate_credentials()
-            yield from atv.airplay.load_credentials(credentials)
+            credentials = await atv.airplay.generate_credentials()
+            await atv.airplay.load_credentials(credentials)
             _LOGGER.debug('Generated new credentials: %s', credentials)
-            yield from atv.airplay.start_authentication()
+            await atv.airplay.start_authentication()
             hass.async_add_job(request_configuration,
                                hass, config, atv, credentials)
 
-    @asyncio.coroutine
-    def atv_discovered(service, info):
+    async def atv_discovered(service, info):
         """Set up an Apple TV that was auto discovered."""
-        yield from _setup_atv(hass, {
+        await _setup_atv(hass, config, {
             CONF_NAME: info['name'],
             CONF_HOST: info['host'],
             CONF_LOGIN_ID: info['properties']['hG'],
@@ -177,9 +172,9 @@ def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_APPLE_TV, atv_discovered)
 
-    tasks = [_setup_atv(hass, conf) for conf in config.get(DOMAIN, [])]
+    tasks = [_setup_atv(hass, config, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_service_handler,
@@ -192,8 +187,7 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def _setup_atv(hass, atv_config):
+async def _setup_atv(hass, hass_config, atv_config):
     """Set up an Apple TV."""
     import pyatv
     name = atv_config.get(CONF_NAME)
@@ -209,7 +203,7 @@ def _setup_atv(hass, atv_config):
     session = async_get_clientsession(hass)
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
     if credentials:
-        yield from atv.airplay.load_credentials(credentials)
+        await atv.airplay.load_credentials(credentials)
 
     power = AppleTVPowerManager(hass, atv, start_off)
     hass.data[DATA_APPLE_TV][host] = {
@@ -218,10 +212,10 @@ def _setup_atv(hass, atv_config):
     }
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'media_player', DOMAIN, atv_config))
+        hass, 'media_player', DOMAIN, atv_config, hass_config))
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'remote', DOMAIN, atv_config))
+        hass, 'remote', DOMAIN, atv_config, hass_config))
 
 
 class AppleTVPowerManager:
@@ -258,4 +252,4 @@ class AppleTVPowerManager:
                 self.atv.push_updater.start()
 
             for listener in self.listeners:
-                self.hass.async_add_job(listener.async_update_ha_state())
+                self.hass.async_create_task(listener.async_update_ha_state())

@@ -4,7 +4,6 @@ Support for vacuum cleaner robots (botvacs).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -50,7 +49,7 @@ SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
 VACUUM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
@@ -94,101 +93,12 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn all or specified vacuum on."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn all or specified vacuum off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def locate(hass, entity_id=None):
-    """Locate all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_LOCATE, data)
-
-
-@bind_hass
-def clean_spot(hass, entity_id=None):
-    """Tell all or specified vacuum to perform a spot clean-up."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLEAN_SPOT, data)
-
-
-@bind_hass
-def return_to_base(hass, entity_id=None):
-    """Tell all or specified vacuum to return to base."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_RETURN_TO_BASE, data)
-
-
-@bind_hass
-def start_pause(hass, entity_id=None):
-    """Tell all or specified vacuum to start or pause the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_START_PAUSE, data)
-
-
-@bind_hass
-def start(hass, entity_id=None):
-    """Tell all or specified vacuum to start or resume the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_START, data)
-
-
-@bind_hass
-def pause(hass, entity_id=None):
-    """Tell all or the specified vacuum to pause the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_PAUSE, data)
-
-
-@bind_hass
-def stop(hass, entity_id=None):
-    """Stop all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_STOP, data)
-
-
-@bind_hass
-def set_fan_speed(hass, fan_speed, entity_id=None):
-    """Set fan speed for all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_FAN_SPEED] = fan_speed
-    hass.services.call(DOMAIN, SERVICE_SET_FAN_SPEED, data)
-
-
-@bind_hass
-def send_command(hass, command, params=None, entity_id=None):
-    """Send command to all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_COMMAND] = command
-    if params is not None:
-        data[ATTR_PARAMS] = params
-    hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the vacuum component."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,

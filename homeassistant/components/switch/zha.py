@@ -7,7 +7,11 @@ at https://home-assistant.io/components/switch.zha/
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components import zha
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,21 +20,38 @@ DEPENDENCIES = ['zha']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Zigbee Home Automation switches."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
-
-    from zigpy.zcl.clusters.general import OnOff
-    in_clusters = discovery_info['in_clusters']
-    cluster = in_clusters[OnOff.cluster_id]
-    await cluster.bind()
-    await cluster.configure_reporting(0, 0, 600, 1,)
-
-    async_add_entities([Switch(**discovery_info)], update_before_add=True)
+    """Old way of setting up Zigbee Home Automation switches."""
+    pass
 
 
-class Switch(zha.Entity, SwitchDevice):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation switch from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    switches = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
+    if switches is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    switches.values())
+        del hass.data[DATA_ZHA][DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA switches."""
+    entities = []
+    for discovery_info in discovery_infos:
+        entities.append(Switch(**discovery_info))
+
+    async_add_entities(entities, update_before_add=True)
+
+
+class Switch(ZhaEntity, SwitchDevice):
     """ZHA switch."""
 
     _domain = DOMAIN
@@ -38,15 +59,25 @@ class Switch(zha.Entity, SwitchDevice):
 
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
-        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        cluster = self._endpoint.on_off
+        attr_name = cluster.attributes.get(attribute, [attribute])[0]
+        _LOGGER.debug("%s: Attribute '%s' on cluster '%s' updated to %s",
+                      self.entity_id, attr_name, cluster.ep_attribute, value)
         if attribute == self.value_attribute:
             self._state = value
             self.async_schedule_update_ha_state()
 
     @property
-    def should_poll(self) -> bool:
-        """Let zha handle polling."""
-        return False
+    def zcl_reporting_config(self) -> dict:
+        """Retrun a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {'on_off': REPORT_CONFIG_IMMEDIATE}
+        }
+
+    @property
+    def cluster(self):
+        """Entity's cluster."""
+        return self._endpoint.on_off
 
     @property
     def is_on(self) -> bool:
@@ -59,26 +90,34 @@ class Switch(zha.Entity, SwitchDevice):
         """Turn the entity on."""
         from zigpy.exceptions import DeliveryError
         try:
-            await self._endpoint.on_off.on()
+            res = await self._endpoint.on_off.on()
+            _LOGGER.debug("%s: turned 'on': %s", self.entity_id, res[1])
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the switch on: %s", ex)
+            _LOGGER.error("%s: Unable to turn the switch on: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 1
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
         try:
-            await self._endpoint.on_off.off()
+            res = await self._endpoint.on_off.off()
+            _LOGGER.debug("%s: turned 'off': %s", self.entity_id, res[1])
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the switch off: %s", ex)
+            _LOGGER.error("%s: Unable to turn the switch off: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 0
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.on_off,
-                                     ['on_off'])
+        result = await helpers.safe_read(self.cluster,
+                                         ['on_off'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)

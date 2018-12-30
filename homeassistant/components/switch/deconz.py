@@ -5,8 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
+    DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -26,37 +25,45 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are based same device class as lights in deCONZ.
     """
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_switch(lights):
         """Add switch from deCONZ."""
         entities = []
         for light in lights:
             if light.type in POWER_PLUGS:
-                entities.append(DeconzPowerPlug(light))
+                entities.append(DeconzPowerPlug(light, gateway))
             elif light.type in SIRENS:
-                entities.append(DeconzSiren(light))
+                entities.append(DeconzSiren(light, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))
 
-    async_add_switch(hass.data[DATA_DECONZ].lights.values())
+    async_add_switch(gateway.api.lights.values())
 
 
 class DeconzSwitch(SwitchDevice):
     """Representation of a deCONZ switch."""
 
-    def __init__(self, switch):
+    def __init__(self, switch, gateway):
         """Set up switch and add update callback to get data from websocket."""
         self._switch = switch
+        self.gateway = gateway
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Subscribe to switches events."""
         self._switch.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._switch.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._switch.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect switch object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._switch.remove_callback(self.async_update_callback)
         self._switch = None
 
@@ -78,7 +85,7 @@ class DeconzSwitch(SwitchDevice):
     @property
     def available(self):
         """Return True if light is available."""
-        return self._switch.reachable
+        return self.gateway.available and self._switch.reachable
 
     @property
     def should_poll(self):
@@ -92,6 +99,7 @@ class DeconzSwitch(SwitchDevice):
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -99,6 +107,7 @@ class DeconzSwitch(SwitchDevice):
             'model': self._switch.modelid,
             'name': self._switch.name,
             'sw_version': self._switch.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 

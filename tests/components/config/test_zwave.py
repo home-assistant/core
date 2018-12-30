@@ -16,12 +16,12 @@ VIEW_NAME = 'api:config:zwave:device_config'
 
 
 @pytest.fixture
-def client(loop, hass, aiohttp_client):
+def client(loop, hass, hass_client):
     """Client to communicate with Z-Wave config views."""
     with patch.object(config, 'SECTIONS', ['zwave']):
         loop.run_until_complete(async_setup_component(hass, 'config', {}))
 
-    return loop.run_until_complete(aiohttp_client(hass.http.app))
+    return loop.run_until_complete(hass_client())
 
 
 @asyncio.coroutine

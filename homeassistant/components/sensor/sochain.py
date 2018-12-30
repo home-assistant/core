@@ -4,7 +4,6 @@ Support for watching multiple cryptocurrencies.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sochain/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -35,9 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the sochain sensors."""
     from pysochain import ChainSo
     address = config.get(CONF_ADDRESS)
@@ -82,7 +80,6 @@ class SochainSensor(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest state of the sensor."""
-        yield from self.chainso.async_get_data()
+        await self.chainso.async_get_data()

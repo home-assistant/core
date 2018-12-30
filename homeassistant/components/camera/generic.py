@@ -46,9 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a generic IP Camera."""
     async_add_entities([GenericCamera(hass, config)])
 
@@ -93,8 +92,7 @@ class GenericCamera(Camera):
         return run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render()
@@ -118,7 +116,7 @@ class GenericCamera(Camera):
                     _LOGGER.error("Error getting camera image: %s", error)
                     return self._last_image
 
-            self._last_image = yield from self.hass.async_add_job(
+            self._last_image = await self.hass.async_add_job(
                 fetch)
         # async
         else:
@@ -126,9 +124,9 @@ class GenericCamera(Camera):
                 websession = async_get_clientsession(
                     self.hass, verify_ssl=self.verify_ssl)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    response = yield from websession.get(
+                    response = await websession.get(
                         url, auth=self._auth)
-                self._last_image = yield from response.read()
+                self._last_image = await response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout getting camera image")
                 return self._last_image

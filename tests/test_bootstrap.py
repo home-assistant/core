@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
     'homeassistant.bootstrap.conf_util.process_ha_config_upgrade', Mock())
 @patch('homeassistant.util.location.detect_location_info',
        Mock(return_value=None))
-@patch('homeassistant.bootstrap.async_register_signal_handling', Mock())
 @patch('os.path.isfile', Mock(return_value=True))
 @patch('os.access', Mock(return_value=True))
 @patch('homeassistant.bootstrap.async_enable_logging',
@@ -41,7 +40,6 @@ def test_from_config_file(hass):
 
 
 @patch('homeassistant.bootstrap.async_enable_logging', Mock())
-@patch('homeassistant.bootstrap.async_register_signal_handling', Mock())
 @asyncio.coroutine
 def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""

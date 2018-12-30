@@ -56,6 +56,10 @@ class TahomaSensor(TahomaDevice, Entity):
             return 'lx'
         if self.tahoma_device.type == 'Humidity Sensor':
             return '%'
+        if self.tahoma_device.type == 'rtds:RTDSContactSensor':
+            return None
+        if self.tahoma_device.type == 'rtds:RTDSMotionSensor':
+            return None
 
     def update(self):
         """Update the state."""
@@ -63,12 +67,21 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:LuminanceState']
+            self._available = bool(self.tahoma_device.active_states.get(
+                'core:StatusState') == 'available')
         if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
-
-        self._available = bool(self.tahoma_device.active_states.get(
-            'core:StatusState') == 'available')
+            self._available = bool(self.tahoma_device.active_states.get(
+                'core:StatusState') == 'available')
+        if self.tahoma_device.type == 'rtds:RTDSContactSensor':
+            self.current_value = self.tahoma_device.active_states[
+                'core:ContactState']
+            self._available = True
+        if self.tahoma_device.type == 'rtds:RTDSMotionSensor':
+            self.current_value = self.tahoma_device.active_states[
+                'core:OccupancyState']
+            self._available = True
 
         _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
 

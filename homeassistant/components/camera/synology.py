@@ -4,7 +4,6 @@ Support for Synology Surveillance Station Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.synology/
 """
-import asyncio
 import logging
 
 import requests
@@ -38,9 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a Synology IP Camera."""
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
@@ -87,15 +85,14 @@ class SynologyCamera(Camera):
         """Return bytes of camera image."""
         return self._surveillance.get_camera_image(self._camera_id)
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Return a MJPEG stream image response directly from the camera."""
         streaming_url = self._camera.video_stream_url
 
         websession = async_get_clientsession(self.hass, self._verify_ssl)
         stream_coro = websession.get(streaming_url)
 
-        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+        return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):

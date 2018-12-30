@@ -98,7 +98,7 @@ class GPSLoggerView(HomeAssistantView):
         if 'activity' in data:
             attrs['activity'] = data['activity']
 
-        hass.async_add_job(self.async_see(
+        hass.async_create_task(self.async_see(
             dev_id=device,
             gps=gps_location, battery=battery,
             gps_accuracy=accuracy,

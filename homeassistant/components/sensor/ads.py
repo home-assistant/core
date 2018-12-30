@@ -4,7 +4,6 @@ Support for ADS sensors.
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/sensor.ads/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -62,8 +61,7 @@ class AdsSensor(Entity):
         self.ads_type = ads_type
         self.factor = factor
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register device notification."""
         def update(name, value):
             """Handle device notifications."""

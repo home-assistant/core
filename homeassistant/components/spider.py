@@ -56,7 +56,7 @@ def setup(hass, config):
         }
 
         for component in SPIDER_COMPONENTS:
-            load_platform(hass, component, DOMAIN, {})
+            load_platform(hass, component, DOMAIN, {}, config)
 
         _LOGGER.debug("Connection with Spider API succeeded")
         return True

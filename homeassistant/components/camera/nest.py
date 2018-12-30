@@ -63,6 +63,23 @@ class NestCamera(Camera):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the serial number."""
+        return self.device.device_id
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (nest.DOMAIN, self.device.device_id)
+            },
+            'name': self.device.name_long,
+            'manufacturer': 'Nest Labs',
+            'model': "Camera",
+        }
+
+    @property
     def should_poll(self):
         """Nest camera should poll periodically."""
         return True

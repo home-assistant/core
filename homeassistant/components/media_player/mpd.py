@@ -79,7 +79,7 @@ class MpdDevice(MediaPlayerDevice):
 
         # set up MPD client
         self._client = mpd.MPDClient()
-        self._client.timeout = 5
+        self._client.timeout = 30
         self._client.idletimeout = None
 
     def _connect(self):
@@ -319,7 +319,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(self._status['random'])
+        return bool(int(self._status['random']))
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""

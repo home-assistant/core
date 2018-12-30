@@ -85,16 +85,11 @@ class TestEfergySensor(unittest.TestCase):
             'sensor': ONE_SENSOR_CONFIG,
         })
 
-        self.assertEqual(
-            '38.21', self.hass.states.get('sensor.energy_consumed').state)
-        self.assertEqual(
-            '1580', self.hass.states.get('sensor.energy_usage').state)
-        self.assertEqual(
-            'ok', self.hass.states.get('sensor.energy_budget').state)
-        self.assertEqual(
-            '5.27', self.hass.states.get('sensor.energy_cost').state)
-        self.assertEqual(
-            '1628', self.hass.states.get('sensor.efergy_728386').state)
+        assert '38.21' == self.hass.states.get('sensor.energy_consumed').state
+        assert '1580' == self.hass.states.get('sensor.energy_usage').state
+        assert 'ok' == self.hass.states.get('sensor.energy_budget').state
+        assert '5.27' == self.hass.states.get('sensor.energy_cost').state
+        assert '1628' == self.hass.states.get('sensor.efergy_728386').state
 
     @requests_mock.Mocker()
     def test_multi_sensor_readings(self, mock):
@@ -104,9 +99,6 @@ class TestEfergySensor(unittest.TestCase):
             'sensor': MULTI_SENSOR_CONFIG,
         })
 
-        self.assertEqual(
-            '218', self.hass.states.get('sensor.efergy_728386').state)
-        self.assertEqual(
-            '1808', self.hass.states.get('sensor.efergy_0').state)
-        self.assertEqual(
-            '312', self.hass.states.get('sensor.efergy_728387').state)
+        assert '218' == self.hass.states.get('sensor.efergy_728386').state
+        assert '1808' == self.hass.states.get('sensor.efergy_0').state
+        assert '312' == self.hass.states.get('sensor.efergy_728387').state

@@ -33,7 +33,7 @@ class Lock(HomeAccessory):
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self._code = self.config.get(ATTR_CODE)
-        self.flag_target_state = False
+        self._flag_state = False
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
         self.char_current_state = serv_lock_mechanism.configure_char(
@@ -45,8 +45,8 @@ class Lock(HomeAccessory):
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
-        self.flag_target_state = True
+        _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
+        self._flag_state = True
 
         hass_value = HOMEKIT_TO_HASS.get(value)
         service = STATE_TO_SERVICE[hass_value]
@@ -54,7 +54,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update lock after state changed."""
@@ -67,6 +67,6 @@ class Lock(HomeAccessory):
 
             # LockTargetState only supports locked and unlocked
             if hass_state in (STATE_LOCKED, STATE_UNLOCKED):
-                if not self.flag_target_state:
+                if not self._flag_state:
                     self.char_target_state.set_value(current_lock_state)
-                self.flag_target_state = False
+                self._flag_state = False

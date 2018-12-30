@@ -104,16 +104,15 @@ class CityBikesRequestError(Exception):
     pass
 
 
-@asyncio.coroutine
-def async_citybikes_request(hass, uri, schema):
+async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
     try:
         session = async_get_clientsession(hass)
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            req = yield from session.get(DEFAULT_ENDPOINT.format(uri=uri))
+            req = await session.get(DEFAULT_ENDPOINT.format(uri=uri))
 
-        json_response = yield from req.json()
+        json_response = await req.json()
         return schema(json_response)
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not connect to CityBikes API endpoint")
@@ -125,9 +124,8 @@ def async_citybikes_request(hass, uri, schema):
     raise CityBikesRequestError
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the CityBikes platform."""
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {MONITORED_NETWORKS: {}}
@@ -142,7 +140,7 @@ def async_setup_platform(hass, config, async_add_entities,
         radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
 
     if not network_id:
-        network_id = yield from CityBikesNetwork.get_closest_network_id(
+        network_id = await CityBikesNetwork.get_closest_network_id(
             hass, latitude, longitude)
 
     if network_id not in hass.data[PLATFORM][MONITORED_NETWORKS]:
@@ -153,7 +151,7 @@ def async_setup_platform(hass, config, async_add_entities,
     else:
         network = hass.data[PLATFORM][MONITORED_NETWORKS][network_id]
 
-    yield from network.ready.wait()
+    await network.ready.wait()
 
     devices = []
     for station in network.stations:
@@ -177,13 +175,12 @@ class CityBikesNetwork:
     NETWORKS_LIST_LOADING = asyncio.Condition()
 
     @classmethod
-    @asyncio.coroutine
-    def get_closest_network_id(cls, hass, latitude, longitude):
+    async def get_closest_network_id(cls, hass, latitude, longitude):
         """Return the id of the network closest to provided location."""
         try:
-            yield from cls.NETWORKS_LIST_LOADING.acquire()
+            await cls.NETWORKS_LIST_LOADING.acquire()
             if cls.NETWORKS_LIST is None:
-                networks = yield from async_citybikes_request(
+                networks = await async_citybikes_request(
                     hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA)
                 cls.NETWORKS_LIST = networks[ATTR_NETWORKS_LIST]
             result = None
@@ -210,11 +207,10 @@ class CityBikesNetwork:
         self.stations = []
         self.ready = asyncio.Event()
 
-    @asyncio.coroutine
-    def async_refresh(self, now=None):
+    async def async_refresh(self, now=None):
         """Refresh the state of the network."""
         try:
-            network = yield from async_citybikes_request(
+            network = await async_citybikes_request(
                 self.hass, STATIONS_URI.format(uid=self.network_id),
                 STATIONS_RESPONSE_SCHEMA)
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
@@ -253,8 +249,7 @@ class CityBikesStation(Entity):
             return self._station_data[ATTR_NAME]
         return None
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update station state."""
         if self._network.ready.is_set():
             for station in self._network.stations:

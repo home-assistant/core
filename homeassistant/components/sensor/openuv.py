@@ -64,7 +64,7 @@ class OpenUvSensor(OpenUvEntity):
         """Initialize the sensor."""
         super().__init__(openuv)
 
-        self._dispatch_remove = None
+        self._async_unsub_dispatcher_connect = None
         self._entry_id = entry_id
         self._icon = icon
         self._latitude = openuv.client.latitude
@@ -100,16 +100,20 @@ class OpenUvSensor(OpenUvEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    @callback
-    def _update_data(self):
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatch_remove = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, self._update_data)
-        self.async_on_remove(self._dispatch_remove)
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     async def async_update(self):
         """Update the state."""

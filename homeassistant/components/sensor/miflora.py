@@ -4,20 +4,17 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
 """
-import asyncio
 from datetime import timedelta
 import logging
 import voluptuous as vol
-import async_timeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
-    CONF_SCAN_INTERVAL)
-
+    CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+from homeassistant.core import callback
 
 REQUIREMENTS = ['miflora==0.4.0']
 
@@ -58,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-variable
+        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:
@@ -75,13 +72,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     devs = []
 
-    try:
-        with async_timeout.timeout(9):
-            await hass.async_add_executor_job(poller.fill_cache)
-    except asyncio.TimeoutError:
-        _LOGGER.error('Unable to connect to %s', config.get(CONF_MAC))
-        raise PlatformNotReady
-
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
         unit = SENSOR_TYPES[parameter][1]
@@ -93,7 +83,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         devs.append(MiFloraSensor(
             poller, parameter, name, unit, force_update, median))
 
-    async_add_entities(devs, update_before_add=True)
+    async_add_entities(devs)
 
 
 class MiFloraSensor(Entity):
@@ -112,6 +102,14 @@ class MiFloraSensor(Entity):
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
         self.median_count = median
+
+    async def async_added_to_hass(self):
+        """Set initial state."""
+        @callback
+        def on_startup(_):
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, on_startup)
 
     @property
     def name(self):

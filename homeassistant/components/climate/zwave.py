@@ -6,14 +6,15 @@ https://home-assistant.io/components/climate.zwave/
 """
 # Because we do not compile openzwave on CI
 import logging
+from homeassistant.core import callback
 from homeassistant.components.climate import (
     DOMAIN, ClimateDevice, STATE_AUTO, STATE_COOL, STATE_HEAT,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +41,22 @@ STATE_MAPPINGS = {
     'Cool': STATE_COOL,
     'Auto': STATE_AUTO,
 }
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave climate devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Climate device from Config Entry."""
+    @callback
+    def async_add_climate(climate):
+        """Add Z-Wave Climate Device."""
+        async_add_entities([climate])
+
+    async_dispatcher_connect(hass, 'zwave_new_climate', async_add_climate)
 
 
 def get_device(hass, values, **kwargs):

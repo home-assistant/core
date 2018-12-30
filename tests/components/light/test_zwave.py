@@ -105,6 +105,26 @@ def test_dimmer_turn_on(mock_openzwave):
         assert entity_id == device.entity_id
 
 
+def test_dimmer_min_brightness(mock_openzwave):
+    """Test turning on a dimmable Z-Wave light to its minimum brightness."""
+    node = MockNode()
+    value = MockValue(data=0, node=node)
+    values = MockLightValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
+
+    assert not device.is_on
+
+    device.turn_on(**{ATTR_BRIGHTNESS: 1})
+
+    assert device.is_on
+    assert device.brightness == 1
+
+    device.turn_on(**{ATTR_BRIGHTNESS: 0})
+
+    assert device.is_on
+    assert device.brightness == 0
+
+
 def test_dimmer_transitions(mock_openzwave):
     """Test dimming transition on a dimmable Z-Wave light."""
     node = MockNode()

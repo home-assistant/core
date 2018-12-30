@@ -4,17 +4,16 @@ Support for Homekit device discovery.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homekit_controller/
 """
-import http
 import json
 import logging
 import os
-import uuid
 
 from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import call_later
 
-REQUIREMENTS = ['homekit==0.10']
+REQUIREMENTS = ['homekit==0.12.0']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
@@ -23,6 +22,7 @@ HOMEKIT_DIR = '.homekit'
 HOMEKIT_ACCESSORY_DISPATCH = {
     'lightbulb': 'light',
     'outlet': 'switch',
+    'switch': 'switch',
     'thermostat': 'climate',
 }
 
@@ -34,37 +34,32 @@ HOMEKIT_IGNORE = [
 
 KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
 KNOWN_DEVICES = "{}-devices".format(DOMAIN)
+CONTROLLER = "{}-controller".format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUEST_TIMEOUT = 5  # seconds
+RETRY_INTERVAL = 60  # seconds
 
-def homekit_http_send(self, message_body=None, encode_chunked=False):
-    r"""Send the currently buffered request and clear the buffer.
+PAIRING_FILE = "pairing.json"
 
-    Appends an extra \r\n to the buffer.
-    A message_body may be specified, to be appended to the request.
-    """
-    # pylint: disable=protected-access
-    self._buffer.extend((b"", b""))
-    msg = b"\r\n".join(self._buffer)
-    del self._buffer[:]
 
-    if message_body is not None:
-        msg = msg + message_body
-
-    self.send(msg)
+class HomeKitConnectionError(ConnectionError):
+    """Raised when unable to connect to target device."""
 
 
 def get_serial(accessory):
     """Obtain the serial number of a HomeKit device."""
     # pylint: disable=import-error
-    import homekit
+    from homekit.model.services import ServicesTypes
+    from homekit.model.characteristics import CharacteristicsTypes
+
     for service in accessory['services']:
-        if homekit.ServicesTypes.get_short(service['type']) != \
+        if ServicesTypes.get_short(service['type']) != \
            'accessory-information':
             continue
         for characteristic in service['characteristics']:
-            ctype = homekit.CharacteristicsTypes.get_short(
+            ctype = CharacteristicsTypes.get_short(
                 characteristic['type'])
             if ctype != 'serial-number':
                 continue
@@ -77,11 +72,10 @@ class HKDevice():
 
     def __init__(self, hass, host, port, model, hkid, config_num, config):
         """Initialise a generic HomeKit device."""
-        # pylint: disable=import-error
-        import homekit
-
         _LOGGER.info("Setting up Homekit device %s", model)
         self.hass = hass
+        self.controller = hass.data[CONTROLLER]
+
         self.host = host
         self.port = port
         self.model = model
@@ -89,20 +83,11 @@ class HKDevice():
         self.config_num = config_num
         self.config = config
         self.configurator = hass.components.configurator
+        self._connection_warning_logged = False
 
-        data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
-        if not os.path.isdir(data_dir):
-            os.mkdir(data_dir)
+        self.pairing = self.controller.pairings.get(hkid)
 
-        self.pairing_file = os.path.join(data_dir, 'hk-{}'.format(hkid))
-        self.pairing_data = homekit.load_pairing(self.pairing_file)
-
-        # Monkey patch httpclient for increased compatibility
-        # pylint: disable=protected-access
-        http.client.HTTPConnection._send_output = homekit_http_send
-
-        self.conn = http.client.HTTPConnection(self.host, port=self.port)
-        if self.pairing_data is not None:
+        if self.pairing is not None:
             self.accessory_setup()
         else:
             self.configure()
@@ -110,15 +95,18 @@ class HKDevice():
     def accessory_setup(self):
         """Handle setup of a HomeKit accessory."""
         # pylint: disable=import-error
-        import homekit
-        self.controllerkey, self.accessorykey = \
-            homekit.get_session_keys(self.conn, self.pairing_data)
-        self.securecon = homekit.SecureHttp(self.conn.sock,
-                                            self.accessorykey,
-                                            self.controllerkey)
-        response = self.securecon.get('/accessories')
-        data = json.loads(response.read().decode())
-        for accessory in data['accessories']:
+        from homekit.model.services import ServicesTypes
+
+        self.pairing.pairing_data['AccessoryIP'] = self.host
+        self.pairing.pairing_data['AccessoryPort'] = self.port
+
+        try:
+            data = self.pairing.list_accessories_and_characteristics()
+        except HomeKitConnectionError:
+            call_later(
+                self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
+            return
+        for accessory in data:
             serial = get_serial(accessory)
             if serial in self.hass.data[KNOWN_ACCESSORIES]:
                 continue
@@ -128,7 +116,7 @@ class HKDevice():
                 service_info = {'serial': serial,
                                 'aid': aid,
                                 'iid': service['iid']}
-                devtype = homekit.ServicesTypes.get_short(service['type'])
+                devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
                 component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:
@@ -137,33 +125,36 @@ class HKDevice():
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
-        # pylint: disable=import-error
-        import homekit
-        pairing_id = str(uuid.uuid4())
+        import homekit  # pylint: disable=import-error
         code = callback_data.get('code').strip()
         try:
-            self.pairing_data = homekit.perform_pair_setup(self.conn, code,
-                                                           pairing_id)
-        except homekit.exception.UnavailableError:
+            self.controller.perform_pairing(self.hkid, self.hkid, code)
+        except homekit.UnavailableError:
             error_msg = "This accessory is already paired to another device. \
                          Please reset the accessory and try again."
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             return
-        except homekit.exception.AuthenticationError:
+        except homekit.AuthenticationError:
             error_msg = "Incorrect HomeKit code for {}. Please check it and \
                          try again.".format(self.model)
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             return
-        except homekit.exception.UnknownError:
+        except homekit.UnknownError:
             error_msg = "Received an unknown error. Please file a bug."
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             raise
 
-        if self.pairing_data is not None:
-            homekit.save_pairing(self.pairing_file, self.pairing_data)
+        self.pairing = self.controller.pairings.get(self.hkid)
+        if self.pairing is not None:
+            pairing_file = os.path.join(
+                self.hass.config.path(),
+                HOMEKIT_DIR,
+                PAIRING_FILE,
+            )
+            self.controller.save_data(pairing_file)
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.request_done(_configurator)
             self.accessory_setup()
@@ -192,7 +183,7 @@ class HomeKitEntity(Entity):
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
         self._name = accessory.model
-        self._securecon = accessory.securecon
+        self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
         self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
@@ -201,9 +192,12 @@ class HomeKitEntity(Entity):
 
     def update(self):
         """Obtain a HomeKit device's state."""
-        response = self._securecon.get('/accessories')
-        data = json.loads(response.read().decode())
-        for accessory in data['accessories']:
+        try:
+            pairing = self._accessory.pairing
+            data = pairing.list_accessories_and_characteristics()
+        except HomeKitConnectionError:
+            return
+        for accessory in data:
             if accessory['aid'] != self._aid:
                 continue
             for service in accessory['services']:
@@ -222,18 +216,56 @@ class HomeKitEntity(Entity):
         """Return the name of the device if any."""
         return self._name
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._accessory.pairing is not None
+
     def update_characteristics(self, characteristics):
         """Synchronise a HomeKit device state with Home Assistant."""
         raise NotImplementedError
 
     def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
-        body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        chars = []
+        for row in characteristics:
+            chars.append((
+                row['aid'],
+                row['iid'],
+                row['value'],
+            ))
+
+        self._accessory.pairing.put_characteristics(chars)
 
 
 def setup(hass, config):
     """Set up for Homekit devices."""
+    # pylint: disable=import-error
+    import homekit
+    from homekit.controller import Pairing
+
+    hass.data[CONTROLLER] = controller = homekit.Controller()
+
+    data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+
+    pairing_file = os.path.join(data_dir, PAIRING_FILE)
+    if os.path.exists(pairing_file):
+        controller.load_data(pairing_file)
+
+    # Migrate any existing pairings to the new internal homekit_python format
+    for device in os.listdir(data_dir):
+        if not device.startswith('hk-'):
+            continue
+        alias = device[3:]
+        if alias in controller.pairings:
+            continue
+        with open(os.path.join(data_dir, device)) as pairing_data_fp:
+            pairing_data = json.load(pairing_data_fp)
+        controller.pairings[alias] = Pairing(pairing_data)
+        controller.save_data(pairing_file)
+
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
         # model, id

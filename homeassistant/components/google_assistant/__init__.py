@@ -14,28 +14,24 @@ import async_timeout
 import voluptuous as vol
 
 # Typing imports
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.loader import bind_hass
 
 from .const import (
-    DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
-    CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
-    DEFAULT_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_API_KEY,
+    DOMAIN, CONF_PROJECT_ID, CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
-    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT
+    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT, CONF_ALLOW_UNLOCK,
+    DEFAULT_ALLOW_UNLOCK
 )
-from .auth import GoogleAssistantAuthView
 from .http import async_register_http
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-
-DEFAULT_AGENT_USER_ID = 'home-assistant'
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -44,44 +40,36 @@ ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ROOM_HINT): cv.string
 })
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Required(CONF_PROJECT_ID): cv.string,
-            vol.Required(CONF_CLIENT_ID): cv.string,
-            vol.Required(CONF_ACCESS_TOKEN): cv.string,
-            vol.Optional(CONF_EXPOSE_BY_DEFAULT,
-                         default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
-            vol.Optional(CONF_EXPOSED_DOMAINS,
-                         default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
-            vol.Optional(CONF_AGENT_USER_ID,
-                         default=DEFAULT_AGENT_USER_ID): cv.string,
-            vol.Optional(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
-        }
-    },
-    extra=vol.ALLOW_EXTRA)
+GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
+    vol.Required(CONF_PROJECT_ID): cv.string,
+    vol.Optional(CONF_EXPOSE_BY_DEFAULT,
+                 default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
+    vol.Optional(CONF_EXPOSED_DOMAINS,
+                 default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
+    vol.Optional(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
+    vol.Optional(CONF_ALLOW_UNLOCK,
+                 default=DEFAULT_ALLOW_UNLOCK): cv.boolean
+}, extra=vol.PREVENT_EXTRA)
 
-
-@bind_hass
-def request_sync(hass):
-    """Request sync."""
-    hass.services.call(DOMAIN, SERVICE_REQUEST_SYNC)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: GOOGLE_ASSISTANT_SCHEMA
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
-    agent_user_id = config.get(CONF_AGENT_USER_ID)
     api_key = config.get(CONF_API_KEY)
-    hass.http.register_view(GoogleAssistantAuthView(hass, config))
     async_register_http(hass, config)
 
-    async def request_sync_service_handler(call):
+    async def request_sync_service_handler(call: ServiceCall):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(5, loop=hass.loop):
+            with async_timeout.timeout(15, loop=hass.loop):
+                agent_user_id = call.data.get('agent_user_id') or \
+                                call.context.user_id
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},

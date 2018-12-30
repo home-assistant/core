@@ -1,14 +1,14 @@
 """Http views to control the config manager."""
-import asyncio
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 
 
-@asyncio.coroutine
-def async_setup(hass):
+async def async_setup(hass):
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
@@ -44,8 +44,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
     url = '/api/config/config_entries/entry'
     name = 'api:config:config_entries:entry'
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """List flows in progress."""
         hass = request.app['hass']
         return self.json([{
@@ -54,6 +53,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'title': entry.title,
             'source': entry.source,
             'state': entry.state,
+            'connection_class': entry.connection_class,
         } for entry in hass.config_entries.async_entries()])
 
 
@@ -63,13 +63,15 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
     url = '/api/config/config_entries/entry/{entry_id}'
     name = 'api:config:config_entries:entry:resource'
 
-    @asyncio.coroutine
-    def delete(self, request, entry_id):
+    async def delete(self, request, entry_id):
         """Delete a config entry."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(config_entry_id=entry_id, permission='remove')
+
         hass = request.app['hass']
 
         try:
-            result = yield from hass.config_entries.async_remove(entry_id)
+            result = await hass.config_entries.async_remove(entry_id)
         except config_entries.UnknownEntry:
             return self.json_message('Invalid entry specified', 404)
 
@@ -82,18 +84,31 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     url = '/api/config/config_entries/flow'
     name = 'api:config:config_entries:flow'
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """List flows that are in progress but not started by a user.
 
         Example of a non-user initiated flow is a discovered Hue hub that
         requires user interaction to finish setup.
         """
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
         hass = request.app['hass']
 
         return self.json([
             flw for flw in hass.config_entries.flow.async_progress()
             if flw['context']['source'] != config_entries.SOURCE_USER])
+
+    # pylint: disable=arguments-differ
+    async def post(self, request):
+        """Handle a POST request."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request)
 
 
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
@@ -102,6 +117,24 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     url = '/api/config/config_entries/flow/{flow_id}'
     name = 'api:config:config_entries:flow:resource'
 
+    async def get(self, request, flow_id):
+        """Get the current state of a data_entry_flow."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
+        return await super().get(request, flow_id)
+
+    # pylint: disable=arguments-differ
+    async def post(self, request, flow_id):
+        """Handle a POST request."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)
+
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
     """View to query available flows."""
@@ -109,7 +142,6 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
     url = '/api/config/config_entries/flow_handlers'
     name = 'api:config:config_entries:flow_handlers'
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """List available flow handlers."""
         return self.json(config_entries.FLOWS)

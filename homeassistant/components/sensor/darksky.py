@@ -4,30 +4,31 @@ Support for Dark Sky weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.darksky/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from requests.exceptions import (
+    ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
-from requests.exceptions import ConnectionError as ConnectError, \
-    HTTPError, Timeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
-    CONF_LATITUDE, CONF_LONGITUDE, UNIT_UV_INDEX)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Powered by Dark Sky"
-CONF_UNITS = 'units'
-CONF_UPDATE_INTERVAL = 'update_interval'
+ATTRIBUTION = "Powered by Dark Sky"
+
 CONF_FORECAST = 'forecast'
 CONF_LANGUAGE = 'language'
+CONF_UNITS = 'units'
+CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_LANGUAGE = 'en'
 
@@ -43,7 +44,8 @@ DEPRECATED_SENSOR_TYPES = {
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None, None, []],
+    'summary': ['Summary', None, None, None, None, None, None,
+                ['currently', 'hourly', 'daily']],
     'minutely_summary': ['Minutely Summary',
                          None, None, None, None, None, None, []],
     'hourly_summary': ['Hourly Summary', None, None, None, None, None, None,
@@ -72,7 +74,7 @@ SENSOR_TYPES = {
                             ['hourly', 'daily']],
     'temperature': ['Temperature',
                     '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                    ['currently', 'hourly']],
+                    ['currently', 'hourly', 'daily']],
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
@@ -82,6 +84,9 @@ SENSOR_TYPES = {
                    'mdi:weather-windy', ['currently', 'hourly', 'daily']],
     'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°', 'mdi:compass',
                      ['currently', 'hourly', 'daily']],
+    'wind_gust': ['Wind Gust', 'm/s', 'mph', 'km/h', 'mph', 'mph',
+                  'mdi:weather-windy-variant',
+                  ['currently', 'hourly', 'daily']],
     'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%',
                     'mdi:weather-partlycloudy',
                     ['currently', 'hourly', 'daily']],
@@ -95,15 +100,13 @@ SENSOR_TYPES = {
               ['currently', 'hourly', 'daily']],
     'apparent_temperature_max': ['Daily High Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
-                                 'mdi:thermometer',
-                                 ['currently', 'hourly', 'daily']],
+                                 'mdi:thermometer', ['daily']],
     'apparent_temperature_high': ["Daytime High Apparent Temperature",
                                   '°C', '°F', '°C', '°C', '°C',
                                   'mdi:thermometer', ['daily']],
     'apparent_temperature_min': ['Daily Low Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
-                                 'mdi:thermometer',
-                                 ['currently', 'hourly', 'daily']],
+                                 'mdi:thermometer', ['daily']],
     'apparent_temperature_low': ['Overnight Low Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
                                  'mdi:thermometer', ['daily']],
@@ -121,37 +124,47 @@ SENSOR_TYPES = {
                         ['daily']],
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
-                             'mdi:thermometer',
-                             ['currently', 'hourly', 'daily']],
+                             'mdi:thermometer', ['daily']],
     'uv_index': ['UV Index',
                  UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
                  UNIT_UV_INDEX, UNIT_UV_INDEX, 'mdi:weather-sunny',
                  ['currently', 'hourly', 'daily']],
     'moon_phase': ['Moon Phase', None, None, None, None, None,
                    'mdi:weather-night', ['daily']],
+    'sunrise_time': ['Sunrise', None, None, None, None, None,
+                     'mdi:white-balance-sunny', ['daily']],
+    'sunset_time': ['Sunset', None, None, None, None, None,
+                    'mdi:weather-night', ['daily']],
 }
 
 CONDITION_PICTURES = {
-    'clear-day': '/static/images/darksky/weather-sunny.svg',
-    'clear-night': '/static/images/darksky/weather-night.svg',
-    'rain': '/static/images/darksky/weather-pouring.svg',
-    'snow': '/static/images/darksky/weather-snowy.svg',
-    'sleet': '/static/images/darksky/weather-hail.svg',
-    'wind': '/static/images/darksky/weather-windy.svg',
-    'fog': '/static/images/darksky/weather-fog.svg',
-    'cloudy': '/static/images/darksky/weather-cloudy.svg',
-    'partly-cloudy-day': '/static/images/darksky/weather-partlycloudy.svg',
-    'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
+    'clear-day': ['/static/images/darksky/weather-sunny.svg',
+                  'mdi:weather-sunny'],
+    'clear-night': ['/static/images/darksky/weather-night.svg',
+                    'mdi:weather-sunny'],
+    'rain': ['/static/images/darksky/weather-pouring.svg',
+             'mdi:weather-pouring'],
+    'snow': ['/static/images/darksky/weather-snowy.svg',
+             'mdi:weather-snowy'],
+    'sleet': ['/static/images/darksky/weather-hail.svg',
+              'mdi:weather-snowy-rainy'],
+    'wind': ['/static/images/darksky/weather-windy.svg',
+             'mdi:weather-windy'],
+    'fog': ['/static/images/darksky/weather-fog.svg',
+            'mdi:weather-fog'],
+    'cloudy': ['/static/images/darksky/weather-cloudy.svg',
+               'mdi:weather-cloudy'],
+    'partly-cloudy-day': ['/static/images/darksky/weather-partlycloudy.svg',
+                          'mdi:weather-partlycloudy'],
+    'partly-cloudy-night': ['/static/images/darksky/weather-cloudy.svg',
+                            'mdi:weather-partlycloudy'],
 }
 
 # Language Supported Codes
 LANGUAGE_CODES = [
-    'ar', 'az', 'be', 'bg', 'bs', 'ca',
-    'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'hr', 'hu', 'id',
-    'is', 'it', 'ja', 'ka', 'kw', 'nb',
-    'nl', 'pl', 'pt', 'ro', 'ru', 'sk',
-    'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
+    'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
+    'et', 'fi', 'fr', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'kw', 'nb',
+    'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
     'x-pig-latin', 'zh', 'zh-tw',
 ]
 
@@ -170,7 +183,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
-        vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
+        vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
 })
 
 
@@ -179,6 +192,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     language = config.get(CONF_LANGUAGE)
+    interval = config.get(CONF_UPDATE_INTERVAL)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -188,18 +202,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = 'us'
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
-        latitude=latitude,
-        longitude=longitude,
-        units=units,
-        language=language,
-        interval=config.get(CONF_UPDATE_INTERVAL))
+        api_key=config.get(CONF_API_KEY, None), latitude=latitude,
+        longitude=longitude, units=units, language=language, interval=interval)
     forecast_data.update()
     forecast_data.update_currently()
 
     # If connection failed don't setup platform.
     if forecast_data.data is None:
-        return False
+        return
 
     name = config.get(CONF_NAME)
 
@@ -207,9 +217,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
-            _LOGGER.warning("Monitored condition %s is deprecated",
-                            variable)
-        sensors.append(DarkSkySensor(forecast_data, variable, name))
+            _LOGGER.warning("Monitored condition %s is deprecated", variable)
+        if (not SENSOR_TYPES[variable][7] or
+                'currently' in SENSOR_TYPES[variable][7]):
+            sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(
@@ -221,7 +232,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DarkSkySensor(Entity):
     """Implementation of a Dark Sky sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name, forecast_day=0):
+    def __init__(self, forecast_data, sensor_type, name, forecast_day=None):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -235,7 +246,7 @@ class DarkSkySensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.forecast_day == 0:
+        if self.forecast_day is None:
             return '{} {}'.format(self.client_name, self._name)
 
         return '{} {} {}'.format(
@@ -263,7 +274,7 @@ class DarkSkySensor(Entity):
             return None
 
         if self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon]
+            return CONDITION_PICTURES[self._icon][0]
 
         return None
 
@@ -281,13 +292,16 @@ class DarkSkySensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if 'summary' in self.type and self._icon in CONDITION_PICTURES:
+            return CONDITION_PICTURES[self._icon][1]
+
         return SENSOR_TYPES[self.type][6]
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
@@ -309,30 +323,18 @@ class DarkSkySensor(Entity):
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
             self._icon = getattr(hourly, 'icon', '')
-        elif self.forecast_day > 0 or (
-                self.type in ['daily_summary',
-                              'temperature_min',
-                              'temperature_low',
-                              'temperature_max',
-                              'temperature_high',
-                              'apparent_temperature_min',
-                              'apparent_temperature_low',
-                              'apparent_temperature_max',
-                              'apparent_temperature_high',
-                              'precip_intensity_max',
-                              'precip_accumulation',
-                              'moon_phase']):
+        elif self.type == 'daily_summary':
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
-            if self.type == 'daily_summary':
-                self._state = getattr(daily, 'summary', '')
-                self._icon = getattr(daily, 'icon', '')
+            self._state = getattr(daily, 'summary', '')
+            self._icon = getattr(daily, 'icon', '')
+        elif self.forecast_day is not None:
+            self.forecast_data.update_daily()
+            daily = self.forecast_data.data_daily
+            if hasattr(daily, 'data'):
+                self._state = self.get_state(daily.data[self.forecast_day])
             else:
-                if hasattr(daily, 'data'):
-                    self._state = self.get_state(
-                        daily.data[self.forecast_day])
-                else:
-                    self._state = 0
+                self._state = 0
         else:
             self.forecast_data.update_currently()
             currently = self.forecast_data.data_currently
@@ -357,12 +359,14 @@ class DarkSkySensor(Entity):
         # percentages
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
+
         if self.type in ['dew_point', 'temperature', 'apparent_temperature',
-                         'temperature_min', 'temperature_max',
-                         'apparent_temperature_min',
-                         'apparent_temperature_max',
-                         'precip_accumulation',
-                         'pressure', 'ozone', 'uvIndex']:
+                         'temperature_low', 'apparent_temperature_low',
+                         'temperature_min', 'apparent_temperature_min',
+                         'temperature_high', 'apparent_temperature_high',
+                         'temperature_max', 'apparent_temperature_max'
+                         'precip_accumulation', 'pressure', 'ozone',
+                         'uvIndex']:
             return round(state, 1)
         return state
 
@@ -371,7 +375,7 @@ def convert_to_camel(data):
     """
     Convert snake case (foo_bar_bat) to camel case (fooBarBat).
 
-    This is not pythonic, but needed for certain situations
+    This is not pythonic, but needed for certain situations.
     """
     components = data.split('_')
     return components[0] + "".join(x.title() for x in components[1:])
@@ -380,8 +384,8 @@ def convert_to_camel(data):
 class DarkSkyData:
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, language,
-                 interval):
+    def __init__(
+            self, api_key, latitude, longitude, units, language, interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude

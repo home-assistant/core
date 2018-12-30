@@ -47,7 +47,7 @@ class TestRing(unittest.TestCase):
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         response = ring.setup(self.hass, self.config)
-        self.assertTrue(response)
+        assert response
 
     @requests_mock.Mocker()
     def test_setup_component_no_login(self, mock):

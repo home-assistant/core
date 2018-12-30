@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS)
-from homeassistant.core import split_entity_id
+    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS,
+    EVENT_SCRIPT_STARTED, ATTR_NAME)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -60,41 +60,6 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 def is_on(hass, entity_id):
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
-
-
-@bind_hass
-def turn_on(hass, entity_id, variables=None, context=None):
-    """Turn script on."""
-    _, object_id = split_entity_id(entity_id)
-
-    hass.services.call(DOMAIN, object_id, variables, context=context)
-
-
-@bind_hass
-def turn_off(hass, entity_id):
-    """Turn script on."""
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def toggle(hass, entity_id):
-    """Toggle the script."""
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def reload(hass):
-    """Reload script component."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
-
-
-@bind_hass
-def async_reload(hass):
-    """Reload the scripts from config.
-
-    Returns a coroutine object.
-    """
-    return hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 async def async_setup(hass, config):
@@ -206,8 +171,14 @@ class ScriptEntity(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the script on."""
+        context = kwargs.get('context')
+        self.async_set_context(context)
+        self.hass.bus.async_fire(EVENT_SCRIPT_STARTED, {
+            ATTR_NAME: self.script.name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }, context=context)
         await self.script.async_run(
-            kwargs.get(ATTR_VARIABLES), kwargs.get('context'))
+            kwargs.get(ATTR_VARIABLES), context)
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

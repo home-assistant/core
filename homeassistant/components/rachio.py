@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['rachiopy==0.1.3']
@@ -22,11 +22,19 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'rachio'
 
+SUPPORTED_DOMAINS = ['switch', 'binary_sensor']
+
+# Manual run length
+CONF_MANUAL_RUN_MINS = 'manual_run_mins'
+DEFAULT_MANUAL_RUN_MINS = 10
 CONF_CUSTOM_URL = 'hass_url_override'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_CUSTOM_URL): cv.string,
+        vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS):
+            cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -112,7 +120,7 @@ def setup(hass, config) -> bool:
 
     # Get the API user
     try:
-        person = RachioPerson(hass, rachio)
+        person = RachioPerson(hass, rachio, config[DOMAIN])
     except AssertionError as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         return False
@@ -126,17 +134,23 @@ def setup(hass, config) -> bool:
 
     # Enable component
     hass.data[DOMAIN] = person
+
+    # Load platforms
+    for component in SUPPORTED_DOMAINS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
+
     return True
 
 
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, hass, rachio):
+    def __init__(self, hass, rachio, config):
         """Create an object from the provided API instance."""
         # Use API token to get user ID
         self._hass = hass
         self.rachio = rachio
+        self.config = config
 
         response = rachio.person.getInfo()
         assert int(response[0][KEY_STATUS]) == 200, "API key error"

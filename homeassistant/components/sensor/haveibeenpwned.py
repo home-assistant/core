@@ -42,24 +42,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, hass, email))
+        devices.append(HaveIBeenPwnedSensor(data, email))
 
     add_entities(devices)
-
-    # To make sure we get initial data for the sensors ignoring the normal
-    # throttle of 15 minutes but using an update throttle of 5 seconds
-    for sensor in devices:
-        sensor.update_nothrottle()
 
 
 class HaveIBeenPwnedSensor(Entity):
     """Implementation of a HaveIBeenPwned sensor."""
 
-    def __init__(self, data, hass, email):
+    def __init__(self, data, email):
         """Initialize the HaveIBeenPwned sensor."""
         self._state = None
         self._data = data
-        self._hass = hass
         self._email = email
         self._unit_of_measurement = "Breaches"
 
@@ -95,6 +89,12 @@ class HaveIBeenPwnedSensor(Entity):
 
         return val
 
+    async def async_added_to_hass(self):
+        """Get initial data."""
+        # To make sure we get initial data for the sensors ignoring the normal
+        # throttle of 15 minutes but using an update throttle of 5 seconds
+        self.hass.async_add_executor_job(self.update_nothrottle)
+
     def update_nothrottle(self, dummy=None):
         """Update sensor without throttle."""
         self._data.update_no_throttle()
@@ -106,13 +106,12 @@ class HaveIBeenPwnedSensor(Entity):
         # normal using update
         if self._email not in self._data.data:
             track_point_in_time(
-                self._hass, self.update_nothrottle,
+                self.hass, self.update_nothrottle,
                 dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES)
             return
 
-        if self._email in self._data.data:
-            self._state = len(self._data.data[self._email])
-            self.schedule_update_ha_state()
+        self._state = len(self._data.data[self._email])
+        self.schedule_update_ha_state()
 
     def update(self):
         """Update data and see if it contains data for our email."""

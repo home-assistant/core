@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "2FA Pinkod"
                 },
+                "description": "Missing english translation",
                 "title": "Tv\u00e5faktorsautentisering"
             },
             "user": {
@@ -21,6 +22,7 @@
                     "email": "E-postadress",
                     "password": "L\u00f6senord"
                 },
+                "description": "Missing english translation",
                 "title": "Google Hangouts-inloggning"
             }
         },

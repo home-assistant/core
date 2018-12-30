@@ -1,19 +1,28 @@
 """The tests for the mqtt climate component."""
-import unittest
 import copy
+import json
+import unittest
+from unittest.mock import ANY
+
+import pytest
+import voluptuous as vol
 
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM
 )
 from homeassistant.setup import setup_component
-from homeassistant.components import climate
+from homeassistant.components import climate, mqtt
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
-from tests.common import (get_test_home_assistant, mock_mqtt_component,
-                          fire_mqtt_message, mock_component)
+from homeassistant.components.mqtt.discovery import async_start
+from tests.common import (
+    async_fire_mqtt_message, async_mock_mqtt_component, async_setup_component,
+    fire_mqtt_message, get_test_home_assistant, mock_component,
+    mock_mqtt_component, MockConfigEntry, mock_registry)
+from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
 
@@ -49,12 +58,12 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(21, state.attributes.get('temperature'))
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual(DEFAULT_MIN_TEMP, state.attributes.get('min_temp'))
-        self.assertEqual(DEFAULT_MAX_TEMP, state.attributes.get('max_temp'))
+        assert 21 == state.attributes.get('temperature')
+        assert "low" == state.attributes.get('fan_mode')
+        assert "off" == state.attributes.get('swing_mode')
+        assert "off" == state.attributes.get('operation_mode')
+        assert DEFAULT_MIN_TEMP == state.attributes.get('min_temp')
+        assert DEFAULT_MAX_TEMP == state.attributes.get('max_temp')
 
     def test_supported_features(self):
         """Test the supported_features."""
@@ -65,7 +74,7 @@ class TestMQTTClimate(unittest.TestCase):
                    SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
                    SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT)
 
-        self.assertEqual(state.attributes.get("supported_features"), support)
+        assert state.attributes.get("supported_features") == support
 
     def test_get_operation_modes(self):
         """Test that the operation list returns the correct modes."""
@@ -73,10 +82,10 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         modes = state.attributes.get('operation_list')
-        self.assertEqual([
+        assert [
             climate.STATE_AUTO, STATE_OFF, climate.STATE_COOL,
             climate.STATE_HEAT, climate.STATE_DRY, climate.STATE_FAN_ONLY
-        ], modes)
+        ] == modes
 
     def test_set_operation_bad_attr_and_state(self):
         """Test setting operation mode without required attribute.
@@ -86,26 +95,27 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
-        climate.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
+        with pytest.raises(vol.Invalid):
+            common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
 
     def test_set_operation(self):
         """Test setting of new operation mode."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
-        climate.set_operation_mode(self.hass, "cool", ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
+        common.set_operation_mode(self.hass, "cool", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("cool", state.attributes.get('operation_mode'))
-        self.assertEqual("cool", state.state)
+        assert "cool" == state.attributes.get('operation_mode')
+        assert "cool" == state.state
         self.mock_publish.async_publish.assert_called_once_with(
             'mode-topic', 'cool', 0, False)
 
@@ -116,26 +126,26 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
+        assert state.attributes.get('operation_mode') is None
+        assert "unknown" == state.state
 
-        climate.set_operation_mode(self.hass, "cool", ENTITY_CLIMATE)
+        common.set_operation_mode(self.hass, "cool", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
+        assert state.attributes.get('operation_mode') is None
+        assert "unknown" == state.state
 
         fire_mqtt_message(self.hass, 'mode-state', 'cool')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("cool", state.attributes.get('operation_mode'))
-        self.assertEqual("cool", state.state)
+        assert "cool" == state.attributes.get('operation_mode')
+        assert "cool" == state.state
 
         fire_mqtt_message(self.hass, 'mode-state', 'bogus mode')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("cool", state.attributes.get('operation_mode'))
-        self.assertEqual("cool", state.state)
+        assert "cool" == state.attributes.get('operation_mode')
+        assert "cool" == state.state
 
     def test_set_operation_with_power_command(self):
         """Test setting of new operation mode with power command enabled."""
@@ -144,24 +154,24 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
-        climate.set_operation_mode(self.hass, "on", ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
+        common.set_operation_mode(self.hass, "on", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('operation_mode'))
-        self.assertEqual("on", state.state)
+        assert "on" == state.attributes.get('operation_mode')
+        assert "on" == state.state
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('power-command', 'ON', 0, False),
             unittest.mock.call('mode-topic', 'on', 0, False)
         ])
         self.mock_publish.async_publish.reset_mock()
 
-        climate.set_operation_mode(self.hass, "off", ENTITY_CLIMATE)
+        common.set_operation_mode(self.hass, "off", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
-        self.assertEqual("off", state.state)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('power-command', 'OFF', 0, False),
             unittest.mock.call('mode-topic', 'off', 0, False)
@@ -173,11 +183,12 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
+        assert "low" == state.attributes.get('fan_mode')
+        with pytest.raises(vol.Invalid):
+            common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
+        assert "low" == state.attributes.get('fan_mode')
 
     def test_set_fan_mode_pessimistic(self):
         """Test setting of new fan mode in pessimistic mode."""
@@ -186,46 +197,47 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
+        assert state.attributes.get('fan_mode') is None
 
-        climate.set_fan_mode(self.hass, 'high', ENTITY_CLIMATE)
+        common.set_fan_mode(self.hass, 'high', ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
+        assert state.attributes.get('fan_mode') is None
 
         fire_mqtt_message(self.hass, 'fan-state', 'high')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('high', state.attributes.get('fan_mode'))
+        assert 'high' == state.attributes.get('fan_mode')
 
         fire_mqtt_message(self.hass, 'fan-state', 'bogus mode')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('high', state.attributes.get('fan_mode'))
+        assert 'high' == state.attributes.get('fan_mode')
 
     def test_set_fan_mode(self):
         """Test setting of new fan mode."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, 'high', ENTITY_CLIMATE)
+        assert "low" == state.attributes.get('fan_mode')
+        common.set_fan_mode(self.hass, 'high', ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'fan-mode-topic', 'high', 0, False)
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('high', state.attributes.get('fan_mode'))
+        assert 'high' == state.attributes.get('fan_mode')
 
     def test_set_swing_mode_bad_attr(self):
         """Test setting swing mode without required attribute."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('swing_mode')
+        with pytest.raises(vol.Invalid):
+            common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
+        assert "off" == state.attributes.get('swing_mode')
 
     def test_set_swing_pessimistic(self):
         """Test setting swing mode in pessimistic mode."""
@@ -234,66 +246,66 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
+        assert state.attributes.get('swing_mode') is None
 
-        climate.set_swing_mode(self.hass, 'on', ENTITY_CLIMATE)
+        common.set_swing_mode(self.hass, 'on', ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
+        assert state.attributes.get('swing_mode') is None
 
         fire_mqtt_message(self.hass, 'swing-state', 'on')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('swing_mode'))
+        assert "on" == state.attributes.get('swing_mode')
 
         fire_mqtt_message(self.hass, 'swing-state', 'bogus state')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('swing_mode'))
+        assert "on" == state.attributes.get('swing_mode')
 
     def test_set_swing(self):
         """Test setting of new swing mode."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, 'on', ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('swing_mode')
+        common.set_swing_mode(self.hass, 'on', ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'swing-mode-topic', 'on', 0, False)
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('swing_mode'))
+        assert "on" == state.attributes.get('swing_mode')
 
     def test_set_target_temperature(self):
         """Test setting the target temperature."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(21, state.attributes.get('temperature'))
-        climate.set_operation_mode(self.hass, 'heat', ENTITY_CLIMATE)
+        assert 21 == state.attributes.get('temperature')
+        common.set_operation_mode(self.hass, 'heat', ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('heat', state.attributes.get('operation_mode'))
+        assert 'heat' == state.attributes.get('operation_mode')
         self.mock_publish.async_publish.assert_called_once_with(
             'mode-topic', 'heat', 0, False)
         self.mock_publish.async_publish.reset_mock()
-        climate.set_temperature(self.hass, temperature=47,
-                                entity_id=ENTITY_CLIMATE)
+        common.set_temperature(self.hass, temperature=47,
+                               entity_id=ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(47, state.attributes.get('temperature'))
+        assert 47 == state.attributes.get('temperature')
         self.mock_publish.async_publish.assert_called_once_with(
             'temperature-topic', 47, 0, False)
 
         # also test directly supplying the operation mode to set_temperature
         self.mock_publish.async_publish.reset_mock()
-        climate.set_temperature(self.hass, temperature=21,
-                                operation_mode="cool",
-                                entity_id=ENTITY_CLIMATE)
+        common.set_temperature(self.hass, temperature=21,
+                               operation_mode="cool",
+                               entity_id=ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('cool', state.attributes.get('operation_mode'))
-        self.assertEqual(21, state.attributes.get('temperature'))
+        assert 'cool' == state.attributes.get('operation_mode')
+        assert 21 == state.attributes.get('temperature')
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('mode-topic', 'cool', 0, False),
             unittest.mock.call('temperature-topic', 21, 0, False)
@@ -307,24 +319,24 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(21, state.attributes.get('temperature'))
-        climate.set_operation_mode(self.hass, 'heat', ENTITY_CLIMATE)
+        assert state.attributes.get('temperature') is None
+        common.set_operation_mode(self.hass, 'heat', ENTITY_CLIMATE)
         self.hass.block_till_done()
-        climate.set_temperature(self.hass, temperature=47,
-                                entity_id=ENTITY_CLIMATE)
+        common.set_temperature(self.hass, temperature=47,
+                               entity_id=ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(21, state.attributes.get('temperature'))
+        assert state.attributes.get('temperature') is None
 
         fire_mqtt_message(self.hass, 'temperature-state', '1701')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(1701, state.attributes.get('temperature'))
+        assert 1701 == state.attributes.get('temperature')
 
         fire_mqtt_message(self.hass, 'temperature-state', 'not a number')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(1701, state.attributes.get('temperature'))
+        assert 1701 == state.attributes.get('temperature')
 
     def test_receive_mqtt_temperature(self):
         """Test getting the current temperature via MQTT."""
@@ -336,7 +348,7 @@ class TestMQTTClimate(unittest.TestCase):
         fire_mqtt_message(self.hass, 'current_temperature', '47')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(47, state.attributes.get('current_temperature'))
+        assert 47 == state.attributes.get('current_temperature')
 
     def test_set_away_mode_pessimistic(self):
         """Test setting of the away mode."""
@@ -345,27 +357,27 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
-        climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
+        common.set_away_mode(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
         fire_mqtt_message(self.hass, 'away-state', 'ON')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        assert 'on' == state.attributes.get('away_mode')
 
         fire_mqtt_message(self.hass, 'away-state', 'OFF')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
         fire_mqtt_message(self.hass, 'away-state', 'nonsense')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
     def test_set_away_mode(self):
         """Test setting of the away mode."""
@@ -376,21 +388,21 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
-        climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
+        assert 'off' == state.attributes.get('away_mode')
+        common.set_away_mode(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'away-mode-topic', 'AN', 0, False)
         self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        assert 'on' == state.attributes.get('away_mode')
 
-        climate.set_away_mode(self.hass, False, ENTITY_CLIMATE)
+        common.set_away_mode(self.hass, False, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'away-mode-topic', 'AUS', 0, False)
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
     def test_set_hold_pessimistic(self):
         """Test setting the hold mode in pessimistic mode."""
@@ -399,43 +411,43 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('hold_mode'))
+        assert state.attributes.get('hold_mode') is None
 
-        climate.set_hold_mode(self.hass, 'on', ENTITY_CLIMATE)
+        common.set_hold_mode(self.hass, 'on', ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('hold_mode'))
+        assert state.attributes.get('hold_mode') is None
 
         fire_mqtt_message(self.hass, 'hold-state', 'on')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('hold_mode'))
+        assert 'on' == state.attributes.get('hold_mode')
 
         fire_mqtt_message(self.hass, 'hold-state', 'off')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('hold_mode'))
+        assert 'off' == state.attributes.get('hold_mode')
 
     def test_set_hold(self):
         """Test setting the hold mode."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('hold_mode'))
-        climate.set_hold_mode(self.hass, 'on', ENTITY_CLIMATE)
+        assert state.attributes.get('hold_mode') is None
+        common.set_hold_mode(self.hass, 'on', ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'hold-topic', 'on', 0, False)
         self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('hold_mode'))
+        assert 'on' == state.attributes.get('hold_mode')
 
-        climate.set_hold_mode(self.hass, 'off', ENTITY_CLIMATE)
+        common.set_hold_mode(self.hass, 'off', ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'hold-topic', 'off', 0, False)
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('hold_mode'))
+        assert 'off' == state.attributes.get('hold_mode')
 
     def test_set_aux_pessimistic(self):
         """Test setting of the aux heating in pessimistic mode."""
@@ -444,48 +456,48 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
-        climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
+        common.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
         fire_mqtt_message(self.hass, 'aux-state', 'ON')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('aux_heat'))
+        assert 'on' == state.attributes.get('aux_heat')
 
         fire_mqtt_message(self.hass, 'aux-state', 'OFF')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
         fire_mqtt_message(self.hass, 'aux-state', 'nonsense')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
     def test_set_aux(self):
         """Test setting of the aux heating."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
-        climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
+        assert 'off' == state.attributes.get('aux_heat')
+        common.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'aux-topic', 'ON', 0, False)
         self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('aux_heat'))
+        assert 'on' == state.attributes.get('aux_heat')
 
-        climate.set_aux_heat(self.hass, False, ENTITY_CLIMATE)
+        common.set_aux_heat(self.hass, False, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'aux-topic', 'OFF', 0, False)
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
@@ -497,19 +509,19 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get('climate.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('climate.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('climate.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_set_with_templates(self):
         """Test setting of new fan mode in pessimistic mode."""
@@ -536,32 +548,32 @@ class TestMQTTClimate(unittest.TestCase):
 
         # Operation Mode
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('operation_mode'))
+        assert state.attributes.get('operation_mode') is None
         fire_mqtt_message(self.hass, 'mode-state', '"cool"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("cool", state.attributes.get('operation_mode'))
+        assert "cool" == state.attributes.get('operation_mode')
 
         # Fan Mode
-        self.assertEqual("low", state.attributes.get('fan_mode'))
+        assert state.attributes.get('fan_mode') is None
         fire_mqtt_message(self.hass, 'fan-state', '"high"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('high', state.attributes.get('fan_mode'))
+        assert 'high' == state.attributes.get('fan_mode')
 
         # Swing Mode
-        self.assertEqual("off", state.attributes.get('swing_mode'))
+        assert state.attributes.get('swing_mode') is None
         fire_mqtt_message(self.hass, 'swing-state', '"on"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('swing_mode'))
+        assert "on" == state.attributes.get('swing_mode')
 
         # Temperature - with valid value
-        self.assertEqual(21, state.attributes.get('temperature'))
+        assert state.attributes.get('temperature') is None
         fire_mqtt_message(self.hass, 'temperature-state', '"1031"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(1031, state.attributes.get('temperature'))
+        assert 1031 == state.attributes.get('temperature')
 
         # Temperature - with invalid value
         with self.assertLogs(level='ERROR') as log:
@@ -569,60 +581,58 @@ class TestMQTTClimate(unittest.TestCase):
             self.hass.block_till_done()
             state = self.hass.states.get(ENTITY_CLIMATE)
             # make sure, the invalid value gets logged...
-            self.assertEqual(len(log.output), 1)
-            self.assertEqual(len(log.records), 1)
-            self.assertIn(
-                "Could not parse temperature from -INVALID-",
+            assert len(log.output) == 1
+            assert len(log.records) == 1
+            assert "Could not parse temperature from -INVALID-" in \
                 log.output[0]
-            )
             # ... but the actual value stays unchanged.
-            self.assertEqual(1031, state.attributes.get('temperature'))
+            assert 1031 == state.attributes.get('temperature')
 
         # Away Mode
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
         fire_mqtt_message(self.hass, 'away-state', '"ON"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        assert 'on' == state.attributes.get('away_mode')
 
         # Away Mode with JSON values
         fire_mqtt_message(self.hass, 'away-state', 'false')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('away_mode'))
+        assert 'off' == state.attributes.get('away_mode')
 
         fire_mqtt_message(self.hass, 'away-state', 'true')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        assert 'on' == state.attributes.get('away_mode')
 
         # Hold Mode
-        self.assertEqual(None, state.attributes.get('hold_mode'))
+        assert state.attributes.get('hold_mode') is None
         fire_mqtt_message(self.hass, 'hold-state', """
             { "attribute": "somemode" }
         """)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('somemode', state.attributes.get('hold_mode'))
+        assert 'somemode' == state.attributes.get('hold_mode')
 
         # Aux mode
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
         fire_mqtt_message(self.hass, 'aux-state', 'switchmeon')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('aux_heat'))
+        assert 'on' == state.attributes.get('aux_heat')
 
         # anything other than 'switchmeon' should turn Aux mode off
         fire_mqtt_message(self.hass, 'aux-state', 'somerandomstring')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('off', state.attributes.get('aux_heat'))
+        assert 'off' == state.attributes.get('aux_heat')
 
         # Current temperature
         fire_mqtt_message(self.hass, 'current-temperature', '"74656"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(74656, state.attributes.get('current_temperature'))
+        assert 74656 == state.attributes.get('current_temperature')
 
     def test_min_temp_custom(self):
         """Test a custom min temp."""
@@ -634,8 +644,8 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         min_temp = state.attributes.get('min_temp')
 
-        self.assertIsInstance(min_temp, float)
-        self.assertEqual(26, state.attributes.get('min_temp'))
+        assert isinstance(min_temp, float)
+        assert 26 == state.attributes.get('min_temp')
 
     def test_max_temp_custom(self):
         """Test a custom max temp."""
@@ -647,5 +657,167 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         max_temp = state.attributes.get('max_temp')
 
-        self.assertIsInstance(max_temp, float)
-        self.assertEqual(60, max_temp)
+        assert isinstance(max_temp, float)
+        assert 60 == max_temp
+
+    def test_temp_step_custom(self):
+        """Test a custom temp step."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['temp_step'] = 0.01
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        temp_step = state.attributes.get('target_temp_step')
+
+        assert isinstance(temp_step, float)
+        assert 0.01 == temp_step
+
+
+async def test_unique_id(hass):
+    """Test unique id option only creates one climate per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, climate.DOMAIN, {
+        climate.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(climate.DOMAIN)) == 1
+
+
+async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
+    """Test removal of discovered climate."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data = (
+        '{ "name": "Beer" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('climate.beer')
+    assert state is None
+
+
+async def test_discovery_update_climate(hass, mqtt_mock, caplog):
+    """Test removal of discovered climate."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('climate.milk')
+    assert state is None
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT climate device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, climate.DOMAIN, {
+        climate.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'mode_state_topic': 'test-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('climate.beer', new_entity_id='climate.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('climate.beer')
+    assert state is None
+
+    state = hass.states.get('climate.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')

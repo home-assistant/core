@@ -21,7 +21,7 @@ class TestWorldClockSensor(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
 
     def tearDown(self):
         """Stop everything that was started."""

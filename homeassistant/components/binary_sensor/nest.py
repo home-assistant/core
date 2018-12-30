@@ -148,6 +148,11 @@ class NestActivityZoneSensor(NestBinarySensor):
         self._name = "{} {} activity".format(self._name, self.zone.name)
 
     @property
+    def unique_id(self):
+        """Return unique id based on camera serial and zone id."""
+        return "{}-{}".format(self.device.serial, self.zone.zone_id)
+
+    @property
     def device_class(self):
         """Return the device class of the binary sensor."""
         return 'motion'

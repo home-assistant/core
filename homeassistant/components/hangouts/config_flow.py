@@ -1,7 +1,7 @@
 """Config flow to configure Google Hangouts."""
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 
@@ -19,10 +19,11 @@ def configured_hangouts(hass):
 
 
 @config_entries.HANDLERS.register(HANGOUTS_DOMAIN)
-class HangoutsFlowHandler(data_entry_flow.FlowHandler):
+class HangoutsFlowHandler(config_entries.ConfigFlow):
     """Config flow Google Hangouts."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize Google Hangouts config flow."""

@@ -11,6 +11,7 @@ from homeassistant.components.light.demo import DemoLight
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
+    allow_unlock=False,
     agent_user_id='test-agent',
 )
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
@@ -35,6 +36,7 @@ async def test_sync_message(hass):
 
     config = helpers.Config(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
+        allow_unlock=False,
         agent_user_id='test-agent',
         entity_config={
             'light.demo_light': {

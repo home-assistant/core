@@ -16,35 +16,34 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.4.7']
+REQUIREMENTS = ['psutil==5.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = 'arg'
 
 SENSOR_TYPES = {
-    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
-    'disk_use': ['Disk use', 'GiB', 'mdi:harddisk'],
-    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk'],
-    'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
-    'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
-    'last_boot': ['Last boot', '', 'mdi:clock'],
-    'load_15m': ['Load (15m)', ' ', 'mdi:memory'],
-    'load_1m': ['Load (1m)', ' ', 'mdi:memory'],
-    'load_5m': ['Load (5m)', ' ', 'mdi:memory'],
-    'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
-    'memory_use': ['Memory use', 'MiB', 'mdi:memory'],
-    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
-    'network_in': ['Network in', 'MiB', 'mdi:server-network'],
-    'network_out': ['Network out', 'MiB', 'mdi:server-network'],
-    'packets_in': ['Packets in', ' ', 'mdi:server-network'],
-    'packets_out': ['Packets out', ' ', 'mdi:server-network'],
-    'process': ['Process', ' ', 'mdi:memory'],
-    'processor_use': ['Processor use', '%', 'mdi:memory'],
-    'since_last_boot': ['Since last boot', '', 'mdi:clock'],
-    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
-    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
-    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
+    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk', None],
+    'disk_use': ['Disk use', 'GiB', 'mdi:harddisk', None],
+    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk', None],
+    'ipv4_address': ['IPv4 address', '', 'mdi:server-network', None],
+    'ipv6_address': ['IPv6 address', '', 'mdi:server-network', None],
+    'last_boot': ['Last boot', '', 'mdi:clock', 'timestamp'],
+    'load_15m': ['Load (15m)', ' ', 'mdi:memory', None],
+    'load_1m': ['Load (1m)', ' ', 'mdi:memory', None],
+    'load_5m': ['Load (5m)', ' ', 'mdi:memory', None],
+    'memory_free': ['Memory free', 'MiB', 'mdi:memory', None],
+    'memory_use': ['Memory use', 'MiB', 'mdi:memory', None],
+    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory', None],
+    'network_in': ['Network in', 'MiB', 'mdi:server-network', None],
+    'network_out': ['Network out', 'MiB', 'mdi:server-network', None],
+    'packets_in': ['Packets in', ' ', 'mdi:server-network', None],
+    'packets_out': ['Packets out', ' ', 'mdi:server-network', None],
+    'process': ['Process', ' ', 'mdi:memory', None],
+    'processor_use': ['Processor use', '%', 'mdi:memory', None],
+    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk', None],
+    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk', None],
+    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -95,6 +94,11 @@ class SystemMonitorSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name.rstrip()
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return SENSOR_TYPES[self.type][3]
 
     @property
     def icon(self):
@@ -174,10 +178,7 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
-            ).date().isoformat()
-        elif self.type == 'since_last_boot':
-            self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
-                psutil.boot_time())
+            ).isoformat()
         elif self.type == 'load_1m':
             self._state = os.getloadavg()[0]
         elif self.type == 'load_5m':

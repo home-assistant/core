@@ -75,35 +75,35 @@ class CanaryCamera(Camera):
         """Return the camera motion detection status."""
         return not self._location.is_recording
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         self.renew_live_stream_session()
 
         from haffmpeg import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
-        image = yield from asyncio.shield(ffmpeg.get_image(
+        image = await asyncio.shield(ffmpeg.get_image(
             self._live_stream_session.live_stream_url,
             output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if self._live_stream_session is None:
             return
 
         from haffmpeg import CameraMjpeg
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             self._live_stream_session.live_stream_url,
             extra_cmd=self._ffmpeg_arguments)
 
-        yield from async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()
 
     @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
     def renew_live_stream_session(self):

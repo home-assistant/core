@@ -79,15 +79,15 @@ class TestHelpersDiscovery:
                                   platform_callback)
 
         discovery.load_platform(self.hass, 'test_component', 'test_platform',
-                                'discovery info')
+                                'discovery info', {'test_component': {}})
         self.hass.block_till_done()
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', None)
+            (self.hass, 'test_component', {'test_component': {}})
         self.hass.block_till_done()
 
         discovery.load_platform(self.hass, 'test_component_2', 'test_platform',
-                                'discovery info')
+                                'discovery info', {'test_component': {}})
         self.hass.block_till_done()
 
         assert len(calls) == 1
@@ -154,7 +154,7 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
 
-    @patch('homeassistant.bootstrap.async_register_signal_handling')
+    @patch('homeassistant.helpers.signal.async_register_signal_handling')
     def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 
@@ -202,7 +202,8 @@ class TestHelpersDiscovery:
 async def test_load_platform_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_load_platform(None, 'config', 'zwave')
+        await discovery.async_load_platform(None, 'config', 'zwave', {},
+                                            {'config': {}})
 
 
 async def test_discover_forbids_config():

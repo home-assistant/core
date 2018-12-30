@@ -86,6 +86,20 @@ class TestPlant(unittest.TestCase):
         assert sensor.state == 'problem'
         assert sensor.state_attributes['problem'] == 'battery low'
 
+    def test_initial_states(self):
+        """Test plant initialises attributes if sensor already exists."""
+        self.hass.states.set(MOISTURE_ENTITY, 5,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: GOOD_CONFIG
+            }
+        })
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        assert 5 == state.attributes[plant.READING_MOISTURE]
+
     def test_update_states(self):
         """Test updating the state of a sensor.
 
@@ -101,8 +115,8 @@ class TestPlant(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEqual(STATE_PROBLEM, state.state)
-        self.assertEqual(5, state.attributes[plant.READING_MOISTURE])
+        assert STATE_PROBLEM == state.state
+        assert 5 == state.attributes[plant.READING_MOISTURE]
 
     @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
                         reason="tests for loading from DB are unstable, thus"
@@ -132,10 +146,10 @@ class TestPlant(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        assert STATE_UNKNOWN == state.state
         max_brightness = state.attributes.get(
             plant.ATTR_MAX_BRIGHTNESS_HISTORY)
-        self.assertEqual(30, max_brightness)
+        assert 30 == max_brightness
 
     def test_brightness_history(self):
         """Test the min_brightness check."""
@@ -149,19 +163,19 @@ class TestPlant(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEqual(STATE_PROBLEM, state.state)
+        assert STATE_PROBLEM == state.state
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 600,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEqual(STATE_OK, state.state)
+        assert STATE_OK == state.state
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 100,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEqual(STATE_OK, state.state)
+        assert STATE_OK == state.state
 
 
 class TestDailyHistory(unittest.TestCase):
@@ -170,7 +184,7 @@ class TestDailyHistory(unittest.TestCase):
     def test_no_data(self):
         """Test with empty history."""
         dh = plant.DailyHistory(3)
-        self.assertIsNone(dh.max)
+        assert dh.max is None
 
     def test_one_day(self):
         """Test storing data for the same day."""
@@ -179,8 +193,8 @@ class TestDailyHistory(unittest.TestCase):
         for i in range(len(values)):
             dh.add_measurement(values[i])
             max_value = max(values[0:i+1])
-            self.assertEqual(1, len(dh._days))
-            self.assertEqual(dh.max, max_value)
+            assert 1 == len(dh._days)
+            assert dh.max == max_value
 
     def test_multiple_days(self):
         """Test storing data for different days."""
@@ -195,4 +209,4 @@ class TestDailyHistory(unittest.TestCase):
 
         for i in range(len(days)):
             dh.add_measurement(values[i], days[i])
-            self.assertEqual(max_values[i], dh.max)
+            assert max_values[i] == dh.max

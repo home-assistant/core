@@ -4,11 +4,11 @@ Support for functionality to keep track of the sun.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sun/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_ELEVATION
+from homeassistant.const import (
+    CONF_ELEVATION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
@@ -36,8 +36,7 @@ STATE_ATTR_NEXT_RISING = 'next_rising'
 STATE_ATTR_NEXT_SETTING = 'next_setting'
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track the state of the sun."""
     if config.get(CONF_ELEVATION) is not None:
         _LOGGER.warning(
@@ -111,9 +110,9 @@ class Sun(Entity):
         self.next_noon = get_astral_event_next(
             self.hass, 'solar_noon', utc_point_in_time)
         self.next_rising = get_astral_event_next(
-            self.hass, 'sunrise', utc_point_in_time)
+            self.hass, SUN_EVENT_SUNRISE, utc_point_in_time)
         self.next_setting = get_astral_event_next(
-            self.hass, 'sunset', utc_point_in_time)
+            self.hass, SUN_EVENT_SUNSET, utc_point_in_time)
 
     @callback
     def update_sun_position(self, utc_point_in_time):

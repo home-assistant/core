@@ -10,5 +10,5 @@ The process is straight-forward.
  - Ensure tests work.
  - Create a Pull Request against the [**dev**](https://github.com/home-assistant/home-assistant/tree/dev) branch of Home Assistant.
 
-Still interested? Then you should take a peek at the [developer documentation](https://home-assistant.io/developers/) to get more details.
+Still interested? Then you should take a peek at the [developer documentation](https://developers.home-assistant.io/) to get more details.
 

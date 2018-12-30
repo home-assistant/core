@@ -4,15 +4,14 @@ Support to interface with the Emby API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.emby/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK, SUPPORT_STOP, MediaPlayerDevice)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
@@ -21,7 +20,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.5']
+REQUIREMENTS = ['pyemby==1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -113,10 +111,9 @@ def async_setup_platform(hass, config, async_add_entities,
         """Start Emby connection."""
         emby.start()
 
-    @asyncio.coroutine
-    def stop_emby(event):
+    async def stop_emby(event):
         """Stop Emby connection."""
-        yield from emby.stop()
+        await emby.stop()
 
     emby.add_new_devices_callback(device_update_callback)
     emby.add_stale_devices_callback(device_removal_callback)
@@ -141,8 +138,7 @@ class EmbyDevice(MediaPlayerDevice):
         self.media_status_last_position = None
         self.media_status_received = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callback."""
         self.emby.add_update_callback(
             self.async_update_callback, self.device_id)
@@ -241,6 +237,8 @@ class EmbyDevice(MediaPlayerDevice):
             return MEDIA_TYPE_GENERIC_VIDEO
         if media_type == 'Audio':
             return MEDIA_TYPE_MUSIC
+        if media_type == 'TvChannel':
+            return MEDIA_TYPE_CHANNEL
         return None
 
     @property

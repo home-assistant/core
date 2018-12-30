@@ -58,7 +58,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         proximities = ['home', 'work']
 
@@ -93,7 +93,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
     def test_proximity(self):
         """Test the proximity."""
@@ -112,7 +112,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         state = self.hass.states.get('proximity.home')
         assert state.state == 'not set'
@@ -140,7 +140,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'home',
@@ -172,7 +172,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'home',
@@ -212,7 +212,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -243,7 +243,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -285,7 +285,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -327,7 +327,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'work',
@@ -356,7 +356,7 @@ class TestProximity(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+        assert setup_component(self.hass, DOMAIN, config)
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',

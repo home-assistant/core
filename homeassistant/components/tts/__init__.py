@@ -299,7 +299,7 @@ class SpeechManager:
         # Is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(key))
+            self.hass.async_create_task(self.async_file_to_mem(key))
         # Load speech from provider into memory
         else:
             filename = await self.async_get_tts_audio(
@@ -331,7 +331,7 @@ class SpeechManager:
         self._async_store_to_memcache(key, filename, data)
 
         if cache:
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.async_save_tts_audio(key, filename, data))
 
         return filename

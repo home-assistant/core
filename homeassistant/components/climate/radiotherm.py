@@ -4,7 +4,6 @@ Support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
-import asyncio
 import datetime
 import logging
 
@@ -18,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.4.1']
+REQUIREMENTS = ['radiotherm==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,8 +144,7 @@ class RadioThermostat(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         # Set the time on the device.  This shouldn't be in the
         # constructor because it's a network call.  We can't put it in
@@ -237,13 +235,15 @@ class RadioThermostat(ClimateDevice):
             self._name = self.device.name['raw']
 
         # Request the current state from the thermostat.
-        data = self.device.tstat['raw']
+        import radiotherm
+        try:
+            data = self.device.tstat['raw']
+        except radiotherm.validate.RadiothermTstatError:
+            _LOGGER.error('%s (%s) was busy (invalid value returned)',
+                          self._name, self.device.host)
+            return
 
         current_temp = data['temp']
-        if current_temp == -1:
-            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
-                          self.device.host)
-            return
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp

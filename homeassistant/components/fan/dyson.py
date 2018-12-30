@@ -3,7 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.dyson/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -77,8 +76,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         self.hass = hass
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)

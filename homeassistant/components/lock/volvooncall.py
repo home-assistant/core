@@ -7,17 +7,18 @@ https://home-assistant.io/components/lock.volvooncall/
 import logging
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.volvooncall import VolvoEntity
+from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Volvo On Call lock."""
     if discovery_info is None:
         return
 
-    add_entities([VolvoLock(hass, *discovery_info)])
+    async_add_entities([VolvoLock(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoLock(VolvoEntity, LockDevice):
@@ -26,12 +27,12 @@ class VolvoLock(VolvoEntity, LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self.vehicle.is_locked
+        return self.instrument.is_locked
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the car."""
-        self.vehicle.lock()
+        await self.instrument.lock()
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the car."""
-        self.vehicle.unlock()
+        await self.instrument.unlock()

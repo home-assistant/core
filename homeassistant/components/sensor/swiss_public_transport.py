@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python_opendata_transport==0.1.3']
+REQUIREMENTS = ['python_opendata_transport==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,7 @@ class SwissPublicTransportSensor(Entity):
         self._name = name
         self._from = start
         self._to = destination
+        self._remaining_time = ""
 
     @property
     def name(self):
@@ -98,7 +99,7 @@ class SwissPublicTransportSensor(Entity):
         if self._opendata is None:
             return
 
-        remaining_time = dt_util.parse_datetime(
+        self._remaining_time = dt_util.parse_datetime(
             self._opendata.connections[0]['departure']) -\
             dt_util.as_local(dt_util.utcnow())
 
@@ -111,7 +112,7 @@ class SwissPublicTransportSensor(Entity):
             ATTR_DEPARTURE_TIME2: self._opendata.connections[2]['departure'],
             ATTR_START: self._opendata.from_name,
             ATTR_TARGET: self._opendata.to_name,
-            ATTR_REMAINING_TIME: '{}'.format(remaining_time),
+            ATTR_REMAINING_TIME: '{}'.format(self._remaining_time),
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
         return attr
@@ -126,6 +127,7 @@ class SwissPublicTransportSensor(Entity):
         from opendata_transport.exceptions import OpendataTransportError
 
         try:
-            await self._opendata.async_get_data()
+            if self._remaining_time.total_seconds() < 0:
+                await self._opendata.async_get_data()
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")

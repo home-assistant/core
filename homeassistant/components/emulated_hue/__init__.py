@@ -18,6 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
+from homeassistant.components.http import real_ip
+
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView, HueGroupView)
@@ -81,14 +83,22 @@ ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
-def setup(hass, yaml_config):
+async def async_setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
 
     app = web.Application()
     app['hass'] = hass
-    handler = None
-    server = None
+
+    real_ip.setup_real_ip(app, False, [])
+    # We misunderstood the startup signal. You're not allowed to change
+    # anything during startup. Temp workaround.
+    # pylint: disable=protected-access
+    app._on_startup.freeze()
+    await app.startup()
+
+    runner = None
+    site = None
 
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
@@ -105,25 +115,24 @@ def setup(hass, yaml_config):
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        if server:
-            server.close()
-            await server.wait_closed()
-        await app.shutdown()
-        if handler:
-            await handler.shutdown(10)
-        await app.cleanup()
+        if site:
+            await site.stop()
+        if runner:
+            await runner.cleanup()
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         upnp_listener.start()
-        nonlocal handler
-        nonlocal server
+        nonlocal site
+        nonlocal runner
 
-        handler = app.make_handler(loop=hass.loop)
+        runner = web.AppRunner(app)
+        await runner.setup()
+
+        site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)
 
         try:
-            server = await hass.loop.create_server(
-                handler, config.host_ip_addr, config.listen_port)
+            await site.start()
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           config.listen_port, error)
@@ -131,7 +140,8 @@ def setup(hass, yaml_config):
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                               start_emulated_hue_bridge)
 
     return True
 

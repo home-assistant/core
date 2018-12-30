@@ -5,10 +5,10 @@ from unittest.mock import Mock, MagicMock, patch, PropertyMock
 
 import pytest
 from pytradfri.device import Device, LightControl, Light
-from pytradfri import RequestError
 
 from homeassistant.components import tradfri
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 DEFAULT_TEST_FEATURES = {'can_set_dimmer': False,
@@ -199,7 +199,7 @@ def mock_gateway():
 @pytest.fixture
 def mock_api(mock_gateway):
     """Mock api."""
-    async def api(self, command):
+    async def api(command):
         """Mock api function."""
         # Store the data for "real" command objects.
         if(hasattr(command, '_data') and not isinstance(command, Mock)):
@@ -213,63 +213,20 @@ async def generate_psk(self, code):
     return "mock"
 
 
-async def setup_gateway(hass, mock_gateway, mock_api,
-                        generate_psk=generate_psk,
-                        known_hosts=None):
+async def setup_gateway(hass, mock_gateway, mock_api):
     """Load the Tradfri platform with a mock gateway."""
-    def request_config(_, callback, description, submit_caption, fields):
-        """Mock request_config."""
-        hass.async_add_job(callback, {'security_code': 'mock'})
-
-    if known_hosts is None:
-        known_hosts = {}
-
-    with patch('pytradfri.api.aiocoap_api.APIFactory.generate_psk',
-               generate_psk), \
-            patch('pytradfri.api.aiocoap_api.APIFactory.request', mock_api), \
-            patch('pytradfri.Gateway', return_value=mock_gateway), \
-            patch.object(tradfri, 'load_json', return_value=known_hosts), \
-            patch.object(tradfri, 'save_json'), \
-            patch.object(hass.components.configurator, 'request_config',
-                         request_config):
-
-        await async_setup_component(hass, tradfri.DOMAIN,
-                                    {
-                                        tradfri.DOMAIN: {
-                                            'host': 'mock-host',
-                                            'allow_tradfri_groups': True
-                                        }
-                                    })
-        await hass.async_block_till_done()
-
-
-async def test_setup_gateway(hass, mock_gateway, mock_api):
-    """Test that the gateway can be setup without errors."""
-    await setup_gateway(hass, mock_gateway, mock_api)
-
-
-async def test_setup_gateway_known_host(hass, mock_gateway, mock_api):
-    """Test gateway setup with a known host."""
-    await setup_gateway(hass, mock_gateway, mock_api,
-                        known_hosts={
-                            'mock-host': {
-                                'identity': 'mock',
-                                'key': 'mock-key'
-                                }
-                            })
-
-
-async def test_incorrect_security_code(hass, mock_gateway, mock_api):
-    """Test that an error is shown if the security code is incorrect."""
-    async def psk_error(self, code):
-        """Raise RequestError when called."""
-        raise RequestError
-
-    with patch.object(hass.components.configurator, 'async_notify_errors') \
-            as notify_error:
-        await setup_gateway(hass, mock_gateway, mock_api,
-                            generate_psk=psk_error)
-        assert len(notify_error.mock_calls) > 0
+    entry = MockConfigEntry(domain=tradfri.DOMAIN, data={
+        'host': 'mock-host',
+        'identity': 'mock-identity',
+        'key': 'mock-key',
+        'import_groups': True,
+        'gateway_id': 'mock-gateway-id',
+    })
+    hass.data[tradfri.KEY_GATEWAY] = {entry.entry_id: mock_gateway}
+    hass.data[tradfri.KEY_API] = {entry.entry_id: mock_api}
+    await hass.config_entries.async_forward_entry_setup(
+        entry, 'light'
+    )
 
 
 def mock_light(test_features={}, test_state={}, n=0):

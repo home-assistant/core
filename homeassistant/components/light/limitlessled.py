@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -19,9 +18,9 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['limitlessled==1.1.2']
+REQUIREMENTS = ['limitlessled==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +157,7 @@ def state(new_state):
     return decorator
 
 
-class LimitlessLEDGroup(Light):
+class LimitlessLEDGroup(Light, RestoreEntity):
     """Representation of a LimitessLED group."""
 
     def __init__(self, group, config):
@@ -188,10 +187,10 @@ class LimitlessLEDGroup(Light):
         self._color = None
         self._effect = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle entity about to be added to hass event."""
-        last_state = yield from async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
         if last_state:
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness')

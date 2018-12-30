@@ -13,10 +13,12 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_WIND_SPEED, ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_PRECIPITATION,
     PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    CONF_MODE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -25,6 +27,8 @@ REQUIREMENTS = ['python-forecastio==1.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
+
+FORECAST_MODE = ['hourly', 'daily']
 
 MAP_CONDITION = {
     'clear-day': 'sunny',
@@ -50,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_MODE, default='hourly'): vol.In(FORECAST_MODE),
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -62,6 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
+    mode = config.get(CONF_MODE)
 
     units = config.get(CONF_UNITS)
     if not units:
@@ -70,16 +76,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dark_sky = DarkSkyData(
         config.get(CONF_API_KEY), latitude, longitude, units)
 
-    add_entities([DarkSkyWeather(name, dark_sky)], True)
+    add_entities([DarkSkyWeather(name, dark_sky, mode)], True)
 
 
 class DarkSkyWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, name, dark_sky):
+    def __init__(self, name, dark_sky, mode):
         """Initialize Dark Sky weather."""
         self._name = name
         self._dark_sky = dark_sky
+        self._mode = mode
 
         self._ds_data = None
         self._ds_currently = None
@@ -118,9 +125,24 @@ class DarkSkyWeather(WeatherEntity):
         return self._ds_currently.get('windSpeed')
 
     @property
+    def wind_bearing(self):
+        """Return the wind bearing."""
+        return self._ds_currently.get('windBearing')
+
+    @property
+    def ozone(self):
+        """Return the ozone level."""
+        return self._ds_currently.get('ozone')
+
+    @property
     def pressure(self):
         """Return the pressure."""
         return self._ds_currently.get('pressure')
+
+    @property
+    def visibility(self):
+        """Return the visibility."""
+        return self._ds_currently.get('visibility')
 
     @property
     def condition(self):
@@ -130,14 +152,47 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{
-            ATTR_FORECAST_TIME:
-                datetime.fromtimestamp(entry.d.get('time')).isoformat(),
-            ATTR_FORECAST_TEMP:
-                entry.d.get('temperature'),
-            ATTR_FORECAST_CONDITION:
-                MAP_CONDITION.get(entry.d.get('icon'))
-        } for entry in self._ds_hourly.data]
+        # Per conversation with Joshua Reyes of Dark Sky, to get the total
+        # forecasted precipitation, you have to multiple the intensity by
+        # the hours for the forecast interval
+        def calc_precipitation(intensity, hours):
+            amount = None
+            if intensity is not None:
+                amount = round((intensity * hours), 1)
+            return amount if amount > 0 else None
+
+        data = None
+
+        if self._mode == 'daily':
+            data = [{
+                ATTR_FORECAST_TIME:
+                    datetime.fromtimestamp(entry.d.get('time')).isoformat(),
+                ATTR_FORECAST_TEMP:
+                    entry.d.get('temperatureHigh'),
+                ATTR_FORECAST_TEMP_LOW:
+                    entry.d.get('temperatureLow'),
+                ATTR_FORECAST_PRECIPITATION:
+                    calc_precipitation(entry.d.get('precipIntensity'), 24),
+                ATTR_FORECAST_WIND_SPEED:
+                    entry.d.get('windSpeed'),
+                ATTR_FORECAST_WIND_BEARING:
+                    entry.d.get('windBearing'),
+                ATTR_FORECAST_CONDITION:
+                    MAP_CONDITION.get(entry.d.get('icon'))
+            } for entry in self._ds_daily.data]
+        else:
+            data = [{
+                ATTR_FORECAST_TIME:
+                    datetime.fromtimestamp(entry.d.get('time')).isoformat(),
+                ATTR_FORECAST_TEMP:
+                    entry.d.get('temperature'),
+                ATTR_FORECAST_PRECIPITATION:
+                    calc_precipitation(entry.d.get('precipIntensity'), 1),
+                ATTR_FORECAST_CONDITION:
+                    MAP_CONDITION.get(entry.d.get('icon'))
+            } for entry in self._ds_hourly.data]
+
+        return data
 
     def update(self):
         """Get the latest data from Dark Sky."""

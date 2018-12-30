@@ -1,27 +1,33 @@
-"""Support for alexa Smart Home Skill API."""
-import asyncio
+"""Support for alexa Smart Home Skill API.
+
+API documentation:
+https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
+https://developer.amazon.com/docs/device-apis/message-guide.html
+"""
+
+from collections import OrderedDict
+from datetime import datetime
 import logging
 import math
-from datetime import datetime
 from uuid import uuid4
 
 from homeassistant.components import (
-    alert, automation, cover, climate, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http, sensor)
+    alert, automation, binary_sensor, climate, cover, fan, group, http,
+    input_boolean, light, lock, media_player, scene, script, sensor, switch)
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util.decorator import Registry
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
-    SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
+from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import CONF_FILTER, CONF_ENTITY_CONFIG
+from .const import CONF_ENTITY_CONFIG, CONF_FILTER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +43,19 @@ API_TEMP_UNITS = {
     TEMP_CELSIUS: 'CELSIUS',
 }
 
-API_THERMOSTAT_MODES = {
-    climate.STATE_HEAT: 'HEAT',
-    climate.STATE_COOL: 'COOL',
-    climate.STATE_AUTO: 'AUTO',
-    climate.STATE_ECO: 'ECO',
-    climate.STATE_IDLE: 'OFF',
-    climate.STATE_FAN_ONLY: 'OFF',
-    climate.STATE_DRY: 'OFF',
-}
+# Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
+# reverse mapping of this dict and we want to map the first occurrance of OFF
+# back to HA state.
+API_THERMOSTAT_MODES = OrderedDict([
+    (climate.STATE_HEAT, 'HEAT'),
+    (climate.STATE_COOL, 'COOL'),
+    (climate.STATE_AUTO, 'AUTO'),
+    (climate.STATE_ECO, 'ECO'),
+    (climate.STATE_OFF, 'OFF'),
+    (climate.STATE_IDLE, 'OFF'),
+    (climate.STATE_FAN_ONLY, 'OFF'),
+    (climate.STATE_DRY, 'OFF')
+])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
@@ -72,11 +82,17 @@ class _DisplayCategory:
     # Indicates media devices with video or photo capabilities.
     CAMERA = "CAMERA"
 
+    # Indicates an endpoint that detects and reports contact.
+    CONTACT_SENSOR = "CONTACT_SENSOR"
+
     # Indicates a door.
     DOOR = "DOOR"
 
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
+
+    # Indicates an endpoint that detects and reports motion.
+    MOTION_SENSOR = "MOTION_SENSOR"
 
     # An endpoint that cannot be described in on of the other categories.
     OTHER = "OTHER"
@@ -155,6 +171,70 @@ class _UnsupportedProperty(Exception):
     """This entity does not support the requested Smart Home API property."""
 
 
+class _AlexaError(Exception):
+    """Base class for errors that can be serialized by the Alexa API.
+
+    A handler can raise subclasses of this to return an error to the request.
+    """
+
+    namespace = None
+    error_type = None
+
+    def __init__(self, error_message, payload=None):
+        Exception.__init__(self)
+        self.error_message = error_message
+        self.payload = None
+
+
+class _AlexaInvalidEndpointError(_AlexaError):
+    """The endpoint in the request does not exist."""
+
+    namespace = 'Alexa'
+    error_type = 'NO_SUCH_ENDPOINT'
+
+    def __init__(self, endpoint_id):
+        msg = 'The endpoint {} does not exist'.format(endpoint_id)
+        _AlexaError.__init__(self, msg)
+        self.endpoint_id = endpoint_id
+
+
+class _AlexaInvalidValueError(_AlexaError):
+    namespace = 'Alexa'
+    error_type = 'INVALID_VALUE'
+
+
+class _AlexaUnsupportedThermostatModeError(_AlexaError):
+    namespace = 'Alexa.ThermostatController'
+    error_type = 'UNSUPPORTED_THERMOSTAT_MODE'
+
+
+class _AlexaTempRangeError(_AlexaError):
+    namespace = 'Alexa'
+    error_type = 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    def __init__(self, hass, temp, min_temp, max_temp):
+        unit = hass.config.units.temperature_unit
+        temp_range = {
+            'minimumValue': {
+                'value': min_temp,
+                'scale': API_TEMP_UNITS[unit],
+            },
+            'maximumValue': {
+                'value': max_temp,
+                'scale': API_TEMP_UNITS[unit],
+            },
+        }
+        payload = {'validRange': temp_range}
+        msg = 'The requested temperature {} is out of range'.format(temp)
+
+        _AlexaError.__init__(self, msg, payload)
+
+
+class _AlexaBridgeUnreachableError(_AlexaError):
+    namespace = 'Alexa'
+    error_type = 'BRIDGE_UNREACHABLE'
+
+
 class _AlexaEntity:
     """An adaptation of an entity, expressed in Alexa's terms.
 
@@ -210,8 +290,23 @@ class _AlexaEntity:
         """
         raise NotImplementedError
 
+    def serialize_properties(self):
+        """Yield each supported property in API format."""
+        for interface in self.interfaces():
+            for prop in interface.serialize_properties():
+                yield prop
+
 
 class _AlexaInterface:
+    """Base class for Alexa capability interfaces.
+
+    The Smart Home Skills API defines a number of "capability interfaces",
+    roughly analogous to domains in Home Assistant. The supported interfaces
+    describe what actions can be performed on a particular device.
+
+    https://developer.amazon.com/docs/device-apis/message-guide.html
+    """
+
     def __init__(self, entity):
         self.entity = entity
 
@@ -284,6 +379,11 @@ class _AlexaInterface:
 
 
 class _AlexaPowerController(_AlexaInterface):
+    """Implements Alexa.PowerController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-powercontroller.html
+    """
+
     def name(self):
         return 'Alexa.PowerController'
 
@@ -303,6 +403,11 @@ class _AlexaPowerController(_AlexaInterface):
 
 
 class _AlexaLockController(_AlexaInterface):
+    """Implements Alexa.LockController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-lockcontroller.html
+    """
+
     def name(self):
         return 'Alexa.LockController'
 
@@ -324,6 +429,11 @@ class _AlexaLockController(_AlexaInterface):
 
 
 class _AlexaSceneController(_AlexaInterface):
+    """Implements Alexa.SceneController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-scenecontroller.html
+    """
+
     def __init__(self, entity, supports_deactivation):
         _AlexaInterface.__init__(self, entity)
         self.supports_deactivation = lambda: supports_deactivation
@@ -333,6 +443,11 @@ class _AlexaSceneController(_AlexaInterface):
 
 
 class _AlexaBrightnessController(_AlexaInterface):
+    """Implements Alexa.BrightnessController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-brightnesscontroller.html
+    """
+
     def name(self):
         return 'Alexa.BrightnessController'
 
@@ -351,41 +466,115 @@ class _AlexaBrightnessController(_AlexaInterface):
 
 
 class _AlexaColorController(_AlexaInterface):
+    """Implements Alexa.ColorController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-colorcontroller.html
+    """
+
     def name(self):
         return 'Alexa.ColorController'
 
+    def properties_supported(self):
+        return [{'name': 'color'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'color':
+            raise _UnsupportedProperty(name)
+
+        hue, saturation = self.entity.attributes.get(
+            light.ATTR_HS_COLOR, (0, 0))
+
+        return {
+            'hue': hue,
+            'saturation': saturation / 100.0,
+            'brightness': self.entity.attributes.get(
+                light.ATTR_BRIGHTNESS, 0) / 255.0,
+        }
+
 
 class _AlexaColorTemperatureController(_AlexaInterface):
+    """Implements Alexa.ColorTemperatureController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-colortemperaturecontroller.html
+    """
+
     def name(self):
         return 'Alexa.ColorTemperatureController'
 
+    def properties_supported(self):
+        return [{'name': 'colorTemperatureInKelvin'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'colorTemperatureInKelvin':
+            raise _UnsupportedProperty(name)
+        if 'color_temp' in self.entity.attributes:
+            return color_util.color_temperature_mired_to_kelvin(
+                self.entity.attributes['color_temp'])
+        return 0
+
 
 class _AlexaPercentageController(_AlexaInterface):
+    """Implements Alexa.PercentageController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
+    """
+
     def name(self):
         return 'Alexa.PercentageController'
 
 
 class _AlexaSpeaker(_AlexaInterface):
+    """Implements Alexa.Speaker.
+
+    https://developer.amazon.com/docs/device-apis/alexa-speaker.html
+    """
+
     def name(self):
         return 'Alexa.Speaker'
 
 
 class _AlexaStepSpeaker(_AlexaInterface):
+    """Implements Alexa.StepSpeaker.
+
+    https://developer.amazon.com/docs/device-apis/alexa-stepspeaker.html
+    """
+
     def name(self):
         return 'Alexa.StepSpeaker'
 
 
 class _AlexaPlaybackController(_AlexaInterface):
+    """Implements Alexa.PlaybackController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-playbackcontroller.html
+    """
+
     def name(self):
         return 'Alexa.PlaybackController'
 
 
 class _AlexaInputController(_AlexaInterface):
+    """Implements Alexa.InputController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-inputcontroller.html
+    """
+
     def name(self):
         return 'Alexa.InputController'
 
 
 class _AlexaTemperatureSensor(_AlexaInterface):
+    """Implements Alexa.TemperatureSensor.
+
+    https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html
+    """
+
     def __init__(self, hass, entity):
         _AlexaInterface.__init__(self, entity)
         self.hass = hass
@@ -415,7 +604,68 @@ class _AlexaTemperatureSensor(_AlexaInterface):
         }
 
 
+class _AlexaContactSensor(_AlexaInterface):
+    """Implements Alexa.ContactSensor.
+
+    The Alexa.ContactSensor interface describes the properties and events used
+    to report the state of an endpoint that detects contact between two
+    surfaces. For example, a contact sensor can report whether a door or window
+    is open.
+
+    https://developer.amazon.com/docs/device-apis/alexa-contactsensor.html
+    """
+
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.ContactSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
+class _AlexaMotionSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.MotionSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
 class _AlexaThermostatController(_AlexaInterface):
+    """Implements Alexa.ThermostatController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html
+    """
+
     def __init__(self, hass, entity):
         _AlexaInterface.__init__(self, entity)
         self.hass = hass
@@ -501,6 +751,9 @@ class _ClimateCapabilities(_AlexaEntity):
         return [_DisplayCategory.THERMOSTAT]
 
     def interfaces(self):
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & climate.SUPPORT_ON_OFF:
+            yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
 
@@ -626,6 +879,39 @@ class _SensorCapabilities(_AlexaEntity):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
 
 
+@ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
+class _BinarySensorCapabilities(_AlexaEntity):
+    TYPE_CONTACT = 'contact'
+    TYPE_MOTION = 'motion'
+
+    def default_display_categories(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            return [_DisplayCategory.CONTACT_SENSOR]
+        if sensor_type is self.TYPE_MOTION:
+            return [_DisplayCategory.MOTION_SENSOR]
+
+    def interfaces(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            yield _AlexaContactSensor(self.hass, self.entity)
+        elif sensor_type is self.TYPE_MOTION:
+            yield _AlexaMotionSensor(self.hass, self.entity)
+
+    def get_type(self):
+        """Return the type of binary sensor."""
+        attrs = self.entity.attributes
+        if attrs.get(ATTR_DEVICE_CLASS) in (
+                'door',
+                'garage_door',
+                'opening',
+                'window',
+        ):
+            return self.TYPE_CONTACT
+        if attrs.get(ATTR_DEVICE_CLASS) == 'motion':
+            return self.TYPE_MOTION
+
+
 class _Cause:
     """Possible causes for property changes.
 
@@ -695,8 +981,7 @@ class SmartHomeView(http.HomeAssistantView):
         """Initialize."""
         self.smart_home_config = smart_home_config
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Alexa Smart Home requests.
 
         The Smart Home API requires the endpoint to be implemented in AWS
@@ -704,121 +989,241 @@ class SmartHomeView(http.HomeAssistantView):
         the response.
         """
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
-        response = yield from async_handle_message(
+        response = await async_handle_message(
             hass, self.smart_home_config, message)
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
 
 
-async def async_handle_message(hass, config, request, context=None):
-    """Handle incoming API messages."""
+class _AlexaDirective:
+    def __init__(self, request):
+        self._directive = request[API_DIRECTIVE]
+        self.namespace = self._directive[API_HEADER]['namespace']
+        self.name = self._directive[API_HEADER]['name']
+        self.payload = self._directive[API_PAYLOAD]
+        self.has_endpoint = API_ENDPOINT in self._directive
+
+        self.entity = self.entity_id = self.endpoint = None
+
+    def load_entity(self, hass, config):
+        """Set attributes related to the entity for this request.
+
+        Sets these attributes when self.has_endpoint is True:
+
+        - entity
+        - entity_id
+        - endpoint
+
+        Behavior when self.has_endpoint is False is undefined.
+
+        Will raise _AlexaInvalidEndpointError if the endpoint in the request is
+        malformed or nonexistant.
+        """
+        _endpoint_id = self._directive[API_ENDPOINT]['endpointId']
+        self.entity_id = _endpoint_id.replace('#', '.')
+
+        self.entity = hass.states.get(self.entity_id)
+        if not self.entity:
+            raise _AlexaInvalidEndpointError(_endpoint_id)
+
+        self.endpoint = ENTITY_ADAPTERS[self.entity.domain](
+            hass, config, self.entity)
+
+    def response(self,
+                 name='Response',
+                 namespace='Alexa',
+                 payload=None):
+        """Create an API formatted response.
+
+        Async friendly.
+        """
+        response = _AlexaResponse(name, namespace, payload)
+
+        token = self._directive[API_HEADER].get('correlationToken')
+        if token:
+            response.set_correlation_token(token)
+
+        if self.has_endpoint:
+            response.set_endpoint(self._directive[API_ENDPOINT].copy())
+
+        return response
+
+    def error(
+            self,
+            namespace='Alexa',
+            error_type='INTERNAL_ERROR',
+            error_message="",
+            payload=None
+    ):
+        """Create a API formatted error response.
+
+        Async friendly.
+        """
+        payload = payload or {}
+        payload['type'] = error_type
+        payload['message'] = error_message
+
+        _LOGGER.info("Request %s/%s error %s: %s",
+                     self._directive[API_HEADER]['namespace'],
+                     self._directive[API_HEADER]['name'],
+                     error_type, error_message)
+
+        return self.response(
+            name='ErrorResponse',
+            namespace=namespace,
+            payload=payload
+        )
+
+
+class _AlexaResponse:
+    def __init__(self, name, namespace, payload=None):
+        payload = payload or {}
+        self._response = {
+            API_EVENT: {
+                API_HEADER: {
+                    'namespace': namespace,
+                    'name': name,
+                    'messageId': str(uuid4()),
+                    'payloadVersion': '3',
+                },
+                API_PAYLOAD: payload,
+            }
+        }
+
+    @property
+    def name(self):
+        """Return the name of this response."""
+        return self._response[API_EVENT][API_HEADER]['name']
+
+    @property
+    def namespace(self):
+        """Return the namespace of this response."""
+        return self._response[API_EVENT][API_HEADER]['namespace']
+
+    def set_correlation_token(self, token):
+        """Set the correlationToken.
+
+        This should normally mirror the value from a request, and is set by
+        _AlexaDirective.response() usually.
+        """
+        self._response[API_EVENT][API_HEADER]['correlationToken'] = token
+
+    def set_endpoint(self, endpoint):
+        """Set the endpoint.
+
+        This should normally mirror the value from a request, and is set by
+        _AlexaDirective.response() usually.
+        """
+        self._response[API_EVENT][API_ENDPOINT] = endpoint
+
+    def _properties(self):
+        context = self._response.setdefault(API_CONTEXT, {})
+        return context.setdefault('properties', [])
+
+    def add_context_property(self, prop):
+        """Add a property to the response context.
+
+        The Alexa response includes a list of properties which provides
+        feedback on how states have changed. For example if a user asks,
+        "Alexa, set theromstat to 20 degrees", the API expects a response with
+        the new value of the property, and Alexa will respond to the user
+        "Thermostat set to 20 degrees".
+
+        async_handle_message() will call .merge_context_properties() for every
+        request automatically, however often handlers will call services to
+        change state but the effects of those changes are applied
+        asynchronously. Thus, handlers should call this method to confirm
+        changes before returning.
+        """
+        self._properties().append(prop)
+
+    def merge_context_properties(self, endpoint):
+        """Add all properties from given endpoint if not already set.
+
+        Handlers should be using .add_context_property().
+        """
+        properties = self._properties()
+        already_set = {(p['namespace'], p['name']) for p in properties}
+
+        for prop in endpoint.serialize_properties():
+            if (prop['namespace'], prop['name']) not in already_set:
+                self.add_context_property(prop)
+
+    def serialize(self):
+        """Return response as a JSON-able data structure."""
+        return self._response
+
+
+async def async_handle_message(
+        hass,
+        config,
+        request,
+        context=None,
+        enabled=True,
+):
+    """Handle incoming API messages.
+
+    If enabled is False, the response to all messagess will be a
+    BRIDGE_UNREACHABLE error. This can be used if the API has been disabled in
+    configuration.
+    """
     assert request[API_DIRECTIVE][API_HEADER]['payloadVersion'] == '3'
 
     if context is None:
         context = ha.Context()
 
-    # Read head data
-    request = request[API_DIRECTIVE]
-    namespace = request[API_HEADER]['namespace']
-    name = request[API_HEADER]['name']
+    directive = _AlexaDirective(request)
 
-    # Do we support this API request?
-    funct_ref = HANDLERS.get((namespace, name))
-    if funct_ref:
-        response = await funct_ref(hass, config, request, context)
-    else:
-        _LOGGER.warning(
-            "Unsupported API request %s/%s", namespace, name)
-        response = api_error(request)
+    try:
+        if not enabled:
+            raise _AlexaBridgeUnreachableError(
+                'Alexa API not enabled in Home Assistant configuration')
+
+        if directive.has_endpoint:
+            directive.load_entity(hass, config)
+
+        funct_ref = HANDLERS.get((directive.namespace, directive.name))
+        if funct_ref:
+            response = await funct_ref(hass, config, directive, context)
+            if directive.has_endpoint:
+                response.merge_context_properties(directive.endpoint)
+        else:
+            _LOGGER.warning(
+                "Unsupported API request %s/%s",
+                directive.namespace,
+                directive.name,
+            )
+            response = directive.error()
+    except _AlexaError as err:
+        response = directive.error(
+            error_type=err.error_type,
+            error_message=err.error_message)
 
     request_info = {
-        'namespace': namespace,
-        'name': name,
+        'namespace': directive.namespace,
+        'name': directive.name,
     }
 
-    if API_ENDPOINT in request and 'endpointId' in request[API_ENDPOINT]:
-        request_info['entity_id'] = \
-            request[API_ENDPOINT]['endpointId'].replace('#', '.')
-
-    response_header = response[API_EVENT][API_HEADER]
+    if directive.has_endpoint:
+        request_info['entity_id'] = directive.entity_id
 
     hass.bus.async_fire(EVENT_ALEXA_SMART_HOME, {
         'request': request_info,
         'response': {
-            'namespace': response_header['namespace'],
-            'name': response_header['name'],
+            'namespace': response.namespace,
+            'name': response.name,
         }
     }, context=context)
 
-    return response
-
-
-def api_message(request,
-                name='Response',
-                namespace='Alexa',
-                payload=None,
-                context=None):
-    """Create a API formatted response message.
-
-    Async friendly.
-    """
-    payload = payload or {}
-
-    response = {
-        API_EVENT: {
-            API_HEADER: {
-                'namespace': namespace,
-                'name': name,
-                'messageId': str(uuid4()),
-                'payloadVersion': '3',
-            },
-            API_PAYLOAD: payload,
-        }
-    }
-
-    # If a correlation token exists, add it to header / Need by Async requests
-    token = request[API_HEADER].get('correlationToken')
-    if token:
-        response[API_EVENT][API_HEADER]['correlationToken'] = token
-
-    # Extend event with endpoint object / Need by Async requests
-    if API_ENDPOINT in request:
-        response[API_EVENT][API_ENDPOINT] = request[API_ENDPOINT].copy()
-
-    if context is not None:
-        response[API_CONTEXT] = context
-
-    return response
-
-
-def api_error(request,
-              namespace='Alexa',
-              error_type='INTERNAL_ERROR',
-              error_message="",
-              payload=None):
-    """Create a API formatted error response.
-
-    Async friendly.
-    """
-    payload = payload or {}
-    payload['type'] = error_type
-    payload['message'] = error_message
-
-    _LOGGER.info("Request %s/%s error %s: %s",
-                 request[API_HEADER]['namespace'],
-                 request[API_HEADER]['name'],
-                 error_type, error_message)
-
-    return api_message(
-        request, name='ErrorResponse', namespace=namespace, payload=payload)
+    return response.serialize()
 
 
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
-async def async_api_discovery(hass, config, request, context):
+async def async_api_discovery(hass, config, directive, context):
     """Create a API formatted discovery response.
 
     Async friendly.
@@ -826,6 +1231,11 @@ async def async_api_discovery(hass, config, request, context):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            _LOGGER.debug("Not exposing %s because it is never exposed",
+                          entity.entity_id)
+            continue
+
         if not config.should_expose(entity.entity_id):
             _LOGGER.debug("Not exposing %s because filtered by config",
                           entity.entity_id)
@@ -837,7 +1247,7 @@ async def async_api_discovery(hass, config, request, context):
 
         endpoint = {
             'displayCategories': alexa_entity.display_categories(),
-            'additionalApplianceDetails': {},
+            'cookie': {},
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),
@@ -853,52 +1263,36 @@ async def async_api_discovery(hass, config, request, context):
             continue
         discovery_endpoints.append(endpoint)
 
-    return api_message(
-        request, name='Discover.Response', namespace='Alexa.Discovery',
-        payload={'endpoints': discovery_endpoints})
-
-
-def extract_entity(funct):
-    """Decorate for extract entity object from request."""
-    async def async_api_entity_wrapper(hass, config, request, context):
-        """Process a turn on request."""
-        entity_id = request[API_ENDPOINT]['endpointId'].replace('#', '.')
-
-        # extract state object
-        entity = hass.states.get(entity_id)
-        if not entity:
-            _LOGGER.error("Can't process %s for %s",
-                          request[API_HEADER]['name'], entity_id)
-            return api_error(request, error_type='NO_SUCH_ENDPOINT')
-
-        return await funct(hass, config, request, context, entity)
-
-    return async_api_entity_wrapper
+    return directive.response(
+        name='Discover.Response',
+        namespace='Alexa.Discovery',
+        payload={'endpoints': discovery_endpoints},
+    )
 
 
 @HANDLERS.register(('Alexa.PowerController', 'TurnOn'))
-@extract_entity
-async def async_api_turn_on(hass, config, request, context, entity):
+async def async_api_turn_on(hass, config, directive, context):
     """Process a turn on request."""
+    entity = directive.entity
     domain = entity.domain
-    if entity.domain == group.DOMAIN:
+    if domain == group.DOMAIN:
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
-    if entity.domain == cover.DOMAIN:
+    if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
 
     await hass.services.async_call(domain, service, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PowerController', 'TurnOff'))
-@extract_entity
-async def async_api_turn_off(hass, config, request, context, entity):
+async def async_api_turn_off(hass, config, directive, context):
     """Process a turn off request."""
+    entity = directive.entity
     domain = entity.domain
     if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
@@ -911,28 +1305,28 @@ async def async_api_turn_off(hass, config, request, context, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.BrightnessController', 'SetBrightness'))
-@extract_entity
-async def async_api_set_brightness(hass, config, request, context, entity):
+async def async_api_set_brightness(hass, config, directive, context):
     """Process a set brightness request."""
-    brightness = int(request[API_PAYLOAD]['brightness'])
+    entity = directive.entity
+    brightness = int(directive.payload['brightness'])
 
     await hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_BRIGHTNESS_PCT: brightness,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.BrightnessController', 'AdjustBrightness'))
-@extract_entity
-async def async_api_adjust_brightness(hass, config, request, context, entity):
+async def async_api_adjust_brightness(hass, config, directive, context):
     """Process an adjust brightness request."""
-    brightness_delta = int(request[API_PAYLOAD]['brightnessDelta'])
+    entity = directive.entity
+    brightness_delta = int(directive.payload['brightnessDelta'])
 
     # read current state
     try:
@@ -948,17 +1342,17 @@ async def async_api_adjust_brightness(hass, config, request, context, entity):
         light.ATTR_BRIGHTNESS_PCT: brightness,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.ColorController', 'SetColor'))
-@extract_entity
-async def async_api_set_color(hass, config, request, context, entity):
+async def async_api_set_color(hass, config, directive, context):
     """Process a set color request."""
+    entity = directive.entity
     rgb = color_util.color_hsb_to_RGB(
-        float(request[API_PAYLOAD]['color']['hue']),
-        float(request[API_PAYLOAD]['color']['saturation']),
-        float(request[API_PAYLOAD]['color']['brightness'])
+        float(directive.payload['color']['hue']),
+        float(directive.payload['color']['saturation']),
+        float(directive.payload['color']['brightness'])
     )
 
     await hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
@@ -966,30 +1360,28 @@ async def async_api_set_color(hass, config, request, context, entity):
         light.ATTR_RGB_COLOR: rgb,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.ColorTemperatureController', 'SetColorTemperature'))
-@extract_entity
-async def async_api_set_color_temperature(hass, config, request, context,
-                                          entity):
+async def async_api_set_color_temperature(hass, config, directive, context):
     """Process a set color temperature request."""
-    kelvin = int(request[API_PAYLOAD]['colorTemperatureInKelvin'])
+    entity = directive.entity
+    kelvin = int(directive.payload['colorTemperatureInKelvin'])
 
     await hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id,
         light.ATTR_KELVIN: kelvin,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(
     ('Alexa.ColorTemperatureController', 'DecreaseColorTemperature'))
-@extract_entity
-async def async_api_decrease_color_temp(hass, config, request, context,
-                                        entity):
+async def async_api_decrease_color_temp(hass, config, directive, context):
     """Process a decrease color temperature request."""
+    entity = directive.entity
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
     max_mireds = int(entity.attributes.get(light.ATTR_MAX_MIREDS))
 
@@ -999,15 +1391,14 @@ async def async_api_decrease_color_temp(hass, config, request, context,
         light.ATTR_COLOR_TEMP: value,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(
     ('Alexa.ColorTemperatureController', 'IncreaseColorTemperature'))
-@extract_entity
-async def async_api_increase_color_temp(hass, config, request, context,
-                                        entity):
+async def async_api_increase_color_temp(hass, config, directive, context):
     """Process an increase color temperature request."""
+    entity = directive.entity
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
     min_mireds = int(entity.attributes.get(light.ATTR_MIN_MIREDS))
 
@@ -1017,13 +1408,13 @@ async def async_api_increase_color_temp(hass, config, request, context,
         light.ATTR_COLOR_TEMP: value,
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.SceneController', 'Activate'))
-@extract_entity
-async def async_api_activate(hass, config, request, context, entity):
+async def async_api_activate(hass, config, directive, context):
     """Process an activate request."""
+    entity = directive.entity
     domain = entity.domain
 
     await hass.services.async_call(domain, SERVICE_TURN_ON, {
@@ -1035,8 +1426,7 @@ async def async_api_activate(hass, config, request, context, entity):
         'timestamp': '%sZ' % (datetime.utcnow().isoformat(),)
     }
 
-    return api_message(
-        request,
+    return directive.response(
         name='ActivationStarted',
         namespace='Alexa.SceneController',
         payload=payload,
@@ -1044,9 +1434,9 @@ async def async_api_activate(hass, config, request, context, entity):
 
 
 @HANDLERS.register(('Alexa.SceneController', 'Deactivate'))
-@extract_entity
-async def async_api_deactivate(hass, config, request, context, entity):
+async def async_api_deactivate(hass, config, directive, context):
     """Process a deactivate request."""
+    entity = directive.entity
     domain = entity.domain
 
     await hass.services.async_call(domain, SERVICE_TURN_OFF, {
@@ -1058,8 +1448,7 @@ async def async_api_deactivate(hass, config, request, context, entity):
         'timestamp': '%sZ' % (datetime.utcnow().isoformat(),)
     }
 
-    return api_message(
-        request,
+    return directive.response(
         name='DeactivationStarted',
         namespace='Alexa.SceneController',
         payload=payload,
@@ -1067,10 +1456,10 @@ async def async_api_deactivate(hass, config, request, context, entity):
 
 
 @HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
-@extract_entity
-async def async_api_set_percentage(hass, config, request, context, entity):
+async def async_api_set_percentage(hass, config, directive, context):
     """Process a set percentage request."""
-    percentage = int(request[API_PAYLOAD]['percentage'])
+    entity = directive.entity
+    percentage = int(directive.payload['percentage'])
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -1093,14 +1482,14 @@ async def async_api_set_percentage(hass, config, request, context, entity):
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PercentageController', 'AdjustPercentage'))
-@extract_entity
-async def async_api_adjust_percentage(hass, config, request, context, entity):
+async def async_api_adjust_percentage(hass, config, directive, context):
     """Process an adjust percentage request."""
-    percentage_delta = int(request[API_PAYLOAD]['percentageDelta'])
+    entity = directive.entity
+    percentage_delta = int(directive.payload['percentageDelta'])
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -1140,46 +1529,43 @@ async def async_api_adjust_percentage(hass, config, request, context, entity):
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.LockController', 'Lock'))
-@extract_entity
-async def async_api_lock(hass, config, request, context, entity):
+async def async_api_lock(hass, config, directive, context):
     """Process a lock request."""
+    entity = directive.entity
     await hass.services.async_call(entity.domain, SERVICE_LOCK, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False, context=context)
 
-    # Alexa expects a lockState in the response, we don't know the actual
-    # lockState at this point but assume it is locked. It is reported
-    # correctly later when ReportState is called. The alt. to this approach
-    # is to implement DeferredResponse
-    properties = [{
+    response = directive.response()
+    response.add_context_property({
         'name': 'lockState',
         'namespace': 'Alexa.LockController',
         'value': 'LOCKED'
-    }]
-    return api_message(request, context={'properties': properties})
+    })
+    return response
 
 
 # Not supported by Alexa yet
 @HANDLERS.register(('Alexa.LockController', 'Unlock'))
-@extract_entity
-async def async_api_unlock(hass, config, request, context, entity):
+async def async_api_unlock(hass, config, directive, context):
     """Process an unlock request."""
+    entity = directive.entity
     await hass.services.async_call(entity.domain, SERVICE_UNLOCK, {
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.Speaker', 'SetVolume'))
-@extract_entity
-async def async_api_set_volume(hass, config, request, context, entity):
+async def async_api_set_volume(hass, config, directive, context):
     """Process a set volume request."""
-    volume = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
+    volume = round(float(directive.payload['volume'] / 100), 2)
+    entity = directive.entity
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1190,14 +1576,14 @@ async def async_api_set_volume(hass, config, request, context, entity):
         entity.domain, SERVICE_VOLUME_SET,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.InputController', 'SelectInput'))
-@extract_entity
-async def async_api_select_input(hass, config, request, context, entity):
+async def async_api_select_input(hass, config, directive, context):
     """Process a set input request."""
-    media_input = request[API_PAYLOAD]['input']
+    media_input = directive.payload['input']
+    entity = directive.entity
 
     # attempt to map the ALL UPPERCASE payload name to a source
     source_list = entity.attributes[media_player.ATTR_INPUT_SOURCE_LIST] or []
@@ -1211,8 +1597,7 @@ async def async_api_select_input(hass, config, request, context, entity):
     else:
         msg = 'failed to map input {} to a media source on {}'.format(
             media_input, entity.entity_id)
-        return api_error(
-            request, error_type='INVALID_VALUE', error_message=msg)
+        raise _AlexaInvalidValueError(msg)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1223,15 +1608,15 @@ async def async_api_select_input(hass, config, request, context, entity):
         entity.domain, media_player.SERVICE_SELECT_SOURCE,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.Speaker', 'AdjustVolume'))
-@extract_entity
-async def async_api_adjust_volume(hass, config, request, context, entity):
+async def async_api_adjust_volume(hass, config, directive, context):
     """Process an adjust volume request."""
-    volume_delta = int(request[API_PAYLOAD]['volume'])
+    volume_delta = int(directive.payload['volume'])
 
+    entity = directive.entity
     current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
     # read current state
@@ -1251,18 +1636,18 @@ async def async_api_adjust_volume(hass, config, request, context, entity):
         entity.domain, media_player.SERVICE_VOLUME_SET,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.StepSpeaker', 'AdjustVolume'))
-@extract_entity
-async def async_api_adjust_volume_step(hass, config, request, context, entity):
+async def async_api_adjust_volume_step(hass, config, directive, context):
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
     # each component handles it differently e.g. via config.
     # For now we use the volumeSteps returned to figure out if we
     # should step up/down
-    volume_step = request[API_PAYLOAD]['volumeSteps']
+    volume_step = directive.payload['volumeSteps']
+    entity = directive.entity
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1277,15 +1662,15 @@ async def async_api_adjust_volume_step(hass, config, request, context, entity):
             entity.domain, media_player.SERVICE_VOLUME_DOWN,
             data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.StepSpeaker', 'SetMute'))
 @HANDLERS.register(('Alexa.Speaker', 'SetMute'))
-@extract_entity
-async def async_api_set_mute(hass, config, request, context, entity):
+async def async_api_set_mute(hass, config, directive, context):
     """Process a set mute request."""
-    mute = bool(request[API_PAYLOAD]['mute'])
+    mute = bool(directive.payload['mute'])
+    entity = directive.entity
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1296,13 +1681,13 @@ async def async_api_set_mute(hass, config, request, context, entity):
         entity.domain, media_player.SERVICE_VOLUME_MUTE,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PlaybackController', 'Play'))
-@extract_entity
-async def async_api_play(hass, config, request, context, entity):
+async def async_api_play(hass, config, directive, context):
     """Process a play request."""
+    entity = directive.entity
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -1311,13 +1696,13 @@ async def async_api_play(hass, config, request, context, entity):
         entity.domain, SERVICE_MEDIA_PLAY,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PlaybackController', 'Pause'))
-@extract_entity
-async def async_api_pause(hass, config, request, context, entity):
+async def async_api_pause(hass, config, directive, context):
     """Process a pause request."""
+    entity = directive.entity
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -1326,13 +1711,13 @@ async def async_api_pause(hass, config, request, context, entity):
         entity.domain, SERVICE_MEDIA_PAUSE,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PlaybackController', 'Stop'))
-@extract_entity
-async def async_api_stop(hass, config, request, context, entity):
+async def async_api_stop(hass, config, directive, context):
     """Process a stop request."""
+    entity = directive.entity
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -1341,13 +1726,13 @@ async def async_api_stop(hass, config, request, context, entity):
         entity.domain, SERVICE_MEDIA_STOP,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PlaybackController', 'Next'))
-@extract_entity
-async def async_api_next(hass, config, request, context, entity):
+async def async_api_next(hass, config, directive, context):
     """Process a next request."""
+    entity = directive.entity
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -1356,13 +1741,13 @@ async def async_api_next(hass, config, request, context, entity):
         entity.domain, SERVICE_MEDIA_NEXT_TRACK,
         data, blocking=False, context=context)
 
-    return api_message(request)
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.PlaybackController', 'Previous'))
-@extract_entity
-async def async_api_previous(hass, config, request, context, entity):
+async def async_api_previous(hass, config, directive, context):
     """Process a previous request."""
+    entity = directive.entity
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -1371,33 +1756,7 @@ async def async_api_previous(hass, config, request, context, entity):
         entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
         data, blocking=False, context=context)
 
-    return api_message(request)
-
-
-def api_error_temp_range(hass, request, temp, min_temp, max_temp):
-    """Create temperature value out of range API error response.
-
-    Async friendly.
-    """
-    unit = hass.config.units.temperature_unit
-    temp_range = {
-        'minimumValue': {
-            'value': min_temp,
-            'scale': API_TEMP_UNITS[unit],
-        },
-        'maximumValue': {
-            'value': max_temp,
-            'scale': API_TEMP_UNITS[unit],
-        },
-    }
-
-    msg = 'The requested temperature {} is out of range'.format(temp)
-    return api_error(
-        request,
-        error_type='TEMPERATURE_VALUE_OUT_OF_RANGE',
-        error_message=msg,
-        payload={'validRange': temp_range},
-    )
+    return directive.response()
 
 
 def temperature_from_object(hass, temp_obj, interval=False):
@@ -1417,76 +1776,95 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
-@extract_entity
-async def async_api_set_target_temp(hass, config, request, context, entity):
+async def async_api_set_target_temp(hass, config, directive, context):
     """Process a set target temperature request."""
+    entity = directive.entity
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
     max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
+    unit = hass.config.units.temperature_unit
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
 
-    payload = request[API_PAYLOAD]
+    payload = directive.payload
+    response = directive.response()
     if 'targetSetpoint' in payload:
         temp = temperature_from_object(hass, payload['targetSetpoint'])
         if temp < min_temp or temp > max_temp:
-            return api_error_temp_range(
-                hass, request, temp, min_temp, max_temp)
+            raise _AlexaTempRangeError(hass, temp, min_temp, max_temp)
         data[ATTR_TEMPERATURE] = temp
+        response.add_context_property({
+            'name': 'targetSetpoint',
+            'namespace': 'Alexa.ThermostatController',
+            'value': {'value': temp, 'scale': API_TEMP_UNITS[unit]},
+        })
     if 'lowerSetpoint' in payload:
         temp_low = temperature_from_object(hass, payload['lowerSetpoint'])
         if temp_low < min_temp or temp_low > max_temp:
-            return api_error_temp_range(
-                hass, request, temp_low, min_temp, max_temp)
+            raise _AlexaTempRangeError(hass, temp_low, min_temp, max_temp)
         data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
+        response.add_context_property({
+            'name': 'lowerSetpoint',
+            'namespace': 'Alexa.ThermostatController',
+            'value': {'value': temp_low, 'scale': API_TEMP_UNITS[unit]},
+        })
     if 'upperSetpoint' in payload:
         temp_high = temperature_from_object(hass, payload['upperSetpoint'])
         if temp_high < min_temp or temp_high > max_temp:
-            return api_error_temp_range(
-                hass, request, temp_high, min_temp, max_temp)
+            raise _AlexaTempRangeError(hass, temp_high, min_temp, max_temp)
         data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
+        response.add_context_property({
+            'name': 'upperSetpoint',
+            'namespace': 'Alexa.ThermostatController',
+            'value': {'value': temp_high, 'scale': API_TEMP_UNITS[unit]},
+        })
 
     await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
 
-    return api_message(request)
+    return response
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'AdjustTargetTemperature'))
-@extract_entity
-async def async_api_adjust_target_temp(hass, config, request, context, entity):
+async def async_api_adjust_target_temp(hass, config, directive, context):
     """Process an adjust target temperature request."""
+    entity = directive.entity
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
     max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
+    unit = hass.config.units.temperature_unit
 
     temp_delta = temperature_from_object(
-        hass, request[API_PAYLOAD]['targetSetpointDelta'], interval=True)
+        hass, directive.payload['targetSetpointDelta'], interval=True)
     target_temp = float(entity.attributes.get(ATTR_TEMPERATURE)) + temp_delta
 
     if target_temp < min_temp or target_temp > max_temp:
-        return api_error_temp_range(
-            hass, request, target_temp, min_temp, max_temp)
+        raise _AlexaTempRangeError(hass, target_temp, min_temp, max_temp)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         ATTR_TEMPERATURE: target_temp,
     }
 
+    response = directive.response()
     await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
+    response.add_context_property({
+        'name': 'targetSetpoint',
+        'namespace': 'Alexa.ThermostatController',
+        'value': {'value': target_temp, 'scale': API_TEMP_UNITS[unit]},
+    })
 
-    return api_message(request)
+    return response
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetThermostatMode'))
-@extract_entity
-async def async_api_set_thermostat_mode(hass, config, request, context,
-                                        entity):
+async def async_api_set_thermostat_mode(hass, config, directive, context):
     """Process a set thermostat mode request."""
-    mode = request[API_PAYLOAD]['thermostatMode']
+    entity = directive.entity
+    mode = directive.payload['thermostatMode']
     mode = mode if isinstance(mode, str) else mode['value']
 
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
@@ -1496,36 +1874,27 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
     )
     if ha_mode not in operation_list:
         msg = 'The requested thermostat mode {} is not supported'.format(mode)
-        return api_error(
-            request,
-            namespace='Alexa.ThermostatController',
-            error_type='UNSUPPORTED_THERMOSTAT_MODE',
-            error_message=msg
-        )
+        raise _AlexaUnsupportedThermostatModeError(msg)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         climate.ATTR_OPERATION_MODE: ha_mode,
     }
 
+    response = directive.response()
     await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
         blocking=False, context=context)
+    response.add_context_property({
+        'name': 'thermostatMode',
+        'namespace': 'Alexa.ThermostatController',
+        'value': mode,
+    })
 
-    return api_message(request)
+    return response
 
 
 @HANDLERS.register(('Alexa', 'ReportState'))
-@extract_entity
-async def async_api_reportstate(hass, config, request, context, entity):
+async def async_api_reportstate(hass, config, directive, context):
     """Process a ReportState request."""
-    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
-    properties = []
-    for interface in alexa_entity.interfaces():
-        properties.extend(interface.serialize_properties())
-
-    return api_message(
-        request,
-        name='StateReport',
-        context={'properties': properties}
-    )
+    return directive.response(name='StateReport')

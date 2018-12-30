@@ -56,9 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
@@ -68,16 +67,15 @@ def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([ViaggiaTrenoSensor(train_id, station_id, name)])
 
 
-@asyncio.coroutine
-def async_http_request(hass, uri):
+async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            req = yield from session.get(uri)
+            req = await session.get(uri)
         if req.status != 200:
             return {'error': req.status}
-        json_response = yield from req.json()
+        json_response = await req.json()
         return json_response
     except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
@@ -152,11 +150,10 @@ class ViaggiaTrenoSensor(Entity):
             return True
         return False
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update state."""
         uri = self.uri
-        res = yield from async_http_request(self.hass, uri)
+        res = await async_http_request(self.hass, uri)
         if res.get('error', ''):
             if res['error'] == 204:
                 self._state = NO_INFORMATION_STRING

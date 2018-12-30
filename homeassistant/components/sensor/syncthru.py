@@ -115,6 +115,13 @@ class SyncThruSensor(Entity):
         self._name = name
         self._icon = 'mdi:printer'
         self._unit_of_measurement = None
+        self._id_suffix = ''
+
+    @property
+    def unique_id(self):
+        """Return unique ID for the sensor."""
+        serial = self.syncthru.serial_number()
+        return serial + self._id_suffix if serial else super().unique_id
 
     @property
     def name(self):
@@ -145,6 +152,11 @@ class SyncThruSensor(Entity):
 class SyncThruMainSensor(SyncThruSensor):
     """Implementation of the main sensor, monitoring the general state."""
 
+    def __init__(self, syncthru, name):
+        """Initialize the sensor."""
+        super().__init__(syncthru, name)
+        self._id_suffix = '_main'
+
     def update(self):
         """Get the latest data from SyncThru and update the state."""
         self.syncthru.update()
@@ -160,6 +172,7 @@ class SyncThruTonerSensor(SyncThruSensor):
         self._name = "{} Toner {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
+        self._id_suffix = '_toner_{}'.format(color)
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -180,6 +193,7 @@ class SyncThruDrumSensor(SyncThruSensor):
         self._name = "{} Drum {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
+        self._id_suffix = '_drum_{}'.format(color)
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -199,6 +213,7 @@ class SyncThruInputTraySensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._name = "{} Tray {}".format(name, number)
         self._number = number
+        self._id_suffix = '_tray_{}'.format(number)
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -220,6 +235,7 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._name = "{} Output Tray {}".format(name, number)
         self._number = number
+        self._id_suffix = '_output_tray_{}'.format(number)
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""

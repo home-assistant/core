@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Geen meldingsservices beschikbaar."
+            },
+            "error": {
+                "invalid_code": "Ongeldige code, probeer opnieuw."
+            },
+            "step": {
+                "init": {
+                    "description": "Selecteer een van de meldingsdiensten:",
+                    "title": "Stel een \u00e9\u00e9nmalig wachtwoord in dat wordt afgegeven door een meldingscomponent"
+                },
+                "setup": {
+                    "description": "Een \u00e9\u00e9nmalig wachtwoord is verzonden via **notify. {notify_service}**. Voer het hieronder in:",
+                    "title": "Controleer de instellingen"
+                }
+            },
+            "title": "Eenmalig wachtwoord melden"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Ongeldige code, probeer het opnieuw. Als u deze fout blijft krijgen, controleer dan of de klok van uw Home Assistant systeem correct is ingesteld."

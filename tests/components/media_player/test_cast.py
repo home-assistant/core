@@ -415,3 +415,23 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
     assert len(mock_setup.mock_calls) == 2
     assert mock_setup.mock_calls[0][1][1] == {'host': 'bla'}
     assert mock_setup.mock_calls[1][1][1] == {'host': 'blu'}
+
+
+async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
+    """Test failed setting up entry will raise PlatformNotReady."""
+    await async_setup_component(hass, 'cast', {
+        'cast': {
+            'media_player': {
+                'host': 'bla'
+            }
+        }
+    })
+
+    with patch(
+        'homeassistant.components.media_player.cast._async_setup_platform',
+            return_value=mock_coro(exception=Exception)) as mock_setup:
+        with pytest.raises(PlatformNotReady):
+            await cast.async_setup_entry(hass, MockConfigEntry(), None)
+
+    assert len(mock_setup.mock_calls) == 1
+    assert mock_setup.mock_calls[0][1][1] == {'host': 'bla'}

@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    ENTITY_MATCH_ALL)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -159,6 +160,12 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, ENTITY_MATCH_ALL),
+    entity_ids
+)
 
 
 def entity_domain(domain: str):
@@ -335,9 +342,12 @@ def slugify(value):
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is not None:
-        return str(value)
-    raise vol.Invalid('string value is None')
+    if value is None:
+        raise vol.Invalid('string value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('value should be a string')
+
+    return str(value)
 
 
 def temperature_unit(value) -> str:
@@ -532,7 +542,8 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
     vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
-    vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
+    vol.Optional('after'): vol.All(vol.Lower, vol.Any(
+        SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)),
     vol.Optional('after_offset'): time_period,
 }), has_at_least_one_key('before', 'after'))
 
@@ -590,7 +601,7 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, template_complex)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({

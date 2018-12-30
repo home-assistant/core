@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 
 
 @asyncio.coroutine
-def test_fetching_url(aioclient_mock, hass, aiohttp_client):
+def test_fetching_url(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url."""
     aioclient_mock.get('http://example.com', text='hello world')
 
@@ -20,7 +20,7 @@ def test_fetching_url(aioclient_mock, hass, aiohttp_client):
             'password': 'pass'
         }})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
@@ -34,7 +34,7 @@ def test_fetching_url(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_fetching_without_verify_ssl(aioclient_mock, hass, aiohttp_client):
+def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url when ssl verify is off."""
     aioclient_mock.get('https://example.com', text='hello world')
 
@@ -48,7 +48,7 @@ def test_fetching_without_verify_ssl(aioclient_mock, hass, aiohttp_client):
             'verify_ssl': 'false',
         }})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
@@ -56,7 +56,7 @@ def test_fetching_without_verify_ssl(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_fetching_url_with_verify_ssl(aioclient_mock, hass, aiohttp_client):
+def test_fetching_url_with_verify_ssl(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url when ssl verify is explicitly on."""
     aioclient_mock.get('https://example.com', text='hello world')
 
@@ -70,7 +70,7 @@ def test_fetching_url_with_verify_ssl(aioclient_mock, hass, aiohttp_client):
             'verify_ssl': 'true',
         }})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
@@ -78,7 +78,7 @@ def test_fetching_url_with_verify_ssl(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_limit_refetch(aioclient_mock, hass, aiohttp_client):
+def test_limit_refetch(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url."""
     aioclient_mock.get('http://example.com/5a', text='hello world')
     aioclient_mock.get('http://example.com/10a', text='hello world')
@@ -94,7 +94,7 @@ def test_limit_refetch(aioclient_mock, hass, aiohttp_client):
             'limit_refetch_to_url_change': True,
         }})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
@@ -139,7 +139,7 @@ def test_limit_refetch(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_camera_content_type(aioclient_mock, hass, aiohttp_client):
+def test_camera_content_type(aioclient_mock, hass, hass_client):
     """Test generic camera with custom content_type."""
     svg_image = '<some image>'
     urlsvg = 'https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg'
@@ -158,7 +158,7 @@ def test_camera_content_type(aioclient_mock, hass, aiohttp_client):
     yield from async_setup_component(hass, 'camera', {
         'camera': [cam_config_svg, cam_config_normal]})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp_1 = yield from client.get('/api/camera_proxy/camera.config_test_svg')
     assert aioclient_mock.call_count == 1

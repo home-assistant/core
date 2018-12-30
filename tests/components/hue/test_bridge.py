@@ -34,7 +34,7 @@ async def test_bridge_setup_invalid_username():
                       side_effect=errors.AuthenticationRequired):
         assert await hue_bridge.async_setup() is False
 
-    assert len(hass.async_add_job.mock_calls) == 1
+    assert len(hass.async_create_task.mock_calls) == 1
     assert len(hass.config_entries.flow.async_init.mock_calls) == 1
     assert hass.config_entries.flow.async_init.mock_calls[0][2]['data'] == {
         'host': '1.2.3.4'
@@ -87,7 +87,7 @@ async def test_reset_if_entry_had_wrong_auth():
                       side_effect=errors.AuthenticationRequired):
         assert await hue_bridge.async_setup() is False
 
-    assert len(hass.async_add_job.mock_calls) == 1
+    assert len(hass.async_create_task.mock_calls) == 1
 
     assert await hue_bridge.async_reset()
 

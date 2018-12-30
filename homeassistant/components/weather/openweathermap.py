@@ -11,19 +11,18 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_WIND_BEARING,
+    PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
     CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.9.0']
+REQUIREMENTS = ['pyowm==2.10.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_FORECAST_WIND_SPEED = 'wind_speed'
-ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
 
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
@@ -131,6 +130,9 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
+        if self.hass.config.units.name == 'imperial':
+            return round(self.data.get_wind().get('speed') * 2.24, 2)
+
         return round(self.data.get_wind().get('speed') * 3.6, 2)
 
     @property
@@ -147,6 +149,15 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         data = []
+
+        def calc_precipitation(rain, snow):
+            """Calculate the precipitation."""
+            rain_value = 0 if rain is None else rain
+            snow_value = 0 if snow is None else snow
+            if round(rain_value + snow_value, 1) == 0:
+                return None
+            return round(rain_value + snow_value, 1)
+
         for entry in self.forecast_data.get_weathers():
             if self._mode == 'daily':
                 data.append({
@@ -157,7 +168,9 @@ class OpenWeatherMapWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP_LOW:
                         entry.get_temperature('celsius').get('night'),
                     ATTR_FORECAST_PRECIPITATION:
-                        entry.get_rain().get('all'),
+                        calc_precipitation(
+                            entry.get_rain().get('all'),
+                            entry.get_snow().get('all')),
                     ATTR_FORECAST_WIND_SPEED:
                         entry.get_wind().get('speed'),
                     ATTR_FORECAST_WIND_BEARING:

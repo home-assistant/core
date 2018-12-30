@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2018.09.10']
+REQUIREMENTS = ['youtube_dl==2018.12.17']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ class MediaExtractor:
             if entity_id:
                 data[ATTR_ENTITY_ID] = entity_id
 
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.hass.services.async_call(
                     MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
             )

@@ -22,7 +22,7 @@ from .const import (
 from .device import get_mysensors_devices
 from .gateway import get_mysensors_gateway, setup_gateways, finish_setup
 
-REQUIREMENTS = ['pymysensors==0.17.0']
+REQUIREMENTS = ['pymysensors==0.18.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ async def async_setup(hass, config):
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
 
-    hass.async_add_job(finish_setup(hass, gateways))
+    hass.async_create_task(finish_setup(hass, config, gateways))
 
     return True
 
@@ -135,7 +135,7 @@ def setup_mysensors_platform(
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
     if not discovery_info:
-        return
+        return None
     if device_args is None:
         device_args = ()
     new_devices = []

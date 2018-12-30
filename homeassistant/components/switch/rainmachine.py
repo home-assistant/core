@@ -7,8 +7,8 @@ https://home-assistant.io/components/switch.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
-    PROGRAM_UPDATE_TOPIC, ZONE_UPDATE_TOPIC, RainMachineEntity)
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
+    ZONE_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -101,15 +101,13 @@ VEGETATION_MAP = {
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the RainMachine Switch platform."""
-    if discovery_info is None:
-        return
+    """Set up RainMachine switches sensor based on the old way."""
+    pass
 
-    _LOGGER.debug('Config received: %s', discovery_info)
 
-    zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
-
-    rainmachine = hass.data[DATA_RAINMACHINE]
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up RainMachine switches based on a config entry."""
+    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     entities = []
 
@@ -127,7 +125,9 @@ async def async_setup_platform(
             continue
 
         _LOGGER.debug('Adding zone: %s', zone)
-        entities.append(RainMachineZone(rainmachine, zone, zone_run_time))
+        entities.append(
+            RainMachineZone(
+                rainmachine, zone, rainmachine.default_zone_runtime))
 
     async_add_entities(entities, True)
 
@@ -186,8 +186,8 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated)
+        self._dispatcher_handlers.append(async_dispatcher_connect(
+            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
@@ -251,10 +251,10 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated)
-        async_dispatcher_connect(
-            self.hass, ZONE_UPDATE_TOPIC, self._program_updated)
+        self._dispatcher_handlers.append(async_dispatcher_connect(
+            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated))
+        self._dispatcher_handlers.append(async_dispatcher_connect(
+            self.hass, ZONE_UPDATE_TOPIC, self._program_updated))
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""

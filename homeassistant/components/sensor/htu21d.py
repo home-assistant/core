@@ -4,7 +4,6 @@ Support for HTU21D temperature and humidity sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.htu21d/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -39,27 +38,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=import-error
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the HTU21D sensor."""
-    import smbus
-    from i2csense.htu21d import HTU21D
+    import smbus  # pylint: disable=import-error
+    from i2csense.htu21d import HTU21D  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
     temp_unit = hass.config.units.temperature_unit
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
-    sensor = yield from hass.async_add_job(
+    sensor = await hass.async_add_job(
         partial(HTU21D, bus, logger=_LOGGER)
     )
     if not sensor.sample_ok:
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
 
-    sensor_handler = yield from hass.async_add_job(HTU21DHandler, sensor)
+    sensor_handler = await hass.async_add_job(HTU21DHandler, sensor)
 
     dev = [HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
            HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')]
@@ -107,10 +104,9 @@ class HTU21DSensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the HTU21D sensor and update the state."""
-        yield from self.hass.async_add_job(self._client.update)
+        await self.hass.async_add_job(self._client.update)
         if self._client.sensor.sample_ok:
             if self._variable == SENSOR_TEMPERATURE:
                 value = round(self._client.sensor.temperature, 1)

@@ -39,11 +39,11 @@ class HomeKitLight(HomeKitEntity, Light):
     def update_characteristics(self, characteristics):
         """Synchronise light state with Home Assistant."""
         # pylint: disable=import-error
-        import homekit
+        from homekit.model.characteristics import CharacteristicsTypes
 
         for characteristic in characteristics:
             ctype = characteristic['type']
-            ctype = homekit.CharacteristicsTypes.get_short(ctype)
+            ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "on":
                 self._chars['on'] = characteristic['iid']
                 self._on = characteristic['value']

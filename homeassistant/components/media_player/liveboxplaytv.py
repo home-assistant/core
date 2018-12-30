@@ -4,7 +4,6 @@ Support for interface with an Orange Livebox Play TV appliance.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.liveboxplaytv/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -44,9 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -83,8 +81,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._media_image_url = None
         self._media_last_updated = None
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve the latest data."""
         import pyteleloisirs
         try:
@@ -95,7 +92,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             channel = self._client.channel
             if channel is not None:
                 self._current_channel = channel
-                program = yield from \
+                program = await \
                     self._client.async_get_current_program()
                 if program and self._current_program != program.get('name'):
                     self._current_program = program.get('name')
@@ -109,7 +106,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                 # Set media image to current program if a thumbnail is
                 # available. Otherwise we'll use the channel's image.
                 img_size = 800
-                prg_img_url = yield from \
+                prg_img_url = await \
                     self._client.async_get_current_program_image(img_size)
                 if prg_img_url:
                     self._media_image_url = prg_img_url

@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_MAC
 
-REQUIREMENTS = ['PySwitchbot==0.3']
+REQUIREMENTS = ['PySwitchbot==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

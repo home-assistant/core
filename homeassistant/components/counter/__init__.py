@@ -9,12 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +19,7 @@ ATTR_INITIAL = 'initial'
 ATTR_STEP = 'step'
 
 CONF_INITIAL = 'initial'
+CONF_RESTORE = 'restore'
 CONF_STEP = 'step'
 
 DEFAULT_INITIAL = 0
@@ -35,7 +33,7 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -45,52 +43,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
     })
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def increment(hass, entity_id):
-    """Increment a counter."""
-    hass.add_job(async_increment, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_increment(hass, entity_id):
-    """Increment a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def decrement(hass, entity_id):
-    """Decrement a counter."""
-    hass.add_job(async_decrement, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_decrement(hass, entity_id):
-    """Decrement a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def reset(hass, entity_id):
-    """Reset a counter."""
-    hass.add_job(async_reset, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_reset(hass, entity_id):
-    """Reset a counter."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_RESET, {ATTR_ENTITY_ID: entity_id}))
 
 
 async def async_setup(hass, config):
@@ -105,10 +62,11 @@ async def async_setup(hass, config):
 
         name = cfg.get(CONF_NAME)
         initial = cfg.get(CONF_INITIAL)
+        restore = cfg.get(CONF_RESTORE)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
 
-        entities.append(Counter(object_id, name, initial, step, icon))
+        entities.append(Counter(object_id, name, initial, restore, step, icon))
 
     if not entities:
         return False
@@ -127,13 +85,14 @@ async def async_setup(hass, config):
     return True
 
 
-class Counter(Entity):
+class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, step, icon):
+    def __init__(self, object_id, name, initial, restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
+        self._restore = restore
         self._step = step
         self._state = self._initial = initial
         self._icon = icon
@@ -168,12 +127,13 @@ class Counter(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        # If not None, we got an initial value.
-        if self._state is not None:
-            return
-
-        state = await async_get_last_state(self.hass, self.entity_id)
-        self._state = state and state.state == state
+        await super().async_added_to_hass()
+        # __init__ will set self._state to self._initial, only override
+        # if needed.
+        if self._restore:
+            state = await self.async_get_last_state()
+            if state is not None:
+                self._state = int(state.state)
 
     async def async_decrement(self):
         """Decrement the counter."""

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -76,7 +77,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
+    if rest.data is None:
+        raise PlatformNotReady
 
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
     add_entities([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
@@ -170,6 +175,7 @@ class RestData:
 
     def update(self):
         """Get the latest data from REST service with provided method."""
+        _LOGGER.debug("Updating from %s", self._request.url)
         try:
             with requests.Session() as sess:
                 response = sess.send(

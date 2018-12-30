@@ -15,6 +15,7 @@ DEPENDENCIES = ['conversation', 'introduction', 'zone']
 DOMAIN = 'demo'
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    'air_pollutants',
     'alarm_control_panel',
     'binary_sensor',
     'calendar',
@@ -35,8 +36,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 ]
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the demo environment."""
     group = hass.components.group
     configurator = hass.components.configurator
@@ -101,7 +101,7 @@ def async_setup(hass, config):
         {'weblink': {'entities': [{'name': 'Router',
                                    'url': 'http://192.168.1.1'}]}}))
 
-    results = yield from asyncio.gather(*tasks, loop=hass.loop)
+    results = await asyncio.gather(*tasks, loop=hass.loop)
 
     if any(not result for result in results):
         return False
@@ -192,7 +192,7 @@ def async_setup(hass, config):
         'climate.ecobee',
     ], view=True))
 
-    results = yield from asyncio.gather(*tasks2, loop=hass.loop)
+    results = await asyncio.gather(*tasks2, loop=hass.loop)
 
     if any(not result for result in results):
         return False

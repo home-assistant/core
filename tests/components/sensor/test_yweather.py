@@ -148,8 +148,8 @@ class TestWeather(unittest.TestCase):
         assert state is not None
 
         assert state.state == 'Mostly Cloudy'
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Condition')
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Condition'
 
     @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
@@ -161,59 +161,59 @@ class TestWeather(unittest.TestCase):
 
         state = self.hass.states.get('sensor.yweather_condition')
         assert state is not None
-        self.assertEqual(state.state, 'Mostly Cloudy')
-        self.assertEqual(state.attributes.get('condition_code'),
-                         '28')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Condition')
+        assert state.state == 'Mostly Cloudy'
+        assert state.attributes.get('condition_code') == \
+            '28'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Condition'
 
         state = self.hass.states.get('sensor.yweather_current')
         assert state is not None
-        self.assertEqual(state.state, 'Cloudy')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Current')
+        assert state.state == 'Cloudy'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Current'
 
         state = self.hass.states.get('sensor.yweather_temperature')
         assert state is not None
-        self.assertEqual(state.state, '18')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Temperature')
+        assert state.state == '18'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Temperature'
 
         state = self.hass.states.get('sensor.yweather_temperature_max')
         assert state is not None
-        self.assertEqual(state.state, '23')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Temperature max')
+        assert state.state == '23'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Temperature max'
 
         state = self.hass.states.get('sensor.yweather_temperature_min')
         assert state is not None
-        self.assertEqual(state.state, '16')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Temperature min')
+        assert state.state == '16'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Temperature min'
 
         state = self.hass.states.get('sensor.yweather_wind_speed')
         assert state is not None
-        self.assertEqual(state.state, '3.94')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Wind speed')
+        assert state.state == '3.94'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Wind speed'
 
         state = self.hass.states.get('sensor.yweather_pressure')
         assert state is not None
-        self.assertEqual(state.state, '1000.0')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Pressure')
+        assert state.state == '1000.0'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Pressure'
 
         state = self.hass.states.get('sensor.yweather_visibility')
         assert state is not None
-        self.assertEqual(state.state, '14.23')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Visibility')
+        assert state.state == '14.23'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Visibility'
 
         state = self.hass.states.get('sensor.yweather_humidity')
         assert state is not None
-        self.assertEqual(state.state, '71')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Yweather Humidity')
+        assert state.state == '71'
+        assert state.attributes.get('friendly_name') == \
+            'Yweather Humidity'
 
     @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)

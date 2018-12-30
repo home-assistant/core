@@ -50,6 +50,12 @@ class BloomSkySensor(BinarySensorDevice):
         self._sensor_name = sensor_name
         self._name = '{} {}'.format(device['DeviceName'], sensor_name)
         self._state = None
+        self._unique_id = '{}-{}'.format(self._device_id, self._sensor_name)
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):

@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "PIN"
                 },
+                "description": "Pusty",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"
             },
             "user": {
@@ -21,6 +22,7 @@
                     "email": "Adres e-mail",
                     "password": "Has\u0142o"
                 },
+                "description": "Pusty",
                 "title": "Logowanie do Google Hangouts"
             }
         },

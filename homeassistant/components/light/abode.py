@@ -8,9 +8,10 @@ import logging
 from math import ceil
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-import homeassistant.util.color as color_util
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin)
 
 
 DEPENDENCIES = ['abode']
@@ -45,10 +46,13 @@ class AbodeLight(AbodeDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        if (ATTR_HS_COLOR in kwargs and
-                self._device.is_dimmable and self._device.has_color):
-            self._device.set_color(color_util.color_hs_to_RGB(
-                *kwargs[ATTR_HS_COLOR]))
+        if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
+            self._device.set_color_temp(
+                int(color_temperature_mired_to_kelvin(
+                    kwargs[ATTR_COLOR_TEMP])))
+
+        if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
+            self._device.set_color(kwargs[ATTR_HS_COLOR])
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert HASS brightness (0-255) to Abode brightness (0-99)
@@ -78,17 +82,22 @@ class AbodeLight(AbodeDevice, Light):
             return ceil(brightness * 255 / 99.0)
 
     @property
+    def color_temp(self):
+        """Return the color temp of the light."""
+        if self._device.has_color:
+            return color_temperature_kelvin_to_mired(self._device.color_temp)
+
+    @property
     def hs_color(self):
         """Return the color of the light."""
-        if self._device.is_dimmable and self._device.has_color:
-            return color_util.color_RGB_to_hs(*self._device.color)
+        if self._device.has_color:
+            return self._device.color
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._device.is_dimmable and self._device.has_color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        if self._device.is_dimmable and self._device.is_color_capable:
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
         if self._device.is_dimmable:
             return SUPPORT_BRIGHTNESS
-
         return 0

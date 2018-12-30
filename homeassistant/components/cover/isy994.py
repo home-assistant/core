@@ -44,6 +44,8 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
     @property
     def current_cover_position(self) -> int:
         """Return the current cover position."""
+        if self.is_unknown() or self.value is None:
+            return None
         return sorted((0, self.value, 100))[1]
 
     @property

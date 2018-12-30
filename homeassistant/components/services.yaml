@@ -260,23 +260,6 @@ eight_sleep:
         description: Duration to heat at the target level in seconds.
         example: 3600
 
-axis:
-  vapix_call:
-    description: Configure device using Vapix parameter management.
-    fields:
-      name:
-        description: Name of device to Configure. [Required]
-        example: M1065-W
-      cgi:
-        description: Which cgi to call on device. [Optional] Default is 'param.cgi'
-        example: 'applications/control.cgi'
-      action:
-        description: What type of call. [Optional] Default is 'update'
-        example: 'start'
-      param:
-        description: What parameter to operate on. [Required]
-        example: 'package=VideoMotionDetection'
-
 apple_tv:
   apple_tv_authenticate:
     description: Start AirPlay device authentication.
@@ -526,6 +509,12 @@ homeassistant:
     fields:
       entity_id:
         description: The entity_id of the device to turn off.
+        example: light.living_room
+  update_entity:
+    description: Force one or more entities to update its data
+    fields:
+      entity_id:
+        description: One or multiple entity_ids to update. Can be a list.
         example: light.living_room
 
 xiaomi_aqara:

@@ -4,7 +4,6 @@ Support for INSTEON fans via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.insteon/
 """
-import asyncio
 import logging
 
 from homeassistant.components.fan import (SPEED_OFF,
@@ -28,9 +27,8 @@ FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -64,20 +62,17 @@ class InsteonFan(InsteonEntity, FanEntity):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
-    @asyncio.coroutine
-    def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
-        yield from self.async_set_speed(speed)
+        await self.async_set_speed(speed)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
-        yield from self.async_set_speed(SPEED_OFF)
+        await self.async_set_speed(SPEED_OFF)
 
-    @asyncio.coroutine
-    def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         fan_speed = SPEED_TO_HEX[speed]
         if fan_speed == 0x00:

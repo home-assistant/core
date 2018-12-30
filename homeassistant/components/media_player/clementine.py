@@ -4,7 +4,6 @@ Support for Clementine Music Player as media player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.clementine/
 """
-import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -169,8 +168,7 @@ class ClementineDevice(MediaPlayerDevice):
 
         return None
 
-    @asyncio.coroutine
-    def async_get_media_image(self):
+    async def async_get_media_image(self):
         """Fetch media image of current playing image."""
         if self._client.current_track:
             image = bytes(self._client.current_track['art'])

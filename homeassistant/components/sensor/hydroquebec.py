@@ -7,7 +7,6 @@ https://www.hydroquebec.com/portail/en/group/clientele/portrait-de-consommation
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.hydroquebec/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -93,9 +92,8 @@ DAILY_MAP = (('yesterday_total_consumption', 'consoTotalQuot'),
              ('yesterday_higher_price_consumption', 'consoHautQuot'))
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the HydroQuebec sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -107,7 +105,7 @@ def async_setup_platform(hass, config, async_add_entities,
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     hydroquebec_data = HydroquebecData(username, password, httpsession,
                                        contract)
-    contracts = yield from hydroquebec_data.get_contract_list()
+    contracts = await hydroquebec_data.get_contract_list()
     if not contracts:
         return
     _LOGGER.info("Contract list: %s",
@@ -155,10 +153,9 @@ class HydroQuebecSensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Hydroquebec and update the state."""
-        yield from self.hydroquebec_data.async_update()
+        await self.hydroquebec_data.async_update()
         if self.hydroquebec_data.data.get(self.type) is not None:
             self._state = round(self.hydroquebec_data.data[self.type], 2)
 
@@ -174,11 +171,10 @@ class HydroquebecData:
         self._contract = contract
         self.data = {}
 
-    @asyncio.coroutine
-    def get_contract_list(self):
+    async def get_contract_list(self):
         """Return the contract list."""
         # Fetch data
-        ret = yield from self._fetch_data()
+        ret = await self._fetch_data()
         if ret:
             return self.client.get_contracts()
         return []
@@ -194,8 +190,7 @@ class HydroquebecData:
             return False
         return True
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Return the latest collected data from HydroQuebec."""
-        yield from self._fetch_data()
+        await self._fetch_data()
         self.data = self.client.get_data(self._contract)[self._contract]

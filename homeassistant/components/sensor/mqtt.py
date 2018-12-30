@@ -12,17 +12,21 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -44,75 +48,95 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    # Integrations shouldn't never expose unique_id through configuration
-    # this here is an exception because MQTT is a msg transport, not a protocol
+    # Integrations should never expose unique_id through configuration.
+    # This is an exception because MQTT is a message transport, not a protocol.
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    """Set up MQTT Sensor."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
-
-    async_add_entities([MqttSensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_UNIT_OF_MEASUREMENT),
-        config.get(CONF_FORCE_UPDATE),
-        config.get(CONF_EXPIRE_AFTER),
-        config.get(CONF_ICON),
-        config.get(CONF_DEVICE_CLASS),
-        value_template,
-        config.get(CONF_JSON_ATTRS),
-        config.get(CONF_UNIQUE_ID),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-    )])
+    """Set up MQTT sensors through configuration.yaml."""
+    await _async_setup_entity(config, async_add_entities)
 
 
-class MqttSensor(MqttAvailability, Entity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT sensors dynamically through MQTT discovery."""
+    async def async_discover_sensor(discovery_payload):
+        """Discover and add a discovered MQTT sensor."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(hass,
+                             MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
+                             async_discover_sensor)
+
+
+async def _async_setup_entity(config: ConfigType, async_add_entities,
+                              discovery_hash=None):
+    """Set up MQTT sensor."""
+    async_add_entities([MqttSensor(config, discovery_hash)])
+
+
+class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                 MqttEntityDeviceInfo, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, icon, device_class: Optional[str],
-                 value_template, json_attributes, unique_id: Optional[str],
-                 availability_topic, payload_available,
-                 payload_not_available):
+    def __init__(self, config, discovery_hash):
         """Initialize the sensor."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        self._config = config
+        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = STATE_UNKNOWN
-        self._name = name
-        self._state_topic = state_topic
-        self._qos = qos
-        self._unit_of_measurement = unit_of_measurement
-        self._force_update = force_update
-        self._template = value_template
-        self._expire_after = expire_after
-        self._icon = icon
-        self._device_class = device_class
+        self._sub_state = None
         self._expiration_trigger = None
-        self._json_attributes = set(json_attributes)
-        self._unique_id = unique_id
         self._attributes = None
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        qos = config.get(CONF_QOS)
+        device_config = config.get(CONF_DEVICE)
+
+        if config.get(CONF_JSON_ATTRS):
+            _LOGGER.warning('configuration variable "json_attributes" is '
+                            'deprecated, replace with "json_attributes_topic"')
+
+        MqttAttributes.__init__(self, config)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._config = config
+        await self.attributes_discovery_update(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        template = self._config.get(CONF_VALUE_TEMPLATE)
+        if template is not None:
+            template.hass = self.hass
 
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
             # auto-expire enabled?
-            if self._expire_after is not None and self._expire_after > 0:
+            expire_after = self._config.get(CONF_EXPIRE_AFTER)
+            if expire_after is not None and expire_after > 0:
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
@@ -120,18 +144,19 @@ class MqttSensor(MqttAvailability, Entity):
 
                 # Set new trigger
                 expiration_at = (
-                    dt_util.utcnow() + timedelta(seconds=self._expire_after))
+                    dt_util.utcnow() + timedelta(seconds=expire_after))
 
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at)
 
-            if self._json_attributes:
+            json_attributes = set(self._config.get(CONF_JSON_ATTRS))
+            if json_attributes:
                 self._attributes = {}
                 try:
                     json_dict = json.loads(payload)
                     if isinstance(json_dict, dict):
                         attrs = {k: json_dict[k] for k in
-                                 self._json_attributes & json_dict.keys()}
+                                 json_attributes & json_dict.keys()}
                         self._attributes = attrs
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
@@ -139,14 +164,24 @@ class MqttSensor(MqttAvailability, Entity):
                     _LOGGER.warning("MQTT payload could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", payload)
 
-            if self._template is not None:
-                payload = self._template.async_render_with_possible_json_value(
+            if template is not None:
+                payload = template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        await mqtt.async_subscribe(self.hass, self._state_topic,
-                                   message_received, self._qos)
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state,
+            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+                             'msg_callback': message_received,
+                             'qos': self._config.get(CONF_QOS)}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @callback
     def value_is_expired(self, *_):
@@ -163,17 +198,17 @@ class MqttSensor(MqttAvailability, Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def force_update(self):
         """Force update."""
-        return self._force_update
+        return self._config.get(CONF_FORCE_UPDATE)
 
     @property
     def state(self):
@@ -193,9 +228,9 @@ class MqttSensor(MqttAvailability, Entity):
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
-        return self._device_class
+        return self._config.get(CONF_DEVICE_CLASS)

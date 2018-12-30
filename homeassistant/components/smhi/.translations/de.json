@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Name existiert bereits",
+            "wrong_location": "Standort nur in Schweden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name"
+                },
+                "title": "Standort in Schweden"
+            }
+        },
+        "title": "Schwedischer Wetterdienst (SMHI)"
+    }
+}

@@ -4,7 +4,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plant/
 """
 import logging
-import asyncio
 from datetime import datetime, timedelta
 from collections import deque
 import voluptuous as vol
@@ -97,8 +96,7 @@ CONFIG_SCHEMA = vol.Schema({
 ENABLE_LOAD_HISTORY = False
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_PLANTS)
@@ -107,12 +105,9 @@ def async_setup(hass, config):
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
         entity = Plant(plant_name, plant_config)
-        sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
-        _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
-        async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
 
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
@@ -246,15 +241,21 @@ class Plant(Entity):
                 return '{} high'.format(sensor_name)
         return None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and 'recorder' in self.hass.config.components:
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
-    @asyncio.coroutine
-    def _load_history_from_db(self):
+        async_track_state_change(self.hass, list(self._sensormap),
+                                 self.state_changed)
+
+        for entity_id in self._sensormap:
+            state = self.hass.states.get(entity_id)
+            if state is not None:
+                self.state_changed(entity_id, None, state)
+
+    async def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
         This only needs to be done once during startup.

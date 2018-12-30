@@ -4,17 +4,14 @@ Component to offer a way to select an option from a list.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_select/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,42 +75,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-def select_option(hass, entity_id, option):
-    """Set value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_OPTION: option,
-    })
-
-
-@bind_hass
-def select_next(hass, entity_id):
-    """Set next value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
-        ATTR_ENTITY_ID: entity_id,
-    })
-
-
-@bind_hass
-def select_previous(hass, entity_id):
-    """Set previous value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
-        ATTR_ENTITY_ID: entity_id,
-    })
-
-
-@bind_hass
-def set_options(hass, entity_id, options):
-    """Set options of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_OPTIONS: options,
-    })
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -149,11 +111,11 @@ def async_setup(hass, config):
         'async_set_options'
     )
 
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
-class InputSelect(Entity):
+class InputSelect(RestoreEntity):
     """Representation of a select input."""
 
     def __init__(self, object_id, name, initial, options, icon):
@@ -164,13 +126,13 @@ class InputSelect(Entity):
         self._options = options
         self._icon = icon
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Run when entity about to be added."""
+        await super().async_added_to_hass()
         if self._current_option is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         if not state or state.state not in self._options:
             self._current_option = self._options[0]
         else:
@@ -203,27 +165,24 @@ class InputSelect(Entity):
             ATTR_OPTIONS: self._options,
         }
 
-    @asyncio.coroutine
-    def async_select_option(self, option):
+    async def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning('Invalid option: %s (possible options: %s)',
                             option, ', '.join(self._options))
             return
         self._current_option = option
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_offset_index(self, offset):
+    async def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_set_options(self, options):
+    async def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._options = options
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

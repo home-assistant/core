@@ -4,7 +4,6 @@ Offer event listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/docs/automation/trigger/#event-trigger
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -25,8 +24,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = vol.Schema(

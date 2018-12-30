@@ -356,8 +356,14 @@ def test_string():
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.Invalid):
         schema(None)
+
+    with pytest.raises(vol.Invalid):
+        schema([])
+
+    with pytest.raises(vol.Invalid):
+        schema({})
 
     for value in (True, 1, 'hello'):
         schema(value)
@@ -578,3 +584,16 @@ def test_is_regex():
 
     valid_re = ".*"
     schema(valid_re)
+
+
+def test_comp_entity_ids():
+    """Test config validation for component entity IDs."""
+    schema = vol.Schema(cv.comp_entity_ids)
+
+    for valid in ('ALL', 'all', 'AlL', 'light.kitchen', ['light.kitchen'],
+                  ['light.kitchen', 'light.ceiling'], []):
+        schema(valid)
+
+    for invalid in (['light.kitchen', 'not-entity-id'], '*', ''):
+        with pytest.raises(vol.Invalid):
+            schema(invalid)

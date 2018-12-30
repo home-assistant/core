@@ -113,7 +113,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         # Load the initial vehicle data
         vehicles = yield from session.get_vehicles()
         for vehicle in vehicles:
-            hass.async_add_job(data.load_vehicle(vehicle))
+            hass.async_create_task(data.load_vehicle(vehicle))
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
@@ -188,7 +188,7 @@ class AutomaticAuthCallbackView(HomeAssistantView):
         code = params['code']
         state = params['state']
         initialize_callback = hass.data[DATA_CONFIGURING][state]
-        hass.async_add_job(initialize_callback(code, state))
+        hass.async_create_task(initialize_callback(code, state))
 
         return response
 
@@ -209,7 +209,7 @@ class AutomaticData:
         self.ws_close_requested = False
 
         self.client.on_app_event(
-            lambda name, event: self.hass.async_add_job(
+            lambda name, event: self.hass.async_create_task(
                 self.handle_event(name, event)))
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.ws_close())

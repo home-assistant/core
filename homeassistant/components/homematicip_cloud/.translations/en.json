@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Access point is already configured",
-            "conection_aborted": "Could not connect to HMIP server",
             "connection_aborted": "Could not connect to HMIP server",
             "unknown": "Unknown error occurred."
         },

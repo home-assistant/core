@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON)
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -57,19 +56,8 @@ PLATFORM_SCHEMA = vol.Schema(
     ), extra=vol.ALLOW_EXTRA)
 
 SCENE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
-
-
-@bind_hass
-def activate(hass, entity_id=None):
-    """Activate a scene."""
-    data = {}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 async def async_setup(hass, config):

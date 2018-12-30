@@ -5,8 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz.const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
+    DOMAIN as DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -30,6 +30,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
@@ -41,31 +43,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 if sensor.type in DECONZ_REMOTE:
                     if sensor.battery:
-                        entities.append(DeconzBattery(sensor))
+                        entities.append(DeconzBattery(sensor, gateway))
                 else:
-                    entities.append(DeconzSensor(sensor))
+                    entities.append(DeconzSensor(sensor, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
+    async_add_sensor(gateway.api.sensors.values())
 
 
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, sensor):
+    def __init__(self, sensor, gateway):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
+        self.gateway = gateway
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._sensor.remove_callback(self.async_update_callback)
         self._sensor = None
 
@@ -115,7 +123,7 @@ class DeconzSensor(Entity):
     @property
     def available(self):
         """Return true if sensor is available."""
-        return self._sensor.reachable
+        return self.gateway.available and self._sensor.reachable
 
     @property
     def should_poll(self):
@@ -147,6 +155,7 @@ class DeconzSensor(Entity):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -154,32 +163,40 @@ class DeconzSensor(Entity):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, sensor):
+    def __init__(self, sensor, gateway):
         """Register dispatcher callback for update of battery state."""
         self._sensor = sensor
+        self.gateway = gateway
+        self.unsub_dispatcher = None
+
         self._name = '{} {}'.format(self._sensor.name, 'Battery Level')
         self._unit_of_measurement = "%"
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._sensor.remove_callback(self.async_update_callback)
         self._sensor = None
 
     @callback
     def async_update_callback(self, reason):
         """Update the battery's state, if needed."""
-        if 'battery' in reason['attr']:
+        if 'reachable' in reason['attr'] or 'battery' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -208,6 +225,11 @@ class DeconzBattery(Entity):
         return self._unit_of_measurement
 
     @property
+    def available(self):
+        """Return true if sensor is available."""
+        return self.gateway.available and self._sensor.reachable
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -227,6 +249,7 @@ class DeconzBattery(Entity):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -234,4 +257,5 @@ class DeconzBattery(Entity):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

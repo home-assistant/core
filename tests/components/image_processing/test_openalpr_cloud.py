@@ -10,6 +10,7 @@ from homeassistant.components.image_processing.openalpr_cloud import (
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+from tests.components.image_processing import common
 
 
 class TestOpenAlprCloudSetup:
@@ -160,7 +161,7 @@ class TestOpenAlprCloud:
         with patch('homeassistant.components.camera.async_get_image',
                    return_value=mock_coro(
                        camera.Image('image/jpeg', b'image'))):
-            ip.scan(self.hass, entity_id='image_processing.test_local')
+            common.scan(self.hass, entity_id='image_processing.test_local')
             self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')
@@ -188,7 +189,7 @@ class TestOpenAlprCloud:
         with patch('homeassistant.components.camera.async_get_image',
                    return_value=mock_coro(
                        camera.Image('image/jpeg', b'image'))):
-            ip.scan(self.hass, entity_id='image_processing.test_local')
+            common.scan(self.hass, entity_id='image_processing.test_local')
             self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
@@ -204,7 +205,7 @@ class TestOpenAlprCloud:
         with patch('homeassistant.components.camera.async_get_image',
                    return_value=mock_coro(
                        camera.Image('image/jpeg', b'image'))):
-            ip.scan(self.hass, entity_id='image_processing.test_local')
+            common.scan(self.hass, entity_id='image_processing.test_local')
             self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1

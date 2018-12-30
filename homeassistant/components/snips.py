@@ -142,7 +142,7 @@ async def async_setup(hass, config):
                 hass, DOMAIN, intent_type, slots, request['input'])
             if 'plain' in intent_response.speech:
                 snips_response = intent_response.speech['plain']['speech']
-        except intent.UnknownIntent as err:
+        except intent.UnknownIntent:
             _LOGGER.warning("Received unknown intent %s",
                             request['intent']['intentName'])
         except intent.IntentError:

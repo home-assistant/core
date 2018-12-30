@@ -12,6 +12,8 @@ import itertools as it
 import logging
 from typing import Awaitable
 
+import voluptuous as vol
+
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
@@ -21,11 +23,16 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
     RESTART_EXIT_CODE)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
+SERVICE_UPDATE_ENTITY = 'update_entity'
+SCHEMA_UPDATE_ENTITY = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids
+})
 
 
 def is_on(hass, entity_id=None):
@@ -59,61 +66,9 @@ def is_on(hass, entity_id=None):
     return False
 
 
-def turn_on(hass, entity_id=None, **service_data):
-    """Turn specified entity on if possible."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_ON, service_data)
-
-
-def turn_off(hass, entity_id=None, **service_data):
-    """Turn specified entity off."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
-
-
-def toggle(hass, entity_id=None, **service_data):
-    """Toggle specified entity."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
-
-
-def stop(hass):
-    """Stop Home Assistant."""
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP)
-
-
-def restart(hass):
-    """Stop Home Assistant."""
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
-
-
-def check_config(hass):
-    """Check the config files."""
-    hass.services.call(ha.DOMAIN, SERVICE_CHECK_CONFIG)
-
-
-def reload_core_config(hass):
-    """Reload the core config."""
-    hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
-
-
-@asyncio.coroutine
-def async_reload_core_config(hass):
-    """Reload the core config."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
-
-
-@asyncio.coroutine
-def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up general services related to Home Assistant."""
-    @asyncio.coroutine
-    def async_handle_turn_service(service):
+    async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
@@ -148,7 +103,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
 
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
@@ -164,15 +119,14 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
         intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 
-    @asyncio.coroutine
-    def async_handle_core_service(call):
+    async def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             hass.async_create_task(hass.async_stop())
             return
 
         try:
-            errors = yield from conf_util.async_check_ha_config_file(hass)
+            errors = await conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
             return
 
@@ -186,23 +140,33 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
+    async def async_handle_update_service(call):
+        """Service handler for updating an entity."""
+        tasks = [hass.helpers.entity_component.async_update_entity(entity)
+                 for entity in call.data[ATTR_ENTITY_ID]]
+
+        if tasks:
+            await asyncio.wait(tasks)
+
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_UPDATE_ENTITY, async_handle_update_service,
+        schema=SCHEMA_UPDATE_ENTITY)
 
-    @asyncio.coroutine
-    def async_handle_reload_config(call):
+    async def async_handle_reload_config(call):
         """Service handler for reloading core config."""
         try:
-            conf = yield from conf_util.async_hass_config_yaml(hass)
+            conf = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
-        yield from conf_util.async_process_ha_core_config(
+        await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.async_register(

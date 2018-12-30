@@ -4,7 +4,6 @@ Local optical character recognition processing of seven segments displays.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.seven_segments/
 """
-import asyncio
 import logging
 import io
 import os
@@ -44,9 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Seven segments OCR platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -71,7 +69,9 @@ class ImageProcessingSsocr(ImageProcessingEntity):
                 split_entity_id(camera_entity)[1])
         self._state = None
 
-        self.filepath = os.path.join(self.hass.config.config_dir, 'ocr.png')
+        self.filepath = os.path.join(self.hass.config.config_dir,
+                                     'ssocr-{0}.png'.format(
+                                         self._name.replace(' ', '_')))
         crop = ['crop', str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
                 str(config[CONF_WIDTH]), str(config[CONF_HEIGHT])]
         digits = ['-d', str(config.get(CONF_DIGITS, -1))]

@@ -7,8 +7,7 @@ https://home-assistant.io/components/climate.tuya/
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, ENTITY_ID_FORMAT, STATE_AUTO, STATE_COOL, STATE_ECO,
-    STATE_ELECTRIC, STATE_FAN_ONLY, STATE_GAS, STATE_HEAT, STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND, STATE_PERFORMANCE, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
 from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
@@ -23,13 +22,8 @@ HA_STATE_TO_TUYA = {
     STATE_AUTO: 'auto',
     STATE_COOL: 'cold',
     STATE_ECO: 'eco',
-    STATE_ELECTRIC: 'electric',
     STATE_FAN_ONLY: 'wind',
-    STATE_GAS: 'gas',
     STATE_HEAT: 'hot',
-    STATE_HEAT_PUMP: 'heat_pump',
-    STATE_HIGH_DEMAND: 'high_demand',
-    STATE_PERFORMANCE: 'performance',
 }
 
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}

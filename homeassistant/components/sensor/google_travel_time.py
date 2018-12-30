@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
@@ -68,6 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+DATA_KEY = 'google_travel_time'
 
 
 def convert_time_to_utc(timestr):
@@ -90,6 +91,10 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         if options.get('units') is None:
             options['units'] = hass.config.units.name
+        if DATA_KEY not in hass.data:
+            hass.data[DATA_KEY] = []
+            hass.services.register(
+                DOMAIN, 'google_travel_sensor_update', update)
 
         travel_mode = config.get(CONF_TRAVEL_MODE)
         mode = options.get(CONF_MODE)
@@ -110,9 +115,18 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         sensor = GoogleTravelTimeSensor(
             hass, name, api_key, origin, destination, options)
+        hass.data[DATA_KEY].append(sensor)
 
         if sensor.valid_api_connection:
             add_entities_callback([sensor])
+
+    def update(service):
+        """Update service for manual updates."""
+        entity_id = service.data.get('entity_id')
+        for sensor in hass.data[DATA_KEY]:
+            if sensor.entity_id == entity_id:
+                sensor.update(no_throttle=True)
+                sensor.schedule_update_ha_state()
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)

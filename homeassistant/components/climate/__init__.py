@@ -10,7 +10,6 @@ import functools as ft
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
@@ -20,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
-    PRECISION_TENTHS, )
+    PRECISION_TENTHS)
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
@@ -49,11 +48,6 @@ STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
-STATE_ELECTRIC = 'electric'
-STATE_PERFORMANCE = 'performance'
-STATE_HIGH_DEMAND = 'high_demand'
-STATE_HEAT_PUMP = 'heat_pump'
-STATE_GAS = 'gas'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2
@@ -98,15 +92,15 @@ CONVERTIBLE_ATTRIBUTE = [
 _LOGGER = logging.getLogger(__name__)
 
 ON_OFF_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
 })
 SET_AUX_HEAT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
@@ -116,131 +110,30 @@ SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
         vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_OPERATION_MODE): cv.string,
     }
 ))
 SET_FAN_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
 })
 SET_HOLD_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_HOLD_MODE): cv.string,
 })
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
 })
 SET_SWING_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_SWING_MODE): cv.string,
 })
-
-
-@bind_hass
-def set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified climate devices away mode on."""
-    data = {
-        ATTR_AWAY_MODE: away_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
-
-
-@bind_hass
-def set_hold_mode(hass, hold_mode, entity_id=None):
-    """Set new hold mode."""
-    data = {
-        ATTR_HOLD_MODE: hold_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HOLD_MODE, data)
-
-
-@bind_hass
-def set_aux_heat(hass, aux_heat, entity_id=None):
-    """Turn all or specified climate devices auxiliary heater on."""
-    data = {
-        ATTR_AUX_HEAT: aux_heat
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
-
-
-@bind_hass
-def set_temperature(hass, temperature=None, entity_id=None,
-                    target_temp_high=None, target_temp_low=None,
-                    operation_mode=None):
-    """Set new target temperature."""
-    kwargs = {
-        key: value for key, value in [
-            (ATTR_TEMPERATURE, temperature),
-            (ATTR_TARGET_TEMP_HIGH, target_temp_high),
-            (ATTR_TARGET_TEMP_LOW, target_temp_low),
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
-        ] if value is not None
-    }
-    _LOGGER.debug("set_temperature start data=%s", kwargs)
-    hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
-
-
-@bind_hass
-def set_humidity(hass, humidity, entity_id=None):
-    """Set new target humidity."""
-    data = {ATTR_HUMIDITY: humidity}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
-
-
-@bind_hass
-def set_fan_mode(hass, fan, entity_id=None):
-    """Set all or specified climate devices fan mode on."""
-    data = {ATTR_FAN_MODE: fan}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
-
-
-@bind_hass
-def set_operation_mode(hass, operation_mode, entity_id=None):
-    """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, data)
-
-
-@bind_hass
-def set_swing_mode(hass, swing_mode, entity_id=None):
-    """Set new target swing mode."""
-    data = {ATTR_SWING_MODE: swing_mode}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
 
 
 async def async_setup(hass, config):
@@ -356,9 +249,11 @@ class ClimateDevice(Entity):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision)
 
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
             if supported_features & SUPPORT_TARGET_HUMIDITY_LOW:
                 data[ATTR_MIN_HUMIDITY] = self.min_humidity

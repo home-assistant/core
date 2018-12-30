@@ -4,7 +4,6 @@ Support for Envisalink sensors (shows panel info).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.envisalink/
 """
-import asyncio
 import logging
 
 from homeassistant.core import callback
@@ -19,9 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['envisalink']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     configured_partitions = discovery_info['partitions']
 
@@ -51,8 +49,7 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(partition_name + ' Keypad', info, controller)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)

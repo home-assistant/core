@@ -50,7 +50,7 @@ class AxisCamera(MjpegCamera):
 
     def __init__(self, hass, config, port):
         """Initialize Axis Communications camera component."""
-        super().__init__(hass, config)
+        super().__init__(config)
         self.port = port
         dispatcher_connect(
             hass, DOMAIN + '_' + config[CONF_NAME] + '_new_ip', self._new_ip)

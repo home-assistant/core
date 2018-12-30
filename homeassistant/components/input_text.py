@@ -4,7 +4,6 @@ Component to offer a way to enter a value into a text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_text/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,10 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,17 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-def set_value(hass, entity_id, value):
-    """Set input_text to value."""
-    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    })
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up an input text box."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -112,11 +99,11 @@ def async_setup(hass, config):
         'async_set_value'
     )
 
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
-class InputText(Entity):
+class InputText(RestoreEntity):
     """Represent a text box."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, icon,
@@ -167,25 +154,24 @@ class InputText(Entity):
             ATTR_MODE: self._mode,
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         if self._current_value is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         value = state and state.state
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= len(value) <= self._maximum:
             self._current_value = value
 
-    @asyncio.coroutine
-    def async_set_value(self, value):
+    async def async_set_value(self, value):
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
             _LOGGER.warning("Invalid value: %s (length range %s - %s)",
                             value, self._minimum, self._maximum)
             return
         self._current_value = value
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

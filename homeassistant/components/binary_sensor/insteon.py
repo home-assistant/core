@@ -4,7 +4,6 @@ Support for INSTEON dimmers via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.insteon/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -15,6 +14,7 @@ DEPENDENCIES = ['insteon']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {'openClosedSensor': 'opening',
+                'ioLincSensor': 'opening',
                 'motionSensor': 'motion',
                 'doorSensor': 'door',
                 'wetLeakSensor': 'moisture',
@@ -22,9 +22,8 @@ SENSOR_TYPES = {'openClosedSensor': 'opening',
                 'batterySensor': 'battery'}
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -59,7 +58,8 @@ class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
         """Return the boolean response if the node is on."""
         on_val = bool(self._insteon_device_state.value)
 
-        if self._insteon_device_state.name == 'lightSensor':
+        if self._insteon_device_state.name in ['lightSensor',
+                                               'ioLincSensor']:
             return not on_val
 
         return on_val
