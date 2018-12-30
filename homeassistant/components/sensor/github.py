@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_PASSWORD, CONF_PATH, CONF_NAME,
-    CONF_SCAN_INTERVAL)
+    CONF_SERVER, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
+CONF_SERVER_URL = 'server_url'
 
 ATTR_PATH = 'path'
 ATTR_NAME = 'name'
@@ -42,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Exclusive(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
     vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_SERVER_URL): cv.url,
     vol.Required(CONF_REPOS): cv.ensure_list
 })
 
@@ -62,7 +64,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             repository=repository,
             access_token=config.get(CONF_ACCESS_TOKEN),
             username=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD)
+            password=config.get(CONF_PASSWORD),
+            server_url=config.get(CONF_SERVER_URL)
         )))
     add_entities(sensors, True)
 
@@ -141,16 +144,25 @@ class GitHubData():
     """GitHub Data object."""
 
     def __init__(self, interval, repository, access_token=None, username=None,
-                 password=None):
+                 password=None, server_url=None):
         """Set up GitHub."""
         import github
 
         self._github = github
 
-        if access_token is not None:
-            self._github_obj = github.Github(access_token)
-        elif username is not None and password is not None:
-            self._github_obj = github.Github(username, password)
+        if server_url is not None:
+            server_url += "/api/v3"
+            if access_token is not None:
+                self._github_obj = github.Github(
+                    access_token, base_url=server_url)
+            elif username is not None and password is not None:
+                self._github_obj = github.Github(
+                    username, password, base_url=server_url)
+        else:
+            if access_token is not None:
+                self._github_obj = github.Github(access_token)
+            elif username is not None and password is not None:
+                self._github_obj = github.Github(username, password)
 
         self.repository_path = repository[CONF_PATH]
 
