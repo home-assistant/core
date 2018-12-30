@@ -137,7 +137,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         from aioharmony.harmonyapi import (
-            HarmonyAPI as Harmony_Client, ClientCallbackType
+            HarmonyAPI as HarmonyClient, ClientCallbackType
         )
 
         _LOGGER.debug("%s: Device init started", name)
@@ -147,7 +147,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-        self._client = Harmony_Client(
+        self._client = HarmonyClient(
             ip_address=host,
             callbacks=ClientCallbackType(
                 new_activity=self.new_activity,
@@ -358,7 +358,8 @@ class HarmonyRemote(remote.RemoteDevice):
         except aioexc.TimeOut:
             _LOGGER.error("%s: Syncing hub with Harmony cloud timed-out",
                           self.name)
-        await self.hass.async_add_executor_job(self.write_config_file)
+        else:
+            await self.hass.async_add_executor_job(self.write_config_file)
 
     def write_config_file(self):
         """Write Harmony configuration file."""
