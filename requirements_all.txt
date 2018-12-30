@@ -104,6 +104,9 @@ aiofreepybox==0.0.6
 # homeassistant.components.camera.yi
 aioftp==0.12.0
 
+# homeassistant.components.remote.harmony
+aioharmony==0.1.1
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -522,9 +525,6 @@ homematicip==0.9.8
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
-
-# homeassistant.components.remote.harmony
-https://github.com/home-assistant/pyharmony/archive/31efd339a3c39e7b8f58e823a0eddb59013e03ae.zip#pyharmony==1.0.21b1
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.1.1
