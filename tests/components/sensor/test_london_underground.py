@@ -35,6 +35,7 @@ VALID_RESPONSE = [
     },
 ]
 
+
 class TestLondonTubeSensor(unittest.TestCase):
     """Test the tube_state platform."""
 
