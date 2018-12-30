@@ -1016,7 +1016,7 @@ pyhik==0.1.9
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.53
+pyhomematic==0.1.54
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
