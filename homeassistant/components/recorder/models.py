@@ -18,6 +18,7 @@ from homeassistant.helpers.json import JSONEncoder
 Base = declarative_base()
 
 SCHEMA_VERSION = 6
+COLUMN_EVENT_TYPE_SIZE = 64
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class Events(Base):  # type: ignore
 
     __tablename__ = 'events'
     event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32), index=True)
+    event_type = Column(String(COLUMN_EVENT_TYPE_SIZE), index=True)
     event_data = Column(Text)
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
