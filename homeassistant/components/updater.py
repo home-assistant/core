@@ -162,7 +162,7 @@ async def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
         info_object = await get_system_info(hass, include_components)
-        info_object['huuid'] = huuid
+        info_object['uid'] = huuid
     else:
         info_object = {}
 
