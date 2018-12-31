@@ -297,7 +297,7 @@ class HueLight(Light):
     @property
     def effect(self):
         """Return the current effect."""
-        return self.light.state['effect']
+        return self.light.state.get('effect', None)
 
     @property
     def effect_list(self):
