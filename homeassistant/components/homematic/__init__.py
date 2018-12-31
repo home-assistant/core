@@ -799,8 +799,6 @@ class HMDevice(Entity):
         """Handle all pyhomematic device events."""
         _LOGGER.debug("%s received event '%s' value: %s", self._name,
                       attribute, value)
-        if int(device.split(':')[-1]) != int(self._channel):
-            return
         has_changed = False
 
         # Is data needed for this instance?
