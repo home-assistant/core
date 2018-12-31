@@ -209,7 +209,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._templates = {
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
-            CONF_COLOR_TEMP_COMMAND_TEMPLATE: config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE),
+            CONF_COLOR_TEMP_COMMAND_TEMPLATE:
+                config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE),
             CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
             CONF_HS: config.get(CONF_HS_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
