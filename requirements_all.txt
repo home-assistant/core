@@ -627,6 +627,9 @@ locationsharinglib==3.0.9
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
 
+# homeassistant.components.sensor.london_underground
+london-tube-status==0.2
+
 # homeassistant.components.luftdaten
 luftdaten==0.3.4
 
