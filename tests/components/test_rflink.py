@@ -4,7 +4,8 @@ from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
-    CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND, RflinkCommand)
+    CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND, RflinkCommand,
+    TMP_ENTITY, DATA_ENTITY_LOOKUP, EVENT_KEY_COMMAND, EVENT_KEY_SENSOR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_STOP_COVER)
 
@@ -328,6 +329,8 @@ async def test_race_condition(hass, monkeypatch):
             'platform': 'rflink',
         },
     }
+    tmp_entity = TMP_ENTITY.format('test3')
+
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(
         hass, config, domain, monkeypatch)
@@ -341,6 +344,14 @@ async def test_race_condition(hass, monkeypatch):
         'id': 'test3',
         'command': 'on',
     })
+
+    # tmp_entity added to EVENT_KEY_COMMAND
+    assert tmp_entity in hass.data[DATA_ENTITY_LOOKUP][
+        EVENT_KEY_COMMAND]['test3']
+    # tmp_entity must no be added to EVENT_KEY_SENSOR
+    assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][
+        EVENT_KEY_SENSOR]['test3']
+
     await hass.async_block_till_done()
 
     # test  state of new sensor
@@ -353,6 +364,9 @@ async def test_race_condition(hass, monkeypatch):
         'command': 'on',
     })
     await hass.async_block_till_done()
+    # tmp_entity must be deleted from EVENT_KEY_COMMAND
+    assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][
+        EVENT_KEY_COMMAND]['test3']
 
     # test  state of new sensor
     new_sensor = hass.states.get(domain+'.test3')
