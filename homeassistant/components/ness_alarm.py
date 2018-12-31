@@ -31,6 +31,7 @@ CONF_ZONE_ID = 'id'
 ATTR_CODE = 'code'
 ATTR_OUTPUT_ID = 'output_id'
 ATTR_STATE = 'state'
+DEFAULT_ZONES = []
 
 SIGNAL_ZONE_CHANGED = 'ness_alarm.zone_changed'
 SIGNAL_ARMING_STATE_CHANGED = 'ness_alarm.arming_state_changed'
@@ -48,7 +49,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE_HOST): cv.string,
         vol.Required(CONF_DEVICE_PORT): cv.port,
-        vol.Optional(CONF_ZONES): vol.All(cv.ensure_list, [ZONE_SCHEMA]),
+        vol.Optional(CONF_ZONES, default=DEFAULT_ZONES):
+            vol.All(cv.ensure_list, [ZONE_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -69,7 +71,7 @@ async def async_setup(hass, config):
     from nessclient import Client, ArmingState
     conf = config[DOMAIN]
 
-    zones = conf.get(CONF_ZONES, [])
+    zones = conf[CONF_ZONES]
     host = conf[CONF_DEVICE_HOST]
     port = conf[CONF_DEVICE_PORT]
 
@@ -111,9 +113,9 @@ async def async_setup(hass, config):
     async def handle_aux(call):
         await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
 
-    hass.services.async_register(DOMAIN, 'panic', handle_panic,
+    hass.services.async_register(DOMAIN, SERVICE_PANIC, handle_panic,
                                  schema=SERVICE_SCHEMA_PANIC)
-    hass.services.async_register(DOMAIN, 'aux', handle_aux,
+    hass.services.async_register(DOMAIN, SERVICE_AUX, handle_aux,
                                  schema=SERVICE_SCHEMA_AUX)
 
     return True

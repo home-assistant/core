@@ -17,7 +17,7 @@ DEPENDENCIES = ['ness_alarm']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Ness Alarm binary sensor devices."""
     if not discovery_info:
@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_devices,
                                       zone_type=zone_type)
         devices.append(device)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class NessZoneBinarySensor(BinarySensorDevice):

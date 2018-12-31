@@ -9,9 +9,11 @@ from homeassistant.components.ness_alarm import (
     DOMAIN, CONF_DEVICE_PORT, CONF_DEVICE_HOST, CONF_ZONE_NAME, CONF_ZONES,
     CONF_ZONE_ID, SERVICE_AUX, SERVICE_PANIC,
     ATTR_CODE, ATTR_OUTPUT_ID)
-from homeassistant.const import (STATE_ALARM_ARMING, SERVICE_ALARM_DISARM,
-                                 ATTR_ENTITY_ID, SERVICE_ALARM_ARM_AWAY,
-                                 SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_TRIGGER)
+from homeassistant.const import (
+    STATE_ALARM_ARMING, SERVICE_ALARM_DISARM, ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_TRIGGER,
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 from tests.common import MockDependency
 
@@ -147,6 +149,31 @@ async def test_dispatch_zone_change(hass, mock_nessclient):
 
     await hass.async_block_till_done()
     assert hass.states.is_state('binary_sensor.zone_1', 'on')
+    assert hass.states.is_state('binary_sensor.zone_2', 'off')
+
+
+async def test_arming_state_change(hass, mock_nessclient):
+    """Test arming state change handing."""
+    states = [
+        (MockArmingState.UNKNOWN, STATE_UNKNOWN),
+        (MockArmingState.DISARMED, STATE_ALARM_DISARMED),
+        (MockArmingState.ARMING, STATE_ALARM_ARMING),
+        (MockArmingState.EXIT_DELAY, STATE_ALARM_ARMING),
+        (MockArmingState.ARMED, STATE_ALARM_ARMED_AWAY),
+        (MockArmingState.ENTRY_DELAY, STATE_ALARM_PENDING),
+        (MockArmingState.TRIGGERED, STATE_ALARM_TRIGGERED),
+    ]
+
+    await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+    assert hass.states.is_state('alarm_control_panel.alarm_panel', STATE_UNKNOWN)
+    on_state_change = mock_nessclient.on_state_change.call_args[0][0]
+
+    for arming_state, expected_state in states:
+        on_state_change(arming_state)
+        await hass.async_block_till_done()
+        assert hass.states.is_state('alarm_control_panel.alarm_panel',
+                                    expected_state)
 
 
 class MockArmingState(Enum):
