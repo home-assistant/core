@@ -51,7 +51,7 @@ DEFAULT_GAS_HEATER_DURATION = 150  # Heater duration in ms 1 - 4032
 DEFAULT_AQ_BURN_IN_TIME = 300  # 300 second burn in time for AQ gas measurement
 DEFAULT_AQ_HUM_BASELINE = 40  # 40%, an optimal indoor humidity.
 DEFAULT_AQ_HUM_WEIGHTING = 25  # 25% Weighting of humidity to gas in AQ score
-DEFAULT_TEMP_OFFSET = 0 # No calibration out of the box.
+DEFAULT_TEMP_OFFSET = 0  # No calibration out of the box.
 
 SENSOR_TEMP = 'temperature'
 SENSOR_HUMID = 'humidity'
