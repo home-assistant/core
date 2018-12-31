@@ -166,7 +166,8 @@ async def test_arming_state_change(hass, mock_nessclient):
 
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
-    assert hass.states.is_state('alarm_control_panel.alarm_panel', STATE_UNKNOWN)
+    assert hass.states.is_state('alarm_control_panel.alarm_panel',
+                                STATE_UNKNOWN)
     on_state_change = mock_nessclient.on_state_change.call_args[0][0]
 
     for arming_state, expected_state in states:
