@@ -295,6 +295,11 @@ class HueLight(Light):
         return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
 
     @property
+    def effect(self):
+        """Return the current effect."""
+        return self.light.state['effect']
+
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
