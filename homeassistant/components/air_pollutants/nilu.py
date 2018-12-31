@@ -149,7 +149,6 @@ class NiluSensor(AirPollutantsEntity):
         self._api = api_data
         self._name = "{} {}".format(name, api_data.data.name)
         self._max_aqi = None
-        self._state = None
         self._attrs = {}
 
         if show_on_map:
