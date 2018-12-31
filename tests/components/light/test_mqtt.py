@@ -678,6 +678,37 @@ async def test_sending_mqtt_rgb_command_with_template(hass, mqtt_mock):
     assert (255, 128, 63) == state.attributes['rgb_color']
 
 
+async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
+    """Test the sending of Color Temp command with template."""
+    config = {light.DOMAIN: {
+        'platform': 'mqtt',
+        'name': 'test',
+        'command_topic': 'test_light_color_temp/set',
+        'color_temp_command_topic': 'test_light_color_temp/color_temp/set',
+        'color_temp_command_template': '{{ (1000 / value) | round(0) }}',
+        'payload_on': 'on',
+        'payload_off': 'off',
+        'qos': 0
+    }}
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+
+    state = hass.states.get('light.test')
+    assert STATE_OFF == state.state
+
+    common.async_turn_on(hass, 'light.test', color_temp=100)
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_has_calls([
+        mock.call('test_light_color_temp/set', 'on', 0, False),
+        mock.call('test_light_color_temp/color_temp/set', '10', 0, False),
+    ], any_order=True)
+
+    state = hass.states.get('light.test')
+    assert STATE_ON == state.state
+    assert 100 == state.attributes['color_temp']
+
+
 async def test_show_brightness_if_only_command_topic(hass, mqtt_mock):
     """Test the brightness if only a command topic is present."""
     config = {light.DOMAIN: {
