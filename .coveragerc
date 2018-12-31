@@ -552,6 +552,7 @@ omit =
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
+    homeassistant/components/idteck_prox.py
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
