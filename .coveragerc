@@ -777,6 +777,7 @@ omit =
     homeassistant/components/sensor/launch_library.py
     homeassistant/components/sensor/linky.py
     homeassistant/components/sensor/linux_battery.py
+    homeassistant/components/sensor/london_underground.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/luftdaten.py
     homeassistant/components/sensor/lyft.py
