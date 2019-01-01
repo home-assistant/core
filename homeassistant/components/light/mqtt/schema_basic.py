@@ -34,6 +34,7 @@ CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
+CONF_COLOR_TEMP_COMMAND_TEMPLATE = 'color_temp_command_template'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
 CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
 CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
@@ -75,6 +76,7 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
@@ -207,6 +209,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._templates = {
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
+            CONF_COLOR_TEMP_COMMAND_TEMPLATE:
+                config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE),
             CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
             CONF_HS: config.get(CONF_HS_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
@@ -682,6 +686,13 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if ATTR_COLOR_TEMP in kwargs and \
            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            tpl = self._templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
+
+            if tpl:
+                color_temp = tpl.async_render({
+                    'value': color_temp,
+                })
+
             mqtt.async_publish(
                 self.hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._config.get(CONF_QOS),
