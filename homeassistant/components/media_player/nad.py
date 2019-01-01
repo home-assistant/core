@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['nad_receiver==0.0.9']
+REQUIREMENTS = ['nad_receiver==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +24,11 @@ DEFAULT_MIN_VOLUME = -92
 DEFAULT_MAX_VOLUME = -20
 
 SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
-    SUPPORT_SELECT_SOURCE
+              SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
+              SUPPORT_SELECT_SOURCE
 
 CONF_SERIAL_PORT = 'serial_port'
+CONF_HOST = 'host'
 CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_SOURCE_DICT = 'sources'
@@ -37,7 +38,8 @@ SOURCE_DICT_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL_PORT): cv.string,
+    vol.Exclusive(CONF_SERIAL_PORT, 'serial_port_or_host'): cv.string,
+    vol.Exclusive(CONF_HOST, 'serial_port_or_host'): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
     vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
@@ -47,10 +49,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
-    from nad_receiver import NADReceiver
+    if config.get(CONF_SERIAL_PORT) is None:
+        from nad_receiver import NADReceiver
+        my_nad_receiver = NADReceiver(config.get(CONF_SERIAL_PORT))
+    else:
+        from nad_receiver import NADReceiverTelnet
+        my_nad_receiver = NADReceiverTelnet(config.get(CONF_HOST))
+
     add_entities([NAD(
         config.get(CONF_NAME),
-        NADReceiver(config.get(CONF_SERIAL_PORT)),
+        my_nad_receiver,
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
         config.get(CONF_SOURCE_DICT)
