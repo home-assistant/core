@@ -10,6 +10,7 @@ from functools import partial
 import logging
 import math
 import sys
+import socket
 
 import voluptuous as vol
 
@@ -23,7 +24,9 @@ from homeassistant.components.light import (
     preprocess_turn_on_alternatives)
 from homeassistant.components.lifx import (
     DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_BROADCAST)
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_MAC
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -146,6 +149,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Priority 1: manual config
     interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
+    direct_connect = []
     if not interfaces:
         # Priority 2: scanned interfaces
         lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
@@ -153,6 +157,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not interfaces:
             # Priority 3: default interface
             interfaces = [{}]
+    else:
+        direct_connect = [
+            conf for conf in interfaces if CONF_HOST in conf and
+            CONF_MAC in conf
+        ]
+        # Filter out direct connections
+        interfaces = [
+            conf for conf in interfaces if CONF_HOST not in conf and
+            CONF_MAC not in conf
+        ]
 
     lifx_manager = LIFXManager(hass, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
@@ -160,7 +174,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for interface in interfaces:
         lifx_manager.start_discovery(interface)
 
+    for conf in direct_connect:
+        register_static_light(
+            hass,
+            conf[CONF_MAC],
+            conf[CONF_HOST],
+            lifx_manager
+        )
+
     return True
+
+
+def register_static_light(hass, mac_addr, ip_addr, manager):
+    """
+    Set up a connection to a light directly, bypassing discovery.
+
+    From https://github.com/frawau/aiolifx/blob/9bd8c5e6d291f4c7
+    9314989402f7e2c6476d5851/aiolifx/aiolifx.py#L1216
+    """
+    light = aiolifx().aiolifx.Light(
+        loop=hass.loop,
+        mac_addr=mac_addr,
+        ip_addr=ip_addr,
+        parent=manager
+    )
+
+    coro = hass.loop.create_datagram_endpoint(
+        lambda: light, family=socket.AF_INET, remote_addr=(
+            light.ip_addr, light.port
+        )
+    )
+
+    light.task = hass.loop.create_task(coro)
 
 
 def lifx_features(bulb):

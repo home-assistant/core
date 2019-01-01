@@ -5,7 +5,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-
+from homeassistant.const import CONF_HOST, CONF_MAC
 
 DOMAIN = 'lifx'
 REQUIREMENTS = ['aiolifx==0.6.7']
@@ -16,6 +16,8 @@ CONF_BROADCAST = 'broadcast'
 INTERFACE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_BROADCAST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_MAC): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema({
