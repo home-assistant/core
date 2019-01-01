@@ -12,7 +12,7 @@ from decimal import Decimal
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = 'source'
 
-CONF_SOURCE_SENSOR = 'source_sensor'
+CONF_SOURCE_SENSOR = 'source'
 CONF_ROUND_DIGITS = 'round'
 
 UNIT_WATTS = "W"
@@ -78,7 +78,7 @@ class EnergySensor(RestoreEntity):
         @callback
         def async_calc_energy(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            if old_state is None:
+            if old_state is None or new_state.state is STATE_UNKNOWN:
                 return
 
             if self._unit_of_measurement_scale is None:

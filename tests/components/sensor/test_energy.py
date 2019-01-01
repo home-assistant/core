@@ -12,14 +12,14 @@ async def test_state(hass):
         'sensor': {
             'platform': 'energy',
             'name': 'energy',
-            'source_sensor': 'sensor.power',
+            'source': 'sensor.power',
             'round': 2
         }
     }
 
     assert await async_setup_component(hass, 'sensor', config)
 
-    entity_id = config['sensor']['source_sensor']
+    entity_id = config['sensor']['source']
     hass.states.async_set(entity_id, 1000, {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
 
@@ -43,14 +43,14 @@ async def test_power_source(hass):
         'sensor': {
             'platform': 'energy',
             'name': 'energy',
-            'source_sensor': 'sensor.power',
+            'source': 'sensor.power',
             'round': 2
         }
     }
 
     assert await async_setup_component(hass, 'sensor', config)
 
-    entity_id = config['sensor']['source_sensor']
+    entity_id = config['sensor']['source']
     hass.states.async_set(entity_id, 1, {"unit_of_measurement": "kW"})
     await hass.async_block_till_done()
 
