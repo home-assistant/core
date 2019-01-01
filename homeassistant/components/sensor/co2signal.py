@@ -4,14 +4,13 @@ For more details about this platform, please refer to the documentation
 """
 import logging
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
+
 from homeassistant.const import (
     CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-CONF_REFRESH = "refresh_rate"
 CONF_COUNTRY_CODE = "country_code"
 
 REQUIREMENTS = ['co2signal==0.2']
@@ -25,18 +24,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
     vol.Optional(CONF_LATITUDE, default=0): cv.latitude,
     vol.Optional(CONF_LONGITUDE, default=0): cv.longitude,
-    vol.Optional(CONF_REFRESH, default=60): cv.positive_int,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CO2signal sensor."""
 
     _LOGGER.debug("Setting up the CO2signal platform")
 
     token = config.get(CONF_TOKEN)
     country_code = config.get(CONF_COUNTRY_CODE)
-    refresh_rate = config.get(CONF_REFRESH)
     lat = None
     lon = None
     location_type = None
@@ -57,17 +54,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           country_code,
                           lat,
                           lon,
-                          location_type,
-                          refresh_rate))
+                          location_type))
 
-    add_devices(devs)
+    add_entities(devs, True)
 
 
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
     def __init__(self, token, country_code, lat, lon,
-                 location_type, refresh_rate=15):
+                 location_type):
         """Initialize the sensor."""
 
         self._token = token
@@ -80,11 +76,8 @@ class CO2Sensor(Entity):
         if country_code is not None:
             self._device_name = country_code
         self._friendly_name = 'CO2 intensity - {}'.format(self._device_name)
-        self._refresh_rate = refresh_rate
 
         _LOGGER.debug("Initialise %s", self._friendly_name)
-
-        self.update()
 
     @property
     def name(self):
@@ -99,8 +92,7 @@ class CO2Sensor(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        """Icon to use in the frontend, if any."""
-        return 'carbon_dioxide_intensity'
+        return None
 
     @property
     def state(self):
