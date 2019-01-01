@@ -68,6 +68,7 @@ ABBREVIATIONS = {
     'bri_scl': 'brightness_scale',
     'bri_stat_t': 'brightness_state_topic',
     'bri_val_tpl': 'brightness_value_template',
+    'clr_temp_cmd_tpl': 'color_temp_command_template',
     'clr_temp_cmd_t': 'color_temp_command_topic',
     'clr_temp_stat_t': 'color_temp_state_topic',
     'clr_temp_val_tpl': 'color_temp_value_template',
