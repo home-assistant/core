@@ -346,7 +346,7 @@ class HarmonyRemote(remote.RemoteDevice):
         for _ in range(num_repeats):
             for single_command in command:
                 send_command = SendCommandDevice(
-                    device=device,
+                    device=device_id,
                     command=single_command,
                     delay=0
                 )
