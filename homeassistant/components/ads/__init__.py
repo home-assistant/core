@@ -143,7 +143,6 @@ class AdsHub:
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-
     def register_device(self, device):
         """Register a new device."""
         self._devices.append(device)
