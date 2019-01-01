@@ -76,10 +76,10 @@ def setup(hass, config):
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME],
         'component_name': DATA_TRANSMISSION}
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig)
+    discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
 
     if config[DOMAIN][TURTLE_MODE] is True:
-        discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig)
+        discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
     return True
 
 
