@@ -52,6 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
         config = PLATFORM_SCHEMA(discovery_payload)
+        config['config_entry'] = config_entry
         await _async_setup_entity(hass, config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
