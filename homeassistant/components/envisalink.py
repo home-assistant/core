@@ -89,8 +89,8 @@ ATTR_CUSTOM_FUNCTION = 'pgm'
 ATTR_PARTITION = 'partition'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CUSTOM_FUNCTION_ATTR): cv.string,
-    vol.Required(PARTITION_ATTR): cv.string,
+    vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
+    vol.Required(ATTR_PARTITION): cv.string,
 })
 
 
@@ -169,8 +169,8 @@ async def async_setup(hass, config):
 
     async def handle_custom_function(call):
         """Handle custom/PGM service."""
-        custom_function = call.data.get(CUSTOM_FUNCTION_ATTR)
-        partition = call.data.get(PARTITION_ATTR)
+        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
+        partition = call.data.get(ATTR_PARTITION)
         controller.command_output(code, partition, custom_function)
 
     controller.callback_zone_timer_dump = zones_updated_callback
