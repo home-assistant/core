@@ -85,8 +85,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_CUSTOM_FUNCTION = 'invoke_custom_function'
-CUSTOM_FUNCTION_ATTR = 'PGM'
-PARTITION_ATTR = 'partition'
+ATTR_CUSTOM_FUNCTION = 'pgm'
+ATTR_PARTITION = 'partition'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Required(CUSTOM_FUNCTION_ATTR): cv.string,
