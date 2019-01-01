@@ -115,7 +115,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for station in stations:
         client = NiluData(nilu.create_station_client(station))
         client.update()
-        sensors.append(NiluSensor(client, name, show_on_map))
+        if client.data.sensors:
+            sensors.append(NiluSensor(client, name, show_on_map))
+        else:
+            _LOGGER.warning("%s didn't give any sensors results. Is the "
+                            "sensor named correctly in the config?", station)
 
     add_entities(sensors, True)
 
