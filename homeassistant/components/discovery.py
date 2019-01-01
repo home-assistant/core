@@ -173,10 +173,13 @@ async def async_setup(hass, config):
 
     async def scan_devices(now):
         """Scan for devices."""
-        results = await hass.async_add_job(_discover, netdisco)
+        try:
+            results = await hass.async_add_job(_discover, netdisco)
 
-        for result in results:
-            hass.async_create_task(new_service_found(*result))
+            for result in results:
+                hass.async_create_task(new_service_found(*result))
+        except OSError:
+            logger.error("Network is unreachable")
 
         async_track_point_in_utc_time(
             hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL)
