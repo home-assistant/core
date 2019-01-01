@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.energy/
 import logging
 
 import voluptuous as vol
+from decimal import Decimal
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -72,7 +73,7 @@ class EnergySensor(RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._state = float(state.state)
+            self._state = Decimal(state.state)
 
         @callback
         def async_calc_energy(entity, old_state, new_state):
@@ -96,8 +97,8 @@ class EnergySensor(RestoreEntity):
                 # energy as the Riemann integral of previous measures.
                 elapsed_time = (new_state.last_updated
                                 - old_state.last_updated).total_seconds()
-                area = (float(new_state.state)
-                        + float(old_state.state))*elapsed_time/2
+                area = (Decimal(new_state.state)
+                        + Decimal(old_state.state))*Decimal(elapsed_time)/2
                 kwh = area / (self._unit_of_measurement_scale * 3600)
 
                 self._state += kwh
@@ -112,7 +113,7 @@ class EnergySensor(RestoreEntity):
         @callback
         def async_set_state(entity, old_state, new_state):
             """Handle set state from dev-state."""
-            self._state = float(new_state.state)
+            self._state = Decimal(new_state.state)
 
         async_track_state_change(self._hass, self.entity_id, async_set_state)
 
