@@ -126,8 +126,6 @@ class EnergySensor(RestoreEntity):
         """Return the state of the sensor."""
         return round(self._state, self._round_digits)
 
-        self._state = 0
-
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
