@@ -5,20 +5,21 @@ from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+
 async def test_state(hass):
     """Test energy sensor state."""
     config = {
         'sensor': {
             'platform': 'energy',
             'name': 'energy',
-            'power_sensor': 'sensor.power',
+            'source_sensor': 'sensor.power',
             'round': 2
         }
     }
 
     assert await async_setup_component(hass, 'sensor', config)
 
-    entity_id = config['sensor']['power_sensor']
+    entity_id = config['sensor']['source_sensor']
     hass.states.async_set(entity_id, 1000, {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
 
@@ -35,20 +36,21 @@ async def test_state(hass):
         # 1000 Watts for 1hour = 1kWh
         assert round(float(state.state), config['sensor']['round']) == 1.0
 
-async def test_units(hass):
-    """Test energy sensor state."""
+
+async def test_power_source(hass):
+    """Test energy sensor state using a power source."""
     config = {
         'sensor': {
             'platform': 'energy',
             'name': 'energy',
-            'power_sensor': 'sensor.power',
+            'source_sensor': 'sensor.power',
             'round': 2
         }
     }
 
     assert await async_setup_component(hass, 'sensor', config)
 
-    entity_id = config['sensor']['power_sensor']
+    entity_id = config['sensor']['source_sensor']
     hass.states.async_set(entity_id, 1, {"unit_of_measurement": "kW"})
     await hass.async_block_till_done()
 
