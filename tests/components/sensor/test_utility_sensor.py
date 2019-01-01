@@ -9,6 +9,7 @@ from homeassistant.components.sensor.utility_meter import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+
 async def test_state(hass):
     """Test utility sensor state."""
     config = {
@@ -37,6 +38,7 @@ async def test_state(hass):
         assert state is not None
 
         assert state.state == '1'
+
 
 async def test_services(hass):
     """Test energy sensor reset service."""
@@ -70,7 +72,7 @@ async def test_services(hass):
     data = {ATTR_ENTITY_ID: 'sensor.meter'}
     await hass.services.async_call('sensor', SERVICE_START_PAUSE, data)
     await hass.async_block_till_done()
- 
+
     now += timedelta(seconds=10)
     with patch('homeassistant.helpers.condition.dt_util.utcnow',
                return_value=now):
@@ -80,7 +82,7 @@ async def test_services(hass):
 
     state = hass.states.get('sensor.meter')
     assert state.state == '2'
-    
+
     data = {ATTR_ENTITY_ID: 'sensor.meter'}
     await hass.services.async_call('sensor', SERVICE_RESET, data)
     await hass.async_block_till_done()
