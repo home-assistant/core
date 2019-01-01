@@ -8,11 +8,10 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID)
+    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -50,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([meter])
 
     return True
- 
+
 
 class EnergySensor(RestoreEntity):
     """Representation of an energy sensor."""
@@ -65,7 +64,7 @@ class EnergySensor(RestoreEntity):
         self._name = name if name is not None\
             else '{} meter'.format(source_entity)
 
-        self._unit_of_measurement = UNIT_KILOWATTS_HOUR 
+        self._unit_of_measurement = UNIT_KILOWATTS_HOUR
         self._unit_of_measurement_scale = None
 
     async def async_added_to_hass(self):
@@ -116,7 +115,6 @@ class EnergySensor(RestoreEntity):
             self._state = float(new_state.state)
 
         async_track_state_change(self._hass, self.entity_id, async_set_state)
-
 
     @property
     def name(self):
