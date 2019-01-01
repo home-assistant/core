@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.energy/
 """
 import logging
 
-import voluptuous as vol
 from decimal import Decimal
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
