@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.utility_meter/
 import logging
 
 import voluptuous as vol
+from decimal import Decimal
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -146,7 +147,11 @@ class UtilityMeterSensor(RestoreEntity):
                 ATTR_UNIT_OF_MEASUREMENT)
 
         try:
-            diff = float(new_state.state) - float(old_state.state)
+            diff = Decimal(new_state.state) - Decimal(old_state.state)
+
+            if diff < 0:
+                # Source sensor just rolled over for unknow reasons,
+                return
             self._state += diff
 
         except ValueError as err:
@@ -194,7 +199,7 @@ class UtilityMeterSensor(RestoreEntity):
 
         state = await self.async_get_last_state()
         if state:
-            self._state = float(state.state)
+            self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
