@@ -132,9 +132,9 @@ async def _test_self_reset(hass, cycle):
         hass.states.async_set(entity_id, 3, {"unit_of_measurement": "kWh"},
                               force_update=True)
         await hass.async_block_till_done()
-    
+
     now += timedelta(seconds=30)
-    with alter_time(now): 
+    with alter_time(now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         hass.states.async_set(entity_id, 6, {"unit_of_measurement": "kWh"},
@@ -145,21 +145,26 @@ async def _test_self_reset(hass, cycle):
     assert state.attributes.get('last_period') == '2'
     assert state.state == '3'
 
+
 async def test_self_reset_hourly(hass):
     """Test hourly reset of meter."""
     await _test_self_reset(hass, 'hourly')
+
 
 async def test_self_reset_daily(hass):
     """Test daily reset of meter."""
     await _test_self_reset(hass, 'daily')
 
+
 async def test_self_reset_weekly(hass):
     """Test weekly reset of meter."""
     await _test_self_reset(hass, 'weekly')
 
+
 async def test_self_reset_monthly(hass):
     """Test monthly reset of meter."""
     await _test_self_reset(hass, 'monthly')
+
 
 async def test_self_reset_yearly(hass):
     """Test yearly reset of meter."""
