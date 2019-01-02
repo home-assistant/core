@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
     CONF_PROTOCOL)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['aioasuswrt==1.1.17']
 
