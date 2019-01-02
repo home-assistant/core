@@ -182,7 +182,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._hass.async_add_job(self.async_update_ha_state, True)
 
     async def _async_reset_meter(self, event):
-        """Helper function for larger then daily cycles."""
+        """Determine cycle - Helper function for larger then daily cycles."""
         now = dt_util.now()
         if self._period == WEEKLY and now.weekday() != self._period_offset:
             return
