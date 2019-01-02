@@ -1,13 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-<<<<<<< HEAD
-MINOR_VERSION = 75
+MINOR_VERSION = 85
 PATCH_VERSION = '0.dev0'
-=======
-MINOR_VERSION = 74
-PATCH_VERSION = '2'
->>>>>>> 9d59bfbe009aa0bdd753de80c7cfdcaaa07d70de
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
