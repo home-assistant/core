@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==2.2.2']
+REQUIREMENTS = ['pyhydroquebec==2.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
