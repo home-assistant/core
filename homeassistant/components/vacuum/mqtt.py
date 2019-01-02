@@ -297,8 +297,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
             self.async_schedule_update_ha_state()
 
-        topics_list = set([topic for
-                           topic in self._state_topics.values() if topic])
+        topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
             {
