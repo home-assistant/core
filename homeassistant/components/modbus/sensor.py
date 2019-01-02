@@ -9,7 +9,7 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
+from homeassistant.components.modbus import DOMAIN
 from homeassistant.const import (
     CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
     CONF_STRUCTURE)
@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['modbus']
 
+CONF_HUB = 'hub'
 CONF_COUNT = 'count'
 CONF_REVERSE_ORDER = 'reverse_order'
 CONF_PRECISION = 'precision'
@@ -40,7 +41,7 @@ DATA_TYPE_CUSTOM = 'custom'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
-        vol.Required(CONF_HUB_NAME, default='default'): cv.string,
+        vol.Required(CONF_HUB, default='default'): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
@@ -94,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "(%d words)", size, register.get(CONF_COUNT))
             continue
 
-        hub_name = register.get(CONF_HUB_NAME)
+        hub_name = register.get(CONF_HUB)
         hub = hass.data[DOMAIN][hub_name]
         sensors.append(ModbusRegisterSensor(
             hub,

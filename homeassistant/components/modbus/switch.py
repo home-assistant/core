@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
+from homeassistant.components.modbus import DOMAIN
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
@@ -18,6 +18,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
+CONF_HUB = "hub"
 CONF_COIL = "coil"
 CONF_COILS = "coils"
 CONF_REGISTER = "register"
@@ -32,7 +33,7 @@ REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 REGISTERS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB_NAME, default='default'): cv.string,
+    vol.Required(CONF_HUB, default='default'): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_REGISTER): cv.positive_int,
@@ -48,7 +49,7 @@ REGISTERS_SCHEMA = vol.Schema({
 })
 
 COILS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB_NAME, default='default'): cv.string,
+    vol.Required(CONF_HUB, default='default'): cv.string,
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
@@ -67,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     if CONF_COILS in config:
         for coil in config.get(CONF_COILS):
-            hub_name = coil.get(CONF_HUB_NAME)
+            hub_name = coil.get(CONF_HUB)
             hub = hass.data[DOMAIN][hub_name]
             switches.append(ModbusCoilSwitch(
                 hub,
@@ -76,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 coil.get(CONF_COIL)))
     if CONF_REGISTERS in config:
         for register in config.get(CONF_REGISTERS):
-            hub_name = register.get(CONF_HUB_NAME)
+            hub_name = register.get(CONF_HUB)
             hub = hass.data[DOMAIN][hub_name]
 
             switches.append(ModbusRegisterSwitch(

@@ -20,14 +20,16 @@ from homeassistant.const import (
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE)
-from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
+from homeassistant.components.modbus import DOMAIN
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
+CONF_HUB = 'hub'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HUB_NAME, default="default"): cv.string,
+    vol.Required(CONF_HUB, default="default"): cv.string,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })
@@ -41,8 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE, None)
     name = config.get(CONF_NAME, None)
-    hub_name = config.get(CONF_HUB_NAME)
-    hub = hass.data[DOMAIN][hub_name]
+    hub = hass.data[DOMAIN][config.get(CONF_HUB)]
     add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
