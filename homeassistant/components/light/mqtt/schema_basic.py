@@ -34,6 +34,7 @@ CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
+CONF_COLOR_TEMP_COMMAND_TEMPLATE = 'color_temp_command_template'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
 CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
 CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
@@ -75,6 +76,7 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
@@ -207,6 +209,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._templates = {
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
+            CONF_COLOR_TEMP_COMMAND_TEMPLATE:
+                config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE),
             CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
             CONF_HS: config.get(CONF_HS_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
@@ -305,7 +309,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             device_value = float(payload)
             percent_bright = \
                 device_value / self._config.get(CONF_BRIGHTNESS_SCALE)
-            self._brightness = int(percent_bright * 255)
+            self._brightness = percent_bright * 255
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
@@ -335,7 +339,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 percent_bright = \
                     float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._brightness = int(percent_bright * 255)
+                self._brightness = percent_bright * 255
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
@@ -441,7 +445,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             device_value = float(payload)
             percent_white = \
                 device_value / self._config.get(CONF_WHITE_VALUE_SCALE)
-            self._white_value = int(percent_white * 255)
+            self._white_value = percent_white * 255
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
@@ -489,13 +493,17 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._brightness
+        brightness = self._brightness
+        if brightness:
+            brightness = min(round(brightness), 255)
+        return brightness
 
     @property
     def hs_color(self):
@@ -510,7 +518,10 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def white_value(self):
         """Return the white property."""
-        return self._white_value
+        white_value = self._white_value
+        if white_value:
+            white_value = min(round(white_value), 255)
+        return white_value
 
     @property
     def should_poll(self):
@@ -638,8 +649,9 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if ATTR_BRIGHTNESS in kwargs and \
            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+            brightness_scale = self._config.get(CONF_BRIGHTNESS_SCALE)
             device_brightness = \
-                int(percent_bright * self._config.get(CONF_BRIGHTNESS_SCALE))
+                min(round(percent_bright * brightness_scale), brightness_scale)
             mqtt.async_publish(
                 self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
                 device_brightness, self._config.get(CONF_QOS),
@@ -674,6 +686,13 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if ATTR_COLOR_TEMP in kwargs and \
            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            tpl = self._templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
+
+            if tpl:
+                color_temp = tpl.async_render({
+                    'value': color_temp,
+                })
+
             mqtt.async_publish(
                 self.hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._config.get(CONF_QOS),
@@ -699,8 +718,9 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if ATTR_WHITE_VALUE in kwargs and \
            self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None:
             percent_white = float(kwargs[ATTR_WHITE_VALUE]) / 255
+            white_scale = self._config.get(CONF_WHITE_VALUE_SCALE)
             device_white_value = \
-                int(percent_white * self._config.get(CONF_WHITE_VALUE_SCALE))
+                min(round(percent_white * white_scale), white_scale)
             mqtt.async_publish(
                 self.hass, self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC],
                 device_white_value, self._config.get(CONF_QOS),

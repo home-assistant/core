@@ -1,10 +1,7 @@
 """Helpers for data entry flows for config entries."""
 from functools import partial
-from ipaddress import ip_address
-from urllib.parse import urlparse
 
 from homeassistant import config_entries
-from homeassistant.util.network import is_local
 
 
 def register_discovery_flow(domain, title, discovery_function,
@@ -114,15 +111,6 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason='one_instance_allowed')
-
-        try:
-            url_parts = urlparse(self.hass.config.api.base_url)
-
-            if is_local(ip_address(url_parts.hostname)):
-                return self.async_abort(reason='not_internet_accessible')
-        except ValueError:
-            # If it's not an IP address, it's very likely publicly accessible
-            pass
 
         if user_input is None:
             return self.async_show_form(

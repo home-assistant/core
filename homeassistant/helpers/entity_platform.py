@@ -297,7 +297,8 @@ class EntityPlatform:
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id,
                 config_entry_id=config_entry_id,
-                device_id=device_id)
+                device_id=device_id,
+                known_object_ids=self.entities.keys())
 
             if entry.disabled:
                 self.logger.info(

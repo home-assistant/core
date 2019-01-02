@@ -12,11 +12,13 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
+from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
@@ -255,6 +257,21 @@ async def async_setup(hass, config):
         # Convert the entity ids to valid light ids
         target_lights = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
+
+        if service.context.user_id:
+            user = await hass.auth.async_get_user(service.context.user_id)
+            if user is None:
+                raise UnknownUser(context=service.context)
+
+            entity_perms = user.permissions.check_entity
+
+            for light in target_lights:
+                if not entity_perms(light, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=service.context,
+                        entity_id=light,
+                        permission=POLICY_CONTROL
+                    )
 
         preprocess_turn_on_alternatives(params)
 

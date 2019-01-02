@@ -48,6 +48,7 @@ HM_UNIT_HA_CAST = {
     'GAS_POWER': 'm3',
     'GAS_ENERGY_COUNTER': 'm3',
     'LUX': 'lx',
+    'ILLUMINATION': 'lx',
     'CURRENT_ILLUMINATION': 'lx',
     'AVERAGE_ILLUMINATION': 'lx',
     'LOWEST_ILLUMINATION': 'lx',
