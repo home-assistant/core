@@ -24,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = 'source'
 ATTR_STATUS = 'status'
-ATTR_PERIOD = 'meter period'
-ATTR_LAST_PERIOD = 'last period'
-ATTR_LAST_RESET = 'last reset'
+ATTR_PERIOD = 'meter_period'
+ATTR_LAST_PERIOD = 'last_period'
+ATTR_LAST_RESET = 'last_reset'
 
 DATA_KEY = 'sensor.utility_meter'
 
@@ -131,9 +131,8 @@ class UtilityMeterSensor(RestoreEntity):
         if meter_type == DAILY:
             async_track_time_change(hass, self.async_reset_meter,
                                     hour=meter_offset, minute=0, second=0)
-        elif meter_type == [WEEKLY, MONTHLY, YEARLY]:
-            async_track_time_change(hass,
-                                    lambda: self.async_reset_meter(False),
+        elif meter_type in [WEEKLY, MONTHLY, YEARLY]:
+            async_track_time_change(hass, self._async_reset_meter,
                                     hour=0, minute=0, second=0)
 
     @callback
@@ -174,22 +173,23 @@ class UtilityMeterSensor(RestoreEntity):
 
         self._hass.async_add_job(self.async_update_ha_state, True)
 
-    async def async_reset_meter(self, force=True):
-        """Reset meter."""
+    async def _async_reset_meter(self, ev):
         now = dt_util.now()
-        if not force:
-            if self._period == WEEKLY and now.weekday() != self._period_offset:
-                return
-            if self._period == MONTHLY and\
-                    now.day() != (1 + self._period_offset):
-                return
-            if self._period == YEARLY and\
-                    now.month() != (1 + self._period_offset):
-                return
+        if self._period == WEEKLY and now.weekday() != self._period_offset:
+            return
+        if self._period == MONTHLY and\
+                now.day != (1 + self._period_offset):
+            return
+        if self._period == YEARLY and\
+                now.month != (1 + self._period_offset):
+            return
+        await self.async_reset_meter()
 
+    async def async_reset_meter(self, ev=None):
+        """Reset meter."""
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
-        self._last_reset = now
-        self._last_period = self._state
+        self._last_reset = dt_util.now()
+        self._last_period = str(self._state)
         self._state = 0
         self._hass.async_add_job(self.async_update_ha_state, True)
 
