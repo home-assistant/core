@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_NAME, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, 
+    CONF_HOST, CONF_METHOD, CONF_NAME, CONF_PORT, CONF_TYPE, CONF_TIMEOUT,
     ATTR_STATE)
 
 DOMAIN = 'modbus'
