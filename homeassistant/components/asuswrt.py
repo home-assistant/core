@@ -60,9 +60,4 @@ async def async_setup(hass, config):
         return False
 
     hass.data[DATA_ASUSWRT] = api
-
-    hass.async_create_task(async_load_platform(
-        hass, 'sensor', DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(
-        hass, 'device_tracker', DOMAIN, {}, config))
     return True
