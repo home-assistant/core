@@ -140,7 +140,7 @@ async def test_bad_platform_setup(hass):
 async def test_awair_setup_no_data(hass):
     """Ensure that we do not crash during setup when no data is returned."""
     await setup_awair(hass, data_fixture=AIR_DATA_FIXTURE_EMPTY)
-    assert not hass.status.async_all()
+    assert not hass.states.async_all()
 
 
 async def test_awair_misc_attributes(hass):
