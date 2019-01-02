@@ -93,7 +93,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             for entity in service.data.get(ATTR_ENTITY_ID):
                 if entity in hass.data[DATA_KEY]:
                     hass.async_add_job(
-                        hass.data[DATA_KEY][entity].async_reset_meter())
+                        hass.data[DATA_KEY][entity].async_reset_meter(
+                            dt_util.utcnow()))
 
         hass.services.async_register(DOMAIN, SERVICE_START_PAUSE,
                                      async_start_pause_meter,
@@ -183,9 +184,9 @@ class UtilityMeterSensor(RestoreEntity):
         if self._period == YEARLY and\
                 now.month != (1 + self._period_offset):
             return
-        await self.async_reset_meter()
+        await self.async_reset_meter(ev)
 
-    async def async_reset_meter(self, ev=None):
+    async def async_reset_meter(self, ev):
         """Reset meter."""
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
