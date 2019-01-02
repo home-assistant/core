@@ -17,7 +17,8 @@ def alter_time(retval):
     """Manage multiple time mocks."""
     patch_one = patch("homeassistant.util.dt.utcnow", return_value=retval)
     patch_two = patch("homeassistant.util.utcnow", return_value=retval)
-    patch_three = patch("homeassistant.components.sensor.utility_meter.dt_util.now", return_value=retval)
+    patch_three = patch("homeassistant.components.sensor.utility_meter.dt_util.now",
+        return_value=retval)
 
     with patch_one, patch_two, patch_three:
         yield
