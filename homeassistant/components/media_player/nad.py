@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
-    if config.get(CONF_SERIAL_PORT) is None:
+    if config.get(CONF_SERIAL_PORT) is not None:
         from nad_receiver import NADReceiver
         my_nad_receiver = NADReceiver(config.get(CONF_SERIAL_PORT))
     else:
