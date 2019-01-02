@@ -103,6 +103,7 @@ async def test_services(hass):
     state = hass.states.get('sensor.meter')
     assert state.state == '0'
 
+
 async def _test_self_reset(hass, cycle):
     """Test energy sensor self reset."""
     config = {
@@ -117,7 +118,7 @@ async def _test_self_reset(hass, cycle):
     entity_id = config['sensor']['source']
 
     now = dt_util.parse_datetime("2017-12-31T23:59:00.000000+00:00")
-    with alter_time(now): 
+    with alter_time(now):
         assert await async_setup_component(hass, 'sensor', config)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -126,7 +127,7 @@ async def _test_self_reset(hass, cycle):
         await hass.async_block_till_done()
 
     now += timedelta(seconds=30)
-    with alter_time(now): 
+    with alter_time(now):
         async_fire_time_changed(hass, now)
         hass.states.async_set(entity_id, 3, {"unit_of_measurement": "kWh"},
                               force_update=True)
@@ -145,12 +146,21 @@ async def _test_self_reset(hass, cycle):
     assert state.state == '3'
 
 async def test_self_reset_hourly(hass):
-    await _test_self_reset(hass, 'hourly') 
+    """Test hourly reset of meter."""
+    await _test_self_reset(hass, 'hourly')
+
 async def test_self_reset_daily(hass):
-    await _test_self_reset(hass, 'daily') 
+    """Test daily reset of meter."""
+    await _test_self_reset(hass, 'daily')
+
 async def test_self_reset_weekly(hass):
-    await _test_self_reset(hass, 'weekly') 
+    """Test weekly reset of meter."""
+    await _test_self_reset(hass, 'weekly')
+
 async def test_self_reset_monthly(hass):
-    await _test_self_reset(hass, 'monthly') 
+    """Test monthly reset of meter."""
+    await _test_self_reset(hass, 'monthly')
+
 async def test_self_reset_yearly(hass):
-    await _test_self_reset(hass, 'yearly') 
+    """Test yearly reset of meter."""
+    await _test_self_reset(hass, 'yearly')
