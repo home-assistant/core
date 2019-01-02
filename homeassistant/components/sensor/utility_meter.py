@@ -122,7 +122,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._last_period = 0
         self._last_reset = dt_util.now()
         # _collecting initializes in inverted logic
-        self._collecting = lambda: None if paused else None
+        self._collecting = None if not paused else lambda: None
         if name:
             self._name = name
         else:
