@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
+CONF_BRIGHTNESS_COMMAND_TEMPLATE = 'brightness_command_template'
 CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
@@ -71,6 +72,7 @@ DEFAULT_ON_COMMAND_TYPE = 'last'
 VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
 PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -207,6 +209,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             'off': config.get(CONF_PAYLOAD_OFF),
         }
         self._templates = {
+            CONF_BRIGHTNESS_COMMAND_TEMPLATE:
+                config.get(CONF_BRIGHTNESS_COMMAND_TEMPLATE),
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
             CONF_COLOR_TEMP_COMMAND_TEMPLATE:
@@ -652,6 +656,13 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             brightness_scale = self._config.get(CONF_BRIGHTNESS_SCALE)
             device_brightness = \
                 min(round(percent_bright * brightness_scale), brightness_scale)
+
+            tpl = self._templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
+            if tpl:
+                device_brightness = tpl.async_render({
+                    'brightness': device_brightness,
+                })
+
             mqtt.async_publish(
                 self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
                 device_brightness, self._config.get(CONF_QOS),
