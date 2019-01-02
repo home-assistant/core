@@ -7,8 +7,7 @@ https://home-assistant.io/components/emulated_roku/
 import voluptuous as vol
 
 from homeassistant import config_entries, util
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .binding import EmulatedRoku
@@ -17,7 +16,7 @@ from .const import (
     CONF_ADVERTISE_IP, CONF_ADVERTISE_PORT, CONF_HOST_IP, CONF_LISTEN_PORT,
     CONF_SERVERS, CONF_UPNP_BIND_MULTICAST, DOMAIN)
 
-REQUIREMENTS = ['emulated_roku==0.1.6']
+REQUIREMENTS = ['emulated_roku==0.1.7']
 
 SERVER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -58,18 +57,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up an emulated roku server from a config entry."""
-    return await create_emulated_roku(hass, config_entry.data)
+    config = config_entry.data
 
-
-async def async_unload_entry(hass, entry):
-    """Unload a config entry."""
-    name = entry.data[CONF_NAME]
-    server = hass.data[DOMAIN].pop(name)
-    return server.stop()
-
-
-async def create_emulated_roku(hass, config):
-    """Set up an emulated roku server from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
@@ -83,14 +72,13 @@ async def create_emulated_roku(hass, config):
     server = EmulatedRoku(hass, name, host_ip, listen_port,
                           advertise_ip, advertise_port, upnp_bind_multicast)
 
-    @callback
-    def emulated_roku_shutdown(event):
-        """Wrap the call to emulated_roku.stop."""
-        server.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               emulated_roku_shutdown)
-
     hass.data[DOMAIN][name] = server
 
-    return await server.async_setup()
+    return await server.setup()
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    name = entry.data[CONF_NAME]
+    server = hass.data[DOMAIN].pop(name)
+    return await server.unload()

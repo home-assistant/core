@@ -1,12 +1,13 @@
 """Tests for emulated_roku library bindings."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components.emulated_roku.binding import EmulatedRoku, \
     EVENT_ROKU_COMMAND, \
     ATTR_SOURCE_NAME, ATTR_COMMAND_TYPE, ATTR_KEY, ATTR_APP_ID, \
     ROKU_COMMAND_KEYPRESS, ROKU_COMMAND_KEYDOWN, \
     ROKU_COMMAND_KEYUP, ROKU_COMMAND_LAUNCH
-from tests.common import mock_coro
+
+from tests.common import mock_coro_func
 
 
 async def test_events_fired_properly(hass):
@@ -18,22 +19,22 @@ async def test_events_fired_properly(hass):
     events = []
     roku_event_handler = None
 
-    def make_roku_api(loop, handler,
-                      roku_usn, host_ip, listen_port,
-                      advertise_ip=None, advertise_port=None,
-                      bind_multicast=True):
+    def instantiate(loop, handler,
+                    roku_usn, host_ip, listen_port,
+                    advertise_ip=None, advertise_port=None,
+                    bind_multicast=None):
         nonlocal roku_event_handler
         roku_event_handler = handler
 
-        return mock_coro(((None, None), None))
+        return Mock(start=mock_coro_func(), close=mock_coro_func())
 
     def listener(event):
         events.append(event)
 
-    with patch('emulated_roku.make_roku_api', make_roku_api):
+    with patch('emulated_roku.EmulatedRokuServer', instantiate):
         hass.bus.async_listen(EVENT_ROKU_COMMAND, listener)
 
-        assert await binding.async_setup() is True
+        assert await binding.setup() is True
 
         assert roku_event_handler is not None
 
