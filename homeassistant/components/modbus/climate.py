@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 
-from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
+from homeassistant.components.modbus import DOMAIN
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['modbus']
@@ -29,13 +29,14 @@ CONF_CURRENT_TEMP = 'current_temp_register'
 CONF_DATA_TYPE = 'data_type'
 CONF_COUNT = 'data_count'
 CONF_PRECISION = 'precision'
+CONF_HUB = 'hub'
 
 DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HUB_NAME, default="default"): cv.string,
+    vol.Required(CONF_HUB, default="default"): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_TARGET_TEMP): cv.positive_int,
@@ -60,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data_type = config.get(CONF_DATA_TYPE)
     count = config.get(CONF_COUNT)
     precision = config.get(CONF_PRECISION)
-    hub_name = config.get(CONF_HUB_NAME)
+    hub_name = config.get(CONF_HUB)
     hub = hass.data[DOMAIN][hub_name]
 
     add_entities([ModbusThermostat(hub, name, modbus_slave,
