@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.utility_meter/
 """
 import logging
 
-import voluptuous as vol
 from decimal import Decimal
+import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -48,6 +48,7 @@ SERVICE_METER_SCHEMA = vol.Schema({
 CONF_SOURCE_SENSOR = 'source'
 CONF_METER_TYPE = 'cycle'
 CONF_METER_OFFSET = 'offset'
+CONF_PAUSED = 'paused'
 
 ICON = 'mdi:counter'
 
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
     vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
+    vol.Optional(CONF_PAUSED, default=False): cv.boolean,
 })
 
 
@@ -75,7 +77,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                                    config[CONF_SOURCE_SENSOR],
                                    config.get(CONF_NAME),
                                    config.get(CONF_METER_TYPE),
-                                   config.get(CONF_METER_OFFSET))
+                                   config.get(CONF_METER_OFFSET),
+                                   config.get(CONF_PAUSED))
 
         async_add_entities([meter])
 
@@ -110,14 +113,16 @@ async def async_setup_platform(hass, config, async_add_entities,
 class UtilityMeterSensor(RestoreEntity):
     """Representation of an utility meter sensor."""
 
-    def __init__(self, hass, source_entity, name, meter_type, meter_offset=0):
+    def __init__(self, hass, source_entity, name, meter_type, meter_offset=0,
+                 paused=False):
         """Initialize the min/max sensor."""
         self._hass = hass
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
         self._last_reset = dt_util.now()
-        self._collecting = None
+        # _collecting initializes in inverted logic
+        self._collecting = lambda: None if paused else None
         if name:
             self._name = name
         else:
@@ -162,19 +167,22 @@ class UtilityMeterSensor(RestoreEntity):
     async def async_start_pause_meter(self):
         """Start/Pause meter."""
         if self._collecting is None:
+            # Start collecting
             self._collecting = async_track_state_change(
                 self._hass, self._sensor_source_id, self.async_reading)
         else:
-            # Cancel async_track_state_change
+            # Pause collecting by cancel of async_track_state_change
             self._collecting()
             self._collecting = None
+
         _LOGGER.debug("%s - %s - source <%s>", self._name,
                       COLLECTING if self._collecting is not None
                       else PAUSED, self._sensor_source_id)
 
         self._hass.async_add_job(self.async_update_ha_state, True)
 
-    async def _async_reset_meter(self, ev):
+    async def _async_reset_meter(self, event):
+        """Helper function for larger then daily cycles."""
         now = dt_util.now()
         if self._period == WEEKLY and now.weekday() != self._period_offset:
             return
@@ -184,9 +192,9 @@ class UtilityMeterSensor(RestoreEntity):
         if self._period == YEARLY and\
                 now.month != (1 + self._period_offset):
             return
-        await self.async_reset_meter(ev)
+        await self.async_reset_meter(event)
 
-    async def async_reset_meter(self, ev):
+    async def async_reset_meter(self, event):
         """Reset meter."""
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
@@ -207,7 +215,11 @@ class UtilityMeterSensor(RestoreEntity):
             self._last_reset = state.attributes.get(ATTR_LAST_RESET)
             self._hass.async_add_job(self.async_update_ha_state, True)
             if state.attributes.get(ATTR_STATUS) == PAUSED:
+                # Fake cancelation function to init the meter paused
                 self._collecting = lambda: None
+            else:
+                # necessary to assure full restoration
+                self._collecting = None
 
         await self.async_start_pause_meter()
 
