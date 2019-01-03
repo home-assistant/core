@@ -87,10 +87,14 @@ async def async_setup_freebox(hass, config, host, port):
         permissions = await fbx.get_permissions()
         if not permissions.get(PERMISSION_SETTINGS):
             hass.async_create_task(async_load_platform(
-                hass, 'switch', DOMAIN, {'permission_settings': False}, config))
+                hass, 'switch', DOMAIN, {'perms_settings': False}, config))
+            _LOGGER.error('The switch.freebox platform will not be available'
+                          ' until you apply the correct permissions in your'
+                          ' router. Please refer to documentation : '
+                          ' https://home-assistant.io/components/switch.freebox/')
         else:
             hass.async_create_task(async_load_platform(
-                hass, 'switch', DOMAIN, {'permission_settings': True}, config))
+                hass, 'switch', DOMAIN, {'perms_settings': True}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""

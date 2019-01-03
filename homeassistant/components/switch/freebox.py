@@ -19,27 +19,27 @@ async def async_setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    permission_settings = discovery_info.get('permission_settings')
+    perms_settings = discovery_info.get('perms_settings')
     add_entities([
-        FbxWifiSwitch(fbx, permission_settings),
+        FbxWifiSwitch(fbx, perms_settings),
     ])
 
 
 class FbxWifiSwitch(ToggleEntity):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, fbx, permission_settings):
+    def __init__(self, fbx, perms_settings):
         """Initilize the Wifi switch."""
         self._name = 'Freebox WiFi'
         self._state = STATE_OFF
-        self.permission_settings = permission_settings
+        self.perms_settings = perms_settings
         self.fbx = fbx
         self.wifi_config = {}
 
     @property
     def available(self):
         """If permission is not true the switch is not available."""
-        if not self.permission_settings:
+        if not self.perms_settings:
             return False
         else:
             return True
@@ -80,9 +80,9 @@ class FbxWifiSwitch(ToggleEntity):
 
         permissions = await self.fbx.get_permissions()
         if permissions.get(PERMISSION_SETTINGS):
-            self.permission_settings = True
+            self.perms_settings = True
         else:
-            self.permission_settings = False
+            self.perms_settings = False
 
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
