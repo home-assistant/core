@@ -1017,22 +1017,8 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if config_entry_id is not None and device_info is not None:
-            processed_dev_info = {
-                'config_entry_id': config_entry_id
-            }
-            for key in (
-                    'connections',
-                    'identifiers',
-                    'manufacturer',
-                    'model',
-                    'name',
-                    'sw_version',
-                    'via_hub',
-            ):
-                if key in device_info:
-                    processed_dev_info[key] = device_info[key]
-
-            device_registry.async_get_or_create(**processed_dev_info)
+            device_info['config_entry_id'] = config_entry_id
+            device_registry.async_get_or_create(**device_info)
 
     @property
     def device_info(self):
