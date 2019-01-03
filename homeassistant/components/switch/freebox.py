@@ -81,6 +81,8 @@ class FbxWifiSwitch(ToggleEntity):
         permissions = await self.fbx.get_permissions()
         if permissions.get(PERMISSION_SETTINGS):
             self.permission_settings = True
+        else:
+            self.permission_settings = False
 
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
