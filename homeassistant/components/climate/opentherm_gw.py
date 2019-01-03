@@ -40,7 +40,7 @@ class OpenThermGateway(ClimateDevice):
         self.friendly_name = config.get(CONF_NAME)
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
-        self._current_operation = STATE_IDLE
+        self._state = STATE_IDLE
         self._current_temperature = 0.0
         self._target_temperature = 0.0
         self._away_mode_a = None
@@ -60,11 +60,11 @@ class OpenThermGateway(ClimateDevice):
         flame_on = status.get(self._gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status.get(self._gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
-            self._current_operation = STATE_HEAT
+            self._state = STATE_HEAT
         elif cooling_active:
-            self._current_operation = STATE_COOL
+            self._state = STATE_COOL
         else:
-            self._current_operation = STATE_IDLE
+            self._state = STATE_IDLE
         self._current_temperature = status.get(self._gw_vars.DATA_ROOM_TEMP)
 
         temp = status.get(self._gw_vars.DATA_ROOM_SETPOINT_OVRD)
@@ -97,6 +97,11 @@ class OpenThermGateway(ClimateDevice):
         self.async_schedule_update_ha_state()
 
     @property
+    def state(self):
+        """Return the state of the system."""
+        return self._state
+
+    @property
     def name(self):
         """Return the friendly name."""
         return self.friendly_name
@@ -119,11 +124,6 @@ class OpenThermGateway(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
         return TEMP_CELSIUS
-
-    @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
 
     @property
     def current_temperature(self):
