@@ -158,8 +158,13 @@ class ImapSensor(Entity):
         """Check the number of found emails."""
         if self._connection:
             await self._connection.noop()
-            _, lines = await self._connection.search(self._search)
-            self._email_count = len(lines[0].split())
+            result, lines = await self._connection.search(self._search)
+
+            if result == 'OK':
+                self._email_count = len(lines[0].split())
+            else:
+                _LOGGER.warning("Can't parse IMAP server response to search '%s':  %s / %s", self._search, result, lines[0])
+                self._email_count = 0
 
     def disconnected(self):
         """Forget the connection after it was lost."""
