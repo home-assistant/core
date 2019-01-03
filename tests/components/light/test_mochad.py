@@ -65,7 +65,7 @@ class TestMochadLight(unittest.TestCase):
                     'brightness_levels': 32}
         self.light = mochad.MochadLight(self.hass, controller_mock,
                                         dev_dict)
-        self.light = mock.MagicMock()
+        self.light.send_cmd = mock.MagicMock()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -104,7 +104,7 @@ class TestMochadLight256Levels(unittest.TestCase):
                     'brightness_levels': 256}
         self.light = mochad.MochadLight(self.hass, controller_mock,
                                         dev_dict)
-        self.light = mock.MagicMock()
+        self.light.send_cmd = mock.MagicMock()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -138,7 +138,7 @@ class TestMochadLight64Levels(unittest.TestCase):
                     'brightness_levels': 64}
         self.light = mochad.MochadLight(self.hass, controller_mock,
                                         dev_dict)
-        self.light = mock.MagicMock()
+        self.light.send_cmd = mock.MagicMock()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
