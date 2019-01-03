@@ -64,8 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT binary sensor."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        config['config_entry'] = config_entry
-        await _async_setup_entity(config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities, config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -73,16 +72,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities, discovery_hash=None):
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
+                              discovery_hash=None):
     """Set up the MQTT binary sensor."""
-    async_add_entities([MqttBinarySensor(config, discovery_hash)])
+    async_add_entities([MqttBinarySensor(config, config_entry,
+                                         discovery_hash)])
 
 
 class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                        MqttEntityDeviceInfo, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the MQTT binary sensor."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
@@ -95,7 +96,6 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, availability_topic, qos,
