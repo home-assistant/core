@@ -22,12 +22,19 @@ CONF_UTC_OFFSET = 'utc_offset'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_SENSOR_TYPE = 'type'
 
+CONF_CURRENCY = 'currency'
 CONF_PERIOD = 'period'
 
 CONF_INSTANT = 'instant_readings'
-CONF_AMOUNT = 'amount'
+CONF_AMOUNT_DAY = 'amount_day'
+CONF_AMOUNT_WEEK = 'amount_week'
+CONF_AMOUNT_MONTH = 'amount_month'
+CONF_AMOUNT_YEAR = 'amount_year'
 CONF_BUDGET = 'budget'
-CONF_COST = 'cost'
+CONF_COST_DAY = 'cost_day'
+CONF_COST_WEEK = 'cost_week'
+CONF_COST_MONTH = 'cost_month'
+CONF_COST_YEAR = 'cost_year'
 CONF_CURRENT_VALUES = 'current_values'
 
 DEFAULT_PERIOD = 'year'
@@ -35,9 +42,15 @@ DEFAULT_UTC_OFFSET = '0'
 
 SENSOR_TYPES = {
     CONF_INSTANT: ['Energy Usage', 'W'],
-    CONF_AMOUNT: ['Energy Consumed', 'kWh'],
+    CONF_AMOUNT_DAY: ['Energy Consumed Today', 'kWh'],
+    CONF_AMOUNT_WEEK: ['Energy Consumed This Week', 'kWh'],
+    CONF_AMOUNT_MONTH: ['Energy Consumed This Month', 'kWh'],
+    CONF_AMOUNT_YEAR: ['Energy Consumed This Year', 'kWh'],
     CONF_BUDGET: ['Energy Budget', None],
-    CONF_COST: ['Energy Cost', None],
+    CONF_COST_DAY: ['Energy Cost Today', None],
+    CONF_COST_WEEK: ['Energy Cost This Week', None],
+    CONF_COST_MONTH: ['Energy Cost This Month', None],
+    CONF_COST_YEAR: ['Energy Cost This Year', None],
     CONF_CURRENT_VALUES: ['Per-Device Usage', 'W']
 }
 
@@ -78,7 +91,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(dev, True)
 
-
 class EfergySensor(Entity):
     """Implementation of an Efergy sensor."""
 
@@ -96,9 +108,18 @@ class EfergySensor(Entity):
         self._state = None
         self.period = period
         self.currency = currency
-        if self.type == 'cost':
-            self._unit_of_measurement = '{}/{}'.format(
-                self.currency, self.period)
+        if self.type == 'cost_day':
+            self._unit_of_measurement = '{}'.format(
+                self.currency)
+        elif self.type == 'cost_week':
+            self._unit_of_measurement = '{}'.format(
+                    self.currency)
+        elif self.type == 'cost_month':
+            self._unit_of_measurement = '{}'.format(
+                    self.currency)
+        elif self.type == 'cost_year':
+            self._unit_of_measurement = '{}'.format(
+                    self.currency)
         else:
             self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -125,9 +146,24 @@ class EfergySensor(Entity):
                     _RESOURCE, self.app_token)
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['reading']
-            elif self.type == 'amount':
-                url_string = '{}getEnergy?token={}&offset={}&period={}'.format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period)
+            elif self.type == 'amount_day':
+                url_string = '{}getEnergy?token={}&offset={}&period=day'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'amount_week':
+                url_string = '{}getEnergy?token={}&offset={}&period=week'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'amount_month':
+                url_string = '{}getEnergy?token={}&offset={}&period=month'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'amount_year':
+                url_string = '{}getEnergy?token={}&offset={}&period=year'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'budget':
@@ -135,9 +171,24 @@ class EfergySensor(Entity):
                     _RESOURCE, self.app_token)
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['status']
-            elif self.type == 'cost':
-                url_string = '{}getCost?token={}&offset={}&period={}'.format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period)
+            elif self.type == 'cost_day':
+                url_string = '{}getCost?token={}&offset={}&period=day'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'cost_week':
+                url_string = '{}getCost?token={}&offset={}&period=week'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'cost_month':
+                url_string = '{}getCost?token={}&offset={}&period=month'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
+                response = requests.get(url_string, timeout=10)
+                self._state = response.json()['sum']
+            elif self.type == 'cost_year':
+                url_string = '{}getCost?token={}&offset={}&period=year'.format(
+                    _RESOURCE, self.app_token, self.utc_offset)
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'current_values':
