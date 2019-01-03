@@ -804,6 +804,8 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         'schema': 'template',
         'state_topic': 'test-topic',
         'command_topic': 'test-command-topic',
+        'command_on_template': 'on,{{ transition }}',
+        'command_off_template': 'off,{{ transition|d }}',
         'device': {
             'identifiers': ['helloworld'],
             'connections': [

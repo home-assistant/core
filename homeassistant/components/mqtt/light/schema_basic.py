@@ -112,13 +112,13 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
-async def async_setup_entity_basic(config, async_add_entities,
+async def async_setup_entity_basic(config, async_add_entities, config_entry,
                                    discovery_hash=None):
     """Set up a MQTT Light."""
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_entities([MqttLight(config, discovery_hash)])
+    async_add_entities([MqttLight(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -126,7 +126,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT light."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize MQTT light."""
         self._state = False
         self._sub_state = None
@@ -153,7 +153,6 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
 
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
