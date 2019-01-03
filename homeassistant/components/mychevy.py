@@ -34,12 +34,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 ERROR_SLEEP_TIME = timedelta(minutes=30)
 
 CONF_COUNTRY = 'country'
+DEFAULT_COUNTRY = 'us'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_COUNTRY, default='us'): vol.All(
-            cv.string, vol.In(['us', 'ca']))
+        vol.Optional(CONF_COUNTRY, default=DEFAULT_COUNTRY):
+            vol.All(cv.string, vol.In(['us', 'ca']))
     }),
 }, extra=vol.ALLOW_EXTRA)
 
