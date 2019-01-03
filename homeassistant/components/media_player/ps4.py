@@ -60,8 +60,8 @@ def request_configuration(hass, config, add_devices, _creds):
         if len(pin) != 8:
             configurator.notify_errors(_CONFIGURING[host],
                                        "Invalid PIN Code")
-        file = load_json(hass.config.path(CONFIG_FILE))
-        creds = file[host]
+        cred_file = load_json(hass.config.path(CONFIG_FILE))
+        creds = cred_file[host]
         ps4 = pyps4.Ps4(host, creds)
         try:
             ps4.login(pin)
@@ -78,10 +78,10 @@ def request_configuration(hass, config, add_devices, _creds):
             configurator.notify_errors(_CONFIGURING[host],
                                        "Could not fetch credentials")
         else:
-            file = hass.config.path(CONFIG_FILE)
+            cred_file = hass.config.path(CONFIG_FILE)
             try:
                 cred = {host: result}
-                save_json(file, cred)
+                save_json(cred_file, cred)
                 hass.components.configurator.request_done(
                     _CONFIGURING.pop(host))
             except OSError:
@@ -163,16 +163,14 @@ class PS4Device(MediaPlayerDevice):
         """Retrieve the latest data."""
         try:
             status = self._ps4.get_status()
-            state = status.get('status')
-            if state == 'Ok':
+            if status.get('status') == 'Ok':
                 titleid = status.get('running-app-titleid')
                 name = status.get('running-app-name')
                 if titleid and name is not None:
                     self._state = STATE_PLAYING
                     self._media_content_id = titleid
-                    app_name = self._ps4.get_ps_store_data('title', name)
-                    if app_name is None:
-                        app_name = name
+                    app_name = self._ps4.get_ps_store_data(
+                        'title', name) or name
                     self._media_image = self._ps4.get_ps_store_data(
                         'art', app_name)
                     self._source = app_name
