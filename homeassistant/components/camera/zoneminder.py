@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.components.camera.mjpeg import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
+    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ DEPENDENCIES = ['zoneminder']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder cameras."""
+    filter_urllib3_logging()
     zm_client = hass.data[ZONEMINDER_DOMAIN]
 
     monitors = zm_client.get_monitors()
