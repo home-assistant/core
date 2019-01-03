@@ -137,8 +137,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        config['config_entry'] = config_entry
-        await _async_setup_entity(config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities, config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -146,16 +145,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities, discovery_hash=None):
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
+                              discovery_hash=None):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(config, discovery_hash)])
+    async_add_entities([MqttCover(config, config_entry, discovery_hash)])
 
 
 class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the cover."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
@@ -174,7 +174,6 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
