@@ -123,3 +123,5 @@ class CO2Sensor(Entity):
         else:
             raise ValueError("Unknown location type: {location_type}"
                              .format(location_type=self._location_type))
+
+        self._data = round(self._data, 2)
