@@ -17,6 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
+    if discovery_info is None:
+        return
+
     api = hass.data[DATA_ASUSWRT]
     add_entities([
         AsuswrtRXSensor(api),
