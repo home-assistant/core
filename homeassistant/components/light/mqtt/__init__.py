@@ -52,8 +52,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        config['config_entry'] = config_entry
         await _async_setup_entity(hass, config, async_add_entities,
+                                  config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -62,7 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(hass, config, async_add_entities,
-                              discovery_hash=None):
+                              config_entry=None, discovery_hash=None):
     """Set up a MQTT Light."""
     setup_entity = {
         'basic': schema_basic.async_setup_entity_basic,
@@ -70,4 +70,4 @@ async def _async_setup_entity(hass, config, async_add_entities,
         'template': schema_template.async_setup_entity_template,
     }
     await setup_entity[config['schema']](
-        hass, config, async_add_entities, discovery_hash)
+        hass, config, async_add_entities, config_entry, discovery_hash)

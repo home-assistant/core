@@ -85,9 +85,10 @@ PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,
-                                  async_add_entities, discovery_hash):
+                                  async_add_entities, config_entry,
+                                  discovery_hash):
     """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(config, discovery_hash)])
+    async_add_entities([MqttLightJson(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -95,7 +96,7 @@ class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate,
                     MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize MQTT JSON light."""
         self._state = False
         self._sub_state = None
@@ -119,7 +120,6 @@ class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate,
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
