@@ -17,7 +17,8 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
     MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+from homeassistant.components.mqtt.discovery import (
+    ALREADY_DISCOVERED, MQTT_DISCOVERY_NEW)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
@@ -66,9 +67,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT sensors dynamically through MQTT discovery."""
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities,
+                                      discovery_hash)
+        except:  # noqa: E722
+            if discovery_hash:
+                del hass.data[ALREADY_DISCOVERED][discovery_hash]
+            raise
 
     async_dispatcher_connect(hass,
                              MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
