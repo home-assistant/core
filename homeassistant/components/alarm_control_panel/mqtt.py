@@ -63,8 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        config['config_entry'] = config_entry
-        await _async_setup_entity(config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities, config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -72,17 +71,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(config, discovery_hash)])
+    async_add_entities([MqttAlarm(config, config_entry, discovery_hash)])
 
 
 class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
         self._state = STATE_UNKNOWN
         self._config = config
@@ -94,7 +93,6 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
