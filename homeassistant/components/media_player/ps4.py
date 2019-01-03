@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['ps4python3==1.0.3']
+REQUIREMENTS = ['pyps4_homeassistant==0.0.4']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -55,7 +55,7 @@ def request_configuration(hass, config, add_devices, _creds):
 
     def connect_callback(data):
         """Run after creds are saved. Pair with PS4."""
-        import ps4python3 as pyps4
+        import pyps4_homeassistant as pyps4
         pin = data.get('pin')
         if len(pin) != 8:
             configurator.notify_errors(_CONFIGURING[host],
@@ -123,7 +123,7 @@ def get_credentials(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the PS4 platform."""
-    import ps4python3 as pyps4
+    import pyps4_homeassistant as pyps4
     host = config.get(CONF_HOST)
     creds = None
     creds = get_credentials(hass, config)
