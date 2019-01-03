@@ -17,7 +17,7 @@ class TestGraphite(unittest.TestCase):
     """Test the Graphite component."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.gf = graphite.GraphiteFeeder(self.hass, 'foo', 123, 'ha')
 
@@ -29,11 +29,9 @@ class TestGraphite(unittest.TestCase):
     def test_setup(self, mock_socket):
         """Test setup."""
         assert setup_component(self.hass, graphite.DOMAIN, {'graphite': {}})
-        self.assertEqual(mock_socket.call_count, 1)
-        self.assertEqual(
-            mock_socket.call_args,
+        assert mock_socket.call_count == 1
+        assert mock_socket.call_args == \
             mock.call(socket.AF_INET, socket.SOCK_STREAM)
-        )
 
     @patch('socket.socket')
     @patch('homeassistant.components.graphite.GraphiteFeeder')
@@ -47,16 +45,12 @@ class TestGraphite(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, graphite.DOMAIN, config))
-        self.assertEqual(mock_gf.call_count, 1)
-        self.assertEqual(
-            mock_gf.call_args, mock.call(self.hass, 'foo', 123, 'me')
-        )
-        self.assertEqual(mock_socket.call_count, 1)
-        self.assertEqual(
-            mock_socket.call_args,
+        assert setup_component(self.hass, graphite.DOMAIN, config)
+        assert mock_gf.call_count == 1
+        assert mock_gf.call_args == mock.call(self.hass, 'foo', 123, 'me')
+        assert mock_socket.call_count == 1
+        assert mock_socket.call_args == \
             mock.call(socket.AF_INET, socket.SOCK_STREAM)
-        )
 
     @patch('socket.socket')
     @patch('homeassistant.components.graphite.GraphiteFeeder')
@@ -69,13 +63,11 @@ class TestGraphite(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, graphite.DOMAIN, config))
-        self.assertTrue(mock_gf.called)
-        self.assertEqual(mock_socket.call_count, 1)
-        self.assertEqual(
-            mock_socket.call_args,
+        assert setup_component(self.hass, graphite.DOMAIN, config)
+        assert mock_gf.called
+        assert mock_socket.call_count == 1
+        assert mock_socket.call_args == \
             mock.call(socket.AF_INET, socket.SOCK_STREAM)
-        )
 
     def test_subscribe(self):
         """Test the subscription."""
@@ -85,34 +77,30 @@ class TestGraphite(unittest.TestCase):
             mock.call(EVENT_HOMEASSISTANT_START, gf.start_listen),
             mock.call(EVENT_HOMEASSISTANT_STOP, gf.shutdown),
         ])
-        self.assertEqual(fake_hass.bus.listen.call_count, 1)
-        self.assertEqual(
-            fake_hass.bus.listen.call_args,
+        assert fake_hass.bus.listen.call_count == 1
+        assert fake_hass.bus.listen.call_args == \
             mock.call(EVENT_STATE_CHANGED, gf.event_listener)
-        )
 
     def test_start(self):
         """Test the start."""
         with mock.patch.object(self.gf, 'start') as mock_start:
             self.gf.start_listen('event')
-            self.assertEqual(mock_start.call_count, 1)
-            self.assertEqual(mock_start.call_args, mock.call())
+            assert mock_start.call_count == 1
+            assert mock_start.call_args == mock.call()
 
     def test_shutdown(self):
         """Test the shutdown."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             self.gf.shutdown('event')
-            self.assertEqual(mock_queue.put.call_count, 1)
-            self.assertEqual(
-                mock_queue.put.call_args, mock.call(self.gf._quit_object)
-            )
+            assert mock_queue.put.call_count == 1
+            assert mock_queue.put.call_args == mock.call(self.gf._quit_object)
 
     def test_event_listener(self):
         """Test the event listener."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             self.gf.event_listener('foo')
-            self.assertEqual(mock_queue.put.call_count, 1)
-            self.assertEqual(mock_queue.put.call_args, mock.call('foo'))
+            assert mock_queue.put.call_count == 1
+            assert mock_queue.put.call_args == mock.call('foo')
 
     @patch('time.time')
     def test_report_attributes(self, mock_time):
@@ -135,7 +123,7 @@ class TestGraphite(unittest.TestCase):
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
             actual = mock_send.call_args_list[0][0][0].split('\n')
-            self.assertEqual(sorted(expected), sorted(actual))
+            assert sorted(expected) == sorted(actual)
 
     @patch('time.time')
     def test_report_with_string_state(self, mock_time):
@@ -150,7 +138,7 @@ class TestGraphite(unittest.TestCase):
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
             actual = mock_send.call_args_list[0][0][0].split('\n')
-            self.assertEqual(sorted(expected), sorted(actual))
+            assert sorted(expected) == sorted(actual)
 
     @patch('time.time')
     def test_report_with_binary_state(self, mock_time):
@@ -162,7 +150,7 @@ class TestGraphite(unittest.TestCase):
             expected = ['ha.entity.foo 1.000000 12345',
                         'ha.entity.state 1.000000 12345']
             actual = mock_send.call_args_list[0][0][0].split('\n')
-            self.assertEqual(sorted(expected), sorted(actual))
+            assert sorted(expected) == sorted(actual)
 
         state.state = STATE_OFF
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
@@ -170,7 +158,7 @@ class TestGraphite(unittest.TestCase):
             expected = ['ha.entity.foo 1.000000 12345',
                         'ha.entity.state 0.000000 12345']
             actual = mock_send.call_args_list[0][0][0].split('\n')
-            self.assertEqual(sorted(expected), sorted(actual))
+            assert sorted(expected) == sorted(actual)
 
     @patch('time.time')
     def test_send_to_graphite_errors(self, mock_time):
@@ -187,32 +175,28 @@ class TestGraphite(unittest.TestCase):
     def test_send_to_graphite(self, mock_socket):
         """Test the sending of data."""
         self.gf._send_to_graphite('foo')
-        self.assertEqual(mock_socket.call_count, 1)
-        self.assertEqual(
-            mock_socket.call_args,
+        assert mock_socket.call_count == 1
+        assert mock_socket.call_args == \
             mock.call(socket.AF_INET, socket.SOCK_STREAM)
-        )
         sock = mock_socket.return_value
-        self.assertEqual(sock.connect.call_count, 1)
-        self.assertEqual(sock.connect.call_args, mock.call(('foo', 123)))
-        self.assertEqual(sock.sendall.call_count, 1)
-        self.assertEqual(
-            sock.sendall.call_args, mock.call('foo'.encode('ascii'))
-        )
-        self.assertEqual(sock.send.call_count, 1)
-        self.assertEqual(sock.send.call_args, mock.call('\n'.encode('ascii')))
-        self.assertEqual(sock.close.call_count, 1)
-        self.assertEqual(sock.close.call_args, mock.call())
+        assert sock.connect.call_count == 1
+        assert sock.connect.call_args == mock.call(('foo', 123))
+        assert sock.sendall.call_count == 1
+        assert sock.sendall.call_args == mock.call('foo'.encode('ascii'))
+        assert sock.send.call_count == 1
+        assert sock.send.call_args == mock.call('\n'.encode('ascii'))
+        assert sock.close.call_count == 1
+        assert sock.close.call_args == mock.call()
 
     def test_run_stops(self):
         """Test the stops."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             mock_queue.get.return_value = self.gf._quit_object
-            self.assertEqual(None, self.gf.run())
-            self.assertEqual(mock_queue.get.call_count, 1)
-            self.assertEqual(mock_queue.get.call_args, mock.call())
-            self.assertEqual(mock_queue.task_done.call_count, 1)
-            self.assertEqual(mock_queue.task_done.call_args, mock.call())
+            assert self.gf.run() is None
+            assert mock_queue.get.call_count == 1
+            assert mock_queue.get.call_args == mock.call()
+            assert mock_queue.task_done.call_count == 1
+            assert mock_queue.task_done.call_args == mock.call()
 
     def test_run(self):
         """Test the running."""
@@ -224,22 +208,19 @@ class TestGraphite(unittest.TestCase):
         def fake_get():
             if len(runs) >= 2:
                 return self.gf._quit_object
-            elif runs:
+            if runs:
                 runs.append(1)
                 return mock.MagicMock(event_type='somethingelse',
                                       data={'new_event': None})
-            else:
-                runs.append(1)
-                return event
+            runs.append(1)
+            return event
 
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             with mock.patch.object(self.gf, '_report_attributes') as mock_r:
                 mock_queue.get.side_effect = fake_get
                 self.gf.run()
                 # Twice for two events, once for the stop
-                self.assertEqual(3, mock_queue.task_done.call_count)
-                self.assertEqual(mock_r.call_count, 1)
-                self.assertEqual(
-                    mock_r.call_args,
+                assert 3 == mock_queue.task_done.call_count
+                assert mock_r.call_count == 1
+                assert mock_r.call_args == \
                     mock.call('entity', event.data['new_state'])
-                )

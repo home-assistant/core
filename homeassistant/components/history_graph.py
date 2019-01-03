@@ -4,7 +4,6 @@ Support to graphs card in the UI.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history_graph/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -39,8 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Load graph configurations."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass)
@@ -51,7 +49,7 @@ def async_setup(hass, config):
         graph = HistoryGraphEntity(name, cfg)
         graphs.append(graph)
 
-    yield from component.async_add_entities(graphs)
+    await component.async_add_entities(graphs)
 
     return True
 

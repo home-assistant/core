@@ -18,7 +18,7 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple('Error', ['file', 'line', 'col', 'msg'])
+Error = namedtuple('Error', ['file', 'line', 'col', 'msg', 'skip'])
 
 PASS = 'green'
 FAIL = 'bold_red'
@@ -39,7 +39,6 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable=E0402
     from gen_requirements_all import main as req_main
     return req_main(True) == 0
 
@@ -70,7 +69,6 @@ async def async_exec(*args, display=False):
                   'stderr': asyncio.subprocess.STDOUT}
         if display:
             kwargs['stderr'] = asyncio.subprocess.PIPE
-        # pylint: disable=E1120
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
         printc(FAIL, "Could not execute {}. Did you install test requirements?"
@@ -109,8 +107,9 @@ async def pylint(files):
         line = line.split(':')
         if len(line) < 3:
             continue
-        res.append(Error(line[0].replace('\\', '/'),
-                         line[1], "", line[2].strip()))
+        _fn = line[0].replace('\\', '/')
+        res.append(Error(
+            _fn, line[1], '', line[2].strip(), _fn.startswith('tests/')))
     return res
 
 
@@ -122,8 +121,8 @@ async def flake8(files):
         line = line.split(':')
         if len(line) < 4:
             continue
-        res.append(Error(line[0].replace('\\', '/'),
-                         line[1], line[2], line[3].strip()))
+        _fn = line[0].replace('\\', '/')
+        res.append(Error(_fn, line[1], line[2], line[3].strip(), False))
     return res
 
 
@@ -144,7 +143,7 @@ async def lint(files):
         err_msg = "{} {}:{} {}".format(err.file, err.line, err.col, err.msg)
 
         # tests/* does not have to pass lint
-        if err.file.startswith('tests/'):
+        if err.skip:
             print(err_msg)
         else:
             printc(FAIL, err_msg)
@@ -154,7 +153,7 @@ async def lint(files):
 
 
 async def main():
-    """The main loop."""
+    """Run the main loop."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

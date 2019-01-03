@@ -2,22 +2,46 @@
 import asyncio
 from datetime import timedelta
 from itertools import chain
+import logging
 
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE)
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE, MATCH_ALL)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+DATA_INSTANCES = 'entity_components'
 
 
-class EntityComponent(object):
+@bind_hass
+async def async_update_entity(hass, entity_id):
+    """Trigger an update for an entity."""
+    domain = entity_id.split('.', 1)[0]
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+
+    if entity_comp is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Component for %s not loaded.', entity_id)
+        return
+
+    entity = entity_comp.get_entity(entity_id)
+
+    if entity is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Entity %s not found.', entity_id)
+        return
+
+    await entity.async_update_ha_state(True)
+
+
+class EntityComponent:
     """The EntityComponent manages platforms that manages entities.
 
     This class has the following responsibilities:
@@ -40,19 +64,12 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            domain: EntityPlatform(
-                hass=hass,
-                logger=logger,
-                domain=domain,
-                platform_name=domain,
-                scan_interval=self.scan_interval,
-                parallel_updates=0,
-                entity_namespace=None,
-                async_entities_added_callback=self._async_update_group,
-            )
+            domain: self._async_init_entity_platform(domain, None)
         }
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
+
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
     def entities(self):
@@ -61,7 +78,7 @@ class EntityComponent(object):
                                    in self._platforms.values())
 
     def get_entity(self, entity_id):
-        """Helper method to get an entity."""
+        """Get an entity."""
         for platform in self._platforms.values():
             entity = platform.entities.get(entity_id)
             if entity is not None:
@@ -102,6 +119,39 @@ class EntityComponent(object):
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
 
+    async def async_setup_entry(self, config_entry):
+        """Set up a config entry."""
+        platform_type = config_entry.domain
+        platform = await async_prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
+
+        if platform is None:
+            return False
+
+        key = config_entry.entry_id
+
+        if key in self._platforms:
+            raise ValueError('Config entry has already been setup!')
+
+        self._platforms[key] = self._async_init_entity_platform(
+            platform_type, platform,
+            scan_interval=getattr(platform, 'SCAN_INTERVAL', None),
+        )
+
+        return await self._platforms[key].async_setup_entry(config_entry)
+
+    async def async_unload_entry(self, config_entry):
+        """Unload a config entry."""
+        key = config_entry.entry_id
+
+        platform = self._platforms.pop(key, None)
+
+        if platform is None:
+            raise ValueError('Config entry was never loaded!')
+
+        await platform.async_reset()
+        return True
+
     @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
@@ -111,12 +161,32 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
-        if ATTR_ENTITY_ID not in service.data:
+        data_ent_id = service.data.get(ATTR_ENTITY_ID)
+
+        if data_ent_id in (None, MATCH_ALL):
+            if data_ent_id is None:
+                self.logger.warning(
+                    'Not passing an entity ID to a service to target all '
+                    'entities is deprecated. Update your call to %s.%s to be '
+                    'instead: entity_id: "*"', service.domain, service.service)
+
             return [entity for entity in self.entities if entity.available]
 
         entity_ids = set(extract_entity_ids(self.hass, service, expand_group))
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
+
+    @callback
+    def async_register_entity_service(self, name, schema, func):
+        """Register an entity service."""
+        async def handle_service(call):
+            """Handle the service."""
+            await self.hass.helpers.service.entity_service_call(
+                self._platforms.values(), func, call
+            )
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema)
 
     async def _async_setup_platform(self, platform_type, platform_config,
                                     discovery_info=None):
@@ -127,34 +197,19 @@ class EntityComponent(object):
         if platform is None:
             return
 
-        # Config > Platform > Component
-        scan_interval = (
-            platform_config.get(CONF_SCAN_INTERVAL) or
-            getattr(platform, 'SCAN_INTERVAL', None) or self.scan_interval)
-        parallel_updates = getattr(
-            platform, 'PARALLEL_UPDATES',
-            int(not hasattr(platform, 'async_setup_platform')))
-
+        # Use config scan interval, fallback to platform if none set
+        scan_interval = platform_config.get(
+            CONF_SCAN_INTERVAL, getattr(platform, 'SCAN_INTERVAL', None))
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            entity_platform = self._platforms[key] = EntityPlatform(
-                hass=self.hass,
-                logger=self.logger,
-                domain=self.domain,
-                platform_name=platform_type,
-                scan_interval=scan_interval,
-                parallel_updates=parallel_updates,
-                entity_namespace=entity_namespace,
-                async_entities_added_callback=self._async_update_group,
+            self._platforms[key] = self._async_init_entity_platform(
+                platform_type, platform, scan_interval, entity_namespace
             )
-        else:
-            entity_platform = self._platforms[key]
 
-        await entity_platform.async_setup(
-            platform, platform_config, discovery_info)
+        await self._platforms[key].async_setup(platform_config, discovery_info)
 
     @callback
     def _async_update_group(self):
@@ -169,10 +224,13 @@ class EntityComponent(object):
                sorted(self.entities,
                       key=lambda entity: entity.name or entity.entity_id)]
 
-        self.hass.components.group.async_set_group(
-            slugify(self.group_name), name=self.group_name,
-            visible=False, entity_ids=ids
-        )
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                'group', 'set', dict(
+                    object_id=slugify(self.group_name),
+                    name=self.group_name,
+                    visible=False,
+                    entities=ids)))
 
     async def _async_reset(self):
         """Remove entities and reset the entity component to initial values.
@@ -191,7 +249,9 @@ class EntityComponent(object):
         self.config = None
 
         if self.group_name is not None:
-            self.hass.components.group.async_remove(slugify(self.group_name))
+            await self.hass.services.async_call(
+                'group', 'remove', dict(
+                    object_id=slugify(self.group_name)))
 
     async def async_remove_entity(self, entity_id):
         """Remove an entity managed by one of the platforms."""
@@ -219,3 +279,20 @@ class EntityComponent(object):
 
         await self._async_reset()
         return conf
+
+    def _async_init_entity_platform(self, platform_type, platform,
+                                    scan_interval=None, entity_namespace=None):
+        """Initialize an entity platform."""
+        if scan_interval is None:
+            scan_interval = self.scan_interval
+
+        return EntityPlatform(
+            hass=self.hass,
+            logger=self.logger,
+            domain=self.domain,
+            platform_name=platform_type,
+            platform=platform,
+            scan_interval=scan_interval,
+            entity_namespace=entity_namespace,
+            async_entities_added_callback=self._async_update_group,
+        )

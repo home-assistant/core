@@ -1,0 +1,22 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "step": {
+                "setup": {
+                    "title": "Verificar a configura\u00e7\u00e3o"
+                }
+            }
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor tente novamente. Se voc\u00ea obtiver este erro de forma consistente, certifique-se de que o rel\u00f3gio do sistema Home Assistant esteja correto."
+            },
+            "step": {
+                "init": {
+                    "title": "Configure a autentica\u00e7\u00e3o de dois fatores usando o TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

@@ -41,14 +41,19 @@ def _find_username_from_config(hass, filename):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class HueFlowHandler(config_entries.ConfigFlowHandler):
+class HueFlowHandler(config_entries.ConfigFlow):
     """Handle a Hue config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Hue flow."""
         self.host = None
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -84,7 +89,7 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
                 reason='all_configured'
             )
 
-        elif len(hosts) == 1:
+        if len(hosts) == 1:
             self.host = hosts[0]
             return await self.async_step_link()
 

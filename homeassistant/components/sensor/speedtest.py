@@ -4,7 +4,6 @@ Support for Speedtest.net.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,12 +11,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['speedtest-cli==2.0.0']
+REQUIREMENTS = ['speedtest-cli==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +31,6 @@ CONF_ATTRIBUTION = "Data retrieved from Speedtest by Ookla"
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
-CONF_DAY = 'day'
 CONF_SERVER_ID = 'server_id'
 CONF_MANUAL = 'manual'
 
@@ -48,8 +45,6 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_DAY):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
     vol.Optional(CONF_HOUR):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_MANUAL, default=False): cv.boolean,
@@ -61,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Speedtest sensor."""
     data = SpeedtestData(hass, config)
 
@@ -69,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         dev.append(SpeedtestSensor(data, sensor))
 
-    add_devices(dev)
+    add_entities(dev)
 
     def update(call=None):
         """Update service for manual updates."""
@@ -80,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(DOMAIN, 'update_speedtest', update)
 
 
-class SpeedtestSensor(Entity):
+class SpeedtestSensor(RestoreEntity):
     """Implementation of a speedtest.net sensor."""
 
     def __init__(self, speedtest_data, sensor_type):
@@ -139,16 +134,16 @@ class SpeedtestSensor(Entity):
         elif self.type == 'upload':
             self._state = round(self._data['upload'] / 10**6, 2)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle all entity which are about to be added."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state
 
 
-class SpeedtestData(object):
+class SpeedtestData:
     """Get the latest data from speedtest.net."""
 
     def __init__(self, hass, config):
@@ -158,8 +153,7 @@ class SpeedtestData(object):
         if not config.get(CONF_MANUAL):
             track_time_change(
                 hass, self.update, second=config.get(CONF_SECOND),
-                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
-                day=config.get(CONF_DAY))
+                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""

@@ -6,17 +6,19 @@ https://home-assistant.io/components/binary_sensor.volvooncall/
 """
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, DEVICE_CLASSES)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    add_devices([VolvoSensor(hass, *discovery_info)])
+    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity, BinarySensorDevice):
@@ -25,14 +27,11 @@ class VolvoSensor(VolvoEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        val = getattr(self.vehicle, self._attribute)
-        if self._attribute == 'bulb_failures':
-            return bool(val)
-        elif self._attribute in ['doors', 'windows']:
-            return any([val[key] for key in val if 'Open' in key])
-        return val != 'Normal'
+        return self.instrument.is_on
 
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return 'safety'
+        if self.instrument.device_class in DEVICE_CLASSES:
+            return self.instrument.device_class
+        return None

@@ -15,7 +15,6 @@ import logging
 import queue
 import threading
 import time
-
 from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
@@ -29,13 +28,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.5']
+REQUIREMENTS = ['sqlalchemy==1.2.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +45,8 @@ ATTR_KEEP_DAYS = 'keep_days'
 ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(ATTR_REPACK, default=False): cv.boolean
+    vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean,
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -85,12 +82,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-async def wait_connection_ready(hass):
-    """Wait till the connection is ready."""
-    return await hass.data[DATA_INSTANCE].async_db_ready
-
-
 def run_information(hass, point_in_time: Optional[datetime] = None):
     """Return information about current run.
 
@@ -112,8 +103,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
         return res
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
@@ -132,8 +122,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
 
-    @asyncio.coroutine
-    def async_handle_purge_service(service):
+    async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
@@ -141,7 +130,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_PURGE, async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA)
 
-    return (yield from instance.async_db_ready)
+    return await instance.async_db_ready
 
 
 PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])
@@ -287,7 +276,7 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif isinstance(event, PurgeTask):
+            if isinstance(event, PurgeTask):
                 purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
@@ -311,14 +300,24 @@ class Recorder(threading.Thread):
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
                     with session_scope(session=self.get_session()) as session:
-                        dbevent = Events.from_event(event)
-                        session.add(dbevent)
-                        session.flush()
+                        try:
+                            dbevent = Events.from_event(event)
+                            session.add(dbevent)
+                            session.flush()
+                        except (TypeError, ValueError):
+                            _LOGGER.warning(
+                                "Event is not JSON serializable: %s", event)
 
                         if event.event_type == EVENT_STATE_CHANGED:
-                            dbstate = States.from_event(event)
-                            dbstate.event_id = dbevent.event_id
-                            session.add(dbstate)
+                            try:
+                                dbstate = States.from_event(event)
+                                dbstate.event_id = dbevent.event_id
+                                session.add(dbstate)
+                            except (TypeError, ValueError):
+                                _LOGGER.warning(
+                                    "State is not JSON serializable: %s",
+                                    event.data.get('new_state'))
+
                     updated = True
 
                 except exc.OperationalError as err:

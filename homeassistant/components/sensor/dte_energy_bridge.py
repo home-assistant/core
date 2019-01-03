@@ -31,13 +31,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DTE energy bridge sensor."""
     name = config.get(CONF_NAME)
     ip_address = config.get(CONF_IP_ADDRESS)
     version = config.get(CONF_VERSION, 1)
 
-    add_devices([DteEnergyBridgeSensor(ip_address, name, version)], True)
+    add_entities([DteEnergyBridgeSensor(ip_address, name, version)], True)
 
 
 class DteEnergyBridgeSensor(Entity):
@@ -109,4 +109,10 @@ class DteEnergyBridgeSensor(Entity):
         # A workaround for a bug in the DTE energy bridge.
         # The returned value can randomly be in W or kW.  Checking for a
         # a decimal seems to be a reliable way to determine the units.
-        self._state = val if '.' in response_split[0] else val / 1000
+        # Limiting to version 1 because version 2 apparently always returns
+        # values in the format 000000.000 kW, but the scaling is Watts
+        # NOT kWatts
+        if self._version == 1 and '.' in response_split[0]:
+            self._state = val
+        else:
+            self._state = val / 1000

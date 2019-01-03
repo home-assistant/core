@@ -10,7 +10,7 @@ import logging
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
-from homeassistant.components.maxcube import MAXCUBE_HANDLE
+from homeassistant.components.maxcube import DATA_KEY
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,34 +22,33 @@ STATE_VACATION = 'vacation'
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats."""
-    cube = hass.data[MAXCUBE_HANDLE].cube
-
     devices = []
+    for handler in hass.data[DATA_KEY].values():
+        cube = handler.cube
+        for device in cube.devices:
+            name = '{} {}'.format(
+                cube.room_by_id(device.room_id).name, device.name)
 
-    for device in cube.devices:
-        name = '{} {}'.format(
-            cube.room_by_id(device.room_id).name, device.name)
-
-        if cube.is_thermostat(device) or cube.is_wallthermostat(device):
-            devices.append(MaxCubeClimate(hass, name, device.rf_address))
+            if cube.is_thermostat(device) or cube.is_wallthermostat(device):
+                devices.append(
+                    MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
-        add_devices(devices)
+        add_entities(devices)
 
 
 class MaxCubeClimate(ClimateDevice):
     """MAX! Cube ClimateDevice."""
 
-    def __init__(self, hass, name, rf_address):
+    def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube ClimateDevice."""
         self._name = name
-        self._unit_of_measurement = TEMP_CELSIUS
         self._operation_list = [STATE_AUTO, STATE_MANUAL, STATE_BOOST,
                                 STATE_VACATION]
         self._rf_address = rf_address
-        self._cubehandle = hass.data[MAXCUBE_HANDLE]
+        self._cubehandle = handler
 
     @property
     def supported_features(self):
@@ -81,7 +80,7 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

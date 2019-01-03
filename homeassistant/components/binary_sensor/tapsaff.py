@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tapsaff==0.1.3']
+REQUIREMENTS = ['tapsaff==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,14 +30,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Taps Aff binary sensor."""
     name = config.get(CONF_NAME)
     location = config.get(CONF_LOCATION)
 
     taps_aff_data = TapsAffData(location)
 
-    add_devices([TapsAffSensor(taps_aff_data, name)], True)
+    add_entities([TapsAffSensor(taps_aff_data, name)], True)
 
 
 class TapsAffSensor(BinarySensorDevice):
@@ -63,7 +63,7 @@ class TapsAffSensor(BinarySensorDevice):
         self.data.update()
 
 
-class TapsAffData(object):
+class TapsAffData:
     """Class for handling the data retrieval for pins."""
 
     def __init__(self, location):

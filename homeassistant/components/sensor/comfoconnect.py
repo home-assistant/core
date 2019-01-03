@@ -23,7 +23,7 @@ DEPENDENCIES = ['comfoconnect']
 SENSOR_TYPES = {}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
     from pycomfoconnect import (
         SENSOR_TEMPERATURE_EXTRACT, SENSOR_HUMIDITY_EXTRACT,
@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class ComfoConnectSensor(Entity):

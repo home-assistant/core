@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.8.5']
+REQUIREMENTS = ['xknx==0.9.3']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"
@@ -107,7 +107,7 @@ async def async_setup(hass, config):
             ('scene', 'Scene'),
             ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
@@ -129,7 +129,7 @@ def _get_devices(hass, discovery_type):
                 hass.data[DATA_KNX].xknx.devices)))
 
 
-class KNXModule(object):
+class KNXModule:
     """Representation of KNX Object."""
 
     def __init__(self, hass, config):
@@ -172,7 +172,7 @@ class KNXModule(object):
         """Return the connection_config."""
         if CONF_KNX_TUNNELING in self.config[DOMAIN]:
             return self.connection_config_tunneling()
-        elif CONF_KNX_ROUTING in self.config[DOMAIN]:
+        if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
         return self.connection_config_auto()
 
@@ -240,7 +240,7 @@ class KNXModule(object):
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
-        self.hass.bus.fire('knx_event', {
+        self.hass.bus.async_fire('knx_event', {
             'address': str(telegram.group_address),
             'data': telegram.payload.value
         })
@@ -284,7 +284,7 @@ class KNXAutomation():
         device.actions.append(self.action)
 
 
-class KNXExposeTime(object):
+class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
     def __init__(self, xknx, expose_type, address):
@@ -308,7 +308,7 @@ class KNXExposeTime(object):
         self.xknx.devices.add(self.device)
 
 
-class KNXExposeSensor(object):
+class KNXExposeSensor:
     """Object to Expose HASS entity to KNX bus."""
 
     def __init__(self, hass, xknx, expose_type, entity_id, address):
@@ -334,7 +334,7 @@ class KNXExposeSensor(object):
             self.hass, self.entity_id, self._async_entity_changed)
 
     async def _async_entity_changed(self, entity_id, old_state, new_state):
-        """Callback after entity changed."""
+        """Handle entity change."""
         if new_state is None:
             return
         await self.device.set(float(new_state.state))

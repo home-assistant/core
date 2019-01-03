@@ -1,6 +1,6 @@
 {
   "config": {
-    "title": "Philips Hue Bridge",
+    "title": "Philips Hue",
     "step": {
       "init": {
         "title": "Pick Hue bridge",

@@ -10,8 +10,7 @@ from homeassistant.components.tellstick import (
 from homeassistant.helpers.entity import ToggleEntity
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tellstick switches."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
@@ -21,10 +20,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     signal_repetitions = discovery_info.get(ATTR_DISCOVER_CONFIG,
                                             DEFAULT_SIGNAL_REPETITIONS)
 
-    add_devices([TellstickSwitch(hass.data[DATA_TELLSTICK][tellcore_id],
-                                 signal_repetitions)
-                 for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
-                True)
+    add_entities([TellstickSwitch(hass.data[DATA_TELLSTICK][tellcore_id],
+                                  signal_repetitions)
+                  for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
+                 True)
 
 
 class TellstickSwitch(TellstickDevice, ToggleEntity):

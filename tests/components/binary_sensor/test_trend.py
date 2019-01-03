@@ -273,8 +273,7 @@ class TestTrendBinarySensor:
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
-    def test_invalid_name_does_not_create(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_name_does_not_create(self):
         """Test invalid name."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {
@@ -290,8 +289,7 @@ class TestTrendBinarySensor:
             })
         assert self.hass.states.all() == []
 
-    def test_invalid_sensor_does_not_create(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_sensor_does_not_create(self):
         """Test invalid sensor."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {

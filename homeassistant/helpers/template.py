@@ -4,11 +4,13 @@ import json
 import logging
 import math
 import random
+import base64
 import re
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from jinja2.utils import Namespace
 
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
@@ -16,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import bind_hass, get_component
+from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
@@ -31,6 +33,7 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
@@ -51,7 +54,7 @@ def render_complex(value, variables=None):
     if isinstance(value, list):
         return [render_complex(item, variables)
                 for item in value]
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
@@ -59,7 +62,10 @@ def render_complex(value, variables=None):
 
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
+    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+        return []
+
+    if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
@@ -82,7 +88,7 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
-class Template(object):
+class Template:
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
@@ -142,9 +148,9 @@ class Template(object):
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
-    # pylint: disable=invalid-name
     def async_render_with_possible_json_value(self, value,
-                                              error_value=_SENTINEL):
+                                              error_value=_SENTINEL,
+                                              variables=None):
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -154,9 +160,9 @@ class Template(object):
         if self._compiled is None:
             self._ensure_compiled()
 
-        variables = {
-            'value': value
-        }
+        variables = dict(variables or {})
+        variables['value'] = value
+
         try:
             variables['value_json'] = json.loads(value)
         except ValueError:
@@ -165,8 +171,10 @@ class Template(object):
         try:
             return self._compiled.render(variables).strip()
         except jinja2.TemplateError as ex:
-            _LOGGER.error("Error parsing value: %s (value: %s, template: %s)",
-                          ex, value, self.template)
+            if error_value is _SENTINEL:
+                _LOGGER.error(
+                    "Error parsing value: %s (value: %s, template: %s)",
+                    ex, value, self.template)
             return value if error_value is _SENTINEL else error_value
 
     def _ensure_compiled(self):
@@ -198,7 +206,7 @@ class Template(object):
                 self.hass == other.hass)
 
 
-class AllStates(object):
+class AllStates:
     """Class to expose all HA states as attributes."""
 
     def __init__(self, hass):
@@ -226,7 +234,7 @@ class AllStates(object):
         return STATE_UNKNOWN if state is None else state.state
 
 
-class DomainStates(object):
+class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
@@ -286,7 +294,7 @@ def _wrap_state(state):
     return None if state is None else TemplateState(state)
 
 
-class TemplateMethods(object):
+class TemplateMethods:
     """Class to expose helpers to templates."""
 
     def __init__(self, hass):
@@ -318,7 +326,7 @@ class TemplateMethods(object):
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            elif not loc_helper.has_location(point_state):
+            if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s",
                     point_state)
@@ -349,10 +357,10 @@ class TemplateMethods(object):
             else:
                 gr_entity_id = str(entities)
 
-            group = get_component('group')
+            group = self._hass.components.group
 
             states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
+                      in group.expand_entity_ids([gr_entity_id])]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
 
@@ -368,18 +376,9 @@ class TemplateMethods(object):
 
         while to_process:
             value = to_process.pop(0)
+            point_state = self._resolve_state(value)
 
-            if isinstance(value, State):
-                latitude = value.attributes.get(ATTR_LATITUDE)
-                longitude = value.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
-            else:
+            if point_state is None:
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
@@ -394,6 +393,22 @@ class TemplateMethods(object):
                 if latitude is None or longitude is None:
                     _LOGGER.warning("Distance:Unable to process latitude and "
                                     "longitude: %s, %s", value, value_2)
+                    return None
+
+            else:
+                if not loc_helper.has_location(point_state):
+                    _LOGGER.warning(
+                        "distance:State does not contain valid location: %s",
+                        point_state)
+                    return None
+
+                latitude = point_state.attributes.get(ATTR_LATITUDE)
+                longitude = point_state.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        "Distance:State does not contains a location: %s",
+                        value)
                     return None
 
             locations.append((latitude, longitude))
@@ -420,7 +435,7 @@ class TemplateMethods(object):
         """Return state or entity_id if given."""
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
-        elif isinstance(entity_id_or_state, str):
+        if isinstance(entity_id_or_state, str):
             return self._hass.states.get(entity_id_or_state)
         return None
 
@@ -448,6 +463,38 @@ def logarithm(value, base=math.e):
     """Filter to get logarithm of the value with a specific base."""
     try:
         return math.log(float(value), float(base))
+    except (ValueError, TypeError):
+        return value
+
+
+def sine(value):
+    """Filter to get sine of the value."""
+    try:
+        return math.sin(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def cosine(value):
+    """Filter to get cosine of the value."""
+    try:
+        return math.cos(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def tangent(value):
+    """Filter to get tangent of the value."""
+    try:
+        return math.tan(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def square_root(value):
+    """Filter to get square root of the value."""
+    try:
+        return math.sqrt(float(value))
     except (ValueError, TypeError):
         return value
 
@@ -516,6 +563,67 @@ def forgiving_float(value):
         return value
 
 
+def regex_match(value, find='', ignorecase=False):
+    """Match value using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.match(find, value, flags))
+
+
+def regex_replace(value='', find='', replace='', ignorecase=False):
+    """Replace using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    regex = re.compile(find, flags)
+    return regex.sub(replace, value)
+
+
+def regex_search(value, find='', ignorecase=False):
+    """Search using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.search(find, value, flags))
+
+
+def regex_findall_index(value, find='', index=0, ignorecase=False):
+    """Find all matches using regex and then pick specific match index."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return re.findall(find, value, flags)[index]
+
+
+def bitwise_and(first_value, second_value):
+    """Perform a bitwise and operation."""
+    return first_value & second_value
+
+
+def bitwise_or(first_value, second_value):
+    """Perform a bitwise or operation."""
+    return first_value | second_value
+
+
+def base64_encode(value):
+    """Perform base64 encode."""
+    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
+
+
+def base64_decode(value):
+    """Perform base64 denode."""
+    return base64.b64decode(value).decode('utf-8')
+
+
+def ordinal(value):
+    """Perform ordinal conversion."""
+    return str(value) + (list(['th', 'st', 'nd', 'rd'] + ['th'] * 6)
+                         [(int(str(value)[-1])) % 10] if
+                         int(str(value)[-2:]) % 100 not in range(11, 14)
+                         else 'th')
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -533,11 +641,20 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
+    def is_safe_attribute(self, obj, attr, value):
+        """Test if attribute is safe."""
+        return isinstance(obj, Namespace) or \
+            super().is_safe_attribute(obj, attr, value)
+
 
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
 ENV.filters['log'] = logarithm
+ENV.filters['sin'] = sine
+ENV.filters['cos'] = cosine
+ENV.filters['tan'] = tangent
+ENV.filters['sqrt'] = square_root
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
@@ -545,7 +662,23 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['base64_encode'] = base64_encode
+ENV.filters['base64_decode'] = base64_decode
+ENV.filters['ordinal'] = ordinal
+ENV.filters['regex_match'] = regex_match
+ENV.filters['regex_replace'] = regex_replace
+ENV.filters['regex_search'] = regex_search
+ENV.filters['regex_findall_index'] = regex_findall_index
+ENV.filters['bitwise_and'] = bitwise_and
+ENV.filters['bitwise_or'] = bitwise_or
 ENV.globals['log'] = logarithm
+ENV.globals['sin'] = sine
+ENV.globals['cos'] = cosine
+ENV.globals['tan'] = tangent
+ENV.globals['sqrt'] = square_root
+ENV.globals['pi'] = math.pi
+ENV.globals['tau'] = math.pi * 2
+ENV.globals['e'] = math.e
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

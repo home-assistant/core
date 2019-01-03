@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.toon/
 """
 import logging
-import datetime as datetime
+import datetime
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.toon as toon_main
@@ -16,7 +16,7 @@ STATE_ATTR_DEVICE_TYPE = 'device_type'
 STATE_ATTR_LAST_CONNECTED_CHANGE = 'last_connected_change'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Toon sensors."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
 
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 smokedetector.device_uuid, 'alarm-bell', '%')
         )
 
-    add_devices(sensor_items)
+    add_entities(sensor_items)
 
 
 class ToonSensor(Entity):

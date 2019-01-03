@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "flow_impl": "Provider"
+                },
+                "title": "Provider di autenticazione"
+            }
+        }
+    }
+}

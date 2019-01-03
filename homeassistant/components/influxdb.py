@@ -9,6 +9,7 @@ import re
 import queue
 import threading
 import time
+import math
 
 import requests.exceptions
 import voluptuous as vol
@@ -22,7 +23,7 @@ from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
-REQUIREMENTS = ['influxdb==5.0.0']
+REQUIREMENTS = ['influxdb==5.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +136,7 @@ def setup(hass, config):
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
+        influx.write_points([])
     except (exceptions.InfluxDBClientError,
             requests.exceptions.ConnectionError) as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
@@ -220,9 +221,12 @@ def setup(hass, config):
                         json['fields'][key] = float(
                             RE_DECIMAL.sub('', new_value))
 
-                # Infinity is not a valid float in InfluxDB
-                if (key, float("inf")) in json['fields'].items():
-                    del json['fields'][key]
+                # Infinity and NaN are not valid floats in InfluxDB
+                try:
+                    if not math.isfinite(json['fields'][key]):
+                        del json['fields'][key]
+                except (KeyError, TypeError):
+                    pass
 
         json['tags'].update(tags)
 

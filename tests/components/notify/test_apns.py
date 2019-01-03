@@ -28,7 +28,7 @@ class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -120,11 +120,10 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'test device'},
-                                                blocking=True))
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'test device'
+        }, blocking=True)
 
         assert len(written_devices) == 1
         assert written_devices[0].name == 'test device'
@@ -156,16 +155,16 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(notify.DOMAIN, 'apns_test_app',
-                                                {'push_id': '1234'},
-                                                blocking=True))
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
         test_device = devices.get('1234')
 
-        self.assertIsNotNone(test_device)
-        self.assertIsNone(test_device.name)
+        assert test_device is not None
+        assert test_device.name is None
 
     @patch('homeassistant.components.notify.apns._write_device')
     def test_update_existing_device(self, mock_write):
@@ -192,21 +191,20 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'updated device 1'},
-                                                blocking=True))
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'updated device 1'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         test_device_2 = devices.get('5678')
 
-        self.assertIsNotNone(test_device_1)
-        self.assertIsNotNone(test_device_2)
+        assert test_device_1 is not None
+        assert test_device_2 is not None
 
-        self.assertEqual('updated device 1', test_device_1.name)
+        assert 'updated device 1' == test_device_1.name
 
     @patch('homeassistant.components.notify.apns._write_device')
     def test_update_existing_device_with_tracking_id(self, mock_write):
@@ -235,24 +233,23 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'updated device 1'},
-                                                blocking=True))
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'updated device 1'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         test_device_2 = devices.get('5678')
 
-        self.assertIsNotNone(test_device_1)
-        self.assertIsNotNone(test_device_2)
+        assert test_device_1 is not None
+        assert test_device_2 is not None
 
-        self.assertEqual('tracking123',
-                         test_device_1.tracking_device_id)
-        self.assertEqual('tracking456',
-                         test_device_2.tracking_device_id)
+        assert 'tracking123' == \
+            test_device_1.tracking_device_id
+        assert 'tracking456' == \
+            test_device_2.tracking_device_id
 
     @patch('apns2.client.APNsClient')
     def test_send(self, mock_client):
@@ -266,25 +263,25 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(
+        assert self.hass.services.call(
             'notify', 'test_app',
             {'message': 'Hello', 'data': {
                 'badge': 1,
                 'sound': 'test.mp3',
                 'category': 'testing'}},
-            blocking=True))
+            blocking=True)
 
-        self.assertTrue(send.called)
-        self.assertEqual(1, len(send.mock_calls))
+        assert send.called
+        assert 1 == len(send.mock_calls)
 
         target = send.mock_calls[0][1][0]
         payload = send.mock_calls[0][1][1]
 
-        self.assertEqual('1234', target)
-        self.assertEqual('Hello', payload.alert)
-        self.assertEqual(1, payload.badge)
-        self.assertEqual('test.mp3', payload.sound)
-        self.assertEqual('testing', payload.category)
+        assert '1234' == target
+        assert 'Hello' == payload.alert
+        assert 1 == payload.badge
+        assert 'test.mp3' == payload.sound
+        assert 'testing' == payload.category
 
     @patch('apns2.client.APNsClient')
     def test_send_when_disabled(self, mock_client):
@@ -301,15 +298,15 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call(
+        assert self.hass.services.call(
             'notify', 'test_app',
             {'message': 'Hello', 'data': {
                 'badge': 1,
                 'sound': 'test.mp3',
                 'category': 'testing'}},
-            blocking=True))
+            blocking=True)
 
-        self.assertFalse(send.called)
+        assert not send.called
 
     @patch('apns2.client.APNsClient')
     def test_send_with_state(self, mock_client):
@@ -346,14 +343,14 @@ class TestApns(unittest.TestCase):
 
         notify_service.send_message(message='Hello', target='home')
 
-        self.assertTrue(send.called)
-        self.assertEqual(1, len(send.mock_calls))
+        assert send.called
+        assert 1 == len(send.mock_calls)
 
         target = send.mock_calls[0][1][0]
         payload = send.mock_calls[0][1][1]
 
-        self.assertEqual('5678', target)
-        self.assertEqual('Hello', payload.alert)
+        assert '5678' == target
+        assert 'Hello' == payload.alert
 
     @patch('apns2.client.APNsClient')
     @patch('homeassistant.components.notify.apns._write_device')
@@ -386,15 +383,15 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        self.assertTrue(self.hass.services.call('notify', 'test_app',
-                                                {'message': 'Hello'},
-                                                blocking=True))
+        assert self.hass.services.call('notify', 'test_app',
+                                       {'message': 'Hello'},
+                                       blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
-        self.assertIsNotNone(test_device_1)
-        self.assertEqual(True, test_device_1.disabled)
+        assert test_device_1 is not None
+        assert test_device_1.disabled is True
 
 
 def test_write_device():

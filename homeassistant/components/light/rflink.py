@@ -4,22 +4,21 @@ Support for Rflink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rflink/
 """
-import asyncio
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
     CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS,
     CONF_DEVICES, CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES,
-    CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES, CONF_NOGROUP_ALIASES,
-    CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
-    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv,
-    remove_deprecated, vol)
-from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
-from homeassistant.helpers.deprecation import get_deprecated
+    CONF_GROUP_ALIASSES, CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES,
+    CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER, DEVICE_DEFAULTS_SCHEMA,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice,
+    remove_deprecated)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (CONF_NAME, CONF_TYPE)
 
 DEPENDENCIES = ['rflink']
 
@@ -30,14 +29,12 @@ TYPE_SWITCHABLE = 'switchable'
 TYPE_HYBRID = 'hybrid'
 TYPE_TOGGLE = 'toggle'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
+        DEVICE_DEFAULTS_SCHEMA,
     vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
-        cv.string: {
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_TYPE):
                 vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
@@ -58,9 +55,9 @@ PLATFORM_SCHEMA = vol.Schema({
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_NOGROUP_ALIASSES):
                 vol.All(cv.ensure_list, [cv.string]),
-        },
-    }),
-})
+        })
+    },
+}, extra=vol.ALLOW_EXTRA)
 
 
 def entity_type_for_device_id(device_id):
@@ -99,7 +96,7 @@ def entity_class_for_type(entity_type):
     return entity_device_mapping.get(entity_type, RflinkLight)
 
 
-def devices_from_config(domain_config, hass=None):
+def devices_from_config(domain_config):
     """Parse configuration and add Rflink light devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
@@ -125,43 +122,18 @@ def devices_from_config(domain_config, hass=None):
                 "repetitions. Please set 'dimmable' or 'switchable' "
                 "type explicitly in configuration", device_id)
 
-        device = entity_class(device_id, hass, **device_config)
+        device = entity_class(device_id, **device_config)
         devices.append(device)
-
-        # Register entity (and aliases) to listen to incoming rflink events
-
-        # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in get_deprecated(config, CONF_ALIASES, CONF_ALIASSES):
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliases only respond to group commands
-        for _id in get_deprecated(
-                config, CONF_GROUP_ALIASES, CONF_GROUP_ALIASSES):
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliases only respond to normal commands
-        for _id in get_deprecated(
-                config, CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES):
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
 
     return devices
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Rflink light platform."""
-    async_add_devices(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config))
 
-    @asyncio.coroutine
-    def add_new_device(event):
+    async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
@@ -169,40 +141,44 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, hass, **device_config)
-        async_add_devices([device])
-
-        # Register entity to listen to incoming Rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-
-        # Schedule task to process event after entity is created
-        hass.async_add_job(device.handle_event, event)
+        device = entity_class(device_id, initial_event=event, **device_config)
+        async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
+# pylint: disable=too-many-ancestors
 class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
     pass
 
 
+# pylint: disable=too-many-ancestors
 class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that support dimming."""
 
     _brightness = 255
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            # restore also brightness in dimmables devices
+            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
             self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
 
         # Turn on light at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
+        await self._async_handle_command('dim', self._brightness)
 
     @property
     def brightness(self):
@@ -215,6 +191,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
+# pylint: disable=too-many-ancestors
 class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that sends out both dim and on/off commands.
 
@@ -232,8 +209,17 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
 
     _brightness = 255
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            # restore also brightness in dimmables devices
+            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+
+    async def async_turn_on(self, **kwargs):
         """Turn the device on and set dim level."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
@@ -241,12 +227,12 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
 
         # if receiver supports dimming this will turn on the light
         # at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
+        await self._async_handle_command('dim', self._brightness)
 
         # if the receiving device does not support dimlevel this
         # will ensure it is turned on when full brightness is set
         if self._brightness == 255:
-            yield from self._async_handle_command('turn_on')
+            await self._async_handle_command('turn_on')
 
     @property
     def brightness(self):
@@ -259,6 +245,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
+# pylint: disable=too-many-ancestors
 class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device which sends out only 'on' commands.
 
@@ -281,14 +268,12 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
         if command == 'on':
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [STATE_UNKNOWN, False]
+            self._state = self._state in [None, False]
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_handle_command('toggle')
+        await self._async_handle_command('toggle')
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_handle_command('toggle')
+        await self._async_handle_command('toggle')

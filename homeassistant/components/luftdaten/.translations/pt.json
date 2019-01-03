@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "N\u00e3o \u00e9 poss\u00edvel comunicar com a API da Luftdaten",
+            "invalid_sensor": "Sensor n\u00e3o dispon\u00edvel ou inv\u00e1lido",
+            "sensor_exists": "Sensor j\u00e1 registado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Mostrar no mapa"
+                }
+            }
+        }
+    }
+}

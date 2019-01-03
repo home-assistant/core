@@ -4,17 +4,16 @@ Support for switching devices via Pilight to on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pilight/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.pilight as pilight
+from homeassistant.components import pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
                                  CONF_PROTOCOL, STATE_ON)
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pilight platform."""
     switches = config.get(CONF_SWITCHES)
     devices = []
@@ -77,10 +76,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(devices)
+    add_entities(devices)
 
 
-class _ReceiveHandle(object):
+class _ReceiveHandle:
     def __init__(self, config, echo):
         """Initialize the handle."""
         self.config_items = config.items()
@@ -98,7 +97,7 @@ class _ReceiveHandle(object):
         switch.set_state(turn_on=turn_on, send_code=self.echo)
 
 
-class PilightSwitch(SwitchDevice):
+class PilightSwitch(SwitchDevice, RestoreEntity):
     """Representation of a Pilight switch."""
 
     def __init__(self, hass, name, code_on, code_off, code_on_receive,
@@ -122,10 +121,10 @@ class PilightSwitch(SwitchDevice):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
-        state = yield from async_get_last_state(self._hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if state:
             self._state = state.state == STATE_ON
 

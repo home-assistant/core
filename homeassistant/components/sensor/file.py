@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.file/
 """
 import os
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -32,8 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the file sensor."""
     file_path = config.get(CONF_FILE_PATH)
     name = config.get(CONF_NAME)
@@ -44,7 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_template.hass = hass
 
     if hass.config.is_allowed_path(file_path):
-        async_add_devices(
+        async_add_entities(
             [FileSensor(name, file_path, unit, value_template)], True)
     else:
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)

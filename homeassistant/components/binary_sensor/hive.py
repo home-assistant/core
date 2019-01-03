@@ -13,13 +13,13 @@ DEVICETYPE_DEVICE_CLASS = {'motionsensor': 'motion',
                            'contactsensor': 'opening'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveBinarySensorEntity(session, discovery_info)])
+    add_entities([HiveBinarySensorEntity(session, discovery_info)])
 
 
 class HiveBinarySensorEntity(BinarySensorDevice):
@@ -32,6 +32,7 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
+        self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
 
@@ -53,6 +54,11 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         return self.node_name
 
     @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        return self.attributes
+
+    @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.session.sensor.get_state(self.node_id,
@@ -61,3 +67,5 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
+        self.attributes = self.session.attributes.state_attributes(
+            self.node_id)

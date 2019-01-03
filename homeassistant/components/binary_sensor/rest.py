@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -66,13 +67,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
-
     if rest.data is None:
-        _LOGGER.error("Unable to fetch REST data from %s", resource)
-        return False
+        raise PlatformNotReady
 
-    add_devices([RestBinarySensor(
-        hass, rest, name, device_class, value_template)], True)
+    # No need to update the sensor now because it will determine its state
+    # based in the rest resource that has just been retrieved.
+    add_entities([RestBinarySensor(
+        hass, rest, name, device_class, value_template)])
 
 
 class RestBinarySensor(BinarySensorDevice):

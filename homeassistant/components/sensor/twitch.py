@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-twitch==1.3.0']
+REQUIREMENTS = ['python-twitch-client==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,35 +20,49 @@ ATTR_GAME = 'game'
 ATTR_TITLE = 'title'
 
 CONF_CHANNELS = 'channels'
+CONF_CLIENT_ID = 'client_id'
 ICON = 'mdi:twitch'
 
 STATE_OFFLINE = 'offline'
 STATE_STREAMING = 'streaming'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CHANNELS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
-    channels = config.get(CONF_CHANNELS, [])
+    from twitch import TwitchClient
+    from requests.exceptions import HTTPError
 
-    add_devices([TwitchSensor(channel) for channel in channels], True)
+    channels = config.get(CONF_CHANNELS, [])
+    client = TwitchClient(client_id=config.get(CONF_CLIENT_ID))
+
+    try:
+        client.ingests.get_server_list()
+    except HTTPError:
+        _LOGGER.error("Client ID is not valid")
+        return
+
+    users = client.users.translate_usernames_to_ids(channels)
+
+    add_entities([TwitchSensor(user, client) for user in users], True)
 
 
 class TwitchSensor(Entity):
     """Representation of an Twitch channel."""
 
-    def __init__(self, channel):
+    def __init__(self, user, client):
         """Initialize the sensor."""
-        self._channel = channel
+        self._client = client
+        self._user = user
+        self._channel = self._user.name
+        self._id = self._user.id
         self._state = STATE_OFFLINE
-        self._preview = None
-        self._game = None
-        self._title = None
+        self._preview = self._game = self._title = None
 
     @property
     def should_poll(self):
@@ -70,20 +84,6 @@ class TwitchSensor(Entity):
         """Return preview of current game."""
         return self._preview
 
-    # pylint: disable=no-member
-    def update(self):
-        """Update device state."""
-        from twitch.api import v3 as twitch
-        stream = twitch.streams.by_channel(self._channel).get('stream')
-        if stream:
-            self._game = stream.get('channel').get('game')
-            self._title = stream.get('channel').get('status')
-            self._preview = stream.get('preview').get('small')
-            self._state = STATE_STREAMING
-        else:
-            self._preview = None
-            self._state = STATE_OFFLINE
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -97,3 +97,16 @@ class TwitchSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
+
+    # pylint: disable=no-member
+    def update(self):
+        """Update device state."""
+        stream = self._client.streams.get_stream_by_user(self._id)
+        if stream:
+            self._game = stream.get('channel').get('game')
+            self._title = stream.get('channel').get('status')
+            self._preview = stream.get('preview').get('medium')
+            self._state = STATE_STREAMING
+        else:
+            self._preview = self._client.users.get_by_id(self._id).get('logo')
+            self._state = STATE_OFFLINE

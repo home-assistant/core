@@ -14,15 +14,15 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, ENTITY_ID_FORMAT)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
     CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.8.0']
+REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES)
@@ -80,11 +80,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MAC).encode().replace(b':', b''))
     switch_type = config.get(CONF_TYPE)
 
-    @asyncio.coroutine
-    def _learn_command(call):
+    async def _learn_command(call):
         """Handle a learn command."""
         try:
-            auth = yield from hass.async_add_job(broadlink_device.auth)
+            auth = await hass.async_add_job(broadlink_device.auth)
         except socket.timeout:
             _LOGGER.error("Failed to connect to device, timeout")
             return
@@ -92,12 +91,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Failed to connect to device")
             return
 
-        yield from hass.async_add_job(broadlink_device.enter_learning)
+        await hass.async_add_job(broadlink_device.enter_learning)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = yield from hass.async_add_job(
+            packet = await hass.async_add_job(
                 broadlink_device.check_data)
             if packet:
                 log_msg = "Received packet is: {}".\
@@ -106,13 +105,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass.components.persistent_notification.async_create(
                     log_msg, title='Broadlink switch')
                 return
-            yield from asyncio.sleep(1, loop=hass.loop)
+            await asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
         hass.components.persistent_notification.async_create(
             "Did not received any signal", title='Broadlink switch')
 
-    @asyncio.coroutine
-    def _send_packet(call):
+    async def _send_packet(call):
         """Send a packet."""
         packets = call.data.get('packet', [])
         for packet in packets:
@@ -122,12 +120,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if extra > 0:
                         packet = packet + ('=' * (4 - extra))
                     payload = b64decode(packet)
-                    yield from hass.async_add_job(
+                    await hass.async_add_job(
                         broadlink_device.send_data, payload)
                     break
                 except (socket.timeout, ValueError):
                     try:
-                        yield from hass.async_add_job(
+                        await hass.async_add_job(
                             broadlink_device.auth)
                     except socket.timeout:
                         if retry == DEFAULT_RETRY-1:
@@ -142,14 +140,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                               ip_addr.replace('.', '_'), _learn_command)
+                               slugify(ip_addr.replace('.', '_')),
+                               _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet,
+                               slugify(ip_addr.replace('.', '_')),
+                               _send_packet,
                                vol.Schema({'packet': cv.ensure_list}))
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
                 BroadlinkRMSwitch(
+                    object_id,
                     device_config.get(CONF_FRIENDLY_NAME, object_id),
                     broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
@@ -178,14 +179,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device")
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, device, command_on, command_off):
+    def __init__(self, name, friendly_name, device, command_on, command_off):
         """Initialize the switch."""
+        self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
         self._state = False
         self._command_on = b64decode(command_on) if command_on else None
@@ -255,9 +257,10 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 
     def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, device, None, None)
+        super().__init__(friendly_name, friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
+        self._load_power = None
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
@@ -286,6 +289,14 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Return the polling state."""
         return True
 
+    @property
+    def current_power_w(self):
+        """Return the current power usage in Watt."""
+        try:
+            return round(self._load_power, 2)
+        except (ValueError, TypeError):
+            return None
+
     def update(self):
         """Synchronize state with switch."""
         self._update()
@@ -294,6 +305,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Update the state of the device."""
         try:
             state = self._device.check_power()
+            load_power = self._device.get_energy()
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error(error)
@@ -304,6 +316,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         if state is None and retry > 0:
             return self._update(retry-1)
         self._state = state
+        self._load_power = load_power
 
 
 class BroadlinkMP1Slot(BroadlinkRMSwitch):
@@ -311,7 +324,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
     def __init__(self, friendly_name, device, slot, parent_device):
         """Initialize the slot of switch."""
-        super().__init__(friendly_name, device, None, None)
+        super().__init__(friendly_name, friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
         self._slot = slot
@@ -346,7 +359,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._state = self._parent_device.get_outlet_status(self._slot)
 
 
-class BroadlinkMP1Switch(object):
+class BroadlinkMP1Switch:
     """Representation of a Broadlink switch - To fetch states of all slots."""
 
     def __init__(self, device):

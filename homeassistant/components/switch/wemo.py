@@ -7,10 +7,12 @@ https://home-assistant.io/components/switch.wemo/
 import asyncio
 import logging
 from datetime import datetime, timedelta
+import requests
 
 import async_timeout
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
@@ -33,18 +35,23 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-# pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo switches."""
-    import pywemo.discovery as discovery
+    from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
-        device = discovery.device_from_description(location, mac)
+
+        try:
+            device = discovery.device_from_description(location, mac)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', location, err)
+            raise PlatformNotReady
 
         if device:
-            add_devices_callback([WemoSwitch(device)])
+            add_entities([WemoSwitch(device)])
 
 
 class WemoSwitch(SwitchDevice):
@@ -57,10 +64,12 @@ class WemoSwitch(SwitchDevice):
         self.maker_params = None
         self.coffeemaker_mode = None
         self._state = None
+        self._mode_string = None
         self._available = True
         self._update_lock = None
-        # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
+        self._name = self.wemo.name
+        self._serialnumber = self.wemo.serialnumber
 
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
@@ -70,7 +79,7 @@ class WemoSwitch(SwitchDevice):
             self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
-        """Helper to handle an update from a subscription."""
+        """Handle an update from a subscription."""
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
@@ -79,23 +88,14 @@ class WemoSwitch(SwitchDevice):
         self.async_schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """Device should poll.
-
-        Subscriptions push the state, however it won't detect if a device
-        is no longer available. Use polling to detect if a device is available.
-        """
-        return True
-
-    @property
     def unique_id(self):
         """Return the ID of this WeMo switch."""
-        return self.wemo.serialnumber
+        return self._serialnumber
 
     @property
     def name(self):
         """Return the name of the switch if any."""
-        return self.wemo.name
+        return self._name
 
     @property
     def device_state_attributes(self):
@@ -162,14 +162,14 @@ class WemoSwitch(SwitchDevice):
     def detail_state(self):
         """Return the state of the device."""
         if self.coffeemaker_mode is not None:
-            return self.wemo.mode_string
+            return self._mode_string
         if self.insight_params:
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
                 return STATE_ON
-            elif standby_state == WEMO_OFF:
+            if standby_state == WEMO_OFF:
                 return STATE_OFF
-            elif standby_state == WEMO_STANDBY:
+            if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
             return STATE_UNKNOWN
 
@@ -235,6 +235,7 @@ class WemoSwitch(SwitchDevice):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
+
             if self._model_name == 'Insight':
                 self.insight_params = self.wemo.insight_params
                 self.insight_params['standby_state'] = (
@@ -243,6 +244,7 @@ class WemoSwitch(SwitchDevice):
                 self.maker_params = self.wemo.maker_params
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
+                self._mode_string = self.wemo.mode_string
 
             if not self._available:
                 _LOGGER.info('Reconnected to %s', self.name)

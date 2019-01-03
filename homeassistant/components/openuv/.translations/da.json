@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API N\u00f8gle",
+                    "latitude": "Breddegrad",
+                    "longitude": "L\u00e6ngdegrad"
+                },
+                "title": "Udfyld dine oplysninger"
+            }
+        },
+        "title": "OpenUV"
+    }
+}

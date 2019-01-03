@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El Bridge ya est\u00e1 configurado",
+            "no_bridges": "No se descubrieron puentes deCONZ",
+            "one_instance_only": "El componente solo admite una instancia deCONZ"
+        },
+        "error": {
+            "no_key": "No se pudo obtener una clave de API"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto (valor predeterminado: '80')"
+                },
+                "title": "Definir el gateway deCONZ"
+            },
+            "link": {
+                "title": "Enlazar con deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Permitir la importaci\u00f3n de sensores virtuales",
+                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
+                }
+            }
+        },
+        "title": "deCONZ Zigbee gateway"
+    }
+}

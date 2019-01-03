@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = [
     'ar-eg', 'ar-sa', 'ca-es', 'cs-cz', 'da-dk', 'de-at', 'de-ch', 'de-de',
     'el-gr', 'en-au', 'en-ca', 'en-gb', 'en-ie', 'en-in', 'en-us', 'es-es',
-    'en-mx', 'fi-fi', 'fr-ca', 'fr-ch', 'fr-fr', 'he-il', 'hi-in', 'hu-hu',
+    'es-mx', 'fi-fi', 'fr-ca', 'fr-ch', 'fr-fr', 'he-il', 'hi-in', 'hu-hu',
     'id-id', 'it-it', 'ja-jp', 'ko-kr', 'nb-no', 'nl-nl', 'pl-pl', 'pt-br',
     'pt-pt', 'ro-ro', 'ru-ru', 'sk-sk', 'sv-se', 'th-th', 'tr-tr', 'zh-cn',
     'zh-hk', 'zh-tw',

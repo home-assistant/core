@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CURTAIN_LEVEL = 'curtain_level'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                   {'status': 'status',
                                                    'pos': 'curtain_level'},
                                                   gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiGenericCover(XiaomiDevice, CoverDevice):

@@ -60,14 +60,6 @@ loader module
     :undoc-members:
     :show-inheritance:
 
-remote module
----------------------------
-
-.. automodule:: homeassistant.remote
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

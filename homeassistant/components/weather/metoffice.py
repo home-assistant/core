@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office weather platform."""
     import datapoint as dp
 
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return
 
-    add_devices([MetOfficeWeather(site, data, name)], True)
+    add_entities([MetOfficeWeather(site, data, name)], True)
 
 
 class MetOfficeWeather(WeatherEntity):

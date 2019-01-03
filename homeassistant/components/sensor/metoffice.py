@@ -86,7 +86,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office sensor platform."""
     import datapoint as dp
 
@@ -121,7 +121,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(MetOfficeCurrentSensor(site, data, variable, name))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class MetOfficeCurrentSensor(Entity):
@@ -174,7 +174,7 @@ class MetOfficeCurrentSensor(Entity):
         self.data.update()
 
 
-class MetOfficeCurrentData(object):
+class MetOfficeCurrentData:
     """Get data from Datapoint."""
 
     def __init__(self, hass, datapoint, site):

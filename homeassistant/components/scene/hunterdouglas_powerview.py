@@ -4,7 +4,6 @@ Support for Powerview scenes from a Powerview hub.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene.hunterdouglas_powerview/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -36,8 +35,8 @@ ROOM_ID_IN_SCENE = 'roomId'
 STATE_ATTRIBUTE_ROOM_NAME = 'roomName'
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up home assistant scene entries."""
     # from aiopvapi.hub import Hub
     from aiopvapi.scenes import Scenes
@@ -47,9 +46,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hub_address = config.get(HUB_ADDRESS)
     websession = async_get_clientsession(hass)
 
-    _scenes = yield from Scenes(
+    _scenes = await Scenes(
         hub_address, hass.loop, websession).get_resources()
-    _rooms = yield from Rooms(
+    _rooms = await Rooms(
         hub_address, hass.loop, websession).get_resources()
 
     if not _scenes or not _rooms:
@@ -60,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                PvScene(_raw_scene, hub_address, hass.loop,
                                        websession), _rooms)
                 for _raw_scene in _scenes[SCENE_DATA])
-    async_add_devices(pvscenes)
+    async_add_entities(pvscenes)
 
 
 class PowerViewScene(Scene):

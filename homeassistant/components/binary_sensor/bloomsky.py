@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,15 +28,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather binary sensors."""
-    bloomsky = get_component('bloomsky')
+    bloomsky = hass.components.bloomsky
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
 
     for device in bloomsky.BLOOMSKY.devices.values():
         for variable in sensors:
-            add_devices(
+            add_entities(
                 [BloomSkySensor(bloomsky.BLOOMSKY, device, variable)], True)
 
 
@@ -51,6 +50,12 @@ class BloomSkySensor(BinarySensorDevice):
         self._sensor_name = sensor_name
         self._name = '{} {}'.format(device['DeviceName'], sensor_name)
         self._state = None
+        self._unique_id = '{}-{}'.format(self._device_id, self._sensor_name)
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "usb_path": "USB \u8bbe\u5907\u8def\u5f84"
+                }
+            }
+        }
+    }
+}

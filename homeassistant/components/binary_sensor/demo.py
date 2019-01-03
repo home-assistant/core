@@ -7,9 +7,9 @@ https://home-assistant.io/components/demo/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo binary sensor platform."""
-    add_devices([
+    add_entities([
         DemoBinarySensor('Basement Floor Wet', False, 'moisture'),
         DemoBinarySensor('Movement Backyard', True, 'motion'),
     ])

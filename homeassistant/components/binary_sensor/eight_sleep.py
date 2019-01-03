@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.eight_sleep/
 """
 import logging
-import asyncio
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.eight_sleep import (
@@ -16,8 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['eight_sleep']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
         return
@@ -31,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor in sensors:
         all_sensors.append(EightHeatSensor(name, eight, sensor))
 
-    async_add_devices(all_sensors, True)
+    async_add_entities(all_sensors, True)
 
 
 class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
@@ -63,7 +62,6 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
         """Return true if the binary sensor is on."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         self._state = self._usrobj.bed_presence

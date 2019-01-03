@@ -8,12 +8,12 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import (
-    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, ATTR_NAME, CONF_AUTOMATIC_ADD,
-    CONF_DATA_TYPE, CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
+    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
+    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
     from RFXtrx import SensorEvent
     sensors = []
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
-    add_devices(sensors)
+    add_entities(sensors)
 
     def sensor_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
-        add_devices([new_sensor])
+        add_entities([new_sensor])
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)

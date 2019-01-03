@@ -19,11 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string
+    vol.Optional(CONF_HOST): cv.string
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Return a Sky Hub scanner if successful."""
     scanner = SkyHubDeviceScanner(config[DOMAIN])
@@ -92,8 +91,7 @@ def _get_skyhub_data(url):
         return
     if response.status_code == 200:
         return _parse_skyhub_response(response.text)
-    else:
-        _LOGGER.error("Invalid response from Sky Hub: %s", response)
+    _LOGGER.error("Invalid response from Sky Hub: %s", response)
 
 
 def _parse_skyhub_response(data_str):

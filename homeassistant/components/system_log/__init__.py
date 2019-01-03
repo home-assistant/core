@@ -4,7 +4,6 @@ Support for system log.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/system_log/
 """
-import asyncio
 from collections import deque
 from io import StringIO
 import logging
@@ -19,12 +18,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 CONF_MAX_ENTRIES = 'max_entries'
+CONF_FIRE_EVENT = 'fire_event'
 CONF_MESSAGE = 'message'
 CONF_LEVEL = 'level'
 CONF_LOGGER = 'logger'
 
 DATA_SYSTEM_LOG = 'system_log'
 DEFAULT_MAX_ENTRIES = 50
+DEFAULT_FIRE_EVENT = False
 DEPENDENCIES = ['http']
 DOMAIN = 'system_log'
 
@@ -37,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
             cv.positive_int,
+        vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -97,11 +99,12 @@ def _exception_as_string(exc_info):
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen):
+    def __init__(self, hass, maxlen, fire_event):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
         self.records = deque(maxlen=maxlen)
+        self.fire_event = fire_event
 
     def _create_entry(self, record, call_stack):
         return {
@@ -122,31 +125,27 @@ class LogErrorHandler(logging.Handler):
         if record.levelno >= logging.WARN:
             stack = []
             if not record.exc_info:
-                try:
-                    stack = [f for f, _, _, _ in traceback.extract_stack()]
-                except ValueError:
-                    # On Python 3.4 under py.test getting the stack might fail.
-                    pass
+                stack = [f for f, _, _, _ in traceback.extract_stack()]
 
             entry = self._create_entry(record, stack)
             self.records.appendleft(entry)
-            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
+            if self.fire_event:
+                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the logger component."""
     conf = config.get(DOMAIN)
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(hass, conf.get(CONF_MAX_ENTRIES))
+    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES],
+                              conf[CONF_FIRE_EVENT])
     logging.getLogger().addHandler(handler)
 
     hass.http.register_view(AllErrorsView(handler))
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle logger services."""
         if service.service == 'clear':
             handler.records.clear()
@@ -157,8 +156,7 @@ def async_setup(hass, config):
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
 
-    @asyncio.coroutine
-    def async_shutdown_handler(event):
+    async def async_shutdown_handler(event):
         """Remove logging handler when Home Assistant is shutdown."""
         # This is needed as older logger instances will remain
         logging.getLogger().removeHandler(handler)
@@ -186,8 +184,7 @@ class AllErrorsView(HomeAssistantView):
         """Initialize a new AllErrorsView."""
         self.handler = handler
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Get all errors and warnings."""
         # deque is not serializable (it's just "list-like") so it must be
         # converted to a list before it can be serialized to json

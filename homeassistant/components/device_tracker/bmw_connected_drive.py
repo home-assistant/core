@@ -27,7 +27,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     return True
 
 
-class BMWDeviceTracker(object):
+class BMWDeviceTracker:
     """BMW Connected Drive device tracker."""
 
     def __init__(self, see, vehicle):
@@ -48,8 +48,11 @@ class BMWDeviceTracker(object):
             return
 
         _LOGGER.debug('Updating %s', dev_id)
-
+        attrs = {
+            'vin': self.vehicle.vin,
+        }
         self._see(
             dev_id=dev_id, host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position, icon='mdi:car'
+            gps=self.vehicle.state.gps_position, attributes=attrs,
+            icon='mdi:car'
         )

@@ -4,19 +4,21 @@ Support for ComEd Hourly Pricing data.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.comed_hourly_pricing/
 """
-from datetime import timedelta
-import logging
 import asyncio
+from datetime import timedelta
 import json
-import async_timeout
+import logging
+
 import aiohttp
+import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://hourlypricing.comed.com/api'
@@ -27,8 +29,6 @@ CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
 CONF_CURRENT_HOUR_AVERAGE = 'current_hour_average'
 CONF_FIVE_MINUTE = 'five_minute'
 CONF_MONITORED_FEEDS = 'monitored_feeds'
-CONF_NAME = 'name'
-CONF_OFFSET = 'offset'
 CONF_SENSOR_TYPE = 'type'
 
 SENSOR_TYPES = {
@@ -40,17 +40,17 @@ TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=0.0): vol.Coerce(float),
-    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]
+    vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA],
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
     dev = []
@@ -60,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass.loop, websession, variable[CONF_SENSOR_TYPE],
             variable[CONF_OFFSET], variable.get(CONF_NAME)))
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class ComedHourlyPricingSensor(Entity):
@@ -100,8 +100,7 @@ class ComedHourlyPricingSensor(Entity):
         attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attrs
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
             if self.type == CONF_FIVE_MINUTE or \
@@ -113,9 +112,9 @@ class ComedHourlyPricingSensor(Entity):
                     url_string += '?type=currenthouraverage'
 
                 with async_timeout.timeout(60, loop=self.loop):
-                    response = yield from self.websession.get(url_string)
+                    response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
-                    text = yield from response.text()
+                    text = await response.text()
                     data = json.loads(text)
                     self._state = round(
                         float(data[0]['price']) + self.offset, 2)

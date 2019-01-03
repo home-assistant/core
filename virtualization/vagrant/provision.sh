@@ -76,6 +76,10 @@ run_tests() {
     rsync -a --delete \
         --exclude='*.tox' \
         --exclude='*.git' \
+        --exclude='.vagrant' \
+        --exclude='lib64' \
+        --exclude='bin/python' \
+        --exclude='bin/python3' \
         /home-assistant/ /home-assistant-tests/
     cd /home-assistant-tests && tox || true
     echo '############################################################'

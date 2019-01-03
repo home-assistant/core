@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DWD-Weather-Warnings sensor."""
     name = config.get(CONF_NAME)
     region_name = config.get(CONF_REGION_NAME)
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = [DwdWeatherWarningsSensor(api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class DwdWeatherWarningsSensor(Entity):
@@ -95,7 +95,6 @@ class DwdWeatherWarningsSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._var_units
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of the device."""
@@ -104,7 +103,6 @@ class DwdWeatherWarningsSensor(Entity):
         except TypeError:
             return self._api.data[self._var_id]
 
-    # pylint: disable=no-member
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
@@ -165,7 +163,7 @@ class DwdWeatherWarningsSensor(Entity):
         self._api.update()
 
 
-class DwdWeatherWarningsAPI(object):
+class DwdWeatherWarningsAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, region_name):

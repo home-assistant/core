@@ -39,7 +39,7 @@ async def async_setup(hass, config):
         return False
 
     for component in SUPPORTED_DOMAINS:
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {}, config))
     return True
 

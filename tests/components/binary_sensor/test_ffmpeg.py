@@ -7,17 +7,14 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
 
 
-class TestFFmpegNoiseSetup(object):
+class TestFFmpegNoiseSetup:
     """Test class for ffmpeg."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
-            'ffmpeg': {
-                'run_test': False,
-            },
             'binary_sensor': {
                 'platform': 'ffmpeg_noise',
                 'input': 'testinputvideo',
@@ -29,7 +26,7 @@ class TestFFmpegNoiseSetup(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 
@@ -38,7 +35,7 @@ class TestFFmpegNoiseSetup(object):
 
     @patch('haffmpeg.SensorNoise.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 
@@ -53,7 +50,7 @@ class TestFFmpegNoiseSetup(object):
 
     @patch('haffmpeg.SensorNoise')
     def test_setup_component_start_callback(self, mock_ffmpeg):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 
@@ -72,17 +69,14 @@ class TestFFmpegNoiseSetup(object):
         assert entity.state == 'on'
 
 
-class TestFFmpegMotionSetup(object):
+class TestFFmpegMotionSetup:
     """Test class for ffmpeg."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
-            'ffmpeg': {
-                'run_test': False,
-            },
             'binary_sensor': {
                 'platform': 'ffmpeg_motion',
                 'input': 'testinputvideo',
@@ -94,7 +88,7 @@ class TestFFmpegMotionSetup(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 
@@ -103,7 +97,7 @@ class TestFFmpegMotionSetup(object):
 
     @patch('haffmpeg.SensorMotion.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 
@@ -118,7 +112,7 @@ class TestFFmpegMotionSetup(object):
 
     @patch('haffmpeg.SensorMotion')
     def test_setup_component_start_callback(self, mock_ffmpeg):
-        """Setup ffmpeg component."""
+        """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
 

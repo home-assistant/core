@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/light.ads/
 
 """
-import asyncio
 import logging
 import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
@@ -26,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -34,8 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
     name = config.get(CONF_NAME)
 
-    add_devices([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
-                          name)], True)
+    add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
+                           name)], True)
 
 
 class AdsLight(Light):
@@ -50,8 +49,7 @@ class AdsLight(Light):
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register device notification."""
         def update_on_state(name, value):
             """Handle device notifications for state."""
@@ -65,15 +63,16 @@ class AdsLight(Light):
             self._brightness = value
             self.schedule_update_ha_state()
 
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
         )
-        self.hass.async_add_job(
-            self._ads_hub.add_device_notification,
-            self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
-            update_brightness
-        )
+        if self.ads_var_brightness is not None:
+            self.hass.async_add_executor_job(
+                self._ads_hub.add_device_notification,
+                self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
+                update_brightness
+            )
 
     @property
     def name(self):
@@ -98,8 +97,10 @@ class AdsLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+        support = 0
         if self.ads_var_brightness is not None:
-            return SUPPORT_BRIGHTNESS
+            support = SUPPORT_BRIGHTNESS
+        return support
 
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""

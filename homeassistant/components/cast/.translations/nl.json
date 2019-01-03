@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen Google Cast-apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van Google Cast nodig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u Google Cast instellen?",
+                "title": "Google Cast"
+            }
+        },
+        "title": "Google Cast"
+    }
+}

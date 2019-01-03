@@ -1,14 +1,18 @@
 """Test the config manager."""
 import asyncio
-from unittest.mock import MagicMock, patch, mock_open
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
-import voluptuous as vol
 
-from homeassistant import config_entries, loader
+from homeassistant import config_entries, loader, data_entry_flow
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
-from tests.common import MockModule, mock_coro, MockConfigEntry
+from tests.common import (
+    MockModule, mock_coro, MockConfigEntry, async_fire_time_changed,
+    MockPlatform, MockEntity)
 
 
 @pytest.fixture
@@ -16,6 +20,7 @@ def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
     manager._entries = []
+    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -28,7 +33,7 @@ def test_call_setup_entry(hass):
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'comp',
+        hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
     result = yield from async_setup_component(hass, 'comp', {})
@@ -36,13 +41,128 @@ def test_call_setup_entry(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_remove_entry(hass, manager):
+    """Test that we can remove an entry."""
+    async def mock_setup_entry(hass, entry):
+        """Mock setting up entry."""
+        hass.loop.create_task(hass.config_entries.async_forward_entry_setup(
+            entry, 'light'))
+        return True
+
+    async def mock_unload_entry(hass, entry):
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_forward_entry_unload(
+            entry, 'light')
+        assert result
+        return result
+
+    entity = MockEntity(
+        unique_id='1234',
+        name='Test Entity',
+    )
+
+    async def mock_setup_entry_platform(hass, entry, async_add_entities):
+        """Mock setting up platform."""
+        async_add_entities([entity])
+
+    loader.set_component(hass, 'test', MockModule(
+        'test',
+        async_setup_entry=mock_setup_entry,
+        async_unload_entry=mock_unload_entry
+    ))
+    loader.set_component(
+        hass, 'light.test',
+        MockPlatform(async_setup_entry=mock_setup_entry_platform))
+
+    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    entry = MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+    )
+    entry.add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+
+    # Check all config entries exist
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test2', 'test3']
+
+    # Setup entry
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    # Check entity state got added
+    assert hass.states.get('light.test_entity') is not None
+    # Group all_lights, light.test_entity
+    assert len(hass.states.async_all()) == 2
+
+    # Check entity got added to entity registry
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert len(ent_reg.entities) == 1
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id == entry.entry_id
+
+    # Remove entry
+    result = await manager.async_remove('test2')
+    await hass.async_block_till_done()
+
+    # Check that unload went well and so no need to restart
+    assert result == {
+        'require_restart': False
+    }
+
+    # Check that config entry was removed.
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test3']
+
+    # Check that entity state has been removed
+    assert hass.states.get('light.test_entity') is None
+    # Just Group all_lights
+    assert len(hass.states.async_all()) == 1
+
+    # Check that entity registry entry no longer references config_entry_id
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id is None
+
+
 @asyncio.coroutine
-def test_remove_entry(manager):
+def test_remove_entry_raises(hass, manager):
+    """Test if a component raises while removing entry."""
+    @asyncio.coroutine
+    def mock_unload_entry(hass, entry):
+        """Mock unload entry function."""
+        raise Exception("BROKEN")
+
+    loader.set_component(
+        hass, 'test',
+        MockModule('comp', async_unload_entry=mock_unload_entry))
+
+    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+        state=config_entries.ENTRY_STATE_LOADED
+    ).add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test2', 'test3']
+
+    result = yield from manager.async_remove('test2')
+
+    assert result == {
+        'require_restart': True
+    }
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test3']
+
+
+@asyncio.coroutine
+def test_remove_entry_if_not_loaded(hass, manager):
     """Test that we can remove an entry."""
     mock_unload_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'test',
+        hass, 'test',
         MockModule('comp', async_unload_entry=mock_unload_entry))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
@@ -64,56 +184,29 @@ def test_remove_entry(manager):
 
 
 @asyncio.coroutine
-def test_remove_entry_raises(manager):
-    """Test if a component raises while removing entry."""
-    @asyncio.coroutine
-    def mock_unload_entry(hass, entry):
-        """Mock unload entry function."""
-        raise Exception("BROKEN")
-
-    loader.set_component(
-        'test',
-        MockModule('comp', async_unload_entry=mock_unload_entry))
-
-    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test2').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
-
-    assert [item.entry_id for item in manager.async_entries()] == \
-        ['test1', 'test2', 'test3']
-
-    result = yield from manager.async_remove('test2')
-
-    assert result == {
-        'require_restart': True
-    }
-    assert [item.entry_id for item in manager.async_entries()] == \
-        ['test1', 'test3']
-
-
-@asyncio.coroutine
 def test_add_entry_calls_setup_entry(hass, manager):
     """Test we call setup_config_entry."""
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'comp',
+        hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
-    class TestFlow(config_entries.ConfigFlowHandler):
+    class TestFlow(config_entries.ConfigFlow):
 
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='title',
                 data={
                     'token': 'supersecret'
                 })
 
-    with patch.dict(config_entries.HANDLERS, {'comp': TestFlow}):
-        yield from manager.flow.async_init('comp')
+    with patch.dict(config_entries.HANDLERS, {'comp': TestFlow, 'beer': 5}):
+        yield from manager.flow.async_init(
+            'comp', context={'source': config_entries.SOURCE_USER})
         yield from hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -149,14 +242,18 @@ def test_domains_gets_uniques(manager):
     assert manager.async_domains() == ['test', 'test2', 'test3']
 
 
-@asyncio.coroutine
-def test_saving_and_loading(hass):
+async def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
-    class TestFlow(config_entries.ConfigFlowHandler):
+    loader.set_component(
+        hass, 'test',
+        MockModule('test', async_setup_entry=lambda *args: mock_coro(True)))
+
+    class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
+        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test Title',
                 data={
@@ -165,13 +262,15 @@ def test_saving_and_loading(hass):
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        yield from hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
-    class Test2Flow(config_entries.ConfigFlowHandler):
+    class Test2Flow(config_entries.ConfigFlow):
         VERSION = 3
+        CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test 2 Title',
                 data={
@@ -179,28 +278,19 @@ def test_saving_and_loading(hass):
                 }
             )
 
-    json_path = 'homeassistant.util.json.open'
-
     with patch('homeassistant.config_entries.HANDLERS.get',
-               return_value=Test2Flow), \
-            patch.object(config_entries, 'SAVE_DELAY', 0):
-        yield from hass.config_entries.flow.async_init('test')
+               return_value=Test2Flow):
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
-    with patch(json_path, mock_open(), create=True) as mock_write:
-        # To trigger the call_later
-        yield from asyncio.sleep(0, loop=hass.loop)
-        # To execute the save
-        yield from hass.async_block_till_done()
-
-    # Mock open calls are: open file, context enter, write, context leave
-    written = mock_write.mock_calls[2][1][0]
+    # To trigger the call_later
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    # To execute the save
+    await hass.async_block_till_done()
 
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
-
-    with patch('os.path.isfile', return_value=True), \
-            patch(json_path, mock_open(read_data=written), create=True):
-        yield from manager.async_load()
+    await manager.async_load()
 
     # Ensure same order
     for orig, loaded in zip(hass.config_entries.async_entries(),
@@ -210,182 +300,170 @@ def test_saving_and_loading(hass):
         assert orig.title == loaded.title
         assert orig.data == loaded.data
         assert orig.source == loaded.source
+        assert orig.connection_class == loaded.connection_class
 
 
-#######################
-#  FLOW MANAGER TESTS #
-#######################
+async def test_forward_entry_sets_up_component(hass):
+    """Test we setup the component entry is forwarded to."""
+    entry = MockConfigEntry(domain='original')
 
-@asyncio.coroutine
-def test_configure_reuses_handler_instance(manager):
-    """Test that we reuse instances."""
-    class TestFlow(config_entries.ConfigFlowHandler):
-        handle_count = 0
+    mock_original_setup_entry = MagicMock(return_value=mock_coro(True))
+    loader.set_component(
+        hass, 'original',
+        MockModule('original', async_setup_entry=mock_original_setup_entry))
 
-        @asyncio.coroutine
-        def async_step_init(self, user_input=None):
-            self.handle_count += 1
-            return self.async_show_form(
-                errors={'base': str(self.handle_count)},
-                step_id='init')
+    mock_forwarded_setup_entry = MagicMock(return_value=mock_coro(True))
+    loader.set_component(
+        hass, 'forwarded',
+        MockModule('forwarded', async_setup_entry=mock_forwarded_setup_entry))
 
-    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        form = yield from manager.flow.async_init('test')
-        assert form['errors']['base'] == '1'
-        form = yield from manager.flow.async_configure(form['flow_id'])
-        assert form['errors']['base'] == '2'
-        assert len(manager.flow.async_progress()) == 1
-        assert len(manager.async_entries()) == 0
+    await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
+    assert len(mock_original_setup_entry.mock_calls) == 0
+    assert len(mock_forwarded_setup_entry.mock_calls) == 1
 
 
-@asyncio.coroutine
-def test_configure_two_steps(manager):
-    """Test that we reuse instances."""
-    class TestFlow(config_entries.ConfigFlowHandler):
-        VERSION = 1
+async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
+    """Test we do not set up entry if component setup fails."""
+    entry = MockConfigEntry(domain='original')
 
-        @asyncio.coroutine
-        def async_step_init(self, user_input=None):
-            if user_input is not None:
-                self.init_data = user_input
-                return self.async_step_second()
-            return self.async_show_form(
-                step_id='init',
-                data_schema=vol.Schema([str])
-            )
+    mock_setup = MagicMock(return_value=mock_coro(False))
+    mock_setup_entry = MagicMock()
+    hass, loader.set_component(hass, 'forwarded', MockModule(
+        'forwarded',
+        async_setup=mock_setup,
+        async_setup_entry=mock_setup_entry,
+    ))
 
-        @asyncio.coroutine
-        def async_step_second(self, user_input=None):
+    await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_discovery_notification(hass):
+    """Test that we create/dismiss a notification when source is discovery."""
+    loader.set_component(hass, 'test', MockModule('test'))
+    await async_setup_component(hass, 'persistent_notification', {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_discovery(self, user_input=None):
             if user_input is not None:
                 return self.async_create_entry(
-                    title='Test Entry',
-                    data=self.init_data + user_input
+                    title='Test Title',
+                    data={
+                        'token': 'abcd'
+                    }
                 )
             return self.async_show_form(
-                step_id='second',
-                data_schema=vol.Schema([str])
+                step_id='discovery',
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        form = yield from manager.flow.async_init('test')
+        result = await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
 
-        with pytest.raises(vol.Invalid):
-            form = yield from manager.flow.async_configure(
-                form['flow_id'], 'INCORRECT-DATA')
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is not None
 
-        form = yield from manager.flow.async_configure(
-            form['flow_id'], ['INIT-DATA'])
-        form = yield from manager.flow.async_configure(
-            form['flow_id'], ['SECOND-DATA'])
-        assert form['type'] == config_entries.RESULT_TYPE_CREATE_ENTRY
-        assert len(manager.flow.async_progress()) == 0
-        assert len(manager.async_entries()) == 1
-        entry = manager.async_entries()[0]
-        assert entry.domain == 'test'
-        assert entry.data == ['INIT-DATA', 'SECOND-DATA']
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is None
 
 
-@asyncio.coroutine
-def test_show_form(manager):
-    """Test that abort removes the flow from progress."""
-    schema = vol.Schema({
-        vol.Required('username'): str,
-        vol.Required('password'): str
+async def test_discovery_notification_not_created(hass):
+    """Test that we not create a notification when discovery is aborted."""
+    loader.set_component(hass, 'test', MockModule('test'))
+    await async_setup_component(hass, 'persistent_notification', {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_discovery(self, user_input=None):
+            return self.async_abort(reason='test')
+
+    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is None
+
+
+async def test_loading_default_config(hass):
+    """Test loading the default config."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
+        await manager.async_load()
+
+    assert len(manager.async_entries()) == 0
+
+
+async def test_updating_entry_data(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain='test',
+        data={'first': True},
+    )
+    entry.add_to_manager(manager)
+
+    manager.async_update_entry(entry, data={
+        'second': True
     })
 
-    class TestFlow(config_entries.ConfigFlowHandler):
-        @asyncio.coroutine
-        def async_step_init(self, user_input=None):
-            return self.async_show_form(
-                step_id='init',
-                data_schema=schema,
-                errors={
-                    'username': 'Should be unique.'
-                }
-            )
-
-    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        form = yield from manager.flow.async_init('test')
-        assert form['type'] == 'form'
-        assert form['data_schema'] is schema
-        assert form['errors'] == {
-            'username': 'Should be unique.'
-        }
-
-
-@asyncio.coroutine
-def test_abort_removes_instance(manager):
-    """Test that abort removes the flow from progress."""
-    class TestFlow(config_entries.ConfigFlowHandler):
-        is_new = True
-
-        @asyncio.coroutine
-        def async_step_init(self, user_input=None):
-            old = self.is_new
-            self.is_new = False
-            return self.async_abort(reason=str(old))
-
-    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        form = yield from manager.flow.async_init('test')
-        assert form['reason'] == 'True'
-        assert len(manager.flow.async_progress()) == 0
-        assert len(manager.async_entries()) == 0
-        form = yield from manager.flow.async_init('test')
-        assert form['reason'] == 'True'
-        assert len(manager.flow.async_progress()) == 0
-        assert len(manager.async_entries()) == 0
-
-
-@asyncio.coroutine
-def test_create_saves_data(manager):
-    """Test creating a config entry."""
-    class TestFlow(config_entries.ConfigFlowHandler):
-        VERSION = 5
-
-        @asyncio.coroutine
-        def async_step_init(self, user_input=None):
-            return self.async_create_entry(
-                title='Test Title',
-                data='Test Data'
-            )
-
-    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        yield from manager.flow.async_init('test')
-        assert len(manager.flow.async_progress()) == 0
-        assert len(manager.async_entries()) == 1
-
-        entry = manager.async_entries()[0]
-        assert entry.version == 5
-        assert entry.domain == 'test'
-        assert entry.title == 'Test Title'
-        assert entry.data == 'Test Data'
-        assert entry.source == config_entries.SOURCE_USER
-
-
-@asyncio.coroutine
-def test_discovery_init_flow(manager):
-    """Test a flow initialized by discovery."""
-    class TestFlow(config_entries.ConfigFlowHandler):
-        VERSION = 5
-
-        @asyncio.coroutine
-        def async_step_discovery(self, info):
-            return self.async_create_entry(title=info['id'], data=info)
-
-    data = {
-        'id': 'hello',
-        'token': 'secret'
+    assert entry.data == {
+        'second': True
     }
 
-    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        yield from manager.flow.async_init(
-            'test', source=config_entries.SOURCE_DISCOVERY, data=data)
-        assert len(manager.flow.async_progress()) == 0
-        assert len(manager.async_entries()) == 1
 
-        entry = manager.async_entries()[0]
-        assert entry.version == 5
-        assert entry.domain == 'test'
-        assert entry.title == 'hello'
-        assert entry.data == data
-        assert entry.source == config_entries.SOURCE_DISCOVERY
+async def test_setup_raise_not_ready(hass, caplog):
+    """Test a setup raising not ready."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert len(mock_call.mock_calls) == 1
+    assert 'Config entry for test not ready yet' in caplog.text
+    p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_wait_time == 5
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+
+    mock_setup_entry.side_effect = None
+    mock_setup_entry.return_value = mock_coro(True)
+
+    await p_setup(None)
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_retrying_during_unload(hass):
+    """Test if we unload an entry that is in retry mode."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    await entry.async_unload(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(mock_call.return_value.mock_calls) == 1

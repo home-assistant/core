@@ -47,7 +47,7 @@ SENSOR_ATTRS = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tank Utility sensor."""
     from tank_utility import auth
     email = config.get(CONF_EMAIL)
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in devices:
         sensor = TankUtilitySensor(email, password, token, device)
         all_sensors.append(sensor)
-    add_devices(all_sensors, True)
+    add_entities(all_sensors, True)
 
 
 class TankUtilitySensor(Entity):

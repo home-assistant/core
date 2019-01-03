@@ -32,5 +32,5 @@ class TestRandomSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
 
-        self.assertLessEqual(int(state.state), config['sensor']['maximum'])
-        self.assertGreaterEqual(int(state.state), config['sensor']['minimum'])
+        assert int(state.state) <= config['sensor']['maximum']
+        assert int(state.state) >= config['sensor']['minimum']

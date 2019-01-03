@@ -6,23 +6,18 @@ https://home-assistant.io/components/light.zwave/
 """
 import logging
 
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from threading import Timer
+from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, DOMAIN, Light)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
-
-AEOTEC = 0x86
-AEOTEC_ZW098_LED_BULB = 0x62
-AEOTEC_ZW098_LED_BULB_LIGHT = (AEOTEC, AEOTEC_ZW098_LED_BULB)
 
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
@@ -30,10 +25,25 @@ COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
+# Some bulbs have an independent warm and cool white light LEDs. These need
+# to be treated differently, aka the zw098 workaround. Ensure these are added
+# to DEVICE_MAPPINGS below.
+# (Manufacturer ID, Product ID) from
+# https://github.com/OpenZWave/open-zwave/blob/master/config/manufacturer_specific.xml
+AEOTEC_ZW098_LED_BULB_LIGHT = (0x86, 0x62)
+AEOTEC_ZWA001_LED_BULB_LIGHT = (0x371, 0x1)
+AEOTEC_ZWA002_LED_BULB_LIGHT = (0x371, 0x2)
+HANK_HKZW_RGB01_LED_BULB_LIGHT = (0x208, 0x4)
+ZIPATO_RGB_BULB_2_LED_BULB_LIGHT = (0x131, 0x3)
+
 WORKAROUND_ZW098 = 'zw098'
 
 DEVICE_MAPPINGS = {
-    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098
+    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    AEOTEC_ZWA001_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    AEOTEC_ZWA002_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    HANK_HKZW_RGB01_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    ZIPATO_RGB_BULB_2_LED_BULB_LIGHT: WORKAROUND_ZW098
 }
 
 # Generate midpoint color temperatures for bulbs that have limited
@@ -43,6 +53,22 @@ TEMP_COLOR_MIN = 154
 TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
 TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave lights."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Light from Config Entry."""
+    @callback
+    def async_add_light(light):
+        """Add Z-Wave Light."""
+        async_add_entities([light])
+
+    async_dispatcher_connect(hass, 'zwave_new_light', async_add_light)
 
 
 def get_device(node, values, node_config, **kwargs):
@@ -61,8 +87,18 @@ def get_device(node, values, node_config, **kwargs):
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
-        return round((value.data / 99) * 255, 0), STATE_ON
+        return round((value.data / 99) * 255), STATE_ON
     return 0, STATE_OFF
+
+
+def byte_to_zwave_brightness(value):
+    """Convert brightness in 0-255 scale to 0-99 scale.
+
+    `value` -- (int) Brightness byte value from 0-255.
+    """
+    if value > 0:
+        return max(1, int((value / 255) * 99))
+    return 0
 
 
 def ct_to_hs(temp):
@@ -189,7 +225,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 99)
+            brightness = byte_to_zwave_brightness(self._brightness)
         else:
             brightness = 255
 
@@ -326,9 +362,11 @@ class ZwaveColorLight(ZwaveDimmer):
                 else:
                     self._ct = TEMP_COLD_HASS
                     rgbw = '#00000000ff'
-
         elif ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
+            if ATTR_WHITE_VALUE not in kwargs:
+                # white LED must be off in order for color to work
+                self._white = 0
 
         if ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs:
             rgbw = '#'
