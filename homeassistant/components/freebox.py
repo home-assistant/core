@@ -55,6 +55,7 @@ async def async_setup(hass, config):
 async def async_setup_freebox(hass, config, host, port):
     """Start up the Freebox component platforms."""
     from aiofreepybox import Freepybox
+    from aiofreepybox.constants import PERMISSION_SETTINGS
     from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
@@ -83,8 +84,13 @@ async def async_setup_freebox(hass, config, host, port):
             hass, 'sensor', DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(
             hass, 'device_tracker', DOMAIN, {}, config))
-        hass.async_create_task(async_load_platform(
-            hass, 'switch', DOMAIN, {}, config))
+        permissions = await fbx.get_permissions()
+        if not permissions.get(PERMISSION_SETTINGS):
+            hass.async_create_task(async_load_platform(
+                hass, 'switch', DOMAIN, {'permission_settings': False}, config))
+        else:
+            hass.async_create_task(async_load_platform(
+                hass, 'switch', DOMAIN, {'permission_settings': True}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""
