@@ -85,8 +85,9 @@ def setup(hass, config):
 
 class TransmissionData:
     """Get the latest data and update the states."""
+    
     def __init__(self, hass, config):
-        """Initialize the Transmission RPC API"""
+        """Initialize the Transmission RPC API."""
         import transmissionrpc
         from transmissionrpc.error import TransmissionError
         try:
