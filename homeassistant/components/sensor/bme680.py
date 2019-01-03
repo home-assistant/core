@@ -145,7 +145,7 @@ def _setup_bme680(config):
             os_lookup[config.get(CONF_OVERSAMPLING_TEMP)]
         )
         sensor.set_temp_offset(
-            os_lookup[config.get(CONF_TEMP_OFFSET)]
+            config.get(CONF_TEMP_OFFSET)
         )
         sensor.set_humidity_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
