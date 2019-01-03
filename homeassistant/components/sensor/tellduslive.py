@@ -146,4 +146,4 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "-".join(self._id[0:2])
+        return "{}-{}-{}".format(*self._id)

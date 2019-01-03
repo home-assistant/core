@@ -265,22 +265,50 @@ class TestComponentLogbook(unittest.TestCase):
     def test_exclude_automation_events(self):
         """Test if automation entries can be excluded by entity_id."""
         name = 'My Automation Rule'
-        message = 'has been triggered'
         domain = 'automation'
         entity_id = 'automation.my_automation_rule'
         entity_id2 = 'automation.my_automation_rule_2'
         entity_id2 = 'sensor.blu'
 
-        eventA = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
+        eventA = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id,
         })
-        eventB = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
+        eventB = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
+            logbook.ATTR_ENTITY_ID: entity_id2,
+        })
+
+        config = logbook.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
+                logbook.CONF_ENTITIES: [entity_id, ]}}})
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
+        entries = list(logbook.humanify(self.hass, events))
+
+        assert 2 == len(entries)
+        self.assert_entry(
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], name=name, domain=domain, entity_id=entity_id2)
+
+    def test_exclude_script_events(self):
+        """Test if script start can be excluded by entity_id."""
+        name = 'My Script Rule'
+        domain = 'script'
+        entity_id = 'script.my_script'
+        entity_id2 = 'script.my_script_2'
+        entity_id2 = 'sensor.blu'
+
+        eventA = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
+            logbook.ATTR_NAME: name,
+            logbook.ATTR_ENTITY_ID: entity_id,
+        })
+        eventB = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
+            logbook.ATTR_NAME: name,
             logbook.ATTR_ENTITY_ID: entity_id2,
         })
 

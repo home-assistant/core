@@ -316,14 +316,19 @@ async def async_handle_waypoints_message(hass, context, message):
 @HANDLERS.register('encrypted')
 async def async_handle_encrypted_message(hass, context, message):
     """Handle an encrypted message."""
-    plaintext_payload = _decrypt_payload(context.secret, message['topic'],
+    if 'topic' not in message and isinstance(context.secret, dict):
+        _LOGGER.error("You cannot set per topic secrets when using HTTP")
+        return
+
+    plaintext_payload = _decrypt_payload(context.secret, message.get('topic'),
                                          message['data'])
 
     if plaintext_payload is None:
         return
 
     decrypted = json.loads(plaintext_payload)
-    decrypted['topic'] = message['topic']
+    if 'topic' in message and 'topic' not in decrypted:
+        decrypted['topic'] = message['topic']
 
     await async_handle_message(hass, context, decrypted)
 

@@ -142,7 +142,7 @@ def hass_access_token(hass, hass_admin_user):
     """Return an access token to access Home Assistant."""
     refresh_token = hass.loop.run_until_complete(
         hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID))
-    yield hass.auth.async_create_access_token(refresh_token)
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture
@@ -165,6 +165,14 @@ def hass_read_only_user(hass, local_auth):
     read_only_group = hass.loop.run_until_complete(hass.auth.async_get_group(
         GROUP_ID_READ_ONLY))
     return MockUser(groups=[read_only_group]).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_read_only_access_token(hass, hass_read_only_user):
+    """Return a Home Assistant read only user."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID))
+    return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture

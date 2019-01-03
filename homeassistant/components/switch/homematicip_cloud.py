@@ -29,7 +29,11 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP switch from a config entry."""
     from homematicip.device import (
-        PlugableSwitch, PlugableSwitchMeasuring, BrandSwitchMeasuring)
+        PlugableSwitch,
+        PlugableSwitchMeasuring,
+        BrandSwitchMeasuring,
+        FullFlushSwitchMeasuring,
+    )
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -39,7 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # This device is implemented in the light platform and will
             # not be added in the switch platform
             pass
-        elif isinstance(device, PlugableSwitchMeasuring):
+        elif isinstance(device, (PlugableSwitchMeasuring,
+                                 FullFlushSwitchMeasuring)):
             devices.append(HomematicipSwitchMeasuring(home, device))
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))

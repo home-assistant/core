@@ -30,6 +30,7 @@ CONF_DEVICE_CONFIG = 'device_config'
 CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
+ENABLE_QUIRKS = 'enable_quirks'
 
 DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
@@ -55,6 +56,27 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
 EVENTABLE_CLUSTERS = []
+
+REPORT_CONFIG_MAX_INT = 900
+REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800
+REPORT_CONFIG_MIN_INT = 30
+REPORT_CONFIG_MIN_INT_ASAP = 1
+REPORT_CONFIG_MIN_INT_IMMEDIATE = 0
+REPORT_CONFIG_MIN_INT_OP = 5
+REPORT_CONFIG_MIN_INT_BATTERY_SAVE = 3600
+REPORT_CONFIG_RPT_CHANGE = 1
+REPORT_CONFIG_DEFAULT = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT,
+                         REPORT_CONFIG_RPT_CHANGE)
+REPORT_CONFIG_ASAP = (REPORT_CONFIG_MIN_INT_ASAP, REPORT_CONFIG_MAX_INT,
+                      REPORT_CONFIG_RPT_CHANGE)
+REPORT_CONFIG_BATTERY_SAVE = (REPORT_CONFIG_MIN_INT_BATTERY_SAVE,
+                              REPORT_CONFIG_MAX_INT,
+                              REPORT_CONFIG_RPT_CHANGE)
+REPORT_CONFIG_IMMEDIATE = (REPORT_CONFIG_MIN_INT_IMMEDIATE,
+                           REPORT_CONFIG_MAX_INT,
+                           REPORT_CONFIG_RPT_CHANGE)
+REPORT_CONFIG_OP = (REPORT_CONFIG_MIN_INT_OP, REPORT_CONFIG_MAX_INT,
+                    REPORT_CONFIG_RPT_CHANGE)
 
 
 def populate_data():
@@ -114,7 +136,9 @@ def populate_data():
         zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
         zcl.clusters.smartenergy.Metering: 'sensor',
         zcl.clusters.homeautomation.ElectricalMeasurement: 'sensor',
+        zcl.clusters.general.PowerConfiguration: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
+        zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
     })
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
