@@ -67,8 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        config['config_entry'] = config_entry
-        await _async_setup_entity(config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities, config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(hass,
@@ -77,16 +76,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(config: ConfigType, async_add_entities,
-                              discovery_hash=None):
+                              config_entry=None, discovery_hash=None):
     """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(config, discovery_hash)])
+    async_add_entities([MqttSensor(config, config_entry, discovery_hash)])
 
 
 class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the sensor."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
@@ -100,7 +99,6 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
-        config_entry = config.get('config_entry')
 
         if config.get(CONF_JSON_ATTRS):
             _LOGGER.warning('configuration variable "json_attributes" is '
