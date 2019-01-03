@@ -190,7 +190,8 @@ class UtilityMeterSensor(RestoreEntity):
                 now.day != (1 + self._period_offset):
             return
         if self._period == YEARLY and\
-                now.month != (1 + self._period_offset):
+                now.month != (1 + self._period_offset) and\
+                now.day != 1:
             return
         await self.async_reset_meter(event)
 
