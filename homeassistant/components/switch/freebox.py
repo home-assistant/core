@@ -41,8 +41,7 @@ class FbxWifiSwitch(ToggleEntity):
         """If permission is not true the switch is not available."""
         if not self.perms_settings:
             return False
-        else:
-            return True
+        return True
 
     @property
     def name(self):
