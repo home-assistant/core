@@ -22,7 +22,6 @@ CONF_UTC_OFFSET = 'utc_offset'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_SENSOR_TYPE = 'type'
 
-CONF_CURRENCY = 'currency'
 CONF_PERIOD = 'period'
 
 CONF_INSTANT = 'instant_readings'
@@ -147,23 +146,23 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['reading']
             elif self.type == 'amount_day':
-                url_string = '{}getEnergy?token={}&offset={}&period=day'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getEnergy?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'day')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'amount_week':
-                url_string = '{}getEnergy?token={}&offset={}&period=week'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getEnergy?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'week')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'amount_month':
-                url_string = '{}getEnergy?token={}&offset={}&period=month'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getEnergy?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'month')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'amount_year':
-                url_string = '{}getEnergy?token={}&offset={}&period=year'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getEnergy?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'year')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'budget':
@@ -172,23 +171,23 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['status']
             elif self.type == 'cost_day':
-                url_string = '{}getCost?token={}&offset={}&period=day'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getCost?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'day')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'cost_week':
-                url_string = '{}getCost?token={}&offset={}&period=week'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getCost?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'week')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'cost_month':
-                url_string = '{}getCost?token={}&offset={}&period=month'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getCost?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'month')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'cost_year':
-                url_string = '{}getCost?token={}&offset={}&period=year'.format(
-                    _RESOURCE, self.app_token, self.utc_offset)
+                url_string = '{}getCost?token={}&offset={}&period={}'.format(
+                    _RESOURCE, self.app_token, self.utc_offset, 'year')
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'current_values':
