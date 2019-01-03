@@ -805,7 +805,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.media_player.ps4
-ps4python3==1.0.3
+pyps4_homeassistant==0.0.4
 
 # homeassistant.components.sensor.systemmonitor
 psutil==5.4.8
