@@ -20,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = 'Data provided by CO2signal'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TOKEN, default=None): cv.string,
-    vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
+    vol.Required(CONF_TOKEN): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coords'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
+    vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
 })
 
 
