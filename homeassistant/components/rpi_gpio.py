@@ -52,10 +52,12 @@ GPIO_LIBRARY = None
 
 class UnknownBoardFamily(Exception):
     """board_family should be 'raspberry_pi' or 'orange_pi'"""
+    pass
 
 
 class UnknownOrangePiBoard(Exception):
-    """'board' config item not set""" 
+    """'board' config item not set"""
+    pass
 
 
 def setup(hass, base_config):
