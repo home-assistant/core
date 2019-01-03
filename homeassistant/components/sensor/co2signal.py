@@ -22,8 +22,8 @@ ATTRIBUTION = 'Data provided by CO2signal'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TOKEN, default=None): cv.string,
     vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
-    vol.Optional(CONF_LATITUDE, default=0): cv.latitude,
-    vol.Optional(CONF_LONGITUDE, default=0): cv.longitude,
+    vol.Inclusive(CONF_LATITUDE, 'coords'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
 })
 
 
@@ -33,17 +33,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Setting up the CO2signal platform")
 
     token = config.get(CONF_TOKEN)
+    lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     country_code = config.get(CONF_COUNTRY_CODE)
-    lat = None
-    lon = None
-    location_type = None
 
-    # find station ID
     if country_code is not None:
         location_type = 'country_code'
     else:
-        lat = config.get(CONF_LATITUDE)
-        lon = config.get(CONF_LONGITUDE)
         location_type = 'coordinates'
 
     _LOGGER.debug("Setting up the sensor using the %s", location_type)
