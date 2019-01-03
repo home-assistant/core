@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['pysma==0.2.2']
+REQUIREMENTS = ['pysma==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +37,18 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
         import pysma
-        valid = [s.name for s in pysma.SENSORS]
+        sensors = pysma.Sensors()
     except (ImportError, AttributeError):
         return conf
 
-    valid.extend(conf[CONF_CUSTOM].keys())
+    try:
+        sensors.add([Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR])
+                     for n, o in conf[CONF_CUSTOM].items()])
+    except KeyError as err:
+        raise vol.Invalid(err)
+
+    valid = [s.name for s in valid]
+
     for sname, attrs in conf[CONF_SENSORS].items():
         if sname not in valid:
             raise vol.Invalid("{} does not exist".format(sname))
@@ -79,22 +86,24 @@ async def async_setup_platform(
     # Check config again during load - dependency available
     config = _check_sensor_schema(config)
 
+    # Init all default sensors
+    sensors_def = pysma.Sensors()
+
     # Sensor_defs from the custom config
-    for name, prop in config[CONF_CUSTOM].items():
-        n_s = pysma.Sensor(name, prop['key'], prop['unit'], prop['factor'])
-        pysma.add_sensor(n_s)
+    sensors_def.add([Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR])
+                 for n, o in conf[CONF_CUSTOM].items()])
 
     # Prepare all HASS sensor entities
     hass_sensors = []
     used_sensors = []
     for name, attr in config[CONF_SENSORS].items():
-        sub_sensors = [pysma.get_sensor(s) for s in attr]
-        hass_sensors.append(SMAsensor(pysma.get_sensor(name), sub_sensors))
+        sub_sensors = [sensor_def[s] for s in attr]
+        hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
         used_sensors.append(name)
         used_sensors.extend(attr)
 
     async_add_entities(hass_sensors)
-    used_sensors = [pysma.get_sensor(s) for s in set(used_sensors)]
+    used_sensors = [sensor_def[s] for s in set(used_sensors)]
 
     # Init the SMA interface
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
@@ -195,3 +204,8 @@ class SMAsensor(Entity):
             self._state = self._sensor.value
 
         return self.async_update_ha_state() if update else None
+
+    @property
+    def unique_id(self):
+        """Unique ID."""
+        return "sma-{}-{}".format(self._sensor.key, self._sensor.name)
