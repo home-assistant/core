@@ -51,23 +51,22 @@ GPIO_LIBRARY = None
 
 
 class UnknownBoardFamily(Exception):
-    pass
+    """board_family should be 'raspberry_pi' or 'orange_pi'"""
 
 
 class UnknownOrangePiBoard(Exception):
-    pass
+    """'board' config item not set""" 
 
 
 def setup(hass, base_config):
     """Set up the GPIO component."""
-
     global GPIO_LIBRARY
 
     config = base_config.get(DOMAIN)
     family_name = config.get(CONF_BOARD_FAMILY, DEFAULT_FAMILY)
     lib_name = FAMILY_LIBRARIES.get(family_name)
-    _LOGGER.info('Configured to use board family %s' % family_name)
-    _LOGGER.info('Will use %s as GPIO library' % lib_name)
+    _LOGGER.info('Configured to use board family %s', family_name)
+    _LOGGER.info('Will use %s as GPIO library', lib_name)
     if not lib_name:
         raise UnknownBoardFamily('Unknown board family: %s'
                                  % config.get(CONF_BOARD_FAMILY))
@@ -77,7 +76,7 @@ def setup(hass, base_config):
     if family_name == 'orange_pi':
         board_name = config.get(CONF_BOARD)
         board = ORANGEPI_BOARDS.get(board_name)
-        _LOGGER.info('OrangePi %s board specified' % board_name)
+        _LOGGER.info('OrangePi %s board specified', board_name)
 
         if not board_name:
             raise UnknownOrangePiBoard('You must specify a board type '
