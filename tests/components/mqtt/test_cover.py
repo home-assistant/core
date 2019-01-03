@@ -758,6 +758,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_percentage_in_range(44)
@@ -788,6 +789,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 40 == mqtt_cover.find_percentage_in_range(120)
@@ -818,6 +820,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 56 == mqtt_cover.find_percentage_in_range(44)
@@ -848,6 +851,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 60 == mqtt_cover.find_percentage_in_range(120)
@@ -878,6 +882,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(44)
@@ -908,6 +913,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(40)
@@ -938,6 +944,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(56)
@@ -968,6 +975,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(60)
