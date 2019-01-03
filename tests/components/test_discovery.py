@@ -25,7 +25,8 @@ UNKNOWN_SERVICE = 'this_service_will_never_be_supported'
 
 BASE_CONFIG = {
     discovery.DOMAIN: {
-        'ignore': []
+        'ignore': [],
+        'enable': []
     }
 }
 
@@ -46,7 +47,7 @@ def netdisco_mock():
 
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
-    """Helper to mock discoveries."""
+    """Mock discoveries."""
     result = await async_setup_component(hass, 'discovery', config)
     assert result
 
@@ -168,11 +169,11 @@ async def test_discover_config_flow(hass):
 
     with patch.dict(discovery.CONFIG_ENTRY_HANDLERS, {
         'mock-service': 'mock-component'}), patch(
-            'homeassistant.config_entries.FlowManager.async_init') as m_init:
+            'homeassistant.data_entry_flow.FlowManager.async_init') as m_init:
         await mock_discovery(hass, discover)
 
     assert len(m_init.mock_calls) == 1
     args, kwargs = m_init.mock_calls[0][1:]
     assert args == ('mock-component',)
-    assert kwargs['source'] == config_entries.SOURCE_DISCOVERY
+    assert kwargs['context']['source'] == config_entries.SOURCE_DISCOVERY
     assert kwargs['data'] == discovery_info

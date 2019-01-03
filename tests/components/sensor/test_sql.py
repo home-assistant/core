@@ -61,4 +61,4 @@ class TestSQLSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.count_tables')
-        self.assertEqual(state.state, STATE_UNKNOWN)
+        assert state.state == STATE_UNKNOWN

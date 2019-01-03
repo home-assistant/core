@@ -49,7 +49,7 @@ class TestMfiSwitch(unittest.TestCase):
     """Test for mFi switch platform."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.port = mock.MagicMock()
         self.switch = mfi.MfiSwitch(self.port)
@@ -60,13 +60,13 @@ class TestMfiSwitch(unittest.TestCase):
 
     def test_name(self):
         """Test the name."""
-        self.assertEqual(self.port.label, self.switch.name)
+        assert self.port.label == self.switch.name
 
     def test_update(self):
         """Test update."""
         self.switch.update()
-        self.assertEqual(self.port.refresh.call_count, 1)
-        self.assertEqual(self.port.refresh.call_args, mock.call())
+        assert self.port.refresh.call_count == 1
+        assert self.port.refresh.call_args == mock.call()
 
     def test_update_with_target_state(self):
         """Test update with target state."""
@@ -74,39 +74,39 @@ class TestMfiSwitch(unittest.TestCase):
         self.port.data = {}
         self.port.data['output'] = 'stale'
         self.switch.update()
-        self.assertEqual(1.0, self.port.data['output'])
-        self.assertEqual(None, self.switch._target_state)
+        assert 1.0 == self.port.data['output']
+        assert self.switch._target_state is None
         self.port.data['output'] = 'untouched'
         self.switch.update()
-        self.assertEqual('untouched', self.port.data['output'])
+        assert 'untouched' == self.port.data['output']
 
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
-        self.assertEqual(self.port.control.call_count, 1)
-        self.assertEqual(self.port.control.call_args, mock.call(True))
-        self.assertTrue(self.switch._target_state)
+        assert self.port.control.call_count == 1
+        assert self.port.control.call_args == mock.call(True)
+        assert self.switch._target_state
 
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
-        self.assertEqual(self.port.control.call_count, 1)
-        self.assertEqual(self.port.control.call_args, mock.call(False))
-        self.assertFalse(self.switch._target_state)
+        assert self.port.control.call_count == 1
+        assert self.port.control.call_args == mock.call(False)
+        assert not self.switch._target_state
 
     def test_current_power_w(self):
         """Test current power."""
         self.port.data = {'active_pwr': 10}
-        self.assertEqual(10, self.switch.current_power_w)
+        assert 10 == self.switch.current_power_w
 
     def test_current_power_w_no_data(self):
         """Test current power if there is no data."""
         self.port.data = {'notpower': 123}
-        self.assertEqual(0, self.switch.current_power_w)
+        assert 0 == self.switch.current_power_w
 
     def test_device_state_attributes(self):
         """Test the state attributes."""
         self.port.data = {'v_rms': 1.25,
                           'i_rms': 2.75}
-        self.assertEqual({'volts': 1.2, 'amps': 2.8},
-                         self.switch.device_state_attributes)
+        assert {'volts': 1.2, 'amps': 2.8} == \
+            self.switch.device_state_attributes

@@ -6,45 +6,44 @@ https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
 import os
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_RESOURCES, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_TYPE)
+from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.4.3']
+REQUIREMENTS = ['psutil==5.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = 'arg'
 
 SENSOR_TYPES = {
-    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
-    'disk_use': ['Disk use', 'GiB', 'mdi:harddisk'],
-    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk'],
-    'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
-    'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
-    'last_boot': ['Last boot', '', 'mdi:clock'],
-    'load_15m': ['Load (15m)', ' ', 'mdi:memory'],
-    'load_1m': ['Load (1m)', ' ', 'mdi:memory'],
-    'load_5m': ['Load (5m)', ' ', 'mdi:memory'],
-    'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
-    'memory_use': ['Memory use', 'MiB', 'mdi:memory'],
-    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
-    'network_in': ['Network in', 'MiB', 'mdi:server-network'],
-    'network_out': ['Network out', 'MiB', 'mdi:server-network'],
-    'packets_in': ['Packets in', ' ', 'mdi:server-network'],
-    'packets_out': ['Packets out', ' ', 'mdi:server-network'],
-    'process': ['Process', ' ', 'mdi:memory'],
-    'processor_use': ['Processor use', '%', 'mdi:memory'],
-    'since_last_boot': ['Since last boot', '', 'mdi:clock'],
-    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
-    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
-    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
+    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk', None],
+    'disk_use': ['Disk use', 'GiB', 'mdi:harddisk', None],
+    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk', None],
+    'ipv4_address': ['IPv4 address', '', 'mdi:server-network', None],
+    'ipv6_address': ['IPv6 address', '', 'mdi:server-network', None],
+    'last_boot': ['Last boot', '', 'mdi:clock', 'timestamp'],
+    'load_15m': ['Load (15m)', ' ', 'mdi:memory', None],
+    'load_1m': ['Load (1m)', ' ', 'mdi:memory', None],
+    'load_5m': ['Load (5m)', ' ', 'mdi:memory', None],
+    'memory_free': ['Memory free', 'MiB', 'mdi:memory', None],
+    'memory_use': ['Memory use', 'MiB', 'mdi:memory', None],
+    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory', None],
+    'network_in': ['Network in', 'MiB', 'mdi:server-network', None],
+    'network_out': ['Network out', 'MiB', 'mdi:server-network', None],
+    'packets_in': ['Packets in', ' ', 'mdi:server-network', None],
+    'packets_out': ['Packets out', ' ', 'mdi:server-network', None],
+    'process': ['Process', ' ', 'mdi:memory', None],
+    'processor_use': ['Processor use', '%', 'mdi:memory', None],
+    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk', None],
+    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk', None],
+    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -62,14 +61,13 @@ IO_COUNTER = {
     'packets_in': 3,
 }
 
-IF_ADDRS = {
-    'ipv4_address': 0,
-    'ipv6_address': 1,
+IF_ADDRS_FAMILY = {
+    'ipv4_address': socket.AF_INET,
+    'ipv6_address': socket.AF_INET6,
 }
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
@@ -78,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(SystemMonitorSensor(
             resource[CONF_TYPE], resource[CONF_ARG]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SystemMonitorSensor(Entity):
@@ -96,6 +94,11 @@ class SystemMonitorSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name.rstrip()
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return SENSOR_TYPES[self.type][3]
 
     @property
     def icon(self):
@@ -157,26 +160,25 @@ class SystemMonitorSensor(Entity):
                 counter = counters[self.argument][IO_COUNTER[self.type]]
                 self._state = round(counter / 1024**2, 1)
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'packets_out' or self.type == 'packets_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 self._state = counters[self.argument][IO_COUNTER[self.type]]
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'ipv4_address' or self.type == 'ipv6_address':
             addresses = psutil.net_if_addrs()
             if self.argument in addresses:
-                self._state = addresses[self.argument][IF_ADDRS[self.type]][1]
+                for addr in addresses[self.argument]:
+                    if addr.family == IF_ADDRS_FAMILY[self.type]:
+                        self._state = addr.address
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
-            ).date().isoformat()
-        elif self.type == 'since_last_boot':
-            self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
-                psutil.boot_time())
+            ).isoformat()
         elif self.type == 'load_1m':
             self._state = os.getloadavg()[0]
         elif self.type == 'load_5m':

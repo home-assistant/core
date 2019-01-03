@@ -14,7 +14,7 @@ from tests.common import get_test_home_assistant
 
 
 @pytest.fixture
-def camera_client(hass, aiohttp_client):
+def camera_client(hass, hass_client):
     """Fixture to fetch camera streams."""
     assert hass.loop.run_until_complete(async_setup_component(hass, 'camera', {
         'camera': {
@@ -23,14 +23,14 @@ def camera_client(hass, aiohttp_client):
             'mjpeg_url': 'http://example.com/mjpeg_stream',
         }}))
 
-    yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    yield hass.loop.run_until_complete(hass_client())
 
 
 class TestHelpersAiohttpClient(unittest.TestCase):
     """Test homeassistant.helpers.aiohttp_client module."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -135,9 +135,8 @@ class TestHelpersAiohttpClient(unittest.TestCase):
 @asyncio.coroutine
 def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
-    aioclient_mock.get('http://example.com/mjpeg_stream', content=[
-        b'Frame1', b'Frame2', b'Frame3'
-    ])
+    aioclient_mock.get('http://example.com/mjpeg_stream',
+                       content=b'Frame1Frame2Frame3')
 
     resp = yield from camera_client.get(
         '/api/camera_proxy_stream/camera.config_test')
@@ -145,7 +144,7 @@ def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
     body = yield from resp.text()
-    assert body == 'Frame3Frame2Frame1'
+    assert body == 'Frame1Frame2Frame3'
 
 
 @asyncio.coroutine

@@ -41,31 +41,31 @@ class YahooWeatherMock():
 
     @property
     def RawData(self):  # pylint: disable=invalid-name
-        """Raw Data."""
+        """Return raw Data."""
         if self.woeid == '12345':
             return json.loads('[]')
         return self._data
 
     @property
     def Now(self):  # pylint: disable=invalid-name
-        """Current weather data."""
+        """Return current weather data."""
         if self.woeid == '111':
             raise ValueError
         return self._data['query']['results']['channel']['item']['condition']
 
     @property
     def Atmosphere(self):  # pylint: disable=invalid-name
-        """Atmosphere weather data."""
+        """Return atmosphere weather data."""
         return self._data['query']['results']['channel']['atmosphere']
 
     @property
     def Wind(self):  # pylint: disable=invalid-name
-        """Wind weather data."""
+        """Return wind weather data."""
         return self._data['query']['results']['channel']['wind']
 
     @property
     def Forecast(self):  # pylint: disable=invalid-name
-        """Forecast data 0-5 Days."""
+        """Return forecast data 0-5 Days."""
         if self.woeid == '123123':
             raise ValueError
         return self._data['query']['results']['channel']['item']['forecast']
@@ -76,14 +76,14 @@ class TestWeather(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             device.update()
             self.DEVICES.append(device)
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
 
@@ -97,12 +97,11 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup(self, mock_yahooweather):
         """Test for typical weather data attributes."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is not None
@@ -110,12 +109,12 @@ class TestWeather(unittest.TestCase):
         assert state.state == 'cloudy'
 
         data = state.attributes
-        self.assertEqual(data.get(ATTR_WEATHER_TEMPERATURE), 18.0)
-        self.assertEqual(data.get(ATTR_WEATHER_HUMIDITY), 71)
-        self.assertEqual(data.get(ATTR_WEATHER_PRESSURE), 1000.0)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_SPEED), 3.94)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_BEARING), 0)
-        self.assertEqual(state.attributes.get('friendly_name'), 'Yweather')
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
+        assert data.get(ATTR_WEATHER_HUMIDITY) == 71
+        assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
+        assert data.get(ATTR_WEATHER_WIND_BEARING) == 0
+        assert state.attributes.get('friendly_name') == 'Yweather'
 
     @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
@@ -123,13 +122,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_no_data(self, mock_yahooweather):
         """Test for note receiving data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '12345',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is not None
@@ -140,13 +138,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_bad_data(self, mock_yahooweather):
         """Test for bad forecast data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '123123',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is None
@@ -157,13 +154,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_condition_error(self, mock_yahooweather):
         """Test for bad forecast data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '111',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is None

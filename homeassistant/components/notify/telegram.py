@@ -47,7 +47,7 @@ class TelegramNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        service_data = dict(target=kwargs.get(ATTR_TARGET, self._chat_id))
+        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
         if ATTR_TITLE in kwargs:
             service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
         if message:
@@ -73,7 +73,7 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     DOMAIN, 'send_photo', service_data=service_data)
             return
-        elif data is not None and ATTR_VIDEO in data:
+        if data is not None and ATTR_VIDEO in data:
             videos = data.get(ATTR_VIDEO, None)
             videos = videos if isinstance(videos, list) else [videos]
             for video_data in videos:
@@ -81,11 +81,11 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     DOMAIN, 'send_video', service_data=service_data)
             return
-        elif data is not None and ATTR_LOCATION in data:
+        if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))
             return self.hass.services.call(
                 DOMAIN, 'send_location', service_data=service_data)
-        elif data is not None and ATTR_DOCUMENT in data:
+        if data is not None and ATTR_DOCUMENT in data:
             service_data.update(data.get(ATTR_DOCUMENT))
             return self.hass.services.call(
                 DOMAIN, 'send_document', service_data=service_data)

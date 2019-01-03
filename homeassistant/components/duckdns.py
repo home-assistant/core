@@ -4,14 +4,12 @@ Integrate with DuckDNS.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/duckdns/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -40,36 +38,24 @@ SERVICE_TXT_SCHEMA = vol.Schema({
 })
 
 
-@bind_hass
-@asyncio.coroutine
-def async_set_txt(hass, txt):
-    """Set the txt record. Pass in None to remove it."""
-    yield from hass.services.async_call(DOMAIN, SERVICE_SET_TXT, {
-        ATTR_TXT: txt
-    }, blocking=True)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the DuckDNS component."""
     domain = config[DOMAIN][CONF_DOMAIN]
     token = config[DOMAIN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    result = yield from _update_duckdns(session, domain, token)
+    result = await _update_duckdns(session, domain, token)
 
     if not result:
         return False
 
-    @asyncio.coroutine
-    def update_domain_interval(now):
+    async def update_domain_interval(now):
         """Update the DuckDNS entry."""
-        yield from _update_duckdns(session, domain, token)
+        await _update_duckdns(session, domain, token)
 
-    @asyncio.coroutine
-    def update_domain_service(call):
+    async def update_domain_service(call):
         """Update the DuckDNS entry."""
-        yield from _update_duckdns(
+        await _update_duckdns(
             session, domain, token, txt=call.data[ATTR_TXT])
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
@@ -83,8 +69,8 @@ def async_setup(hass, config):
 _SENTINEL = object()
 
 
-@asyncio.coroutine
-def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
+async def _update_duckdns(session, domain, token, *, txt=_SENTINEL,
+                          clear=False):
     """Update DuckDNS."""
     params = {
         'domains': domain,
@@ -102,8 +88,8 @@ def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
     if clear:
         params['clear'] = 'true'
 
-    resp = yield from session.get(UPDATE_URL, params=params)
-    body = yield from resp.text()
+    resp = await session.get(UPDATE_URL, params=params)
+    body = await resp.text()
 
     if body != 'OK':
         _LOGGER.warning("Updating DuckDNS domain failed: %s", domain)

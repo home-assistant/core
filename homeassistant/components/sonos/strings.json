@@ -1,0 +1,15 @@
+{
+  "config": {
+    "title": "Sonos",
+    "step": {
+      "confirm": {
+        "title": "Sonos",
+        "description": "Do you want to set up Sonos?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Sonos is necessary.",
+      "no_devices_found": "No Sonos devices found on the network."
+    }
+  }
+}

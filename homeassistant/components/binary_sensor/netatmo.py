@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.netatmo import CameraData
-from homeassistant.loader import get_component
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
@@ -58,10 +57,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    netatmo = get_component('netatmo')
+    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     timeout = config.get(CONF_TIMEOUT)
     if timeout is None:
@@ -69,12 +67,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     module_name = None
 
-    import lnetatmo
+    import pyatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
         if not data.get_camera_names():
             return None
-    except lnetatmo.NoDevice:
+    except pyatmo.NoDevice:
         return None
 
     welcome_sensors = config.get(
@@ -91,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             for variable in welcome_sensors:
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
         if camera_type == 'NOC':
@@ -100,14 +98,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             for variable in presence_sensors:
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
 
         for module_name in data.get_module_names(camera_name):
             for variable in tag_sensors:
                 camera_type = None
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
 
@@ -144,7 +142,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         if self._cameratype == 'NACamera':
             return WELCOME_SENSOR_TYPES.get(self._sensor_name)
-        elif self._cameratype == 'NOC':
+        if self._cameratype == 'NOC':
             return PRESENCE_SENSOR_TYPES.get(self._sensor_name)
         return TAG_SENSOR_TYPES.get(self._sensor_name)
 

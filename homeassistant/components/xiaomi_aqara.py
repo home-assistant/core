@@ -4,7 +4,6 @@ Support for Xiaomi Gateways.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/xiaomi_aqara/
 """
-import asyncio
 import logging
 
 from datetime import timedelta
@@ -23,7 +22,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.9.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
 
@@ -73,6 +73,7 @@ GATEWAY_CONFIG = vol.Schema({
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
+    vol.Optional(CONF_DISABLE, default=False): cv.boolean,
 })
 
 
@@ -111,8 +112,7 @@ def setup(hass, config):
         interface = config[DOMAIN][CONF_INTERFACE]
         discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
 
-    @asyncio.coroutine
-    def xiaomi_gw_discovered(service, discovery_info):
+    async def xiaomi_gw_discovered(service, discovery_info):
         """Perform action when Xiaomi Gateway device(s) has been found."""
         # We don't need to do anything here, the purpose of Home Assistant's
         # discovery service is to just trigger loading of this
@@ -137,7 +137,8 @@ def setup(hass, config):
     xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
-    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover',
+                      'lock']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
@@ -215,7 +216,7 @@ class XiaomiDevice(Entity):
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
         self._remove_unavailability_tracker = None
-        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self._xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
 
@@ -230,9 +231,9 @@ class XiaomiDevice(Entity):
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Start unavailability tracking."""
+        self._xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self._async_track_unavailable()
 
     @property

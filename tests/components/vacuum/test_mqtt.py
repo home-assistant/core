@@ -9,8 +9,10 @@ from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.const import (
     CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, CONF_NAME)
 from homeassistant.setup import setup_component
+
 from tests.common import (
     fire_mqtt_message, get_test_home_assistant, mock_mqtt_component)
+from tests.components.vacuum import common
 
 
 class TestVacuumMQTT(unittest.TestCase):
@@ -49,75 +51,75 @@ class TestVacuumMQTT(unittest.TestCase):
 
     def test_default_supported_features(self):
         """Test that the correct supported features."""
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
         entity = self.hass.states.get('vacuum.mqtttest')
         entity_features = \
             entity.attributes.get(mqtt.CONF_SUPPORTED_FEATURES, 0)
-        self.assertListEqual(sorted(mqtt.services_to_strings(entity_features)),
-                             sorted(['turn_on', 'turn_off', 'stop',
-                                     'return_home', 'battery', 'status',
-                                     'clean_spot']))
+        assert sorted(mqtt.services_to_strings(entity_features)) == \
+            sorted(['turn_on', 'turn_off', 'stop',
+                    'return_home', 'battery', 'status',
+                    'clean_spot'])
 
     def test_all_commands(self):
         """Test simple commands to the vacuum."""
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
-        vacuum.turn_on(self.hass, 'vacuum.mqtttest')
+        common.turn_on(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'turn_on', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.turn_off(self.hass, 'vacuum.mqtttest')
+        common.turn_off(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'turn_off', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.stop(self.hass, 'vacuum.mqtttest')
+        common.stop(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'stop', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.clean_spot(self.hass, 'vacuum.mqtttest')
+        common.clean_spot(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'clean_spot', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.locate(self.hass, 'vacuum.mqtttest')
+        common.locate(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'locate', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.start_pause(self.hass, 'vacuum.mqtttest')
+        common.start_pause(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'start_pause', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.return_to_base(self.hass, 'vacuum.mqtttest')
+        common.return_to_base(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'return_to_base', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
+        common.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/set_fan_speed', 'high', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        vacuum.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
+        common.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/send_command', '44 FE 93', 0, False)
@@ -127,9 +129,9 @@ class TestVacuumMQTT(unittest.TestCase):
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         message = """{
             "battery_level": 54,
@@ -141,13 +143,11 @@ class TestVacuumMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_ON, state.state)
-        self.assertEqual(
-            'mdi:battery-50',
+        assert STATE_ON == state.state
+        assert 'mdi:battery-50' == \
             state.attributes.get(ATTR_BATTERY_ICON)
-        )
-        self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual('max', state.attributes.get(ATTR_FAN_SPEED))
+        assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert 'max' == state.attributes.get(ATTR_FAN_SPEED)
 
         message = """{
             "battery_level": 61,
@@ -160,13 +160,11 @@ class TestVacuumMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(
-            'mdi:battery-charging-60',
+        assert STATE_OFF == state.state
+        assert 'mdi:battery-charging-60' == \
             state.attributes.get(ATTR_BATTERY_ICON)
-        )
-        self.assertEqual(61, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
+        assert 61 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert 'min' == state.attributes.get(ATTR_FAN_SPEED)
 
     def test_battery_template(self):
         """Test that you can use non-default templates for battery_level."""
@@ -177,31 +175,31 @@ class TestVacuumMQTT(unittest.TestCase):
             mqtt.CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'retroroomba/battery_level', '54')
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
-                         'mdi:battery-50')
+        assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert state.attributes.get(ATTR_BATTERY_ICON) == \
+            'mdi:battery-50'
 
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'vacuum/state', '{"asdfasas false}')
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual("Stopped", state.attributes.get(ATTR_STATUS))
+        assert STATE_OFF == state.state
+        assert "Stopped" == state.attributes.get(ATTR_STATUS)
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
@@ -209,24 +207,24 @@ class TestVacuumMQTT(unittest.TestCase):
             'availability_topic': 'availability-topic'
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
@@ -236,21 +234,21 @@ class TestVacuumMQTT(unittest.TestCase):
             'payload_not_available': 'nogood'
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state

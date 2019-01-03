@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane",
+            "already_configured": "Mostek jest ju\u017c skonfigurowany",
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z mostkiem",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
-            "no_bridges": "Nie wykryto \u017cadnych mostk\u00f3w Hue"
+            "no_bridges": "Nie wykryto \u017cadnych mostk\u00f3w Hue",
+            "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d"
         },
         "error": {
             "linking": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w trakcie \u0142\u0105czenia.",

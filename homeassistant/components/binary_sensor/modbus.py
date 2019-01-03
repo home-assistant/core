@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.modbus/
 import logging
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers import config_validation as cv
@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             coil.get(CONF_NAME),
             coil.get(CONF_SLAVE),
             coil.get(CONF_COIL)))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ModbusCoilSensor(BinarySensorDevice):

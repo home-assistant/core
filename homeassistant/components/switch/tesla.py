@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tesla']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
     controller = hass.data[TESLA_DOMAIN]['devices']['controller']
     devices = []
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(ChargerSwitch(device, controller))
         elif device.bin_type == 0x9:
             devices.append(RangeSwitch(device, controller))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class ChargerSwitch(TeslaDevice, SwitchDevice):

@@ -10,21 +10,22 @@ from datetime import timedelta
 from homeassistant.components.camera import Camera
 from homeassistant.components.neato import (
     NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN)
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL = timedelta(minutes=10)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato Camera."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         if 'maps' in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
     _LOGGER.debug("Adding robots for cleaning maps %s", dev)
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class NeatoCleaningMap(Camera):
@@ -45,7 +46,6 @@ class NeatoCleaningMap(Camera):
         self.update()
         return self._image
 
-    @Throttle(timedelta(seconds=10))
     def update(self):
         """Check the contents of the map list."""
         self.neato.update_robots()
@@ -63,3 +63,8 @@ class NeatoCleaningMap(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._robot_name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._robot_serial

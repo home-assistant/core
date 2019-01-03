@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     pull_mode = config.get(CONF_PULL_MODE)
     bouncetime = config.get(CONF_BOUNCETIME)
@@ -51,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for port_num, port_name in ports.items():
         binary_sensors.append(RPiGPIOBinarySensor(
             port_name, port_num, pull_mode, bouncetime, invert_logic))
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class RPiGPIOBinarySensor(BinarySensorDevice):
@@ -59,7 +58,6 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
-        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._pull_mode = pull_mode

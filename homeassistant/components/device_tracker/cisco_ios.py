@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
@@ -50,7 +50,6 @@ class CiscoDeviceScanner(DeviceScanner):
         self.success_init = self._update_info()
         _LOGGER.info('cisco_ios scanner initialized')
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get the firmware doesn't save the name of the wireless device."""
         return None

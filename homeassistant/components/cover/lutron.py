@@ -17,15 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron']
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron shades."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]['cover']:
         dev = LutronCover(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
-    add_devices(devs, True)
+    add_entities(devs, True)
     return True
 
 

@@ -8,11 +8,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN)
-from homeassistant.exceptions import PlatformNotReady
+
+REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,19 +27,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
-
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'
 ATTR_BATTERY_LEVEL = 'battery_level'
-ATTR_TIME_STATE = 'time_state'
+ATTR_DISPLAY_CLOCK = 'display_clock'
+ATTR_NIGHT_MODE = 'night_mode'
+ATTR_NIGHT_TIME_BEGIN = 'night_time_begin'
+ATTR_NIGHT_TIME_END = 'night_time_end'
+ATTR_SENSOR_STATE = 'sensor_state'
 ATTR_MODEL = 'model'
 
 SUCCESS = ['ok']
 
 
-# pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the sensor from config."""
     from miio import AirQualityMonitor, DeviceException
@@ -65,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         raise PlatformNotReady
 
     hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+    async_add_entities([device], update_before_add=True)
 
 
 class XiaomiAirQualityMonitor(Entity):
@@ -86,7 +89,11 @@ class XiaomiAirQualityMonitor(Entity):
             ATTR_POWER: None,
             ATTR_BATTERY_LEVEL: None,
             ATTR_CHARGING: None,
-            ATTR_TIME_STATE: None,
+            ATTR_DISPLAY_CLOCK: None,
+            ATTR_NIGHT_MODE: None,
+            ATTR_NIGHT_TIME_BEGIN: None,
+            ATTR_NIGHT_TIME_END: None,
+            ATTR_SENSOR_STATE: None,
             ATTR_MODEL: self._model,
         }
 
@@ -135,7 +142,7 @@ class XiaomiAirQualityMonitor(Entity):
         from miio import DeviceException
 
         try:
-            state = await self.hass.async_add_job(self._device.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -144,7 +151,11 @@ class XiaomiAirQualityMonitor(Entity):
                 ATTR_POWER: state.power,
                 ATTR_CHARGING: state.usb_power,
                 ATTR_BATTERY_LEVEL: state.battery,
-                ATTR_TIME_STATE: state.time_state,
+                ATTR_DISPLAY_CLOCK: state.display_clock,
+                ATTR_NIGHT_MODE: state.night_mode,
+                ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
+                ATTR_NIGHT_TIME_END: state.night_time_end,
+                ATTR_SENSOR_STATE: state.sensor_state,
             })
 
         except DeviceException as ex:

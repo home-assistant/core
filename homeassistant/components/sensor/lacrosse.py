@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LaCrosse sensors."""
     import pylacrosse
     from serial import SerialException
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class LaCrosseSensor(Entity):

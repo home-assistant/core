@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Hyperion server remote."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       default_color, hdmi_priority, effect_list)
 
     if device.setup():
-        add_devices([device])
+        add_entities([device])
         return True
     return False
 
@@ -146,10 +146,7 @@ class Hyperion(Light):
         else:
             rgb_color = self._rgb_mem
 
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            brightness = self._brightness
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
 
         if ATTR_EFFECT in kwargs:
             self._skip_update = True

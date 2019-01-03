@@ -1,70 +1,252 @@
 """Test different accessory types: Sensors."""
-import unittest
-
-from homeassistant.components.homekit.const import PROP_CELSIUS
+from homeassistant.components.homekit.const import (
+    PROP_CELSIUS, THRESHOLD_CO, THRESHOLD_CO2)
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, HumiditySensor)
+    AirQualitySensor, BinarySensor, CarbonMonoxideSensor, CarbonDioxideSensor,
+    HumiditySensor, LightSensor, TemperatureSensor, BINARY_SENSOR_SERVICE_MAP)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_HOME, STATE_NOT_HOME,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-from tests.common import get_test_home_assistant
+
+async def test_temperature(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.temperature'
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = TemperatureSensor(hass, hk_driver, 'Temperature', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_temp.value == 0.0
+    for key, value in PROP_CELSIUS.items():
+        assert acc.char_temp.properties[key] == value
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN,
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    await hass.async_block_till_done()
+    assert acc.char_temp.value == 0.0
+
+    hass.states.async_set(entity_id, '20',
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    await hass.async_block_till_done()
+    assert acc.char_temp.value == 20
+
+    hass.states.async_set(entity_id, '75.2',
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
+    await hass.async_block_till_done()
+    assert acc.char_temp.value == 24
 
 
-class TestHomekitSensors(unittest.TestCase):
-    """Test class for all accessory types regarding sensors."""
+async def test_humidity(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.humidity'
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = HumiditySensor(hass, hk_driver, 'Humidity', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
 
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
 
-    def test_temperature(self):
-        """Test if accessory is updated after state change."""
-        entity_id = 'sensor.temperature'
+    assert acc.char_humidity.value == 0
 
-        acc = TemperatureSensor(self.hass, entity_id, 'Temperature', aid=2)
-        acc.run()
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_humidity.value == 0
 
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 10)  # Sensor
+    hass.states.async_set(entity_id, '20')
+    await hass.async_block_till_done()
+    assert acc.char_humidity.value == 20
 
-        self.assertEqual(acc.char_temp.value, 0.0)
-        for key, value in PROP_CELSIUS.items():
-            self.assertEqual(acc.char_temp.properties[key], value)
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.block_till_done()
+async def test_air_quality(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.air_quality'
 
-        self.hass.states.set(entity_id, '20',
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_temp.value, 20)
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, 'Air Quality', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
 
-        self.hass.states.set(entity_id, '75.2',
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_temp.value, 24)
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
 
-    def test_humidity(self):
-        """Test if accessory is updated after state change."""
-        entity_id = 'sensor.humidity'
+    assert acc.char_density.value == 0
+    assert acc.char_quality.value == 0
 
-        acc = HumiditySensor(self.hass, entity_id, 'Humidity', aid=2)
-        acc.run()
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 0
+    assert acc.char_quality.value == 0
 
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 10)  # Sensor
+    hass.states.async_set(entity_id, '34')
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 34
+    assert acc.char_quality.value == 1
 
-        self.assertEqual(acc.char_humidity.value, 0)
+    hass.states.async_set(entity_id, '200')
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 200
+    assert acc.char_quality.value == 5
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: "%"})
-        self.hass.block_till_done()
 
-        self.hass.states.set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: "%"})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_humidity.value, 20)
+async def test_co(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.co'
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = CarbonMonoxideSensor(hass, hk_driver, 'CO', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    value = 32
+    assert value > THRESHOLD_CO
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 32
+    assert acc.char_peak.value == 32
+    assert acc.char_detected.value == 1
+
+    value = 10
+    assert value < THRESHOLD_CO
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 10
+    assert acc.char_peak.value == 32
+    assert acc.char_detected.value == 0
+
+
+async def test_co2(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.co2'
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = CarbonDioxideSensor(hass, hk_driver, 'CO2', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    value = 1100
+    assert value > THRESHOLD_CO2
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 1100
+    assert acc.char_peak.value == 1100
+    assert acc.char_detected.value == 1
+
+    value = 800
+    assert value < THRESHOLD_CO2
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 800
+    assert acc.char_peak.value == 1100
+    assert acc.char_detected.value == 0
+
+
+async def test_light(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.light'
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = LightSensor(hass, hk_driver, 'Light', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_light.value == 0.0001
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_light.value == 0.0001
+
+    hass.states.async_set(entity_id, '300')
+    await hass.async_block_till_done()
+    assert acc.char_light.value == 300
+
+
+async def test_binary(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'binary_sensor.opening'
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN,
+                          {ATTR_DEVICE_CLASS: 'opening'})
+    await hass.async_block_till_done()
+
+    acc = BinarySensor(hass, hk_driver, 'Window Opening', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_detected.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON,
+                          {ATTR_DEVICE_CLASS: 'opening'})
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 1
+
+    hass.states.async_set(entity_id, STATE_OFF,
+                          {ATTR_DEVICE_CLASS: 'opening'})
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 0
+
+    hass.states.async_set(entity_id, STATE_HOME,
+                          {ATTR_DEVICE_CLASS: 'opening'})
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 1
+
+    hass.states.async_set(entity_id, STATE_NOT_HOME,
+                          {ATTR_DEVICE_CLASS: 'opening'})
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 0
+
+    hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 0
+
+
+async def test_binary_device_classes(hass, hk_driver):
+    """Test if services and characteristics are assigned correctly."""
+    entity_id = 'binary_sensor.demo'
+
+    for device_class, (service, char) in BINARY_SENSOR_SERVICE_MAP.items():
+        hass.states.async_set(entity_id, STATE_OFF,
+                              {ATTR_DEVICE_CLASS: device_class})
+        await hass.async_block_till_done()
+
+        acc = BinarySensor(hass, hk_driver, 'Binary Sensor',
+                           entity_id, 2, None)
+        assert acc.get_service(service).display_name == service
+        assert acc.char_detected.display_name == char

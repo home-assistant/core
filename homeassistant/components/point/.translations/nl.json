@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "flow_impl": "Leverancier"
+                },
+                "title": "Authenticatieleverancier"
+            }
+        }
+    }
+}

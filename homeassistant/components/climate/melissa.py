@@ -34,10 +34,11 @@ FAN_MODES = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
-    devices = api.fetch_devices().values()
+    devices = (await api.async_fetch_devices()).values()
 
     all_devices = []
 
@@ -46,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             all_devices.append(MelissaClimate(
                 api, device['serial_number'], device))
 
-    add_devices(all_devices)
+    async_add_entities(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
@@ -88,6 +89,12 @@ class MelissaClimate(ClimateDevice):
             return self._data[self._api.TEMP]
 
     @property
+    def current_humidity(self):
+        """Return the current humidity value."""
+        if self._data:
+            return self._data[self._api.HUMIDITY]
+
+    @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
         return PRECISION_WHOLE
@@ -112,8 +119,9 @@ class MelissaClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._cur_settings is not None:
-            return self._cur_settings[self._api.TEMP]
+        if self._cur_settings is None:
+            return None
+        return self._cur_settings[self._api.TEMP]
 
     @property
     def state(self):
@@ -142,48 +150,48 @@ class MelissaClimate(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        self.send({self._api.TEMP: temp})
+        await self.async_send({self._api.TEMP: temp})
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
-        self.send({self._api.FAN: melissa_fan_mode})
+        await self.async_send({self._api.FAN: melissa_fan_mode})
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         mode = self.hass_mode_to_melissa(operation_mode)
-        self.send({self._api.MODE: mode})
+        await self.async_send({self._api.MODE: mode})
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on device."""
-        self.send({self._api.STATE: self._api.STATE_ON})
+        await self.async_send({self._api.STATE: self._api.STATE_ON})
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off device."""
-        self.send({self._api.STATE: self._api.STATE_OFF})
+        await self.async_send({self._api.STATE: self._api.STATE_OFF})
 
-    def send(self, value):
-        """Sending action to service."""
+    async def async_send(self, value):
+        """Send action to service."""
         try:
             old_value = self._cur_settings.copy()
             self._cur_settings.update(value)
         except AttributeError:
             old_value = None
-        if not self._api.send(self._serial_number, self._cur_settings):
+        if not await self._api.async_send(
+                self._serial_number, self._cur_settings):
             self._cur_settings = old_value
-            return False
-        return True
 
-    def update(self):
+    async def async_update(self):
         """Get latest data from Melissa."""
         try:
-            self._data = self._api.status(cached=True)[self._serial_number]
-            self._cur_settings = self._api.cur_settings(
+            self._data = (await self._api.async_status(cached=True))[
+                self._serial_number]
+            self._cur_settings = (await self._api.async_cur_settings(
                 self._serial_number
-            )['controller']['_relation']['command_log']
+            ))['controller']['_relation']['command_log']
         except KeyError:
             _LOGGER.warning(
                 'Unable to update entity %s', self.entity_id)
@@ -192,9 +200,9 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa states to hass states."""
         if state == self._api.STATE_ON:
             return STATE_ON
-        elif state == self._api.STATE_OFF:
+        if state == self._api.STATE_OFF:
             return STATE_OFF
-        elif state == self._api.STATE_IDLE:
+        if state == self._api.STATE_IDLE:
             return STATE_IDLE
         return None
 
@@ -202,11 +210,11 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa modes to hass states."""
         if mode == self._api.MODE_HEAT:
             return STATE_HEAT
-        elif mode == self._api.MODE_COOL:
+        if mode == self._api.MODE_COOL:
             return STATE_COOL
-        elif mode == self._api.MODE_DRY:
+        if mode == self._api.MODE_DRY:
             return STATE_DRY
-        elif mode == self._api.MODE_FAN:
+        if mode == self._api.MODE_FAN:
             return STATE_FAN_ONLY
         _LOGGER.warning(
             "Operation mode %s could not be mapped to hass", mode)
@@ -216,11 +224,11 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa fan modes to hass modes."""
         if fan == self._api.FAN_AUTO:
             return STATE_AUTO
-        elif fan == self._api.FAN_LOW:
+        if fan == self._api.FAN_LOW:
             return SPEED_LOW
-        elif fan == self._api.FAN_MEDIUM:
+        if fan == self._api.FAN_MEDIUM:
             return SPEED_MEDIUM
-        elif fan == self._api.FAN_HIGH:
+        if fan == self._api.FAN_HIGH:
             return SPEED_HIGH
         _LOGGER.warning("Fan mode %s could not be mapped to hass", fan)
         return None
@@ -229,24 +237,22 @@ class MelissaClimate(ClimateDevice):
         """Translate hass states to melissa modes."""
         if mode == STATE_HEAT:
             return self._api.MODE_HEAT
-        elif mode == STATE_COOL:
+        if mode == STATE_COOL:
             return self._api.MODE_COOL
-        elif mode == STATE_DRY:
+        if mode == STATE_DRY:
             return self._api.MODE_DRY
-        elif mode == STATE_FAN_ONLY:
+        if mode == STATE_FAN_ONLY:
             return self._api.MODE_FAN
-        else:
-            _LOGGER.warning("Melissa have no setting for %s mode", mode)
+        _LOGGER.warning("Melissa have no setting for %s mode", mode)
 
     def hass_fan_to_melissa(self, fan):
         """Translate hass fan modes to melissa modes."""
         if fan == STATE_AUTO:
             return self._api.FAN_AUTO
-        elif fan == SPEED_LOW:
+        if fan == SPEED_LOW:
             return self._api.FAN_LOW
-        elif fan == SPEED_MEDIUM:
+        if fan == SPEED_MEDIUM:
             return self._api.FAN_MEDIUM
-        elif fan == SPEED_HIGH:
+        if fan == SPEED_HIGH:
             return self._api.FAN_HIGH
-        else:
-            _LOGGER.warning("Melissa have no setting for %s fan mode", fan)
+        _LOGGER.warning("Melissa have no setting for %s fan mode", fan)

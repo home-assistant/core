@@ -105,6 +105,26 @@ def test_dimmer_turn_on(mock_openzwave):
         assert entity_id == device.entity_id
 
 
+def test_dimmer_min_brightness(mock_openzwave):
+    """Test turning on a dimmable Z-Wave light to its minimum brightness."""
+    node = MockNode()
+    value = MockValue(data=0, node=node)
+    values = MockLightValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
+
+    assert not device.is_on
+
+    device.turn_on(**{ATTR_BRIGHTNESS: 1})
+
+    assert device.is_on
+    assert device.brightness == 1
+
+    device.turn_on(**{ATTR_BRIGHTNESS: 0})
+
+    assert device.is_on
+    assert device.brightness == 0
+
+
 def test_dimmer_transitions(mock_openzwave):
     """Test dimming transition on a dimmable Z-Wave light."""
     node = MockNode()
@@ -253,6 +273,32 @@ def test_set_white_value(mock_openzwave):
     device.turn_on(**{ATTR_WHITE_VALUE: 200})
 
     assert color.data == '#ffffffc800'
+
+
+def test_disable_white_if_set_color(mock_openzwave):
+    """
+    Test that _white is set to 0 if turn_on with ATTR_HS_COLOR.
+
+    See Issue #13930 - many RGBW ZWave bulbs will only activate the RGB LED to
+    produce color if _white is set to zero.
+    """
+    node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+    value = MockValue(data=0, node=node)
+    color = MockValue(data='#0000000000', node=node)
+    # Supports RGB only
+    color_channels = MockValue(data=0x1c, node=node)
+    values = MockLightValues(primary=value, color=color,
+                             color_channels=color_channels)
+    device = zwave.get_device(node=node, values=values, node_config={})
+    device._white = 234
+
+    assert color.data == '#0000000000'
+    assert device.white_value == 234
+
+    device.turn_on(**{ATTR_HS_COLOR: (30, 50)})
+
+    assert device.white_value == 0
+    assert color.data == '#ffbf7f0000'
 
 
 def test_zw098_set_color_temp(mock_openzwave):

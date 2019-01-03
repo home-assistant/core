@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 
-REQUIREMENTS = ['foobot_async==0.3.0']
+REQUIREMENTS = ['foobot_async==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the devices associated with the account."""
     from foobot_async import FoobotClient
@@ -82,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     except FoobotClient.ClientError:
         _LOGGER.error('Failed to fetch data from foobot servers.')
         return
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class FoobotSensor(Entity):

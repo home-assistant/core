@@ -4,7 +4,6 @@ This component provides basic support for Abode Home Security system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/abode/
 """
-import asyncio
 import logging
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -19,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['abodepy==0.12.2']
+REQUIREMENTS = ['abodepy==0.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +26,7 @@ CONF_ATTRIBUTION = "Data provided by goabode.com"
 CONF_POLLING = 'polling'
 
 DOMAIN = 'abode'
+DEFAULT_CACHEDB = './abodepy_cache.pickle'
 
 NOTIFICATION_ID = 'abode_notification'
 NOTIFICATION_TITLE = 'Abode Security Setup'
@@ -80,19 +80,20 @@ TRIGGER_SCHEMA = vol.Schema({
 
 ABODE_PLATFORMS = [
     'alarm_control_panel', 'binary_sensor', 'lock', 'switch', 'cover',
-    'camera', 'light'
+    'camera', 'light', 'sensor'
 ]
 
 
-class AbodeSystem(object):
+class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, username, password, name, polling, exclude, lights):
+    def __init__(self, username, password, cache,
+                 name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
         self.abode = abodepy.Abode(
             username, password, auto_login=True, get_devices=True,
-            get_automations=True)
+            get_automations=True, cache_path=cache)
         self.name = name
         self.polling = polling
         self.exclude = exclude
@@ -129,8 +130,9 @@ def setup(hass, config):
     lights = conf.get(CONF_LIGHTS)
 
     try:
+        cache = hass.config.path(DEFAULT_CACHEDB)
         hass.data[DOMAIN] = AbodeSystem(
-            username, password, name, polling, exclude, lights)
+            username, password, cache, name, polling, exclude, lights)
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
 
@@ -258,8 +260,7 @@ class AbodeDevice(Entity):
         self._data = data
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe Abode events."""
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
@@ -305,8 +306,7 @@ class AbodeAutomation(Entity):
         self._automation = automation
         self._event = event
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe Abode events."""
         if self._event:
             self.hass.async_add_job(

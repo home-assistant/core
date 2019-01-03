@@ -36,7 +36,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     """Tests for setting up the Google Wifi sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -49,12 +49,12 @@ class TestGoogleWifiSetup(unittest.TestCase):
         resource = '{}{}{}'.format(
             'http://', google_wifi.DEFAULT_HOST, google_wifi.ENDPOINT)
         mock_req.get(resource, status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
+        assert setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'google_wifi',
                 'monitored_conditions': ['uptime']
             }
-        }))
+        })
         assert_setup_component(1, 'sensor')
 
     @requests_mock.Mocker()
@@ -63,7 +63,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
         resource = '{}{}{}'.format(
             'http://', 'localhost', google_wifi.ENDPOINT)
         mock_req.get(resource, status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
+        assert setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'google_wifi',
                 'host': 'localhost',
@@ -75,7 +75,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
                                          'local_ip',
                                          'status']
             }
-        }))
+        })
         assert_setup_component(6, 'sensor')
 
 
@@ -83,7 +83,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
     """Tests for Google Wifi sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         with requests_mock.Mocker() as mock_req:
             self.setup_api(MOCK_DATA, mock_req)
@@ -93,7 +93,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         self.hass.stop()
 
     def setup_api(self, data, mock_req):
-        """Setup API with fake data."""
+        """Set up API with fake data."""
         resource = '{}{}{}'.format(
             'http://', 'localhost', google_wifi.ENDPOINT)
         now = datetime(1970, month=1, day=1)
@@ -127,20 +127,20 @@ class TestGoogleWifiSensor(unittest.TestCase):
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
             test_name = self.sensor_dict[name]['name']
-            self.assertEqual(test_name, sensor.name)
+            assert test_name == sensor.name
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
-            self.assertEqual(
-                self.sensor_dict[name]['units'], sensor.unit_of_measurement)
+            assert \
+                self.sensor_dict[name]['units'] == sensor.unit_of_measurement
 
     def test_icon(self):
         """Test the icon."""
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
-            self.assertEqual(self.sensor_dict[name]['icon'], sensor.icon)
+            assert self.sensor_dict[name]['icon'] == sensor.icon
 
     @requests_mock.Mocker()
     def test_state(self, mock_req):
@@ -153,13 +153,13 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 self.fake_delay(2)
                 sensor.update()
                 if name == google_wifi.ATTR_LAST_RESTART:
-                    self.assertEqual('1969-12-31 00:00:00', sensor.state)
+                    assert '1969-12-31 00:00:00' == sensor.state
                 elif name == google_wifi.ATTR_UPTIME:
-                    self.assertEqual(1, sensor.state)
+                    assert 1 == sensor.state
                 elif name == google_wifi.ATTR_STATUS:
-                    self.assertEqual('Online', sensor.state)
+                    assert 'Online' == sensor.state
                 else:
-                    self.assertEqual('initial', sensor.state)
+                    assert 'initial' == sensor.state
 
     @requests_mock.Mocker()
     def test_update_when_value_is_none(self, mock_req):
@@ -169,7 +169,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
             sensor = self.sensor_dict[name]['sensor']
             self.fake_delay(2)
             sensor.update()
-            self.assertEqual(STATE_UNKNOWN, sensor.state)
+            assert STATE_UNKNOWN == sensor.state
 
     @requests_mock.Mocker()
     def test_update_when_value_changed(self, mock_req):
@@ -182,17 +182,17 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 self.fake_delay(2)
                 sensor.update()
                 if name == google_wifi.ATTR_LAST_RESTART:
-                    self.assertEqual('1969-12-30 00:00:00', sensor.state)
+                    assert '1969-12-30 00:00:00' == sensor.state
                 elif name == google_wifi.ATTR_UPTIME:
-                    self.assertEqual(2, sensor.state)
+                    assert 2 == sensor.state
                 elif name == google_wifi.ATTR_STATUS:
-                    self.assertEqual('Offline', sensor.state)
+                    assert 'Offline' == sensor.state
                 elif name == google_wifi.ATTR_NEW_VERSION:
-                    self.assertEqual('Latest', sensor.state)
+                    assert 'Latest' == sensor.state
                 elif name == google_wifi.ATTR_LOCAL_IP:
-                    self.assertEqual(STATE_UNKNOWN, sensor.state)
+                    assert STATE_UNKNOWN == sensor.state
                 else:
-                    self.assertEqual('next', sensor.state)
+                    assert 'next' == sensor.state
 
     @requests_mock.Mocker()
     def test_when_api_data_missing(self, mock_req):
@@ -204,7 +204,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 sensor = self.sensor_dict[name]['sensor']
                 self.fake_delay(2)
                 sensor.update()
-                self.assertEqual(STATE_UNKNOWN, sensor.state)
+                assert STATE_UNKNOWN == sensor.state
 
     def test_update_when_unavailable(self):
         """Test state updates when Google Wifi unavailable."""
@@ -213,7 +213,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
             sensor.update()
-            self.assertEqual(STATE_UNKNOWN, sensor.state)
+            assert STATE_UNKNOWN == sensor.state
 
     def update_side_effect(self):
         """Mock representation of update function."""

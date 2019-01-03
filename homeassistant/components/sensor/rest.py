@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -49,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -76,8 +77,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
+    if rest.data is None:
+        raise PlatformNotReady
 
-    add_devices([RestSensor(
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    add_entities([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
 
@@ -158,7 +163,7 @@ class RestSensor(Entity):
         return self._attributes
 
 
-class RestData(object):
+class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(self, method, resource, auth, headers, data, verify_ssl):
@@ -170,12 +175,14 @@ class RestData(object):
 
     def update(self):
         """Get the latest data from REST service with provided method."""
+        _LOGGER.debug("Updating from %s", self._request.url)
         try:
             with requests.Session() as sess:
                 response = sess.send(
                     self._request, timeout=10, verify=self._verify_ssl)
 
             self.data = response.text
-        except requests.exceptions.RequestException:
-            _LOGGER.error("Error fetching data: %s", self._request)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Error fetching data: %s from %s failed with %s",
+                          self._request, self._request.url, ex)
             self.data = None

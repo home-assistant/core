@@ -45,13 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LIFX platform."""
     server_addr = config.get(CONF_SERVER)
     broadcast_addr = config.get(CONF_BROADCAST)
 
-    lifx_library = LIFX(add_devices, server_addr, broadcast_addr)
+    lifx_library = LIFX(add_entities, server_addr, broadcast_addr)
 
     # Register our poll service
     track_time_change(hass, lifx_library.poll, second=[10, 40])
@@ -59,17 +58,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lifx_library.probe()
 
 
-class LIFX(object):
+class LIFX:
     """Representation of a LIFX light."""
 
-    def __init__(self, add_devices_callback, server_addr=None,
+    def __init__(self, add_entities_callback, server_addr=None,
                  broadcast_addr=None):
         """Initialize the light."""
         import liffylights
 
         self._devices = []
 
-        self._add_devices_callback = add_devices_callback
+        self._add_entities_callback = add_entities_callback
 
         self._liffylights = liffylights.LiffyLights(
             self.on_device, self.on_power, self.on_color, server_addr,
@@ -94,7 +93,7 @@ class LIFX(object):
             bulb = LIFXLight(
                 self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
-            self._add_devices_callback([bulb])
+            self._add_entities_callback([bulb])
         else:
             _LOGGER.debug("update bulb %s %s %d %d %d %d %d",
                           ipaddr, name, power, hue, sat, bri, kel)
@@ -118,7 +117,6 @@ class LIFX(object):
             bulb.set_power(power)
             bulb.schedule_update_ha_state()
 
-    # pylint: disable=unused-argument
     def poll(self, now):
         """Set up polling for the light."""
         self.probe()

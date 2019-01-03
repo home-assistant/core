@@ -7,7 +7,7 @@ https://home-assistant.io/components/camera.axis/
 import logging
 
 from homeassistant.components.camera.mjpeg import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
+    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
@@ -23,12 +23,14 @@ def _get_image_url(host, port, mode):
     """Set the URL to get the image."""
     if mode == 'mjpeg':
         return 'http://{}:{}/axis-cgi/mjpg/video.cgi'.format(host, port)
-    elif mode == 'single':
+    if mode == 'single':
         return 'http://{}:{}/axis-cgi/jpg/image.cgi'.format(host, port)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Axis camera."""
+    filter_urllib3_logging()
+
     camera_config = {
         CONF_NAME: discovery_info[CONF_NAME],
         CONF_USERNAME: discovery_info[CONF_USERNAME],
@@ -41,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'single'),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
-    add_devices([AxisCamera(
+    add_entities([AxisCamera(
         hass, camera_config, str(discovery_info[CONF_PORT]))])
 
 
@@ -50,7 +52,7 @@ class AxisCamera(MjpegCamera):
 
     def __init__(self, hass, config, port):
         """Initialize Axis Communications camera component."""
-        super().__init__(hass, config)
+        super().__init__(config)
         self.port = port
         dispatcher_connect(
             hass, DOMAIN + '_' + config[CONF_NAME] + '_new_ip', self._new_ip)

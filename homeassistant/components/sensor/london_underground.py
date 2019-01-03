@@ -8,12 +8,12 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-import requests
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+
+REQUIREMENTS = ['london-tube-status==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ TUBE_LINES = [
     'TfL Rail',
     'Victoria',
     'Waterloo & City']
-URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LINE):
@@ -43,15 +42,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tube sensor."""
+    from london_tube_status import TubeData
     data = TubeData()
     data.update()
     sensors = []
     for line in config.get(CONF_LINE):
         sensors.append(LondonTubeSensor(line, data))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class LondonTubeSensor(Entity):
@@ -93,43 +93,3 @@ class LondonTubeSensor(Entity):
         self._data.update()
         self._state = self._data.data[self.name]['State']
         self._description = self._data.data[self.name]['Description']
-
-
-class TubeData(object):
-    """Get the latest tube data from TFL."""
-
-    def __init__(self):
-        """Initialize the TubeData object."""
-        self.data = None
-
-    # Update only once in scan interval.
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from TFL."""
-        response = requests.get(URL)
-        if response.status_code != 200:
-            _LOGGER.warning("Invalid response from API")
-        else:
-            self.data = parse_api_response(response.json())
-
-
-def parse_api_response(response):
-    """Take in the TFL API json response."""
-    lines = [line['name'] for line in response]
-    data_dict = dict.fromkeys(lines)
-
-    for line in response:
-        statuses = [status['statusSeverityDescription']
-                    for status in line['lineStatuses']]
-        state = ' + '.join(sorted(set(statuses)))
-
-        if state == 'Good Service':
-            reason = 'Nothing to report'
-        else:
-            reason = ' *** '.join(
-                [status['reason'] for status in line['lineStatuses']])
-
-        attr = {'State': state, 'Description': reason}
-        data_dict[line['name']] = attr
-
-    return data_dict

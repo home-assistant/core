@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il punto di accesso \u00e8 gi\u00e0 configurato",
+            "connection_aborted": "Impossibile connettersi al server HMIP"
+        },
+        "error": {
+            "invalid_pin": "PIN non valido, riprova.",
+            "press_the_button": "Si prega di premere il pulsante blu.",
+            "register_failed": "Registrazione fallita, si prega di riprovare."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "pin": "Codice Pin (opzionale)"
+                }
+            }
+        }
+    }
+}

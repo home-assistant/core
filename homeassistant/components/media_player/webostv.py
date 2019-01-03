@@ -8,12 +8,11 @@ import asyncio
 from datetime import timedelta
 import logging
 from urllib.parse import urlparse
-
-# pylint: disable=unused-import
-from typing import Dict  # noqa: F401
+from typing import Dict  # noqa: F401 pylint: disable=unused-import
 
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
@@ -24,9 +23,8 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
+REQUIREMENTS = ['pylgtv==0.1.9', 'websockets==6.0']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SOURCES = 'sources'
 CONF_ON_ACTION = 'turn_on_action'
 
-DEFAULT_NAME = 'LG webOS Smart TV'
+DEFAULT_NAME = "LG webOS Smart TV"
+LIVETV_APP_ID = 'com.webos.app.livetv'
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
@@ -60,8 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
@@ -84,11 +82,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     config = hass.config.path(config.get(CONF_FILENAME))
 
     setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action)
+             add_entities, turn_on_action)
 
 
 def setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action):
+             add_entities, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -113,7 +111,7 @@ def setup_tv(host, name, customize, config, timeout, hass,
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
                 host, name, customize, config, timeout, hass,
-                add_devices, turn_on_action)
+                add_entities, turn_on_action)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -122,13 +120,13 @@ def setup_tv(host, name, customize, config, timeout, hass,
         configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, name, customize, config, timeout,
-                               hass, turn_on_action)], True)
+    add_entities([LgWebOSDevice(host, name, customize, config, timeout,
+                                hass, turn_on_action)], True)
 
 
 def request_configuration(
         host, name, customize, config, timeout, hass,
-        add_devices, turn_on_action):
+        add_entities, turn_on_action):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
@@ -138,11 +136,10 @@ def request_configuration(
             _CONFIGURING[host], 'Failed to pair, please try again.')
         return
 
-    # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
-                 add_devices, turn_on_action)
+                 add_entities, turn_on_action)
 
     _CONFIGURING[host] = configurator.request_config(
         name, lgtv_configuration_callback,
@@ -343,6 +340,39 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._current_source = source_dict['label']
             self._client.set_input(source_dict['id'])
 
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        _LOGGER.debug(
+            "Call play media type <%s>, Id <%s>", media_type, media_id)
+
+        if media_type == MEDIA_TYPE_CHANNEL:
+            _LOGGER.debug("Searching channel...")
+            partial_match_channel_id = None
+            perfect_match_channel_id = None
+
+            for channel in self._client.get_channels():
+                if media_id == channel['channelNumber']:
+                    perfect_match_channel_id = channel['channelId']
+                    continue
+                elif media_id.lower() == channel['channelName'].lower():
+                    perfect_match_channel_id = channel['channelId']
+                    continue
+                elif media_id.lower() in channel['channelName'].lower():
+                    partial_match_channel_id = channel['channelId']
+
+            if perfect_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with perfect match",
+                    perfect_match_channel_id)
+                self._client.set_channel(perfect_match_channel_id)
+            elif partial_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with partial match",
+                    partial_match_channel_id)
+                self._client.set_channel(partial_match_channel_id)
+
+            return
+
     def media_play(self):
         """Send play command."""
         self._playing = True
@@ -357,8 +387,16 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._client.fast_forward()
+        current_input = self._client.get_input()
+        if current_input == LIVETV_APP_ID:
+            self._client.channel_up()
+        else:
+            self._client.fast_forward()
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self._client.rewind()
+        current_input = self._client.get_input()
+        if current_input == LIVETV_APP_ID:
+            self._client.channel_down()
+        else:
+            self._client.rewind()

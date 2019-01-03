@@ -1,14 +1,14 @@
 """Service calling related helpers."""
+import asyncio
 import logging
-# pylint: disable=unused-import
-from typing import Optional  # NOQA
 from os import path
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.auth.permissions.const import POLICY_CONTROL
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
 from homeassistant.helpers import template
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.yaml import load_yaml
@@ -37,7 +37,7 @@ def call_from_config(hass, config, blocking=False, variables=None,
 
 @bind_hass
 async def async_call_from_config(hass, config, blocking=False, variables=None,
-                                 validate_config=True):
+                                 validate_config=True, context=None):
     """Call a service based on a config hash."""
     if validate_config:
         try:
@@ -55,9 +55,13 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
                 variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
+            if blocking:
+                raise
             _LOGGER.error('Error rendering service name template: %s', ex)
             return
-        except vol.Invalid as ex:
+        except vol.Invalid:
+            if blocking:
+                raise
             _LOGGER.error('Template rendered invalid service: %s',
                           domain_service)
             return
@@ -78,7 +82,7 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
     await hass.services.async_call(
-        domain, service_name, service_data, blocking)
+        domain, service_name, service_data, blocking=blocking, context=context)
 
 
 @bind_hass
@@ -92,7 +96,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = get_component('group')
+    group = hass.components.group
 
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
@@ -100,17 +104,15 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if expand_group:
 
         if isinstance(service_ent_id, str):
-            return group.expand_entity_ids(hass, [service_ent_id])
+            return group.expand_entity_ids([service_ent_id])
 
         return [ent_id for ent_id in
-                group.expand_entity_ids(hass, service_ent_id)]
+                group.expand_entity_ids(service_ent_id)]
 
-    else:
+    if isinstance(service_ent_id, str):
+        return [service_ent_id]
 
-        if isinstance(service_ent_id, str):
-            return [service_ent_id]
-
-        return service_ent_id
+    return service_ent_id
 
 
 @bind_hass
@@ -125,10 +127,10 @@ async def async_get_all_descriptions(hass):
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""
         if domain == ha.DOMAIN:
-            import homeassistant.components as components
+            from homeassistant import components
             component_path = path.dirname(components.__file__)
         else:
-            component_path = path.dirname(get_component(domain).__file__)
+            component_path = path.dirname(get_component(hass, domain).__file__)
         return path.join(component_path, 'services.yaml')
 
     def load_services_files(yaml_files):
@@ -182,3 +184,111 @@ async def async_get_all_descriptions(hass):
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@bind_hass
+async def entity_service_call(hass, platforms, func, call):
+    """Handle an entity service call.
+
+    Calls all platforms simultaneously.
+    """
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        entity_perms = user.permissions.check_entity
+    else:
+        entity_perms = None
+
+    # Are we trying to target all entities
+    if ATTR_ENTITY_ID in call.data:
+        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
+    else:
+        _LOGGER.warning('Not passing an entity ID to a service to target all '
+                        'entities is deprecated. Use instead: entity_id: "*"')
+        target_all_entities = True
+
+    if not target_all_entities:
+        # A set of entities we're trying to target.
+        entity_ids = set(
+            extract_entity_ids(hass, call, True))
+
+    # If the service function is a string, we'll pass it the service call data
+    if isinstance(func, str):
+        data = {key: val for key, val in call.data.items()
+                if key != ATTR_ENTITY_ID}
+    # If the service function is not a string, we pass the service call
+    else:
+        data = call
+
+    # Check the permissions
+
+    # A list with for each platform in platforms a list of entities to call
+    # the service on.
+    platforms_entities = []
+
+    if entity_perms is None:
+        for platform in platforms:
+            if target_all_entities:
+                platforms_entities.append(list(platform.entities.values()))
+            else:
+                platforms_entities.append([
+                    entity for entity in platform.entities.values()
+                    if entity.entity_id in entity_ids
+                ])
+
+    elif target_all_entities:
+        # If we target all entities, we will select all entities the user
+        # is allowed to control.
+        for platform in platforms:
+            platforms_entities.append([
+                entity for entity in platform.entities.values()
+                if entity_perms(entity.entity_id, POLICY_CONTROL)])
+
+    else:
+        for platform in platforms:
+            platform_entities = []
+            for entity in platform.entities.values():
+                if entity.entity_id not in entity_ids:
+                    continue
+
+                if not entity_perms(entity.entity_id, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=call.context,
+                        entity_id=entity.entity_id,
+                        permission=POLICY_CONTROL
+                    )
+
+                platform_entities.append(entity)
+
+            platforms_entities.append(platform_entities)
+
+    tasks = [
+        _handle_service_platform_call(func, data, entities, call.context)
+        for platform, entities in zip(platforms, platforms_entities)
+    ]
+
+    if tasks:
+        await asyncio.wait(tasks)
+
+
+async def _handle_service_platform_call(func, data, entities, context):
+    """Handle a function call."""
+    tasks = []
+
+    for entity in entities:
+        if not entity.available:
+            continue
+
+        entity.async_set_context(context)
+
+        if isinstance(func, str):
+            await getattr(entity, func)(**data)
+        else:
+            await func(entity, data)
+
+        if entity.should_poll:
+            tasks.append(entity.async_update_ha_state(True))
+
+    if tasks:
+        await asyncio.wait(tasks)

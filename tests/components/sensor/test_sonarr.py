@@ -139,7 +139,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 14402
             }
         ], 200)
-    elif 'api/command' in url:
+    if 'api/command' in url:
         return MockResponse([
             {
                 "name": "RescanSeries",
@@ -150,7 +150,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 24
             }
         ], 200)
-    elif 'api/wanted/missing' in url or 'totalRecords' in url:
+    if 'api/wanted/missing' in url or 'totalRecords' in url:
         return MockResponse(
             {
                 "page": 1,
@@ -325,7 +325,7 @@ def mocked_requests_get(*args, **kwargs):
                     }
                 ]
             }, 200)
-    elif 'api/queue' in url:
+    if 'api/queue' in url:
         return MockResponse([
             {
                 "series": {
@@ -449,7 +449,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 1503378561
             }
         ], 200)
-    elif 'api/series' in url:
+    if 'api/series' in url:
         return MockResponse([
             {
                 "title": "Marvel's Daredevil",
@@ -540,7 +540,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 7
             }
         ], 200)
-    elif 'api/diskspace' in url:
+    if 'api/diskspace' in url:
         return MockResponse([
             {
                 "path": "/data",
@@ -549,7 +549,7 @@ def mocked_requests_get(*args, **kwargs):
                 "totalSpace": 499738734592
             }
         ], 200)
-    elif 'api/system/status' in url:
+    if 'api/system/status' in url:
         return MockResponse({
             "version": "2.0.0.1121",
             "buildTime": "2014-02-08T20:49:36.5560392Z",
@@ -568,10 +568,9 @@ def mocked_requests_get(*args, **kwargs):
             "startOfWeek": 0,
             "urlBase": ""
         }, 200)
-    else:
-        return MockResponse({
-            "error": "Unauthorized"
-        }, 401)
+    return MockResponse({
+        "error": "Unauthorized"
+    }, 401)
 
 
 class TestSonarrSetup(unittest.TestCase):
@@ -580,7 +579,7 @@ class TestSonarrSetup(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices, update):
+    def add_entities(self, devices, update):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -608,17 +607,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual('263.10', device.state)
-            self.assertEqual('mdi:harddisk', device.icon)
-            self.assertEqual('GB', device.unit_of_measurement)
-            self.assertEqual('Sonarr Disk Space', device.name)
-            self.assertEqual(
-                '263.10/465.42GB (56.53%)',
+            assert '263.10' == device.state
+            assert 'mdi:harddisk' == device.icon
+            assert 'GB' == device.unit_of_measurement
+            assert 'Sonarr Disk Space' == device.name
+            assert '263.10/465.42GB (56.53%)' == \
                 device.device_state_attributes["/data"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_diskspace_paths(self, req_mock):
@@ -635,17 +632,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual('263.10', device.state)
-            self.assertEqual('mdi:harddisk', device.icon)
-            self.assertEqual('GB', device.unit_of_measurement)
-            self.assertEqual('Sonarr Disk Space', device.name)
-            self.assertEqual(
-                '263.10/465.42GB (56.53%)',
+            assert '263.10' == device.state
+            assert 'mdi:harddisk' == device.icon
+            assert 'GB' == device.unit_of_measurement
+            assert 'Sonarr Disk Space' == device.name
+            assert '263.10/465.42GB (56.53%)' == \
                 device.device_state_attributes["/data"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_commands(self, req_mock):
@@ -662,17 +657,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'commands'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:code-braces', device.icon)
-            self.assertEqual('Commands', device.unit_of_measurement)
-            self.assertEqual('Sonarr Commands', device.name)
-            self.assertEqual(
-                'pending',
+            assert 1 == device.state
+            assert 'mdi:code-braces' == device.icon
+            assert 'Commands' == device.unit_of_measurement
+            assert 'Sonarr Commands' == device.name
+            assert 'pending' == \
                 device.device_state_attributes["RescanSeries"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_queue(self, req_mock):
@@ -689,17 +682,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'queue'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:download', device.icon)
-            self.assertEqual('Episodes', device.unit_of_measurement)
-            self.assertEqual('Sonarr Queue', device.name)
-            self.assertEqual(
-                '100.00%',
+            assert 1 == device.state
+            assert 'mdi:download' == device.icon
+            assert 'Episodes' == device.unit_of_measurement
+            assert 'Sonarr Queue' == device.name
+            assert '100.00%' == \
                 device.device_state_attributes["Game of Thrones S03E08"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_series(self, req_mock):
@@ -716,17 +707,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'series'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:television', device.icon)
-            self.assertEqual('Shows', device.unit_of_measurement)
-            self.assertEqual('Sonarr Series', device.name)
-            self.assertEqual(
-                '26/26 Episodes',
+            assert 1 == device.state
+            assert 'mdi:television' == device.icon
+            assert 'Shows' == device.unit_of_measurement
+            assert 'Sonarr Series' == device.name
+            assert '26/26 Episodes' == \
                 device.device_state_attributes["Marvel's Daredevil"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_wanted(self, req_mock):
@@ -743,17 +732,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'wanted'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:television', device.icon)
-            self.assertEqual('Episodes', device.unit_of_measurement)
-            self.assertEqual('Sonarr Wanted', device.name)
-            self.assertEqual(
-                '2014-02-03',
+            assert 1 == device.state
+            assert 'mdi:television' == device.icon
+            assert 'Episodes' == device.unit_of_measurement
+            assert 'Sonarr Wanted' == device.name
+            assert '2014-02-03' == \
                 device.device_state_attributes["Archer (2009) S05E04"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_upcoming_multiple_days(self, req_mock):
@@ -770,17 +757,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:television', device.icon)
-            self.assertEqual('Episodes', device.unit_of_measurement)
-            self.assertEqual('Sonarr Upcoming', device.name)
-            self.assertEqual(
-                'S04E11',
+            assert 1 == device.state
+            assert 'mdi:television' == device.icon
+            assert 'Episodes' == device.unit_of_measurement
+            assert 'Sonarr Upcoming' == device.name
+            assert 'S04E11' == \
                 device.device_state_attributes["Bob's Burgers"]
-            )
 
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
@@ -801,17 +786,15 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('mdi:television', device.icon)
-            self.assertEqual('Episodes', device.unit_of_measurement)
-            self.assertEqual('Sonarr Upcoming', device.name)
-            self.assertEqual(
-                'S04E11',
+            assert 1 == device.state
+            assert 'mdi:television' == device.icon
+            assert 'Episodes' == device.unit_of_measurement
+            assert 'Sonarr Upcoming' == device.name
+            assert 'S04E11' == \
                 device.device_state_attributes["Bob's Burgers"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_system_status(self, req_mock):
@@ -828,15 +811,14 @@ class TestSonarrSetup(unittest.TestCase):
                 'status'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual('2.0.0.1121', device.state)
-            self.assertEqual('mdi:information', device.icon)
-            self.assertEqual('Sonarr Status', device.name)
-            self.assertEqual(
-                '6.2.9200.0',
-                device.device_state_attributes['osVersion'])
+            assert '2.0.0.1121' == device.state
+            assert 'mdi:information' == device.icon
+            assert 'Sonarr Status' == device.name
+            assert '6.2.9200.0' == \
+                device.device_state_attributes['osVersion']
 
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
@@ -855,18 +837,16 @@ class TestSonarrSetup(unittest.TestCase):
             ],
             "ssl": "true"
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(1, device.state)
-            self.assertEqual('s', device.ssl)
-            self.assertEqual('mdi:television', device.icon)
-            self.assertEqual('Episodes', device.unit_of_measurement)
-            self.assertEqual('Sonarr Upcoming', device.name)
-            self.assertEqual(
-                'S04E11',
+            assert 1 == device.state
+            assert 's' == device.ssl
+            assert 'mdi:television' == device.icon
+            assert 'Episodes' == device.unit_of_measurement
+            assert 'Sonarr Upcoming' == device.name
+            assert 'S04E11' == \
                 device.device_state_attributes["Bob's Burgers"]
-            )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_exception)
     def test_exception_handling(self, req_mock):
@@ -883,7 +863,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(None, device.state)
+            assert device.state is None

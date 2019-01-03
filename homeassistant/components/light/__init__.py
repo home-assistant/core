@@ -12,12 +12,13 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
-from homeassistant.core import callback
+from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
@@ -83,24 +84,13 @@ COLOR_GROUP = "Color descriptors"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
-PROP_TO_ATTR = {
-    'brightness': ATTR_BRIGHTNESS,
-    'color_temp': ATTR_COLOR_TEMP,
-    'min_mireds': ATTR_MIN_MIREDS,
-    'max_mireds': ATTR_MAX_MIREDS,
-    'hs_color': ATTR_HS_COLOR,
-    'white_value': ATTR_WHITE_VALUE,
-    'effect_list': ATTR_EFFECT_LIST,
-    'effect': ATTR_EFFECT,
-}
-
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -127,13 +117,13 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
 })
 
@@ -151,90 +141,6 @@ def is_on(hass, entity_id=None):
     """Return if the lights are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
     return hass.states.is_state(entity_id, STATE_ON)
-
-
-@bind_hass
-def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            brightness_pct=None, rgb_color=None, xy_color=None, hs_color=None,
-            color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
-    """Turn all or specified light on."""
-    hass.add_job(
-        async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
-        rgb_color, xy_color, hs_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
-
-
-@callback
-@bind_hass
-def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  brightness_pct=None, rgb_color=None, xy_color=None,
-                  hs_color=None, color_temp=None, kelvin=None,
-                  white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
-    """Turn all or specified light on."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_PROFILE, profile),
-            (ATTR_TRANSITION, transition),
-            (ATTR_BRIGHTNESS, brightness),
-            (ATTR_BRIGHTNESS_PCT, brightness_pct),
-            (ATTR_RGB_COLOR, rgb_color),
-            (ATTR_XY_COLOR, xy_color),
-            (ATTR_HS_COLOR, hs_color),
-            (ATTR_COLOR_TEMP, color_temp),
-            (ATTR_KELVIN, kelvin),
-            (ATTR_WHITE_VALUE, white_value),
-            (ATTR_FLASH, flash),
-            (ATTR_EFFECT, effect),
-            (ATTR_COLOR_NAME, color_name),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
-
-
-@bind_hass
-def turn_off(hass, entity_id=None, transition=None):
-    """Turn all or specified light off."""
-    hass.add_job(async_turn_off, hass, entity_id, transition)
-
-
-@callback
-@bind_hass
-def async_turn_off(hass, entity_id=None, transition=None):
-    """Turn all or specified light off."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TRANSITION, transition),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, data))
-
-
-@callback
-@bind_hass
-def async_toggle(hass, entity_id=None, transition=None):
-    """Toggle all or specified light."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TRANSITION, transition),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, data))
-
-
-@bind_hass
-def toggle(hass, entity_id=None, transition=None):
-    """Toggle all or specified light."""
-    hass.add_job(async_toggle, hass, entity_id, transition)
 
 
 def preprocess_turn_on_alternatives(params):
@@ -334,7 +240,7 @@ class SetIntentHandler(intent.IntentHandler):
 
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     await component.async_setup(config)
 
@@ -343,8 +249,8 @@ async def async_setup(hass, config):
     if not profiles_valid:
         return False
 
-    async def async_handle_light_service(service):
-        """Handle a turn light on or off service call."""
+    async def async_handle_light_on_service(service):
+        """Handle a turn light on service call."""
         # Get the validated data
         params = service.data.copy()
 
@@ -352,40 +258,71 @@ async def async_setup(hass, config):
         target_lights = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
+        if service.context.user_id:
+            user = await hass.auth.async_get_user(service.context.user_id)
+            if user is None:
+                raise UnknownUser(context=service.context)
+
+            entity_perms = user.permissions.check_entity
+
+            for light in target_lights:
+                if not entity_perms(light, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=service.context,
+                        entity_id=light,
+                        permission=POLICY_CONTROL
+                    )
+
         preprocess_turn_on_alternatives(params)
 
         update_tasks = []
         for light in target_lights:
-            if service.service == SERVICE_TURN_ON:
-                await light.async_turn_on(**params)
-            elif service.service == SERVICE_TURN_OFF:
-                await light.async_turn_off(**params)
-            else:
-                await light.async_toggle(**params)
+            light.async_set_context(service.context)
+
+            pars = params
+            if not pars:
+                pars = params.copy()
+                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+                preprocess_turn_on_alternatives(pars)
+            await light.async_turn_on(**pars)
 
             if not light.should_poll:
                 continue
-            update_tasks.append(light.async_update_ha_state(True))
+
+            update_tasks.append(
+                light.async_update_ha_state(True))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
+        DOMAIN, SERVICE_TURN_ON, async_handle_light_on_service,
         schema=LIGHT_TURN_ON_SCHEMA)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        schema=LIGHT_TURN_OFF_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, LIGHT_TURN_OFF_SCHEMA,
+        'async_turn_off'
+    )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        schema=LIGHT_TOGGLE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA,
+        'async_toggle'
+    )
 
     hass.helpers.intent.async_register(SetIntentHandler())
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class Profiles:
@@ -432,11 +369,21 @@ class Profiles:
         """Return a named profile."""
         return cls._all.get(name)
 
+    @classmethod
+    def get_default(cls, entity_id):
+        """Return the default turn-on profile for the given light."""
+        # pylint: disable=unsupported-membership-test
+        name = entity_id + ".default"
+        if name in cls._all:
+            return name
+        name = ENTITY_ID_ALL_LIGHTS + ".default"
+        if name in cls._all:
+            return name
+        return None
+
 
 class Light(ToggleEntity):
     """Representation of a light."""
-
-    # pylint: disable=no-self-use
 
     @property
     def brightness(self):
@@ -486,29 +433,37 @@ class Light(ToggleEntity):
     def state_attributes(self):
         """Return optional state attributes."""
         data = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & SUPPORT_COLOR_TEMP:
+        if supported_features & SUPPORT_COLOR_TEMP:
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
         if self.is_on:
-            for prop, attr in PROP_TO_ATTR.items():
-                value = getattr(self, prop)
-                if value is not None:
-                    data[attr] = value
+            if supported_features & SUPPORT_BRIGHTNESS:
+                data[ATTR_BRIGHTNESS] = self.brightness
 
-            # Expose current color also as RGB and XY
-            if ATTR_HS_COLOR in data:
-                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(
-                    *data[ATTR_HS_COLOR])
-                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(
-                    *data[ATTR_HS_COLOR])
+            if supported_features & SUPPORT_COLOR_TEMP:
+                data[ATTR_COLOR_TEMP] = self.color_temp
+
+            if self.supported_features & SUPPORT_COLOR and self.hs_color:
+                # pylint: disable=unsubscriptable-object,not-an-iterable
+                hs_color = self.hs_color
                 data[ATTR_HS_COLOR] = (
-                    round(data[ATTR_HS_COLOR][0], 3),
-                    round(data[ATTR_HS_COLOR][1], 3),
+                    round(hs_color[0], 3),
+                    round(hs_color[1], 3),
                 )
+                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
 
-        return data
+            if supported_features & SUPPORT_WHITE_VALUE:
+                data[ATTR_WHITE_VALUE] = self.white_value
+
+            if supported_features & SUPPORT_EFFECT:
+                data[ATTR_EFFECT_LIST] = self.effect_list
+                data[ATTR_EFFECT] = self.effect
+
+        return {key: val for key, val in data.items() if val is not None}
 
     @property
     def supported_features(self):

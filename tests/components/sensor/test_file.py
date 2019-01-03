@@ -45,7 +45,7 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file1')
-        self.assertEqual(state.state, '21')
+        assert state.state == '21'
 
     @patch('os.path.isfile', Mock(return_value=True))
     @patch('os.access', Mock(return_value=True))
@@ -70,7 +70,7 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file2')
-        self.assertEqual(state.state, '26')
+        assert state.state == '26'
 
     @patch('os.path.isfile', Mock(return_value=True))
     @patch('os.access', Mock(return_value=True))
@@ -91,4 +91,4 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file3')
-        self.assertEqual(state.state, STATE_UNKNOWN)
+        assert state.state == STATE_UNKNOWN

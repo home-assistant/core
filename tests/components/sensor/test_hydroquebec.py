@@ -99,7 +99,7 @@ def test_error(hass, caplog):
     sys.modules['pyhydroquebec.client'] = PyHydroQuebecClientFakeModule()
 
     config = {}
-    fake_async_add_devices = MagicMock()
+    fake_async_add_entities = MagicMock()
     yield from hydroquebec.async_setup_platform(hass, config,
-                                                fake_async_add_devices)
-    assert fake_async_add_devices.called is False
+                                                fake_async_add_entities)
+    assert fake_async_add_entities.called is False

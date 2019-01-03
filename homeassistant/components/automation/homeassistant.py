@@ -4,7 +4,6 @@ Offer Home Assistant core automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#homeassistant-trigger
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -23,8 +22,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
 
@@ -32,24 +30,24 @@ def async_trigger(hass, config, action):
         @callback
         def hass_shutdown(event):
             """Execute when Home Assistant is shutting down."""
-            hass.async_run_job(action, {
+            hass.async_run_job(action({
                 'trigger': {
                     'platform': 'homeassistant',
                     'event': event,
                 },
-            })
+            }, context=event.context))
 
         return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                           hass_shutdown)
 
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.
-    elif hass.state == CoreState.starting:
-        hass.async_run_job(action, {
+    if hass.state == CoreState.starting:
+        hass.async_run_job(action({
             'trigger': {
                 'platform': 'homeassistant',
                 'event': event,
             },
-        })
+        }))
 
     return lambda: None

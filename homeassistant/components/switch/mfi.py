@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up mFi sensors."""
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
@@ -59,10 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
         return False
 
-    add_devices(MfiSwitch(port)
-                for device in client.get_devices()
-                for port in device.ports.values()
-                if port.model in SWITCH_MODELS)
+    add_entities(MfiSwitch(port)
+                 for device in client.get_devices()
+                 for port in device.ports.values()
+                 if port.model in SWITCH_MODELS)
 
 
 class MfiSwitch(SwitchDevice):

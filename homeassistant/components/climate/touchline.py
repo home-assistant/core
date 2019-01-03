@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Touchline devices."""
     from pytouchline import PyTouchline
     host = config[CONF_HOST]
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for device_id in range(0, number_of_devices):
         devices.append(Touchline(PyTouchline(device_id)))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class Touchline(ClimateDevice):

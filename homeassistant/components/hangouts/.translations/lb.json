@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts ass scho konfigur\u00e9iert",
+            "unknown": "Onbekannten Fehler opgetrueden"
+        },
+        "error": {
+            "invalid_2fa": "Ong\u00eblteg 2-Faktor Authentifikatioun, prob\u00e9iert w.e.g. nach emol.",
+            "invalid_2fa_method": "Ong\u00eblteg 2FA Methode (Iwwerpr\u00e9ift et um Telefon)",
+            "invalid_login": "Ong\u00ebltege Login, prob\u00e9iert w.e.g. nach emol."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA Pin"
+                },
+                "description": "Eidel",
+                "title": "2-Faktor-Authentifikatioun"
+            },
+            "user": {
+                "data": {
+                    "email": "E-Mail Adress",
+                    "password": "Passwuert"
+                },
+                "description": "Eidel",
+                "title": "Google Hangouts Login"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

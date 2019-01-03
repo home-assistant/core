@@ -6,7 +6,7 @@ https://home-assistant.io/components/scene.litejet/
 """
 import logging
 
-import homeassistant.components.litejet as litejet
+from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
 
 DEPENDENCIES = ['litejet']
@@ -16,7 +16,7 @@ ATTR_NUMBER = 'number'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up scenes for the LiteJet platform."""
     litejet_ = hass.data['litejet_system']
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = litejet_.get_scene_name(i)
         if not litejet.is_ignored(hass, name):
             devices.append(LiteJetScene(litejet_, i, name))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class LiteJetScene(Scene):

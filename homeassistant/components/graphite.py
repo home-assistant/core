@@ -137,15 +137,14 @@ class GraphiteFeeder(threading.Thread):
                 _LOGGER.debug("Event processing thread stopped")
                 self._queue.task_done()
                 return
-            elif (event.event_type == EVENT_STATE_CHANGED and
-                  event.data.get('new_state')):
+            if event.event_type == EVENT_STATE_CHANGED and \
+               event.data.get('new_state'):
                 _LOGGER.debug("Processing STATE_CHANGED event for %s",
                               event.data['entity_id'])
                 try:
                     self._report_attributes(
                         event.data['entity_id'], event.data['new_state'])
-                # pylint: disable=broad-except
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")

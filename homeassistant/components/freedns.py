@@ -37,8 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the FreeDNS component."""
     url = config[DOMAIN].get(CONF_URL)
     auth_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
@@ -46,16 +45,15 @@ def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = yield from _update_freedns(
+    result = await _update_freedns(
         hass, session, url, auth_token)
 
     if result is False:
         return False
 
-    @asyncio.coroutine
-    def update_domain_callback(now):
+    async def update_domain_callback(now):
         """Update the FreeDNS entry."""
-        yield from _update_freedns(hass, session, url, auth_token)
+        await _update_freedns(hass, session, url, auth_token)
 
     hass.helpers.event.async_track_time_interval(
         update_domain_callback, update_interval)
@@ -63,8 +61,7 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def _update_freedns(hass, session, url, auth_token):
+async def _update_freedns(hass, session, url, auth_token):
     """Update FreeDNS."""
     params = None
 
@@ -77,8 +74,8 @@ def _update_freedns(hass, session, url, auth_token):
 
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            resp = yield from session.get(url, params=params)
-            body = yield from resp.text()
+            resp = await session.get(url, params=params)
+            body = await resp.text()
 
             if "has not changed" in body:
                 # IP has not changed.

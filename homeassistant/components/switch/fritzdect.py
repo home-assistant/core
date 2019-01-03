@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add all switches connected to Fritz Box."""
     from fritzhome.fritz import FritzBox
 
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     fritz = FritzBox(host, username, password)
     try:
         fritz.login()
-    except Exception:  # pylint: disable=W0703
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Login to Fritz!Box failed")
         return
 
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if actor.has_switch:
             data = FritzDectSwitchData(fritz, actor.actor_id)
             data.is_online = True
-            add_devices([FritzDectSwitch(hass, data, actor.name)], True)
+            add_entities([FritzDectSwitch(hass, data, actor.name)], True)
 
 
 class FritzDectSwitch(SwitchDevice):
@@ -105,7 +105,7 @@ class FritzDectSwitch(SwitchDevice):
         return attrs
 
     @property
-    def current_power_watt(self):
+    def current_power_w(self):
         """Return the current power usage in Watt."""
         try:
             return float(self.data.current_consumption)
@@ -163,7 +163,7 @@ class FritzDectSwitch(SwitchDevice):
             self.data.is_online = False
 
 
-class FritzDectSwitchData(object):
+class FritzDectSwitchData:
     """Get the latest data from the fritz box."""
 
     def __init__(self, fritz, ain):

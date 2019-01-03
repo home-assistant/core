@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components import rfxtrx
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
@@ -36,12 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
-    add_devices(lights)
+    add_entities(lights)
 
     def light_update(event):
         """Handle light updates from the RFXtrx gateway."""
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxLight)
         if new_device:
-            add_devices([new_device])
+            add_entities([new_device])
 
         rfxtrx.apply_received_command(event)
 

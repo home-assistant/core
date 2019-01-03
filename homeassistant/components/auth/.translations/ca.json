@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "No hi ha serveis de notificaci\u00f3 disponibles."
+            },
+            "error": {
+                "invalid_code": "Codi inv\u00e0lid, si us plau torna a provar-ho."
+            },
+            "step": {
+                "init": {
+                    "description": "Selecciona un dels serveis de notificaci\u00f3:",
+                    "title": "Configuraci\u00f3 d'una contrasenya d'un sol \u00fas a trav\u00e9s del component de notificacions"
+                },
+                "setup": {
+                    "description": "S'ha enviat una contrasenya d'un sol \u00fas mitjan\u00e7ant **notify.{notify_service}**. Introdueix-la a continuaci\u00f3:",
+                    "title": "Verificaci\u00f3 de la configuraci\u00f3"
+                }
+            },
+            "title": "Contrasenya d'un sol \u00fas del servei de notificacions"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Codi inv\u00e0lid, si us plau torna a provar-ho. Si obtens aquest error repetidament, assegura't que la data i hora de Home Assistant siguin correctes i acurades."
+            },
+            "step": {
+                "init": {
+                    "description": "Per activar la verificaci\u00f3 en dos passos mitjan\u00e7ant contrasenyes d'un sol \u00fas basades en temps, escaneja el codi QR amb la teva aplicaci\u00f3 de verificaci\u00f3. Si no en tens cap, et recomanem [Google Authenticator](https://support.google.com/accounts/answer/1066447) o b\u00e9 [Authy](https://authy.com/). \n\n {qr_code} \n \nDespr\u00e9s d'escanejar el codi QR, introdueix el codi de sis d\u00edgits proporcionat per l'aplicaci\u00f3. Si tens problemes per escanejar el codi QR, fes una configuraci\u00f3 manual amb el codi **`{code}`**.",
+                    "title": "Configura la verificaci\u00f3 en dos passos utilitzant TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

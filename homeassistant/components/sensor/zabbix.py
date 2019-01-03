@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.zabbix as zabbix
+from homeassistant.components import zabbix
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zabbix sensor platform."""
     sensors = []
 
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensor = ZabbixTriggerCountSensor(zapi)
         sensors.append(sensor)
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ZabbixTriggerCountSensor(Entity):

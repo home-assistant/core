@@ -41,8 +41,7 @@ REMOTE_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Mopar platform."""
     import motorparts
     cookie = hass.config.path(COOKIE_FILE)
@@ -67,11 +66,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            schema=REMOTE_COMMAND_SCHEMA)
 
     data = MoparData(session)
-    add_devices([MoparSensor(data, index)
-                 for index, _ in enumerate(data.vehicles)], True)
+    add_entities([MoparSensor(data, index)
+                  for index, _ in enumerate(data.vehicles)], True)
 
 
-class MoparData(object):
+class MoparData:
     """Container for Mopar vehicle data.
 
     Prevents session expiry re-login race condition.

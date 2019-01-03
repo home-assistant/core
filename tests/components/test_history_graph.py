@@ -10,7 +10,7 @@ class TestGraph(unittest.TestCase):
     """Test the Google component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -30,15 +30,15 @@ class TestGraph(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, 'history_graph', config))
-        self.assertEqual(
-            dict(self.hass.states.get('history_graph.name_1').attributes),
-            {
-                'entity_id': ['test.test'],
-                'friendly_name': 'name_1',
-                'hours_to_show': 24,
-                'refresh': 0
-            })
+        assert setup_component(self.hass, 'history_graph', config)
+        assert dict(
+            self.hass.states.get('history_graph.name_1').attributes
+        ) == {
+            'entity_id': ['test.test'],
+            'friendly_name': 'name_1',
+            'hours_to_show': 24,
+            'refresh': 0
+        }
 
     def init_recorder(self):
         """Initialize the recorder."""

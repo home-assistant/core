@@ -4,7 +4,6 @@ Support for the Foursquare (Swarm) API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/foursquare/
 """
-import asyncio
 import logging
 
 import requests
@@ -85,11 +84,10 @@ class FoursquarePushReceiver(HomeAssistantView):
         """Initialize the OAuth callback view."""
         self.push_secret = push_secret
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST from Foursquare."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 

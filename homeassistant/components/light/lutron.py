@@ -16,16 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron']
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron lights."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]['light']:
         dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
-    add_devices(devs, True)
-    return True
+    add_entities(devs, True)
 
 
 def to_lutron_level(level):
@@ -44,7 +42,7 @@ class LutronLight(LutronDevice, Light):
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        LutronDevice.__init__(self, area_name, lutron_device, controller)
+        super().__init__(area_name, lutron_device, controller)
 
     @property
     def supported_features(self):
@@ -77,8 +75,7 @@ class LutronLight(LutronDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr['Lutron Integration ID'] = self._lutron_device.id
+        attr = {'lutron_integration_id': self._lutron_device.id}
         return attr
 
     @property

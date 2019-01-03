@@ -1,6 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
-import ssl
 import sys
 
 import aiohttp
@@ -8,11 +7,11 @@ from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
-import certifi
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.loader import bind_hass
+from homeassistant.util import ssl as ssl_util
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
@@ -67,14 +66,13 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     return clientsession
 
 
-@asyncio.coroutine
 @bind_hass
-def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
-                            timeout=10):
+async def async_aiohttp_proxy_web(hass, request, web_coro,
+                                  buffer_size=102400, timeout=10):
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            req = yield from web_coro
+            req = await web_coro
 
     except asyncio.CancelledError:
         # The user cancelled the request
@@ -89,7 +87,7 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         raise HTTPBadGateway() from err
 
     try:
-        yield from async_aiohttp_proxy_stream(
+        return await async_aiohttp_proxy_stream(
             hass,
             request,
             req.content,
@@ -113,22 +111,17 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
                 data = await stream.read(buffer_size)
 
             if not data:
-                await response.write_eof()
                 break
-
             await response.write(data)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        # Something went wrong fetching data, close connection gracefully
-        await response.write_eof()
-
-    except asyncio.CancelledError:
-        # The user closed the connection
+        # Something went wrong fetching data, closed connection
         pass
+
+    return response
 
 
 @callback
-# pylint: disable=invalid-name
 def _async_register_clientsession_shutdown(hass, clientsession):
     """Register ClientSession close on Home Assistant shutdown.
 
@@ -155,9 +148,7 @@ def _async_get_connector(hass, verify_ssl=True):
         return hass.data[key]
 
     if verify_ssl:
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        ssl_context.load_verify_locations(cafile=certifi.where(),
-                                          capath=None)
+        ssl_context = ssl_util.client_context()
     else:
         ssl_context = False
 

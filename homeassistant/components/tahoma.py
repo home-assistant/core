@@ -32,17 +32,32 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 TAHOMA_COMPONENTS = [
-    'scene', 'sensor', 'cover'
+    'scene', 'sensor', 'cover', 'switch', 'binary_sensor'
 ]
 
 TAHOMA_TYPES = {
-    'rts:RollerShutterRTSComponent': 'cover',
-    'rts:CurtainRTSComponent': 'cover',
-    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
-    'io:RollerShutterVeluxIOComponent': 'cover',
-    'io:RollerShutterGenericIOComponent': 'cover',
-    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:ExteriorVenetianBlindIOComponent': 'cover',
+    'io:HorizontalAwningIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
+    'io:OnOffIOComponent': 'switch',
+    'io:OnOffLightIOComponent': 'switch',
+    'io:RollerShutterGenericIOComponent': 'cover',
+    'io:RollerShutterUnoIOComponent': 'cover',
+    'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:SomfyContactIOSystemSensor': 'sensor',
+    'io:VerticalExteriorAwningIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'rtds:RTDSContactSensor': 'sensor',
+    'rtds:RTDSMotionSensor': 'sensor',
+    'rtds:RTDSSmokeSensor': 'smoke',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:CurtainRTSComponent': 'cover',
+    'rts:DualCurtainRTSComponent': 'cover',
+    'rts:ExteriorVenetianBlindRTSComponent': 'cover',
+    'rts:GarageDoor4TRTSComponent': 'switch',
+    'rts:RollerShutterRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover'
 }
 
 

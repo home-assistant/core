@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a HUAWEI scanner."""
     scanner = HuaweiDeviceScanner(config[DOMAIN])
@@ -40,7 +39,7 @@ Device = namedtuple('Device', ['name', 'ip', 'mac', 'state'])
 class HuaweiDeviceScanner(DeviceScanner):
     """This class queries a router running HUAWEI firmware."""
 
-    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
+    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*)null\);')
     DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
     DEVICE_ATTR_REGEX = re.compile(
         '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
@@ -86,8 +85,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         active_clients = [client for client in data if client.state]
         self.last_results = active_clients
 
-        # pylint: disable=logging-not-lazy
-        _LOGGER.debug("Active clients: " + "\n"
+        _LOGGER.debug("Active clients: %s", "\n"
                       .join((client.mac + " " + client.name)
                             for client in active_clients))
         return True

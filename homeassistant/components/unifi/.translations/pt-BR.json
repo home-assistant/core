@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "user_privilege": "O usu\u00e1rio precisa ser administrador"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

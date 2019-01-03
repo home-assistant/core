@@ -50,8 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NZBGet sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -79,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             client_name=name)
         devices.append(new_sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class NZBGetSensor(Entity):
@@ -139,7 +138,7 @@ class NZBGetSensor(Entity):
             self._state = value
 
 
-class NZBGetAPI(object):
+class NZBGetAPI:
     """Simple JSON-RPC wrapper for NZBGet's API."""
 
     def __init__(self, api_url, username=None, password=None):
@@ -174,8 +173,4 @@ class NZBGetAPI(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        try:
-            self.status = self.post('status')['result']
-        except requests.exceptions.ConnectionError:
-            # failed to update status - exception already logged in self.post
-            raise
+        self.status = self.post('status')['result']

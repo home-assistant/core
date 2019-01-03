@@ -48,13 +48,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ping Binary sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     count = config.get(CONF_PING_COUNT)
 
-    add_devices([PingBinarySensor(name, PingData(host, count))], True)
+    add_entities([PingBinarySensor(name, PingData(host, count))], True)
 
 
 class PingBinarySensor(BinarySensorDevice):
@@ -96,7 +96,7 @@ class PingBinarySensor(BinarySensorDevice):
         self.ping.update()
 
 
-class PingData(object):
+class PingData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, host, count):

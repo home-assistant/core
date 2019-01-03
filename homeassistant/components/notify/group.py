@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.group/
 """
 import asyncio
-import collections
+from collections.abc import Mapping
 from copy import deepcopy
 import logging
 import voluptuous as vol
@@ -33,7 +33,7 @@ def update(input_dict, update_source):
     Async friendly.
     """
     for key, val in update_source.items():
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, Mapping):
             recurse = update(input_dict.get(key, {}), val)
             input_dict[key] = recurse
         else:
@@ -41,8 +41,7 @@ def update(input_dict, update_source):
     return input_dict
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the Group notification service."""
     return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
@@ -55,8 +54,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         self.hass = hass
         self.entities = entities
 
-    @asyncio.coroutine
-    def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
         payload = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
@@ -70,4 +68,4 @@ class GroupNotifyPlatform(BaseNotificationService):
                 DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks, loop=self.hass.loop)

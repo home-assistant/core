@@ -7,7 +7,6 @@ Air Quality calculation based on humidity and volatile gas.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme680/
 """
-import asyncio
 import logging
 
 from time import time, sleep
@@ -21,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['bme680==1.0.4',
+REQUIREMENTS = ['bme680==1.0.5',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +36,7 @@ CONF_GAS_HEATER_DURATION = 'gas_heater_duration'
 CONF_AQ_BURN_IN_TIME = 'aq_burn_in_time'
 CONF_AQ_HUM_BASELINE = 'aq_humidity_baseline'
 CONF_AQ_HUM_WEIGHTING = 'aq_humidity_bias'
+CONF_TEMP_OFFSET = 'temp_offset'
 
 
 DEFAULT_NAME = 'BME680 Sensor'
@@ -51,6 +51,7 @@ DEFAULT_GAS_HEATER_DURATION = 150  # Heater duration in ms 1 - 4032
 DEFAULT_AQ_BURN_IN_TIME = 300  # 300 second burn in time for AQ gas measurement
 DEFAULT_AQ_HUM_BASELINE = 40  # 40%, an optimal indoor humidity.
 DEFAULT_AQ_HUM_WEIGHTING = 25  # 25% Weighting of humidity to gas in AQ score
+DEFAULT_TEMP_OFFSET = 0  # No calibration out of the box.
 
 SENSOR_TEMP = 'temperature'
 SENSOR_HUMID = 'humidity'
@@ -94,16 +95,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(1, 100)),
     vol.Optional(CONF_AQ_HUM_WEIGHTING, default=DEFAULT_AQ_HUM_WEIGHTING):
         vol.All(vol.Coerce(int), vol.Range(1, 100)),
+    vol.Optional(CONF_TEMP_OFFSET, default=DEFAULT_TEMP_OFFSET):
+        vol.All(vol.Coerce(float), vol.Range(-100.0, 100.0)),
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the BME680 sensor."""
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
 
-    sensor_handler = yield from hass.async_add_job(_setup_bme680, config)
+    sensor_handler = await hass.async_add_job(_setup_bme680, config)
     if sensor_handler is None:
         return
 
@@ -112,19 +115,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev.append(BME680Sensor(
             sensor_handler, variable, SENSOR_TYPES[variable][1], name))
 
-    async_add_devices(dev)
+    async_add_entities(dev)
     return
 
 
-# pylint: disable=import-error, no-member
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
-    from smbus import SMBus
+    from smbus import SMBus  # pylint: disable=import-error
     import bme680
 
     sensor_handler = None
     sensor = None
     try:
+        # pylint: disable=no-member
         i2c_address = config.get(CONF_I2C_ADDRESS)
         bus = SMBus(config.get(CONF_I2C_BUS))
         sensor = bme680.BME680(i2c_address, bus)
@@ -140,6 +143,9 @@ def _setup_bme680(config):
         }
         sensor.set_temperature_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_TEMP)]
+        )
+        sensor.set_temp_offset(
+            config.get(CONF_TEMP_OFFSET)
         )
         sensor.set_humidity_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
@@ -180,10 +186,8 @@ def _setup_bme680(config):
 
     sensor_handler = BME680Handler(
         sensor,
-        True if (
-            SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
-            SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
-        ) else False,
+        (SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
+         SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]),
         config[CONF_AQ_BURN_IN_TIME],
         config[CONF_AQ_HUM_BASELINE],
         config[CONF_AQ_HUM_WEIGHTING]
@@ -350,10 +354,9 @@ class BME680Sensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
-        yield from self.hass.async_add_job(self.bme680_client.update)
+        await self.hass.async_add_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
             temperature = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:

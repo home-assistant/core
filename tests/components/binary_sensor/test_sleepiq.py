@@ -16,7 +16,7 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -45,14 +45,14 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
 
         sleepiq.setup_platform(self.hass,
                                self.config,
-                               self.add_devices,
+                               self.add_entities,
                                MagicMock())
-        self.assertEqual(2, len(self.DEVICES))
+        assert 2 == len(self.DEVICES)
 
         left_side = self.DEVICES[1]
-        self.assertEqual('SleepNumber ILE Test1 Is In Bed', left_side.name)
-        self.assertEqual('on', left_side.state)
+        assert 'SleepNumber ILE Test1 Is In Bed' == left_side.name
+        assert 'on' == left_side.state
 
         right_side = self.DEVICES[0]
-        self.assertEqual('SleepNumber ILE Test2 Is In Bed', right_side.name)
-        self.assertEqual('off', right_side.state)
+        assert 'SleepNumber ILE Test2 Is In Bed' == right_side.name
+        assert 'off' == right_side.state

@@ -25,6 +25,7 @@ from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
     'google-api-python-client==1.6.4',
+    'httplib2==0.10.3',
     'oauth2client==4.0.0',
 ]
 
@@ -44,6 +45,7 @@ CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
 CONF_SEARCH = 'search'
 CONF_OFFSET = 'offset'
+CONF_IGNORE_AVAILABILITY = 'ignore_availability'
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
@@ -74,8 +76,9 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Optional(CONF_TRACK): cv.boolean,
-    vol.Optional(CONF_SEARCH): vol.Any(cv.string, None),
+    vol.Optional(CONF_SEARCH): cv.string,
     vol.Optional(CONF_OFFSET): cv.string,
+    vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
 })
 
 DEVICE_SCHEMA = vol.Schema({
@@ -85,7 +88,7 @@ DEVICE_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def do_authentication(hass, config):
+def do_authentication(hass, hass_config, config):
     """Notify user of actions and authenticate.
 
     Notify user of user_code and verification_url then poll
@@ -142,7 +145,7 @@ def do_authentication(hass, config):
 
         storage = Storage(hass.config.path(TOKEN_FILE))
         storage.put(credentials)
-        do_setup(hass, config)
+        do_setup(hass, hass_config, config)
         listener()
         hass.components.persistent_notification.create(
             'We are all setup now. Check {} for calendars that have '
@@ -164,14 +167,15 @@ def setup(hass, config):
 
     token_file = hass.config.path(TOKEN_FILE)
     if not os.path.isfile(token_file):
-        do_authentication(hass, conf)
+        do_authentication(hass, config, conf)
     else:
-        do_setup(hass, conf)
+        do_setup(hass, config, conf)
 
     return True
 
 
-def setup_services(hass, track_new_found_calendars, calendar_service):
+def setup_services(hass, hass_config, track_new_found_calendars,
+                   calendar_service):
     """Set up the service listeners."""
     def _found_calendar(call):
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
@@ -187,7 +191,8 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
         )
 
         discovery.load_platform(hass, 'calendar', DOMAIN,
-                                hass.data[DATA_INDEX][calendar[CONF_CAL_ID]])
+                                hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
+                                hass_config)
 
     hass.services.register(
         DOMAIN, SERVICE_FOUND_CALENDARS, _found_calendar)
@@ -195,7 +200,7 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
     def _scan_for_calendars(service):
         """Scan for new calendars."""
         service = calendar_service.get()
-        cal_list = service.calendarList()  # pylint: disable=no-member
+        cal_list = service.calendarList()
         calendars = cal_list.list().execute()['items']
         for calendar in calendars:
             calendar['track'] = track_new_found_calendars
@@ -207,7 +212,7 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
     return True
 
 
-def do_setup(hass, config):
+def do_setup(hass, hass_config, config):
     """Run the setup after we have everything configured."""
     # Load calendars the user has configured
     hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
@@ -215,20 +220,22 @@ def do_setup(hass, config):
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
     track_new_found_calendars = convert(config.get(CONF_TRACK_NEW),
                                         bool, DEFAULT_CONF_TRACK_NEW)
-    setup_services(hass, track_new_found_calendars, calendar_service)
+    setup_services(hass, hass_config, track_new_found_calendars,
+                   calendar_service)
 
     # Ensure component is loaded
     setup_component(hass, 'calendar', config)
 
     for calendar in hass.data[DATA_INDEX].values():
-        discovery.load_platform(hass, 'calendar', DOMAIN, calendar)
+        discovery.load_platform(hass, 'calendar', DOMAIN, calendar,
+                                hass_config)
 
     # Look for any new calendars
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
     return True
 
 
-class GoogleCalendarService(object):
+class GoogleCalendarService:
     """Calendar service interface to Google."""
 
     def __init__(self, token_file):

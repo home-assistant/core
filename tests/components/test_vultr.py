@@ -39,7 +39,7 @@ class TestVultr(unittest.TestCase):
             return_value=json.loads(
                 load_fixture('vultr_server_list.json'))):
             response = vultr.setup(self.hass, self.config)
-        self.assertTrue(response)
+        assert response
 
     def test_setup_no_api_key(self):
         """Test failed setup with missing API Key."""
