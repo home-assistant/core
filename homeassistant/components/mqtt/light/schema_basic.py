@@ -111,7 +111,7 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_entity_basic(hass, config, async_add_entities,
+async def async_setup_entity_basic(config, async_add_entities,
                                    discovery_hash=None):
     """Set up a MQTT Light."""
     config.setdefault(
