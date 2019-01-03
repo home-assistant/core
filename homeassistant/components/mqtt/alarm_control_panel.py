@@ -130,11 +130,11 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         @callback
         def message_received(topic, payload, qos):
+            """Run when new MQTT message has been received."""
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
 
-            """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                                STATE_ALARM_ARMED_AWAY,
                                STATE_ALARM_ARMED_NIGHT,
