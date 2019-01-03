@@ -105,7 +105,7 @@ async def test_services(hass):
     assert state.state == '0'
 
 
-async def _test_self_reset(hass, cycle):
+async def _test_self_reset(hass, cycle, start_time, expect_reset=True):
     """Test energy sensor self reset."""
     config = {
         'sensor': {
@@ -118,7 +118,7 @@ async def _test_self_reset(hass, cycle):
 
     entity_id = config['sensor']['source']
 
-    now = dt_util.parse_datetime("2017-12-31T23:59:00.000000+00:00")
+    now = dt_util.parse_datetime(start_time)
     with alter_time(now):
         assert await async_setup_component(hass, 'sensor', config)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -143,30 +143,40 @@ async def _test_self_reset(hass, cycle):
         await hass.async_block_till_done()
 
     state = hass.states.get('sensor.meter')
-    assert state.attributes.get('last_period') == '2'
-    assert state.state == '3'
+    if expect_reset:
+        assert state.attributes.get('last_period') == '2'
+        assert state.state == '3'
+    else:
+        assert state.attributes.get('last_period') == 0
+        assert state.state == '5'
 
 
 async def test_self_reset_hourly(hass):
     """Test hourly reset of meter."""
-    await _test_self_reset(hass, 'hourly')
+    await _test_self_reset(hass, 'hourly', "2017-12-31T23:59:00.000000+00:00")
 
 
 async def test_self_reset_daily(hass):
     """Test daily reset of meter."""
-    await _test_self_reset(hass, 'daily')
+    await _test_self_reset(hass, 'daily', "2017-12-31T23:59:00.000000+00:00")
 
 
 async def test_self_reset_weekly(hass):
     """Test weekly reset of meter."""
-    await _test_self_reset(hass, 'weekly')
+    await _test_self_reset(hass, 'weekly', "2017-12-31T23:59:00.000000+00:00")
 
 
 async def test_self_reset_monthly(hass):
     """Test monthly reset of meter."""
-    await _test_self_reset(hass, 'monthly')
+    await _test_self_reset(hass, 'monthly', "2017-12-31T23:59:00.000000+00:00")
 
 
 async def test_self_reset_yearly(hass):
     """Test yearly reset of meter."""
-    await _test_self_reset(hass, 'yearly')
+    await _test_self_reset(hass, 'yearly', "2017-12-31T23:59:00.000000+00:00")
+
+
+async def test_self_no_reset_yearly(hass):
+    """Test yearly reset of meter does not occur after 1st January."""
+    await _test_self_reset(hass, 'yearly', "2018-01-01T23:59:00.000000+00:00",
+                           expect_reset=False)
