@@ -11,5 +11,5 @@ invoke_custom_function:
         Typically this is just "1".
       example: "1"
     pgm:
-      description: The PGM number to trigger on the alarm panel.  This will be 1-4.
+      description: The PGM number to trigger on the alarm panel. This will be 1-4.
       example: "2"
