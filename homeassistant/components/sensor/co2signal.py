@@ -19,10 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by CO2signal'
 
+msg_location = "Please use either coordinates or the country code. For the coordinates, " \
+               "you need to use both latitude and longitude."
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coords'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
+    vol.Inclusive(CONF_LATITUDE, 'coords', msg=msg_location): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coords', msg=msg_location): cv.longitude,
     vol.Optional(CONF_COUNTRY_CODE, default='None'): cv.string,
 })
 
