@@ -35,7 +35,7 @@ class HueUsernameView(HomeAssistantView):
 
     url = '/api'
     name = 'emulated_hue:api:create_username'
-    extra_urls = ['/api/', '/api/(null)', '/api/(null)/']
+    extra_urls = ['/api/']
     requires_auth = False
 
     async def get(self, request):
