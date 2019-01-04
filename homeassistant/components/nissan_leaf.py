@@ -32,7 +32,7 @@ nissan_connect: If your car has the updated head unit (Nissan Connect rather
                 than Car Wings) then you can pull the location, shown in a
                 device tracker. If you have a pre-2016 24kWh Leaf then you
                 will have CarWings and should set this to false, or it will
-                crash the component.  (FIXME: Don't crash here)
+                crash the component.
 update_interval: The interval between updates if AC is off and not charging
 update_interval_charging: The interval between updates if charging
 update_interval_climate: The interval between updates if climate control is on
@@ -67,6 +67,9 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+
+# TODO: Disable charging switch if currently charging, because charging
+#       cannot be stopped remotely by the Nissan APIs.
 
 # If testing then use the following kinds of URLs
 #
@@ -160,8 +163,8 @@ def async_setup(hass, config):
             leaf = sess.get_leaf()
 
         try:
-            # TODO: Does this need to be made async it takes
-            #       10+ seconds to respond...
+            # this might need to be made async (somehow) causes
+            # homeassistant to be slow to start
             await hass.async_add_job(leaf_login)
         except(RuntimeError, urllib.error.HTTPError):
             _LOGGER.error(
@@ -245,8 +248,6 @@ class LeafDataStore:
         # connected # and when the traction battery has enough charge. To
         # avoid draining the 12V battery we shall restrict the update
         # frequency if low battery detected.
-        # TODO: Find way to limit updates if car left connected
-        #       for a long time.
         if (self.last_battery_response is not None and
                 self.data[DATA_CHARGING] is False and
                 self.data[DATA_BATTERY] <= RESTRICTED_BATTERY):
@@ -486,14 +487,15 @@ class LeafDataStore:
                 _LOGGER.debug(location_status.__dict__)
                 break
 
-        # TODO: Check if self.signal_components() is needed for device tracker
         self.signal_components()
         return location_status
 
     def start_charging(self):
         """Request start charging via Nissan servers."""
-        # TODO: Check if charging flag needs to be set here so that
-        #       the next refresh occurs "quickly".
+        # TODO: This should be improved to:
+        #   1. check if the command to start charging actually completes.
+        #   2. reschedule the update if interval less whilst charging.
+        #   3. disable the start charging button
         self.hass.async_add_job(self.leaf.start_charging)
 
 

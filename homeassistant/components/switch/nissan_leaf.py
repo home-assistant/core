@@ -57,15 +57,11 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
             self.car.data[DATA_CLIMATE] = True
-        # FIXME: Unsure if need _update_callback
-        # self._update_callback()
 
     async def async_turn_off(self, **kwargs):
         """Turn off climate control."""
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False
-        # FIXME: Unsure if need _update_callback
-        # self._update_callback()
 
     @property
     def icon(self):
