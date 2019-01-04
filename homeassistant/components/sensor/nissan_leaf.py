@@ -18,7 +18,7 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Nissan Leaf sensors."""
+    """Sensors setup."""
     _LOGGER.debug("setup_platform nissan_leaf sensors, discovery_info=%s",
                   discovery_info)
 
@@ -81,7 +81,7 @@ class LeafRangeSensor(LeafEntity):
 
     @property
     def name(self):
-        """Sensor name depends of if AC on or off sensor."""
+        """Update sensor name depending on AC."""
         if self.ac_on is True:
             return self.car.leaf.nickname + " Range (AC)"
         else:

@@ -70,15 +70,16 @@ from homeassistant.util.dt import utcnow
 
 # If testing then use the following kinds of URLs
 #
-#REQUIREMENTS = ['https://github.com/filcole/pycarwings2/archive/master.zip'
-#                '#pycarwings2']
-#REQUIREMENTS = ['https://test-files.pythonhosted.org/packages/7c/ad/ee27988357f1710ca9ced1a60263486415f054003ca6fa396922ca6b6bbf/pycarwings2-2.2.tar.gz'
-#                '#pycarwings2']
-#REQUIREMENTS = ['file:///home/phil/repos/pycarwings2ve/pycarwings2/dist/pycarwings2-2.2.tar.gz'
-#                '#pycarwings2']
+# REQUIREMENTS = ['https://github.com/filcole/pycarwings2/archive/master.zip'
+#                 '#pycarwings2']
+# REQUIREMENTS = ['https://test-files.pythonhosted.org/packages/7c/ad/
+#      ee27988357f1710ca9ced1a60263486415f054003ca6fa396922ca6b6bbf/
+#      pycarwings2-2.2.tar.gz'
+#                 '#pycarwings2']
+# REQUIREMENTS = ['file:///home/phil/repos/pycarwings2ve/pycarwings2/
+#      dist/pycarwings2-2.2.tar.gz'
+#                 '#pycarwings2']
 REQUIREMENTS = ['pycarwings2==2.2']
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -314,7 +315,9 @@ class LeafDataStore:
 
             if server_response.answer['status'] == 200:
                 if server_response.state_of_charge is not None:
-                    self.data[DATA_BATTERY] = int(server_response.state_of_charge)
+                    self.data[DATA_BATTERY] = int(
+                        server_response.state_of_charge
+                    )
                 else:
                     self.data[DATA_BATTERY] = server_response.battery_percent
 
@@ -326,7 +329,7 @@ class LeafDataStore:
                 )
                 self.signal_components()
                 self.last_battery_response = utcnow()
-                
+
         # Climate response only updated if battery data updated first.
         if (battery_response is not None) or (server_response is not None):
 
@@ -362,10 +365,13 @@ class LeafDataStore:
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
         # First, check nissan servers for the latest data
-        start_server_info = await self.hass.async_add_job(self.leaf.get_latest_battery_status)
+        start_server_info = await self.hass.async_add_job(
+            self.leaf.get_latest_battery_status
+        )
 
         # Store the date from the nissan servers
-        start_date = start_server_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        start_date = start_server_info.answer[
+            "BatteryStatusRecords"]["OperationDateAndTime"]
         _LOGGER.info("Start server date=%s", start_date)
 
         # Request battery update from the car
@@ -386,7 +392,8 @@ class LeafDataStore:
                 server_info = await self.hass.async_add_job(
                     self.leaf.get_latest_battery_status
                 )
-                latest_date = server_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+                latest_date = server_info.answer[
+                    "BatteryStatusRecords"]["OperationDateAndTime"]
                 _LOGGER.info("Latest server date=%s", latest_date)
                 if (latest_date != start_date):
                     _LOGGER.info("Using updated server info instead " +
@@ -396,7 +403,6 @@ class LeafDataStore:
         _LOGGER.info("%s attempts exceeded return latest data from server",
                      MAX_RESPONSE_ATTEMPTS)
         return (None, server_info)
-
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
@@ -411,7 +417,6 @@ class LeafDataStore:
                 "An error occurred communicating with the car %s",
                 self.leaf.vin)
             return None
-
 
     async def async_set_climate(self, toggle):
         """Set climate control mode via Nissan servers."""

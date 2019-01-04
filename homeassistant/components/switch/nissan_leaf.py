@@ -18,7 +18,7 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Nissan Leaf switch platforms."""
+    """Nissan Leaf switch platform setup."""
     _LOGGER.debug("In switch setup platform, discovery_info=%s",
                   discovery_info)
 
@@ -57,15 +57,15 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
             self.car.data[DATA_CLIMATE] = True
-        #FIXME: Unsure if need _update_callback
-        #self._update_callback()
+        # FIXME: Unsure if need _update_callback
+        # self._update_callback()
 
     async def async_turn_off(self, **kwargs):
         """Turn off climate control."""
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False
-        #FIXME: Unsure if need _update_callback
-        #self._update_callback()
+        # FIXME: Unsure if need _update_callback
+        # self._update_callback()
 
     @property
     def icon(self):
