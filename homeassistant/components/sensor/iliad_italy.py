@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:phone'
 
-THROTTLE = timedelta(minutes=30)
+THROTTLE = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
