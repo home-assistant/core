@@ -4,8 +4,10 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
-    DOMAIN, SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
+    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN,
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+    SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF,
@@ -155,3 +157,94 @@ async def test_fan_oscillate(hass, hk_driver, cls, events):
     assert call_oscillate[1].data[ATTR_OSCILLATING] is True
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is True
+
+
+async def test_fan_speed(hass, hk_driver, cls, events):
+    """Test fan with speed."""
+    entity_id = 'fan.demo'
+
+    long_list = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    short_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
+
+    hass.states.async_set(entity_id, STATE_ON, {
+        ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED, ATTR_SPEED: SPEED_OFF,
+        ATTR_SPEED_LIST: long_list})
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
+
+    assert acc.char_speed.value == 0
+
+    # check values (0%, 33%, 67%, 100%) if there are 4 possible settings
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH,
+                          ATTR_SPEED_LIST: long_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 100
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_LOW,
+                          ATTR_SPEED_LIST: long_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 100 / 3
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_MEDIUM,
+                          ATTR_SPEED_LIST: long_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 100 / 3 * 2
+
+    # check values (0%, 50%, 100%) if there are 3 possible settings
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_OFF,
+                          ATTR_SPEED_LIST: short_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH,
+                          ATTR_SPEED_LIST: short_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 100
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_LOW,
+                          ATTR_SPEED_LIST: short_list})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 50
+
+    # Set from HomeKit
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_OFF,
+                          ATTR_SPEED_LIST: short_list})
+    call_set_speed = async_mock_service(hass, DOMAIN, 'set_speed')
+
+    await hass.async_add_job(acc.char_speed.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert call_set_speed[0]
+    assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[0].data[ATTR_SPEED] == SPEED_OFF
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == SPEED_OFF
+
+    await hass.async_add_job(acc.char_speed.client_update_value, 100)
+    await hass.async_block_till_done()
+    assert call_set_speed[1]
+    assert call_set_speed[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[1].data[ATTR_SPEED] == SPEED_HIGH
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == SPEED_HIGH
+
+    # A speed setting of exactly 50 will be converted to SPEED_LOW
+    await hass.async_add_job(acc.char_speed.client_update_value, 50)
+    await hass.async_block_till_done()
+    assert call_set_speed[2]
+    assert call_set_speed[2].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[2].data[ATTR_SPEED] == SPEED_LOW
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] == SPEED_LOW
+
+    # A speed setting above 66 will be converted to SPEED_HIGH
+    await hass.async_add_job(acc.char_speed.client_update_value, 67)
+    await hass.async_block_till_done()
+    assert call_set_speed[3]
+    assert call_set_speed[3].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[3].data[ATTR_SPEED] == SPEED_HIGH
+    assert len(events) == 4
+    assert events[-1].data[ATTR_VALUE] == SPEED_HIGH
