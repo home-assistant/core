@@ -39,10 +39,11 @@ TARGET_STATE_MAP = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit Alarm Control Panel support."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
-                     True)
+    if discovery_info is None:
+        return
+    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+    add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
+                 True)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
@@ -56,11 +57,12 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     def update_characteristics(self, characteristics):
         """Synchronise the Alarm Control Panel state with Home Assistant."""
-        import homekit  # pylint: disable=import-error
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
 
         for characteristic in characteristics:
             ctype = characteristic['type']
-            ctype = homekit.CharacteristicsTypes.get_short(ctype)
+            ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "security-system-state.current":
                 self._chars['security-system-state.current'] = \
                     characteristic['iid']
@@ -84,34 +86,25 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._state = STATE_ALARM_DISARMED
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[self._state]}]
-        self.put_characteristics(characteristics)
+        self.set_alarm_state(STATE_ALARM_DISARMED, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm command."""
-        self._state = STATE_ALARM_ARMED_AWAY
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[self._state]}]
-        self.put_characteristics(characteristics)
+        self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
 
     def alarm_arm_home(self, code=None):
         """Send stay command."""
-        self._state = STATE_ALARM_ARMED_HOME
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[self._state]}]
-        self.put_characteristics(characteristics)
+        self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
 
     def alarm_arm_night(self, code=None):
         """Send night command."""
-        self._state = STATE_ALARM_ARMED_NIGHT
+        self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
+
+    def set_alarm_state(self, state, code=None):
+        """Send state command."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[self._state]}]
+                            'value': TARGET_STATE_MAP[state]}]
         self.put_characteristics(characteristics)
 
     @property
