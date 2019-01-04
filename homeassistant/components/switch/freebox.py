@@ -64,13 +64,29 @@ class FbxWifiSwitch(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
+        from aiofreepybox.exceptions import InsufficientPermissionsError
+
         wifi_config = {"enabled": True}
-        await self.fbx.wifi.set_global_config(wifi_config)
+        try:
+            await self.fbx.wifi.set_global_config(wifi_config)
+        except InsufficientPermissionsError:
+            _LOGGER.warning('Home Assistant does not have permissions to'
+                            ' modify the settings. Please refer to'
+                            ' documentation. https://home-assistant.io/'
+                            'components/switch.freebox/')
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
+        from aiofreepybox.exceptions import InsufficientPermissionsError
+
         wifi_config = {"enabled": False}
-        await self.fbx.wifi.set_global_config(wifi_config)
+        try:
+            await self.fbx.wifi.set_global_config(wifi_config)
+        except InsufficientPermissionsError:
+            _LOGGER.warning('Home Assistant does not have permissions to'
+                            ' modify the settings. Please refer to'
+                            ' documentation. https://home-assistant.io/'
+                            'components/switch.freebox/')
 
     async def async_update(self):
         """Get the state and update it."""
