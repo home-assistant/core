@@ -34,7 +34,6 @@ class FbxWifiSwitch(ToggleEntity):
         self._state = STATE_OFF
         self.perms_settings = perms_settings
         self.fbx = fbx
-        self.wifi_config = {}
 
     @property
     def available(self):
@@ -65,13 +64,13 @@ class FbxWifiSwitch(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.wifi_config = {"enabled": True}
-        await self.fbx.wifi.set_global_config(self.wifi_config)
+        wifi_config = {"enabled": True}
+        await self.fbx.wifi.set_global_config(wifi_config)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.wifi_config = {"enabled": False}
-        await self.fbx.wifi.set_global_config(self.wifi_config)
+        wifi_config = {"enabled": False}
+        await self.fbx.wifi.set_global_config(wifi_config)
 
     async def async_update(self):
         """Get the state and update it."""
