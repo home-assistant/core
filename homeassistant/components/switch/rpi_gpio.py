@@ -41,21 +41,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
-        switches.append(RPiGPIOSwitch(name, port, invert_logic))
+        switches.append(RPiGPIOSwitch(hass, name, port, invert_logic))
     add_entities(switches)
 
 
 class RPiGPIOSwitch(ToggleEntity):
     """Representation of a  Raspberry Pi GPIO."""
 
-    def __init__(self, name, port, invert_logic):
+    def __init__(self, hass, name, port, invert_logic):
         """Initialize the pin."""
+        self._hass = hass
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._invert_logic = invert_logic
         self._state = False
-        rpi_gpio.setup_output(self._port)
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        rpi_gpio.setup_output(self._hass, self._port)
+        rpi_gpio.write_output(self._hass, self._port,
+                              1 if self._invert_logic else 0)
 
     @property
     def name(self):
@@ -74,12 +76,14 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
+        rpi_gpio.write_output(self._hass, self._port,
+                              0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        rpi_gpio.write_output(self._hass, self._port,
+                              1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()

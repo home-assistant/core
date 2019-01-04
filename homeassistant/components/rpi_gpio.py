@@ -39,6 +39,7 @@ ORANGEPI_BOARDS = {'zero': 'ZERO',
                    }
 
 DOMAIN = 'rpi_gpio'
+LIBRARY = 'gpio_library'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -47,22 +48,22 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-GPIO_LIBRARY = None
-
 
 class UnknownBoardFamily(Exception):
-    """board_family should be 'raspberry_pi' or 'orange_pi'"""
+    """board_family should be 'raspberry_pi' or 'orange_pi'."""
+
     pass
 
 
 class UnknownOrangePiBoard(Exception):
-    """'board' config item not set"""
+    """'board' config item not set."""
+
     pass
 
 
 def setup(hass, base_config):
     """Set up the GPIO component."""
-    global GPIO_LIBRARY
+    hass.data[DOMAIN] = {}
 
     config = base_config.get(DOMAIN)
     family_name = config.get(CONF_BOARD_FAMILY, DEFAULT_FAMILY)
@@ -72,7 +73,7 @@ def setup(hass, base_config):
     if not lib_name:
         raise UnknownBoardFamily('Unknown board family: %s'
                                  % config.get(CONF_BOARD_FAMILY))
-    GPIO_LIBRARY = importlib.import_module(lib_name)
+    hass.data[DOMAIN][LIBRARY] = importlib.import_module(lib_name)
 
     # OrangePi GPIOS require knowledge of the specific board as well
     if family_name == 'orange_pi':
@@ -84,11 +85,12 @@ def setup(hass, base_config):
             raise UnknownOrangePiBoard('You must specify a board type '
                                        'with the "board" configuration '
                                        'option.')
-        GPIO_LIBRARY.setboard(getattr(GPIO_LIBRARY, board))
+        hass.data[DOMAIN][LIBRARY].setboard(
+            getattr(hass.data[DOMAIN][LIBRARY], board))
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
-        GPIO_LIBRARY.cleanup()
+        hass.data[DOMAIN][LIBRARY].cleanup()
 
     def prepare_gpio(event):
         """Stuff to do when home assistant starts."""
@@ -97,39 +99,40 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
     if family_name == 'orange_pi':
-        GPIO_LIBRARY.setmode(GPIO_LIBRARY.BOARD)
+        hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].BOARD)
     else:
-        GPIO_LIBRARY.setmode(GPIO_LIBRARY.BCM)
+        hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].BCM)
 
     return True
 
 
-def setup_output(port):
+def setup_output(hass, port):
     """Set up a GPIO as output."""
-    GPIO_LIBRARY.setup(port, GPIO_LIBRARY.OUT)
+    hass.data[DOMAIN][LIBRARY].setup(port, hass.data[DOMAIN][LIBRARY].OUT)
 
 
-def setup_input(port, pull_mode):
+def setup_input(hass, port, pull_mode):
     """Set up a GPIO as input."""
-    pull_mode = (GPIO_LIBRARY.PUD_DOWN if pull_mode == 'DOWN'
-                 else GPIO_LIBRARY.PUD_UP)
-    GPIO_LIBRARY.setup(port, GPIO_LIBRARY.IN, pull_mode)
+    pull_mode = (hass.data[DOMAIN][LIBRARY].PUD_DOWN if pull_mode == 'DOWN'
+                 else hass.data[DOMAIN][LIBRARY].PUD_UP)
+    hass.data[DOMAIN][LIBRARY].setup(
+        port, hass.data[DOMAIN][LIBRARY].IN, pull_mode)
 
 
-def write_output(port, value):
+def write_output(hass, port, value):
     """Write a value to a GPIO."""
-    GPIO_LIBRARY.output(port, value)
+    hass.data[DOMAIN][LIBRARY].output(port, value)
 
 
-def read_input(port):
+def read_input(hass, port):
     """Read a value from a GPIO."""
-    return GPIO_LIBRARY.input(port)
+    return hass.data[DOMAIN][LIBRARY].input(port)
 
 
-def edge_detect(port, event_callback, bounce):
+def edge_detect(hass, port, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
-    GPIO_LIBRARY.add_event_detect(
+    hass.data[DOMAIN][LIBRARY].add_event_detect(
         port,
-        GPIO_LIBRARY.BOTH,
+        hass.data[DOMAIN][LIBRARY].BOTH,
         callback=event_callback,
         bouncetime=bounce)

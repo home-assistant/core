@@ -65,17 +65,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for cover in covers_conf:
         covers.append(RPiGPIOCover(
-            cover[CONF_NAME], cover[CONF_RELAY_PIN], cover[CONF_STATE_PIN],
-            state_pull_mode, relay_time, invert_state, invert_relay))
+            hass, cover[CONF_NAME], cover[CONF_RELAY_PIN],
+            cover[CONF_STATE_PIN], state_pull_mode, relay_time,
+            invert_state, invert_relay))
     add_entities(covers)
 
 
 class RPiGPIOCover(CoverDevice):
     """Representation of a Raspberry GPIO cover."""
 
-    def __init__(self, name, relay_pin, state_pin, state_pull_mode,
+    def __init__(self, hass, name, relay_pin, state_pin, state_pull_mode,
                  relay_time, invert_state, invert_relay):
         """Initialize the cover."""
+        self._hass = hass
         self._name = name
         self._state = False
         self._relay_pin = relay_pin
@@ -84,9 +86,11 @@ class RPiGPIOCover(CoverDevice):
         self._relay_time = relay_time
         self._invert_state = invert_state
         self._invert_relay = invert_relay
-        rpi_gpio.setup_output(self._relay_pin)
-        rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
-        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
+        rpi_gpio.setup_output(self._hass, self._relay_pin)
+        rpi_gpio.setup_input(self._hass, self._state_pin,
+                             self._state_pull_mode)
+        rpi_gpio.write_output(self._hass, self._relay_pin,
+                              0 if self._invert_relay else 1)
 
     @property
     def name(self):
@@ -95,7 +99,7 @@ class RPiGPIOCover(CoverDevice):
 
     def update(self):
         """Update the state of the cover."""
-        self._state = rpi_gpio.read_input(self._state_pin)
+        self._state = rpi_gpio.read_input(self._hass, self._state_pin)
 
     @property
     def is_closed(self):
@@ -104,9 +108,11 @@ class RPiGPIOCover(CoverDevice):
 
     def _trigger(self):
         """Trigger the cover."""
-        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
+        rpi_gpio.write_output(self._hass, self._relay_pin,
+                              1 if self._invert_relay else 0)
         sleep(self._relay_time)
-        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
+        rpi_gpio.write_output(self._hass, self._relay_pin,
+                              0 if self._invert_relay else 1)
 
     def close_cover(self, **kwargs):
         """Close the cover."""

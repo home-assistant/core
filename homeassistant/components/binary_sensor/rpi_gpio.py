@@ -49,15 +49,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ports = config.get('ports')
     for port_num, port_name in ports.items():
         binary_sensors.append(RPiGPIOBinarySensor(
-            port_name, port_num, pull_mode, bouncetime, invert_logic))
+            hass, port_name, port_num, pull_mode, bouncetime, invert_logic))
     add_entities(binary_sensors, True)
 
 
 class RPiGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses Raspberry Pi GPIO."""
 
-    def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
+    def __init__(self, hass, name, port, pull_mode, bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
+        self._hass = hass
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._pull_mode = pull_mode
@@ -65,14 +66,15 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
         self._state = None
 
-        rpi_gpio.setup_input(self._port, self._pull_mode)
+        rpi_gpio.setup_input(self._hass, self._port, self._pull_mode)
 
         def read_gpio(port):
             """Read state from GPIO."""
-            self._state = rpi_gpio.read_input(self._port)
+            self._state = rpi_gpio.read_input(self._hass, self._port)
             self.schedule_update_ha_state()
 
-        rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
+        rpi_gpio.edge_detect(self._hass, self._port, read_gpio,
+                             self._bouncetime)
 
     @property
     def should_poll(self):
@@ -91,4 +93,4 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update the GPIO state."""
-        self._state = rpi_gpio.read_input(self._port)
+        self._state = rpi_gpio.read_input(self._hass, self._port)
