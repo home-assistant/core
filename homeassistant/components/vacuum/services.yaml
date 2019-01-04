@@ -140,7 +140,7 @@ xiaomi_clean_zone:
       example: 'vacuum.xiaomi_vacuum_cleaner'
     zone:
       description: Array of zones. Each zone is an array of 4 integer values.
-      example: '[[23510,25311,25110,26361]]'
+      example: '[[23510,25311,25110,26362]]'
     repeats:
       description: Number of cleaning repeats for each zone between 1 and 3.
       example: '1'
