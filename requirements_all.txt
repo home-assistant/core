@@ -124,7 +124,7 @@ aiolifx==0.6.7
 aiolifx_effects==0.2.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
-aiopvapi==1.5.4
+aiopvapi==1.6.14
 
 # homeassistant.components.unifi
 aiounifi==3
