@@ -110,7 +110,6 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         cli = APIClient(self.hass.loop, self._host, self._port, '')
 
         try:
-            await cli.start()
             await cli.connect()
             device_info = await cli.device_info()
         except APIConnectionError as err:
@@ -118,7 +117,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 return 'resolve_error', None
             return 'connection_error', None
         finally:
-            await cli.stop(force=True)
+            await cli.disconnect(force=True)
 
         return None, device_info
 
@@ -129,17 +128,9 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         cli = APIClient(self.hass.loop, self._host, self._port, self._password)
 
         try:
-            await cli.start()
-            await cli.connect()
+            await cli.connect(login=True)
         except APIConnectionError:
-            await cli.stop(force=True)
-            return 'connection_error'
-
-        try:
-            await cli.login()
-        except APIConnectionError:
+            await cli.disconnect(force=True)
             return 'invalid_password'
-        finally:
-            await cli.stop(force=True)
 
         return None
