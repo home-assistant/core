@@ -38,6 +38,9 @@ SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
 SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
+SERVICE_START_CLEAN_ZONE = 'xiaomi_clean_zone_start'
+
+ZONE_CLEAN_COMMAND = 'app_zoned_clean'
 
 FAN_SPEEDS = {
     'Quiet': 38,
@@ -63,6 +66,9 @@ ATTR_RC_DURATION = 'duration'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
 ATTR_STATUS = 'status'
+ATTR_ZONE_ARRAY = 'zone'
+ATTR_ZONE_REPEATER = 'reps'
+ATTR_ZONE_TEST = 'test'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -70,6 +76,11 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_ROTATION):
         vol.All(vol.Coerce(int), vol.Clamp(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+})
+SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_ZONE_ARRAY): vol.All(list, [vol.ExactSequence([int, int, int, int])]),
+    vol.Required(ATTR_ZONE_REPEATER, default=1): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
+    vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
 
 SERVICE_TO_METHOD = {
@@ -81,6 +92,9 @@ SERVICE_TO_METHOD = {
     SERVICE_MOVE_REMOTE_CONTROL_STEP: {
         'method': 'async_remote_control_move_step',
         'schema': SERVICE_SCHEMA_REMOTE_CONTROL},
+    SERVICE_START_CLEAN_ZONE: {
+        'method': 'async_clean_zone_start',
+        'schema': SERVICE_SCHEMA_ZONE_CLEAN},
 }
 
 SUPPORT_XIAOMI = SUPPORT_STATE | SUPPORT_PAUSE | \
@@ -383,3 +397,27 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.error("Got OSError while fetching the state: %s", exc)
         except DeviceException as exc:
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
+
+    async def async_clean_zone_start(self, 
+                               zone, 
+                               reps: int = 1,
+                               test: bool = 0):
+        """Start the cleaning operation in the areas selected for the number of reps indicated."""
+        _LOGGER.debug("Start clean zone: %s Reps: %s", zone, reps)
+        try:
+            for _zone in zone:
+                _LOGGER.debug("original zone: %s", _zone)
+                _zone.append(reps)
+                _LOGGER.debug("zone with reps: %s", _zone)
+        except OSError as exc:
+            _LOGGER.error("Got OSError while append reps to zone: %s", exc)
+        except DeviceException as exc:
+            _LOGGER.warning("Got exception while append reps to zone: %s", exc)
+
+        """If test, bypass exec command on vacuum."""
+        if not test:
+            await self._try_command(
+                "Unable to send command to the vacuum: %s",
+                self._vacuum.raw_command, ZONE_CLEAN_COMMAND, zone)
+        else:
+            _LOGGER.warning("This is a test!!")
