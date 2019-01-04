@@ -23,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:phone'
 
-SCAN_INTERVAL = timedelta(hours=1)
-
 THROTTLE = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
