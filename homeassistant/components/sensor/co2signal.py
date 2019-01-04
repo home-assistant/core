@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coords'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
-    vol.Optional(CONF_COUNTRY_CODE, default=None): cv.string,
+    vol.Optional(CONF_COUNTRY_CODE, default='None'): cv.string,
 })
 
 
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     country_code = config.get(CONF_COUNTRY_CODE)
 
-    if country_code is not None:
+    if country_code != 'None':
         location_type = 'country_code'
     else:
         location_type = 'coordinates'
