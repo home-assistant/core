@@ -18,6 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_change)
+from homeassistant.helpers.dispatcher import (
+    dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +30,8 @@ ATTR_PERIOD = 'meter_period'
 ATTR_LAST_PERIOD = 'last_period'
 ATTR_LAST_RESET = 'last_reset'
 
-DATA_KEY = 'sensor.utility_meter'
+SIGNAL_START_PAUSE_METER = 'utility_meter_start_pause'
+SIGNAL_RESET_METER = 'utility_meter_reset'
 
 SERVICE_START_PAUSE = 'utility_meter_start_pause'
 SERVICE_RESET = 'utility_meter_reset'
@@ -68,9 +71,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the utility meter sensor."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized."""
         meter = UtilityMeterSensor(hass,
@@ -86,18 +86,13 @@ async def async_setup_platform(hass, config, async_add_entities,
         def async_start_pause_meter(service):
             """Process service start_pause meter."""
             for entity in service.data.get(ATTR_ENTITY_ID):
-                if entity in hass.data[DATA_KEY]:
-                    hass.async_add_job(
-                        hass.data[DATA_KEY][entity].async_start_pause_meter())
+                dispatcher_send(hass, SIGNAL_START_PAUSE_METER, entity)
 
         @callback
         def async_reset_meter(service):
             """Process service reset meter."""
             for entity in service.data.get(ATTR_ENTITY_ID):
-                if entity in hass.data[DATA_KEY]:
-                    hass.async_add_job(
-                        hass.data[DATA_KEY][entity].async_reset_meter(
-                            dt_util.utcnow()))
+                dispatcher_send(hass, SIGNAL_RESET_METER, entity)
 
         hass.services.async_register(DOMAIN, SERVICE_START_PAUSE,
                                      async_start_pause_meter,
@@ -131,23 +126,14 @@ class UtilityMeterSensor(RestoreEntity):
         self._period = meter_type
         self._period_offset = meter_offset
 
-        if meter_type == HOURLY:
-            async_track_time_change(hass, self.async_reset_meter,
-                                    minute=meter_offset, second=0)
-        if meter_type == DAILY:
-            async_track_time_change(hass, self.async_reset_meter,
-                                    hour=meter_offset, minute=0, second=0)
-        elif meter_type in [WEEKLY, MONTHLY, YEARLY]:
-            async_track_time_change(hass, self._async_reset_meter,
-                                    hour=0, minute=0, second=0)
-
     @callback
     def async_reading(self, entity, old_state, new_state):
         """Handle the sensor state changes."""
         if old_state is None:
             return
 
-        if self._unit_of_measurement is None:
+        if self._unit_of_measurement is None and\
+            new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None:
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
@@ -162,10 +148,12 @@ class UtilityMeterSensor(RestoreEntity):
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
 
-        self._hass.async_add_job(self.async_update_ha_state, True)
+        self._hass.async_add_job(self.async_update_ha_state)
 
-    async def async_start_pause_meter(self):
+    async def async_start_pause_meter(self, entity_id):
         """Start/Pause meter."""
+        if self.entity_id != entity_id:
+            return
         if self._collecting is None:
             # Start collecting
             self._collecting = async_track_state_change(
@@ -179,7 +167,7 @@ class UtilityMeterSensor(RestoreEntity):
                       COLLECTING if self._collecting is not None
                       else PAUSED, self._sensor_source_id)
 
-        self._hass.async_add_job(self.async_update_ha_state, True)
+        await self.async_update_ha_state()
 
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger then daily cycles."""
@@ -192,19 +180,38 @@ class UtilityMeterSensor(RestoreEntity):
         if self._period == YEARLY and\
                 (now.month != (1 + self._period_offset) or now.day != 1):
             return
-        await self.async_reset_meter(event)
+        await self.async_reset_meter(self.entity_id)
 
-    async def async_reset_meter(self, event):
+    async def async_reset_meter(self, entity_id):
         """Reset meter."""
+        if self.entity_id != entity_id:
+            print("Not for me", entity_id)
+            return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
         self._last_period = str(self._state)
         self._state = 0
-        self._hass.async_add_job(self.async_update_ha_state, True)
+        await self.async_update_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        if self._period == HOURLY:
+            async_track_time_change(self._hass, self._async_reset_meter,
+                                    minute=self._period_offset, second=0)
+        elif self._period == DAILY:
+            async_track_time_change(self._hass, self._async_reset_meter,
+                                    hour=self._period_offset, minute=0, second=0)
+        elif self._period in [WEEKLY, MONTHLY, YEARLY]:
+            async_track_time_change(self._hass, self._async_reset_meter,
+                                    hour=0, minute=0, second=0)
+
+        async_dispatcher_connect(
+            self._hass, SIGNAL_START_PAUSE_METER, self.async_start_pause_meter)
+        
+        async_dispatcher_connect(
+            self._hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
         state = await self.async_get_last_state()
         if state:
@@ -213,7 +220,7 @@ class UtilityMeterSensor(RestoreEntity):
                 ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
             self._last_reset = state.attributes.get(ATTR_LAST_RESET)
-            self._hass.async_add_job(self.async_update_ha_state, True)
+            await self.async_update_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancelation function to init the meter paused
                 self._collecting = lambda: None
@@ -221,9 +228,7 @@ class UtilityMeterSensor(RestoreEntity):
                 # necessary to assure full restoration
                 self._collecting = None
 
-        await self.async_start_pause_meter()
-
-        self._hass.data[DATA_KEY][self.entity_id] = self
+        await self.async_start_pause_meter(self.entity_id)
 
     @property
     def name(self):
