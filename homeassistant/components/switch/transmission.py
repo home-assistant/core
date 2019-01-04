@@ -7,10 +7,10 @@ https://home-assistant.io/components/switch.transmission/
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
-from homeassistant.exceptions import PlatformNotReady
+    DATA_TRANSMISSION, SCAN_INTERVAL)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
+from homeassistant.util import Throttle
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['transmission']

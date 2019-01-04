@@ -8,9 +8,9 @@ import logging
 
 from homeassistant.components.transmission import (
     DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import STATE_IDLE
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
 

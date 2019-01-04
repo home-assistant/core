@@ -79,8 +79,8 @@ def setup(hass, config):
                           " Transmission client are not valid")
         return false
 
-    tm_data = hass.data[DATA_TRANSMISSION]
-    = TransmissionData(hass, config, api)
+    tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
+        hass, config, api)
     tm_data.init_torrent_list()
 
     def refresh(event_time):
