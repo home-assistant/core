@@ -56,7 +56,7 @@ class LcnOutputLight(LcnDevice, Light):
         self._is_on = None
         self._is_dimming_to_zero = False
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self.hass.async_create_task(
@@ -138,7 +138,7 @@ class LcnRelayLight(LcnDevice, Light):
 
         self._is_on = None
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self.hass.async_create_task(

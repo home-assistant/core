@@ -183,11 +183,11 @@ class LcnDevice(Entity):
         self._name = config[CONF_NAME]
 
     @property
-    def should_poll(self) -> bool:
+    def should_poll(self):
         """Lcn device entity pushes its state to HA."""
         return False
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         self.address_connection.register_for_inputs(
             self.input_received)
