@@ -38,6 +38,7 @@ DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
 DISPATCHER_ON_LIST = 'esphome_{entry_id}_on_list'
 DISPATCHER_ON_DEVICE_UPDATE = 'esphome_{entry_id}_on_device_update'
 DISPATCHER_ON_STATE = 'esphome_{entry_id}_on_state'
+DISPATCHER_UNLOAD = 'esphome_{entry_id}_unload'
 
 STORAGE_KEY = 'esphome.{}'
 STORAGE_VERSION = 1
@@ -374,13 +375,16 @@ async def _cleanup_instance(hass: HomeAssistantType,
 async def async_unload_entry(hass: HomeAssistantType,
                              entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    await _cleanup_instance(hass, entry)
+    async_dispatcher_send(hass,
+                          DISPATCHER_UNLOAD.format(entry_id=entry.entry_id))
 
     tasks = []
     for component in HA_COMPONENTS:
         tasks.append(hass.config_entries.async_forward_entry_unload(
             entry, component))
     await asyncio.wait(tasks)
+
+    await _cleanup_instance(hass, entry)
 
     return True
 
@@ -481,6 +485,12 @@ class EsphomeEntity(Entity):
             async_dispatcher_connect(
                 self.hass, DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
                 self.async_schedule_update_ha_state)
+        )
+
+        self._remove_callbacks.append(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_UNLOAD.format(entry_id=self._entry_id),
+                self.async_remove)
         )
 
     async def async_will_remove_from_hass(self):
