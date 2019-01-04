@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "connection_error": "Keng Verbindung zum ESP. Iwwerpr\u00e9ift d'Pr\u00e4sens vun der Zeil api: am YAML Fichier.",
+            "invalid_password": "Ong\u00ebltegt Passwuert!",
+            "resolve_error": "Kann d'Adresse vum ESP net opl\u00e9isen. Falls d\u00ebse Problem weiderhi besteet dann defin\u00e9iert eng statesch IP Adresse:\nhttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passwuert"
+                },
+                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an.",
+                "title": "Passwuert aginn"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port"
+                },
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an.",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

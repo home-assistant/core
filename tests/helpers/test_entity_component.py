@@ -452,3 +452,37 @@ async def test_set_service_race(hass):
 
     await hass.async_block_till_done()
     assert not exception
+
+
+async def test_extract_all_omit_entity_id(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') in caplog.text
+
+
+async def test_extract_all_use_match_all(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service', {'entity_id': '*'})
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') not in caplog.text

@@ -136,7 +136,7 @@ def setup(hass, config):
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
+        influx.write_points([])
     except (exceptions.InfluxDBClientError,
             requests.exceptions.ConnectionError) as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "

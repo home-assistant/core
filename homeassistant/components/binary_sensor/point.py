@@ -7,10 +7,10 @@ https://home-assistant.io/components/binary_sensor.point/
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.point import MinutPointEntity
 from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, NEW_DEVICE, SIGNAL_WEBHOOK)
+    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -40,10 +40,16 @@ EVENTS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Point's binary sensors based on a config entry."""
-    device_id = config_entry.data[NEW_DEVICE]
-    client = hass.data[POINT_DOMAIN][config_entry.entry_id]
-    async_add_entities((MinutPointBinarySensor(client, device_id, device_class)
-                        for device_class in EVENTS), True)
+    async def async_discover_sensor(device_id):
+        """Discover and add a discovered sensor."""
+        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        async_add_entities(
+            (MinutPointBinarySensor(client, device_id, device_class)
+             for device_class in EVENTS), True)
+
+    async_dispatcher_connect(
+        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN),
+        async_discover_sensor)
 
 
 class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):

@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest import mock
 import unittest
 
+import jinja2
+import voluptuous as vol
+import pytest
+
+from homeassistant import exceptions
 from homeassistant.core import Context, callback
 # Otherwise can't test just this file (import order issue)
 import homeassistant.components  # noqa
@@ -774,3 +779,118 @@ class TestScriptHelper(unittest.TestCase):
             self.hass.block_till_done()
 
         assert script_obj.last_triggered == time
+
+
+async def test_propagate_error_service_not_found(hass):
+    """Test that a script aborts when a service is not found."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+    assert script_obj._cur == -1
+
+
+async def test_propagate_error_invalid_service_data(hass):
+    """Test that a script aborts when we send invalid service data."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
+
+    hass.services.async_register('test', 'script', record_call,
+                                 schema=vol.Schema({'text': str}))
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script', 'data': {'text': 1}},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(vol.Invalid):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+    assert len(calls) == 0
+    assert script_obj._cur == -1
+
+
+async def test_propagate_error_service_exception(hass):
+    """Test that a script aborts when a service throws an exception."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        raise ValueError("BROKEN")
+
+    hass.services.async_register('test', 'script', record_call)
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(ValueError):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+    assert len(calls) == 0
+    assert script_obj._cur == -1
+
+
+def test_log_exception():
+    """Test logged output."""
+    script_obj = script.Script(None, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+    script_obj._exception_step = 1
+
+    for exc, msg in (
+        (vol.Invalid("Invalid number"), 'Invalid data'),
+        (exceptions.TemplateError(jinja2.TemplateError('Unclosed bracket')),
+         'Error rendering template'),
+        (exceptions.Unauthorized(), 'Unauthorized'),
+        (exceptions.ServiceNotFound('light', 'turn_on'), 'Service not found'),
+        (ValueError("Cannot parse JSON"), 'Unknown error'),
+    ):
+        logger = mock.Mock()
+        script_obj.async_log_exception(logger, 'Test error', exc)
+
+        assert len(logger.mock_calls) == 1
+        p_format, p_msg_base, p_error_desc, p_action_type, p_step, p_error = \
+            logger.mock_calls[0][1]
+
+        assert p_error_desc == msg
+        assert p_action_type == script.ACTION_FIRE_EVENT
+        assert p_step == 2
+        if isinstance(exc, ValueError):
+            assert p_error == ""
+        else:
+            assert p_error == str(exc)

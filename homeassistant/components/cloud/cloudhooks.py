@@ -18,7 +18,7 @@ class Cloudhooks:
         await self.cloud.iot.async_send_message('webhook-register', {
             'cloudhook_ids': [info['cloudhook_id'] for info
                               in cloudhooks.values()]
-        })
+        }, expect_answer=False)
 
     async def async_create(self, webhook_id):
         """Create a cloud webhook."""

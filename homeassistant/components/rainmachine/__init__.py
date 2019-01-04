@@ -21,9 +21,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.0.7']
+REQUIREMENTS = ['regenmaschine==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +34,13 @@ PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 ZONE_UPDATE_TOPIC = '{0}_zone_update'.format(DOMAIN)
 
+CONF_CONTROLLERS = 'controllers'
 CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_ICON = 'mdi:water'
-DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
 TYPE_FREEZE = 'freeze'
@@ -97,23 +98,26 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_IP_ADDRESS): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-                cv.time_period,
-            vol.Optional(CONF_BINARY_SENSORS, default={}):
-                BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-            vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
-        })
-    },
-    extra=vol.ALLOW_EXTRA)
+
+CONTROLLER_SCHEMA = vol.Schema({
+    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        cv.time_period,
+    vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
+    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+    vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+})
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_CONTROLLERS):
+            vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -127,14 +131,15 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    if conf[CONF_IP_ADDRESS] in configured_instances(hass):
-        return True
+    for controller in conf[CONF_CONTROLLERS]:
+        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
+            continue
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data=conf))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={'source': SOURCE_IMPORT},
+                data=controller))
 
     return True
 
@@ -144,24 +149,22 @@ async def async_setup_entry(hass, config_entry):
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
-    password = config_entry.data[CONF_PASSWORD]
-    port = config_entry.data[CONF_PORT]
-    ssl = config_entry.data.get(CONF_SSL, DEFAULT_SSL)
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
         client = await login(
-            ip_address, password, websession, port=port, ssl=ssl)
+            config_entry.data[CONF_IP_ADDRESS],
+            config_entry.data[CONF_PASSWORD],
+            websession,
+            port=config_entry.data[CONF_PORT],
+            ssl=config_entry.data[CONF_SSL])
         rainmachine = RainMachine(
             client,
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(SENSORS)),
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
-        )
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
         await rainmachine.async_update()
     except RainMachineError as err:
         _LOGGER.error('An error occurred: %s', err)

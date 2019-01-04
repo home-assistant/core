@@ -99,6 +99,8 @@ async def async_setup(hass, config):
         kwargs[CONF_GOOGLE_ACTIONS] = GACTIONS_SCHEMA({})
 
     kwargs[CONF_ALEXA] = alexa_sh.Config(
+        endpoint=None,
+        async_get_access_token=None,
         should_expose=alexa_conf[CONF_FILTER],
         entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
     )
@@ -252,8 +254,7 @@ class Cloud:
                 return json.loads(file.read())
 
         info = await self.hass.async_add_job(load_config)
-
-        await self.prefs.async_initialize(bool(info))
+        await self.prefs.async_initialize()
 
         if info is None:
             return

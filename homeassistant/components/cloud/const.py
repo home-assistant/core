@@ -18,7 +18,7 @@ SERVERS = {
                                     'amazonaws.com/prod/smart_home_sync'),
         'subscription_info_url': ('https://stripe-api.nabucasa.com/payments/'
                                   'subscription_info'),
-        'cloudhook_create_url': 'https://webhook-api.nabucasa.com/generate'
+        'cloudhook_create_url': 'https://webhooks-api.nabucasa.com/generate'
     }
 }
 

@@ -35,17 +35,21 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
-    try:
-        dev = []
-        for home in tibber_connection.get_homes():
+    dev = []
+    for home in tibber_connection.get_homes():
+        try:
             await home.update_info()
-            dev.append(TibberSensorElPrice(home))
-            if home.has_real_time_consumption:
-                dev.append(TibberSensorRT(home))
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
+        dev.append(TibberSensorElPrice(home))
+        if home.has_real_time_consumption:
+            dev.append(TibberSensorRT(home))
 
-    async_add_entities(dev, True)
+    async_add_entities(dev, False)
 
 
 class TibberSensorElPrice(Entity):
@@ -187,7 +191,11 @@ class TibberSensorRT(Entity):
         if live_measurement is None:
             return
         self._state = live_measurement.pop('power', None)
-        self._device_state_attributes = live_measurement
+        for key, value in live_measurement.items():
+            if value is None:
+                continue
+            self._device_state_attributes[key] = value
+
         self.async_schedule_update_ha_state()
 
     @property

@@ -518,6 +518,9 @@ class TemperatureSettingTrait(_Trait):
         climate.STATE_COOL: 'cool',
         climate.STATE_OFF: 'off',
         climate.STATE_AUTO: 'heatcool',
+        climate.STATE_FAN_ONLY: 'fan-only',
+        climate.STATE_DRY: 'dry',
+        climate.STATE_ECO: 'eco'
     }
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
@@ -588,8 +591,11 @@ class TemperatureSettingTrait(_Trait):
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            temp = temp_util.convert(params['thermostatTemperatureSetpoint'],
-                                     TEMP_CELSIUS, unit)
+            temp = temp_util.convert(
+                params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
+                unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp = round(temp)
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -607,6 +613,8 @@ class TemperatureSettingTrait(_Trait):
             temp_high = temp_util.convert(
                 params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
                 unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp_high = round(temp_high)
 
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
@@ -615,7 +623,10 @@ class TemperatureSettingTrait(_Trait):
                     "{} and {}".format(min_temp, max_temp))
 
             temp_low = temp_util.convert(
-                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS, unit)
+                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
+                unit)
+            if unit == TEMP_FAHRENHEIT:
+                temp_low = round(temp_low)
 
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(

@@ -50,23 +50,23 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def update_characteristics(self, characteristics):
         """Synchronise device state with Home Assistant."""
         # pylint: disable=import-error
-        from homekit import CharacteristicsTypes as ctypes
+        from homekit.models.characteristics import CharacteristicsTypes
 
         for characteristic in characteristics:
             ctype = characteristic['type']
-            if ctype == ctypes.HEATING_COOLING_CURRENT:
+            if ctype == CharacteristicsTypes.HEATING_COOLING_CURRENT:
                 self._state = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
-            if ctype == ctypes.HEATING_COOLING_TARGET:
+            if ctype == CharacteristicsTypes.HEATING_COOLING_TARGET:
                 self._chars['target_mode'] = characteristic['iid']
                 self._features |= SUPPORT_OPERATION_MODE
                 self._current_mode = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
                 self._valid_modes = [MODE_HOMEKIT_TO_HASS.get(
                     mode) for mode in characteristic['valid-values']]
-            elif ctype == ctypes.TEMPERATURE_CURRENT:
+            elif ctype == CharacteristicsTypes.TEMPERATURE_CURRENT:
                 self._current_temp = characteristic['value']
-            elif ctype == ctypes.TEMPERATURE_TARGET:
+            elif ctype == CharacteristicsTypes.TEMPERATURE_TARGET:
                 self._chars['target_temp'] = characteristic['iid']
                 self._features |= SUPPORT_TARGET_TEMPERATURE
                 self._target_temp = characteristic['value']

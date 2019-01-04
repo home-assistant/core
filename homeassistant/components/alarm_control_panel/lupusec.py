@@ -12,7 +12,8 @@ from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
 from homeassistant.components.lupusec import LupusecDevice
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_DISARMED)
+                                 STATE_ALARM_DISARMED,
+                                 STATE_ALARM_TRIGGERED)
 
 DEPENDENCIES = ['lupusec']
 
@@ -50,6 +51,8 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanel):
             state = STATE_ALARM_ARMED_AWAY
         elif self._device.is_home:
             state = STATE_ALARM_ARMED_HOME
+        elif self._device.is_alarm_triggered:
+            state = STATE_ALARM_TRIGGERED
         else:
             state = None
         return state

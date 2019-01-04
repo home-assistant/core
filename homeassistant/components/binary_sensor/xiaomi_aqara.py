@@ -409,10 +409,14 @@ class XiaomiButton(XiaomiBinarySensor):
             click_type = 'double'
         elif value == 'both_click':
             click_type = 'both'
+        elif value == 'double_both_click':
+            click_type = 'double_both'
         elif value == 'shake':
             click_type = 'shake'
-        elif value in ['long_click', 'long_both_click']:
-            return False
+        elif value == 'long_click':
+            click_type = 'long'
+        elif value == 'long_both_click':
+            click_type = 'long_both'
         else:
             _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
@@ -423,9 +427,7 @@ class XiaomiButton(XiaomiBinarySensor):
         })
         self._last_action = click_type
 
-        if value in ['long_click_press', 'long_click_release']:
-            return True
-        return False
+        return True
 
 
 class XiaomiCube(XiaomiBinarySensor):
@@ -464,6 +466,14 @@ class XiaomiCube(XiaomiBinarySensor):
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
                 'action_value': float(data['rotate'].replace(",", "."))
+            })
+            self._last_action = 'rotate'
+
+        if 'rotate_degree' in data:
+            self._hass.bus.fire('xiaomi_aqara.cube_action', {
+                'entity_id': self.entity_id,
+                'action_type': 'rotate',
+                'action_value': float(data['rotate_degree'].replace(",", "."))
             })
             self._last_action = 'rotate'
 

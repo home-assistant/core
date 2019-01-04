@@ -11,11 +11,12 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
-    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo)
 from homeassistant.const import (
-    CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
+    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.components import mqtt, lock
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PAYLOAD_LOCK = 'payload_lock'
 CONF_PAYLOAD_UNLOCK = 'payload_unlock'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Lock'
 DEFAULT_OPTIMISTIC = False
@@ -40,6 +42,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK):
         cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -82,21 +86,25 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_UNIQUE_ID),
+        config.get(CONF_DEVICE),
         discovery_hash,
     )])
 
 
-class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
+class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+               LockDevice):
     """Representation of a lock that can be toggled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
                  payload_lock, payload_unlock, optimistic, value_template,
                  availability_topic, payload_available, payload_not_available,
-                 discovery_hash):
+                 unique_id, device_config, discovery_hash):
         """Initialize the lock."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttEntityDeviceInfo.__init__(self, device_config)
         self._state = False
         self._name = name
         self._state_topic = state_topic
@@ -108,6 +116,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
         self._optimistic = optimistic
         self._template = value_template
         self._discovery_hash = discovery_hash
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -142,6 +151,11 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
     def name(self):
         """Return the name of the lock."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def is_locked(self):

@@ -13,7 +13,7 @@
             "user": {
                 "data": {
                     "enable_port_mapping": "Activa l'assignaci\u00f3 de ports per a Home Assistant",
-                    "enable_sensors": "Afegiu sensors de tr\u00e0nsit",
+                    "enable_sensors": "Afegeix sensors de tr\u00e0nsit",
                     "igd": "UPnP/IGD"
                 },
                 "title": "Opcions de configuraci\u00f3 per a UPnP/IGD"

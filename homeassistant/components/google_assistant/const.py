@@ -19,8 +19,6 @@ DEFAULT_EXPOSED_DOMAINS = [
     'media_player', 'scene', 'script', 'switch', 'vacuum', 'lock',
 ]
 DEFAULT_ALLOW_UNLOCK = False
-CLIMATE_MODE_HEATCOOL = 'heatcool'
-CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'

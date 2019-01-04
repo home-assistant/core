@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -755,12 +755,13 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self._model == MODEL_AIRHUMIDIFIER_CA:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
-            self._speed_list = [mode.name for mode in OperationMode]
+            self._speed_list = [mode.name for mode in OperationMode if
+                                mode is not OperationMode.Strong]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
             self._speed_list = [mode.name for mode in OperationMode if
-                                mode.name != 'Auto']
+                                mode is not OperationMode.Auto]
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes})

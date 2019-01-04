@@ -383,7 +383,6 @@ class DeviceTracker:
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
-                device.mark_stale()
                 self.hass.async_create_task(device.async_update_ha_state(True))
 
     async def async_setup_tracked_device(self):

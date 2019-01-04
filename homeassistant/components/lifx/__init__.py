@@ -8,7 +8,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 
 DOMAIN = 'lifx'
-REQUIREMENTS = ['aiolifx==0.6.6']
+REQUIREMENTS = ['aiolifx==0.6.7']
 
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'

@@ -5,7 +5,12 @@ from homeassistant.auth import models, permissions
 def test_owner_fetching_owner_permissions():
     """Test we fetch the owner permissions for an owner user."""
     group = models.Group(name="Test Group", policy={})
-    owner = models.User(name="Test User", groups=[group], is_owner=True)
+    owner = models.User(
+        name="Test User",
+        perm_lookup=None,
+        groups=[group],
+        is_owner=True
+    )
     assert owner.permissions is permissions.OwnerPermissions
 
 
@@ -25,7 +30,11 @@ def test_permissions_merged():
             }
         }
     })
-    user = models.User(name="Test User", groups=[group, group2])
+    user = models.User(
+        name="Test User",
+        perm_lookup=None,
+        groups=[group, group2]
+    )
     # Make sure we cache instance
     assert user.permissions is user.permissions
 

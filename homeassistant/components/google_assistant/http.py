@@ -48,7 +48,7 @@ def async_register_http(hass, cfg):
             entity_config.get(entity.entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = \
-            expose_by_default or entity.domain in exposed_domains
+            expose_by_default and entity.domain in exposed_domains
 
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being

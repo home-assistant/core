@@ -52,7 +52,7 @@ def setup_platform(hass, config: ConfigType,
                           node.nid, node.parent_nid)
         else:
             device_type = _detect_device_type(node)
-            subnode_id = int(node.nid[-1])
+            subnode_id = int(node.nid[-1], 16)
             if device_type in ('opening', 'moisture'):
                 # These sensors use an optional "negative" subnode 2 to snag
                 # all state changes

@@ -42,7 +42,7 @@ class LutronLight(LutronDevice, Light):
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        super().__init__(self, area_name, lutron_device, controller)
+        super().__init__(area_name, lutron_device, controller)
 
     @property
     def supported_features(self):
@@ -75,8 +75,7 @@ class LutronLight(LutronDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr['lutron_integration_id'] = self._lutron_device.id
+        attr = {'lutron_integration_id': self._lutron_device.id}
         return attr
 
     @property

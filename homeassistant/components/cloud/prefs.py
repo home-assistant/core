@@ -16,19 +16,17 @@ class CloudPreferences:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._prefs = None
 
-    async def async_initialize(self, logged_in):
+    async def async_initialize(self):
         """Finish initializing the preferences."""
         prefs = await self._store.async_load()
 
         if prefs is None:
-            # Backwards compat: we enable alexa/google if already logged in
             prefs = {
-                PREF_ENABLE_ALEXA: logged_in,
-                PREF_ENABLE_GOOGLE: logged_in,
+                PREF_ENABLE_ALEXA: True,
+                PREF_ENABLE_GOOGLE: True,
                 PREF_GOOGLE_ALLOW_UNLOCK: False,
                 PREF_CLOUDHOOKS: {}
             }
-            await self._store.async_save(prefs)
 
         self._prefs = prefs
 

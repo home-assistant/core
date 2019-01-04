@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['aioftp==0.10.1']
+REQUIREMENTS = ['aioftp==0.12.0']
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 

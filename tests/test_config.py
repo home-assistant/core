@@ -6,8 +6,10 @@ import unittest
 import unittest.mock as mock
 from collections import OrderedDict
 
+import asynctest
 import pytest
 from voluptuous import MultipleInvalid, Invalid
+import yaml
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
@@ -31,7 +33,8 @@ from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 import homeassistant.scripts.check_config as check_config
 
-from tests.common import get_test_config_dir, get_test_home_assistant
+from tests.common import (
+    get_test_config_dir, get_test_home_assistant, patch_yaml_files)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -548,6 +551,30 @@ class TestConfig(unittest.TestCase):
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
         ).result() == 'bad'
+
+
+@asynctest.mock.patch('homeassistant.config.os.path.isfile',
+                      mock.Mock(return_value=True))
+async def test_async_hass_config_yaml_merge(merge_log_err, hass):
+    """Test merge during async config reload."""
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: {
+            'pack_dict': {
+                'input_boolean': {'ib1': None}}}},
+        'input_boolean': {'ib2': None},
+        'light': {'platform': 'test'}
+    }
+
+    files = {config_util.YAML_CONFIG_FILE: yaml.dump(config)}
+    with patch_yaml_files(files, True):
+        conf = await config_util.async_hass_config_yaml(hass)
+
+    assert merge_log_err.call_count == 0
+    assert conf[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) \
+        is not None
+    assert len(conf) == 3
+    assert len(conf['input_boolean']) == 2
+    assert len(conf['light']) == 1
 
 
 # pylint: disable=redefined-outer-name
