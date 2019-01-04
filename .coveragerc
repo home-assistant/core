@@ -106,7 +106,7 @@ omit =
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
-    homeassistant/components/envisalink.py
+    homeassistant/components/envisalink/__init__.py
     homeassistant/components/*/envisalink.py
 
     homeassistant/components/evohome.py
