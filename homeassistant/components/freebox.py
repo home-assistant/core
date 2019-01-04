@@ -88,7 +88,7 @@ async def async_setup_freebox(hass, config, host, port):
         if not permissions.get(PERMISSION_SETTINGS):
             hass.async_create_task(async_load_platform(
                 hass, 'switch', DOMAIN, {'perms_settings': False}, config))
-            _LOGGER.error('The switch.freebox platform will not be available'
+            _LOGGER.warning('The switch.freebox platform will not be available'
                           ' until you apply the correct permissions in your'
                           ' router. Please refer to documentation : '
                           ' https://home-assistant.io/components/'
