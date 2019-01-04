@@ -246,7 +246,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             # Re-connection logic will trigger after this
             await cli.disconnect()
 
-    try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host, on_login)
+    try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host,
+                                                    on_login)
 
     # This is a bit of a hack: We schedule complete_setup into the
     # event loop and return immediately (return True)
@@ -316,15 +317,14 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
 
         if tries != 0:
             # If not first re-try, wait and print message
-            # Cap wait time at 1 minute. This is because while working on the device
-            # (e.g. soldering stuff), users don't want to have to wait a long time for their
-            # device to show up in HA again (this was mentioned early in beta feedback)
+            # Cap wait time at 1 minute. This is because while working on the
+            # device (e.g. soldering stuff), users don't want to have to wait
+            # a long time for their device to show up in HA again (this was
+            # mentioned a lot in early feedback)
             #
-            # In the future another API will be set up so that the ESP can notify HA of
-            # connectivity directly, but for new we'll use a really short reconnect interval.
-            # The connect() call isn't that expensive anyway, the socket is only opened if the
-            # IP resolve process is successful. And the IP resolve process for .local addresses
-            # is only successful if the ESP is on the network.
+            # In the future another API will be set up so that the ESP can
+            # notify HA of connectivity directly, but for new we'll use a
+            # really short reconnect interval.
             wait_time = int(round(min(1.8**tries, 60.0)))
             _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
             await asyncio.sleep(wait_time)
@@ -336,8 +336,8 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
                          host, error)
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
-            data.reconnect_task = hass.loop.create_task(try_connect(tries + 1,
-                                                                    is_disconnect=False))
+            data.reconnect_task = hass.loop.create_task(
+                try_connect(tries + 1, is_disconnect=False))
         else:
             _LOGGER.info("Successfully connected to %s", host)
             hass.async_create_task(on_login())
