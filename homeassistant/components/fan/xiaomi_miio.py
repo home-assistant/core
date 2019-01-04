@@ -26,7 +26,8 @@ DEFAULT_NAME = 'Xiaomi Miio Device'
 DATA_KEY = 'fan.xiaomi_miio'
 
 CONF_MODEL = 'model'
-MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v7'
+MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
+MODEL_AIRPURIFIER_PRO_V7 = 'zhimi.airpurifier.v7'
 MODEL_AIRPURIFIER_V3 = 'zhimi.airpurifier.v3'
 MODEL_AIRHUMIDIFIER_V1 = 'zhimi.humidifier.v1'
 MODEL_AIRHUMIDIFIER_CA = 'zhimi.humidifier.ca1'
@@ -575,6 +576,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         super().__init__(name, device, model, unique_id)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
+        elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
