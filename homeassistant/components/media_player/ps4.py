@@ -282,7 +282,6 @@ class PS4Device(MediaPlayerDevice):
             return MEDIA_IMAGE_DEFAULT
         try:
             return self._media_image
-            # return self._gamesmap[self._media_content_id]
         except KeyError:
             return MEDIA_IMAGE_DEFAULT
 
