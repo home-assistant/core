@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['pysma==0.3']
+REQUIREMENTS = ['pysma==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,17 +37,12 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
         import pysma
-        sensors = pysma.Sensors()
+        valid = [s.name for s in pysma.Sensors()]
     except (ImportError, AttributeError):
         return conf
 
-    try:
-        sensors.add([Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR])
-                     for n, o in conf[CONF_CUSTOM].items()])
-    except KeyError as err:
-        raise vol.Invalid(err)
-
-    valid = [s.name for s in valid]
+    for name in conf[CONF_CUSTOM]:
+        valid.append(name)
 
     for sname, attrs in conf[CONF_SENSORS].items():
         if sname not in valid:
@@ -72,7 +67,8 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: cv.ensure_list}),
+    vol.Optional(CONF_SENSORS, default={}):
+        vol.Schema({cv.slug: cv.ensure_list}),
     vol.Optional(CONF_CUSTOM, default={}):
         vol.Schema({cv.slug: CUSTOM_SCHEMA}),
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
@@ -87,16 +83,21 @@ async def async_setup_platform(
     config = _check_sensor_schema(config)
 
     # Init all default sensors
-    sensors_def = pysma.Sensors()
+    sensor_def = pysma.Sensors()
 
-    # Sensor_defs from the custom config
-    sensors_def.add([Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR])
-                 for n, o in conf[CONF_CUSTOM].items()])
+    # Sensor from the custom config
+    sensor_def.add([pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR])
+                    for n, o in config[CONF_CUSTOM].items()])
+
+    # Use all sensors by default
+    config_sensors = config[CONF_SENSORS]
+    if not config_sensors:
+        config_sensors = {s.name: [] for s in sensor_def}
 
     # Prepare all HASS sensor entities
     hass_sensors = []
     used_sensors = []
-    for name, attr in config[CONF_SENSORS].items():
+    for name, attr in config_sensors.items():
         sub_sensors = [sensor_def[s] for s in attr]
         hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
         used_sensors.append(name)
@@ -207,5 +208,5 @@ class SMAsensor(Entity):
 
     @property
     def unique_id(self):
-        """Unique ID."""
+        """Return a unique identifier for this sensor."""
         return "sma-{}-{}".format(self._sensor.key, self._sensor.name)
