@@ -67,10 +67,13 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
 
     attr_name = cluster.attributes.get(attr, [attr])[0]
     cluster_name = cluster.ep_attribute
+    kwargs = {}
+    if manufacturer:
+        kwargs['manufacturer'] = manufacturer
     try:
         res = await cluster.configure_reporting(attr, min_report,
                                                 max_report, reportable_change,
-                                                manufacturer=manufacturer)
+                                                **kwargs)
         _LOGGER.debug(
             "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
             entity_id, attr_name, cluster_name, min_report, max_report,
