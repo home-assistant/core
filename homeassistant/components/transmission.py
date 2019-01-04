@@ -10,7 +10,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
@@ -77,7 +76,7 @@ def setup(hass, config):
         if str(error).find("401: Unauthorized"):
             _LOGGER.error("Credentials for"
                           " Transmission client are not valid")
-        return false
+        return False
 
     tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
         hass, config, api)
