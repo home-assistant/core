@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -73,12 +73,16 @@ class EnergySensor(RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._state = Decimal(state.state)
+            try:
+                self._state = Decimal(state.state)
+            except ValueError as err:
+                _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
         def async_calc_energy(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            if old_state is None or new_state.state is STATE_UNKNOWN:
+            if old_state is None or new_state.state in [STATE_UNKNOWN,
+                                                        STATE_UNAVAILABLE]:
                 return
 
             if self._unit_of_measurement_scale is None:
@@ -113,7 +117,10 @@ class EnergySensor(RestoreEntity):
         @callback
         def async_set_state(entity, old_state, new_state):
             """Handle set state from dev-state."""
-            self._state = Decimal(new_state.state)
+            try:
+                self._state = Decimal(new_state.state)
+            except ValueError:
+                _LOGGER.error("State must be a number")
 
         async_track_state_change(self._hass, self.entity_id, async_set_state)
 
