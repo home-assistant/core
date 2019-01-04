@@ -124,7 +124,7 @@ class HueAllLightsStateView(HomeAssistantView):
         # Different response if extra_urls is used, example for sleep cycle
         if str(request.path) != self.url.replace('{username}', username):
             json_response = \
-            {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
+             {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
 
         return self.json(json_response)
 
