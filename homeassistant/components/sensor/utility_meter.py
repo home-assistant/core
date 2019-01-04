@@ -133,7 +133,7 @@ class UtilityMeterSensor(RestoreEntity):
             return
 
         if self._unit_of_measurement is None and\
-            new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None:
+           new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None:
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
@@ -202,14 +202,15 @@ class UtilityMeterSensor(RestoreEntity):
                                     minute=self._period_offset, second=0)
         elif self._period == DAILY:
             async_track_time_change(self._hass, self._async_reset_meter,
-                                    hour=self._period_offset, minute=0, second=0)
+                                    hour=self._period_offset, minute=0,
+                                    second=0)
         elif self._period in [WEEKLY, MONTHLY, YEARLY]:
             async_track_time_change(self._hass, self._async_reset_meter,
                                     hour=0, minute=0, second=0)
 
         async_dispatcher_connect(
             self._hass, SIGNAL_START_PAUSE_METER, self.async_start_pause_meter)
-        
+
         async_dispatcher_connect(
             self._hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
