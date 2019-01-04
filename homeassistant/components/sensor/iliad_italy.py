@@ -59,7 +59,6 @@ class IliadSensor(Entity):
         self._iliaddata = IliadData(self._iliad)
         self._data = None
         self._state = None
-        self.async_update = Throttle(THROTTLE)(self._async_update)
 
     @property
     def name(self):
@@ -110,7 +109,8 @@ class IliadSensor(Entity):
         }
         return attr
 
-    async def _async_update(self):
+    @Throttle(THROTTLE)
+    async def async_update(self):
         """Update device state."""
         await self._iliaddata.update()
         self._data = {
