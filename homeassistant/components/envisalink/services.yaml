@@ -1,4 +1,4 @@
-# Describes the format for available for Envisalink services.
+# Describes the format for available Envisalink services.
 
 invoke_custom_function:
   description: >
