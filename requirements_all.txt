@@ -33,7 +33,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.homekit
-HAP-python==2.4.1
+HAP-python==2.4.2
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.3.1
@@ -96,7 +96,7 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.esphome
-aioesphomeapi==1.3.0
+aioesphomeapi==1.4.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.6
@@ -124,7 +124,7 @@ aiolifx==0.6.7
 aiolifx_effects==0.2.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
-aiopvapi==1.5.4
+aiopvapi==1.6.14
 
 # homeassistant.components.unifi
 aiounifi==3
@@ -680,7 +680,7 @@ motorparts==1.0.2
 mutagen==1.41.1
 
 # homeassistant.components.mychevy
-mychevy==1.1.0
+mychevy==1.2.0
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
@@ -876,7 +876,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.4
 
 # homeassistant.components.tibber
-pyTibber==0.8.7
+pyTibber==0.9.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0

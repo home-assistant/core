@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
 import attr
 import voluptuous as vol
 
+from homeassistant import const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
     EVENT_HOMEASSISTANT_STOP
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
         ServiceCall
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.3.0']
+REQUIREMENTS = ['aioesphomeapi==1.4.0']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -161,8 +162,8 @@ async def async_setup_entry(hass: HomeAssistantType,
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
 
-    cli = APIClient(hass.loop, host, port, password)
-    await cli.start()
+    cli = APIClient(hass.loop, host, port, password,
+                    client_info="Home Assistant {}".format(const.__version__))
 
     # Store client in per-config-entry hass.data
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY.format(entry.entry_id),
@@ -180,8 +181,6 @@ async def async_setup_entry(hass: HomeAssistantType,
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
-
-    try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host)
 
     @callback
     def async_on_state(state: 'EntityState') -> None:
@@ -247,7 +246,8 @@ async def async_setup_entry(hass: HomeAssistantType,
             # Re-connection logic will trigger after this
             await cli.disconnect()
 
-    cli.on_login = on_login
+    try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host,
+                                                    on_login)
 
     # This is a bit of a hack: We schedule complete_setup into the
     # event loop and return immediately (return True)
@@ -291,7 +291,7 @@ async def async_setup_entry(hass: HomeAssistantType,
 
 async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
                                       cli: 'APIClient',
-                                      entry: ConfigEntry, host: str):
+                                      entry: ConfigEntry, host: str, on_login):
     """Set up the re-connect logic for the API client."""
     from aioesphomeapi import APIConnectionError
 
@@ -308,33 +308,40 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
         data.available = False
         data.async_update_device_state(hass)
 
-        if tries != 0:
-            # If not first re-try, wait and print message
-            wait_time = min(2**tries, 300)
-            _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
-            await asyncio.sleep(wait_time)
-
-        if is_disconnect and tries == 0:
+        if is_disconnect:
             # This can happen often depending on WiFi signal strength.
             # So therefore all these connection warnings are logged
             # as infos. The "unavailable" logic will still trigger so the
             # user knows if the device is not connected.
-            _LOGGER.info("Disconnected from API")
+            _LOGGER.info("Disconnected from ESPHome API for %s", host)
+
+        if tries != 0:
+            # If not first re-try, wait and print message
+            # Cap wait time at 1 minute. This is because while working on the
+            # device (e.g. soldering stuff), users don't want to have to wait
+            # a long time for their device to show up in HA again (this was
+            # mentioned a lot in early feedback)
+            #
+            # In the future another API will be set up so that the ESP can
+            # notify HA of connectivity directly, but for new we'll use a
+            # really short reconnect interval.
+            wait_time = int(round(min(1.8**tries, 60.0)))
+            _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
+            await asyncio.sleep(wait_time)
 
         try:
-            await cli.connect()
-            await cli.login()
+            await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to esphome API for '%s' (%s)",
+            _LOGGER.info("Can't connect to ESPHome API for %s: %s",
                          host, error)
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
-            data.reconnect_task = \
-                hass.loop.create_task(try_connect(tries + 1, is_disconnect))
+            data.reconnect_task = hass.loop.create_task(
+                try_connect(tries + 1, is_disconnect=False))
         else:
             _LOGGER.info("Successfully connected to %s", host)
+            hass.async_create_task(on_login())
 
-    cli.on_disconnect = try_connect
     return try_connect
 
 
@@ -368,7 +375,7 @@ async def _cleanup_instance(hass: HomeAssistantType,
         disconnect_cb()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    await data.client.stop()
+    await data.client.disconnect()
 
 
 async def async_unload_entry(hass: HomeAssistantType,
