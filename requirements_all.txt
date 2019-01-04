@@ -311,6 +311,9 @@ deluge-client==1.4.0
 # homeassistant.components.media_player.denonavr
 denonavr==0.7.7
 
+# homeassistant.components.depict
+depict-control==1.0
+
 # homeassistant.components.media_player.directv
 directpy==0.5
 

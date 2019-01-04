@@ -590,3 +590,15 @@ nest:
       trip_id:
         description: Optional identity of a trip. Using the same trip_ID will update the estimation.
         example: trip_back_home
+
+depict:
+  set_contrast:
+    description: >
+                  Set the contrast for a Depict art frame.
+    fields:
+      entity_id:
+        description: The light entity for the frame for which to set contrast.
+        example: light.living_room_depict
+      value:
+        description: The contrast value (between 0 and 255).
+        example: 128
