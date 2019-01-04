@@ -16,6 +16,7 @@ requests==2.21.0
 ruamel.yaml==0.15.81
 voluptuous==0.11.5
 voluptuous-serialize==2.0.0
+networkx==2.2
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
