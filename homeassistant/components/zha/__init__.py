@@ -95,8 +95,7 @@ async def async_setup(hass, config):
             context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_USB_PATH: conf[CONF_USB_PATH],
-                CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value,
-                ENABLE_QUIRKS: conf[ENABLE_QUIRKS]
+                CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value
             }
         ))
     return True
@@ -107,16 +106,16 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    if config_entry.data.get(ENABLE_QUIRKS):
-        # needs to be done here so that the ZHA module is finished loading
-        # before zhaquirks is imported
-        # pylint: disable=W0611, W0612
-        import zhaquirks  # noqa
-
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
 
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+
+    if config.get(ENABLE_QUIRKS, True):
+        # needs to be done here so that the ZHA module is finished loading
+        # before zhaquirks is imported
+        # pylint: disable=W0611, W0612
+        import zhaquirks  # noqa
 
     usb_path = config_entry.data.get(CONF_USB_PATH)
     baudrate = config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
