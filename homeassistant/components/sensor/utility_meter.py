@@ -185,7 +185,6 @@ class UtilityMeterSensor(RestoreEntity):
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
         if self.entity_id != entity_id:
-            print("Not for me", entity_id)
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
