@@ -334,7 +334,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control = {"zone": [[123, 123, 123, 123]], "reps": 2, "tets": 0}
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_START_CLEAN_ZONE, 
+        DOMAIN, SERVICE_START_CLEAN_ZONE,
         control, blocking=True)
     mock_mirobo_is_off.assert_has_calls(
         [mock.call.Vacuum().raw_command(control)], any_order=True)
