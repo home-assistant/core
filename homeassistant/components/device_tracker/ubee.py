@@ -55,7 +55,7 @@ class UbeeDeviceScanner(DeviceScanner):
         if self.success_init:
             self.last_results = results
         else:
-            _LOGGER.error("Failed to login")
+            _LOGGER.error("Login failed")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
