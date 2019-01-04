@@ -78,8 +78,10 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_ZONE_ARRAY): vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Required(ATTR_ZONE_REPEATER, default=1): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
+    vol.Required(ATTR_ZONE_ARRAY): 
+        vol.All(list, [vol.ExactSequence([int, int, int, int])]),
+    vol.Required(ATTR_ZONE_REPEATER, default=1): 
+        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
     vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
 
@@ -399,11 +401,12 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
     async def async_clean_zone_start(self, 
-                               zone, 
-                               reps: int = 1,
-                               test: bool = 0):
-        """Start the cleaning operation in the areas selected for the number of reps indicated."""
+                                     zone, 
+                                     reps: int = 1,
+                                     test: bool = 0):
+        """Start cleaning operation in the areas for the number of reps."""
         _LOGGER.debug("Start clean zone: %s Reps: %s", zone, reps)
+        from miio import DeviceException
         try:
             for _zone in zone:
                 _LOGGER.debug("original zone: %s", _zone)
@@ -413,7 +416,6 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.error("Got OSError while append reps to zone: %s", exc)
         except DeviceException as exc:
             _LOGGER.warning("Got exception while append reps to zone: %s", exc)
-
         """If test, bypass exec command on vacuum."""
         if not test:
             await self._try_command(
