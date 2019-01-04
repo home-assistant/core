@@ -156,8 +156,8 @@ def async_setup(hass, config):
 
         async def leaf_login():
             nonlocal leaf
-            s = pycarwings2.Session(username, password, region)
-            leaf = s.get_leaf()
+            sess = pycarwings2.Session(username, password, region)
+            leaf = sess.get_leaf()
 
         try:
             # TODO: Does this need to be made async it takes
@@ -173,7 +173,7 @@ def async_setup(hass, config):
                 "Unable to fetch car details..."
                 " do you actually have a Leaf connected to your account?")
             return False
-        except Exception:
+        except pycarwings2.CarwingsError:
             _LOGGER.error(
                 "An unknown error occurred while connecting to Nissan: %s",
                 sys.exc_info()[0])
@@ -250,7 +250,7 @@ class LeafDataStore:
         if (self.last_battery_response is not None and
                 self.data[DATA_CHARGING] is False and
                 self.data[DATA_BATTERY] <= RESTRICTED_BATTERY):
-            _LOGGER.info("Refresh frequency restricted due to low battery",
+            _LOGGER.info("Refresh frequency restricted due to low battery (%s)",
                          self.leaf.nickname)
             interval = RESTRICTED_INTERVAL
         else:
@@ -274,6 +274,8 @@ class LeafDataStore:
 
     async def async_refresh_data(self):
         """Refresh the leaf data and update the datastore."""
+        from pycarwings2 import CarwingsError
+
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s",
                           self.leaf.nickname)
@@ -352,7 +354,7 @@ class LeafDataStore:
 
                     _LOGGER.debug("Location Response: ")
                     _LOGGER.debug(location_response.__dict__)
-            except Exception:
+            except CarwingsError:
                 _LOGGER.error("Error fetching location info")
 
         self.request_in_progress = False
@@ -385,20 +387,20 @@ class LeafDataStore:
             )
             if battery_status is not None:
                 return (battery_status, None)
-            else:
-                _LOGGER.info("Battery data (%s) not in yet (%s). " +
-                             "Seeing if nissan server data has changed",
-                             self.leaf.vin, attempt)
-                server_info = await self.hass.async_add_job(
-                    self.leaf.get_latest_battery_status
-                )
-                latest_date = server_info.answer[
-                    "BatteryStatusRecords"]["OperationDateAndTime"]
-                _LOGGER.info("Latest server date=%s", latest_date)
-                if (latest_date != start_date):
-                    _LOGGER.info("Using updated server info instead " +
-                                 "of waiting for request_updated")
-                    return (None, server_info)
+
+            _LOGGER.info("Battery data (%s) not in yet (%s). "
+                         "Seeing if nissan server data has changed",
+                         self.leaf.vin, attempt)
+            server_info = await self.hass.async_add_job(
+                self.leaf.get_latest_battery_status
+            )
+            latest_date = server_info.answer[
+                "BatteryStatusRecords"]["OperationDateAndTime"]
+            _LOGGER.info("Latest server date=%s", latest_date)
+            if latest_date != start_date:
+                _LOGGER.info("Using updated server info instead "
+                             "of waiting for request_updated")
+                return (None, server_info)
 
         _LOGGER.info("%s attempts exceeded return latest data from server",
                      MAX_RESPONSE_ATTEMPTS)
@@ -428,7 +430,7 @@ class LeafDataStore:
             )
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
-                    _LOGGER.info("Climate data not in yet (%s) (%s)." +
+                    _LOGGER.info("Climate data not in yet (%s) (%s). "
                                  "Waiting 5 seconds.", self.leaf.vin, attempt)
                     await asyncio.sleep(5)
 
@@ -447,7 +449,7 @@ class LeafDataStore:
 
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
-                    _LOGGER.debug("Climate data not in yet. (%s) (%s). " +
+                    _LOGGER.debug("Climate data not in yet. (%s) (%s). "
                                   "Waiting 5 seconds", self.leaf.vin, attempt)
                     await asyncio.sleep(5)
 
@@ -462,7 +464,7 @@ class LeafDataStore:
             _LOGGER.debug("Climate result:")
             _LOGGER.debug(climate_result.__dict__)
             self.signal_components()
-            return (climate_result.is_hvac_running == toggle)
+            return climate_result.is_hvac_running == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
@@ -472,7 +474,7 @@ class LeafDataStore:
         request = await self.hass.async_add_job(self.leaf.request_location)
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
-                _LOGGER.debug("Location data in in yet. (%s) (%s). " +
+                _LOGGER.debug("Location data in in yet. (%s) (%s). "
                               "Waiting 5 seconds", self.leaf.vin, attempt)
                 await asyncio.sleep(5)
 
@@ -501,6 +503,10 @@ class LeafEntity(Entity):
     def __init__(self, car):
         """Store LeafDataStore upon init."""
         self.car = car
+
+    def log_registration(self):
+        """Abstract log registration."""
+        raise NotImplementedError("Please implement this method")
 
     @property
     def device_state_attributes(self):

@@ -64,10 +64,10 @@ class LeafBatterySensor(LeafEntity):
     @property
     def icon(self):
         """Battery state icon handling."""
-        chargeState = self.car.data[DATA_CHARGING]
+        chargestate = self.car.data[DATA_CHARGING]
         return icon_for_battery_level(
             battery_level=self.state,
-            charging=chargeState
+            charging=chargestate
         )
 
 
@@ -84,8 +84,7 @@ class LeafRangeSensor(LeafEntity):
         """Update sensor name depending on AC."""
         if self.ac_on is True:
             return self.car.leaf.nickname + " Range (AC)"
-        else:
-            return self.car.leaf.nickname + " Range"
+        return self.car.leaf.nickname + " Range"
 
     def log_registration(self):
         """Log registration."""
@@ -115,8 +114,7 @@ class LeafRangeSensor(LeafEntity):
         if (self.car.hass.config.units.is_metric is False or
                 self.car.force_miles is True):
             return "mi"
-        else:
-            return "km"
+        return "km"
 
     @property
     def icon(self):

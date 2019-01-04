@@ -53,5 +53,4 @@ class LeafPluggedInSensor(LeafEntity):
         """Icon handling."""
         if self.car.data[DATA_PLUGGED_IN]:
             return 'mdi:power-plug'
-        else:
-            return 'mdi:power-plug-off'
+        return 'mdi:power-plug-off'

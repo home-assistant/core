@@ -72,8 +72,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         """Climate control icon."""
         if self.car.data[DATA_CLIMATE]:
             return 'mdi:fan'
-        else:
-            return 'mdi:fan-off'
+        return 'mdi:fan-off'
 
 
 class LeafChargeSwitch(LeafEntity, ToggleEntity):
@@ -95,8 +94,7 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         """Charging switch icon."""
         if self.car.data[DATA_CHARGING]:
             return 'mdi:flash'
-        else:
-            return 'mdi:flash-off'
+        return 'mdi:flash-off'
 
     @property
     def is_on(self):
