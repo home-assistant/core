@@ -6,6 +6,8 @@ https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
+from homeassistant.components.transmission import (
+    DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
@@ -21,10 +23,9 @@ DEFAULT_NAME = 'Transmission Turtle Mode'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
-        _LOGGING.warning("Unable to connect to Transmission client.")
-        raise PlatformNotReady
+        return
 
-    component_name = discovery_info['component_name']
+    component_name = DATA_TRANSMISSION
     transmission_api = hass.data[component_name]
     name = discovery_info['client_name']
 
@@ -70,6 +71,7 @@ class TransmissionSwitch(ToggleEntity):
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
         self.transmission_client.set_alt_speed_enabled(False)
 
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Transmission and updates the state."""
         active = self.transmission_client.get_alt_speed_enabled()

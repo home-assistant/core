@@ -62,17 +62,34 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 def setup(hass, config):
     """Set up the Transmission Component."""
-    hass.data[DATA_TRANSMISSION] = TransmissionData(hass, config)
-    hass.data[DATA_TRANSMISSION].init_torrent_list()
+    host = config[DOMAIN][CONF_HOST]
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
+    port = config[DOMAIN][CONF_PORT]
+
+    import transmissionrpc
+    from transmissionrpc.error import TransmissionError
+    try:
+        api = transmissionrpc.Client(
+            host, port=port, user=username, password=password)
+        api.session_stats()
+    except TransmissionError as error:
+        if str(error).find("401: Unauthorized"):
+            _LOGGER.error("Credentials for"
+                          " Transmission client are not valid")
+        return false
+
+    tm_data = hass.data[DATA_TRANSMISSION]
+    = TransmissionData(hass, config, api)
+    tm_data.init_torrent_list()
 
     def refresh(event_time):
         """Get the latest data from Transmission."""
-        hass.data[DATA_TRANSMISSION].update()
+        tm_data.update()
 
     track_time_interval(hass, refresh, SCAN_INTERVAL)
 
     sensorconfig = {
-        'sensor_types': SENSOR_TYPES,
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME],
         'component_name': DATA_TRANSMISSION}
@@ -85,40 +102,17 @@ def setup(hass, config):
 
 class TransmissionData:
     """Get the latest data and update the states."""
-    
-    def __init__(self, hass, config):
+
+    def __init__(self, hass, config, api):
         """Initialize the Transmission RPC API."""
-        import transmissionrpc
-        from transmissionrpc.error import TransmissionError
-        try:
-            host = config[DOMAIN][CONF_HOST]
-            username = config[DOMAIN][CONF_USERNAME]
-            password = config[DOMAIN][CONF_PASSWORD]
-            port = config[DOMAIN][CONF_PORT]
+        self.data = None
+        self.torrents = None
+        self.available = True
+        self._api = api
+        self.completed_torrents = []
+        self.started_torrents = []
+        self.hass = hass
 
-            api = transmissionrpc.Client(
-                host, port=port, user=username, password=password)
-            api.session_stats()
-
-            self.data = None
-            self.torrents = None
-            self.available = True
-            self._api = api
-            self.completed_torrents = []
-            self.started_torrents = []
-            self.hass = hass
-
-        except TransmissionError as error:
-            if str(error).find("401: Unauthorized"):
-                _LOGGER.error("Credentials for"
-                              " Transmission client are not valid")
-                return
-
-            _LOGGER.warning(
-                "Unable to connect to Transmission client: %s:%s", host, port)
-            raise PlatformNotReady
-
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Transmission instance."""
         from transmissionrpc.error import TransmissionError
