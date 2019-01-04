@@ -36,12 +36,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-# Currently waiting on the lib author to review a PR
-# So using my fork for now.
-# https://github.com/jdhorne/pycarwings2/pull/28
+# If testing then use the following kinds of URLs
+#
+#REQUIREMENTS = ['https://github.com/filcole/pycarwings2/archive/master.zip'
+#                '#pycarwings2']
+#REQUIREMENTS = ['https://test-files.pythonhosted.org/packages/7c/ad/ee27988357f1710ca9ced1a60263486415f054003ca6fa396922ca6b6bbf/pycarwings2-2.2.tar.gz'
+#                '#pycarwings2']
+#REQUIREMENTS = ['file:///home/phil/repos/pycarwings2ve/pycarwings2/dist/pycarwings2-2.2.tar.gz'
+#                '#pycarwings2']
+REQUIREMENTS = ['pycarwings2==2.2']
 
-REQUIREMENTS = ['https://github.com/BenWoodford/pycarwings2/archive/master.zip'
-                '#pycarwings']
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -246,10 +251,9 @@ class LeafDataStore:
         self.last_check = datetime.today()
         self.request_in_progress = True
 
-        battery_response = await self.async_get_battery()
+        (battery_response, server_response) = await self.async_get_battery()
 
         if battery_response is not None:
-
             _LOGGER.debug("Battery Response: ")
             _LOGGER.debug(battery_response.__dict__)
 
@@ -270,15 +274,35 @@ class LeafDataStore:
                     battery_response.cruising_range_ac_off_km
                 )
                 self.signal_components()
-
-                # Climate response only updated if battery data updated first.
-                climate_response = await self.async_get_climate()
-
-                if climate_response is not None:
-                    _LOGGER.debug("Got climate data for Leaf.")
-                    _LOGGER.debug(climate_response.__dict__)
-                    self.data[DATA_CLIMATE] = climate_response.is_hvac_running
                 self.last_battery_response = utcnow()
+
+        if server_response is not None:
+            _LOGGER.debug("Server Response: ")
+            _LOGGER.debug(server_response.__dict__)
+
+            if server_response.answer['status'] == 200:
+                if server_response.state_of_charge is not None:
+                    self.data[DATA_BATTERY] = int(server_response.state_of_charge)
+                else:
+                    self.data[DATA_BATTERY] = server_response.battery_percent
+
+                self.data[DATA_RANGE_AC] = (
+                    server_response.cruising_range_ac_on_km
+                )
+                self.data[DATA_RANGE_AC_OFF] = (
+                    server_response.cruising_range_ac_off_km
+                )
+                self.signal_components()
+                self.last_battery_response = utcnow()
+                
+        # Climate response only updated if battery data updated first.
+        if (battery_response is not None) or (server_response is not None):
+
+            climate_response = await self.async_get_climate()
+            if climate_response is not None:
+                _LOGGER.debug("Got climate data for Leaf.")
+                _LOGGER.debug(climate_response.__dict__)
+                self.data[DATA_CLIMATE] = climate_response.is_hvac_running
 
         if self.nissan_connect:
             try:
@@ -305,21 +329,42 @@ class LeafDataStore:
 
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
+        # First, check nissan servers for the latest data
+        start_server_info = await self.hass.async_add_job(self.leaf.get_latest_battery_status)
+
+        # Store the date from the nissan servers
+        start_date = start_server_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        _LOGGER.info("Start server date=%s", start_date)
+
+        # Request battery update from the car
         _LOGGER.info("Requesting battery update, %s", self.leaf.vin)
         request = await self.hass.async_add_job(self.leaf.request_update)
-        for attempt in range(MAX_RESPONSE_ATTEMPTS):
-            if attempt > 0:
-                _LOGGER.info("Battery data (%s) not in yet (%s). "
-                             "Waiting 5 seconds.", self.leaf.vin, attempt)
-                await asyncio.sleep(5)
 
+        for attempt in range(MAX_RESPONSE_ATTEMPTS):
+            await asyncio.sleep(5)
             battery_status = await self.hass.async_add_job(
                 self.leaf.get_status_from_update, request
             )
             if battery_status is not None:
-                break
+                return (battery_status, None)
+            else:
+                _LOGGER.info("Battery data (%s) not in yet (%s). " +
+                             "Seeing if nissan server data has changed",
+                             self.leaf.vin, attempt)
+                server_info = await self.hass.async_add_job(
+                    self.leaf.get_latest_battery_status
+                )
+                latest_date = server_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+                _LOGGER.info("Latest server date=%s", latest_date)
+                if (latest_date != start_date):
+                    _LOGGER.info("Using updated server info instead " +
+                                 "of waiting for request_updated")
+                    return (None, server_info)
 
-        return battery_status
+        _LOGGER.info("%s attempts exceeded return latest data from server",
+                     MAX_RESPONSE_ATTEMPTS)
+        return (None, server_info)
+
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
