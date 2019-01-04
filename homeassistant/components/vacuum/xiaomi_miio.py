@@ -78,9 +78,9 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_ZONE_ARRAY): 
+    vol.Required(ATTR_ZONE_ARRAY):
         vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Required(ATTR_ZONE_REPEATER, default=1): 
+    vol.Required(ATTR_ZONE_REPEATER, default=1):
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
     vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
@@ -400,8 +400,8 @@ class MiroboVacuum(StateVacuumDevice):
         except DeviceException as exc:
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
-    async def async_clean_zone_start(self, 
-                                     zone, 
+    async def async_clean_zone_start(self,
+                                     zone,
                                      reps: int = 1,
                                      test: bool = 0):
         """Start cleaning operation in the areas for the number of reps."""
