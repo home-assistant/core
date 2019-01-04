@@ -81,7 +81,14 @@ CHANNEL_SCHEMA = vol.Schema({
 CHANNELS_SCHEMA = vol.All(cv.ensure_list, [CHANNEL_SCHEMA])
 
 MONITOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_SERIAL_NUMBER): cv.positive_int,
+    vol.Required(CONF_SERIAL_NUMBER):
+        vol.All(
+            cv.string,
+            vol.Length(
+                min=8,
+                max=8,
+                msg="GEM serial number must be specified as an 8-character "
+                    "string (including leading zeroes).")),
     vol.Optional(CONF_CHANNELS, default=[]): CHANNELS_SCHEMA,
     vol.Optional(
         CONF_TEMPERATURE_SENSORS,
