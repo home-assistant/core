@@ -42,6 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_TIMEOUT = 5  # seconds
 RETRY_INTERVAL = 60  # seconds
 
+PAIRING_FILE = "pairing.json"
+
 
 class HomeKitConnectionError(ConnectionError):
     """Raised when unable to connect to target device."""
@@ -151,7 +153,7 @@ class HKDevice():
             pairing_file = os.path.join(
                 self.hass.config.path(),
                 HOMEKIT_DIR,
-                'pairing.json'
+                PAIRING_FILE,
             )
             self.controller.save_data(pairing_file)
             _configurator = self.hass.data[DOMAIN+self.hkid]
@@ -249,7 +251,7 @@ def setup(hass, config):
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    pairing_file = os.path.join(data_dir, 'pairings.json')
+    pairing_file = os.path.join(data_dir, PAIRING_FILE)
     if os.path.exists(pairing_file):
         controller.load_data(pairing_file)
 
