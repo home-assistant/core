@@ -35,8 +35,16 @@ class HueUsernameView(HomeAssistantView):
 
     url = '/api'
     name = 'emulated_hue:api:create_username'
-    extra_urls = ['/api/']
+    extra_urls = ['/api/', '/api/(null)', '/api/(null)/']
     requires_auth = False
+
+    async def get(self, request):
+        """Handle a GET request."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
+        return self.json([{'success': {'username': '12345678901234567890'}}])
 
     async def post(self, request):
         """Handle a POST request."""
@@ -88,6 +96,7 @@ class HueAllLightsStateView(HomeAssistantView):
 
     url = '/api/{username}/lights'
     name = 'emulated_hue:lights:state'
+    extra_urls = ['/api/{username}']
     requires_auth = False
 
     def __init__(self, config):
@@ -111,6 +120,11 @@ class HueAllLightsStateView(HomeAssistantView):
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(
                     self.config, entity, state, brightness)
+
+        # Different response if extra_urls is used, example for sleep cycle
+        if str(request.path) != self.url.replace('{username}', username):
+            json_response = \
+            {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
 
         return self.json(json_response)
 
@@ -325,7 +339,7 @@ def parse_hue_api_put_light_body(request_json, entity):
         if entity.domain == "light":
             if entity_features & SUPPORT_BRIGHTNESS:
                 report_brightness = True
-                result = (brightness > 0)
+                result = (brightness >= 0)
 
         elif entity.domain == "scene":
             brightness = None
@@ -340,6 +354,13 @@ def parse_hue_api_put_light_body(request_json, entity):
             brightness = round(level)
             report_brightness = True
             result = True
+
+    # select device
+    if (HUE_API_STATE_BRI or HUE_API_STATE_ON) not in request_json:
+        _LOGGER.info('Probably device select, request_json %s', request_json)
+        brightness = None
+        report_brightness = False
+        result = False
 
     return (result, brightness) if report_brightness else (result, None)
 

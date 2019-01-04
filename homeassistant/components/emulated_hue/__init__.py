@@ -46,6 +46,7 @@ CONF_ENTITY_HIDDEN = 'hidden'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
+TYPE_SLEEPCYCLE = 'sleep_cycle'
 
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
@@ -72,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
-            vol.Any(TYPE_ALEXA, TYPE_GOOGLE),
+            vol.Any(TYPE_ALEXA, TYPE_GOOGLE, TYPE_SLEEPCYCLE),
         vol.Optional(CONF_ENTITIES):
             vol.Schema({cv.entity_id: CONFIG_ENTITY_SCHEMA})
     })
