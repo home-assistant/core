@@ -12,14 +12,13 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED)
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['homekit_controller']
 
 ICON = 'mdi:security'
 
 _LOGGER = logging.getLogger(__name__)
-
-BATTERY_LEVEL = 'battery_level'
 
 CURRENT_STATE_MAP = {
     0: STATE_ALARM_ARMED_HOME,
@@ -110,7 +109,9 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        if self._battery_level is not None:
-            return {
-                BATTERY_LEVEL: self._battery_level,
-            }
+        if self._battery_level is None:
+            return None
+
+        return {
+            ATTR_BATTERY_LEVEL: self._battery_level,
+        }
