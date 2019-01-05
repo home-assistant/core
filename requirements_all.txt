@@ -668,8 +668,7 @@ mycroftapi==2.0
 myusps==1.3.2
 
 # homeassistant.components.media_player.nad
-# homeassistant.components.media_player.nadtcp
-nad_receiver==0.0.9
+nad_receiver==0.0.11
 
 # homeassistant.components.light.nanoleaf_aurora
 nanoleaf==0.4.1
