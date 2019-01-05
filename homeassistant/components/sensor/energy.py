@@ -111,7 +111,7 @@ class EnergySensor(RestoreEntity):
                 _LOGGER.warning("While calculating energy: %s", err)
             except DecimalException as err:
                 _LOGGER.warning("Invalid state (%s > %s): %s",
-                              old_state.state, new_state.state, err)
+                                old_state.state, new_state.state, err)
             except AssertionError as err:
                 _LOGGER.error("Could not calculate kWh: %s", err)
             else:
