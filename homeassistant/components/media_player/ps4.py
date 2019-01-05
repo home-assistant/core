@@ -111,9 +111,9 @@ def request_configuration(hass, config, add_devices, _creds):
 def get_credentials(hass, config):
     """Get credentials if any."""
     host = config.get(CONF_HOST)
-    file = hass.config.path(CONFIG_FILE)
+    creds_file = hass.config.path(CONFIG_FILE)
     try:
-        creds = load_json(file)
+        creds = load_json(creds_file)
         credentials = creds[host]
     except KeyError:
         credentials = None
