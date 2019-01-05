@@ -59,6 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     planner = vasttrafik.JournyPlanner(
         config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
+
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
