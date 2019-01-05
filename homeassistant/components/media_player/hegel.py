@@ -10,7 +10,7 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
@@ -24,9 +24,8 @@ DEFAULT_NAME = 'Hegel Integrated Amplifier'
 DEFAULT_PORT = 50001   # telnet default port for Hegel devices
 DEFAULT_TIMEOUT = None
 
-SUPPORT_HEGEL = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                  SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+SUPPORT_HEGEL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 MAX_VOLUME = 100
 MAX_SOURCE_NUMBERS = 60
