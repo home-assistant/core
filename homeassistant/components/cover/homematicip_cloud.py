@@ -25,7 +25,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP cover from a config entry."""
-    from homematicip.device import AsyncFullFlushShutter
+    from homematicip.aio.device import AsyncFullFlushShutter
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -49,13 +49,13 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
         """Return current position of cover."""
         return int(self._device.shutterLevel * 100)
 
-    def set_cover_position(self, **kwargs):
+    async def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = float(kwargs[ATTR_POSITION])
             position = min(100, max(0, position))
             level = position / 100.0
-            self._device.set_shutter_level(level)
+            await self._device.set_shutter_level(level)
 
     @property
     def is_closed(self):
@@ -63,14 +63,14 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
         if self._device.shutterLevel is not None:
             return self._device.shutterLevel == 0
 
-    def open_cover(self, **kwargs):
+    async def open_cover(self, **kwargs):
         """Open the cover."""
-        self._device.set_shutter_level(1)
+        await self._device.set_shutter_level(1)
 
-    def close_cover(self, **kwargs):
+    async def close_cover(self, **kwargs):
         """Close the cover."""
-        self._device.set_shutter_level(0)
+        await self._device.set_shutter_level(0)
 
-    def stop_cover(self, **kwargs):
+    async def stop_cover(self, **kwargs):
         """Stop the device if in motion."""
-        self._device.set_shutter_stop()
+        await self._device.set_shutter_stop()
