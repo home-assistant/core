@@ -26,7 +26,7 @@ from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
                                           SPEED_OFF, ATTR_SPEED)
 from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED, MQTT_DISCOVERY_NEW)
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                       discovery_hash)
         except Exception:
             if discovery_hash:
-                del hass.data[ALREADY_DISCOVERED][discovery_hash]
+                clear_discovery_hash(hass, discovery_hash)
             raise
 
     async_dispatcher_connect(
