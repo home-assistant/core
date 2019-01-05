@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.energy/
 """
 import logging
 
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -79,10 +79,11 @@ class EnergySensor(RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def async_calc_energy(entity, old_state, new_state):
+        def calc_energy(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            if old_state is None or new_state.state in [STATE_UNKNOWN,
-                                                        STATE_UNAVAILABLE]:
+            if any([old_state is None,
+                    old_state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
+                    new_state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
                 return
 
             if self._unit_of_measurement_scale is None:
@@ -105,14 +106,20 @@ class EnergySensor(RestoreEntity):
                         + Decimal(old_state.state))*Decimal(elapsed_time)/2
                 kwh = area / (self._unit_of_measurement_scale * 3600)
 
-                self._state += kwh
+                assert isinstance(kwh, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating energy: %s", err)
-
-            await self.async_update_ha_state()
+            except DecimalException as err:
+                _LOGGER.error("Invalid state (%s > %s): %s",
+                              old_state.state, new_state.state, err)
+            except AssertionError as err:
+                _LOGGER.error("Could not calculate kWh: %s", err)
+            else:
+                self._state += kwh
+                self.async_schedule_update_ha_state()
 
         async_track_state_change(
-            self._hass, self._sensor_source_id, async_calc_energy)
+            self._hass, self._sensor_source_id, calc_energy)
 
         @callback
         def async_set_state(entity, old_state, new_state):
