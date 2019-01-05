@@ -75,5 +75,5 @@ async def _async_setup_entity(config, async_add_entities,
         'json': schema_json.async_setup_entity_json,
         'template': schema_template.async_setup_entity_template,
     }
-    await setup_entity[config['schema']](
+    await setup_entity[config[CONF_SCHEMA]](
         config, async_add_entities, discovery_hash)
