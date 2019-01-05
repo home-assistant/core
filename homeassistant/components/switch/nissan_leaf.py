@@ -97,12 +97,10 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         """Return true if charging."""
         return self.car.data[DATA_CHARGING] is True
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Start car charging."""
-        if self.car.start_charging():
+        if await self.car.async_start_charging():
             self.car.data[DATA_CHARGING] = True
-
-        self._update_callback()
 
     def turn_off(self, **kwargs):
         """Nissan API doesn't allow stopping of charge remotely."""

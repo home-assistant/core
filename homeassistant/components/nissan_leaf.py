@@ -228,7 +228,7 @@ class LeafDataStore:
     @asyncio.coroutine
     async def async_update_data(self, now):
         """Update data from nissan leaf."""
-        await self.async_refresh_data()
+        await self.async_refresh_data(now)
         next_interval = self.get_next_interval()
         _LOGGER.debug("Next interval=%s", next_interval)
         async_track_point_in_utc_time(
@@ -270,7 +270,7 @@ class LeafDataStore:
 
         return utcnow() + interval
 
-    async def async_refresh_data(self):
+    async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
         from pycarwings2 import CarwingsError
 
@@ -487,12 +487,18 @@ class LeafDataStore:
         self.signal_components()
         return location_status
 
-    def start_charging(self):
+    async def async_start_charging(self):
         """Request start charging via Nissan servers."""
-        # TODO: This should be improved to:
-        #   1. check if the command to start charging actually completes.
-        #   2. reschedule the update if interval less whilst charging.
-        self.hass.async_add_job(self.leaf.start_charging)
+        # Send the command to request charging is started to Nissan servers.
+        # If that completes OK then trigger a fresh update to pull the
+        # charging status from the car after waiting a minute for the
+        # charging request to reach the car.
+        result = await self.hass.async_add_job(self.leaf.start_charging)
+        if result:
+            _LOGGER.debug("Start charging sent, request updated data in 1 minute")
+            check_charge_at = utcnow() + timedelta(minutes=1)
+            async_track_point_in_utc_time(
+                self.hass, self.async_refresh_data, check_charge_at)
 
 
 class LeafEntity(Entity):
