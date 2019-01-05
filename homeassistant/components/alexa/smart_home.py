@@ -27,8 +27,9 @@ from homeassistant.const import (
     CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON,
+    STATE_UNAVAILABLE, STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -391,6 +392,37 @@ class _AlexaInterface:
                     'timeOfSample': datetime.now().strftime(DATE_FORMAT),
                     'uncertaintyInMilliseconds': 0
                 }
+
+
+class _AlexaEndpointHealth(_AlexaInterface):
+    """Implements Alexa.EndpointHealth.
+
+    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
+    """
+
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.EndpointHealth'
+
+    def properties_supported(self):
+        return [{'name': 'connectivity'}]
+
+    def properties_proactively_reported(self):
+        return False
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'connectivity':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state is STATE_UNAVAILABLE:
+            return {'value': 'UNREACHABLE'}
+        return {'value': 'OK'}
 
 
 class _AlexaPowerController(_AlexaInterface):
@@ -933,6 +965,8 @@ class _BinarySensorCapabilities(_AlexaEntity):
             yield _AlexaContactSensor(self.hass, self.entity)
         elif sensor_type is self.TYPE_MOTION:
             yield _AlexaMotionSensor(self.hass, self.entity)
+
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
     def get_type(self):
         """Return the type of binary sensor."""
