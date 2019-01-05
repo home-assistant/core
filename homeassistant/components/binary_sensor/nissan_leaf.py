@@ -1,5 +1,5 @@
 """
-Plugged In Status Support for the Nissan Leaf
+Plugged In Status Support for the Nissan Leaf.
 
 Documentation pending.
 Please refer to the main platform component for configuration details
@@ -7,7 +7,8 @@ Please refer to the main platform component for configuration details
 
 import logging
 
-from .. import nissan_leaf as LeafCore
+from homeassistant.components.nissan_leaf import (
+    DATA_LEAF, DATA_PLUGGED_IN, LeafEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,35 +16,41 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Nissan Leaf binary_sensor setup."""
+    _LOGGER.debug("binary_sensor setup_platform, discovery_info=%s",
+                  discovery_info)
+
     devices = []
-
-    _LOGGER.debug("Adding sensors")
-
-    for key, value in hass.data[LeafCore.DATA_LEAF].items():
+    for key, value in hass.data[DATA_LEAF].items():
+        _LOGGER.debug("binary_sensor setup_platform, key=%s, value=%s",
+                      key, value)
         devices.append(LeafPluggedInSensor(value))
 
     add_devices(devices, True)
 
-    return True
 
+class LeafPluggedInSensor(LeafEntity):
+    """Plugged In Sensor class."""
 
-class LeafPluggedInSensor(LeafCore.LeafEntity):
     @property
     def name(self):
+        """Sensor name."""
         return self.car.leaf.nickname + " Plug Status"
 
     def log_registration(self):
+        """Log registration."""
         _LOGGER.debug(
             "Registered LeafPluggedInSensor component with HASS for VIN %s",
             self.car.leaf.vin)
 
     @property
     def state(self):
-        return self.car.data[LeafCore.DATA_PLUGGED_IN]
+        """Return true if plugged in."""
+        return self.car.data[DATA_PLUGGED_IN]
 
     @property
     def icon(self):
-        if self.car.data[LeafCore.DATA_PLUGGED_IN]:
+        """Icon handling."""
+        if self.car.data[DATA_PLUGGED_IN]:
             return 'mdi:power-plug'
-        else:
-            return 'mdi:power-plug-off'
+        return 'mdi:power-plug-off'
