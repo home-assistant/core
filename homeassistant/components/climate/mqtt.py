@@ -164,7 +164,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(hass, config, async_add_entities,
                                       discovery_hash)
-        except:  # noqa: E722
+        except Exception:
             if discovery_hash:
                 del hass.data[ALREADY_DISCOVERED][discovery_hash]
             raise
