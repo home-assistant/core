@@ -25,6 +25,8 @@ ADSTYPE_INT = 'int'
 ADSTYPE_UINT = 'uint'
 ADSTYPE_BYTE = 'byte'
 ADSTYPE_BOOL = 'bool'
+ADSTYPE_DINT = 'dint'
+ADSTYPE_UDINT = 'udint'
 
 DOMAIN = 'ads'
 
@@ -46,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE]),
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_DINT, ADSTYPE_UDINT]),
     vol.Required(CONF_ADS_VALUE): cv.match_all,
     vol.Required(CONF_ADS_VAR): cv.string,
 })
@@ -68,12 +70,16 @@ def setup(hass, config):
         ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
         ADSTYPE_INT: pyads.PLCTYPE_INT,
         ADSTYPE_UINT: pyads.PLCTYPE_UINT,
-    }
+        ADSTYPE_DINT: pyads.PLCTYPE_DINT,
+        ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
+}
 
     AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
     AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
     AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
     AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
+    AdsHub.PLCTYPE_DINT = pyads.PLCTYPE_DINT
+    AdsHub.PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
     AdsHub.ADSError = pyads.ADSError
 
     try:
@@ -196,6 +202,10 @@ class AdsHub:
             value = struct.unpack('<B', bytearray(data)[:1])[0]
         elif notification_item.plc_datatype == self.PLCTYPE_UINT:
             value = struct.unpack('<H', bytearray(data)[:2])[0]
+        elif notification_item.plc_datatype == self.PLCTYPE_DINT:
+            value = struct.unpack('<i', bytearray(data)[:4])[0]
+        elif notification_item.plc_datatype == self.PLCTYPE_UDINT:
+            value = struct.unpack('<I', bytearray(data)[:4])[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
