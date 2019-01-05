@@ -75,11 +75,9 @@ class MyChevyStatus(Entity):
     def error(self):
         """Update state, trigger updates."""
         if self._state != MYCHEVY_ERROR:
-            self.hass.components.persistent_notification.create(
+            _LOGGER.exception(
                 "Error:<br/>Connection to mychevy website failed. "
-                "This probably means the mychevy to OnStar link is down.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+                "This probably means the mychevy to OnStar link is down.")
             self._state = MYCHEVY_ERROR
         self.async_schedule_update_ha_state()
 
