@@ -18,7 +18,7 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
     MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED, MQTT_DISCOVERY_NEW)
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
@@ -74,7 +74,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                       discovery_hash)
         except Exception:
             if discovery_hash:
-                del hass.data[ALREADY_DISCOVERED][discovery_hash]
+                clear_discovery_hash(hass, discovery_hash)
             raise
 
     async_dispatcher_connect(hass,
