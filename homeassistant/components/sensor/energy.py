@@ -109,7 +109,7 @@ class EnergySensor(RestoreEntity):
             except ValueError as err:
                 _LOGGER.warning("While calculating energy: %s", err)
 
-            self._hass.async_add_job(self.async_update_ha_state, True)
+            await self.async_update_ha_state()
 
         async_track_state_change(
             self._hass, self._sensor_source_id, async_calc_energy)
