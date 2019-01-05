@@ -107,7 +107,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
 
     def update(self):
         """Update the sensor state."""
-        _LOGGER.debug('Updating xiaomi sensor by polling')
+        _LOGGER.debug('Updating xiaomi sensor (%s) by polling', self._sid)
         self._get_from_hub(self._sid)
 
 
