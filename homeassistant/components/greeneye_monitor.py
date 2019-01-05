@@ -88,7 +88,8 @@ MONITOR_SCHEMA = vol.Schema({
                 min=8,
                 max=8,
                 msg="GEM serial number must be specified as an 8-character "
-                    "string (including leading zeroes).")),
+                    "string (including leading zeroes)."),
+            vol.Coerce(int)),
     vol.Optional(CONF_CHANNELS, default=[]): CHANNELS_SCHEMA,
     vol.Optional(
         CONF_TEMPERATURE_SENSORS,
