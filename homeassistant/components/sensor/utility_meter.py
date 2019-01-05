@@ -73,12 +73,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the utility meter sensor."""
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized."""
+        conf = discovery_info if discovery_info else config
+
         meter = UtilityMeterSensor(hass,
-                                   config[CONF_SOURCE_SENSOR],
-                                   config.get(CONF_NAME),
-                                   config.get(CONF_METER_TYPE),
-                                   config.get(CONF_METER_OFFSET),
-                                   config.get(CONF_PAUSED))
+                                   conf[CONF_SOURCE_SENSOR],
+                                   conf.get(CONF_NAME),
+                                   conf.get(CONF_METER_TYPE),
+                                   conf.get(CONF_METER_OFFSET),
+                                   conf.get(CONF_PAUSED))
 
         async_add_entities([meter])
 
