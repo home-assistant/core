@@ -79,7 +79,7 @@ from homeassistant.util.dt import utcnow
 # REQUIREMENTS = ['file:///home/phil/repos/pycarwings2ve/pycarwings2/
 #      dist/pycarwings2-2.2.tar.gz'
 #                 '#pycarwings2']
-REQUIREMENTS = ['pycarwings2==2.2']
+REQUIREMENTS = ['pycarwings2==2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
