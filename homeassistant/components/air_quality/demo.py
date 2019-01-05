@@ -1,25 +1,25 @@
 """
-Demo platform that offers fake air pollutants data.
+Demo platform that offers fake air quality data.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.air_pollutants import AirPollutantsEntity
+from homeassistant.components.air_quality import AirQualityEntity
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Air Pollutants."""
+    """Set up the Air Quality."""
     add_entities([
-        DemoAirPollutants('Home', 14, 23, 100),
-        DemoAirPollutants('Office', 4, 16, None)
+        DemoAirQuality('Home', 14, 23, 100),
+        DemoAirQuality('Office', 4, 16, None)
     ])
 
 
-class DemoAirPollutants(AirPollutantsEntity):
-    """Representation of Air Pollutants data."""
+class DemoAirQuality(AirQualityEntity):
+    """Representation of Air Quality data."""
 
     def __init__(self, name, pm_2_5, pm_10, n2o):
-        """Initialize the Demo Air Pollutants."""
+        """Initialize the Demo Air Quality."""
         self._name = name
         self._pm_2_5 = pm_2_5
         self._pm_10 = pm_10
@@ -28,11 +28,11 @@ class DemoAirPollutants(AirPollutantsEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format('Demo Air Pollutants', self._name)
+        return '{} {}'.format('Demo Air Quality', self._name)
 
     @property
     def should_poll(self):
-        """No polling needed for Demo Air Pollutants."""
+        """No polling needed for Demo Air Quality."""
         return False
 
     @property
