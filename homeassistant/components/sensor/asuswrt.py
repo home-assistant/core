@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.asuswrt/
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.asuswrt import DATA_ASUSWRT
+from homeassistant.components.asuswrt import DATA_ASUSWRT, CONF_SENSORS
 
 DEPENDENCIES = ['asuswrt']
 
@@ -20,13 +20,22 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
+    sensors = discovery_info[CONF_SENSORS]
+
     api = hass.data[DATA_ASUSWRT]
-    add_entities([
-        AsuswrtRXSensor(api),
-        AsuswrtTXSensor(api),
-        AsuswrtTotalRXSensor(api),
-        AsuswrtTotalTXSensor(api)
-    ])
+
+    devices = list()
+
+    if 'download' in sensors:
+        devices.append(AsuswrtTotalRXSensor(api))
+    if 'upload' in sensors:
+        devices.append(AsuswrtTotalTXSensor(api))
+    if 'download_speed' in devices:
+        devices.append(AsuswrtRXSensor(api))
+    if 'upload_speed' in sensors:
+        devices.append(AsuswrtTXSensor(api))
+
+    add_entities(devices)
 
 
 class AsuswrtSensor(Entity):
