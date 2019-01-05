@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.mychevy import (
     EVSensorConfig, DOMAIN as MYCHEVY_DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    NOTIFICATION_ID, NOTIFICATION_TITLE, UPDATE_TOPIC, ERROR_TOPIC
+    UPDATE_TOPIC, ERROR_TOPIC
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.core import callback
