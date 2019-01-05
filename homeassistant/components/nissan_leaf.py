@@ -104,7 +104,7 @@ CONF_FORCE_MILES = 'force_miles'
 
 INITIAL_UPDATE = timedelta(seconds=15)
 MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(minutes=30)
+DEFAULT_INTERVAL = timedelta(hours=1)
 DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
 DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
 RESTRICTED_BATTERY = 2
