@@ -2,12 +2,12 @@
 Support for HomematicIP Cloud cover.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematicip_cloud/
+https://home-assistant.io/components/cover.homematicip_cloud/
 """
 import logging
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, CoverDevice)
+    ATTR_POSITION, CoverDevice)
 from homeassistant.components.homematicip_cloud import (
     HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
