@@ -84,9 +84,11 @@ class WebDAVSensor(BinarySensorDevice):
         """Get the current contents of the share."""
         from webdav3.exceptions import WebDavException
         try:
+            directory = '/'
             self._files = [
-                self._client.get_url(path) for path in self._client.list('/')
-                if not path.endswith('/')]
+                self._client.get_url(directory + filename)
+                for filename in self._client.list(directory)
+                if not filename.endswith('/')]
             self._available = True
         except WebDavException as exception:
             self._files = []
