@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.components import mqtt, lock
 from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED, MQTT_DISCOVERY_NEW)
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                       discovery_hash)
         except Exception:
             if discovery_hash:
-                del hass.data[ALREADY_DISCOVERED][discovery_hash]
+                clear_discovery_hash(hass, discovery_hash)
             raise
 
     async_dispatcher_connect(
