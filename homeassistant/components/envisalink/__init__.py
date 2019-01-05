@@ -11,12 +11,12 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==3.7']
+REQUIREMENTS = ['pyenvisalink==3.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
 DEFAULT_PANIC = 'Police'
+DEFAULT_TIMEOUT = 10
 
 SIGNAL_ZONE_UPDATE = 'envisalink.zones_updated'
 SIGNAL_PARTITION_UPDATE = 'envisalink.partition_updated'
@@ -65,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASS): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
         vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
@@ -77,8 +78,20 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(
             CONF_ZONEDUMP_INTERVAL,
             default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
+        vol.Optional(
+            CONF_TIMEOUT,
+            default=DEFAULT_TIMEOUT): vol.Coerce(int),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+SERVICE_CUSTOM_FUNCTION = 'invoke_custom_function'
+ATTR_CUSTOM_FUNCTION = 'pgm'
+ATTR_PARTITION = 'partition'
+
+SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
+    vol.Required(ATTR_PARTITION): cv.string,
+})
 
 
 async def async_setup(hass, config):
@@ -99,11 +112,12 @@ async def async_setup(hass, config):
     zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
+    connection_timeout = conf.get(CONF_TIMEOUT)
     sync_connect = asyncio.Future(loop=hass.loop)
 
     controller = EnvisalinkAlarmPanel(
         host, port, panel_type, version, user, password, zone_dump,
-        keep_alive, hass.loop)
+        keep_alive, hass.loop, connection_timeout)
     hass.data[DATA_EVL] = controller
 
     @callback
@@ -153,6 +167,12 @@ async def async_setup(hass, config):
         _LOGGER.info("Shutting down Envisalink")
         controller.stop()
 
+    async def handle_custom_function(call):
+        """Handle custom/PGM service."""
+        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
+        partition = call.data.get(ATTR_PARTITION)
+        controller.command_output(code, partition, custom_function)
+
     controller.callback_zone_timer_dump = zones_updated_callback
     controller.callback_zone_state_change = zones_updated_callback
     controller.callback_partition_state_change = partition_updated_callback
@@ -189,6 +209,11 @@ async def async_setup(hass, config):
                 CONF_ZONES: zones
             }, config
         ))
+
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_CUSTOM_FUNCTION,
+                                 handle_custom_function,
+                                 schema=SERVICE_SCHEMA)
 
     return True
 
