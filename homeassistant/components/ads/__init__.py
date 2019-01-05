@@ -48,7 +48,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_DINT, ADSTYPE_UDINT]),
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, 
+                ADSTYPE_DINT, ADSTYPE_UDINT]),
     vol.Required(CONF_ADS_VALUE): cv.match_all,
     vol.Required(CONF_ADS_VAR): cv.string,
 })
@@ -72,7 +73,7 @@ def setup(hass, config):
         ADSTYPE_UINT: pyads.PLCTYPE_UINT,
         ADSTYPE_DINT: pyads.PLCTYPE_DINT,
         ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
-}
+    }
 
     AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
     AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
