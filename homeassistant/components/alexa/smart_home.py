@@ -801,7 +801,8 @@ class _GenericCapabilities(_AlexaEntity):
         return [_DisplayCategory.OTHER]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity)]
+        return [_AlexaPowerController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(switch.DOMAIN)
@@ -810,7 +811,8 @@ class _SwitchCapabilities(_AlexaEntity):
         return [_DisplayCategory.SWITCH]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity)]
+        return [_AlexaPowerController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(climate.DOMAIN)
@@ -824,6 +826,7 @@ class _ClimateCapabilities(_AlexaEntity):
             yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -836,6 +839,7 @@ class _CoverCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield _AlexaPercentageController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
@@ -853,6 +857,7 @@ class _LightCapabilities(_AlexaEntity):
             yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield _AlexaColorTemperatureController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
@@ -873,7 +878,8 @@ class _LockCapabilities(_AlexaEntity):
         return [_DisplayCategory.SMARTLOCK]
 
     def interfaces(self):
-        return [_AlexaLockController(self.entity)]
+        return [_AlexaLockController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(media_player.DOMAIN)
@@ -883,6 +889,7 @@ class _MediaPlayerCapabilities(_AlexaEntity):
 
     def interfaces(self):
         yield _AlexaPowerController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_SET:
@@ -945,6 +952,7 @@ class _SensorCapabilities(_AlexaEntity):
                 TEMP_CELSIUS,
         ):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
+            yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
