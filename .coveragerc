@@ -463,6 +463,7 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/binary_sensor/uptimerobot.py
+    homeassistant/components/binary_sensor/webdav.py
     homeassistant/components/browser.py
     homeassistant/components/calendar/caldav.py
     homeassistant/components/calendar/todoist.py
@@ -870,7 +871,6 @@ omit =
     homeassistant/components/sensor/volkszaehler.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/waze_travel_time.py
-    homeassistant/components/sensor/webdav.py
     homeassistant/components/sensor/whois.py
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
