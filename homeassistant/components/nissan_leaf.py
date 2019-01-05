@@ -195,7 +195,8 @@ def async_setup(hass, config):
                     car_config[CONF_NCONNECT] is True):
                 load_platform(hass, component, DOMAIN, {}, car_config)
 
-        async_track_point_in_utc_time(hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE)
+        async_track_point_in_utc_time(hass, data_store.async_update_data,
+                                      utcnow() + INITIAL_UPDATE)
 
     hass.data[DATA_LEAF] = {}
     tasks = [async_setup_leaf(car) for car in config[DOMAIN]]
@@ -497,7 +498,8 @@ class LeafDataStore:
         # charging request to reach the car.
         result = await self.hass.async_add_job(self.leaf.start_charging)
         if result:
-            _LOGGER.debug("Start charging sent, request updated data in 1 minute")
+            _LOGGER.debug("Start charging sent, "
+                          "request updated data in 1 minute")
             check_charge_at = utcnow() + timedelta(minutes=1)
             async_track_point_in_utc_time(
                 self.hass, self.async_refresh_data, check_charge_at)
