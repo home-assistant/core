@@ -68,9 +68,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-# TODO: Disable charging switch if currently charging, because charging
-#       cannot be stopped remotely by the Nissan APIs.
-
 # If testing then use the following kinds of URLs
 #
 # REQUIREMENTS = ['https://github.com/filcole/pycarwings2/archive/master.zip'
@@ -495,7 +492,6 @@ class LeafDataStore:
         # TODO: This should be improved to:
         #   1. check if the command to start charging actually completes.
         #   2. reschedule the update if interval less whilst charging.
-        #   3. disable the start charging button
         self.hass.async_add_job(self.leaf.start_charging)
 
 

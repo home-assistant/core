@@ -106,6 +106,6 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
 
     def turn_off(self, **kwargs):
         """Nissan API doesn't allow stopping of charge remotely."""
-        _LOGGER.debug(
+        _LOGGER.info(
             "Cannot turn off Leaf charging -"
-            " Nissan does not support that remotely.")
+            " Nissan API does not support stopping charge remotely.")
