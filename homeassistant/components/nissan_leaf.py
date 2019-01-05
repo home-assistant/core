@@ -143,11 +143,11 @@ SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the nissan leaf component."""
+    """Set-up the Nissan Leaf component."""
     import pycarwings2
 
     async def async_setup_leaf(car_config):
-        """Setup a leaf car."""
+        """Set-up a car."""
         _LOGGER.debug("Logging into You+Nissan...")
 
         username = car_config[CONF_USERNAME]
@@ -518,7 +518,7 @@ class LeafEntity(Entity):
 
     @property
     def device_state_attributes(self):
-        """Default attributes for Nissan Leaf entities."""
+        """Return default attributes for Nissan Leaf entities."""
         return {
             'homebridge_serial': self.car.leaf.vin,
             'homebridge_mfg': 'Nissan',
@@ -532,5 +532,5 @@ class LeafEntity(Entity):
             self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
 
     def _update_callback(self):
-        """Callback update method."""
+        """Update the state."""
         self.schedule_update_ha_state(True)
