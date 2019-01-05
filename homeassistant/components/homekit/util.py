@@ -1,17 +1,20 @@
 """Collection of useful functions for the HomeKit component."""
+from collections import namedtuple
 import logging
+from math import inf
 
 import voluptuous as vol
 
-from homeassistant.components import media_player
-from homeassistant.core import split_entity_id
+from homeassistant.components import fan, media_player
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
+from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
+
 from .const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_FAUCET,
+    CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
     TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +111,59 @@ def validate_media_player_features(state, feature_list):
                       state.entity_id, error_list)
         return False
     return True
+
+
+SpeedRange = namedtuple('SpeedRange', 'start target stop')
+SpeedRange.__doc__ += """: a mapping of descrete Home Assistant speed \
+values to percentage based HomeKit speeds."""
+SpeedRange.start.__doc__ += """Start of the range (inclusive)."""
+SpeedRange.target.__doc__ += """Percentage to use to determine HomeKit \
+percentages from HomeAssistant speed."""
+SpeedRange.stop.__doc__ += """Stop of the range (exclusive)."""
+
+
+class HomeKitSpeedMapping:
+    """Supports conversion between Home Assistant and HomeKit fan speeds."""
+
+    def __init__(self, speed_list):
+        """Initialize a new SpeedMapping object."""
+        if not speed_list or speed_list[0] != fan.SPEED_OFF:
+            _LOGGER.warning("%s does not contain the speed setting "
+                            "%s as its first element. "
+                            "Assuming that %s is equivalent to 'off'.",
+                            speed_list, fan.SPEED_OFF, speed_list[0])
+        speed_ranges = {}
+        list_size = len(speed_list)
+        for index, speed in enumerate(speed_list):
+            # By dividing by list_size -1 the following
+            # desired attributes hold true:
+            # * index = 0 => 0%, equal to "off"
+            # * index = len(speed_list) - 1 => 100 %
+            # * all other indices are equally distributed
+            target = index * 100 / (list_size - 1)
+            start = index * 100 / list_size
+            stop = (index + 1) * 100 / list_size
+            # the first and last element should go until -+ infinity
+            if index == 0:
+                start = -inf
+            if index == list_size - 1:
+                stop = inf
+            speed_ranges[speed] = SpeedRange(start, target, stop)
+        self.speed_ranges = speed_ranges
+
+    def speed_to_homekit(self, speed):
+        """Map Home Assistant speed state to HomeKit speed."""
+        speed_range = self.speed_ranges.get(speed, None)
+        return speed_range.target if speed_range else 0
+
+    def speed_to_states(self, speed):
+        """Map HomeKit speed to Home Assistant speed state."""
+        for state, speed_range in self.speed_ranges.items():
+            if speed_range.start <= speed < speed_range.stop:
+                return state
+        # if nobody tampered with self.speed_ranges
+        # this happens only for +/-inf
+        raise KeyError(speed)
 
 
 def show_setup_message(hass, pincode):

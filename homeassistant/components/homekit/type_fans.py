@@ -5,18 +5,19 @@ from pyhap.const import CATEGORY_FAN
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
-    DIRECTION_FORWARD, DIRECTION_REVERSE,
-    DOMAIN, SERVICE_OSCILLATE, SERVICE_SET_DIRECTION, SERVICE_SET_SPEED,
-    SPEED_OFF, SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
+    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
+    SERVICE_SET_DIRECTION, SERVICE_SET_SPEED, SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, STATE_ON)
 
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
-    CHAR_SWING_MODE, SERV_FANV2)
+    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED, CHAR_SWING_MODE,
+    SERV_FANV2)
+from .util import HomeKitSpeedMapping
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +28,6 @@ class Fan(HomeAccessory):
 
     Currently supports: state, speed, oscillate, direction.
     """
-
-    speed_list = []
 
     def __init__(self, *args):
         """Initialize a new Light accessory object."""
@@ -47,7 +46,15 @@ class Fan(HomeAccessory):
         if features & SUPPORT_OSCILLATE:
             chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
-            chars.append(CHAR_ROTATION_SPEED)
+            speed_list = self.hass.states.get(self.entity_id) \
+                .attributes.get(ATTR_SPEED_LIST)
+            if speed_list:
+                self.speed_mapping = HomeKitSpeedMapping(speed_list)
+                chars.append(CHAR_ROTATION_SPEED)
+            else:
+                _LOGGER.warning(
+                    '%s: claims to support %s but does not contain a %s',
+                    self.entity_id, SERVICE_SET_SPEED, ATTR_SPEED_LIST)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.char_active = serv_fan.configure_char(
@@ -63,9 +70,6 @@ class Fan(HomeAccessory):
                 setter_callback=self.set_direction)
 
         if CHAR_ROTATION_SPEED in chars:
-            speed_list = self.hass.states.get(self.entity_id) \
-                .attributes.get(ATTR_SPEED_LIST)
-            self.set_speed_list(speed_list)
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED, value=0, setter_callback=self.set_speed)
 
@@ -98,52 +102,11 @@ class Fan(HomeAccessory):
                   ATTR_OSCILLATING: oscillating}
         self.call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
-    def set_speed_list(self, speed_list):
-        """Set and validate the speed list from the fan."""
-        if self.speed_list == speed_list:
-            return
-        if not speed_list:
-            self.speed_list = []
-            return
-        if SPEED_OFF != speed_list[0]:
-            _LOGGER.warning(
-                "%s: %s (%s) does not contain the speed setting "
-                "%s as its first element. "
-                "Assuming that %s is equivalent to 'off'.""",
-                self.entity_id, ATTR_SPEED_LIST, speed_list,
-                SPEED_OFF, speed_list[0])
-        self.speed_list = speed_list
-
-    def speed_from_percentage(self, percentage):
-        """Convert a value from 0-100 to a value in the speed list."""
-        if not self.speed_list:
-            return None
-        if percentage <= 0:
-            return self.speed_list[0]
-        if percentage >= 100:
-            return self.speed_list[-1]
-        index = int(percentage / 100 * len(self.speed_list))
-        return self.speed_list[index]
-
-    def percentage_from_speed(self, speed):
-        """Convert a value in the speed list into a value from 0-100."""
-        try:
-            index = self.speed_list.index(speed)
-            # By dividing by len(speed_list) -1 the following
-            # desired attributes hold true:
-            # * index = 0 => 0%, equal to "off"
-            # * index = len(speed_list) - 1 => 100 %
-            # * all other indices are equally distributed
-            return index * 100 / (len(self.speed_list) - 1)
-        except ValueError:
-            # speed_list does not contain the speed
-            return None
-
     def set_speed(self, value):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_SPEED] = True
-        speed = self.speed_from_percentage(value)
+        speed = self.speed_mapping.speed_to_states(value)
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_SPEED: speed}
         self.call_service(DOMAIN, SERVICE_SET_SPEED, params, speed)
@@ -171,9 +134,8 @@ class Fan(HomeAccessory):
 
         # Handle Speed
         if self.char_speed is not None:
-            self.set_speed_list(new_state.attributes.get(ATTR_SPEED_LIST))
             speed = new_state.attributes.get(ATTR_SPEED)
-            hk_speed_value = self.percentage_from_speed(speed)
+            hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
             # update the speed even if it had been set via HomeKit
             # so that it snaps to the correct percentage
             if hk_speed_value is not None and \
