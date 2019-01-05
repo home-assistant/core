@@ -102,6 +102,7 @@ CONF_REGION = 'region'
 CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
 CONF_FORCE_MILES = 'force_miles'
 
+INITIAL_UPDATE = timedelta(seconds=15)
 MIN_UPDATE_INTERVAL = timedelta(minutes=2)
 DEFAULT_INTERVAL = timedelta(minutes=30)
 DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
@@ -188,12 +189,13 @@ def async_setup(hass, config):
 
         data_store = LeafDataStore(leaf, hass, car_config)
         hass.data[DATA_LEAF][leaf.vin] = data_store
-        await hass.async_add_job(data_store.async_update_data, None)
 
         for component in LEAF_COMPONENTS:
             if (component != 'device_tracker' or
                     car_config[CONF_NCONNECT] is True):
                 load_platform(hass, component, DOMAIN, {}, car_config)
+
+        async_track_point_in_utc_time(hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE)
 
     hass.data[DATA_LEAF] = {}
     tasks = [async_setup_leaf(car) for car in config[DOMAIN]]
