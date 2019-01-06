@@ -5,8 +5,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
-from tests.common import (
-    async_fire_time_changed, assert_setup_component, mock_component)
+from tests.common import async_fire_time_changed, mock_component
 from tests.components.automation import common
 from tests.common import async_mock_service
 
@@ -30,6 +29,8 @@ async def test_if_fires_when_hour_matches(hass, calls):
             'trigger': {
                 'platform': 'interval',
                 'hours': 0,
+                'minutes': '*',
+                'seconds': '*',
             },
             'action': {
                 'service': 'test.automation'
@@ -55,7 +56,9 @@ async def test_if_fires_when_minute_matches(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'interval',
+                'hours': '*',
                 'minutes': 0,
+                'seconds': '*',
             },
             'action': {
                 'service': 'test.automation'
@@ -75,6 +78,8 @@ async def test_if_fires_when_second_matches(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'interval',
+                'hours': '*',
+                'minutes': '*',
                 'seconds': 0,
             },
             'action': {
@@ -118,6 +123,8 @@ async def test_if_fires_periodic_seconds(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'interval',
+                'hours': '*',
+                'minutes': '*',
                 'seconds': "/2",
             },
             'action': {
@@ -139,7 +146,9 @@ async def test_if_fires_periodic_minutes(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'interval',
+                'hours': '*',
                 'minutes': "/2",
+                'seconds': '*',
             },
             'action': {
                 'service': 'test.automation'
@@ -161,6 +170,8 @@ async def test_if_fires_periodic_hours(hass, calls):
             'trigger': {
                 'platform': 'interval',
                 'hours': "/2",
+                'minutes': '*',
+                'seconds': '*',
             },
             'action': {
                 'service': 'test.automation'
@@ -175,22 +186,34 @@ async def test_if_fires_periodic_hours(hass, calls):
     assert 1 == len(calls)
 
 
-async def test_if_not_working_if_no_values_in_conf_provided(hass, calls):
-    """Test for failure if no configuration."""
-    with assert_setup_component(0):
-        assert await async_setup_component(hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'interval',
-                },
-                'action': {
-                    'service': 'test.automation'
-                }
+async def test_default_values(hass, calls):
+    """Test for firing at 2 minutes every hour."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'interval',
+                'minutes': "2",
+            },
+            'action': {
+                'service': 'test.automation'
             }
-        })
+        }
+    })
 
     async_fire_time_changed(hass, dt_util.utcnow().replace(
-        hour=5, minute=0, second=0))
+        hour=1, minute=2, second=0))
 
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert 1 == len(calls)
+
+    async_fire_time_changed(hass, dt_util.utcnow().replace(
+        hour=1, minute=2, second=1))
+
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+    async_fire_time_changed(hass, dt_util.utcnow().replace(
+        hour=2, minute=2, second=0))
+
+    await hass.async_block_till_done()
+    assert 2 == len(calls)

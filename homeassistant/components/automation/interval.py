@@ -33,6 +33,12 @@ async def async_trigger(hass, config, action, automation_info):
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
 
+    # If larger units are specified, default the smaller units to zero
+    if minutes is None and hours is not None:
+        minutes = 0
+    if seconds is None and minutes is not None:
+        seconds = 0
+
     @callback
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
