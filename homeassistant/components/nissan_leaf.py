@@ -1,55 +1,8 @@
 """
 Support for the Nissan Leaf Carwings/Nissan Connect API.
 
-Please note this is the pre-2018 API, which is still functional in the US.
-The old API should continue to work for the forseeable future.
-
-Documentation has not been created yet, here is an example configuration block:
-
-nissan_leaf:
-  - username: "username"
-    password: "password"
-    nissan_connect: true
-    region: 'NE'
-    update_interval:
-      hours: 1
-    update_interval_charging:
-      minutes: 15
-    update_interval_climate:
-      minutes: 5
-    force_miles: true
-
-
-Notes for the above:
-
-region: Must be one of
-           'NE' (Europe),
-           'NNA' (US),
-           'NCI' (Canada),
-           'NMA' (Australia),
-           'NML' (Japan)
-nissan_connect: If your car has the updated head unit (Nissan Connect rather
-                than Car Wings) then you can pull the location, shown in a
-                device tracker. If you have a pre-2016 24kWh Leaf then you
-                will have CarWings and should set this to false, or it will
-                crash the component.
-update_interval: The interval between updates if AC is off and not charging
-update_interval_charging: The interval between updates if charging
-update_interval_climate: The interval between updates if climate control is on
-
-Notes for testers:
-
-Please report bugs using the following logger config.
-
-logger:
-  default: critical
-  logs:
-    homeassistant.components.nissan_leaf: debug
-    homeassistant.components.sensor.nissan_leaf: debug
-    homeassistant.components.switch.nissan_leaf: debug
-    homeassistant.components.device_tracker.nissan_leaf: debug
-
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/nissan_leaf
 """
 
 import logging

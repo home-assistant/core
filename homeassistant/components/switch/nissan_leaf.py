@@ -1,7 +1,6 @@
 """
 Charge and Climate Control Support for the Nissan Leaf.
 
-Documentation pending.
 Please refer to the main platform component for configuration details
 """
 
