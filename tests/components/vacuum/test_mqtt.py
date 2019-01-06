@@ -11,7 +11,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
-    mock_mqtt_component, async_mock_mqtt_component,
+    async_mock_mqtt_component,
     async_fire_mqtt_message, MockConfigEntry)
 from tests.components.vacuum import common
 

@@ -194,4 +194,5 @@ def async_send_command(hass, command, params=None, entity_id=None):
     data[ATTR_COMMAND] = command
     if params is not None:
         data[ATTR_PARAMS] = params
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data))
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_SEND_COMMAND, data))
