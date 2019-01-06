@@ -128,55 +128,6 @@ async def test_controlling_state_via_topic_and_json_message(
     assert STATE_OFF == state.state
 
 
-async def test_controlling_availability(hass, mock_publish):
-    """Test the controlling state via topic."""
-    assert await async_setup_component(hass, switch.DOMAIN, {
-        switch.DOMAIN: {
-            'platform': 'mqtt',
-            'name': 'test',
-            'state_topic': 'state-topic',
-            'command_topic': 'command-topic',
-            'availability_topic': 'availability_topic',
-            'payload_on': 1,
-            'payload_off': 0,
-            'payload_available': 1,
-            'payload_not_available': 0
-        }
-    })
-
-    state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
-
-    async_fire_mqtt_message(hass, 'availability_topic', '1')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
-
-    async_fire_mqtt_message(hass, 'availability_topic', '0')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
-
-    async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
-
-    async_fire_mqtt_message(hass, 'availability_topic', '1')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
-
-
 async def test_default_availability_payload(hass, mock_publish):
     """Test the availability payload."""
     assert await async_setup_component(hass, switch.DOMAIN, {
