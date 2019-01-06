@@ -42,15 +42,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if vehicle.has_hv_battery:
                 _LOGGER.debug('BMW with a high voltage battery')
                 for key, value in sorted(SENSOR_TYPES_ELEC.items()):
-                    device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
-                    devices.append(device)
+                    if value[0] in vehicle.available_attributes:
+                        device = BMWConnectedDriveSensor(account, vehicle,
+                                                         key, value[0],
+                                                         value[1])
+                        devices.append(device)
             elif vehicle.has_internal_combustion_engine:
                 _LOGGER.debug('BMW with an internal combustion engine')
                 for key, value in sorted(SENSOR_TYPES.items()):
-                    device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
-                    devices.append(device)
+                    if value[0] in vehicle.available_attributes:
+                        device = BMWConnectedDriveSensor(account, vehicle,
+                                                         key, value[0],
+                                                         value[1])
+                        devices.append(device)
     add_entities(devices, True)
 
 

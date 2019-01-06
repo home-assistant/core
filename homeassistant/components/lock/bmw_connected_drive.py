@@ -24,8 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in accounts:
         if not account.read_only:
             for vehicle in account.account.vehicles:
-                device = BMWLock(account, vehicle, 'lock', 'BMW lock')
-                devices.append(device)
+                if 'door_lock_state' in vehicle.available_attributes:
+                    device = BMWLock(account, vehicle, 'lock', 'BMW lock')
+                    devices.append(device)
     add_entities(devices, True)
 
 
