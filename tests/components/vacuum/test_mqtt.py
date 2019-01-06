@@ -272,7 +272,7 @@ async def test_custom_availability_payload(hass, mock_publish):
 
 
 async def test_discovery_removal_vacuum(hass, mock_publish):
-    """Test expansion of discovered vacuum."""
+    """Test removal of discovered vacuum."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
 
@@ -299,7 +299,7 @@ async def test_discovery_removal_vacuum(hass, mock_publish):
 
 
 async def test_discovery_update_vacuum(hass, mock_publish):
-    """Test expansion of discovered vacuum."""
+    """Test update of discovered vacuum."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
 
