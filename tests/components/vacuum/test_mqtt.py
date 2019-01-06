@@ -16,9 +16,6 @@ from tests.common import (
     async_fire_mqtt_message, MockConfigEntry)
 from tests.components.vacuum import common
 
-import logging
-_LOGGER = logging.getLogger(__name__)
-
 default_config = {
     CONF_PLATFORM: 'mqtt',
     CONF_NAME: 'mqtttest',
