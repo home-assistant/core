@@ -11,7 +11,7 @@ import random
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME, CONF_TOKEN, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -31,9 +31,31 @@ UNIT_RECORDS = 'records'
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
+LIST_MONITORED_CONDITIONS = ['collection', 'wantlist', 'random_record']
+
+SENSORS = {
+    'collection': {
+        'name': 'Collection',
+        'icon': 'mdi:album',
+        'unit_of_measurement': 'records'
+    },
+    'wantlist': {
+        'name': 'Wantlist',
+        'icon': 'mdi:album',
+        'unit_of_measurement': 'records'
+    },
+    'random_record': {
+        'name': 'Random Record',
+        'icon': 'mdi:record_player',
+        'unit_of_measurement': None
+    },
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=LIST_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(LIST_MONITORED_CONDITIONS)])
 })
 
 
@@ -48,116 +70,40 @@ async def async_setup_platform(hass, config, async_add_entities,
     try:
         discogs_client = discogs_client.Client(
             SERVER_SOFTWARE, user_token=token)
-        discogs_client.identity()
+
+        discogs_data = {
+            'user': discogs_client.identity().name,
+            'folders': discogs_client.identity().collection_folders,
+            'collection_count': discogs_client.identity().num_collection,
+            'wantlist_count': discogs_client.identity().num_wantlist
+        }
     except discogs_client.exceptions.HTTPError:
         _LOGGER.error("API token is not valid")
         return
 
-    async_add_entities([
-        DiscogsCollectionSensor(discogs_client, name),
-        DiscogsWantlistSensor(discogs_client, name),
-        DiscogsRandomRecordSensor(discogs_client, name),
-    ], True)
+    sensors = []
+    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+        sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
+        # sensors.append(DiscogsSensor(discogs_client, name, sensor_type))
+
+    async_add_entities(sensors, True)
 
 
-class DiscogsCollectionSensor(Entity):
-    """Get a user's number of records in collection."""
+class DiscogsSensor(Entity):
+    """Create a new Discogs sensor for a specific type."""
 
-    def __init__(self, client, name):
-        """Initialize the Discogs collection sensor."""
-        self._client = client
+    def __init__(self, discogs_data, name, sensor_type):
+        """Initialize the Discogs sensor."""
+        self._discogs_data = discogs_data
         self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} Collection".format(self._name)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON_RECORD
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return UNIT_RECORDS
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_IDENTITY: self._client.identity().name,
-        }
-
-    async def async_update(self):
-        """Set state to the amount of records in user's collection."""
-        self._state = self._client.identity().num_collection
-
-
-class DiscogsWantlistSensor(Entity):
-    """Get a user's number of records in wantlist."""
-
-    def __init__(self, client, name):
-        """Initialize the Discogs wantlist sensor."""
-        self._client = client
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} Wantlist".format(self._name)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON_RECORD
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return UNIT_RECORDS
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_IDENTITY: self._client.identity().name,
-        }
-
-    async def async_update(self):
-        """Set state to the amount of records in user's collection."""
-        self._state = self._client.identity().num_wantlist
-
-
-class DiscogsRandomRecordSensor(Entity):
-    """Suggest a random record from the user's collection."""
-
-    def __init__(self, client, name):
-        """Initialize the Discogs random record sensor."""
-        self._client = client
-        self._name = name
+        self._type = sensor_type
         self._state = None
         self._attrs = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} Random Record".format(self._name)
+        return "{} {}".format(self._name, SENSORS[self._type]['name'])
 
     @property
     def state(self):
@@ -167,13 +113,24 @@ class DiscogsRandomRecordSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return ICON_PLAYER
+        return SENSORS[self._type]['icon']
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return SENSORS[self._type]['unit_of_measurement']
 
     @property
     def device_state_attributes(self):
-        """Return sensor attributes if data is available."""
+        """Return the state attributes of the sensor."""
         if self._state is None or self._attrs is None:
             return None
+
+        if self._type != 'random_record':
+            return {
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_IDENTITY: self._discogs_data['user'],
+            }
 
         return {
             'cat_no': self._attrs['labels'][0]['catno'],
@@ -184,16 +141,27 @@ class DiscogsRandomRecordSensor(Entity):
             'label': self._attrs['labels'][0]['name'],
             'released': self._attrs['year'],
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_IDENTITY: self._client.identity().name,
+            ATTR_IDENTITY: self._discogs_data['user'],
         }
 
-    async def async_update(self):
-        """Set state to a random record in user's collection."""
-        collection = self._client.identity().collection_folders[0]
+    def get_random_record(self):
+        """Get a random record suggestion from the user's collection."""
+
+        # Index 0 in the folders is the 'All' folder
+        collection = self._discogs_data['folders'][0]
         random_index = random.randrange(collection.count)
         random_record = collection.releases[random_index].release
 
         self._attrs = random_record.data
-        self._state = "{} - {}".format(
+        return "{} - {}".format(
             random_record.data['artists'][0]['name'],
             random_record.data['title'])
+
+    async def async_update(self):
+        """Set state to the amount of records in user's collection."""
+        if self._type == 'collection':
+            self._state = self._discogs_data['collection_count']
+        elif self._type == 'wantlist':
+            self._state = self._discogs_data['wantlist_count']
+        else:
+            self._state = self.get_random_record()
