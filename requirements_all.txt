@@ -1682,7 +1682,7 @@ watchdog==0.8.3
 # homeassistant.components.waterfurnace
 waterfurnace==1.0.0
 
-# homeassistant.components.sensor.webdav
+# homeassistant.components.binary_sensor.webdav
 webdavclient3==0.9
 
 # homeassistant.components.media_player.gpmdp
