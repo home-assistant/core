@@ -667,7 +667,7 @@ async def async_load_config(path: str, hass: HomeAssistantType,
 
         for dev_id, device in devices.items():
             # Deprecated option. We just ignore it to avoid breaking change
-            device.pop('vendor', None)
+            device.get('vendor', None)
             try:
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
