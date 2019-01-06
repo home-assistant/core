@@ -423,7 +423,7 @@ class HueLight(Light):
             light_spec = self.light.raw['capabilities']['control']
             color_gamut_type = light_spec['colorgamuttype']
             gtup = tuple([color.XYPoint(*x) for x in light_spec['colorgamut']])
-            color_gamut = color.gamut(*gtup)
+            color_gamut = color.GamutType(*gtup)
         except KeyError:
             err_msg = 'Can not get color gamut of light "%s"'
             _LOGGER.warning(err_msg, self.name)
