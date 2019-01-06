@@ -11,7 +11,8 @@ import random
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME, CONF_TOKEN, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TOKEN)
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -146,7 +147,6 @@ class DiscogsSensor(Entity):
 
     def get_random_record(self):
         """Get a random record suggestion from the user's collection."""
-
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data['folders'][0]
         random_index = random.randrange(collection.count)
