@@ -73,7 +73,7 @@ async def async_setup(hass, config):
             }, config
         ))
 
-    if isinstance(frame_configs, dict):  # AUTODETECT_SCHEMA
+    if not frame_configs:  # AUTODETECT_SCHEMA
         for ip_address in await Frame.find_frame_ips(session):
             await add_frame(ip_address)
     else:  # FRAMES_SCHEMA
