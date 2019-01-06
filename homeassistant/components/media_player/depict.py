@@ -21,7 +21,8 @@ ATTR_RESOLUTION = 'resolution'
 MEDIA_TYPE_IMAGE = 'image'
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up a media player entity for a Depict frame."""
     name = discovery_info[CONF_NAME]
     add_entities(
