@@ -43,8 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SET_CONTRAST_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_VALUE: cv.byte,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): cv.byte,
 })
 
 
