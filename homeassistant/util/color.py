@@ -162,11 +162,13 @@ COLORS = {
     'yellowgreen': (154, 205, 50),
 }
 
+
 # Represents a CIE 1931 XY coordinate pair.
 @attr.s()
 class XYPoint:
     x = attr.ib(type=float)
     y = attr.ib(type=float)
+
 
 # Represents the Gamut of a light
 # ColorGamut = gamut(xypoint(xR,yR),xypoint(xG,yG),xypoint(xB,yB))
@@ -175,6 +177,7 @@ class GamutType:
     red = attr.ib(type=XYPoint)
     green = attr.ib(type=XYPoint)
     blue = attr.ib(type=XYPoint)
+
 
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
     """Convert color name to RGB hex value."""
