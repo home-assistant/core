@@ -67,20 +67,18 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 FIBARO_ID_LIST_SCHEMA = vol.Schema([cv.string])
 
 GATEWAY_CONFIG = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_URL): cv.url,
-        vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
-        vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
-        vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
-    })
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_URL): cv.url,
+    vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
+    vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
+    vol.Optional(CONF_DEVICE_CONFIG, default={}):
+        vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default={}):
+        vol.Optional(CONF_GATEWAYS, default=[{}]):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG])
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -255,10 +253,10 @@ class FibaroController():
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
-                else:
-                    _LOGGER.debug("%s (%s, %s) not used",
-                                  device.ha_id, device.type,
-                                  device.baseType)
+                _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
+                              device.ha_id, device.type,
+                              device.baseType, device.mapped_type,
+                              str(device.properties), str(device.actions))
             except (KeyError, ValueError):
                 pass
 
