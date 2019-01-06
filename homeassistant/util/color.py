@@ -3,7 +3,7 @@ import math
 import colorsys
 
 from typing import Tuple, List, Optional
-from collections import namedtuple
+import attr
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
@@ -162,13 +162,19 @@ COLORS = {
     'yellowgreen': (154, 205, 50),
 }
 
-# Represents the Gamut of a light, ((xR,yR), (xG,yG), (xB,yB))
-GamutType = Tuple[Tuple[float, float], Tuple[float, float],
-                  Tuple[float, float]]
-
 # Represents a CIE 1931 XY coordinate pair.
-XYPoint = namedtuple('XYPoint', ['x', 'y'])
+@attr.s()
+class XYPoint:
+    x = attr.ib(type=float)
+    y = attr.ib(type=float)
 
+# Represents the Gamut of a light
+# ColorGamut = gamut(xypoint(xR,yR),xypoint(xG,yG),xypoint(xB,yB))
+@attr.s()
+class GamutType:
+    red = attr.ib(type=XYPoint)
+    green = attr.ib(type=XYPoint)
+    blue = attr.ib(type=XYPoint)
 
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
     """Convert color name to RGB hex value."""
@@ -548,15 +554,12 @@ def get_closest_point_to_point(xy_tuple: Tuple[float, float],
 
     Should only be used if the supplied color is outside of the color gamut.
     """
-    G_Red = XYPoint(Gamut[0][0], Gamut[0][1])
-    G_Green = XYPoint(Gamut[1][0], Gamut[1][1])
-    G_Blue = XYPoint(Gamut[2][0], Gamut[2][1])
     xy_point = XYPoint(xy_tuple[0], xy_tuple[1])
 
     # find the closest point on each line in the CIE 1931 'triangle'.
-    pAB = get_closest_point_to_line(G_Red, G_Green, xy_point)
-    pAC = get_closest_point_to_line(G_Blue, G_Red, xy_point)
-    pBC = get_closest_point_to_line(G_Green, G_Blue, xy_point)
+    pAB = get_closest_point_to_line(Gamut.red, Gamut.green, xy_point)
+    pAC = get_closest_point_to_line(Gamut.blue, Gamut.red, xy_point)
+    pBC = get_closest_point_to_line(Gamut.green, Gamut.blue, xy_point)
 
     # Get the distances per point and see which point is closer to our Point.
     dAB = get_distance_between_two_points(xy_point, pAB)
@@ -584,10 +587,10 @@ def get_closest_point_to_point(xy_tuple: Tuple[float, float],
 def check_point_in_lamps_reach(p: Tuple[float, float],
                                Gamut: GamutType) -> bool:
     """Check if the provided XYPoint can be recreated by a Hue lamp."""
-    v1 = XYPoint(Gamut[1][0] - Gamut[0][0], Gamut[1][1] - Gamut[0][1])
-    v2 = XYPoint(Gamut[2][0] - Gamut[0][0], Gamut[2][1] - Gamut[0][1])
+    v1 = XYPoint(Gamut.green.x - Gamut.red.x, Gamut.green.y - Gamut.red.y)
+    v2 = XYPoint(Gamut.blue.x - Gamut.red.x, Gamut.blue.y - Gamut.red.y)
 
-    q = XYPoint(p[0] - Gamut[0][0], p[1] - Gamut[0][1])
+    q = XYPoint(p[0] - Gamut.red.x, p[1] - Gamut.red.y)
     s = cross_product(q, v2) / cross_product(v1, v2)
     t = cross_product(v1, q) / cross_product(v1, v2)
 
