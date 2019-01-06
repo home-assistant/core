@@ -36,7 +36,7 @@ FRAME_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
 })
 
-FRAMES_SCHEMA = vol.Schema([FRAME_SCHEMA])
+FRAMES_SCHEMA = vol.All(cv.ensure_list, [FRAME_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Any(AUTODETECT_SCHEMA, FRAMES_SCHEMA),
