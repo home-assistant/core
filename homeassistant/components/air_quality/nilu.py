@@ -12,8 +12,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.air_pollutants import (
-    PLATFORM_SCHEMA, AirPollutantsEntity)
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA, AirQualityEntity)
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_SHOW_ON_MAP)
 import homeassistant.helpers.config_validation as cv
@@ -142,7 +142,7 @@ class NiluData:
         self.api.update()
 
 
-class NiluSensor(AirPollutantsEntity):
+class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
     def __init__(self,

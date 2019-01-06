@@ -713,7 +713,7 @@ neurio==0.3.1
 # homeassistant.components.light.niko_home_control
 niko-home-control==0.1.8
 
-# homeassistant.components.air_pollutants.nilu
+# homeassistant.components.air_quality.nilu
 niluclient==0.1.2
 
 # homeassistant.components.sensor.nederlandse_spoorwegen

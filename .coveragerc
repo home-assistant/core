@@ -443,7 +443,7 @@ omit =
     homeassistant/components/*/spider.py
 
     homeassistant/components/air_quality/opensensemap.py
-    homeassistant/components/air_pollutants/nilu.py
+    homeassistant/components/air_quality/nilu.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
