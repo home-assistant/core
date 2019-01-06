@@ -2,7 +2,7 @@
 Support for controlling what images are displayed on the Depict art frame.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.depict/
+https://home-assistant.io/components/media_player.depict/
 """
 
 from homeassistant.components.media_player import (
