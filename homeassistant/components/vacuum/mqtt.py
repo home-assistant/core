@@ -175,6 +175,7 @@ async def _async_setup_entity(config, async_add_entities,
     async_add_entities([MqttVacuum(config, discovery_hash)])
 
 
+# pylint: disable=too-many-ancestors
 class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                  VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
