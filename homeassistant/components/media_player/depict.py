@@ -93,3 +93,7 @@ class DepictMediaPlayer(MediaPlayerDevice):
         """Display an image."""
         self._url = media_id
         await self._frame.set_image_url(media_id)
+
+    async def async_update(self):
+        """Refresh the state of the frame."""
+        await self._frame.update()
