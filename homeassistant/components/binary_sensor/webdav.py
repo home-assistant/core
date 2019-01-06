@@ -2,7 +2,7 @@
 Support for observing the availability and contents of a WebDAV share.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensors.webdav/
+https://home-assistant.io/components/binary_sensor.webdav/
 """
 import logging
 
