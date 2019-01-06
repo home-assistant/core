@@ -113,7 +113,6 @@ class UtilityMeterSensor(RestoreEntity):
     def __init__(self, hass, source_entity, name, meter_type, meter_offset=0,
                  paused=False):
         """Initialize the min/max sensor."""
-        self._hass = hass
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
@@ -150,7 +149,7 @@ class UtilityMeterSensor(RestoreEntity):
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
 
-        self._hass.async_add_job(self.async_update_ha_state)
+        self.hass.async_add_job(self.async_update_ha_state)
 
     async def async_start_pause_meter(self, entity_id):
         """Start/Pause meter."""
@@ -159,7 +158,7 @@ class UtilityMeterSensor(RestoreEntity):
         if self._collecting is None:
             # Start collecting
             self._collecting = async_track_state_change(
-                self._hass, self._sensor_source_id, self.async_reading)
+                self.hass, self._sensor_source_id, self.async_reading)
         else:
             # Pause collecting by cancel of async_track_state_change
             self._collecting()
@@ -199,21 +198,21 @@ class UtilityMeterSensor(RestoreEntity):
         await super().async_added_to_hass()
 
         if self._period == HOURLY:
-            async_track_time_change(self._hass, self._async_reset_meter,
+            async_track_time_change(self.hass, self._async_reset_meter,
                                     minute=self._period_offset, second=0)
         elif self._period == DAILY:
-            async_track_time_change(self._hass, self._async_reset_meter,
+            async_track_time_change(self.hass, self._async_reset_meter,
                                     hour=self._period_offset, minute=0,
                                     second=0)
         elif self._period in [WEEKLY, MONTHLY, YEARLY]:
-            async_track_time_change(self._hass, self._async_reset_meter,
+            async_track_time_change(self.hass, self._async_reset_meter,
                                     hour=0, minute=0, second=0)
 
         async_dispatcher_connect(
-            self._hass, SIGNAL_START_PAUSE_METER, self.async_start_pause_meter)
+            self.hass, SIGNAL_START_PAUSE_METER, self.async_start_pause_meter)
 
         async_dispatcher_connect(
-            self._hass, SIGNAL_RESET_METER, self.async_reset_meter)
+            self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
         state = await self.async_get_last_state()
         if state:
