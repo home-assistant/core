@@ -85,7 +85,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
-        # sensors.append(DiscogsSensor(discogs_client, name, sensor_type))
 
     async_add_entities(sensors, True)
 
