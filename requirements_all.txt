@@ -99,7 +99,7 @@ aiodns==1.1.1
 aioesphomeapi==1.4.1
 
 # homeassistant.components.freebox
-aiofreepybox==0.0.6
+aiofreepybox==0.0.7
 
 # homeassistant.components.camera.yi
 aioftp==0.12.0
