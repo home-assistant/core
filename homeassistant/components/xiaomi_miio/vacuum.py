@@ -410,7 +410,7 @@ class MiroboVacuum(StateVacuumDevice):
                 reps = int(reps)
             except ValueError:
                 reps = 1
-                _LOGGER.debug("Failed to cast template reps. Set default --> 1")
+                _LOGGER.debug("Failed to cast template reps. Set default > 1")
         _LOGGER.debug("Start clean zone: %s Reps: %s", zone, reps)
         from miio import DeviceException
         try:
