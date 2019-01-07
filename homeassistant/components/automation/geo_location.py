@@ -1,5 +1,5 @@
 """
-Offer geo location automation rules.
+Offer geolocation automation rules.
 
 For more details about this automation trigger, please refer to the
 documentation at
