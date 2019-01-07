@@ -105,7 +105,7 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.data = None
         self.torrents = None
-		self.session = None
+        self.session = None
         self.available = True
         self._api = api
         self.completed_torrents = []
