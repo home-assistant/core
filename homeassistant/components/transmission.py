@@ -119,7 +119,7 @@ class TransmissionData:
         try:
             self.data = self._api.session_stats()
             self.torrents = self._api.get_torrents()
-			self.session = self._api.get_session()
+            self.session = self._api.get_session()
 
             self.check_completed_torrent()
             self.check_started_torrent()
