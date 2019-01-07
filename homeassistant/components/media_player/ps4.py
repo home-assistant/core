@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pyps4_homeassistant==0.0.4']
+REQUIREMENTS = ['pyps4-homeassistant==0.1.4']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -103,7 +103,7 @@ def request_configuration(hass, config, add_devices, _creds):
     _CONFIGURING[host] = configurator.request_config(
         NOTIFICATION_TITLE, configuration_callback,
         description="Press start to begin config. Then\
-        in PS4 Second Screen App, refresh devices and select 'PS4-Waker'",
+        in PS4 Second Screen App, refresh devices and select 'Home-Assistant'",
         submit_caption='Start'
     )
 
@@ -154,7 +154,6 @@ class PS4Device(MediaPlayerDevice):
         self._media_title = None
         self._media_image = None
         self._source = None
-        self._source_selected = None
         self._games = self.load_games()
         self._source_list = list(sorted(self._games.values()))
 
@@ -163,18 +162,20 @@ class PS4Device(MediaPlayerDevice):
         """Retrieve the latest data."""
         try:
             status = self._ps4.get_status()
-            if status.get('status') == 'Ok':
-                titleid = status.get('running-app-titleid')
-                name = status.get('running-app-name')
-                if titleid and name is not None:
-                    self._state = STATE_PLAYING
+        except socket.timeout:
+            self._state = STATE_UNKNOWN
+            return
+        if status.get('status') == 'Ok':
+            titleid = status.get('running-app-titleid')
+            name = status.get('running-app-name')
+            if titleid and name is not None:
+                self._state = STATE_PLAYING
+                if self._media_content_id != titleid:
                     self._media_content_id = titleid
-                    app_name = self._ps4.get_ps_store_data(
-                        'title', name) or name
-                    self._media_image = self._ps4.get_ps_store_data(
-                        'art', app_name)
-                    self._source = app_name
-                    self._media_title = app_name
+                    app_name, art = self._ps4.get_ps_store_data(name)
+                    self._media_title = app_name or name
+                    self._source = self._media_title
+                    self._media_image = art
                     if titleid in self._games:
                         store = self._games[titleid]
                         if store != app_name:
@@ -183,14 +184,10 @@ class PS4Device(MediaPlayerDevice):
                         self.add_games(titleid, app_name)
                         self._games = self.load_games()
                     self._source_list = list(sorted(self._games.values()))
-                else:
-                    self.idle()
-                    if self._source_selected is not None:
-                        self._source_selected = None
             else:
-                self.state_off()
-        except socket.timeout:
-            pass
+                self.idle()
+        else:
+            self.state_off()
 
     def idle(self):
         """Set states for state idle."""
@@ -207,7 +204,6 @@ class PS4Device(MediaPlayerDevice):
         self._media_title = None
         self._media_content_id = None
         self._source = None
-        self._source_selected = None
 
     def load_games(self):
         """Load games for sources."""
@@ -323,12 +319,6 @@ class PS4Device(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        if self._source_selected is not None:
-            _LOGGER.debug(
-                "Application %s is already in the process of starting (%s)",
-                self._source_selected, source)
-            return
-
         for title_id, game in self._games.items():
             if source == game:
                 _LOGGER.debug(
