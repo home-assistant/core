@@ -35,9 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def color_rgb_to_int(r: int, g: int, b: int) -> int:
+def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
-    return r*256*256+g*256+b
+    return red*256*256+green*256+blue
 
 
 def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
