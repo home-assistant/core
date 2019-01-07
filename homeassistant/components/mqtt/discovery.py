@@ -180,6 +180,11 @@ ABBREVIATIONS = {
 }
 
 
+def clear_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    del hass.data[ALREADY_DISCOVERED][discovery_hash]
+
+
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
