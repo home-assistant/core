@@ -20,19 +20,17 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    sensors = discovery_info[CONF_SENSORS]
-
     api = hass.data[DATA_ASUSWRT]
 
     devices = list()
 
-    if 'download' in sensors:
+    if 'download' in discovery_info:
         devices.append(AsuswrtTotalRXSensor(api))
-    if 'upload' in sensors:
+    if 'upload' in discovery_info:
         devices.append(AsuswrtTotalTXSensor(api))
-    if 'download_speed' in devices:
+    if 'download_speed' in discovery_info:
         devices.append(AsuswrtRXSensor(api))
-    if 'upload_speed' in sensors:
+    if 'upload_speed' in discovery_info:
         devices.append(AsuswrtTXSensor(api))
 
     add_entities(devices)

@@ -65,9 +65,9 @@ async def async_setup(hass, config):
 
     hass.data[DATA_ASUSWRT] = api
 
-    for router in config[DOMAIN]:
-        hass.async_create_task(async_load_platform(
-            hass, 'sensor', DOMAIN, router[CONF_SENSORS], config))
-        hass.async_create_task(async_load_platform(
-            hass, 'device_tracker', DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(
+        hass, 'sensor', DOMAIN, config[DOMAIN][CONF_SENSORS], config))
+    hass.async_create_task(async_load_platform(
+        hass, 'device_tracker', DOMAIN, {}, config))
+
     return True
