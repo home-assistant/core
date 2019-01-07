@@ -124,7 +124,7 @@ class VasttrafikDepartureSensor(Entity):
                 "No departures from %s heading %s",
                 self._departure['name'],
                 self._heading['name'] if self._heading else 'ANY')
-            self._state = "No departures"
+            self._state = None
             self._attributes = {}
         else:
             for departure in self._departureboard:
