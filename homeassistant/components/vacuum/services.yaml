@@ -144,3 +144,6 @@ xiaomi_clean_zone_start:
     reps:
       description: Number of cleaning reps for each zone between 1 and 3.
       example: '1'
+    reps_template:
+      description: Template that rapresents the number of cleaning reps for each zone between 1 and 3..
+      example: '{{states.input_number.vacuum_passes.state|int}}'
