@@ -187,7 +187,7 @@ batinfo==0.4.2
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
-beautifulsoup4==4.6.3
+beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
 bellows==0.7.0
