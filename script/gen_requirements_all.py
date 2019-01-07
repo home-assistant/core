@@ -68,6 +68,7 @@ TEST_REQUIREMENTS = (
     'libpurecoollink',
     'libsoundtouch',
     'luftdaten',
+    'mbddns',
     'mficlient',
     'numpy',
     'paho-mqtt',
@@ -209,7 +210,7 @@ def gather_modules():
         for req in module.REQUIREMENTS:
             if req in IGNORE_REQ:
                 continue
-            if '://' in req:
+            if '://' in req and 'pyharmony' not in req:
                 errors.append(
                     "{}[Only pypi dependencies are allowed: {}]".format(
                         package, req))

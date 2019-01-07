@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pybotvac==0.0.10']
+REQUIREMENTS = ['pybotvac==0.0.13']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
@@ -63,6 +63,7 @@ ERRORS = {
     'ui_error_battery_mismatch': 'Replace battery',
     'ui_error_battery_nothermistor': 'Replace battery',
     'ui_error_battery_overtemp': 'Replace battery',
+    'ui_error_battery_overvolt': 'Replace battery',
     'ui_error_battery_undercurrent': 'Replace battery',
     'ui_error_battery_undertemp': 'Replace battery',
     'ui_error_battery_undervolt': 'Replace battery',
@@ -73,27 +74,38 @@ ERRORS = {
     'ui_error_check_battery_switch': 'Check battery',
     'ui_error_corrupt_scb': 'Call customer service corrupt board',
     'ui_error_deck_debris': 'Deck debris',
+    'ui_error_dflt_app': 'Check Neato app',
+    'ui_error_disconnect_chrg_cable': 'Disconnected charge cable',
+    'ui_error_disconnect_usb_cable': 'Disconnected USB cable',
     'ui_error_dust_bin_missing': 'Dust bin missing',
     'ui_error_dust_bin_full': 'Dust bin full',
     'ui_error_dust_bin_emptied': 'Dust bin emptied',
     'ui_error_hardware_failure': 'Hardware failure',
     'ui_error_ldrop_stuck': 'Clear my path',
+    'ui_error_lds_jammed': 'Clear my path',
+    'ui_error_lds_bad_packets': 'Check Neato app',
+    'ui_error_lds_disconnected': 'Check Neato app',
+    'ui_error_lds_missed_packets': 'Check Neato app',
     'ui_error_lwheel_stuck': 'Clear my path',
     'ui_error_navigation_backdrop_frontbump': 'Clear my path',
     'ui_error_navigation_backdrop_leftbump': 'Clear my path',
     'ui_error_navigation_backdrop_wheelextended': 'Clear my path',
     'ui_error_navigation_noprogress': 'Clear my path',
     'ui_error_navigation_origin_unclean': 'Clear my path',
-    'ui_error_navigation_pathproblems_returninghome': 'Cannot return to base',
+    'ui_error_navigation_pathproblems': 'Cannot return to base',
+    'ui_error_navigation_pinkycommsfail': 'Clear my path',
     'ui_error_navigation_falling': 'Clear my path',
     'ui_error_navigation_noexitstogo': 'Clear my path',
     'ui_error_navigation_nomotioncommands': 'Clear my path',
     'ui_error_navigation_rightdrop_leftbump': 'Clear my path',
     'ui_error_navigation_undockingfailed': 'Clear my path',
     'ui_error_picked_up': 'Picked up',
+    'ui_error_qa_fail': 'Check Neato app',
     'ui_error_rdrop_stuck': 'Clear my path',
+    'ui_error_reconnect_failed': 'Reconnect failed',
     'ui_error_rwheel_stuck': 'Clear my path',
     'ui_error_stuck': 'Stuck!',
+    'ui_error_unable_to_return_to_base': 'Unable to return to base',
     'ui_error_unable_to_see': 'Clean vacuum sensors',
     'ui_error_vacuum_slip': 'Clear my path',
     'ui_error_vacuum_stuck': 'Clear my path',
@@ -112,6 +124,7 @@ ERRORS = {
     'lds_deck_debris': 'Debris on deck',
     'lds_disconnected': 'Disconnected',
     'lds_jammed': 'Jammed',
+    'lds_missed_packets': 'Missed packets',
     'maint_brush_stuck': 'Brush stuck',
     'maint_brush_overload': 'Brush overloaded',
     'maint_bumper_stuck': 'Bumper stuck',
@@ -139,11 +152,24 @@ ERRORS = {
 ALERTS = {
     'ui_alert_dust_bin_full': 'Please empty dust bin',
     'ui_alert_recovering_location': 'Returning to start',
+    'ui_alert_battery_chargebasecommerr': 'Battery error',
+    'ui_alert_busy_charging': 'Busy charging',
+    'ui_alert_charging_base': 'Base charging',
+    'ui_alert_charging_power': 'Charging power',
+    'ui_alert_connect_chrg_cable': 'Connect charge cable',
+    'ui_alert_info_thank_you': 'Thank you',
+    'ui_alert_invalid': 'Invalid check app',
+    'ui_alert_old_error': 'Old error',
+    'ui_alert_swupdate_fail': 'Update failed',
     'dustbin_full': 'Please empty dust bin',
     'maint_brush_change': 'Change the brush',
     'maint_filter_change': 'Change the filter',
     'clean_completed_to_start': 'Cleaning completed',
-    'nav_floorplan_not_created': 'No floorplan found'
+    'nav_floorplan_not_created': 'No floorplan found',
+    'nav_floorplan_load_fail': 'Failed to load floorplan',
+    'nav_floorplan_localization_fail': 'Failed to load floorplan',
+    'clean_incomplete_to_start': 'Cleaning incomplete',
+    'log_upload_failed': 'Logs failed to upload'
 }
 
 

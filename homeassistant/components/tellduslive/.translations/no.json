@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "TelldusLive er allerede konfigurert",
+            "authorize_url_fail": "Ukjent feil ved generering av autoriseringsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
+            "unknown": "Ukjent feil oppstod"
+        },
+        "step": {
+            "auth": {
+                "description": "For \u00e5 koble TelldusLive-kontoen din:\n 1. Klikk p\u00e5 linken under\n 2. Logg inn p\u00e5 Telldus Live \n 3. Tillat **{app_name}** (klikk**Ja**). \n 4. Kom tilbake hit og klikk **SUBMIT**. \n\n [Link TelldusLive-konto]({auth_url})",
+                "title": "Godkjen mot TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "title": "Velg endepunkt."
+            }
+        },
+        "title": "Telldus Live"
+    }
+}

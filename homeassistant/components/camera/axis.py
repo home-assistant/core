@@ -7,7 +7,7 @@ https://home-assistant.io/components/camera.axis/
 import logging
 
 from homeassistant.components.camera.mjpeg import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
+    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
@@ -29,6 +29,8 @@ def _get_image_url(host, port, mode):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Axis camera."""
+    filter_urllib3_logging()
+
     camera_config = {
         CONF_NAME: discovery_info[CONF_NAME],
         CONF_USERNAME: discovery_info[CONF_USERNAME],
