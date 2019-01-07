@@ -24,6 +24,7 @@ DATA_ASUSWRT = DOMAIN
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
 CONF_REQUIRE_IP = 'require_ip'
+CONF_DISABLE_SENSOR = 'disable_sensor'
 DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -37,7 +38,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
+        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
+        vol.Optional(CONF_DISABLE_SENSOR, default=False): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,8 +63,9 @@ async def async_setup(hass, config):
 
     hass.data[DATA_ASUSWRT] = api
 
-    hass.async_create_task(async_load_platform(
-        hass, 'sensor', DOMAIN, {}, config))
+    if not conf[CONF_DISABLE_SENSOR]:
+        hass.async_create_task(async_load_platform(
+            hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(async_load_platform(
         hass, 'device_tracker', DOMAIN, {}, config))
     return True
