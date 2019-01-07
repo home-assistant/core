@@ -87,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         @callback
         def async_start_pause_meter(service):
             """Process service start_pause meter."""
-            for entity in service.data.get(ATTR_ENTITY_ID):
+            for entity in service.data[ATTR_ENTITY_ID]:
                 dispatcher_send(hass, SIGNAL_START_PAUSE_METER, entity)
 
         @callback
