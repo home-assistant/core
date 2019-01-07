@@ -7,7 +7,6 @@ https://home-assistant.io/components/camera.amcrest/
 import asyncio
 import logging
 from requests import RequestException
-from urllib3.exceptions import ReadTimeoutError
 
 import voluptuous as vol
 
@@ -20,7 +19,6 @@ from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, STATE_ON, STATE_OFF)
 from homeassistant.loader import bind_hass
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_web,
     async_aiohttp_proxy_stream)
