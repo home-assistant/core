@@ -227,16 +227,26 @@ async def async_setup_platform(hass, config, async_add_entities,
             await asyncio.wait(update_tasks, loop=hass.loop)
 
     services = (
-        (SERVICE_ENABLE_RECORDING,  async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_DISABLE_RECORDING, async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_GOTO_PRESET,       async_goto_preset,     SERVICE_GOTO_PRESET_SCHEMA),
-        (SERVICE_SET_COLOR_BW,      async_set_color_bw,    SERVICE_SET_COLOR_BW_SCHEMA),
-        (SERVICE_AUDIO_OFF,         async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_AUDIO_ON,          async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_MASK_OFF,          async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_MASK_ON,           async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_TOUR_OFF,          async_service_handler, CAMERA_SERVICE_SCHEMA),
-        (SERVICE_TOUR_ON,           async_service_handler, CAMERA_SERVICE_SCHEMA))
+        (SERVICE_ENABLE_RECORDING, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_DISABLE_RECORDING, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_GOTO_PRESET, async_goto_preset,
+            SERVICE_GOTO_PRESET_SCHEMA),
+        (SERVICE_SET_COLOR_BW, async_set_color_bw,
+            SERVICE_SET_COLOR_BW_SCHEMA),
+        (SERVICE_AUDIO_OFF, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_AUDIO_ON, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_MASK_OFF, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_MASK_ON, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_TOUR_OFF, async_service_handler,
+            CAMERA_SERVICE_SCHEMA),
+        (SERVICE_TOUR_ON, async_service_handler,
+            CAMERA_SERVICE_SCHEMA))
     if not hass.services.has_service(DOMAIN, services[0][0]):
         for service in services:
             hass.services.async_register(DOMAIN, *service)
@@ -280,7 +290,6 @@ class AmcrestCam(Camera):
         if self._lock.acquire(timeout=9):
             try:
                 return self._camera.snapshot(channel=self._resolution).data
-#            except (RequestException, ReadTimeoutError, ValueError) as exc:
             except Exception as exc:
                 _LOGGER.error('In camera_image: {}: {}'.format(
                     exc.__class__.__name__, str(exc)))
@@ -503,7 +512,7 @@ class AmcrestCam(Camera):
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__, 
-                                                        str(exc)))
+                                                     str(exc)))
         else:
             self.is_streaming = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.VideoEnable=' in s]
@@ -512,7 +521,8 @@ class AmcrestCam(Camera):
             self._is_audio_on = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
-                for s in video_widget_config if '.Covers' in s and '.EncodeBlend=' in s]
+                for s in video_widget_config if '.Covers' in s and 
+                    '.EncodeBlend=' in s]
 
     # Other Camera method overrides
 
