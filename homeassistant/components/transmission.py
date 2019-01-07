@@ -9,7 +9,6 @@ from datetime import timedelta
 import logging
 import voluptuous as vol
 
-from homeassistant.util import Throttle
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
