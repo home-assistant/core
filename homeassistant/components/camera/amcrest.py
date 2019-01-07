@@ -553,8 +553,8 @@ class AmcrestCam(Camera):
         try:
             self._check_result(
                 self._camera.go_to_preset(action='start',
-                                            preset_point_number=preset),
-                                            'preset={}'.format(preset))
+                                          preset_point_number=preset),
+                                          'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In goto_preset: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
