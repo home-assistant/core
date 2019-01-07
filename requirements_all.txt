@@ -508,7 +508,7 @@ hlk-sw16==0.0.6
 hole==0.3.0
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.8
+holidays==0.9.9
 
 # homeassistant.components.frontend
 home-assistant-frontend==20181219.0
