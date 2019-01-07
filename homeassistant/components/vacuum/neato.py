@@ -148,7 +148,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._robot_map_id = self._robot_maps[self._robot_serial][0]['id']
             self._robot_boundaries = (self.robot.get_map_boundaries(
                 self._robot_map_id).json())
-             
             zones = range(len(self._robot_boundaries['data']['boundaries']))
 
             for boundary in zones:
