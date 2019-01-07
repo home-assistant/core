@@ -420,7 +420,7 @@ class _AlexaEndpointHealth(_AlexaInterface):
         if name != 'connectivity':
             raise _UnsupportedProperty(name)
 
-        if self.entity.state is STATE_UNAVAILABLE:
+        if self.entity.state == STATE_UNAVAILABLE:
             return {'value': 'UNREACHABLE'}
         return {'value': 'OK'}
 
