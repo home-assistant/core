@@ -303,7 +303,7 @@ class AmcrestCam(Camera):
 
             streaming_url = self._camera.rtsp_url(typeno=self._resolution)
             # Need to use lock here but lock is not asyncio!
-            #self._lock.acquire()
+            # self._lock.acquire()
             try:
                 stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
                 await stream.open_camera(
@@ -314,7 +314,7 @@ class AmcrestCam(Camera):
                     'multipart/x-mixed-replace;boundary=ffserver')
                 await stream.close()
             finally:
-                #self._lock.release()
+                # self._lock.release()
                 pass
 
     # Entity property overrides
@@ -364,7 +364,8 @@ class AmcrestCam(Camera):
     def is_recording(self, enable):
         rec_mode = {'Automatic': 0, 'Manual': 1}
         try:
-            self._camera.record_mode = rec_mode['Manual' if enable else 'Automatic']
+            self._camera.record_mode = 
+                rec_mode['Manual' if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -495,7 +496,8 @@ class AmcrestCam(Camera):
             video_in_options = self._camera.video_in_options.split()
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__, 
+                str(exc)))
         else:
             self.is_streaming = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.VideoEnable=' in s]
@@ -547,11 +549,12 @@ class AmcrestCam(Camera):
 
     def goto_preset(self, preset):
         """Move camera position and zoom to preset."""
-        #self.preset = preset
+        # self.preset = preset
         try:
             self._check_result(
-                self._camera.go_to_preset(action='start', preset_point_number=preset),
-                'preset={}'.format(preset))
+                self._camera.go_to_preset(action='start', 
+                    preset_point_number=preset),
+                    'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In goto_preset: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -599,7 +602,8 @@ class AmcrestCam(Camera):
         try:
             self._tour(True)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In tour_on: {}: {}'.format(exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In tour_on: {}: {}'.format(
+                exc.__class__.__name__, str(exc)))
 
     @callback
     def async_tour_on(self):
@@ -609,7 +613,8 @@ class AmcrestCam(Camera):
         try:
             self._tour(False)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In tour_off: {}: {}'.format(exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In tour_off: {}: {}'.format(
+                exc.__class__.__name__, str(exc)))
 
     @callback
     def async_tour_off(self):
@@ -668,5 +673,5 @@ class AmcrestCam(Camera):
 
     def _tour(self, start):
         self._camera.command(
-            'ptz.cgi?action=start&channel=0&code={}Tour&arg1=1&arg2=0&arg3=0&arg4=0'.format(
-                'Start' if start else 'Stop'))
+            'ptz.cgi?action=start&channel=0&code={}Tour&arg1=1&arg2=0&arg3=0&' \
+                'arg4=0'.format('Start' if start else 'Stop'))
