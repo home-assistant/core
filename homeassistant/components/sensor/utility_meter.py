@@ -149,7 +149,7 @@ class UtilityMeterSensor(RestoreEntity):
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
 
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.async_schedule_update_ha_state()
 
     async def async_start_pause_meter(self, entity_id):
         """Start/Pause meter."""
