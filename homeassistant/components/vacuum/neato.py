@@ -146,11 +146,15 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         if self._robot_has_map:
             self._robot_map_id = self._robot_maps[self._robot_serial][0]['id']
-            self._robot_boundaries = self.robot.get_map_boundaries(self._robot_map_id).json()
+            self._robot_boundaries = (self.robot.get_map_boundaries(
+                self._robot_map_id).json())
 
-            for boundary in range(len(self._robot_boundaries['data']['boundaries'])):
-               self._boundary_name[boundary] = self._robot_boundaries['data']['boundaries'][boundary]['name']
-               self._boundary_id[boundary] = self._robot_boundaries['data']['boundaries'][boundary]['id']
+            for boundary in range(len(self._robot_boundaries['data']
+                ['boundaries'])):
+                self._boundary_name[boundary] = (self._robot_boundaries['data']
+                    ['boundaries'][boundary]['name'])
+                self._boundary_id[boundary] = (self._robot_boundaries['data']
+                    ['boundaries'][boundary]['id'])
 
     @property
     def name(self):
@@ -211,8 +215,9 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
 
         if self._boundary_name is not None:
-           for boundary in self._boundary_name:
-               data[self._boundary_name[boundary]] = self._boundary_id[boundary]
+            for boundary in self._boundary_name:
+                data[self._boundary_name[boundary]] = (
+                    self._boundary_id[boundary])
 
         return data
 
