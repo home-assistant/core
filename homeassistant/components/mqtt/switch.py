@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(config, async_add_entities, config_entry,
-                                      discovery_payload[ATTR_DISCOVERY_HASH])
+                                      discovery_hash)
         except Exception:
             if discovery_hash:
                 clear_discovery_hash(hass, discovery_hash)
