@@ -90,11 +90,10 @@ def setup(hass, config):
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
-        'client_name': config[DOMAIN][CONF_NAME],
-        'component_name': DATA_TRANSMISSION}
+        'client_name': config[DOMAIN][CONF_NAME]}
     discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
 
-    if config[DOMAIN][TURTLE_MODE] is True:
+    if config[DOMAIN][TURTLE_MODE]:
         discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
     return True
 
@@ -106,6 +105,7 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.data = None
         self.torrents = None
+		self.session = None
         self.available = True
         self._api = api
         self.completed_torrents = []
@@ -119,6 +119,7 @@ class TransmissionData:
         try:
             self.data = self._api.session_stats()
             self.torrents = self._api.get_torrents()
+			self.session = self._api.get_session()
 
             self.check_completed_torrent()
             self.check_started_torrent()
@@ -185,9 +186,4 @@ class TransmissionData:
 
     def get_alt_speed_enabled(self):
         """Get the alternative speed flag."""
-        return self.get_session().alt_speed_enabled
-
-    @Throttle(SCAN_INTERVAL)
-    def get_session(self):
-        """Get the Transmission session parameters."""
-        return self._api.get_session()
+        return self.session.alt_speed_enabled

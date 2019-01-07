@@ -24,20 +24,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    component_name = DATA_TRANSMISSION
-    transmission_api = hass.data[component_name]
+    transmission_api = hass.data[DATA_TRANSMISSION]
     monitored_variables = discovery_info['sensors']
     name = discovery_info['client_name']
-    sensor_types = SENSOR_TYPES
 
     dev = []
-    for variable in monitored_variables:
+    for sensor_type in monitored_variables:
         dev.append(TransmissionSensor(
-            variable,
+            sensor_type,
             transmission_api,
             name,
-            sensor_types[variable][0],
-            sensor_types[variable][1]))
+            SENSOR_TYPES[sensor_type][0],
+            SENSOR_TYPES[sensor_type][1]))
 
     add_entities(dev, True)
 
