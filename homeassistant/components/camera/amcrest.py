@@ -364,8 +364,8 @@ class AmcrestCam(Camera):
     def is_recording(self, enable):
         rec_mode = {'Automatic': 0, 'Manual': 1}
         try:
-            self._camera.record_mode = 
-                rec_mode['Manual' if enable else 'Automatic']
+            self._camera.record_mode =
+            rec_mode['Manual' if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -497,7 +497,7 @@ class AmcrestCam(Camera):
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__, 
-                str(exc)))
+                                                        str(exc)))
         else:
             self.is_streaming = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.VideoEnable=' in s]
@@ -552,9 +552,9 @@ class AmcrestCam(Camera):
         # self.preset = preset
         try:
             self._check_result(
-                self._camera.go_to_preset(action='start', 
-                    preset_point_number=preset),
-                    'preset={}'.format(preset))
+                self._camera.go_to_preset(action='start',
+                                            preset_point_number=preset),
+                                            'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In goto_preset: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -674,4 +674,4 @@ class AmcrestCam(Camera):
     def _tour(self, start):
         self._camera.command(
             'ptz.cgi?action=start&channel=0&code={}Tour&arg1=1&arg2=0&arg3=0&' \
-                'arg4=0'.format('Start' if start else 'Stop'))
+            'arg4=0'.format('Start' if start else 'Stop'))
