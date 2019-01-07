@@ -151,6 +151,15 @@ class SomfyEntity(Entity):
         """Return the name of the device."""
         return self.device.name
 
+    @property
+    def device_info(self):
+        return {
+            'identifiers': {(DOMAIN, self.unique_id)},
+            'name': self.name,
+            'model': self.device.type,
+            'via_hub': (DOMAIN, self.device.site_id),
+        }
+
     def update(self):
         """Update the device with the latest data."""
         update_all_devices(self.hass)
