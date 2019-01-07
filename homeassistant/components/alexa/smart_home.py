@@ -870,6 +870,7 @@ class _FanCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield _AlexaPercentageController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
