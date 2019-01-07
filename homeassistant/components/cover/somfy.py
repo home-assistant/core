@@ -62,11 +62,9 @@ class SomfyCover(SomfyEntity, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         is_closed = None
-        try:
+        if self.has_capability('position'):
             from pymfy.api.devices.roller_shutter import RollerShutter
             is_closed = RollerShutter(self.device, self.api).is_closed()
-        except StopIteration:
-            pass
         return is_closed
 
     @property
