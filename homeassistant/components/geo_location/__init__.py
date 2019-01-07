@@ -22,7 +22,7 @@ DOMAIN = 'geo_location'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
+GROUP_NAME_ALL_EVENTS = 'All Geolocation Events'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
