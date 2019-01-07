@@ -58,10 +58,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     device = BMWConnectedDriveSensor(account, vehicle,
                                                      attribute_name,
                                                      attribute_info)
+                    devices.append(device)
+            if 'mileage' in vehicle.available_attributes:
+                device = BMWConnectedDriveSensor(account, vehicle, 'mileage',
+                                                 attribute_info)
                 devices.append(device)
-            device = BMWConnectedDriveSensor(account, vehicle, 'mileage',
-                                             attribute_info)
-            devices.append(device)
     add_entities(devices, True)
 
 
