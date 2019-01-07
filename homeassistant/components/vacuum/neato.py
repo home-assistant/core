@@ -149,12 +149,11 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._robot_boundaries = (self.robot.get_map_boundaries(
                 self._robot_map_id).json())
 
-            for boundary in range(len(self._robot_boundaries['data']
-                ['boundaries'])):
-                self._boundary_name[boundary] = (self._robot_boundaries['data']
-                    ['boundaries'][boundary]['name'])
-                self._boundary_id[boundary] = (self._robot_boundaries['data']
-                    ['boundaries'][boundary]['id'])
+            for boundary in range(len(self._robot_boundaries['data']['boundaries'])):
+                self._boundary_name[boundary] = (
+                    self._robot_boundaries['data']['boundaries'][boundary]['name'])
+                self._boundary_id[boundary] = (
+                    self._robot_boundaries['data']['boundaries'][boundary]['id'])
 
     @property
     def name(self):
