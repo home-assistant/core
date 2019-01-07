@@ -63,6 +63,7 @@ ATTR_RC_VELOCITY = 'velocity'
 ATTR_STATUS = 'status'
 ATTR_ZONE_ARRAY = 'zone'
 ATTR_ZONE_REPEATER = 'reps'
+ATTR_ZONE_REPEATER_TEMPLATE = 'reps_template'
 ATTR_ZONE_TEST = 'test'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
@@ -75,8 +76,9 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
 SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
         vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Required(ATTR_ZONE_REPEATER, default=1):
-        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
+    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeToReps'):
+        vol.All(vol.Coerce(int, "Reps error"), vol.Clamp(min=1, max=3)),
+    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeToReps'): cv.template,
     vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
 
@@ -397,8 +399,18 @@ class MiroboVacuum(StateVacuumDevice):
     async def async_clean_zone_start(self,
                                      zone,
                                      reps: int = 1,
+                                     reps_template = None,
                                      test: bool = 0):
-        """Start cleaning operation in the areas for the number of reps."""
+        """Cleaning selected area for the number of reps indicated."""
+        if reps_template is not None:
+            _LOGGER.debug("Using template reps")
+            reps_template.hass = self.hass
+            reps = reps_template.async_render()
+            try:
+                reps = int(reps)
+            except ValueError:
+                reps = 1
+                _LOGGER.debug("Failed to cast template reps. Set default > 1")
         _LOGGER.debug("Start clean zone: %s Reps: %s", zone, reps)
         from miio import DeviceException
         try:
