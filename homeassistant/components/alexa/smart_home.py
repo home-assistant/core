@@ -401,7 +401,7 @@ class _AlexaEndpointHealth(_AlexaInterface):
     """
 
     def __init__(self, hass, entity):
-        _AlexaInterface.__init__(self, entity)
+        super().__init__(entity)
         self.hass = hass
 
     def name(self):

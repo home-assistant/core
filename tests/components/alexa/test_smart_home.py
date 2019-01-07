@@ -152,6 +152,7 @@ async def discovery_test(device, hass, expected_endpoints=1):
         return endpoints
     return None
 
+
 def get_capability(capabilities, capability_name):
     """Search a set of capabilities for a specific one."""
     for capability in capabilities:
@@ -159,6 +160,7 @@ def get_capability(capabilities, capability_name):
             return capability
 
     return None
+
 
 def assert_endpoint_capabilities(endpoint, *interfaces):
     """Assert the endpoint supports the given interfaces.
@@ -728,7 +730,8 @@ async def test_temp_sensor(hass):
         'Alexa.EndpointHealth',
     )
 
-    temp_sensor_capability = get_capability(capabilities, 'Alexa.TemperatureSensor')
+    temp_sensor_capability = get_capability(capabilities,
+                                            'Alexa.TemperatureSensor')
     assert temp_sensor_capability is not None
     properties = temp_sensor_capability['properties']
     assert properties['retrievable'] is True
