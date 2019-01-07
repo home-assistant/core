@@ -684,9 +684,9 @@ class AmcrestCam(Camera):
         self._camera.command(cmd)
         cmd = 'configManager.cgi?action=setConfig'
         for params in _MOT_DET_WINDOW[enable]:
-            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]'
+            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]' \
                    '.Sensitive={sensitive}'.format(**params)
-            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]'
+            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]' \
                    '.Threshold={threshold}'.format(**params)
         self._camera.command(cmd)
 
