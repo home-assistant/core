@@ -109,9 +109,9 @@ def _validate_data(data):
     return data
 
 
-def _is_mobile_beacon(self, data):
+def _is_mobile_beacon(data, mobile_beacons):
     """Check if we have a mobile beacon."""
-    return 'beaconUUID' in data and data['name'] in self.mobile_beacons
+    return 'beaconUUID' in data and data['name'] in mobile_beacons
 
 
 def _device_name(data):
