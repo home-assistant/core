@@ -380,7 +380,8 @@ class AmcrestCam(Camera):
     def is_recording(self, enable):
         rec_mode = {'Automatic': 0, 'Manual': 1}
         try:
-            self._camera.record_mode = rec_mode['Manual' if enable else 'Automatic']
+            self._camera.record_mode = rec_mode['Manual'
+                if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -395,7 +396,8 @@ class AmcrestCam(Camera):
         return 'Amcrest'
 
     # Don't use Camera's motion_detection_enabled method/property because
-    # Camera.state_attributes doesn't properly report the 'motion_detection' attribute.
+    # Camera.state_attributes doesn't properly report the 'motion_detection'
+    # attribute.
     # See is_motion_detection_on property/setter below.
 
     @property
@@ -505,13 +507,14 @@ class AmcrestCam(Camera):
             encode_media = self._camera.encode_media.split()
             self._is_recording = self._camera.record_mode == 'Manual'
             self._is_motion_detection_on = self._camera.is_motion_detector_on()
-            # Model should not be changing dynamically so only need to grab once.
+            # Model should not be changing dynamically,
+            # so only need to grab once.
             if self._model is None:
                 self._model = self._camera.device_type.split('=')[1].strip()
             video_in_options = self._camera.video_in_options.split()
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__, 
+            _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__,
                                                      str(exc)))
         else:
             self.is_streaming = 'true' in [s.split('=')[-1]
@@ -521,8 +524,8 @@ class AmcrestCam(Camera):
             self._is_audio_on = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
-                for s in video_widget_config if '.Covers' in s and 
-                    '.EncodeBlend=' in s]
+                for s in video_widget_config
+                    if '.Covers' in s and '.EncodeBlend=' in s]
 
     # Other Camera method overrides
 
@@ -648,8 +651,8 @@ class AmcrestCam(Camera):
     def _set_color_bw(self, cbw):
         self._check_result(
             self._camera.command(
-                    'configManager.cgi?action=setConfig'
-                    '&VideoInOptions[0].DayNightColor={}'.format(CBW.index(cbw))
+                    'configManager.cgi?action=setConfig&VideoInOptions[0].'
+                    'DayNightColor={}'.format(CBW.index(cbw))
                 ).content.decode(),
             'cbw = {}'.format(cbw))
 
@@ -681,13 +684,13 @@ class AmcrestCam(Camera):
         self._camera.command(cmd)
         cmd = 'configManager.cgi?action=setConfig'
         for params in _MOT_DET_WINDOW[enable]:
-            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]' \
+            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]'
                    '.Sensitive={sensitive}'.format(**params)
-            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]' \
+            cmd += '&MotionDetect[0].MotionDetectWindow[{window}]'
                    '.Threshold={threshold}'.format(**params)
         self._camera.command(cmd)
 
     def _tour(self, start):
         self._camera.command(
-            'ptz.cgi?action=start&channel=0&code={}Tour&arg1=1&arg2=0&arg3=0&' \
+            'ptz.cgi?action=start&channel=0&code={}Tour&arg1=1&arg2=0&arg3=0&'
             'arg4=0'.format('Start' if start else 'Stop'))
