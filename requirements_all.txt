@@ -1165,7 +1165,7 @@ pypoint==1.0.6
 pypollencom==2.2.2
 
 # homeassistant.components.media_player.ps4
-pyps4_homeassistant==0.0.4
+pyps4-homeassistant==0.1.4
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
