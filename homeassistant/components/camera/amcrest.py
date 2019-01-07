@@ -373,8 +373,7 @@ class AmcrestCam(Camera):
     def is_recording(self, enable):
         rec_mode = {'Automatic': 0, 'Manual': 1}
         try:
-            self._camera.record_mode =
-            rec_mode['Manual' if enable else 'Automatic']
+            self._camera.record_mode = rec_mode['Manual' if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
