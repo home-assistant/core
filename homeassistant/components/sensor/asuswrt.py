@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.asuswrt/
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.asuswrt import DATA_ASUSWRT, CONF_SENSORS
+from homeassistant.components.asuswrt import DATA_ASUSWRT
 
 DEPENDENCIES = ['asuswrt']
 
