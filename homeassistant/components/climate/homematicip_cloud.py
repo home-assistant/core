@@ -17,6 +17,9 @@ from homeassistant.const import TEMP_CELSIUS
 _LOGGER = logging.getLogger(__name__)
 
 STATE_BOOST = 'Boost'
+STATE_PARTY = 'Party'
+
+HMIP_MANUAL = 'MANUAL'
 
 HA_STATE_TO_HMIP = {
     STATE_AUTO: 'AUTOMATIC',
@@ -82,7 +85,13 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. automatic or manual."""
-        return HMIP_STATE_TO_HA.get(self._device.controlMode)
+        if self._device.boostMode:
+            return STATE_BOOST
+        elif self._device.partyMode:
+            return STATE_PARTY
+        elif self._device.controlMode == HMIP_MANUAL:
+            return STATE_MANUAL
+        return self._device.activeProfile.name
 
     @property
     def min_temp(self):
