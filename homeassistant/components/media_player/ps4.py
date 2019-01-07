@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pyps4-homeassistant==0.1.4']
+REQUIREMENTS = ['pyps4-homeassistant==0.1.6']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
