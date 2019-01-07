@@ -972,7 +972,7 @@ class MqttDiscoveryUpdate(Entity):
 
         from homeassistant.helpers.dispatcher import async_dispatcher_connect
         from homeassistant.components.mqtt.discovery import (
-            ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
+            MQTT_DISCOVERY_UPDATED, clear_discovery_hash)
 
         @callback
         def discovery_callback(payload):
@@ -983,7 +983,7 @@ class MqttDiscoveryUpdate(Entity):
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
-                del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
+                clear_discovery_hash(self.hass, self._discovery_hash)
                 self._remove_signal()
             elif self._discovery_update:
                 # Non-empty payload: Notify component
