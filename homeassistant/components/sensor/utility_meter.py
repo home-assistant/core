@@ -112,7 +112,7 @@ class UtilityMeterSensor(RestoreEntity):
 
     def __init__(self, hass, source_entity, name, meter_type, meter_offset=0,
                  paused=False):
-        """Initialize the min/max sensor."""
+        """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
