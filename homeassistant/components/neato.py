@@ -23,6 +23,7 @@ DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
 NEATO_LOGIN = 'neato_login'
 NEATO_MAP_DATA = 'neato_map_data'
+NEATO_PERSISTENT_MAPS = 'neato_persistent_maps'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -202,6 +203,7 @@ class NeatoHub:
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def login(self):
@@ -221,6 +223,7 @@ class NeatoHub:
         _LOGGER.debug("Running HUB.update_robots %s",
                       self._hass.data[NEATO_ROBOTS])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def download_map(self, url):

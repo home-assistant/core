@@ -15,7 +15,8 @@ from homeassistant.components.vacuum import (
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
     SUPPORT_LOCATE)
 from homeassistant.components.neato import (
-    NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
+    NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, NEATO_PERSISTENT_MAPS, ACTION,
+    ERRORS, MODE, ALERTS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +68,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._available = False
         self._battery_level = None
         self._robot_serial = self.robot.serial
+        self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
+        self._robot_map_id = None
+        self._robot_boundaries = {}
+        self._boundary_id = {}
+        self._boundary_name = {}
+        self._robot_has_map = self.robot.has_persistent_maps
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -137,6 +144,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         self._battery_level = self._state['details']['charge']
 
+        if self._robot_has_map:
+            self._robot_map_id = self._robot_maps[self._robot_serial][0]['id']
+            self._robot_boundaries = self.robot.get_map_boundaries(self._robot_map_id).json()
+
+            for boundary in range(len(self._robot_boundaries['data']['boundaries'])):
+               self._boundary_name[boundary] = self._robot_boundaries['data']['boundaries'][boundary]['name']
+               self._boundary_id[boundary] = self._robot_boundaries['data']['boundaries'][boundary]['id']
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -194,6 +209,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             data[ATTR_CLEAN_BATTERY_START] = self.clean_battery_start
         if self.clean_battery_end is not None:
             data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
+
+        if self._boundary_name is not None:
+           for boundary in self._boundary_name:
+               data[self._boundary_name[boundary]] = self._boundary_id[boundary]
 
         return data
 
