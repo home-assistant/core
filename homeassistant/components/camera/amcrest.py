@@ -34,23 +34,23 @@ OPTIMISTIC = True
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
-SERVICE_ENABLE_RECORDING  = 'amcrest_enable_recording'
+SERVICE_ENABLE_RECORDING = 'amcrest_enable_recording'
 SERVICE_DISABLE_RECORDING = 'amcrest_disable_recording'
-SERVICE_GOTO_PRESET       = 'amcrest_goto_preset'
-SERVICE_SET_COLOR_BW      = 'amcrest_set_color_bw'
-SERVICE_AUDIO_ON          = 'amcrest_audio_on'
-SERVICE_AUDIO_OFF         = 'amcrest_audio_off'
-SERVICE_MASK_ON           = 'amcrest_mask_on'
-SERVICE_MASK_OFF          = 'amcrest_mask_off'
-SERVICE_TOUR_ON           = 'amcrest_tour_on'
-SERVICE_TOUR_OFF          = 'amcrest_tour_off'
+SERVICE_GOTO_PRESET = 'amcrest_goto_preset'
+SERVICE_SET_COLOR_BW = 'amcrest_set_color_bw'
+SERVICE_AUDIO_ON = 'amcrest_audio_on'
+SERVICE_AUDIO_OFF = 'amcrest_audio_off'
+SERVICE_MASK_ON = 'amcrest_mask_on'
+SERVICE_MASK_OFF = 'amcrest_mask_off'
+SERVICE_TOUR_ON = 'amcrest_tour_on'
+SERVICE_TOUR_OFF = 'amcrest_tour_off'
 
-ATTR_PRESET   = 'preset'
+ATTR_PRESET = 'preset'
 ATTR_COLOR_BW = 'color_bw'
 
 CBW_COLOR = 'color'
-CBW_AUTO  = 'auto'
-CBW_BW    = 'bw'
+CBW_AUTO = 'auto'
+CBW_BW = 'bw'
 CBW = [CBW_COLOR, CBW_AUTO, CBW_BW]
 
 SERVICE_GOTO_PRESET_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
@@ -267,7 +267,7 @@ class AmcrestCam(Camera):
         self._stream_source = amcrest.stream_source
         self._resolution = amcrest.resolution
         self._token = self._auth = amcrest.authentication
-        self.is_streaming = None
+        self._is_streaming = None
         self._is_recording = None
         self._is_motion_detection_on = None
         self._model = None
@@ -420,7 +420,7 @@ class AmcrestCam(Camera):
     @property
     def is_streaming_on(self):
         """Return the camera streaming status."""
-        return self.is_streaming
+        return self._is_streaming
 
     @is_streaming_on.setter
     def is_streaming_on(self, enable):
@@ -431,7 +431,7 @@ class AmcrestCam(Camera):
                 exc.__class__.__name__, str(exc)))
         else:
             if OPTIMISTIC:
-                self.is_streaming = enable
+                self._is_streaming = enable
                 self.schedule_update_ha_state()
 
     @property
@@ -517,7 +517,7 @@ class AmcrestCam(Camera):
             _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__,
                                                      str(exc)))
         else:
-            self.is_streaming = 'true' in [s.split('=')[-1]
+            self._is_streaming = 'true' in [s.split('=')[-1]
                 for s in encode_media if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
                 for s in video_in_options if '].DayNightColor=' in s][0])]
