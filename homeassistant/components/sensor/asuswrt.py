@@ -22,7 +22,7 @@ async def async_setup_platform(
 
     api = hass.data[DATA_ASUSWRT]
 
-    devices = list()
+    devices = []
 
     if 'download' in discovery_info:
         devices.append(AsuswrtTotalRXSensor(api))
