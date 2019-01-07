@@ -134,7 +134,6 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._color_temp = None
         self._effect = None
         self._white_value = None
-        self._supported_features = 0
 
         self._topic = None
         self._payload = None
