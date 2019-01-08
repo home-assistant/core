@@ -36,7 +36,7 @@ REQUIRES = [
     'astral==1.7.1',
     'async_timeout==3.0.1',
     'attrs==18.2.0',
-    'bcrypt==3.1.4',
+    'bcrypt==3.1.5',
     'certifi>=2018.04.16',
     'jinja2>=2.10',
     'PyJWT==1.6.4',
