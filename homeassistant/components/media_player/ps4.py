@@ -211,7 +211,7 @@ class PS4Device(MediaPlayerDevice):
         self._media_title = None
         self._media_content_id = None
         self._source = None
-        
+
     def update_list(self):
         """Update Game List, Correct data if different."""
         if self._media_content_id in self._games:
