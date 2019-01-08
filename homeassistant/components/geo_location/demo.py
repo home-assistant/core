@@ -10,7 +10,7 @@ from math import cos, pi, radians, sin
 import random
 from typing import Optional
 
-from homeassistant.components.geo_location import GeoLocationEvent
+from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class DemoManager:
             cos(radians(home_latitude))
 
         event_name = random.choice(EVENT_NAMES)
-        return DemoGeoLocationEvent(event_name, radius_in_km, latitude,
+        return DemoGeolocationEvent(event_name, radius_in_km, latitude,
                                     longitude, DEFAULT_UNIT_OF_MEASUREMENT)
 
     def _init_regular_updates(self):
@@ -90,7 +90,7 @@ class DemoManager:
         self._add_entities(new_devices)
 
 
-class DemoGeoLocationEvent(GeoLocationEvent):
+class DemoGeolocationEvent(GeolocationEvent):
     """This represents a demo geolocation event."""
 
     def __init__(self, name, distance, latitude, longitude,
