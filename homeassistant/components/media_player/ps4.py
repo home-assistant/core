@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pyps4-homeassistant==0.1.7']
+REQUIREMENTS = ['pyps4-homeassistant==0.1.8']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -156,6 +156,7 @@ class PS4Device(MediaPlayerDevice):
         self._source = None
         self._games = self.load_games()
         self._source_list = list(sorted(self._games.values()))
+        self._retry = 0
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -163,32 +164,30 @@ class PS4Device(MediaPlayerDevice):
         try:
             status = self._ps4.get_status()
         except socket.timeout:
-            self._state = STATE_UNKNOWN
-            return
+            status = None
         if status is not None:
+            self._retry = 0
             if status.get('status') == 'Ok':
                 titleid = status.get('running-app-titleid')
                 name = status.get('running-app-name')
-            if titleid and name is not None:
-                self._state = STATE_PLAYING
-                if self._media_content_id != titleid:
-                    self._media_content_id = titleid
-                    app_name, art = self._ps4.get_ps_store_data(name)
-                    self._media_title = app_name or name
-                    self._source = self._media_title
-                    self._media_image = art
-                    if titleid in self._games:
-                        store = self._games[titleid]
-                        if store != app_name:
-                            self._games.pop(titleid)
-                    if titleid not in self._games:
-                        self.add_games(titleid, app_name)
-                        self._games = self.load_games()
-                    self._source_list = list(sorted(self._games.values()))
+                if titleid and name is not None:
+                    self._state = STATE_PLAYING
+                    if self._media_content_id != titleid:
+                        self._media_content_id = titleid
+                        app_name, art = self._ps4.get_ps_store_data(
+                            name, titleid)
+                        self._media_title = app_name or name
+                        self._source = self._media_title
+                        self._media_image = art
+                        self.update_list()
+                else:
+                    self.idle()
             else:
-                self.idle()
+                self.state_off()
+        elif self._retry > 5:
+            self.state_unknown()
         else:
-            self.state_off()
+            self.update()
 
     def idle(self):
         """Set states for state idle."""
@@ -200,11 +199,29 @@ class PS4Device(MediaPlayerDevice):
         self.no_title()
         self._state = STATE_OFF
 
+    def state_unknown(self):
+        """Set states for state unknown."""
+        self._retry += 1
+        self.no_title()
+        self._state = STATE_UNKNOWN
+        self.update()
+
     def no_title(self):
         """Update if there is no title."""
         self._media_title = None
         self._media_content_id = None
         self._source = None
+        
+    def update_list(self):
+        """Update Game List, Correct data if different."""
+        if self._media_content_id in self._games:
+            store = self._games[self._media_content_id]
+            if store != self._media_title:
+                self._games.pop(self._media_content_id)
+        if self._media_content_id not in self._games:
+            self.add_games(self._media_content_id, self._media_title)
+            self._games = self.load_games()
+        self._source_list = list(sorted(self._games.values()))
 
     def load_games(self):
         """Load games for sources."""
@@ -325,5 +342,6 @@ class PS4Device(MediaPlayerDevice):
                 _LOGGER.debug(
                     "Starting PS4 game %s (%s) using source %s",
                     game, title_id, source)
-                self._ps4.start_title(title_id)
+                self._ps4.start_title(
+                    title_id, running_id=self._media_content_id)
                 return
