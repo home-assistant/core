@@ -72,9 +72,9 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
 SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
         vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeToReps'):
-        vol.All(vol.Coerce(int, "Reps error"), vol.Clamp(min=1, max=3)),
-    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeToReps'): cv.template,
+    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeTorepeats'):
+        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
+    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeTorepeats'): cv.template,
     vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
 
