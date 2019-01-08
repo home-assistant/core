@@ -31,12 +31,9 @@ DOMAIN = 'somfy'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
-NOTIFICATION_CB_ID = 'somfy_cb_notification'
-NOTIFICATION_OK_ID = 'somfy_ok_notification'
+NOTIFICATION_ID = 'somfy_notification'
 NOTIFICATION_TITLE = 'Somfy Setup'
 
-ATTR_ACCESS_TOKEN = 'access_token'
-ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
 
@@ -78,7 +75,7 @@ def setup(hass, config):
             ' you must visit this <a href="{}" target="_blank">link</a>.'
             .format(authorization_url),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_CB_ID
+            notification_id=NOTIFICATION_ID
         )
         hass.http.register_view(SomfyAuthCallbackView(config))
         is_ready = True
@@ -116,11 +113,11 @@ class SomfyAuthCallbackView(HomeAssistantView):
             code = request.query.get('code')
             hass.data[DOMAIN][API].request_token(code=code)
             hass.async_add_job(setup, hass, self.config)
-            hass.components.persistent_notification.dismiss(NOTIFICATION_CB_ID)
+            hass.components.persistent_notification.dismiss(NOTIFICATION_ID)
             hass.components.persistent_notification.create(
                 "Somfy has been successfully authorized!",
                 title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_CB_ID
+                notification_id=NOTIFICATION_ID
             )
         except MismatchingStateError:
             _LOGGER.error("OAuth state not equal in request and response.",
