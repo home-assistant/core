@@ -18,7 +18,8 @@ from homeassistant.components.mqtt import (
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.components import mqtt, lock
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -57,9 +58,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT lock dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add an MQTT lock."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(hass, config, async_add_entities,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(lock.DOMAIN, 'mqtt'),
