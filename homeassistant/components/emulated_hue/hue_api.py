@@ -121,12 +121,7 @@ class HueAllLightsStateView(HomeAssistantView):
                 json_response[number] = entity_to_json(
                     self.config, entity, state, brightness)
 
-        # Different response if extra_urls is used, example for sleep cycle
-        if str(request.path) != self.url.replace('{username}', username):
-            json_response = \
-             {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
-
-        return self.json(json_response)
+        return self.json(self.config.response_wrapper(json_response))
 
 
 class HueOneLightStateView(HomeAssistantView):
