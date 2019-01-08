@@ -181,7 +181,10 @@ async def async_update_items(hass, bridge, async_add_entities,
 
         for light_id, light in current.items():
             if light_id not in progress_waiting:
-                light.async_schedule_update_ha_state()
+                if light.entity_id is None:
+                    _LOGGER.error("ERROR: Light %s has no entity ID. Skipping update.", light.name)
+                else:
+                    light.async_schedule_update_ha_state()
 
         return
 
@@ -202,7 +205,10 @@ async def async_update_items(hass, bridge, async_add_entities,
 
             new_lights.append(current[item_id])
         elif item_id not in progress_waiting:
-            current[item_id].async_schedule_update_ha_state()
+            if current[item_id].entity_id is None:
+                _LOGGER.error("ERROR: Current Item %s has no entity ID in API type '%s'. Skipping update.", current[item_id].name, api_type)
+            else:
+                current[item_id].async_schedule_update_ha_state()
 
     if new_lights:
         async_add_entities(new_lights)
@@ -298,7 +304,7 @@ class HueLight(Light):
     @property
     def device_info(self):
         """Return the device info."""
-        if self.light.type in ('LightGroup', 'Room'):
+        if self.light.type in ('LightGroup', 'Room', 'Luminaire', 'LightSource'):
             return None
 
         return {
