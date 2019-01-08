@@ -25,6 +25,9 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'switch': 'switch',
     'thermostat': 'climate',
     'security-system': 'alarm_control_panel',
+    'garage-door-opener': 'cover',
+    'window': 'cover',
+    'window-covering': 'cover'
 }
 
 HOMEKIT_IGNORE = [
