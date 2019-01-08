@@ -300,7 +300,7 @@ async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
 
 
 async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
-    """Test removal of discovered alarm_control_panel."""
+    """Test update of discovered alarm_control_panel."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
 
@@ -335,6 +335,41 @@ async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
     assert state.name == 'Milk'
 
     state = hass.states.get('alarm_control_panel.milk')
+    assert state is None
+
+
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is None
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.milk')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('alarm_control_panel.beer')
     assert state is None
 
 
