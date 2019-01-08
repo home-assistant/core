@@ -134,7 +134,6 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._color_temp = None
         self._effect = None
         self._white_value = None
-        self._supported_features = 0
 
         self._topic = None
         self._payload = None
@@ -240,27 +239,6 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             optimistic or topic[CONF_WHITE_VALUE_STATE_TOPIC] is None)
         self._optimistic_xy = \
             optimistic or topic[CONF_XY_STATE_TOPIC] is None
-
-        self._supported_features = 0
-        self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and
-            (SUPPORT_COLOR | SUPPORT_BRIGHTNESS))
-        self._supported_features |= (
-            topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
-            SUPPORT_BRIGHTNESS)
-        self._supported_features |= (
-            topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
-            SUPPORT_COLOR_TEMP)
-        self._supported_features |= (
-            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
-            SUPPORT_EFFECT)
-        self._supported_features |= (
-            topic[CONF_HS_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
-        self._supported_features |= (
-            topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
-            SUPPORT_WHITE_VALUE)
-        self._supported_features |= (
-            topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -561,7 +539,28 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        supported_features = 0
+        supported_features |= (
+            self._topic[CONF_RGB_COMMAND_TOPIC] is not None and
+            (SUPPORT_COLOR | SUPPORT_BRIGHTNESS))
+        supported_features |= (
+            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
+            SUPPORT_BRIGHTNESS)
+        supported_features |= (
+            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
+            SUPPORT_COLOR_TEMP)
+        supported_features |= (
+            self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
+            SUPPORT_EFFECT)
+        supported_features |= (
+            self._topic[CONF_HS_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
+        supported_features |= (
+            self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
+            SUPPORT_WHITE_VALUE)
+        supported_features |= (
+            self._topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
+
+        return supported_features
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on.
