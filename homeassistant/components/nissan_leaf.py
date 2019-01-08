@@ -187,7 +187,7 @@ class LeafDataStore:
 
         # The 12V battery is used when communicating with Nissan servers.
         # The 12V battery is charged from the traction battery when not
-        # connected # and when the traction battery has enough charge. To
+        # connected and when the traction battery has enough charge. To
         # avoid draining the 12V battery we shall restrict the update
         # frequency if low battery detected.
         if (self.last_battery_response is not None and
@@ -232,8 +232,7 @@ class LeafDataStore:
         (battery_response, server_response) = await self.async_get_battery()
 
         if battery_response is not None:
-            _LOGGER.debug("Battery Response: ")
-            _LOGGER.debug(battery_response.__dict__)
+            _LOGGER.debug("Battery Response: %s", battery_response.__dict__)
 
             if battery_response.answer['status'] == 200:
                 if int(battery_response.battery_capacity) > 100:
@@ -255,8 +254,7 @@ class LeafDataStore:
                 self.last_battery_response = utcnow()
 
         if server_response is not None:
-            _LOGGER.debug("Server Response: ")
-            _LOGGER.debug(server_response.__dict__)
+            _LOGGER.debug("Server Response: %s", server_response.__dict__)
 
             if server_response.answer['status'] == 200:
                 if server_response.state_of_charge is not None:
@@ -280,8 +278,8 @@ class LeafDataStore:
 
             climate_response = await self.async_get_climate()
             if climate_response is not None:
-                _LOGGER.debug("Got climate data for Leaf.")
-                _LOGGER.debug(climate_response.__dict__)
+                _LOGGER.debug("Got climate data for Leaf: %s",
+                              climate_response.__dict__)
                 self.data[DATA_CLIMATE] = climate_response.is_hvac_running
 
         if self.nissan_connect:
@@ -295,8 +293,8 @@ class LeafDataStore:
                     _LOGGER.debug("Got location data for Leaf")
                     self.data[DATA_LOCATION] = location_response
 
-                    _LOGGER.debug("Location Response: ")
-                    _LOGGER.debug(location_response.__dict__)
+                    _LOGGER.debug("Location Response: %s",
+                                  location_response.__dict__)
             except CarwingsError:
                 _LOGGER.error("Error fetching location info")
 
@@ -404,8 +402,7 @@ class LeafDataStore:
                     break
 
         if climate_result is not None:
-            _LOGGER.debug("Climate result:")
-            _LOGGER.debug(climate_result.__dict__)
+            _LOGGER.debug("Climate result: %s", climate_result.__dict__)
             self.signal_components()
             return climate_result.is_hvac_running == toggle
 
@@ -426,7 +423,7 @@ class LeafDataStore:
             )
 
             if location_status is not None:
-                _LOGGER.debug(location_status.__dict__)
+                _LOGGER.debug("Location_status=%s", location_status.__dict__)
                 break
 
         self.signal_components()
