@@ -408,10 +408,6 @@ class HueLight(Light):
         attributes = {}
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
-        if self.gamut_typ:
-            attributes[ATTR_GAMUT_TYP] = self.gamut_typ
-        if self.gamut:
-            attributes[ATTR_GAMUT] = self.gamut
         return attributes
 
     def get_gamut(self):
