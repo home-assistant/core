@@ -1,7 +1,3 @@
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.components.cover import (
-    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice)
-import voluptuous as vol
 """
 Support for Homekit Cover.
 
