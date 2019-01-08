@@ -406,10 +406,6 @@ class ApplicationListener:
                     self._hass,
                     cluster
                 ))
-            self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
-                self._hass,
-                cluster
-            ))
 
         if cluster.cluster_id in profile_clusters:
             return
