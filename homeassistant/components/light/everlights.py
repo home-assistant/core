@@ -34,6 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOSTS, default=[]): [cv.string],
 })
 
+NAME_FORMAT = "EverLights {} Zone {}"
+
 
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
@@ -91,7 +93,7 @@ class EverLightsLight(Light):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._mac+'-'+str(self._channel)
+        return '{}-{}'.format(self._mac, self._channel)
 
     @property
     def available(self) -> bool:
@@ -100,8 +102,8 @@ class EverLightsLight(Light):
 
     @property
     def name(self):
-        """Return the name of the device if any."""
-        return 'EverLights '+self._mac+' Zone '+str(self._channel)
+        """Return the name of the device."""
+        return NAME_FORMAT.format(self._mac, self._channel)
 
     @property
     def should_poll(self):
@@ -111,7 +113,7 @@ class EverLightsLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status['ch'+str(self._channel)+'Active'] == 1
+        return self._status['ch{}Active'.format(self._channel)] == 1
 
     @property
     def brightness(self):
@@ -139,7 +141,7 @@ class EverLightsLight(Light):
         return self._effects
 
     async def async_turn_on(self, **kwargs):
-        """Turn the specified or all lights on."""
+        """Turn the light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         effect = kwargs.get(ATTR_EFFECT)
