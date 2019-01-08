@@ -102,8 +102,10 @@ async def async_discover_and_construct(hass, udn=None) -> Device:
         # get the first/any
         discovery_info = discovery_infos[0]
         if len(discovery_infos) > 1:
+            device_name = discovery_info.get(
+                'usn', discovery_info.get('ssdp_description', ''))
             _LOGGER.info('Detected multiple UPnP/IGD devices, using: %s',
-                         discovery_info['igd_name'])
+                         device_name)
 
     ssdp_description = discovery_info['ssdp_description']
     return await Device.async_create_device(hass, ssdp_description)
