@@ -776,6 +776,9 @@ async def test_contact_sensor(hass):
     properties.assert_equal('Alexa.ContactSensor', 'detectionState',
                             'DETECTED')
 
+    properties.assert_equal('Alexa.EndpointHealth', 'connectivity',
+                            {'value': 'OK'})
+
 
 async def test_motion_sensor(hass):
     """Test motion sensor discovery."""
@@ -1716,6 +1719,38 @@ async def test_disabled(hass):
     assert msg['header']['name'] == 'ErrorResponse'
     assert msg['header']['namespace'] == 'Alexa'
     assert msg['payload']['type'] == 'BRIDGE_UNREACHABLE'
+
+
+async def test_endpoint_good_health(hass):
+    """Test endpoint health reporting."""
+    device = (
+        'binary_sensor.test_contact',
+        'on',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+    await discovery_test(device, hass)
+    properties = await reported_properties(hass, 'binary_sensor#test_contact')
+    properties.assert_equal('Alexa.EndpointHealth', 'connectivity',
+                            {'value': 'OK'})
+
+
+async def test_endpoint_bad_health(hass):
+    """Test endpoint health reporting."""
+    device = (
+        'binary_sensor.test_contact',
+        'unavailable',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+    await discovery_test(device, hass)
+    properties = await reported_properties(hass, 'binary_sensor#test_contact')
+    properties.assert_equal('Alexa.EndpointHealth', 'connectivity',
+                            {'value': 'UNREACHABLE'})
 
 
 async def test_report_state(hass, aioclient_mock):
