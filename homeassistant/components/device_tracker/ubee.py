@@ -76,15 +76,18 @@ class UbeeDeviceScanner(DeviceScanner):
         Returns boolean if scanning successful.
         """
         if not self.success_init:
-            return
+            return False
 
         _LOGGER.info("Scanning")
         results = self.get_connected_devices()
 
         if results is None:
             _LOGGER.warning("Error scanning devices")
+            return False
 
         self.last_results = results or []
+
+        return True
 
     def get_connected_devices(self):
         """List connected devices with pyubee."""
