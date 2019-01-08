@@ -5,7 +5,7 @@ Sensor for checking the air quality around Norway.
 Data delivered by luftkvalitet.info and nilu.no.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_pollutants.nilu/
+https://home-assistant.io/components/air_quality.nilu/
 """
 from datetime import timedelta
 import logging
@@ -95,7 +95,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NILU air pollutants sensor."""
+    """Set up the NILU air quality sensor."""
     import niluclient as nilu
     name = config.get(CONF_NAME)
     area = config.get(CONF_AREA)
