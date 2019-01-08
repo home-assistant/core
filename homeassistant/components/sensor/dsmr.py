@@ -273,7 +273,7 @@ class DSMREntity(Entity):
             return self.translate_tariff(value)
 
         try:
-            value = round(float(value),self._config[CONF_PRECISION])
+            value = round(float(value), self._config[CONF_PRECISION])
         except:
             value = value
 
