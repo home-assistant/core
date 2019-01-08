@@ -1681,7 +1681,7 @@ async def test_report_state(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
 
-    call_json = json.loads(call[0][2])
+    call_json = call[0][2]
     assert call_json["event"]["payload"]["change"]["properties"][0][
                "value"] == "NOT_DETECTED"
     assert call_json["event"]["endpoint"][
