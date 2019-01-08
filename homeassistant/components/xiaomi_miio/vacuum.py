@@ -35,8 +35,6 @@ SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 SERVICE_START_CLEAN_ZONE = 'xiaomi_clean_zone_start'
 
-ZONE_CLEAN_COMMAND = 'app_zoned_clean'
-
 FAN_SPEEDS = {
     'Quiet': 38,
     'Balanced': 60,
@@ -62,8 +60,8 @@ ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
 ATTR_STATUS = 'status'
 ATTR_ZONE_ARRAY = 'zone'
-ATTR_ZONE_REPEATER = 'reps'
-ATTR_ZONE_REPEATER_TEMPLATE = 'reps_template'
+ATTR_ZONE_REPEATER = 'repeats'
+ATTR_ZONE_REPEATER_TEMPLATE = 'repeats_template'
 ATTR_ZONE_TEST = 'test'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
@@ -76,9 +74,9 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
 SERVICE_SCHEMA_ZONE_CLEAN = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
         vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeToReps'):
-        vol.All(vol.Coerce(int, "Reps error"), vol.Clamp(min=1, max=3)),
-    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeToReps'): cv.template,
+    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeTorepeats'):
+        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
+    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeTorepeats'): cv.template,
     vol.Optional(ATTR_ZONE_TEST, default=0): cv.boolean,
 })
 
@@ -398,34 +396,42 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_clean_zone_start(self,
                                      zone,
-                                     reps: int = 1,
-                                     reps_template: str = None,
+                                     repeats: int = 1,
+                                     repeats_template: str = None,
                                      test: bool = 0):
-        """Cleaning selected area for the number of reps indicated."""
-        if reps_template is not None:
-            _LOGGER.debug("Using template reps")
-            reps_template.hass = self.hass
-            reps = reps_template.async_render()
+        """Clean selected area for the number of repeats indicated."""
+        if repeats_template is not None:
+            _LOGGER.debug("Using template repeats")
+            repeats_template.hass = self.hass
+            repeats = repeats_template.async_render()
             try:
-                reps = int(reps)
+                repeats = int(repeats)
             except ValueError:
-                reps = 1
-                _LOGGER.debug("Failed to cast template reps. Set default > 1")
-        _LOGGER.debug("Start clean zone: %s Reps: %s", zone, reps)
+                repeats = 1
+                _LOGGER.debug("Failed to cast template. Set default > 1")
+        if repeats < 1:
+            repeats = 1
+        if repeats > 3:
+            repeats = 3
+        _LOGGER.debug("Start clean zone: %s repeats: %s", zone, repeats)
         from miio import DeviceException
         try:
             for _zone in zone:
                 _LOGGER.debug("original zone: %s", _zone)
-                _zone.append(reps)
-                _LOGGER.debug("zone with reps: %s", _zone)
+                _zone.append(repeats)
+                _LOGGER.debug("zone with repeats: %s", _zone)
         except OSError as exc:
-            _LOGGER.error("Got OSError while append reps to zone: %s", exc)
+            _LOGGER.error(
+                "Got OSError while append repeats to zone: %s",
+                exc)
         except DeviceException as exc:
-            _LOGGER.warning("Got exception while append reps to zone: %s", exc)
+            _LOGGER.warning(
+                "Got exception while append repeats to zone: %s",
+                exc)
         """If test, bypass exec command on vacuum."""
-        if not test:
-            await self._try_command(
-                "Unable to send command to the vacuum: %s",
-                self._vacuum.raw_command, ZONE_CLEAN_COMMAND, zone)
-        else:
-            _LOGGER.warning("This is a test!!")
+        try:
+            self._vacuum.zoned_clean(zone)
+        except Exception as exc:
+            _LOGGER.error(
+                "Unable to send zoned_clean command to the vacuum: %s",
+                exc)

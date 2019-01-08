@@ -133,7 +133,7 @@ xiaomi_remote_control_move_step:
       example: '1500'
 
 xiaomi_clean_zone_start:
-  description: Start the cleaning operation in the areas selected for the number of reps indicated.
+  description: Start the cleaning operation in the areas selected for the number of repeats indicated.
   fields:
     entity_id:
       description: Name of the vacuum entity.
@@ -141,9 +141,9 @@ xiaomi_clean_zone_start:
     zone:
       description: Array of zones. Each zone is an array of 4 integer value.
       example: '[[23510,25311,25110,26361]]'
-    reps:
-      description: Number of cleaning reps for each zone between 1 and 3.
+    repeats:
+      description: Number of cleaning repeats for each zone between 1 and 3.
       example: '1'
-    reps_template:
-      description: Template that rapresents the number of cleaning reps for each zone between 1 and 3..
+    repeats_template:
+      description: Template that rapresents the number of cleaning repeats for each zone between 1 and 3..
       example: '{{states.input_number.vacuum_passes.state|int}}'

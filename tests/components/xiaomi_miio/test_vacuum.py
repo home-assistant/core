@@ -332,11 +332,11 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
-    control = {"zone": [[123, 123, 123, 123]], "reps": 2, "test": 0}
+    control = {"zone": [[123, 123, 123, 123]], "repeats": 2}
     yield from hass.services.async_call(
         DOMAIN, SERVICE_START_CLEAN_ZONE,
         control, blocking=True)
     mock_mirobo_is_off.assert_has_calls(
-        [mock.call.Vacuum().raw_command(control)], any_order=True)
+        [mock.call.Vacuum().zoned_clean([[123, 123, 123, 123, 2]])], any_order=True)
     mock_mirobo_is_off.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_off.reset_mock()
