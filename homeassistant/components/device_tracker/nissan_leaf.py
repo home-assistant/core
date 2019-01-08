@@ -41,6 +41,5 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 icon='mdi:car')
 
     dispatcher_connect(hass, SIGNAL_UPDATE_LEAF, see_vehicle)
-    dispatcher_send(hass, SIGNAL_UPDATE_LEAF)
 
     return True
