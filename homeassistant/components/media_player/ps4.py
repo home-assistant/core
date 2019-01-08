@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pyps4-homeassistant==0.1.6']
+REQUIREMENTS = ['pyps4-homeassistant==0.1.7']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -165,27 +165,28 @@ class PS4Device(MediaPlayerDevice):
         except socket.timeout:
             self._state = STATE_UNKNOWN
             return
-        if status.get('status') == 'Ok':
-            titleid = status.get('running-app-titleid')
-            name = status.get('running-app-name')
-            if titleid and name is not None:
-                self._state = STATE_PLAYING
-                if self._media_content_id != titleid:
-                    self._media_content_id = titleid
-                    app_name, art = self._ps4.get_ps_store_data(name)
-                    self._media_title = app_name or name
-                    self._source = self._media_title
-                    self._media_image = art
-                    if titleid in self._games:
-                        store = self._games[titleid]
-                        if store != app_name:
-                            self._games.pop(titleid)
-                    if titleid not in self._games:
-                        self.add_games(titleid, app_name)
-                        self._games = self.load_games()
-                    self._source_list = list(sorted(self._games.values()))
-            else:
-                self.idle()
+        if status is not None:
+            if status.get('status') == 'Ok':
+                titleid = status.get('running-app-titleid')
+                name = status.get('running-app-name')
+                if titleid and name is not None:
+                    self._state = STATE_PLAYING
+                    if self._media_content_id != titleid:
+                        self._media_content_id = titleid
+                        app_name, art = self._ps4.get_ps_store_data(name)
+                        self._media_title = app_name or name
+                        self._source = self._media_title
+                        self._media_image = art
+                        if titleid in self._games:
+                            store = self._games[titleid]
+                            if store != app_name:
+                                self._games.pop(titleid)
+                        if titleid not in self._games:
+                            self.add_games(titleid, app_name)
+                            self._games = self.load_games()
+                        self._source_list = list(sorted(self._games.values()))
+                else:
+                    self.idle()
         else:
             self.state_off()
 
