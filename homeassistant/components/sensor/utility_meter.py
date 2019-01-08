@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.utility_meter/
 """
 import logging
 
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_change)
@@ -130,7 +130,9 @@ class UtilityMeterSensor(RestoreEntity):
     @callback
     def async_reading(self, entity, old_state, new_state):
         """Handle the sensor state changes."""
-        if old_state is None:
+        if any([old_state is None,
+                old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
+                new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
             return
 
         if self._unit_of_measurement is None and\
@@ -148,7 +150,9 @@ class UtilityMeterSensor(RestoreEntity):
 
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
-
+        except DecimalException as err:
+            _LOGGER.warning("Invalid state (%s > %s): %s",
+                            old_state.state, new_state.state, err)
         self.async_schedule_update_ha_state()
 
     async def async_start_pause_meter(self, entity_id):
