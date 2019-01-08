@@ -287,12 +287,13 @@ class Config:
         return is_default_exposed or expose
 
     def response_wrapper(self, json_response):
-        """Wrapper for the json_response"""
+        """Determine if the json_respone should be wrapped."""
         if self.type == TYPE_SLEEPCYCLE:
             json_response = \
              {'lights': json_response, 'config': {'mac': '00:00:00:00:00:00'}}
 
         return json_response
+
 
 def _load_json(filename):
     """Wrapper, because we actually want to handle invalid json."""
