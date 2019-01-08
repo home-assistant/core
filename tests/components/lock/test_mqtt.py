@@ -182,6 +182,38 @@ async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
     assert state is None
 
 
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('lock.beer')
+    assert state is None
+
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('lock.milk')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('lock.beer')
+    assert state is None
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT lock device registry integration."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)

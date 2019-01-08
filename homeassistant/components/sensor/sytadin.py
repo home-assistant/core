@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.6.3']
+REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
