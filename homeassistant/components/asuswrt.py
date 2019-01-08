@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
-        vol.Optional(CONF_SENSORS, default=SENSOR_TYPES): vol.All(
+        vol.Optional(CONF_SENSORS, default=None): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
