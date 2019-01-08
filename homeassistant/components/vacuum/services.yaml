@@ -132,7 +132,7 @@ xiaomi_remote_control_move_step:
       description: Duration of the movement.
       example: '1500'
 
-xiaomi_clean_zone_start:
+xiaomi_clean_zone:
   description: Start the cleaning operation in the areas selected for the number of repeats indicated.
   fields:
     entity_id:
