@@ -274,7 +274,7 @@ class DSMREntity(Entity):
 
         try:
             value = round(float(value), self._config[CONF_PRECISION])
-        except:
+        except TypeError:
             value = value
 
         if value is not None:
