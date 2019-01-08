@@ -82,8 +82,8 @@ class EnergySensor(RestoreEntity):
         def calc_energy(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if any([old_state is None,
-                    old_state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
-                    new_state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
+                    old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
+                    new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
                 return
 
             if self._unit_of_measurement_scale is None:
