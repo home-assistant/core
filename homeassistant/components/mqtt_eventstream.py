@@ -4,7 +4,6 @@ Connect two Home Assistant instances via MQTT.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt_eventstream/
 """
-import asyncio
 import json
 
 import voluptuous as vol
