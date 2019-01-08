@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.hive/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
+from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
 
@@ -35,23 +35,8 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
-        self.uniqueid = '{}-{}'.format(self.node_id, self.device_type)
+
         self.session.entities.append(self)
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self.uniqueid
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
