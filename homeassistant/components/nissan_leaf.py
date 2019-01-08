@@ -250,7 +250,7 @@ class LeafDataStore:
                 self.data[DATA_RANGE_AC_OFF] = (
                     battery_response.cruising_range_ac_off_km
                 )
-                self.signal_components()
+                async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
                 self.last_battery_response = utcnow()
 
         if server_response is not None:
@@ -270,7 +270,7 @@ class LeafDataStore:
                 self.data[DATA_RANGE_AC_OFF] = (
                     server_response.cruising_range_ac_off_km
                 )
-                self.signal_components()
+                async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
                 self.last_battery_response = utcnow()
 
         # Climate response only updated if battery data updated first.
@@ -299,10 +299,6 @@ class LeafDataStore:
                 _LOGGER.error("Error fetching location info")
 
         self.request_in_progress = False
-        self.signal_components()
-
-    def signal_components(self):
-        """Signal components to refresh."""
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
     async def async_get_battery(self):
@@ -403,7 +399,7 @@ class LeafDataStore:
 
         if climate_result is not None:
             _LOGGER.debug("Climate result: %s", climate_result.__dict__)
-            self.signal_components()
+            async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
             return climate_result.is_hvac_running == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
@@ -426,7 +422,7 @@ class LeafDataStore:
                 _LOGGER.debug("Location_status=%s", location_status.__dict__)
                 break
 
-        self.signal_components()
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
         return location_status
 
     async def async_start_charging(self):
