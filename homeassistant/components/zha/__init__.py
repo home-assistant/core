@@ -395,7 +395,7 @@ class ApplicationListener:
             if cluster.endpoint.device.ieee not in self._events:
                 self._events.update({cluster.endpoint.device.ieee: []})
             from zigpy.zcl.clusters.general import OnOff, LevelControl
-            if discovery_attr == 'out_clusters' and\
+            if discovery_attr == 'out_clusters' and \
                     (cluster.cluster_id == OnOff.cluster_id or
                      cluster.cluster_id == LevelControl.cluster_id):
                 self._events[cluster.endpoint.device.ieee].append(
