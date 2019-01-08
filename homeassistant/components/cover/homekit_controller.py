@@ -181,7 +181,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             if ctype == "position.state":
                 self._chars['position.state'] = \
                     characteristic['iid']
-                self._state = CURRENT_WINDOW_STATE_MAP[characteristic['value']]
+                if 'value' in characteristic:
+                    self._state = \
+                        CURRENT_WINDOW_STATE_MAP[characteristic['value']]
             elif ctype == "position.current":
                 self._chars['position.current'] = \
                     characteristic['iid']
@@ -191,6 +193,8 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                     characteristic['iid']
             elif ctype == "position.hold":
                 self._chars['position.hold'] = characteristic['iid']
+                if 'value' in characteristic:
+                    self._hold = characteristic['value']
             elif ctype == "vertical-tilt.current":
                 self._chars['vertical-tilt.current'] = characteristic['iid']
                 self._tilt_position = characteristic['value']
@@ -208,7 +212,8 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                 self._obstruction_detected = characteristic['value']
             elif ctype == "name":
                 self._chars['name'] = characteristic['iid']
-                self._name = characteristic['value']
+                if 'value' in characteristic:
+                    self._name = characteristic['value']
 
     @property
     def name(self):
