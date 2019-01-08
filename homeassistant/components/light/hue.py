@@ -41,8 +41,6 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
-ATTR_GAMUT_TYP = 'color_gamut_type'
-ATTR_GAMUT = 'color_gamut'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
