@@ -150,6 +150,7 @@ FLOWS = [
     'ios',
     'lifx',
     'locative',
+    'logi_circle',
     'luftdaten',
     'mailgun',
     'mqtt',
