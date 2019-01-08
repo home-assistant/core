@@ -428,10 +428,13 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.warning(
                 "Got exception while append repeats to zone: %s",
                 exc)
-        """If test, bypass exec command on vacuum."""
         try:
             self._vacuum.zoned_clean(zone)
-        except Exception as exc:
+        except OSError as exc:
+            _LOGGER.error(
+                "Unable to send zoned_clean command to the vacuum: %s",
+                exc)
+        except DeviceException as exc:
             _LOGGER.error(
                 "Unable to send zoned_clean command to the vacuum: %s",
                 exc)
