@@ -181,7 +181,7 @@ async def async_update_items(hass, bridge, async_add_entities,
 
         for light_id, light in current.items():
             if light_id not in progress_waiting:
-                    light.async_schedule_update_ha_state()   
+                light.async_schedule_update_ha_state()
 
         return
 
@@ -298,7 +298,7 @@ class HueLight(Light):
     @property
     def device_info(self):
         """Return the device info."""
-        if self.light.type in ('LightGroup', 'Room', 
+        if self.light.type in ('LightGroup', 'Room',
                                'Luminaire', 'LightSource'):
             return None
 
