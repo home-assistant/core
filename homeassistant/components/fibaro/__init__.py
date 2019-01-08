@@ -78,7 +78,7 @@ GATEWAY_CONFIG = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=[{}]):
+        vol.Required(CONF_GATEWAYS):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG])
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -91,19 +91,19 @@ class FibaroController():
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
 
-        self._client = FibaroClient(config.get(CONF_URL),
-                                    config.get(CONF_USERNAME),
-                                    config.get(CONF_PASSWORD))
+        self._client = FibaroClient(config[CONF_URL],
+                                    config[CONF_USERNAME],
+                                    config[CONF_PASSWORD])
         self._scene_map = None
         # Whether to import devices from plugins
-        self._import_plugins = config.get(CONF_PLUGINS, False)
-        self._device_config = config.get(CONF_DEVICE_CONFIG, {})
+        self._import_plugins = config[CONF_PLUGINS]
+        self._device_config = config[CONF_DEVICE_CONFIG]
         self._room_map = None         # Mapping roomId to room object
         self._device_map = None       # Mapping deviceId to device object
         self.fibaro_devices = None    # List of devices by type
         self._callbacks = {}          # Update value callbacks by deviceId
         self._state_handler = None    # Fiblary's StateHandler object
-        self._excluded_devices = config.get(CONF_EXCLUDE, [])
+        self._excluded_devices = config[CONF_EXCLUDE]
         self.hub_serial = None          # Unique serial number of the hub
 
     def connect(self):
@@ -176,12 +176,11 @@ class FibaroController():
     def _map_device_to_type(device):
         """Map device to HA device type."""
         # Use our lookup table to identify device type
+        device_type = None
         if 'type' in device:
             device_type = FIBARO_TYPEMAP.get(device.type)
-        elif 'baseType' in device:
+        if device_type is None and 'baseType' in device:
             device_type = FIBARO_TYPEMAP.get(device.baseType)
-        else:
-            device_type = None
 
         # We can also identify device type by its capabilities
         if device_type is None:
