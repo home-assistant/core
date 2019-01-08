@@ -40,6 +40,7 @@ CURRENT_WINDOW_STATE_MAP = {
     1: STATE_CLOSING
 }
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up HomeKit Cover support."""
     if discovery_info is None:
@@ -190,11 +191,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                     characteristic['iid']
             elif ctype == "position.hold":
                 self._chars['position.hold'] = characteristic['iid']
-
-                for key in characteristic:
-                    _LOGGER.info("Key: %s; Value: %s", key, str(characteristic[key]))
-
-                # self._hold = characteristic['value']
             elif ctype == "vertical-tilt.current":
                 self._chars['vertical-tilt.current'] = characteristic['iid']
                 self._tilt_position = characteristic['value']
