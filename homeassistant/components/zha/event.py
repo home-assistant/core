@@ -70,7 +70,7 @@ class ZhaEvent():
 
 
 class ZhaRelayEvent(ZhaEvent):
-    """A base class for ZHA events."""
+    """Event relay that can be attached to zigbee clusters."""
 
     @callback
     def attribute_updated(self, attribute, value):
