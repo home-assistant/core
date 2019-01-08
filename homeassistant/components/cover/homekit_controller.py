@@ -177,8 +177,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         for characteristic in characteristics:
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
-            _LOGGER.info("Type: %s", ctype)
-
             if ctype == "position.state":
                 self._chars['position.state'] = \
                     characteristic['iid']
