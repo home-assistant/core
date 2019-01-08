@@ -38,8 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the MQTT eventstream component."""
     mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
@@ -104,6 +103,6 @@ def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        yield from mqtt.async_subscribe(sub_topic, _event_receiver)
+        await mqtt.async_subscribe(sub_topic, _event_receiver)
 
     return True
