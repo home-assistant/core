@@ -117,11 +117,12 @@ class HKDevice():
             self.hass.data[KNOWN_ACCESSORIES][serial] = self
             aid = accessory['aid']
             for service in accessory['services']:
-                service_info = {'serial': serial,
-                                'aid': aid,
-                                'iid': service['iid']}
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
+                service_info = {'serial': serial,
+                                'aid': aid,
+                                'iid': service['iid'],
+                                'device-type': devtype}
                 component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
