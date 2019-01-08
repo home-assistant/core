@@ -21,17 +21,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-# If testing then use the following kinds of URLs
-#
-# REQUIREMENTS = ['https://github.com/filcole/pycarwings2/archive/master.zip'
-#                 '#pycarwings2']
-# REQUIREMENTS = ['https://test-files.pythonhosted.org/packages/7c/ad/
-#      ee27988357f1710ca9ced1a60263486415f054003ca6fa396922ca6b6bbf/
-#      pycarwings2-2.2.tar.gz'
-#                 '#pycarwings2']
-# REQUIREMENTS = ['file:///home/phil/repos/pycarwings2ve/pycarwings2/
-#      dist/pycarwings2-2.2.tar.gz'
-#                 '#pycarwings2']
 REQUIREMENTS = ['pycarwings2==2.3']
 
 _LOGGER = logging.getLogger(__name__)
