@@ -1,4 +1,4 @@
-"""The tests for the time automation."""
+"""The tests for the schedule automation."""
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -27,7 +27,7 @@ async def test_if_fires_when_hour_matches(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': 0,
                 'minutes': '*',
                 'seconds': '*',
@@ -55,7 +55,7 @@ async def test_if_fires_when_minute_matches(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': '*',
                 'minutes': 0,
                 'seconds': '*',
@@ -77,7 +77,7 @@ async def test_if_fires_when_second_matches(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': '*',
                 'minutes': '*',
                 'seconds': 0,
@@ -99,7 +99,7 @@ async def test_if_fires_when_all_matches(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': 1,
                 'minutes': 2,
                 'seconds': 3,
@@ -122,7 +122,7 @@ async def test_if_fires_periodic_seconds(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': '*',
                 'minutes': '*',
                 'seconds': "/2",
@@ -145,7 +145,7 @@ async def test_if_fires_periodic_minutes(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': '*',
                 'minutes': "/2",
                 'seconds': '*',
@@ -168,7 +168,7 @@ async def test_if_fires_periodic_hours(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'hours': "/2",
                 'minutes': '*',
                 'seconds': '*',
@@ -191,7 +191,7 @@ async def test_default_values(hass, calls):
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
-                'platform': 'interval',
+                'platform': 'schedule',
                 'minutes': "2",
             },
             'action': {
