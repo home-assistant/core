@@ -150,6 +150,10 @@ class SomfyEntity(Entity):
 
     @property
     def device_info(self):
+        """Return device specific attributes.
+
+        Implemented by platform classes.
+        """
         return {
             'identifiers': {(DOMAIN, self.unique_id)},
             'name': self.name,
