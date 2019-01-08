@@ -132,7 +132,8 @@ class VasttrafikDepartureSensor(Entity):
                 if not self._lines or line in self._lines:
                     if 'rtTime' in self._departureboard[0]:
                         self._state = self._departureboard[0]['rtTime']
-                    self._state = self._departureboard[0]['time']
+                    else:
+                        self._state = self._departureboard[0]['time']
 
                     params = {
                         ATTR_ACCESSIBILITY: departure.get('accessibility'),
@@ -144,3 +145,4 @@ class VasttrafikDepartureSensor(Entity):
 
                     self._attributes = {
                         k: v for k, v in params.items() if v}
+                    break
