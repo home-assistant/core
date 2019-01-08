@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import const as zha_const
-from .event import ZhaEvent
+from .event import ZhaEvent, ZhaRelayEvent
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
@@ -393,10 +393,18 @@ class ApplicationListener:
         if cluster.cluster_id in EVENTABLE_CLUSTERS:
             if cluster.endpoint.device.ieee not in self._events:
                 self._events.update({cluster.endpoint.device.ieee: []})
-            self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
-                self._hass,
-                cluster
-            ))
+            from zigpy.zcl.clusters.general import OnOff, LevelControl
+            if discovery_attr == 'out_clusters' and \
+                    (cluster.cluster_id == OnOff.cluster_id or
+                     cluster.cluster_id == LevelControl.cluster_id):
+                self._events[cluster.endpoint.device.ieee].append(
+                    ZhaRelayEvent(self._hass, cluster)
+                )
+            else:
+                self._events[cluster.endpoint.device.ieee].append(ZhaEvent(
+                    self._hass,
+                    cluster
+                ))
 
         if cluster.cluster_id in profile_clusters:
             return
