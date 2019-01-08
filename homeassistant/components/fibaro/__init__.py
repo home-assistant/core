@@ -262,8 +262,7 @@ class FibaroController():
 
 def setup(hass, base_config):
     """Set up the Fibaro Component."""
-    config = base_config.get(DOMAIN)
-    gateways = config.get(CONF_GATEWAYS)
+    gateways = base_config[DOMAIN][CONF_GATEWAYS]
     hass.data[FIBARO_CONTROLLERS] = {}
 
     def stop_fibaro(event):
