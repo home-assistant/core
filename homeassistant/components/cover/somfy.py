@@ -27,35 +27,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
+    def __init__(self, device, hass):
+        """Initialize the Somfy device."""
+        from pymfy.api.devices.blind import Blind
+        super().__init__(device, hass)
+        self.cover = Blind(self.device, self.api)
+
     def close_cover(self, **kwargs):
         """Close the cover."""
-        from pymfy.api.devices.roller_shutter import RollerShutter
-        RollerShutter(self.device, self.api).close()
+        self.cover.close()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        from pymfy.api.devices.roller_shutter import RollerShutter
-        RollerShutter(self.device, self.api).open()
+        self.cover.open()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        from pymfy.api.devices.roller_shutter import RollerShutter
-        RollerShutter(self.device, self.api).stop()
+        self.cover.stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
-        from pymfy.api.devices.roller_shutter import RollerShutter
-        RollerShutter(self.device, self.api).set_position(100 - position)
+        self.cover.set_position(100 - position)
 
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
         position = None
         if self.has_capability('position'):
-            from pymfy.api.devices.roller_shutter import RollerShutter
-            shutter = RollerShutter(self.device, self.api)
-            position = 100 - shutter.get_position()
+            position = 100 - self.cover.get_position()
         return position
 
     @property
@@ -63,8 +63,7 @@ class SomfyCover(SomfyEntity, CoverDevice):
         """Return if the cover is closed."""
         is_closed = None
         if self.has_capability('position'):
-            from pymfy.api.devices.roller_shutter import RollerShutter
-            is_closed = RollerShutter(self.device, self.api).is_closed()
+            is_closed = self.cover.is_closed()
         return is_closed
 
     @property
@@ -75,27 +74,22 @@ class SomfyCover(SomfyEntity, CoverDevice):
         """
         orientation = None
         if self.has_capability('rotation'):
-            from pymfy.api.devices.blind import Blind
-            orientation = 100 - Blind(self.device, self.api).orientation
+            orientation = 100 - self.cover.orientation
         return orientation
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         orientation = kwargs.get(ATTR_TILT_POSITION)
-        from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = orientation
+        self.cover.orientation = orientation
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 100
+        self.cover.orientation = 100
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).orientation = 0
+        self.cover.orientation = 0
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        from pymfy.api.devices.blind import Blind
-        Blind(self.device, self.api).stop()
+        self.cover.stop()
