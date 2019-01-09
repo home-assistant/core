@@ -104,7 +104,7 @@ hdate==0.7.5
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181219.0
+home-assistant-frontend==20190109.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.3
