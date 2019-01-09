@@ -1019,7 +1019,7 @@ pyhaversion==2.0.3
 pyhik==0.1.9
 
 # homeassistant.components.hive
-pyhiveapi==0.2.14
+pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
 pyhomematic==0.1.54
