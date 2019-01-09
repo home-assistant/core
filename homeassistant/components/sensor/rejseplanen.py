@@ -1,5 +1,5 @@
 """
-Support for Rejseplanen information from rejseplanen.dk
+Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
@@ -75,7 +75,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     departure_type = config.get(CONF_DEPARTURE_TYPE)
 
     data = PublicTransportData(stop_id, route, direction, departure_type)
-    add_devices([RejseplanenTransportSensor(data, stop_id, route, direction, name)], True)
+    add_devices([RejseplanenTransportSensor(data,
+                                            stop_id,
+                                            route,
+                                            direction,
+                                            name)],
+                True)
 
 
 class RejseplanenTransportSensor(Entity):
@@ -106,7 +111,8 @@ class RejseplanenTransportSensor(Entity):
         if self._times is not None:
             next_up = "None"
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ROUTE] + " towards " + self._times[1][ATTR_DIRECTION] + " in "
+                next_up = self._times[1][ATTR_ROUTE] + " towards "
+                next_up += self._times[1][ATTR_DIRECTION] + " in "
                 next_up += str(self._times[1][ATTR_DUE_IN])
                 next_up += " from " + self._times[1][ATTR_STOP_NAME]
 
@@ -142,7 +148,7 @@ class RejseplanenTransportSensor(Entity):
             pass
 
 
-class PublicTransportData(object):
+class PublicTransportData():
     """The Class for handling the data retrieval."""
 
     def __init__(self, stop_id, route, direction, departure_type):
@@ -162,7 +168,8 @@ class PublicTransportData(object):
         """Get the latest data from rejseplanen."""
         params = {}
         params['id'] = self.stop_id
-        # Can't specify route and direction in query for rejseplanen, will have to filter results
+        # Can't specify route and direction in query for rejseplanen
+        # Will have to filter results
         params['format'] = 'json'
 
         response = requests.get(_RESOURCE, params, timeout=10)
@@ -202,7 +209,6 @@ class PublicTransportData(object):
 
             # Filter based on route
             if self.route:
-                #if route != self.route:
                 if route not in self.route:
                     continue
 
@@ -210,30 +216,33 @@ class PublicTransportData(object):
             if self.direction:
                 if direction not in self.direction:
                     continue
-            
+
             # Filter based on type
             if self.departure_type:
                 if departure_type not in self.departure_type:
                     continue
 
-            # The fields rtDate and rtTime have information about delays. They are however not always present.
+            # The fields rtDate and rtTime have information about delays.
+            # They are however not always present.
             due_at_date = item.get('rtDate')
             due_at_time = item.get('rtTime')
 
             if due_at_date is None:
-                due_at_date = item.get('date') # Scheduled date
+                due_at_date = item.get('date')  # Scheduled date
             if due_at_time is None:
-                due_at_time = item.get('time') # Scheduled time
+                due_at_time = item.get('time')  # Scheduled time
 
-            if due_at_date is not None and due_at_time is not None and route is not None:
+            if (due_at_date is not None and
+                    due_at_time is not None and
+                    route is not None):
                 due_at = due_at_date + " " + due_at_time
 
                 departure_data = {ATTR_DUE_IN: due_in_minutes(due_at),
-                            ATTR_DUE_AT: due_at,
-                            ATTR_TYPE: departure_type,
-                            ATTR_ROUTE: route,
-                            ATTR_DIRECTION: direction,
-                            ATTR_STOP_NAME: stop}
+                                  ATTR_DUE_AT: due_at,
+                                  ATTR_TYPE: departure_type,
+                                  ATTR_ROUTE: route,
+                                  ATTR_DIRECTION: direction,
+                                  ATTR_STOP_NAME: stop}
                 self.info.append(departure_data)
 
         if not self.info:
