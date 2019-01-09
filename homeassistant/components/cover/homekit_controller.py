@@ -9,9 +9,9 @@ import logging
 from homeassistant.components.homekit_controller import (HomeKitEntity,
                                                          KNOWN_ACCESSORIES)
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
-    SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
-    SUPPORT_SET_TILT_POSITION, ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN)
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
+    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_SET_TILT_POSITION,
+    ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 
