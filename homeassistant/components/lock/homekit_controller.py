@@ -17,13 +17,11 @@ DEPENDENCIES = ['homekit_controller']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_JAMMED = 'jammed'
-
 CURRENT_STATE_MAP = {
     0: STATE_UNLOCKED,
     1: STATE_LOCKED,
-    2: STATE_JAMMED,
-    3: STATE_UNKNOWN,
+    2: 'jammed',
+    3: None,
 }
 
 TARGET_STATE_MAP = {
@@ -44,12 +42,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HomeKitLock(HomeKitEntity, LockDevice):
     """Representation of a HomeKit Controller Lock."""
 
-    def __init__(self, *args):
+    def __init__(self, accessory, discovery_info):
         """Initialise the Lock."""
-
-        super().__init__(*args)
+        super().__init__(accessory, discovery_info)
         self._state = None
-        self._name = args[1]['model']
+        self._name = discovery_info['model']
         self._battery_level = None
 
     def update_characteristics(self, characteristics):
@@ -86,15 +83,15 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return true if device is locked."""
         return self._state != STATE_UNKNOWN
 
-    def lock(self, **kwargs):
+    def lock(self):
         """Lock the device."""
-        self.set_lock_state(STATE_LOCKED)
+        self._set_lock_state(STATE_LOCKED)
 
-    def unlock(self, **kwargs):
+    def unlock(self):
         """Unlock the device."""
-        self.set_lock_state(STATE_UNLOCKED)
+        self._set_lock_state(STATE_UNLOCKED)
 
-    def set_lock_state(self, state):
+    def _set_lock_state(self, state):
         """Send state command."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['lock-mechanism.target-state'],
