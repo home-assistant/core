@@ -514,7 +514,7 @@ holidays==0.9.8
 home-assistant-frontend==20181219.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.1
+homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
 # homekit==0.12.0
