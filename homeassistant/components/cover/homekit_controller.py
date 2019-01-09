@@ -59,9 +59,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     """Representation of a HomeKit Garage Door."""
 
-    def __init__(self):
+    def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
-        super().__init__()
+        super().__init__(accessory, discovery_info)
         self._name = None
         self._state = None
         self._obstruction_detected = None
@@ -153,9 +153,9 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     """Representation of a HomeKit Window or Window Covering."""
 
-    def __init__(self):
+    def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
-        super().__init__()
+        super().__init__(accessory, discovery_info)
         self._name = None
         self._state = None
         self._position = None
