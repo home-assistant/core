@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
 
-    async def hue_activate_scene(call, skip_bridge_refresh=True):
+    async def hue_activate_scene(call, skip_reload=True):
 
         # Get parameters
         group_name = call.data[ATTR_GROUP_NAME]
@@ -65,8 +65,8 @@ async def async_setup(hass, config):
         results = []
         for dummy_host, bridge in hass.data[DOMAIN].items():
             result = await bridge.hue_activate_scene(call,
-                                                     updated=skip_bridge_refresh,
-                                                     hide_warnings=skip_bridge_refresh)
+                                                     updated=skip_reload,
+                                                     hide_warnings=skip_reload)
             if result is False:
                 results.append(result)
             else:
@@ -74,9 +74,9 @@ async def async_setup(hass, config):
 
         # Did *any* bridge succeed? If not, refresh / retry
         if True not in results:
-            if skip_bridge_refresh:
+            if skip_reload:
                 return await hue_activate_scene(call,
-                                                skip_bridge_refresh=False)
+                                                skip_reload=False)
             else:
                 _LOGGER.warning("No bridge was able to activate "
                                 "scene %s in group %s", scene_name, group_name)
