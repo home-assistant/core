@@ -820,6 +820,7 @@ omit =
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
+    homeassistant/components/sensor/rejseplanen.py
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/ruter.py
