@@ -287,7 +287,7 @@ def setup(hass, base_config):
     if hass.data[FIBARO_CONTROLLERS]:
         for component in FIBARO_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {},
-                                    base_config[DOMAIN])
+                                    base_config)
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
