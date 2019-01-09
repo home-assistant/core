@@ -31,7 +31,7 @@ send_command:
       description: Name(s) of entities to send command from.
       example: 'remote.family_room'
     device:
-      description: Device ID to send command to.
+      description: An optional device ID to send command to.
       example: '32756745'
     command:
       description: A single command or a list of commands to send.
