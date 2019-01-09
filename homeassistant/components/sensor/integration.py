@@ -1,8 +1,8 @@
 """
-Energy meter from sensors providing power information.
+Numeric integration of data coming from a source sensor over time.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.energy/
+https://home-assistant.io/components/sensor.integration/
 """
 import logging
 
@@ -23,13 +23,23 @@ ATTR_SOURCE_ID = 'source'
 
 CONF_SOURCE_SENSOR = 'source'
 CONF_ROUND_DIGITS = 'round'
+CONF_UNIT_PREFIX = 'unit_prefix'
+CONF_UNIT_TIME = 'unit_time'
+CONF_UNIT_OF_MEASUREMENT = 'unit'
 
-UNIT_WATTS = "W"
-UNIT_KILOWATTS = "kW"
-UNIT_KILOWATTS_HOUR = "kWh"
+# SI Metric prefixes
+UNIT_PREFIXES = {None: 1,
+                 "k": 10**3,
+                 "G": 10**6,
+                 "T": 10**9}
 
-UNIT_OF_MEASUREMENT = UNIT_KILOWATTS_HOUR
-ICON = 'mdi:counter'
+# SI Time prefixes
+UNIT_TIME = {'s': 1,
+             'min': 60,
+             'h': 60*60,
+             'd': 24*60*60}
+
+ICON = 'mdi:char-histogram'
 
 DEFAULT_ROUND = 3
 
@@ -37,36 +47,51 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
     vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+    vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+    vol.Optional(CONF_UNIT_TIME, default='h'): vol.In(UNIT_TIME),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
 })
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the energy sensor."""
-    meter = EnergySensor(hass, config[CONF_SOURCE_SENSOR],
-                         config.get(CONF_NAME),
-                         config[CONF_ROUND_DIGITS])
+    """Set up the integration sensor."""
+    integral = IntegrationSensor(hass, config[CONF_SOURCE_SENSOR],
+                                 config.get(CONF_NAME),
+                                 config[CONF_ROUND_DIGITS],
+                                 config[CONF_UNIT_PREFIX],
+                                 config[CONF_UNIT_TIME],
+                                 config.get(CONF_UNIT_OF_MEASUREMENT))
 
-    async_add_entities([meter])
+    async_add_entities([integral])
 
     return True
 
 
-class EnergySensor(RestoreEntity):
-    """Representation of an energy sensor."""
+class IntegrationSensor(RestoreEntity):
+    """Representation of an integration sensor."""
 
-    def __init__(self, hass, source_entity, name, round_digits):
-        """Initialize the energy sensor."""
+    def __init__(self, hass, source_entity, name, round_digits, unit_prefix,
+                 unit_time, unit_of_measurement):
+        """Initialize the integration sensor."""
         self._hass = hass
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
 
         self._name = name if name is not None\
-            else '{} meter'.format(source_entity)
+            else '{} integral'.format(source_entity)
 
-        self._unit_of_measurement = UNIT_KILOWATTS_HOUR
-        self._unit_of_measurement_scale = None
+        if unit_of_measurement is None:
+            self._unit_of_measurement = "" if unit_prefix is None\
+                                        else unit_prefix
+            self._unit_of_measurement += "{}" + unit_time
+        else:
+            self._unit_of_measurement = unit_of_measurement
+        print(self._unit_of_measurement)
+
+        self._unit_prefix = UNIT_PREFIXES[unit_prefix]
+        self._unit_time = UNIT_TIME[unit_time]
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -79,47 +104,40 @@ class EnergySensor(RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_energy(entity, old_state, new_state):
+        def calc_integration(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            if any([old_state is None,
-                    old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
-                    new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
+            if old_state is None or\
+                    old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE] or\
+                    new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
-            if self._unit_of_measurement_scale is None:
-                unit_of_measurement = new_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT)
-                if unit_of_measurement == UNIT_WATTS:
-                    self._unit_of_measurement_scale = 1000
-                elif unit_of_measurement == UNIT_KILOWATTS:
-                    self._unit_of_measurement_scale = 1
-                else:
-                    _LOGGER.error("Unsupported power unit: %s",
-                                  unit_of_measurement)
-                    return
+            if "{}" in self._unit_of_measurement:
+                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                self._unit_of_measurement = self._unit_of_measurement.format(
+                    "" if unit is None else unit)
 
             try:
-                # energy as the Riemann integral of previous measures.
+                # integration as the Riemann integral of previous measures.
                 elapsed_time = (new_state.last_updated
                                 - old_state.last_updated).total_seconds()
                 area = (Decimal(new_state.state)
                         + Decimal(old_state.state))*Decimal(elapsed_time)/2
-                kwh = area / (self._unit_of_measurement_scale * 3600)
+                integral = area / (self._unit_prefix * self._unit_time)
 
-                assert isinstance(kwh, Decimal)
+                assert isinstance(integral, Decimal)
             except ValueError as err:
-                _LOGGER.warning("While calculating energy: %s", err)
+                _LOGGER.warning("While calculating integration: %s", err)
             except DecimalException as err:
                 _LOGGER.warning("Invalid state (%s > %s): %s",
                                 old_state.state, new_state.state, err)
             except AssertionError as err:
-                _LOGGER.error("Could not calculate kWh: %s", err)
+                _LOGGER.error("Could not calculate integral: %s", err)
             else:
-                self._state += kwh
+                self._state += integral
                 self.async_schedule_update_ha_state()
 
         async_track_state_change(
-            self._hass, self._sensor_source_id, calc_energy)
+            self._hass, self._sensor_source_id, calc_integration)
 
         @callback
         def async_set_state(entity, old_state, new_state):
@@ -129,7 +147,8 @@ class EnergySensor(RestoreEntity):
             except ValueError:
                 _LOGGER.error("State must be a number")
 
-        async_track_state_change(self._hass, self.entity_id, async_set_state)
+        async_track_state_change(
+            self._hass, self.entity_id, async_set_state)
 
     @property
     def name(self):
@@ -144,7 +163,7 @@ class EnergySensor(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return UNIT_OF_MEASUREMENT
+        return self._unit_of_measurement
 
     @property
     def should_poll(self):
