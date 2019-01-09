@@ -1,5 +1,5 @@
 """
-Demo platform for the geo location component.
+Demo platform for the geolocation component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
@@ -30,15 +30,15 @@ SOURCE = 'demo'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Demo geo locations."""
+    """Set up the Demo geolocations."""
     DemoManager(hass, add_entities)
 
 
 class DemoManager:
-    """Device manager for demo geo location events."""
+    """Device manager for demo geolocation events."""
 
     def __init__(self, hass, add_entities):
-        """Initialise the demo geo location event manager."""
+        """Initialise the demo geolocation event manager."""
         self._hass = hass
         self._add_entities = add_entities
         self._managed_devices = []
@@ -91,7 +91,7 @@ class DemoManager:
 
 
 class DemoGeoLocationEvent(GeoLocationEvent):
-    """This represents a demo geo location event."""
+    """This represents a demo geolocation event."""
 
     def __init__(self, name, distance, latitude, longitude,
                  unit_of_measurement):
@@ -114,7 +114,7 @@ class DemoGeoLocationEvent(GeoLocationEvent):
 
     @property
     def should_poll(self):
-        """No polling needed for a demo geo location event."""
+        """No polling needed for a demo geolocation event."""
         return False
 
     @property
