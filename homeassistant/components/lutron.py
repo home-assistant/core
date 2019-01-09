@@ -68,7 +68,7 @@ def setup(hass, base_config):
                             button.name != 'Unknown Button' and
                             button.button_type in ('SingleAction', 'Toggle')):
                         hass.data[LUTRON_DEVICES]['scene'].append(
-                            (area.name, button, led))
+                            (area.name, keypad.name, button, led))
 
     for component in ('light', 'cover', 'switch', 'scene'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)

@@ -19,7 +19,7 @@ requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.4.1
+HAP-python==2.4.2
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1.3
@@ -104,13 +104,13 @@ hbmqtt==0.9.4
 hdate==0.7.5
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.8
+holidays==0.9.9
 
 # homeassistant.components.frontend
 home-assistant-frontend==20181219.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.9.8
+homematicip==0.10.3
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb

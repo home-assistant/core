@@ -3,7 +3,7 @@ aiohttp==3.5.1
 astral==1.7.1
 async_timeout==3.0.1
 attrs==18.2.0
-bcrypt==3.1.4
+bcrypt==3.1.5
 certifi>=2018.04.16
 jinja2>=2.10
 PyJWT==1.6.4
@@ -33,7 +33,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.homekit
-HAP-python==2.4.1
+HAP-python==2.4.2
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.3.1
@@ -87,7 +87,7 @@ abodepy==0.14.0
 afsapi==0.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.15
+aioasuswrt==1.1.17
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -96,7 +96,7 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.esphome
-aioesphomeapi==1.3.0
+aioesphomeapi==1.4.1
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.6
@@ -124,7 +124,7 @@ aiolifx==0.6.7
 aiolifx_effects==0.2.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
-aiopvapi==1.5.4
+aiopvapi==1.6.14
 
 # homeassistant.components.unifi
 aiounifi==3
@@ -187,7 +187,7 @@ batinfo==0.4.2
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
-beautifulsoup4==4.6.3
+beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
 bellows==0.7.0
@@ -211,7 +211,7 @@ blockchain==1.4.4
 # bluepy==1.1.4
 
 # homeassistant.components.sensor.bme680
-# bme680==1.0.4
+# bme680==1.0.5
 
 # homeassistant.components.route53
 # homeassistant.components.notify.aws_lambda
@@ -511,19 +511,19 @@ hlk-sw16==0.0.6
 hole==0.3.0
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.8
+holidays==0.9.9
 
 # homeassistant.components.frontend
 home-assistant-frontend==20181219.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.1
+homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
 # homekit==0.12.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.9.8
+homematicip==0.10.3
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -683,7 +683,7 @@ motorparts==1.0.2
 mutagen==1.41.1
 
 # homeassistant.components.mychevy
-mychevy==1.1.0
+mychevy==1.2.0
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
@@ -708,7 +708,7 @@ nessclient==0.9.9
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.2.0
+netdisco==2.3.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -749,7 +749,7 @@ openevsewifi==0.4
 # homeassistant.components.media_player.openhome
 openhomedevice==0.4.2
 
-# homeassistant.components.air_pollutants.opensensemap
+# homeassistant.components.air_quality.opensensemap
 opensensemap-api==0.1.3
 
 # homeassistant.components.switch.orvibo
@@ -842,7 +842,7 @@ pushbullet.py==0.11.0
 pushetta==1.0.15
 
 # homeassistant.components.light.rpi_gpio_pwm
-pwmled==1.3.0
+pwmled==1.4.0
 
 # homeassistant.components.august
 py-august==0.7.0
@@ -879,7 +879,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.4
 
 # homeassistant.components.tibber
-pyTibber==0.8.7
+pyTibber==0.9.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -922,7 +922,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.12
+pybotvac==0.0.13
 
 # homeassistant.components.cloudflare
 pycfdns==0.0.1
@@ -976,7 +976,7 @@ pyeight==0.1.0
 pyemby==1.6
 
 # homeassistant.components.envisalink
-pyenvisalink==3.7
+pyenvisalink==3.8
 
 # homeassistant.components.climate.ephember
 pyephember==0.2.0
@@ -1022,7 +1022,7 @@ pyhaversion==2.0.3
 pyhik==0.1.9
 
 # homeassistant.components.hive
-pyhiveapi==0.2.14
+pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
 pyhomematic==0.1.54
@@ -1144,7 +1144,7 @@ pyoppleio==1.0.5
 pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.3b1
+pyotgw==0.4b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1201,7 +1201,7 @@ pysesame==0.1.0
 pysher==1.0.1
 
 # homeassistant.components.sensor.sma
-pysma==0.2.2
+pysma==0.3.1
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
@@ -1574,7 +1574,7 @@ suds-py3==1.3.3.0
 swisshydrodata==0.0.3
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.13
+tahoma-api==0.0.14
 
 # homeassistant.components.sensor.tank_utility
 tank_utility==1.4.0
@@ -1683,7 +1683,7 @@ warrant==0.6.1
 watchdog==0.8.3
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.0.0
+waterfurnace==1.1.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.54.0

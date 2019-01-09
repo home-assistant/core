@@ -106,7 +106,7 @@ omit =
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
-    homeassistant/components/envisalink.py
+    homeassistant/components/envisalink/__init__.py
     homeassistant/components/*/envisalink.py
 
     homeassistant/components/evohome.py
@@ -442,7 +442,7 @@ omit =
     homeassistant/components/spider.py
     homeassistant/components/*/spider.py
 
-    homeassistant/components/air_pollutants/opensensemap.py
+    homeassistant/components/air_quality/opensensemap.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py

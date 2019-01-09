@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.15']
+REQUIREMENTS = ['aioasuswrt==1.1.17']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ CONF_SSH_KEY = 'ssh_key'
 CONF_REQUIRE_IP = 'require_ip'
 DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
+CONF_SENSORS = 'sensors'
+SENSOR_TYPES = ['upload_speed', 'download_speed', 'download', 'upload']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,7 +39,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
+        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -62,7 +66,8 @@ async def async_setup(hass, config):
     hass.data[DATA_ASUSWRT] = api
 
     hass.async_create_task(async_load_platform(
-        hass, 'sensor', DOMAIN, {}, config))
+        hass, 'sensor', DOMAIN, config[DOMAIN].get(CONF_SENSORS), config))
     hass.async_create_task(async_load_platform(
         hass, 'device_tracker', DOMAIN, {}, config))
+
     return True

@@ -111,7 +111,7 @@ class InfluxSensor(Entity):
             database=database, ssl=influx_conf['ssl'],
             verify_ssl=influx_conf['verify_ssl'])
         try:
-            influx.query("select * from /.*/ LIMIT 1;")
+            influx.query("SHOW DIAGNOSTICS;")
             self.connected = True
             self.data = InfluxSensorData(
                 influx, query.get(CONF_GROUP_FUNCTION), query.get(CONF_FIELD),
