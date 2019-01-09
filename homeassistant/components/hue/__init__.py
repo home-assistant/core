@@ -15,7 +15,8 @@ from homeassistant.helpers import (
     config_validation as cv, device_registry as dr)
 
 from .const import DOMAIN
-from .bridge import HueBridge, SERVICE_HUE_SCENE, SCENE_SCHEMA, ATTR_GROUP_NAME, ATTR_SCENE_NAME
+from .bridge import (HueBridge, SERVICE_HUE_SCENE,
+                     SCENE_SCHEMA, ATTR_GROUP_NAME, ATTR_SCENE_NAME)
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 
@@ -63,7 +64,8 @@ async def async_setup(hass, config):
         # Call the set scene function on each bridge
         results = []
         for dummy_host, bridge in hass.data[DOMAIN].items():
-            result = await bridge.hue_activate_scene(call, updated=skip_bridge_refresh,
+            result = await bridge.hue_activate_scene(call,
+                                                     updated=skip_bridge_refresh,
                                                      hide_warnings=skip_bridge_refresh)
             if result is False:
                 results.append(result)
@@ -73,7 +75,8 @@ async def async_setup(hass, config):
         # Did *any* bridge succeed? If not, refresh / retry
         if True not in results:
             if skip_bridge_refresh:
-                return await hue_activate_scene(call, skip_bridge_refresh=False)
+                return await hue_activate_scene(call,
+                                                skip_bridge_refresh=False)
             else:
                 _LOGGER.warning("No bridge was able to activate "
                                 "scene %s in group %s", scene_name, group_name)

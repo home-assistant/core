@@ -137,12 +137,14 @@ class HueBridge:
 
         if group is None:
             if not hide_warnings:
-                LOGGER.warning('Unable to find group %s on bridge %s', group_name, self.host)
+                LOGGER.warning('Unable to find group %s'
+                               ' on bridge %s', group_name, self.host)
             return False
 
         if scene is None:
             if not hide_warnings:
-                LOGGER.warning('Unable to find scene %s on bridge %s', scene_name, self.host)
+                LOGGER.warning('Unable to find scene %s'
+                               ' on bridge %s', scene_name, self.host)
             return False
 
         return await group.set_action(scene=scene.id)
