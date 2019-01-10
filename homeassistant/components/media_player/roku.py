@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.roku/
 """
 import logging
 
-from homeassistant.components.roku import (DATA_ENTITIES)
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
@@ -31,15 +30,17 @@ async def async_setup_platform(
     if not discovery_info:
         return
 
+    data_entities = 'data_roku_entities'
+
     # Manage entity cache for service handler
-    if DATA_ENTITIES not in hass.data:
-        hass.data[DATA_ENTITIES] = []
+    if data_entities not in hass.data:
+        hass.data[data_entities] = []
 
     host = discovery_info[CONF_HOST]
     entity = RokuDevice(host)
 
-    if entity not in hass.data[DATA_ENTITIES]:
-        hass.data[DATA_ENTITIES].append(entity)
+    if entity not in hass.data[data_entities]:
+        hass.data[data_entities].append(entity)
 
     async_add_entities([entity])
 

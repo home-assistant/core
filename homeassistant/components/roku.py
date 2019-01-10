@@ -25,7 +25,6 @@ SERVICE_SCAN = 'roku_scan'
 ATTR_ROKU = 'roku'
 
 DATA_ROKU = 'data_roku'
-DATA_ENTITIES = 'data_roku_entities'
 
 NOTIFICATION_ID = 'roku_notification'
 NOTIFICATION_TITLE = 'Roku Setup'
