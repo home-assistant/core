@@ -191,15 +191,13 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
 
 
 @patch(
-    'homeassistant.components.device_tracker.DeviceTracker.see')
-@patch(
     'homeassistant.components.device_tracker.demo.setup_scanner',
     autospec=True)
-async def test_discover_platform_configured(mock_demo_setup_scanner, mock_see, hass):
+async def test_discover_platform_configured(mock_demo_setup_scanner, hass):
     """Test discovery of device_tracker demo platform."""
-    assert await async_setup_component(hass, device_tracker.DOMAIN,
-                                       {device_tracker.DOMAIN: {CONF_PLATFORM:
-                                           'demo'}})
+    assert await async_setup_component(
+        hass, device_tracker.DOMAIN,
+        {device_tracker.DOMAIN: {CONF_PLATFORM: 'demo'}})
     assert device_tracker.DOMAIN in hass.config.components
     await discovery.async_load_platform(
         hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
