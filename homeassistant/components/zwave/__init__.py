@@ -284,7 +284,7 @@ async def async_setup_entry(hass, config_entry):
 
     options.set_console_output(use_debug)
 
-    if CONF_NETWORK_KEY in config_entry.data:
+    if config_entry.data.get(CONF_NETWORK_KEY):
         options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
     await hass.async_add_executor_job(options.lock)
