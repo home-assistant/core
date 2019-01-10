@@ -66,7 +66,8 @@ async def async_setup(hass, config):
         tasks = [bridge.hue_activate_scene(call,
                                            updated=skip_reload,
                                            hide_warnings=skip_reload)
-                 for bridge in hass.data[DOMAIN].values()]
+                 for bridge in hass.data[DOMAIN].values()
+                 if isinstance(bridge, HueBridge)]
         results = await asyncio.gather(*tasks)
 
         # Did *any* bridge succeed? If not, refresh / retry
