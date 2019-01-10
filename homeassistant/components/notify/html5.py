@@ -342,8 +342,10 @@ class HTML5NotificationService(BaseNotificationService):
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
+        data = kwargs.get(ATTR_DATA)
+        tag = data.get(ATTR_TAG) if data else ""
         payload = {
-            ATTR_TAG: kwargs.get(ATTR_DATA, {}).get(ATTR_TAG),
+            ATTR_TAG: tag,
             ATTR_DISMISS: True,
             ATTR_DATA: {}
         }
