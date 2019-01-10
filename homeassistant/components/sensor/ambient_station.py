@@ -21,16 +21,18 @@ REQUIREMENTS = ['ambient_api==1.5.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_APP_KEY = 'app_key'
+CONF_UNITS = 'units'
 
 SENSOR_NAME = 0
 SENSOR_UNITS = 1
 
-CONF_UNITS = 'units'
 UNITS_US = 'us'
 UNITS_SI = 'si'
 UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 
-SCAN_INTERVAL = timedelta(seconds=300)
+DEFAULT_APP_KEY = '32f561c4cb3a400d9c71ae0e96495466beaea220e315403c955b8f2bb' \
+    '12ac9a1'
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     '24hourrainin': ['24 Hr Rain', 'in'],
@@ -67,7 +69,6 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_APP_KEY): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_UNITS): vol.In([UNITS_SI, UNITS_US]),
@@ -87,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     api = AmbientAPI(
         AMBIENT_API_KEY=config[CONF_API_KEY],
-        AMBIENT_APPLICATION_KEY=config[CONF_APP_KEY],
+        AMBIENT_APPLICATION_KEY=DEFAULT_APP_KEY,
         log_level='DEBUG')
 
     data = AmbientStationData(api)
@@ -161,7 +162,7 @@ class AmbientStationData:
         self.data = {}
         self.stations = []
 
-    @Throttle(SCAN_INTERVAL)
+    @Throttle(DEFAULT_SCAN_INTERVAL)
     def update(self):
         """Get new data for all stations."""
         # Ambient's API has really aggressive rate limiting (no more than 1
