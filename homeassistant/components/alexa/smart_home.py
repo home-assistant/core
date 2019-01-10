@@ -27,8 +27,9 @@ from homeassistant.const import (
     CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON,
+    STATE_UNAVAILABLE, STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -391,6 +392,37 @@ class _AlexaInterface:
                     'timeOfSample': datetime.now().strftime(DATE_FORMAT),
                     'uncertaintyInMilliseconds': 0
                 }
+
+
+class _AlexaEndpointHealth(_AlexaInterface):
+    """Implements Alexa.EndpointHealth.
+
+    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
+    """
+
+    def __init__(self, hass, entity):
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.EndpointHealth'
+
+    def properties_supported(self):
+        return [{'name': 'connectivity'}]
+
+    def properties_proactively_reported(self):
+        return False
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'connectivity':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_UNAVAILABLE:
+            return {'value': 'UNREACHABLE'}
+        return {'value': 'OK'}
 
 
 class _AlexaPowerController(_AlexaInterface):
@@ -769,7 +801,8 @@ class _GenericCapabilities(_AlexaEntity):
         return [_DisplayCategory.OTHER]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity)]
+        return [_AlexaPowerController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(switch.DOMAIN)
@@ -778,7 +811,8 @@ class _SwitchCapabilities(_AlexaEntity):
         return [_DisplayCategory.SWITCH]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity)]
+        return [_AlexaPowerController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(climate.DOMAIN)
@@ -792,6 +826,7 @@ class _ClimateCapabilities(_AlexaEntity):
             yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -804,6 +839,7 @@ class _CoverCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield _AlexaPercentageController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
@@ -821,6 +857,7 @@ class _LightCapabilities(_AlexaEntity):
             yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield _AlexaColorTemperatureController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
@@ -833,6 +870,7 @@ class _FanCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield _AlexaPercentageController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
@@ -841,7 +879,8 @@ class _LockCapabilities(_AlexaEntity):
         return [_DisplayCategory.SMARTLOCK]
 
     def interfaces(self):
-        return [_AlexaLockController(self.entity)]
+        return [_AlexaLockController(self.entity),
+                _AlexaEndpointHealth(self.hass, self.entity)]
 
 
 @ENTITY_ADAPTERS.register(media_player.DOMAIN)
@@ -851,6 +890,7 @@ class _MediaPlayerCapabilities(_AlexaEntity):
 
     def interfaces(self):
         yield _AlexaPowerController(self.entity)
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_SET:
@@ -913,6 +953,7 @@ class _SensorCapabilities(_AlexaEntity):
                 TEMP_CELSIUS,
         ):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
+            yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
@@ -933,6 +974,8 @@ class _BinarySensorCapabilities(_AlexaEntity):
             yield _AlexaContactSensor(self.hass, self.entity)
         elif sensor_type is self.TYPE_MOTION:
             yield _AlexaMotionSensor(self.hass, self.entity)
+
+        yield _AlexaEndpointHealth(self.hass, self.entity)
 
     def get_type(self):
         """Return the type of binary sensor."""
