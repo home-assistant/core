@@ -988,7 +988,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.sensor.flunearyou
-pyflunearyou==1.0.0
+pyflunearyou==1.0.1
 
 # homeassistant.components.light.futurenow
 pyfnip==0.2
