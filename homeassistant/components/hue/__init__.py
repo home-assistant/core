@@ -6,6 +6,7 @@ https://home-assistant.io/components/hue/
 """
 import ipaddress
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -62,18 +63,15 @@ async def async_setup(hass, config):
         scene_name = call.data[ATTR_SCENE_NAME]
 
         # Call the set scene function on each bridge
-        results = []
-        for dummy_host, bridge in hass.data[DOMAIN].items():
-            result = await bridge.hue_activate_scene(call,
-                                                     updated=skip_reload,
-                                                     hide_warnings=skip_reload)
-            if result is False:
-                results.append(result)
-            else:
-                results.append(True)
+        tasks = [bridge.hue_activate_scene(call,
+                                           updated=skip_reload,
+                                           hide_warnings=skip_reload)
+                 for bridge in hass.data[DOMAIN].values()]
+        results = await asyncio.gather(*tasks)
 
         # Did *any* bridge succeed? If not, refresh / retry
-        if True not in results:
+        # Note that we'll get a "None" value for a successful call
+        if None not in results:
             if skip_reload:
                 return await hue_activate_scene(call,
                                                 skip_reload=False)
