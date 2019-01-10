@@ -45,7 +45,7 @@ ROKU_SCAN_SCHEMA = vol.Schema({})
 async def scan_for_rokus(hass):
     """Scan for devices and present a notification of the ones found."""
     from roku import Roku, RokuException
-    rokus = await Roku.discover()
+    rokus = Roku.discover()
 
     devices = []
     for roku in rokus:

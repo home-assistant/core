@@ -30,19 +30,8 @@ async def async_setup_platform(
     if not discovery_info:
         return
 
-    data_entities = 'data_roku_entities'
-
-    # Manage entity cache for service handler
-    if data_entities not in hass.data:
-        hass.data[data_entities] = []
-
     host = discovery_info[CONF_HOST]
-    entity = RokuDevice(host)
-
-    if entity not in hass.data[data_entities]:
-        hass.data[data_entities].append(entity)
-
-    async_add_entities([entity])
+    async_add_entities([RokuDevice(host)])
 
 
 class RokuDevice(MediaPlayerDevice):
