@@ -112,7 +112,7 @@ class TestHtml5Notify:
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
 
-        assert payload['dismiss'] == True
+        assert payload['dismiss'] is True
         assert payload['tag'] == 'test'
 
     @patch('pywebpush.WebPusher')
