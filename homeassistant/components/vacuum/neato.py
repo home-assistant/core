@@ -82,7 +82,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
         _LOGGER.debug('self._state=%s', self._state)
-        robot_alert = ALERTS.get(self._state['alert'])
+        if 'alert' in self._state:
+            robot_alert = ALERTS.get(self._state['alert'])
+        else:
+            robot_alert = None
         if self._state['state'] == 1:
             if self._state['details']['isCharging']:
                 self._clean_state = STATE_DOCKED
