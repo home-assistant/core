@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Music station'
+DEFAULT_TIMEOUT = 5
 
 SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
@@ -53,8 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
     denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
 
-    if denon.update():
-        add_entities([denon])
+    add_entities([denon])
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -116,24 +116,42 @@ class DenonDevice(MediaPlayerDevice):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
-        telnet = telnetlib.Telnet(self._host)
-        _LOGGER.debug("Sending: %s", command)
+        try:
+            _LOGGER.debug("%s: Opening telnet for sending command",
+                          self.entity_id)
+            telnet = telnetlib.Telnet(self._host, 23, DEFAULT_TIMEOUT)
+        except OSError as exc:
+            _LOGGER.debug("%s: Opening telnet for sending command failed: %s",
+                          self.entity_id, exc)
+            return False
+
+        _LOGGER.debug("%s: Sending: %s", self.entity_id, command)
         telnet.write(command.encode('ASCII') + b'\r')
         telnet.read_very_eager()  # skip response
+        _LOGGER.debug("%s: Closing telnet", self.entity_id)
         telnet.close()
 
     def update(self):
         """Get the latest details from the device."""
         try:
-            telnet = telnetlib.Telnet(self._host)
-        except OSError:
+            _LOGGER.debug("%s: Opening telnet for update",
+                          self.entity_id)
+            telnet = telnetlib.Telnet(self._host, 23, DEFAULT_TIMEOUT)
+        except OSError as exc:
+            _LOGGER.debug("%s: Opening telnet for update failed: %s",
+                          self.entity_id, exc)
             return False
 
         if self._should_setup_sources:
             self._setup_sources(telnet)
             self._should_setup_sources = False
 
+        _LOGGER.debug("%s: Retrieving power state",
+                      self.entity_id)
         self._pwstate = self.telnet_request(telnet, 'PW?')
+
+        _LOGGER.debug("%s: Retrieving volume",
+                      self.entity_id)
         for line in self.telnet_request(telnet, 'MV?', all_lines=True):
             if line.startswith('MVMAX '):
                 # only grab two digit max, don't care about any half digit
@@ -141,7 +159,13 @@ class DenonDevice(MediaPlayerDevice):
                 continue
             if line.startswith('MV'):
                 self._volume = int(line[len('MV'):])
+
+        _LOGGER.debug("%s: Retrieving mute state",
+                      self.entity_id)
         self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')
+
+        _LOGGER.debug("%s: Retrieving media source",
+                      self.entity_id)
         self._mediasource = self.telnet_request(telnet, 'SI?')[len('SI'):]
 
         if self._mediasource in MEDIA_MODES.values():
@@ -153,6 +177,8 @@ class DenonDevice(MediaPlayerDevice):
         else:
             self._mediainfo = self.source
 
+        _LOGGER.debug("%s: Closing telnet",
+                      self.entity_id)
         telnet.close()
         return True
 
