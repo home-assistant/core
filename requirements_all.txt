@@ -1176,6 +1176,9 @@ pyrainbird==0.1.6
 # homeassistant.components.switch.recswitch
 pyrecswitch==1.0.2
 
+# homeassistant.components.sensor.repetier
+pyrepetier==1.4.1
+
 # homeassistant.components.sensor.ruter
 pyruter==1.1.0
 
@@ -1749,6 +1752,3 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.0
-
-# homeassistant.components.sensor.repetier
-pyrepetier==1.4.1
