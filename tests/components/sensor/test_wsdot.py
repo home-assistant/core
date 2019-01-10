@@ -43,8 +43,7 @@ class TestWSDOT(unittest.TestCase):
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'wsdot': self.config}))
+        assert setup_component(self.hass, 'sensor', {'wsdot': self.config})
 
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
@@ -52,12 +51,11 @@ class TestWSDOT(unittest.TestCase):
         uri = re.compile(RESOURCE + '*')
         mock_req.get(uri, text=load_fixture('wsdot.json'))
         wsdot.setup_platform(self.hass, self.config, self.add_entities)
-        self.assertEqual(len(self.entities), 1)
+        assert len(self.entities) == 1
         sensor = self.entities[0]
-        self.assertEqual(sensor.name, 'I90 EB')
-        self.assertEqual(sensor.state, 11)
-        self.assertEqual(sensor.device_state_attributes[ATTR_DESCRIPTION],
-                         'Downtown Seattle to Downtown Bellevue via I-90')
-        self.assertEqual(sensor.device_state_attributes[ATTR_TIME_UPDATED],
-                         datetime(2017, 1, 21, 15, 10,
-                                  tzinfo=timezone(timedelta(hours=-8))))
+        assert sensor.name == 'I90 EB'
+        assert sensor.state == 11
+        assert sensor.device_state_attributes[ATTR_DESCRIPTION] == \
+            'Downtown Seattle to Downtown Bellevue via I-90'
+        assert sensor.device_state_attributes[ATTR_TIME_UPDATED] == \
+            datetime(2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8)))

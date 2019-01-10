@@ -17,9 +17,10 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.6.3']
+REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,8 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error("Unable to fetch data from %s", resource)
-        return False
+        raise PlatformNotReady
 
     add_entities([
         ScrapeSensor(rest, name, select, attr, value_template, unit)], True)

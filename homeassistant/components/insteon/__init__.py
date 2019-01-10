@@ -10,16 +10,16 @@ from typing import Dict
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
                                  CONF_PLATFORM,
                                  CONF_ENTITY_ID,
                                  CONF_HOST)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.15.0']
+REQUIREMENTS = ['insteonplm==0.15.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
         vol.Optional(CONF_PLATFORM): cv.string,
-        }))
+    }))
 
 CONF_X10_SCHEMA = vol.All(
     vol.Schema({
@@ -146,6 +146,45 @@ PRINT_ALDB_SCHEMA = vol.Schema({
 X10_HOUSECODE_SCHEMA = vol.Schema({
     vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
     })
+
+STATE_NAME_LABEL_MAP = {
+    'keypadButtonA': 'Button A',
+    'keypadButtonB': 'Button B',
+    'keypadButtonC': 'Button C',
+    'keypadButtonD': 'Button D',
+    'keypadButtonE': 'Button E',
+    'keypadButtonF': 'Button F',
+    'keypadButtonG': 'Button G',
+    'keypadButtonH': 'Button H',
+    'keypadButtonMain': 'Main',
+    'onOffButtonA': 'Button A',
+    'onOffButtonB': 'Button B',
+    'onOffButtonC': 'Button C',
+    'onOffButtonD': 'Button D',
+    'onOffButtonE': 'Button E',
+    'onOffButtonF': 'Button F',
+    'onOffButtonG': 'Button G',
+    'onOffButtonH': 'Button H',
+    'onOffButtonMain': 'Main',
+    'fanOnLevel': 'Fan',
+    'lightOnLevel': 'Light',
+    'coolSetPoint': 'Cool Set',
+    'heatSetPoint': 'HeatSet',
+    'statusReport': 'Status',
+    'generalSensor': 'Sensor',
+    'motionSensor': 'Motion',
+    'lightSensor': 'Light',
+    'batterySensor': 'Battery',
+    'dryLeakSensor': 'Dry',
+    'wetLeakSensor': 'Wet',
+    'heartbeatLeakSensor': 'Heartbeat',
+    'openClosedRelay': 'Relay',
+    'openClosedSensor': 'Sensor',
+    'lightOnOff': 'Light',
+    'outletTopOnOff': 'Top',
+    'outletBottomOnOff': 'Bottom',
+    'coverOpenLevel': 'Cover',
+}
 
 
 async def async_setup(hass, config):
@@ -478,12 +517,20 @@ class InsteonEntity(Entity):
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
-        name = ''
-        if self._insteon_device_state.group == 0x01:
-            name = self._insteon_device.id
-        else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id,
-                                      self._insteon_device_state.group)
+        # Set a base description
+        description = self._insteon_device.description
+        if self._insteon_device.description is None:
+            description = 'Unknown Device'
+
+        # Get an extension label if there is one
+        extension = self._get_label()
+        if extension:
+            extension = ' ' + extension
+        name = '{:s} {:s}{:s}'.format(
+            description,
+            self._insteon_device.address.human,
+            extension
+        )
         return name
 
     @property
@@ -525,6 +572,16 @@ class InsteonEntity(Entity):
     def _aldb_loaded(self):
         """All-Link Database loaded for the device."""
         self.print_aldb()
+
+    def _get_label(self):
+        """Get the device label for grouped devices."""
+        label = ''
+        if len(self._insteon_device.states) > 1:
+            if self._insteon_device_state.name in STATE_NAME_LABEL_MAP:
+                label = STATE_NAME_LABEL_MAP[self._insteon_device_state.name]
+            else:
+                label = 'Group {:d}'.format(self.group)
+        return label
 
 
 def print_aldb_to_log(aldb):

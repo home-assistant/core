@@ -25,18 +25,18 @@ from typing import (  # noqa: F401 pylint: disable=unused-import
 from async_timeout import timeout
 import attr
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
-    EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
+    EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
+    HomeAssistantError, InvalidEntityFormatError, InvalidStateError,
+    Unauthorized, ServiceNotFound)
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
@@ -954,7 +954,6 @@ class ServiceRegistry:
         """Initialize a service registry."""
         self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
-        self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
 
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
@@ -1009,10 +1008,6 @@ class ServiceRegistry:
             self._services[domain][service] = service_obj
         else:
             self._services[domain] = {service: service_obj}
-
-        if self._async_unsub_call_event is None:
-            self._async_unsub_call_event = self._hass.bus.async_listen(
-                EVENT_CALL_SERVICE, self._event_to_service_call)
 
         self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
@@ -1092,99 +1087,62 @@ class ServiceRegistry:
 
         This method is a coroutine.
         """
+        domain = domain.lower()
+        service = service.lower()
         context = context or Context()
-        call_id = uuid.uuid4().hex
-        event_data = {
+        service_data = service_data or {}
+
+        try:
+            handler = self._services[domain][service]
+        except KeyError:
+            raise ServiceNotFound(domain, service) from None
+
+        if handler.schema:
+            processed_data = handler.schema(service_data)
+        else:
+            processed_data = service_data
+
+        service_call = ServiceCall(domain, service, processed_data, context)
+
+        self._hass.bus.async_fire(EVENT_CALL_SERVICE, {
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
-            ATTR_SERVICE_CALL_ID: call_id,
-        }
+        })
 
         if not blocking:
-            self._hass.bus.async_fire(
-                EVENT_CALL_SERVICE, event_data, EventOrigin.local, context)
+            self._hass.async_create_task(
+                self._safe_execute(handler, service_call))
             return None
 
-        fut = asyncio.Future()  # type: asyncio.Future
-
-        @callback
-        def service_executed(event: Event) -> None:
-            """Handle an executed service."""
-            if event.data[ATTR_SERVICE_CALL_ID] == call_id:
-                fut.set_result(True)
-                unsub()
-
-        unsub = self._hass.bus.async_listen(
-            EVENT_SERVICE_EXECUTED, service_executed)
-
-        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data,
-                                  EventOrigin.local, context)
-
-        done, _ = await asyncio.wait([fut], timeout=SERVICE_CALL_LIMIT)
-        success = bool(done)
-        if not success:
-            unsub()
-        return success
-
-    async def _event_to_service_call(self, event: Event) -> None:
-        """Handle the SERVICE_CALLED events from the EventBus."""
-        service_data = event.data.get(ATTR_SERVICE_DATA) or {}
-        domain = event.data.get(ATTR_DOMAIN).lower()  # type: ignore
-        service = event.data.get(ATTR_SERVICE).lower()  # type: ignore
-        call_id = event.data.get(ATTR_SERVICE_CALL_ID)
-
-        if not self.has_service(domain, service):
-            if event.origin == EventOrigin.local:
-                _LOGGER.warning("Unable to find service %s/%s",
-                                domain, service)
-            return
-
-        service_handler = self._services[domain][service]
-
-        def fire_service_executed() -> None:
-            """Fire service executed event."""
-            if not call_id:
-                return
-
-            data = {ATTR_SERVICE_CALL_ID: call_id}
-
-            if (service_handler.is_coroutinefunction or
-                    service_handler.is_callback):
-                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data,
-                                          EventOrigin.local, event.context)
-            else:
-                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data,
-                                    EventOrigin.local, event.context)
-
         try:
-            if service_handler.schema:
-                service_data = service_handler.schema(service_data)
-        except vol.Invalid as ex:
-            _LOGGER.error("Invalid service data for %s.%s: %s",
-                          domain, service, humanize_error(service_data, ex))
-            fire_service_executed()
-            return
+            with timeout(SERVICE_CALL_LIMIT):
+                await asyncio.shield(
+                    self._execute_service(handler, service_call))
+            return True
+        except asyncio.TimeoutError:
+            return False
 
-        service_call = ServiceCall(
-            domain, service, service_data, event.context)
-
+    async def _safe_execute(self, handler: Service,
+                            service_call: ServiceCall) -> None:
+        """Execute a service and catch exceptions."""
         try:
-            if service_handler.is_callback:
-                service_handler.func(service_call)
-                fire_service_executed()
-            elif service_handler.is_coroutinefunction:
-                await service_handler.func(service_call)
-                fire_service_executed()
-            else:
-                def execute_service() -> None:
-                    """Execute a service and fires a SERVICE_EXECUTED event."""
-                    service_handler.func(service_call)
-                    fire_service_executed()
-
-                await self._hass.async_add_executor_job(execute_service)
+            await self._execute_service(handler, service_call)
+        except Unauthorized:
+            _LOGGER.warning('Unauthorized service called %s/%s',
+                            service_call.domain, service_call.service)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error executing service %s', service_call)
+
+    async def _execute_service(self, handler: Service,
+                               service_call: ServiceCall) -> None:
+        """Execute a service."""
+        if handler.is_callback:
+            handler.func(service_call)
+        elif handler.is_coroutinefunction:
+            await handler.func(service_call)
+        else:
+            await self._hass.async_add_executor_job(handler.func, service_call)
 
 
 class Config:

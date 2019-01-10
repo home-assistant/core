@@ -17,7 +17,8 @@ from homeassistant.const import (
     ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, ATTR_SERVICE,
     CONF_EXCLUDE, CONF_INCLUDE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED, HTTP_BAD_REQUEST,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
@@ -59,7 +60,8 @@ CONFIG_SCHEMA = vol.Schema({
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED
+    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED,
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -316,6 +318,83 @@ def humanify(hass, events):
                     'context_user_id': event.context.user_id
                 }
 
+            elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
+                yield {
+                    'when': event.time_fired,
+                    'name': event.data.get(ATTR_NAME),
+                    'message': "has been triggered",
+                    'domain': 'automation',
+                    'entity_id': event.data.get(ATTR_ENTITY_ID),
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
+            elif event.event_type == EVENT_SCRIPT_STARTED:
+                yield {
+                    'when': event.time_fired,
+                    'name': event.data.get(ATTR_NAME),
+                    'message': 'started',
+                    'domain': 'script',
+                    'entity_id': event.data.get(ATTR_ENTITY_ID),
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
+
+def _get_related_entity_ids(session, entity_filter):
+    from homeassistant.components.recorder.models import States
+    from homeassistant.components.recorder.util import \
+        RETRIES, QUERY_RETRY_WAIT
+    from sqlalchemy.exc import SQLAlchemyError
+    import time
+
+    timer_start = time.perf_counter()
+
+    query = session.query(States).with_entities(States.entity_id).distinct()
+
+    for tryno in range(0, RETRIES):
+        try:
+            result = [
+                row.entity_id for row in query
+                if entity_filter(row.entity_id)]
+
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                elapsed = time.perf_counter() - timer_start
+                _LOGGER.debug(
+                    'fetching %d distinct domain/entity_id pairs took %fs',
+                    len(result),
+                    elapsed)
+
+            return result
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+
+            if tryno == RETRIES - 1:
+                raise
+            else:
+                time.sleep(QUERY_RETRY_WAIT)
+
+
+def _generate_filter_from_config(config):
+    from homeassistant.helpers.entityfilter import generate_filter
+
+    excluded_entities = []
+    excluded_domains = []
+    included_entities = []
+    included_domains = []
+
+    exclude = config.get(CONF_EXCLUDE)
+    if exclude:
+        excluded_entities = exclude.get(CONF_ENTITIES, [])
+        excluded_domains = exclude.get(CONF_DOMAINS, [])
+    include = config.get(CONF_INCLUDE)
+    if include:
+        included_entities = include.get(CONF_ENTITIES, [])
+        included_domains = include.get(CONF_DOMAINS, [])
+
+    return generate_filter(included_domains, included_entities,
+                           excluded_domains, excluded_entities)
+
 
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
@@ -323,37 +402,29 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
     from homeassistant.components.recorder.util import (
         execute, session_scope)
 
+    entities_filter = _generate_filter_from_config(config)
+
     with session_scope(hass=hass) as session:
+        if entity_id is not None:
+            entity_ids = [entity_id.lower()]
+        else:
+            entity_ids = _get_related_entity_ids(session, entities_filter)
+
         query = session.query(Events).order_by(Events.time_fired) \
-            .outerjoin(States, (Events.event_id == States.event_id))  \
+            .outerjoin(States, (Events.event_id == States.event_id)) \
             .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
-            .filter((States.last_updated == States.last_changed)
+            .filter(((States.last_updated == States.last_changed) &
+                     States.entity_id.in_(entity_ids))
                     | (States.state_id.is_(None)))
 
-        if entity_id is not None:
-            query = query.filter(States.entity_id == entity_id.lower())
-
         events = execute(query)
-    return humanify(hass, _exclude_events(events, config))
+
+    return humanify(hass, _exclude_events(events, entities_filter))
 
 
-def _exclude_events(events, config):
-    """Get list of filtered events."""
-    excluded_entities = []
-    excluded_domains = []
-    included_entities = []
-    included_domains = []
-    exclude = config.get(CONF_EXCLUDE)
-    if exclude:
-        excluded_entities = exclude[CONF_ENTITIES]
-        excluded_domains = exclude[CONF_DOMAINS]
-    include = config.get(CONF_INCLUDE)
-    if include:
-        included_entities = include[CONF_ENTITIES]
-        included_domains = include[CONF_DOMAINS]
-
+def _exclude_events(events, entities_filter):
     filtered_events = []
     for event in events:
         domain, entity_id = None, None
@@ -398,34 +469,26 @@ def _exclude_events(events, config):
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
-        if domain or entity_id:
-            # filter if only excluded is configured for this domain
-            if excluded_domains and domain in excluded_domains and \
-                    not included_domains:
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities:
-                    continue
-            # filter if only included is configured for this domain
-            elif not excluded_domains and included_domains and \
-                    domain not in included_domains:
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities:
-                    continue
-            # filter if included and excluded is configured for this domain
-            elif excluded_domains and included_domains and \
-                    (domain not in included_domains or
-                     domain in excluded_domains):
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities or domain in excluded_domains:
-                    continue
-            # filter if only included is configured for this entity
-            elif not excluded_domains and not included_domains and \
-                    included_entities and entity_id not in included_entities:
-                continue
-            # check if logbook entry is excluded for this entity
-            if entity_id in excluded_entities:
-                continue
-        filtered_events.append(event)
+        elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
+            domain = 'automation'
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_SCRIPT_STARTED:
+            domain = 'script'
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_ALEXA_SMART_HOME:
+            domain = 'alexa'
+
+        elif event.event_type == EVENT_HOMEKIT_CHANGED:
+            domain = DOMAIN_HOMEKIT
+
+        if not entity_id and domain:
+            entity_id = "%s." % (domain, )
+
+        if not entity_id or entities_filter(entity_id):
+            filtered_events.append(event)
+
     return filtered_events
 
 

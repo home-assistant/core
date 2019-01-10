@@ -1,127 +1,177 @@
-"""Lovelace UI."""
+"""
+Support for the Lovelace UI.
+
+For more details about this component, please refer to the documentation
+at https://www.home-assistant.io/lovelace/
+"""
+from functools import wraps
 import logging
-import uuid
 import os
-from os import O_WRONLY, O_CREAT, O_TRUNC
-from collections import OrderedDict
-from typing import Union, List, Dict
+import time
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'lovelace'
-REQUIREMENTS = ['ruamel.yaml==0.15.72']
 
-OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
+DOMAIN = 'lovelace'
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+CONF_MODE = 'mode'
+MODE_YAML = 'yaml'
+MODE_STORAGE = 'storage'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_MODE, default=MODE_STORAGE):
+        vol.All(vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])),
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
+
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
+WS_TYPE_SAVE_CONFIG = 'lovelace/config/save'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
-                                  OLD_WS_TYPE_GET_LOVELACE_UI),
+    vol.Required('type'): WS_TYPE_GET_LOVELACE_UI,
+    vol.Optional('force', default=False): bool,
 })
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_SAVE_CONFIG,
+    vol.Required('config'): vol.Any(str, dict),
+})
 
 
-class WriteError(HomeAssistantError):
-    """Error writing the data."""
-
-
-def save_yaml(fname: str, data: JSON_TYPE):
-    """Save a YAML file."""
-    from ruamel.yaml import YAML
-    from ruamel.yaml.error import YAMLError
-    yaml = YAML(typ='rt')
-    yaml.indent(sequence=4, offset=2)
-    tmp_fname = fname + "__TEMP__"
-    try:
-        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC, 0o644),
-                  'w', encoding='utf-8') as temp_file:
-            yaml.dump(data, temp_file)
-        os.replace(tmp_fname, fname)
-    except YAMLError as exc:
-        _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
-    except OSError as exc:
-        _LOGGER.exception('Saving YAML file failed: %s', fname)
-        raise WriteError(exc)
-    finally:
-        if os.path.exists(tmp_fname):
-            try:
-                os.remove(tmp_fname)
-            except OSError as exc:
-                # If we are cleaning up then something else went wrong, so
-                # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("YAML replacement cleanup failed: %s", exc)
-
-
-def load_yaml(fname: str) -> JSON_TYPE:
-    """Load a YAML file."""
-    from ruamel.yaml import YAML
-    from ruamel.yaml.error import YAMLError
-    yaml = YAML(typ='rt')
-    try:
-        with open(fname, encoding='utf-8') as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.load(conf_file) or OrderedDict()
-    except YAMLError as exc:
-        _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
-    except UnicodeDecodeError as exc:
-        _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
-
-
-def load_config(fname: str) -> JSON_TYPE:
-    """Load a YAML file and adds id to card if not present."""
-    config = load_yaml(fname)
-    # Check if all cards have an ID or else add one
-    updated = False
-    for view in config.get('views', []):
-        for card in view.get('cards', []):
-            if 'id' not in card:
-                updated = True
-                card['id'] = uuid.uuid4().hex
-                card.move_to_end('id', last=False)
-    if updated:
-        save_yaml(fname, config)
-    return config
+class ConfigNotFound(HomeAssistantError):
+    """When no config available."""
 
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
-    # Backwards compat. Added in 0.80. Remove after 0.85
-    hass.components.websocket_api.async_register_command(
-        OLD_WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
-        SCHEMA_GET_LOVELACE_UI)
+    # Pass in default to `get` because defaults not set if loaded as dep
+    mode = config.get(DOMAIN, {}).get(CONF_MODE, MODE_STORAGE)
+
+    await hass.components.frontend.async_register_built_in_panel(
+        DOMAIN, config={
+            'mode': mode
+        })
+
+    if mode == MODE_YAML:
+        hass.data[DOMAIN] = LovelaceYAML(hass)
+    else:
+        hass.data[DOMAIN] = LovelaceStorage(hass)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
         SCHEMA_GET_LOVELACE_UI)
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config,
+        SCHEMA_SAVE_CONFIG)
+
     return True
 
 
+class LovelaceStorage:
+    """Class to handle Storage based Lovelace config."""
+
+    def __init__(self, hass):
+        """Initialize Lovelace config based on storage helper."""
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._data = None
+
+    async def async_load(self, force):
+        """Load config."""
+        if self._data is None:
+            data = await self._store.async_load()
+            self._data = data if data else {'config': None}
+
+        config = self._data['config']
+
+        if config is None:
+            raise ConfigNotFound
+
+        return config
+
+    async def async_save(self, config):
+        """Save config."""
+        self._data['config'] = config
+        await self._store.async_save(self._data)
+
+
+class LovelaceYAML:
+    """Class to handle YAML-based Lovelace config."""
+
+    def __init__(self, hass):
+        """Initialize the YAML config."""
+        self.hass = hass
+        self._cache = None
+
+    async def async_load(self, force):
+        """Load config."""
+        return await self.hass.async_add_executor_job(self._load_config, force)
+
+    def _load_config(self, force):
+        """Load the actual config."""
+        fname = self.hass.config.path(LOVELACE_CONFIG_FILE)
+        # Check for a cached version of the config
+        if not force and self._cache is not None:
+            config, last_update = self._cache
+            modtime = os.path.getmtime(fname)
+            if config and last_update > modtime:
+                return config
+
+        try:
+            config = load_yaml(fname)
+        except FileNotFoundError:
+            raise ConfigNotFound from None
+
+        self._cache = (config, time.time())
+        return config
+
+    async def async_save(self, config):
+        """Save config."""
+        raise HomeAssistantError('Not supported')
+
+
+def handle_yaml_errors(func):
+    """Handle error with WebSocket calls."""
+    @wraps(func)
+    async def send_with_error_handling(hass, connection, msg):
+        error = None
+        try:
+            result = await func(hass, connection, msg)
+            message = websocket_api.result_message(
+                msg['id'], result
+            )
+        except ConfigNotFound:
+            error = 'config_not_found', 'No config found.'
+        except HomeAssistantError as err:
+            error = 'error', str(err)
+
+        if error is not None:
+            message = websocket_api.error_message(msg['id'], *error)
+
+        connection.send_message(message)
+
+    return send_with_error_handling
+
+
 @websocket_api.async_response
+@handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
-    """Send lovelace UI config over websocket config."""
-    error = None
-    try:
-        config = await hass.async_add_executor_job(
-            load_config, hass.config.path('ui-lovelace.yaml'))
-        message = websocket_api.result_message(
-            msg['id'], config
-        )
-    except FileNotFoundError:
-        error = ('file_not_found',
-                 'Could not find ui-lovelace.yaml in your config dir.')
-    except HomeAssistantError as err:
-        error = 'load_error', str(err)
+    """Send Lovelace UI config over WebSocket configuration."""
+    return await hass.data[DOMAIN].async_load(msg['force'])
 
-    if error is not None:
-        message = websocket_api.error_message(msg['id'], *error)
 
-    connection.send_message(message)
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_save_config(hass, connection, msg):
+    """Save Lovelace UI configuration."""
+    await hass.data[DOMAIN].async_save(msg['config'])

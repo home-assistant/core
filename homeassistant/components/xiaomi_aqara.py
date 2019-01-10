@@ -20,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.util import slugify
 
 REQUIREMENTS = ['PyXiaomiGateway==0.11.1']
 
@@ -222,11 +221,11 @@ class XiaomiDevice(Entity):
 
         if hasattr(self, '_data_key') \
                 and self._data_key:  # pylint: disable=no-member
-            self._unique_id = slugify("{}-{}".format(
+            self._unique_id = "{}{}".format(
                 self._data_key,  # pylint: disable=no-member
-                self._sid))
+                self._sid)
         else:
-            self._unique_id = slugify("{}-{}".format(self._type, self._sid))
+            self._unique_id = "{}{}".format(self._type, self._sid)
 
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)

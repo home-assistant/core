@@ -24,6 +24,7 @@ from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+from homeassistant.util.package import is_virtual_env
 
 REQUIREMENTS = ['distro==1.3.0']
 
@@ -133,7 +134,7 @@ async def get_system_info(hass, include_components):
         'python_version': platform.python_version(),
         'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
         'version': current_version,
-        'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
+        'virtualenv': is_virtual_env(),
         'hassio': hass.components.hassio.is_hassio(),
     }
 

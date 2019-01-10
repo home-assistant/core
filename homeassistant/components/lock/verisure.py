@@ -8,7 +8,8 @@ import logging
 from time import sleep
 from time import time
 from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (CONF_LOCKS, CONF_CODE_DIGITS)
+from homeassistant.components.verisure import (
+    CONF_LOCKS, CONF_DEFAULT_LOCK_CODE, CONF_CODE_DIGITS)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
     ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
@@ -39,6 +40,7 @@ class VerisureDoorlock(LockDevice):
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None
         self._change_timestamp = 0
+        self._default_lock_code = hub.config.get(CONF_DEFAULT_LOCK_CODE)
 
     @property
     def name(self):
@@ -96,13 +98,25 @@ class VerisureDoorlock(LockDevice):
         """Send unlock command."""
         if self._state == STATE_UNLOCKED:
             return
-        self.set_lock_state(kwargs[ATTR_CODE], STATE_UNLOCKED)
+
+        code = kwargs.get(ATTR_CODE, self._default_lock_code)
+        if code is None:
+            _LOGGER.error("Code required but none provided")
+            return
+
+        self.set_lock_state(code, STATE_UNLOCKED)
 
     def lock(self, **kwargs):
         """Send lock command."""
         if self._state == STATE_LOCKED:
             return
-        self.set_lock_state(kwargs[ATTR_CODE], STATE_LOCKED)
+
+        code = kwargs.get(ATTR_CODE, self._default_lock_code)
+        if code is None:
+            _LOGGER.error("Code required but none provided")
+            return
+
+        self.set_lock_state(code, STATE_LOCKED)
 
     def set_lock_state(self, code, state):
         """Send set lock state command."""

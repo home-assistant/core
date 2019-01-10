@@ -9,7 +9,7 @@ import logging
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pifacecommon==4.1.2', 'pifacedigitalio==3.0.5']
+REQUIREMENTS = ['pifacecommon==4.2.2', 'pifacedigitalio==3.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

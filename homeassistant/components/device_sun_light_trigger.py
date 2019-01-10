@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     ATTR_PROFILE, ATTR_TRANSITION, DOMAIN as DOMAIN_LIGHT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME,
-    STATE_NOT_HOME)
+    STATE_NOT_HOME, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_state_change)
 from homeassistant.helpers.sun import is_up, get_astral_event_next
@@ -79,7 +79,7 @@ async def async_setup(hass, config):
 
         Async friendly.
         """
-        next_setting = get_astral_event_next(hass, 'sunset')
+        next_setting = get_astral_event_next(hass, SUN_EVENT_SUNSET)
         if not next_setting:
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
@@ -123,7 +123,8 @@ async def async_setup(hass, config):
                 start_point + index * LIGHT_TRANSITION_TIME)
 
     async_track_point_in_utc_time(hass, schedule_light_turn_on,
-                                  get_astral_event_next(hass, 'sunrise'))
+                                  get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNRISE))
 
     # If the sun is already above horizon schedule the time-based pre-sun set
     # event.
@@ -153,7 +154,8 @@ async def async_setup(hass, config):
         # Check this by seeing if current time is later then the point
         # in time when we would start putting the lights on.
         elif (start_point and
-              start_point < now < get_astral_event_next(hass, 'sunset')):
+              start_point < now < get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNSET)):
 
             # Check for every light if it would be on if someone was home
             # when the fading in started and turn it on if so

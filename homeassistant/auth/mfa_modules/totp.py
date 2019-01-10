@@ -176,7 +176,7 @@ class TotpSetupFlow(SetupFlow):
             -> Dict[str, Any]:
         """Handle the first step of setup flow.
 
-        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
         import pyotp

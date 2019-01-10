@@ -35,17 +35,21 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
-    try:
-        dev = []
-        for home in tibber_connection.get_homes():
+    dev = []
+    for home in tibber_connection.get_homes():
+        try:
             await home.update_info()
-            dev.append(TibberSensorElPrice(home))
-            if home.has_real_time_consumption:
-                dev.append(TibberSensorRT(home))
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
+        dev.append(TibberSensorElPrice(home))
+        if home.has_real_time_consumption:
+            dev.append(TibberSensorRT(home))
 
-    async_add_entities(dev, True)
+    async_add_entities(dev, False)
 
 
 class TibberSensorElPrice(Entity):
@@ -132,6 +136,8 @@ class TibberSensorElPrice(Entity):
         state = None
         max_price = 0
         min_price = 10000
+        sum_price = 0
+        num = 0
         now = dt_util.now()
         for key, price_total in self._tibber_home.price_total.items():
             price_time = dt_util.as_local(dt_util.parse_datetime(key))
@@ -146,8 +152,11 @@ class TibberSensorElPrice(Entity):
             if now.date() == price_time.date():
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
+                num += 1
+                sum_price += price_total
         self._state = state
         self._device_state_attributes['max_price'] = max_price
+        self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
         self._device_state_attributes['min_price'] = min_price
         return state is not None
 
@@ -171,10 +180,22 @@ class TibberSensorRT(Entity):
 
     async def _async_callback(self, payload):
         """Handle received data."""
-        data = payload.get('data', {})
-        live_measurement = data.get('liveMeasurement', {})
+        errors = payload.get('errors')
+        if errors:
+            _LOGGER.error(errors[0])
+            return
+        data = payload.get('data')
+        if data is None:
+            return
+        live_measurement = data.get('liveMeasurement')
+        if live_measurement is None:
+            return
         self._state = live_measurement.pop('power', None)
-        self._device_state_attributes = live_measurement
+        for key, value in live_measurement.items():
+            if value is None:
+                continue
+            self._device_state_attributes[key] = value
+
         self.async_schedule_update_ha_state()
 
     @property

@@ -8,7 +8,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 
 DOMAIN = 'lifx'
-REQUIREMENTS = ['aiolifx==0.6.5']
+REQUIREMENTS = ['aiolifx==0.6.7']
 
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
@@ -24,6 +24,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema(vol.All(cv.ensure_list, [INTERFACE_SCHEMA])),
     }
 }, extra=vol.ALLOW_EXTRA)
+
+DATA_LIFX_MANAGER = 'lifx_manager'
 
 
 async def async_setup(hass, config):
@@ -43,6 +45,16 @@ async def async_setup_entry(hass, entry):
     """Set up LIFX from a config entry."""
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, LIGHT_DOMAIN))
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    hass.data.pop(DATA_LIFX_MANAGER).cleanup()
+
+    await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
+
     return True
 
 

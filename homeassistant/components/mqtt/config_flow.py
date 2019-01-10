@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_PROTOCOL)
+    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_PROTOCOL, CONF_HOST)
 
 from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 
@@ -80,7 +80,7 @@ class FlowHandler(config_entries.ConfigFlow):
             data = self._hassio_discovery
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                data[CONF_BROKER],
+                data[CONF_HOST],
                 data[CONF_PORT],
                 data.get(CONF_USERNAME),
                 data.get(CONF_PASSWORD),
@@ -90,7 +90,7 @@ class FlowHandler(config_entries.ConfigFlow):
             if can_connect:
                 return self.async_create_entry(
                     title=data['addon'], data={
-                        CONF_BROKER: data[CONF_BROKER],
+                        CONF_BROKER: data[CONF_HOST],
                         CONF_PORT: data[CONF_PORT],
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),

@@ -13,6 +13,7 @@ import tests.common
 from homeassistant.components.media_player.monoprice import (
     DATA_MONOPRICE, PLATFORM_SCHEMA, SERVICE_SNAPSHOT,
     SERVICE_RESTORE, setup_platform)
+import pytest
 
 
 class AttrDict(dict):
@@ -149,7 +150,7 @@ class TestMonopriceSchema(unittest.TestCase):
 
         )
         for value in schemas:
-            with self.assertRaises(vol.MultipleInvalid):
+            with pytest.raises(vol.MultipleInvalid):
                 PLATFORM_SCHEMA(value)
 
 
@@ -185,21 +186,19 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
     def test_setup_platform(self, *args):
         """Test setting up platform."""
         # Two services must be registered
-        self.assertTrue(self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_RESTORE))
-        self.assertTrue(self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_SNAPSHOT))
-        self.assertEqual(len(self.hass.data[DATA_MONOPRICE]), 1)
-        self.assertEqual(self.hass.data[DATA_MONOPRICE][0].name, 'Zone name')
+        assert self.hass.services.has_service(DOMAIN, SERVICE_RESTORE)
+        assert self.hass.services.has_service(DOMAIN, SERVICE_SNAPSHOT)
+        assert len(self.hass.data[DATA_MONOPRICE]) == 1
+        assert self.hass.data[DATA_MONOPRICE][0].name == 'Zone name'
 
     def test_service_calls_with_entity_id(self):
         """Test snapshot save/restore service calls."""
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
         # Saving default values
         self.hass.services.call(DOMAIN, SERVICE_SNAPSHOT,
@@ -215,26 +214,26 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
 
         # Checking that values were indeed changed
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_OFF, self.media_player.state)
-        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
-        self.assertFalse(self.media_player.is_volume_muted)
-        self.assertEqual('two', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_OFF == self.media_player.state
+        assert 1.0 == self.media_player.volume_level, 0.0001
+        assert not self.media_player.is_volume_muted
+        assert 'two' == self.media_player.source
 
         # Restoring wrong media player to its previous state
         # Nothing should be done
         self.hass.services.call(DOMAIN, SERVICE_RESTORE,
-                                {'entity_id': 'not_existing'},
+                                {'entity_id': 'media.not_existing'},
                                 blocking=True)
         # self.hass.block_till_done()
 
         # Checking that values were not (!) restored
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_OFF, self.media_player.state)
-        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
-        self.assertFalse(self.media_player.is_volume_muted)
-        self.assertEqual('two', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_OFF == self.media_player.state
+        assert 1.0 == self.media_player.volume_level, 0.0001
+        assert not self.media_player.is_volume_muted
+        assert 'two' == self.media_player.source
 
         # Restoring media player to its previous state
         self.hass.services.call(DOMAIN, SERVICE_RESTORE,
@@ -243,31 +242,31 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.hass.block_till_done()
 
         # Checking that values were restored
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
     def test_service_calls_without_entity_id(self):
         """Test snapshot save/restore service calls."""
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
         # Restoring media player
         # since there is no snapshot, nothing should be done
         self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
         self.hass.block_till_done()
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
         # Saving default values
         self.hass.services.call(DOMAIN, SERVICE_SNAPSHOT, blocking=True)
@@ -281,195 +280,195 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
 
         # Checking that values were indeed changed
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_OFF, self.media_player.state)
-        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
-        self.assertFalse(self.media_player.is_volume_muted)
-        self.assertEqual('two', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_OFF == self.media_player.state
+        assert 1.0 == self.media_player.volume_level, 0.0001
+        assert not self.media_player.is_volume_muted
+        assert 'two' == self.media_player.source
 
         # Restoring media player to its previous state
         self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
         self.hass.block_till_done()
 
         # Checking that values were restored
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
     def test_update(self):
         """Test updating values from monoprice."""
-        self.assertIsNone(self.media_player.state)
-        self.assertIsNone(self.media_player.volume_level)
-        self.assertIsNone(self.media_player.is_volume_muted)
-        self.assertIsNone(self.media_player.source)
+        assert self.media_player.state is None
+        assert self.media_player.volume_level is None
+        assert self.media_player.is_volume_muted is None
+        assert self.media_player.source is None
 
         self.media_player.update()
 
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
-        self.assertTrue(self.media_player.is_volume_muted)
-        self.assertEqual('one', self.media_player.source)
+        assert STATE_ON == self.media_player.state
+        assert 0.0 == self.media_player.volume_level, 0.0001
+        assert self.media_player.is_volume_muted
+        assert 'one' == self.media_player.source
 
     def test_name(self):
         """Test name property."""
-        self.assertEqual('Zone name', self.media_player.name)
+        assert 'Zone name' == self.media_player.name
 
     def test_state(self):
         """Test state property."""
-        self.assertIsNone(self.media_player.state)
+        assert self.media_player.state is None
 
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
         self.monoprice.zones[12].power = False
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state
 
     def test_volume_level(self):
         """Test volume level property."""
-        self.assertIsNone(self.media_player.volume_level)
+        assert self.media_player.volume_level is None
         self.media_player.update()
-        self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
+        assert 0.0 == self.media_player.volume_level, 0.0001
 
         self.monoprice.zones[12].volume = 38
         self.media_player.update()
-        self.assertEqual(1.0, self.media_player.volume_level, 0.0001)
+        assert 1.0 == self.media_player.volume_level, 0.0001
 
         self.monoprice.zones[12].volume = 19
         self.media_player.update()
-        self.assertEqual(.5, self.media_player.volume_level, 0.0001)
+        assert .5 == self.media_player.volume_level, 0.0001
 
     def test_is_volume_muted(self):
         """Test volume muted property."""
-        self.assertIsNone(self.media_player.is_volume_muted)
+        assert self.media_player.is_volume_muted is None
 
         self.media_player.update()
-        self.assertTrue(self.media_player.is_volume_muted)
+        assert self.media_player.is_volume_muted
 
         self.monoprice.zones[12].mute = False
         self.media_player.update()
-        self.assertFalse(self.media_player.is_volume_muted)
+        assert not self.media_player.is_volume_muted
 
     def test_supported_features(self):
         """Test supported features property."""
-        self.assertEqual(SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |
-                         SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON |
-                         SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE,
-                         self.media_player.supported_features)
+        assert SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+            SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
+            SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE == \
+            self.media_player.supported_features
 
     def test_source(self):
         """Test source property."""
-        self.assertIsNone(self.media_player.source)
+        assert self.media_player.source is None
         self.media_player.update()
-        self.assertEqual('one', self.media_player.source)
+        assert 'one' == self.media_player.source
 
     def test_media_title(self):
         """Test media title property."""
-        self.assertIsNone(self.media_player.media_title)
+        assert self.media_player.media_title is None
         self.media_player.update()
-        self.assertEqual('one', self.media_player.media_title)
+        assert 'one' == self.media_player.media_title
 
     def test_source_list(self):
         """Test source list property."""
         # Note, the list is sorted!
-        self.assertEqual(['one', 'two', 'three'],
-                         self.media_player.source_list)
+        assert ['one', 'two', 'three'] == \
+            self.media_player.source_list
 
     def test_select_source(self):
         """Test source selection methods."""
         self.media_player.update()
 
-        self.assertEqual('one', self.media_player.source)
+        assert 'one' == self.media_player.source
 
         self.media_player.select_source('two')
-        self.assertEqual(2, self.monoprice.zones[12].source)
+        assert 2 == self.monoprice.zones[12].source
         self.media_player.update()
-        self.assertEqual('two', self.media_player.source)
+        assert 'two' == self.media_player.source
 
         # Trying to set unknown source
         self.media_player.select_source('no name')
-        self.assertEqual(2, self.monoprice.zones[12].source)
+        assert 2 == self.monoprice.zones[12].source
         self.media_player.update()
-        self.assertEqual('two', self.media_player.source)
+        assert 'two' == self.media_player.source
 
     def test_turn_on(self):
         """Test turning on the zone."""
         self.monoprice.zones[12].power = False
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state
 
         self.media_player.turn_on()
-        self.assertTrue(self.monoprice.zones[12].power)
+        assert self.monoprice.zones[12].power
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
     def test_turn_off(self):
         """Test turning off the zone."""
         self.monoprice.zones[12].power = True
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
         self.media_player.turn_off()
-        self.assertFalse(self.monoprice.zones[12].power)
+        assert not self.monoprice.zones[12].power
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state
 
     def test_mute_volume(self):
         """Test mute functionality."""
         self.monoprice.zones[12].mute = True
         self.media_player.update()
-        self.assertTrue(self.media_player.is_volume_muted)
+        assert self.media_player.is_volume_muted
 
         self.media_player.mute_volume(False)
-        self.assertFalse(self.monoprice.zones[12].mute)
+        assert not self.monoprice.zones[12].mute
         self.media_player.update()
-        self.assertFalse(self.media_player.is_volume_muted)
+        assert not self.media_player.is_volume_muted
 
         self.media_player.mute_volume(True)
-        self.assertTrue(self.monoprice.zones[12].mute)
+        assert self.monoprice.zones[12].mute
         self.media_player.update()
-        self.assertTrue(self.media_player.is_volume_muted)
+        assert self.media_player.is_volume_muted
 
     def test_set_volume_level(self):
         """Test set volume level."""
         self.media_player.set_volume_level(1.0)
-        self.assertEqual(38, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 38 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
         self.media_player.set_volume_level(0.0)
-        self.assertEqual(0, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 0 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
         self.media_player.set_volume_level(0.5)
-        self.assertEqual(19, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 19 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
     def test_volume_up(self):
         """Test increasing volume by one."""
         self.monoprice.zones[12].volume = 37
         self.media_player.update()
         self.media_player.volume_up()
-        self.assertEqual(38, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 38 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
         # Try to raise value beyond max
         self.media_player.update()
         self.media_player.volume_up()
-        self.assertEqual(38, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 38 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
     def test_volume_down(self):
         """Test decreasing volume by one."""
         self.monoprice.zones[12].volume = 1
         self.media_player.update()
         self.media_player.volume_down()
-        self.assertEqual(0, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 0 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)
 
         # Try to lower value beyond minimum
         self.media_player.update()
         self.media_player.volume_down()
-        self.assertEqual(0, self.monoprice.zones[12].volume)
-        self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
+        assert 0 == self.monoprice.zones[12].volume
+        assert isinstance(self.monoprice.zones[12].volume, int)

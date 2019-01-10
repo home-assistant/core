@@ -19,11 +19,16 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         return False
 
     for device in new_devices:
+        gateway_id = id(device.gateway)
         dev_id = (
-            id(device.gateway), device.node_id, device.child_id,
+            gateway_id, device.node_id, device.child_id,
             device.value_type)
         async_dispatcher_connect(
-            hass, mysensors.const.SIGNAL_CALLBACK.format(*dev_id),
+            hass, mysensors.const.CHILD_CALLBACK.format(*dev_id),
+            device.async_update_callback)
+        async_dispatcher_connect(
+            hass,
+            mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
             device.async_update_callback)
 
     return True

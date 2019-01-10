@@ -32,8 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a FFmpeg camera."""
-    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
-        return
     async_add_entities([FFmpegCamera(hass, config)])
 
 

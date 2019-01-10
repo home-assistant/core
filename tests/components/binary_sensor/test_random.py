@@ -32,7 +32,7 @@ class TestRandomSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
 
-        self.assertEqual(state.state, 'on')
+        assert state.state == 'on'
 
     @patch('random.getrandbits', return_value=False)
     def test_random_binary_sensor_off(self, mocked):
@@ -48,4 +48,4 @@ class TestRandomSensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
 
-        self.assertEqual(state.state, 'off')
+        assert state.state == 'off'

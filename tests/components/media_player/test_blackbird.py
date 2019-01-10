@@ -11,6 +11,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 import tests.common
 from homeassistant.components.media_player.blackbird import (
     DATA_BLACKBIRD, PLATFORM_SCHEMA, SERVICE_SETALLZONES, setup_platform)
+import pytest
 
 
 class AttrDict(dict):
@@ -157,7 +158,7 @@ class TestBlackbirdSchema(unittest.TestCase):
             },
         )
         for value in schemas:
-            with self.assertRaises(vol.MultipleInvalid):
+            with pytest.raises(vol.MultipleInvalid):
                 PLATFORM_SCHEMA(value)
 
 
@@ -192,18 +193,17 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
     def test_setup_platform(self, *args):
         """Test setting up platform."""
         # One service must be registered
-        self.assertTrue(self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_SETALLZONES))
-        self.assertEqual(len(self.hass.data[DATA_BLACKBIRD]), 1)
-        self.assertEqual(self.hass.data[DATA_BLACKBIRD]['/dev/ttyUSB0-3'].name,
-                         'Zone name')
+        assert self.hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
+        assert len(self.hass.data[DATA_BLACKBIRD]) == 1
+        assert self.hass.data[DATA_BLACKBIRD]['/dev/ttyUSB0-3'].name == \
+            'Zone name'
 
     def test_setallzones_service_call_with_entity_id(self):
         """Test set all zone source service call with entity id."""
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 'one' == self.media_player.source
 
         # Call set all zones service
         self.hass.services.call(DOMAIN, SERVICE_SETALLZONES,
@@ -212,110 +212,110 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
                                 blocking=True)
 
         # Check that source was changed
-        self.assertEqual(3, self.blackbird.zones[3].av)
+        assert 3 == self.blackbird.zones[3].av
         self.media_player.update()
-        self.assertEqual('three', self.media_player.source)
+        assert 'three' == self.media_player.source
 
     def test_setallzones_service_call_without_entity_id(self):
         """Test set all zone source service call without entity id."""
         self.media_player.update()
-        self.assertEqual('Zone name', self.media_player.name)
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual('one', self.media_player.source)
+        assert 'Zone name' == self.media_player.name
+        assert STATE_ON == self.media_player.state
+        assert 'one' == self.media_player.source
 
         # Call set all zones service
         self.hass.services.call(DOMAIN, SERVICE_SETALLZONES,
                                 {'source': 'three'}, blocking=True)
 
         # Check that source was changed
-        self.assertEqual(3, self.blackbird.zones[3].av)
+        assert 3 == self.blackbird.zones[3].av
         self.media_player.update()
-        self.assertEqual('three', self.media_player.source)
+        assert 'three' == self.media_player.source
 
     def test_update(self):
         """Test updating values from blackbird."""
-        self.assertIsNone(self.media_player.state)
-        self.assertIsNone(self.media_player.source)
+        assert self.media_player.state is None
+        assert self.media_player.source is None
 
         self.media_player.update()
 
-        self.assertEqual(STATE_ON, self.media_player.state)
-        self.assertEqual('one', self.media_player.source)
+        assert STATE_ON == self.media_player.state
+        assert 'one' == self.media_player.source
 
     def test_name(self):
         """Test name property."""
-        self.assertEqual('Zone name', self.media_player.name)
+        assert 'Zone name' == self.media_player.name
 
     def test_state(self):
         """Test state property."""
-        self.assertIsNone(self.media_player.state)
+        assert self.media_player.state is None
 
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
         self.blackbird.zones[3].power = False
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state
 
     def test_supported_features(self):
         """Test supported features property."""
-        self.assertEqual(SUPPORT_TURN_ON | SUPPORT_TURN_OFF |
-                         SUPPORT_SELECT_SOURCE,
-                         self.media_player.supported_features)
+        assert SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+            SUPPORT_SELECT_SOURCE == \
+            self.media_player.supported_features
 
     def test_source(self):
         """Test source property."""
-        self.assertIsNone(self.media_player.source)
+        assert self.media_player.source is None
         self.media_player.update()
-        self.assertEqual('one', self.media_player.source)
+        assert 'one' == self.media_player.source
 
     def test_media_title(self):
         """Test media title property."""
-        self.assertIsNone(self.media_player.media_title)
+        assert self.media_player.media_title is None
         self.media_player.update()
-        self.assertEqual('one', self.media_player.media_title)
+        assert 'one' == self.media_player.media_title
 
     def test_source_list(self):
         """Test source list property."""
         # Note, the list is sorted!
-        self.assertEqual(['one', 'two', 'three'],
-                         self.media_player.source_list)
+        assert ['one', 'two', 'three'] == \
+            self.media_player.source_list
 
     def test_select_source(self):
         """Test source selection methods."""
         self.media_player.update()
 
-        self.assertEqual('one', self.media_player.source)
+        assert 'one' == self.media_player.source
 
         self.media_player.select_source('two')
-        self.assertEqual(2, self.blackbird.zones[3].av)
+        assert 2 == self.blackbird.zones[3].av
         self.media_player.update()
-        self.assertEqual('two', self.media_player.source)
+        assert 'two' == self.media_player.source
 
         # Trying to set unknown source.
         self.media_player.select_source('no name')
-        self.assertEqual(2, self.blackbird.zones[3].av)
+        assert 2 == self.blackbird.zones[3].av
         self.media_player.update()
-        self.assertEqual('two', self.media_player.source)
+        assert 'two' == self.media_player.source
 
     def test_turn_on(self):
         """Testing turning on the zone."""
         self.blackbird.zones[3].power = False
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state
 
         self.media_player.turn_on()
-        self.assertTrue(self.blackbird.zones[3].power)
+        assert self.blackbird.zones[3].power
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
     def test_turn_off(self):
         """Testing turning off the zone."""
         self.blackbird.zones[3].power = True
         self.media_player.update()
-        self.assertEqual(STATE_ON, self.media_player.state)
+        assert STATE_ON == self.media_player.state
 
         self.media_player.turn_off()
-        self.assertFalse(self.blackbird.zones[3].power)
+        assert not self.blackbird.zones[3].power
         self.media_player.update()
-        self.assertEqual(STATE_OFF, self.media_player.state)
+        assert STATE_OFF == self.media_player.state

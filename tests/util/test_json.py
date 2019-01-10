@@ -1,12 +1,16 @@
 """Test Home Assistant json utility functions."""
+from json import JSONEncoder
 import os
 import unittest
 import sys
 from tempfile import mkdtemp
 
-from homeassistant.util.json import (SerializationError,
-                                     load_json, save_json)
+from homeassistant.util.json import (
+    SerializationError, load_json, save_json)
 from homeassistant.exceptions import HomeAssistantError
+import pytest
+
+from unittest.mock import Mock
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
@@ -38,7 +42,7 @@ class TestJSON(unittest.TestCase):
         fname = self._path_for("test1")
         save_json(fname, TEST_JSON_A)
         data = load_json(fname)
-        self.assertEqual(data, TEST_JSON_A)
+        assert data == TEST_JSON_A
 
     # Skipped on Windows
     @unittest.skipIf(sys.platform.startswith('win'),
@@ -48,9 +52,9 @@ class TestJSON(unittest.TestCase):
         fname = self._path_for("test2")
         save_json(fname, TEST_JSON_A, private=True)
         data = load_json(fname)
-        self.assertEqual(data, TEST_JSON_A)
+        assert data == TEST_JSON_A
         stats = os.stat(fname)
-        self.assertEqual(stats.st_mode & 0o77, 0)
+        assert stats.st_mode & 0o77 == 0
 
     def test_overwrite_and_reload(self):
         """Test that we can overwrite an existing file and read back."""
@@ -58,12 +62,12 @@ class TestJSON(unittest.TestCase):
         save_json(fname, TEST_JSON_A)
         save_json(fname, TEST_JSON_B)
         data = load_json(fname)
-        self.assertEqual(data, TEST_JSON_B)
+        assert data == TEST_JSON_B
 
     def test_save_bad_data(self):
         """Test error from trying to save unserialisable data."""
         fname = self._path_for("test4")
-        with self.assertRaises(SerializationError):
+        with pytest.raises(SerializationError):
             save_json(fname, TEST_BAD_OBJECT)
 
     def test_load_bad_data(self):
@@ -71,5 +75,19 @@ class TestJSON(unittest.TestCase):
         fname = self._path_for("test5")
         with open(fname, "w") as fh:
             fh.write(TEST_BAD_SERIALIED)
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             load_json(fname)
+
+    def test_custom_encoder(self):
+        """Test serializing with a custom encoder."""
+        class MockJSONEncoder(JSONEncoder):
+            """Mock JSON encoder."""
+
+            def default(self, o):
+                """Mock JSON encode method."""
+                return "9"
+
+        fname = self._path_for("test6")
+        save_json(fname, Mock(), encoder=MockJSONEncoder)
+        data = load_json(fname)
+        self.assertEqual(data, "9")

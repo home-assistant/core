@@ -6,52 +6,33 @@ https://home-assistant.io/components/sensor.daikin/
 """
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.daikin import (
-    SENSOR_TYPES, SENSOR_TYPE_TEMPERATURE,
-    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE,
-    daikin_api_setup
-)
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_ICON, CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_TYPE
-)
+from homeassistant.components.daikin import DOMAIN as DAIKIN_DOMAIN
+from homeassistant.components.daikin.const import (
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPES)
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.unit_system import UnitSystem
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Daikin sensors."""
-    if discovery_info is not None:
-        host = discovery_info.get('ip')
-        name = None
-        monitored_conditions = discovery_info.get(
-            CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES.keys())
-        )
-    else:
-        host = config[CONF_HOST]
-        name = config.get(CONF_NAME)
-        monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-        _LOGGER.info("Added Daikin AC sensor on %s", host)
+    """Old way of setting up the Daikin sensors.
 
-    api = daikin_api_setup(hass, host, name)
-    units = hass.config.units
-    sensors = []
-    for monitored_state in monitored_conditions:
-        sensors.append(DaikinClimateSensor(api, monitored_state, units, name))
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
 
-    add_entities(sensors, True)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Daikin climate based on config_entry."""
+    daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    async_add_entities([
+        DaikinClimateSensor(daikin_api, sensor, hass.config.units)
+        for sensor in SENSOR_TYPES
+    ])
 
 
 class DaikinClimateSensor(Entity):
@@ -70,6 +51,11 @@ class DaikinClimateSensor(Entity):
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
             self._unit_of_measurement = units.temperature_unit
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}-{}".format(self._api.mac, self._device_attribute)
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -118,3 +104,8 @@ class DaikinClimateSensor(Entity):
     def update(self):
         """Retrieve latest state."""
         self._api.update()
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info

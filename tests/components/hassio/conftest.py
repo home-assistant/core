@@ -27,7 +27,7 @@ def hassio_env():
 
 
 @pytest.fixture
-def hassio_client(hassio_env, hass, aiohttp_client):
+def hassio_client(hassio_env, hass, aiohttp_client, legacy_auth):
     """Create mock hassio http client."""
     with patch('homeassistant.components.hassio.HassIO.update_hass_api',
                Mock(return_value=mock_coro({"result": "ok"}))), \

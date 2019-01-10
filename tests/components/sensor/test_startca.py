@@ -47,51 +47,51 @@ def test_capped_setup(hass, aioclient_mock):
 
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
-    state = hass.states.get('sensor.startca_usage_ratio')
+    state = hass.states.get('sensor.start_ca_usage_ratio')
     assert state.attributes.get('unit_of_measurement') == '%'
     assert state.state == '76.24'
 
-    state = hass.states.get('sensor.startca_usage')
+    state = hass.states.get('sensor.start_ca_usage')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_data_limit')
+    state = hass.states.get('sensor.start_ca_data_limit')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '400'
 
-    state = hass.states.get('sensor.startca_used_download')
+    state = hass.states.get('sensor.start_ca_used_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_used_upload')
+    state = hass.states.get('sensor.start_ca_used_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '6.48'
 
-    state = hass.states.get('sensor.startca_used_total')
+    state = hass.states.get('sensor.start_ca_used_total')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '311.43'
 
-    state = hass.states.get('sensor.startca_grace_download')
+    state = hass.states.get('sensor.start_ca_grace_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_grace_upload')
+    state = hass.states.get('sensor.start_ca_grace_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '6.48'
 
-    state = hass.states.get('sensor.startca_grace_total')
+    state = hass.states.get('sensor.start_ca_grace_total')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '311.43'
 
-    state = hass.states.get('sensor.startca_total_download')
+    state = hass.states.get('sensor.start_ca_total_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_total_upload')
+    state = hass.states.get('sensor.start_ca_total_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '6.48'
 
-    state = hass.states.get('sensor.startca_remaining')
+    state = hass.states.get('sensor.start_ca_remaining')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '95.05'
 
@@ -138,51 +138,51 @@ def test_unlimited_setup(hass, aioclient_mock):
 
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
-    state = hass.states.get('sensor.startca_usage_ratio')
+    state = hass.states.get('sensor.start_ca_usage_ratio')
     assert state.attributes.get('unit_of_measurement') == '%'
     assert state.state == '0'
 
-    state = hass.states.get('sensor.startca_usage')
+    state = hass.states.get('sensor.start_ca_usage')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '0.0'
 
-    state = hass.states.get('sensor.startca_data_limit')
+    state = hass.states.get('sensor.start_ca_data_limit')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == 'inf'
 
-    state = hass.states.get('sensor.startca_used_download')
+    state = hass.states.get('sensor.start_ca_used_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '0.0'
 
-    state = hass.states.get('sensor.startca_used_upload')
+    state = hass.states.get('sensor.start_ca_used_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '0.0'
 
-    state = hass.states.get('sensor.startca_used_total')
+    state = hass.states.get('sensor.start_ca_used_total')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '0.0'
 
-    state = hass.states.get('sensor.startca_grace_download')
+    state = hass.states.get('sensor.start_ca_grace_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_grace_upload')
+    state = hass.states.get('sensor.start_ca_grace_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '6.48'
 
-    state = hass.states.get('sensor.startca_grace_total')
+    state = hass.states.get('sensor.start_ca_grace_total')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '311.43'
 
-    state = hass.states.get('sensor.startca_total_download')
+    state = hass.states.get('sensor.start_ca_total_download')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '304.95'
 
-    state = hass.states.get('sensor.startca_total_upload')
+    state = hass.states.get('sensor.start_ca_total_upload')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == '6.48'
 
-    state = hass.states.get('sensor.startca_remaining')
+    state = hass.states.get('sensor.start_ca_remaining')
     assert state.attributes.get('unit_of_measurement') == 'GB'
     assert state.state == 'inf'
 

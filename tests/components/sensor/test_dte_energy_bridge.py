@@ -27,9 +27,8 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
-        self.assertTrue(
-            setup_component(self.hass, 'sensor',
-                            {'dte_energy_bridge': DTE_ENERGY_BRIDGE_CONFIG}))
+        assert setup_component(self.hass, 'sensor',
+                               {'dte_energy_bridge': DTE_ENERGY_BRIDGE_CONFIG})
 
     @requests_mock.Mocker()
     def test_setup_correct_reading(self, mock_req):
@@ -39,9 +38,9 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
                      text='.411 kW')
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
-        self.assertEqual('0.411',
-                         self.hass.states
-                         .get('sensor.current_energy_usage').state)
+        assert '0.411' == \
+            self.hass.states \
+            .get('sensor.current_energy_usage').state
 
     @requests_mock.Mocker()
     def test_setup_incorrect_units_reading(self, mock_req):
@@ -51,9 +50,9 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
                      text='411 kW')
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
-        self.assertEqual('0.411',
-                         self.hass.states
-                         .get('sensor.current_energy_usage').state)
+        assert '0.411' == \
+            self.hass.states \
+            .get('sensor.current_energy_usage').state
 
     @requests_mock.Mocker()
     def test_setup_bad_format_reading(self, mock_req):
@@ -63,6 +62,6 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
                      text='411')
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
-        self.assertEqual('unknown',
-                         self.hass.states
-                         .get('sensor.current_energy_usage').state)
+        assert 'unknown' == \
+            self.hass.states \
+            .get('sensor.current_energy_usage').state

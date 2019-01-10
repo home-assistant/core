@@ -5,7 +5,17 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
 import logging
-from homeassistant.components import light, zha
+
+from homeassistant.components import light
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.components.zha.entities.listeners import (
+    OnOffListener, LevelListener
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,30 +32,59 @@ UNSUPPORTED_ATTRIBUTE = 0x86
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Zigbee Home Automation lights."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
-
-    endpoint = discovery_info['endpoint']
-    if hasattr(endpoint, 'light_color'):
-        caps = await zha.safe_read(
-            endpoint.light_color, ['color_capabilities'])
-        discovery_info['color_capabilities'] = caps.get('color_capabilities')
-        if discovery_info['color_capabilities'] is None:
-            # ZCL Version 4 devices don't support the color_capabilities
-            # attribute. In this version XY support is mandatory, but we need
-            # to probe to determine if the device supports color temperature.
-            discovery_info['color_capabilities'] = CAPABILITIES_COLOR_XY
-            result = await zha.safe_read(
-                endpoint.light_color, ['color_temperature'])
-            if result.get('color_temperature') is not UNSUPPORTED_ATTRIBUTE:
-                discovery_info['color_capabilities'] |= CAPABILITIES_COLOR_TEMP
-
-    async_add_entities([Light(**discovery_info)], update_before_add=True)
+    """Old way of setting up Zigbee Home Automation lights."""
+    pass
 
 
-class Light(zha.Entity, light.Light):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation light from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    lights = hass.data.get(DATA_ZHA, {}).get(light.DOMAIN)
+    if lights is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    lights.values())
+        del hass.data[DATA_ZHA][light.DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA lights."""
+    entities = []
+    for discovery_info in discovery_infos:
+        endpoint = discovery_info['endpoint']
+        if hasattr(endpoint, 'light_color'):
+            caps = await helpers.safe_read(
+                endpoint.light_color, ['color_capabilities'])
+            discovery_info['color_capabilities'] = caps.get(
+                'color_capabilities')
+            if discovery_info['color_capabilities'] is None:
+                # ZCL Version 4 devices don't support the color_capabilities
+                # attribute. In this version XY support is mandatory, but we
+                # need to probe to determine if the device supports color
+                # temperature.
+                discovery_info['color_capabilities'] = \
+                    CAPABILITIES_COLOR_XY
+                result = await helpers.safe_read(
+                    endpoint.light_color, ['color_temperature'])
+                if (result.get('color_temperature') is not
+                        UNSUPPORTED_ATTRIBUTE):
+                    discovery_info['color_capabilities'] |= \
+                        CAPABILITIES_COLOR_TEMP
+
+        zha_light = Light(**discovery_info)
+        entities.append(zha_light)
+
+    async_add_entities(entities, update_before_add=True)
+
+
+class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
     _domain = light.DOMAIN
@@ -57,12 +96,25 @@ class Light(zha.Entity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
+        from zigpy.zcl.clusters.general import OnOff, LevelControl
+        self._in_listeners = {
+            OnOff.cluster_id: OnOffListener(
+                self,
+                self._in_clusters[OnOff.cluster_id]
+            ),
+        }
 
-        import zigpy.zcl.clusters as zcl_clusters
-        if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
+        if LevelControl.cluster_id in self._in_clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
+            self._in_listeners.update({
+                LevelControl.cluster_id: LevelListener(
+                    self,
+                    self._in_clusters[LevelControl.cluster_id]
+                )
+            })
+        import zigpy.zcl.clusters as zcl_clusters
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
             color_capabilities = kwargs['color_capabilities']
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
@@ -73,11 +125,29 @@ class Light(zha.Entity, light.Light):
                 self._hs_color = (0, 0)
 
     @property
+    def zcl_reporting_config(self) -> dict:
+        """Return attribute reporting configuration."""
+        return {
+            'on_off': {'on_off': REPORT_CONFIG_IMMEDIATE},
+            'level': {'current_level': REPORT_CONFIG_ASAP},
+            'light_color': {
+                'current_x': REPORT_CONFIG_DEFAULT,
+                'current_y': REPORT_CONFIG_DEFAULT,
+                'color_temperature': REPORT_CONFIG_DEFAULT,
+            }
+        }
+
+    @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
         if self._state is None:
             return False
         return bool(self._state)
+
+    def set_state(self, state):
+        """Set the state."""
+        self._state = state
+        self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -148,8 +218,15 @@ class Light(zha.Entity, light.Light):
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
+        duration = kwargs.get(light.ATTR_TRANSITION)
         try:
-            res = await self._endpoint.on_off.off()
+            supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
+            if duration and supports_level:
+                res = await self._endpoint.level.move_to_level_with_on_off(
+                    0, duration*10
+                )
+            else:
+                res = await self._endpoint.on_off.off()
             _LOGGER.debug("%s was turned off: %s", self.entity_id, res)
         except DeliveryError as ex:
             _LOGGER.error("%s: Unable to turn the light off: %s",
@@ -163,6 +240,13 @@ class Light(zha.Entity, light.Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    def set_level(self, value):
+        """Set the brightness of this light between 0..255."""
+        if value < 0 or value > 255:
+            return
+        self._brightness = value
+        self.async_schedule_update_ha_state()
 
     @property
     def hs_color(self):
@@ -181,40 +265,38 @@ class Light(zha.Entity, light.Light):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.on_off, ['on_off'],
-                                     allow_cache=False,
-                                     only_cache=(not self._initialized))
+        result = await helpers.safe_read(self._endpoint.on_off, ['on_off'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
-            result = await zha.safe_read(self._endpoint.level,
-                                         ['current_level'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
+            result = await helpers.safe_read(self._endpoint.level,
+                                             ['current_level'],
+                                             allow_cache=False,
+                                             only_cache=(
+                                                 not self._initialized
+                                             ))
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
-            result = await zha.safe_read(self._endpoint.light_color,
-                                         ['color_temperature'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
+            result = await helpers.safe_read(self._endpoint.light_color,
+                                             ['color_temperature'],
+                                             allow_cache=False,
+                                             only_cache=(
+                                                 not self._initialized
+                                             ))
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
         if self._supported_features & light.SUPPORT_COLOR:
-            result = await zha.safe_read(self._endpoint.light_color,
-                                         ['current_x', 'current_y'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
+            result = await helpers.safe_read(self._endpoint.light_color,
+                                             ['current_x', 'current_y'],
+                                             allow_cache=False,
+                                             only_cache=(
+                                                 not self._initialized
+                                             ))
             if 'current_x' in result and 'current_y' in result:
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False

@@ -5,10 +5,15 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/fan.zha/
 """
 import logging
-from homeassistant.components import zha
+
 from homeassistant.components.fan import (
-    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+    DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
+    FanEntity)
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['zha']
 
@@ -39,18 +44,54 @@ SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Zigbee Home Automation fans."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
-
-    async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
+    """Old way of setting up Zigbee Home Automation fans."""
+    pass
 
 
-class ZhaFan(zha.Entity, FanEntity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation fan from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    fans = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
+    if fans is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    fans.values())
+        del hass.data[DATA_ZHA][DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA fans."""
+    entities = []
+    for discovery_info in discovery_infos:
+        entities.append(ZhaFan(**discovery_info))
+
+    async_add_entities(entities, update_before_add=True)
+
+
+class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN
+    value_attribute = 0  # fan_mode
+
+    @property
+    def zcl_reporting_config(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {self.value_attribute: REPORT_CONFIG_OP}
+        }
+
+    @property
+    def cluster(self):
+        """Fan ZCL Cluster."""
+        return self._endpoint.fan
 
     @property
     def supported_features(self) -> int:
@@ -101,16 +142,17 @@ class ZhaFan(zha.Entity, FanEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'],
-                                     allow_cache=False,
-                                     only_cache=(not self._initialized))
+        result = await helpers.safe_read(self.cluster, ['fan_mode'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
+        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
+                      self.entity_id, self.cluster.name, attr_name, value)
+        if attribute == self.value_attribute:
+            self._state = VALUE_TO_SPEED.get(value, self._state)
+            self.async_schedule_update_ha_state()

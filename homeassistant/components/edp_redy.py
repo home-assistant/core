@@ -24,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'edp_redy'
 EDP_REDY = 'edp_redy'
 DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 60
 
-REQUIREMENTS = ['edp_redy==0.0.2']
+REQUIREMENTS = ['edp_redy==0.0.3']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

@@ -31,10 +31,10 @@ class TestMHZ19Sensor(unittest.TestCase):
     @patch('pmsensor.co2sensor.read_mh_z19', side_effect=OSError('test error'))
     def test_setup_failed_connect(self, mock_co2):
         """Test setup when connection error occurs."""
-        self.assertFalse(mhz19.setup_platform(self.hass, {
+        assert not mhz19.setup_platform(self.hass, {
             'platform': 'mhz19',
             mhz19.CONF_SERIAL_DEVICE: 'test.serial',
-            }, None))
+            }, None)
 
     def test_setup_connected(self):
         """Test setup when connection succeeds."""
@@ -43,12 +43,12 @@ class TestMHZ19Sensor(unittest.TestCase):
             from pmsensor.co2sensor import read_mh_z19_with_temperature
             read_mh_z19_with_temperature.return_value = None
             mock_add = Mock()
-            self.assertTrue(mhz19.setup_platform(self.hass, {
+            assert mhz19.setup_platform(self.hass, {
                 'platform': 'mhz19',
                 'monitored_conditions': ['co2', 'temperature'],
                 mhz19.CONF_SERIAL_DEVICE: 'test.serial',
-                }, mock_add))
-        self.assertEqual(1, mock_add.call_count)
+                }, mock_add)
+        assert 1 == mock_add.call_count
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            side_effect=OSError('test error'))
@@ -57,7 +57,7 @@ class TestMHZ19Sensor(unittest.TestCase):
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         client.update()
-        self.assertEqual({}, client.data)
+        assert {} == client.data
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(5001, 24))
@@ -66,7 +66,7 @@ class TestMHZ19Sensor(unittest.TestCase):
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         client.update()
-        self.assertIsNone(client.data.get('co2'))
+        assert client.data.get('co2') is None
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(1000, 24))
@@ -75,7 +75,7 @@ class TestMHZ19Sensor(unittest.TestCase):
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         client.update()
-        self.assertEqual({'temperature': 24, 'co2': 1000}, client.data)
+        assert {'temperature': 24, 'co2': 1000} == client.data
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(1000, 24))
@@ -86,11 +86,11 @@ class TestMHZ19Sensor(unittest.TestCase):
         sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, 'name')
         sensor.update()
 
-        self.assertEqual('name: CO2', sensor.name)
-        self.assertEqual(1000, sensor.state)
-        self.assertEqual('ppm', sensor.unit_of_measurement)
-        self.assertTrue(sensor.should_poll)
-        self.assertEqual({'temperature': 24}, sensor.device_state_attributes)
+        assert 'name: CO2' == sensor.name
+        assert 1000 == sensor.state
+        assert 'ppm' == sensor.unit_of_measurement
+        assert sensor.should_poll
+        assert {'temperature': 24} == sensor.device_state_attributes
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(1000, 24))
@@ -102,12 +102,11 @@ class TestMHZ19Sensor(unittest.TestCase):
             client, mhz19.SENSOR_TEMPERATURE, None, 'name')
         sensor.update()
 
-        self.assertEqual('name: Temperature', sensor.name)
-        self.assertEqual(24, sensor.state)
-        self.assertEqual('°C', sensor.unit_of_measurement)
-        self.assertTrue(sensor.should_poll)
-        self.assertEqual(
-            {'co2_concentration': 1000}, sensor.device_state_attributes)
+        assert 'name: Temperature' == sensor.name
+        assert 24 == sensor.state
+        assert '°C' == sensor.unit_of_measurement
+        assert sensor.should_poll
+        assert {'co2_concentration': 1000} == sensor.device_state_attributes
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(1000, 24))
@@ -119,4 +118,4 @@ class TestMHZ19Sensor(unittest.TestCase):
             client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, 'name')
         sensor.update()
 
-        self.assertEqual(75.2, sensor.state)
+        assert 75.2 == sensor.state

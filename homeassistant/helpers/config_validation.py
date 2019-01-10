@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    ENTITY_MATCH_ALL)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -161,6 +162,12 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, ENTITY_MATCH_ALL),
+    entity_ids
+)
+
+
 def entity_domain(domain: str):
     """Validate that entity belong to domain."""
     def validate(value: Any) -> str:
@@ -193,10 +200,10 @@ def icon(value):
     """Validate icon."""
     value = str(value)
 
-    if value.startswith('mdi:'):
+    if ':' in value:
         return value
 
-    raise vol.Invalid('Icons should start with prefix "mdi:"')
+    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -535,7 +542,8 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
     vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
-    vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
+    vol.Optional('after'): vol.All(vol.Lower, vol.Any(
+        SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)),
     vol.Optional('after_offset'): time_period,
 }), has_at_least_one_key('before', 'after'))
 

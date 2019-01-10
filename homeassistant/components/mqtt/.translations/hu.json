@@ -10,6 +10,7 @@
             "broker": {
                 "data": {
                     "broker": "Br\u00f3ker",
+                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se",
                     "password": "Jelsz\u00f3",
                     "port": "Port",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"

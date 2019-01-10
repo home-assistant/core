@@ -10,26 +10,27 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_WEMO
-from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.4.28']
+REQUIREMENTS = ['pywemo==0.4.34']
 
 DOMAIN = 'wemo'
 
-# Mapping from Wemo model_name to component.
-WEMO_MODEL_DISPATCH = {
+# Mapping from Wemo device type to Home Assistant component type.
+WEMO_DEVICE_TYPE_DISPATCH = {
     'Bridge':  'light',
     'CoffeeMaker': 'switch',
     'Dimmer': 'light',
+    'Humidifier': 'fan',
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
     'Motion': 'binary_sensor',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch'
+    'Switch':  'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -57,12 +58,17 @@ def coerce_host_port(value):
 
 
 CONF_STATIC = 'static'
+CONF_DISCOVERY = 'discovery'
+
+DEFAULT_DISCOVERY = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_STATIC, default=[]): vol.Schema([
             vol.All(cv.string, coerce_host_port)
-        ])
+        ]),
+        vol.Optional(CONF_DISCOVERY,
+                     default=DEFAULT_DISCOVERY): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -71,35 +77,20 @@ def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo
 
+    # Keep track of WeMo devices
+    devices = []
+
+    # Keep track of WeMo device subscriptions for push updates
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
     SUBSCRIPTION_REGISTRY.start()
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
+        _LOGGER.debug("Shutting down WeMo event subscriptions")
         SUBSCRIPTION_REGISTRY.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
-
-    def discovery_dispatch(service, discovery_info):
-        """Dispatcher for WeMo discovery events."""
-        # name, model, location, mac
-        model_name = discovery_info.get('model_name')
-        serial = discovery_info.get('serial')
-
-        # Only register a device once
-        if serial in KNOWN_DEVICES:
-            return
-        _LOGGER.debug('Discovered unique device %s', serial)
-        KNOWN_DEVICES.append(serial)
-
-        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
-
-        discovery.load_platform(hass, component, DOMAIN, discovery_info,
-                                config)
-
-    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     def setup_url_for_device(device):
         """Determine setup.xml url for given device."""
@@ -115,40 +106,76 @@ def setup(hass, config):
 
         return 'http://{}:{}/setup.xml'.format(host, port)
 
-    devices = []
+    def discovery_dispatch(service, discovery_info):
+        """Dispatcher for incoming WeMo discovery events."""
+        # name, model, location, mac
+        device_type = discovery_info.get('device_type')
+        serial = discovery_info.get('serial')
 
-    for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-        url = setup_url_for_address(host, port)
+        # Only register a device once
+        if serial in KNOWN_DEVICES:
+            _LOGGER.debug('Ignoring known device %s %s',
+                          service, discovery_info)
+            return
 
-        if not url:
-            _LOGGER.error(
-                'Unable to get description url for %s',
-                '{}:{}'.format(host, port) if port else host)
-            continue
+        _LOGGER.debug('Discovered unique WeMo device: %s', serial)
+        KNOWN_DEVICES.append(serial)
 
-        try:
-            device = pywemo.discovery.device_from_description(url, None)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', url, err)
-            continue
+        component = WEMO_DEVICE_TYPE_DISPATCH.get(device_type, 'switch')
 
-        devices.append((url, device))
+        discovery.load_platform(hass, component, DOMAIN,
+                                discovery_info, config)
 
-    _LOGGER.info("Scanning for WeMo devices.")
-    devices.extend(
-        (setup_url_for_device(device), device)
-        for device in pywemo.discover_devices())
+    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
-    for url, device in devices:
-        _LOGGER.info('Adding wemo at %s:%i', device.host, device.port)
+    def discover_wemo_devices(now):
+        """Run discovery for WeMo devices."""
+        _LOGGER.debug("Beginning WeMo device discovery...")
+        _LOGGER.debug("Adding statically configured WeMo devices...")
+        for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+            url = setup_url_for_address(host, port)
 
-        discovery_info = {
-            'model_name': device.model_name,
-            'serial': device.serialnumber,
-            'mac_address': device.mac,
-            'ssdp_description': url,
-        }
+            if not url:
+                _LOGGER.error(
+                    'Unable to get description url for WeMo at: %s',
+                    '{}:{}'.format(host, port) if port else host)
+                continue
 
-        discovery.discover(hass, SERVICE_WEMO, discovery_info)
+            try:
+                device = pywemo.discovery.device_from_description(url, None)
+            except (requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout) as err:
+                _LOGGER.error('Unable to access WeMo at %s (%s)', url, err)
+                continue
+
+            if not [d[1] for d in devices
+                    if d[1].serialnumber == device.serialnumber]:
+                devices.append((url, device))
+
+        if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
+            _LOGGER.debug("Scanning network for WeMo devices...")
+            for device in pywemo.discover_devices():
+                if not [d[1] for d in devices
+                        if d[1].serialnumber == device.serialnumber]:
+                    devices.append((setup_url_for_device(device),
+                                    device))
+
+        for url, device in devices:
+            _LOGGER.debug('Adding WeMo device at %s:%i',
+                          device.host, device.port)
+
+            discovery_info = {
+                'device_type': device.__class__.__name__,
+                'serial': device.serialnumber,
+                'mac_address': device.mac,
+                'ssdp_description': url,
+            }
+
+            discovery.discover(hass, SERVICE_WEMO, discovery_info)
+
+        _LOGGER.debug("WeMo device discovery has finished")
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                         discover_wemo_devices)
+
     return True

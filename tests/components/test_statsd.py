@@ -10,6 +10,7 @@ import homeassistant.components.statsd as statsd
 from homeassistant.const import (STATE_ON, STATE_OFF, EVENT_STATE_CHANGED)
 
 from tests.common import get_test_home_assistant
+import pytest
 
 
 class TestStatsd(unittest.TestCase):
@@ -31,9 +32,9 @@ class TestStatsd(unittest.TestCase):
             }
         }
 
-        with self.assertRaises(vol.Invalid):
+        with pytest.raises(vol.Invalid):
             statsd.CONFIG_SCHEMA(None)
-        with self.assertRaises(vol.Invalid):
+        with pytest.raises(vol.Invalid):
             statsd.CONFIG_SCHEMA(config)
 
     @mock.patch('statsd.StatsClient')
@@ -48,16 +49,14 @@ class TestStatsd(unittest.TestCase):
             }
         }
         self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, statsd.DOMAIN, config))
-        self.assertEqual(mock_connection.call_count, 1)
-        self.assertEqual(
-            mock_connection.call_args,
+        assert setup_component(self.hass, statsd.DOMAIN, config)
+        assert mock_connection.call_count == 1
+        assert mock_connection.call_args == \
             mock.call(host='host', port=123, prefix='foo')
-        )
 
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(EVENT_STATE_CHANGED,
-                         self.hass.bus.listen.call_args_list[0][0][0])
+        assert self.hass.bus.listen.called
+        assert EVENT_STATE_CHANGED == \
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     @mock.patch('statsd.StatsClient')
     def test_statsd_setup_defaults(self, mock_connection):
@@ -72,13 +71,11 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
         self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, statsd.DOMAIN, config))
-        self.assertEqual(mock_connection.call_count, 1)
-        self.assertEqual(
-            mock_connection.call_args,
+        assert setup_component(self.hass, statsd.DOMAIN, config)
+        assert mock_connection.call_count == 1
+        assert mock_connection.call_args == \
             mock.call(host='host', port=8125, prefix='hass')
-        )
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
 
     @mock.patch('statsd.StatsClient')
     def test_event_listener_defaults(self, mock_client):
@@ -94,7 +91,7 @@ class TestStatsd(unittest.TestCase):
 
         self.hass.bus.listen = mock.MagicMock()
         setup_component(self.hass, statsd.DOMAIN, config)
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
         handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         valid = {'1': 1,
@@ -112,18 +109,16 @@ class TestStatsd(unittest.TestCase):
 
             mock_client.return_value.gauge.reset_mock()
 
-            self.assertEqual(mock_client.return_value.incr.call_count, 1)
-            self.assertEqual(
-                mock_client.return_value.incr.call_args,
+            assert mock_client.return_value.incr.call_count == 1
+            assert mock_client.return_value.incr.call_args == \
                 mock.call(state.entity_id, rate=statsd.DEFAULT_RATE)
-            )
             mock_client.return_value.incr.reset_mock()
 
         for invalid in ('foo', '', object):
             handler_method(mock.MagicMock(data={
                 'new_state': ha.State('domain.test', invalid, {})}))
-            self.assertFalse(mock_client.return_value.gauge.called)
-            self.assertTrue(mock_client.return_value.incr.called)
+            assert not mock_client.return_value.gauge.called
+            assert mock_client.return_value.incr.called
 
     @mock.patch('statsd.StatsClient')
     def test_event_listener_attr_details(self, mock_client):
@@ -139,7 +134,7 @@ class TestStatsd(unittest.TestCase):
 
         self.hass.bus.listen = mock.MagicMock()
         setup_component(self.hass, statsd.DOMAIN, config)
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
         handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         valid = {'1': 1,
@@ -159,15 +154,13 @@ class TestStatsd(unittest.TestCase):
 
             mock_client.return_value.gauge.reset_mock()
 
-            self.assertEqual(mock_client.return_value.incr.call_count, 1)
-            self.assertEqual(
-                mock_client.return_value.incr.call_args,
+            assert mock_client.return_value.incr.call_count == 1
+            assert mock_client.return_value.incr.call_args == \
                 mock.call(state.entity_id, rate=statsd.DEFAULT_RATE)
-            )
             mock_client.return_value.incr.reset_mock()
 
         for invalid in ('foo', '', object):
             handler_method(mock.MagicMock(data={
                 'new_state': ha.State('domain.test', invalid, {})}))
-            self.assertFalse(mock_client.return_value.gauge.called)
-            self.assertTrue(mock_client.return_value.incr.called)
+            assert not mock_client.return_value.gauge.called
+            assert mock_client.return_value.incr.called

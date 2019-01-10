@@ -59,23 +59,23 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(before_birthday)
         self.hass.block_till_done()
-        self.assertEqual(0, len(runs))
+        assert 0 == len(runs)
 
         self._send_time_changed(birthday_paulus)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
         # A point in time tracker will only fire once, this should do nothing
         self._send_time_changed(birthday_paulus)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
         track_point_in_time(
             self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        assert 2 == len(runs)
 
         unsub = track_point_in_time(
             self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
@@ -83,7 +83,7 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        assert 2 == len(runs)
 
     def test_track_state_change(self):
         """Test track_state_change."""
@@ -113,56 +113,56 @@ class TestEventHelpers(unittest.TestCase):
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
-        self.assertIsNone(wildcard_runs[-1][0])
-        self.assertIsNotNone(wildcard_runs[-1][1])
+        assert 0 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
+        assert wildcard_runs[-1][0] is None
+        assert wildcard_runs[-1][1] is not None
 
         # Set same state should not trigger a state change/listener
         self.hass.states.set('light.Bowl', 'on')
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
+        assert 0 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-        self.assertEqual(2, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 2 == len(wildcard_runs)
+        assert 2 == len(wildercard_runs)
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-        self.assertEqual(3, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 3 == len(wildcard_runs)
+        assert 3 == len(wildercard_runs)
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(4, len(wildcard_runs))
-        self.assertEqual(4, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 4 == len(wildcard_runs)
+        assert 4 == len(wildercard_runs)
 
         self.hass.states.remove('light.bowl')
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(5, len(wildcard_runs))
-        self.assertEqual(5, len(wildercard_runs))
-        self.assertIsNotNone(wildcard_runs[-1][0])
-        self.assertIsNone(wildcard_runs[-1][1])
-        self.assertIsNotNone(wildercard_runs[-1][0])
-        self.assertIsNone(wildercard_runs[-1][1])
+        assert 1 == len(specific_runs)
+        assert 5 == len(wildcard_runs)
+        assert 5 == len(wildercard_runs)
+        assert wildcard_runs[-1][0] is not None
+        assert wildcard_runs[-1][1] is None
+        assert wildercard_runs[-1][0] is not None
+        assert wildercard_runs[-1][1] is None
 
         # Set state for different entity id
         self.hass.states.set('switch.kitchen', 'on')
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(5, len(wildcard_runs))
-        self.assertEqual(6, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 5 == len(wildcard_runs)
+        assert 6 == len(wildercard_runs)
 
     def test_track_template(self):
         """Test tracking template."""
@@ -203,37 +203,37 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.states.set('switch.test', 'on')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
 
         self.hass.states.set('switch.test', 'on')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
 
         self.hass.states.set('switch.test', 'off')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
 
         self.hass.states.set('switch.test', 'off')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-        self.assertEqual(1, len(wildercard_runs))
+        assert 1 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
+        assert 1 == len(wildercard_runs)
 
         self.hass.states.set('switch.test', 'on')
         self.hass.block_till_done()
 
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-        self.assertEqual(2, len(wildercard_runs))
+        assert 2 == len(specific_runs)
+        assert 2 == len(wildcard_runs)
+        assert 2 == len(wildercard_runs)
 
     def test_track_same_state_simple_trigger(self):
         """Test track_same_change with trigger simple."""
@@ -270,17 +270,17 @@ class TestEventHelpers(unittest.TestCase):
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
         self.hass.block_till_done()
-        self.assertEqual(0, len(thread_runs))
-        self.assertEqual(0, len(callback_runs))
-        self.assertEqual(0, len(coroutine_runs))
+        assert 0 == len(thread_runs)
+        assert 0 == len(callback_runs)
+        assert 0 == len(coroutine_runs)
 
         # change time to track and see if they trigger
         future = dt_util.utcnow() + period
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
-        self.assertEqual(1, len(thread_runs))
-        self.assertEqual(1, len(callback_runs))
-        self.assertEqual(1, len(coroutine_runs))
+        assert 1 == len(thread_runs)
+        assert 1 == len(callback_runs)
+        assert 1 == len(coroutine_runs)
 
     def test_track_same_state_simple_no_trigger(self):
         """Test track_same_change with no trigger."""
@@ -299,18 +299,18 @@ class TestEventHelpers(unittest.TestCase):
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
         self.hass.block_till_done()
-        self.assertEqual(0, len(callback_runs))
+        assert 0 == len(callback_runs)
 
         # Change state on state machine
         self.hass.states.set("light.Bowl", "off")
         self.hass.block_till_done()
-        self.assertEqual(0, len(callback_runs))
+        assert 0 == len(callback_runs)
 
         # change time to track and see if they trigger
         future = dt_util.utcnow() + period
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
-        self.assertEqual(0, len(callback_runs))
+        assert 0 == len(callback_runs)
 
     def test_track_same_state_simple_trigger_check_funct(self):
         """Test track_same_change with trigger and check funct."""
@@ -334,15 +334,15 @@ class TestEventHelpers(unittest.TestCase):
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
         self.hass.block_till_done()
-        self.assertEqual(0, len(callback_runs))
-        self.assertEqual('on', check_func[-1][2].state)
-        self.assertEqual('light.bowl', check_func[-1][0])
+        assert 0 == len(callback_runs)
+        assert 'on' == check_func[-1][2].state
+        assert 'light.bowl' == check_func[-1][0]
 
         # change time to track and see if they trigger
         future = dt_util.utcnow() + period
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
-        self.assertEqual(1, len(callback_runs))
+        assert 1 == len(callback_runs)
 
     def test_track_time_interval(self):
         """Test tracking time interval."""
@@ -356,21 +356,21 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(utc_now + timedelta(seconds=5))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
         self._send_time_changed(utc_now + timedelta(seconds=13))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(utc_now + timedelta(minutes=20))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         unsub()
 
         self._send_time_changed(utc_now + timedelta(seconds=30))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
     def test_track_sunrise(self):
         """Test track the sunrise."""
@@ -410,26 +410,26 @@ class TestEventHelpers(unittest.TestCase):
         # run tests
         self._send_time_changed(next_rising - offset)
         self.hass.block_till_done()
-        self.assertEqual(0, len(runs))
-        self.assertEqual(0, len(offset_runs))
+        assert 0 == len(runs)
+        assert 0 == len(offset_runs)
 
         self._send_time_changed(next_rising)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(0, len(offset_runs))
+        assert 1 == len(runs)
+        assert 0 == len(offset_runs)
 
         self._send_time_changed(next_rising + offset)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(1, len(offset_runs))
+        assert 1 == len(runs)
+        assert 1 == len(offset_runs)
 
         unsub()
         unsub2()
 
         self._send_time_changed(next_rising + offset)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(1, len(offset_runs))
+        assert 1 == len(runs)
+        assert 1 == len(offset_runs)
 
     def test_track_sunset(self):
         """Test track the sunset."""
@@ -469,26 +469,26 @@ class TestEventHelpers(unittest.TestCase):
         # Run tests
         self._send_time_changed(next_setting - offset)
         self.hass.block_till_done()
-        self.assertEqual(0, len(runs))
-        self.assertEqual(0, len(offset_runs))
+        assert 0 == len(runs)
+        assert 0 == len(offset_runs)
 
         self._send_time_changed(next_setting)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(0, len(offset_runs))
+        assert 1 == len(runs)
+        assert 0 == len(offset_runs)
 
         self._send_time_changed(next_setting + offset)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(1, len(offset_runs))
+        assert 1 == len(runs)
+        assert 1 == len(offset_runs)
 
         unsub()
         unsub2()
 
         self._send_time_changed(next_setting + offset)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
-        self.assertEqual(1, len(offset_runs))
+        assert 1 == len(runs)
+        assert 1 == len(offset_runs)
 
     def _send_time_changed(self, now):
         """Send a time changed event."""
@@ -524,26 +524,26 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
+        assert 1 == len(specific_runs)
+        assert 1 == len(wildcard_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
+        assert 1 == len(specific_runs)
+        assert 2 == len(wildcard_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
+        assert 2 == len(specific_runs)
+        assert 3 == len(wildcard_runs)
 
         unsub()
         unsub_utc()
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
+        assert 2 == len(specific_runs)
+        assert 3 == len(wildcard_runs)
 
     def test_periodic_task_minute(self):
         """Test periodic tasks per minute."""
@@ -555,21 +555,21 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 3, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
     def test_periodic_task_hour(self):
         """Test periodic tasks per hour."""
@@ -581,29 +581,29 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 25, 0, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 25, 1, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(3, len(specific_runs))
+        assert 3 == len(specific_runs)
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(3, len(specific_runs))
+        assert 3 == len(specific_runs)
 
     def test_periodic_task_wrong_input(self):
         """Test periodic tasks with wrong input."""
@@ -615,7 +615,7 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
     def test_periodic_task_clock_rollback(self):
         """Test periodic tasks with the time rolling backwards."""
@@ -627,29 +627,29 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(3, len(specific_runs))
+        assert 3 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(4, len(specific_runs))
+        assert 4 == len(specific_runs)
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(4, len(specific_runs))
+        assert 4 == len(specific_runs)
 
     def test_periodic_task_duplicate_time(self):
         """Test periodic tasks not triggering on duplicate time."""
@@ -661,15 +661,15 @@ class TestTrackTimeChange(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(datetime(2014, 5, 25, 0, 0, 0))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         unsub()
 
@@ -686,22 +686,22 @@ class TestTrackTimeChange(unittest.TestCase):
         self._send_time_changed(
             tz.localize(datetime(2018, 3, 25, 1, 50, 0)))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 3, 25, 3, 50, 0)))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 3, 26, 1, 50, 0)))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 3, 26, 2, 50, 0)))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         unsub()
 
@@ -718,22 +718,22 @@ class TestTrackTimeChange(unittest.TestCase):
         self._send_time_changed(
             tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False))
         self.hass.block_till_done()
-        self.assertEqual(0, len(specific_runs))
+        assert 0 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True))
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        assert 1 == len(specific_runs)
 
         self._send_time_changed(
             tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True))
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        assert 2 == len(specific_runs)
 
         unsub()
 

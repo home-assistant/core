@@ -320,38 +320,39 @@ def setup(hass: HomeAssistant, base_config):
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
-    def __init__(self, hass: HomeAssistant, device, logical) -> None:
+    def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self.hass = hass
         self._icon = None
         self._state = STATE_UNKNOWN
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
-        device.set_update_callback(self._update)
 
     def update(self):
         """Update device status."""
-        self._update()
+        device = self._device
+        from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
+            POWER_OFF, POWER_ON
+        if device.power_status in [POWER_OFF, 3]:
+            self._state = STATE_OFF
+        elif device.status == STATUS_PLAY:
+            self._state = STATE_PLAYING
+        elif device.status == STATUS_STOP:
+            self._state = STATE_IDLE
+        elif device.status == STATUS_STILL:
+            self._state = STATE_PAUSED
+        elif device.power_status in [POWER_ON, 4]:
+            self._state = STATE_ON
+        else:
+            _LOGGER.warning("Unknown state: %d", device.power_status)
+
+    async def async_added_to_hass(self):
+        """Register HDMI callbacks after initialization."""
+        self._device.set_update_callback(self._update)
 
     def _update(self, device=None):
-        """Update device status."""
-        if device:
-            from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
-                POWER_OFF, POWER_ON
-            if device.power_status == POWER_OFF:
-                self._state = STATE_OFF
-            elif device.status == STATUS_PLAY:
-                self._state = STATE_PLAYING
-            elif device.status == STATUS_STOP:
-                self._state = STATE_IDLE
-            elif device.status == STATUS_STILL:
-                self._state = STATE_PAUSED
-            elif device.power_status == POWER_ON:
-                self._state = STATE_ON
-            else:
-                _LOGGER.warning("Unknown state: %d", device.power_status)
-        self.schedule_update_ha_state()
+        """Device status changed, schedule an update."""
+        self.schedule_update_ha_state(True)
 
     @property
     def name(self):

@@ -35,7 +35,7 @@ def debounce(func):
         """Handle call_later callback."""
         debounce_params = self.debounce.pop(func.__name__, None)
         if debounce_params:
-            self.hass.async_add_job(func, self, *debounce_params[1:])
+            self.hass.async_add_executor_job(func, self, *debounce_params[1:])
 
     @wraps(func)
     def wrapper(self, *args):
@@ -94,8 +94,15 @@ class HomeAccessory(Accessory):
 
         Run inside the HAP-python event loop.
         """
+        self.hass.add_job(self.run_handler)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
         state = self.hass.states.get(self.entity_id)
-        self.hass.add_job(self.update_state_callback, None, None, state)
+        self.hass.async_add_job(self.update_state_callback, None, None, state)
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
@@ -107,8 +114,8 @@ class HomeAccessory(Accessory):
         if new_state is None:
             return
         if self._support_battery_level:
-            self.hass.async_add_job(self.update_battery, new_state)
-        self.hass.async_add_job(self.update_state, new_state)
+            self.hass.async_add_executor_job(self.update_battery, new_state)
+        self.hass.async_add_executor_job(self.update_state, new_state)
 
     def update_battery(self, new_state):
         """Update battery service if available.

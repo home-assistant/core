@@ -15,6 +15,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers import template
 
 from tests.common import get_test_home_assistant, assert_setup_component
+import pytest
 
 
 class TestRestBinarySensorSetup(unittest.TestCase):
@@ -45,7 +46,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
-        with self.assertRaises(MissingSchema):
+        with pytest.raises(MissingSchema):
             rest.setup_platform(self.hass, {
                 'platform': 'rest',
                 'resource': 'localhost',
@@ -61,7 +62,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 'platform': 'rest',
                 'resource': 'http://localhost',
             }, self.add_devices, None)
-        self.assertEqual(len(self.DEVICES), 0)
+        assert len(self.DEVICES) == 0
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
@@ -71,27 +72,27 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 'platform': 'rest',
                 'resource': 'http://localhost',
             }, self.add_devices, None)
-        self.assertEqual(len(self.DEVICES), 0)
+        assert len(self.DEVICES) == 0
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
         mock_req.get('http://localhost', status_code=200)
         with assert_setup_component(1, 'binary_sensor'):
-            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+            assert setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'rest',
                     'resource': 'http://localhost'
                 }
-            }))
-        self.assertEqual(1, mock_req.call_count)
+            })
+        assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get('http://localhost', status_code=200)
         with assert_setup_component(1, 'binary_sensor'):
-            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+            assert setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'rest',
                     'resource': 'http://localhost',
@@ -105,15 +106,15 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     'password': 'my password',
                     'headers': {'Accept': 'application/json'}
                 }
-            }))
-        self.assertEqual(1, mock_req.call_count)
+            })
+        assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.post('http://localhost', status_code=200)
         with assert_setup_component(1, 'binary_sensor'):
-            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+            assert setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'rest',
                     'resource': 'http://localhost',
@@ -128,8 +129,8 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     'password': 'my password',
                     'headers': {'Accept': 'application/json'}
                 }
-            }))
-        self.assertEqual(1, mock_req.call_count)
+            })
+        assert 1 == mock_req.call_count
 
 
 class TestRestBinarySensor(unittest.TestCase):
@@ -161,16 +162,16 @@ class TestRestBinarySensor(unittest.TestCase):
 
     def test_name(self):
         """Test the name."""
-        self.assertEqual(self.name, self.binary_sensor.name)
+        assert self.name == self.binary_sensor.name
 
     def test_device_class(self):
         """Test the device class."""
-        self.assertEqual(self.device_class, self.binary_sensor.device_class)
+        assert self.device_class == self.binary_sensor.device_class
 
     def test_initial_state(self):
         """Test the initial state."""
         self.binary_sensor.update()
-        self.assertEqual(STATE_OFF, self.binary_sensor.state)
+        assert STATE_OFF == self.binary_sensor.state
 
     def test_update_when_value_is_none(self):
         """Test state gets updated to unknown when sensor returns no data."""
@@ -178,7 +179,7 @@ class TestRestBinarySensor(unittest.TestCase):
             'RestData.update',
             side_effect=self.update_side_effect(None))
         self.binary_sensor.update()
-        self.assertFalse(self.binary_sensor.available)
+        assert not self.binary_sensor.available
 
     def test_update_when_value_changed(self):
         """Test state gets updated when sensor returns a new status."""
@@ -186,15 +187,15 @@ class TestRestBinarySensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     '{ "key": true }'))
         self.binary_sensor.update()
-        self.assertEqual(STATE_ON, self.binary_sensor.state)
-        self.assertTrue(self.binary_sensor.available)
+        assert STATE_ON == self.binary_sensor.state
+        assert self.binary_sensor.available
 
     def test_update_when_failed_request(self):
         """Test state gets updated when sensor returns a new status."""
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(None))
         self.binary_sensor.update()
-        self.assertFalse(self.binary_sensor.available)
+        assert not self.binary_sensor.available
 
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
@@ -203,5 +204,5 @@ class TestRestBinarySensor(unittest.TestCase):
         self.binary_sensor = rest.RestBinarySensor(
             self.hass, self.rest, self.name, self.device_class, None)
         self.binary_sensor.update()
-        self.assertEqual(STATE_ON, self.binary_sensor.state)
-        self.assertTrue(self.binary_sensor.available)
+        assert STATE_ON == self.binary_sensor.state
+        assert self.binary_sensor.available

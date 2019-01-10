@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['ring_doorbell==0.2.1']
+REQUIREMENTS = ['ring_doorbell==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 

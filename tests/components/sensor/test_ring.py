@@ -72,40 +72,40 @@ class TestRingSensorSetup(unittest.TestCase):
         for device in self.DEVICES:
             device.update()
             if device.name == 'Front Battery':
-                self.assertEqual(80, device.state)
-                self.assertEqual('hp_cam_v1',
-                                 device.device_state_attributes['kind'])
-                self.assertEqual('stickup_cams',
-                                 device.device_state_attributes['type'])
+                assert 80 == device.state
+                assert 'hp_cam_v1' == \
+                    device.device_state_attributes['kind']
+                assert 'stickup_cams' == \
+                    device.device_state_attributes['type']
             if device.name == 'Front Door Battery':
-                self.assertEqual(100, device.state)
-                self.assertEqual('lpd_v1',
-                                 device.device_state_attributes['kind'])
-                self.assertNotEqual('chimes',
-                                    device.device_state_attributes['type'])
+                assert 100 == device.state
+                assert 'lpd_v1' == \
+                    device.device_state_attributes['kind']
+                assert 'chimes' != \
+                       device.device_state_attributes['type']
             if device.name == 'Downstairs Volume':
-                self.assertEqual(2, device.state)
-                self.assertEqual('1.2.3',
-                                 device.device_state_attributes['firmware'])
-                self.assertEqual('ring_mock_wifi',
-                                 device.device_state_attributes['wifi_name'])
-                self.assertEqual('mdi:bell-ring', device.icon)
-                self.assertEqual('chimes',
-                                 device.device_state_attributes['type'])
+                assert 2 == device.state
+                assert '1.2.3' == \
+                    device.device_state_attributes['firmware']
+                assert 'ring_mock_wifi' == \
+                    device.device_state_attributes['wifi_name']
+                assert 'mdi:bell-ring' == device.icon
+                assert 'chimes' == \
+                    device.device_state_attributes['type']
             if device.name == 'Front Door Last Activity':
-                self.assertFalse(device.device_state_attributes['answered'])
-                self.assertEqual('America/New_York',
-                                 device.device_state_attributes['timezone'])
+                assert not device.device_state_attributes['answered']
+                assert 'America/New_York' == \
+                    device.device_state_attributes['timezone']
 
             if device.name == 'Downstairs WiFi Signal Strength':
-                self.assertEqual(-39, device.state)
+                assert -39 == device.state
 
             if device.name == 'Front Door WiFi Signal Category':
-                self.assertEqual('good', device.state)
+                assert 'good' == device.state
 
             if device.name == 'Front Door WiFi Signal Strength':
-                self.assertEqual(-58, device.state)
+                assert -58 == device.state
 
-            self.assertIsNone(device.entity_picture)
-            self.assertEqual(ATTRIBUTION,
-                             device.device_state_attributes['attribution'])
+            assert device.entity_picture is None
+            assert ATTRIBUTION == \
+                device.device_state_attributes['attribution']

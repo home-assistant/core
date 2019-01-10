@@ -150,7 +150,7 @@ def setup_plexserver(
             _LOGGER.exception("Error listing plex devices")
             return
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Could not connect to plex server at http://%s (%s)", host, ex)
             return
 
@@ -218,7 +218,7 @@ def setup_plexserver(
             _LOGGER.exception("Error listing plex sessions")
             return
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Could not connect to plex server at http://%s (%s)", host, ex)
             return
 

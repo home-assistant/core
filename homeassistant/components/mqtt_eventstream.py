@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
-    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
+    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
@@ -68,16 +68,6 @@ def async_setup(hass, config):
                     event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic
             ):
                 return
-
-        # Filter out all the "event service executed" events because they
-        # are only used internally by core as callbacks for blocking
-        # during the interval while a service is being executed.
-        # They will serve no purpose to the external system,
-        # and thus are unnecessary traffic.
-        # And at any rate it would cause an infinite loop to publish them
-        # because publishing to an MQTT topic itself triggers one.
-        if event.event_type == EVENT_SERVICE_EXECUTED:
-            return
 
         event_info = {'event_type': event.event_type, 'event_data': event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)

@@ -92,7 +92,7 @@ class SynologyCamera(Camera):
         websession = async_get_clientsession(self.hass, self._verify_ssl)
         stream_coro = websession.get(streaming_url)
 
-        await async_aiohttp_proxy_web(self.hass, request, stream_coro)
+        return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):

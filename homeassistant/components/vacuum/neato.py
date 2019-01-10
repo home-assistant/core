@@ -82,6 +82,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
         _LOGGER.debug('self._state=%s', self._state)
+        robot_alert = ALERTS.get(self._state['alert'])
         if self._state['state'] == 1:
             if self._state['details']['isCharging']:
                 self._clean_state = STATE_DOCKED
@@ -93,14 +94,17 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             else:
                 self._clean_state = STATE_IDLE
                 self._status_state = 'Stopped'
+
+            if robot_alert is not None:
+                self._status_state = robot_alert
         elif self._state['state'] == 2:
-            if ALERTS.get(self._state['error']) is None:
+            if robot_alert is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
                     MODE.get(self._state['cleaning']['mode'])
                     + ' ' + ACTION.get(self._state['action']))
             else:
-                self._status_state = ALERTS.get(self._state['error'])
+                self._status_state = robot_alert
         elif self._state['state'] == 3:
             self._clean_state = STATE_PAUSED
             self._status_state = 'Paused'
@@ -108,27 +112,28 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._clean_state = STATE_ERROR
             self._status_state = ERRORS.get(self._state['error'])
 
-        if not self._mapdata.get(self.robot.serial, {}).get('maps', []):
+        if not self._mapdata.get(self._robot_serial, {}).get('maps', []):
             return
         self.clean_time_start = (
-            (self._mapdata[self.robot.serial]['maps'][0]['start_at']
+            (self._mapdata[self._robot_serial]['maps'][0]['start_at']
              .strip('Z'))
             .replace('T', ' '))
         self.clean_time_stop = (
-            (self._mapdata[self.robot.serial]['maps'][0]['end_at'].strip('Z'))
+            (self._mapdata[self._robot_serial]['maps'][0]['end_at'].strip('Z'))
             .replace('T', ' '))
         self.clean_area = (
-            self._mapdata[self.robot.serial]['maps'][0]['cleaned_area'])
+            self._mapdata[self._robot_serial]['maps'][0]['cleaned_area'])
         self.clean_suspension_charge_count = (
-            self._mapdata[self.robot.serial]['maps'][0]
+            self._mapdata[self._robot_serial]['maps'][0]
             ['suspended_cleaning_charging_count'])
         self.clean_suspension_time = (
-            self._mapdata[self.robot.serial]['maps'][0]
+            self._mapdata[self._robot_serial]['maps'][0]
             ['time_in_suspended_cleaning'])
         self.clean_battery_start = (
-            self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_start'])
+            self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_start']
+            )
         self.clean_battery_end = (
-            self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_end'])
+            self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_end'])
 
         self._battery_level = self._state['details']['charge']
 

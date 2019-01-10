@@ -59,8 +59,7 @@ class AmcrestCam(Camera):
         """Return an MJPEG stream."""
         # The snapshot implementation is handled by the parent class
         if self._stream_source == STREAM_SOURCE_LIST['snapshot']:
-            await super().handle_async_mjpeg_stream(request)
-            return
+            return await super().handle_async_mjpeg_stream(request)
 
         if self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
             # stream an MJPEG image stream directly from the camera
@@ -69,20 +68,22 @@ class AmcrestCam(Camera):
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=TIMEOUT)
 
-            await async_aiohttp_proxy_web(self.hass, request, stream_coro)
+            return await async_aiohttp_proxy_web(
+                self.hass, request, stream_coro)
 
-        else:
-            # streaming via fmpeg
-            from haffmpeg import CameraMjpeg
+        # streaming via ffmpeg
+        from haffmpeg import CameraMjpeg
 
-            streaming_url = self._camera.rtsp_url(typeno=self._resolution)
-            stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-            await stream.open_camera(
-                streaming_url, extra_cmd=self._ffmpeg_arguments)
+        streaming_url = self._camera.rtsp_url(typeno=self._resolution)
+        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        await stream.open_camera(
+            streaming_url, extra_cmd=self._ffmpeg_arguments)
 
-            await async_aiohttp_proxy_stream(
+        try:
+            return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
                 'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
             await stream.close()
 
     @property

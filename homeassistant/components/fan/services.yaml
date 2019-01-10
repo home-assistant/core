@@ -204,3 +204,20 @@ xiaomi_miio_set_dry_off:
     entity_id:
       description: Name of the xiaomi miio entity.
       example: 'fan.xiaomi_miio_device'
+
+wemo_set_humidity:
+  description: Set the target humidity of WeMo humidifier devices.
+  fields:
+    entity_id:
+      description: Names of the WeMo humidifier entities (1 or more entity_ids are required).
+      example: 'fan.wemo_humidifier'
+    target_humidity:
+      description: Target humidity. This is a float value between 0 and 100, but will be mapped to the humidity levels that WeMo humidifiers support (45, 50, 55, 60, and 100/Max) by rounding the value down to the nearest supported value.
+      example: 56.5
+
+wemo_reset_filter_life:
+  description: Reset the WeMo Humidifier's filter life to 100%.
+  fields:
+    entity_id:
+      description: Names of the WeMo humidifier entities (1 or more entity_ids are required).
+      example: 'fan.wemo_humidifier'

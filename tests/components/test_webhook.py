@@ -7,10 +7,10 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def mock_client(hass, aiohttp_client):
+def mock_client(hass, hass_client):
     """Create http client for webhooks."""
     hass.loop.run_until_complete(async_setup_component(hass, 'webhook', {}))
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return hass.loop.run_until_complete(hass_client())
 
 
 async def test_unregistering_webhook(hass, mock_client):
@@ -22,7 +22,8 @@ async def test_unregistering_webhook(hass, mock_client):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register(webhook_id, handle)
+    hass.components.webhook.async_register(
+        'test', "Test hook", webhook_id, handle)
 
     resp = await mock_client.post('/api/webhook/{}'.format(webhook_id))
     assert resp.status == 200
@@ -51,7 +52,7 @@ async def test_posting_webhook_nonexisting(hass, mock_client):
 
 async def test_posting_webhook_invalid_json(hass, mock_client):
     """Test posting to a nonexisting webhook."""
-    hass.components.webhook.async_register('hello', None)
+    hass.components.webhook.async_register('test', "Test hook", 'hello', None)
     resp = await mock_client.post('/api/webhook/hello', data='not-json')
     assert resp.status == 200
 
@@ -65,7 +66,8 @@ async def test_posting_webhook_json(hass, mock_client):
         """Handle webhook."""
         hooks.append((args[0], args[1], await args[2].text()))
 
-    hass.components.webhook.async_register(webhook_id, handle)
+    hass.components.webhook.async_register(
+        'test', "Test hook", webhook_id, handle)
 
     resp = await mock_client.post('/api/webhook/{}'.format(webhook_id), json={
         'data': True
@@ -86,7 +88,8 @@ async def test_posting_webhook_no_data(hass, mock_client):
         """Handle webhook."""
         hooks.append(args)
 
-    hass.components.webhook.async_register(webhook_id, handle)
+    hass.components.webhook.async_register(
+        'test', "Test hook", webhook_id, handle)
 
     resp = await mock_client.post('/api/webhook/{}'.format(webhook_id))
     assert resp.status == 200
@@ -94,3 +97,28 @@ async def test_posting_webhook_no_data(hass, mock_client):
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
     assert await hooks[0][2].text() == ''
+
+
+async def test_listing_webhook(hass, hass_ws_client, hass_access_token):
+    """Test unregistering a webhook."""
+    assert await async_setup_component(hass, 'webhook', {})
+    client = await hass_ws_client(hass, hass_access_token)
+
+    hass.components.webhook.async_register(
+        'test', "Test hook", "my-id", None)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'webhook/list',
+    })
+
+    msg = await client.receive_json()
+    assert msg['id'] == 5
+    assert msg['success']
+    assert msg['result'] == [
+        {
+            'webhook_id': 'my-id',
+            'domain': 'test',
+            'name': 'Test hook'
+        }
+    ]

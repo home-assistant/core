@@ -50,7 +50,8 @@ class WUSensorConfig:
 
     def __init__(self, friendly_name, feature, value,
                  unit_of_measurement=None, entity_picture=None,
-                 icon="mdi:gauge", device_state_attributes=None):
+                 icon="mdi:gauge", device_state_attributes=None,
+                 device_class=None):
         """Constructor.
 
         Args:
@@ -73,13 +74,14 @@ class WUSensorConfig:
         self.entity_picture = entity_picture
         self.icon = icon
         self.device_state_attributes = device_state_attributes or {}
+        self.device_class = device_class
 
 
 class WUCurrentConditionsSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for current conditions."""
 
     def __init__(self, friendly_name, field, icon="mdi:gauge",
-                 unit_of_measurement=None):
+                 unit_of_measurement=None, device_class=None):
         """Constructor.
 
         Args:
@@ -101,7 +103,8 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
             device_state_attributes={
                 'date': lambda wu: wu.data['current_observation'][
                     'observation_time']
-            }
+            },
+            device_class=device_class
         )
 
 
@@ -135,7 +138,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for daily simpleforecasts."""
 
     def __init__(self, friendly_name, period, field, wu_unit=None,
-                 ha_unit=None, icon=None):
+                 ha_unit=None, icon=None, device_class=None):
         """Constructor.
 
         Args:
@@ -162,7 +165,8 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
             device_state_attributes={
                 'date': lambda wu: wu.data['forecast']['simpleforecast'][
                     'forecastday'][period]['date']['pretty']
-            }
+            },
+            device_class=device_class
         )
 
 
@@ -216,7 +220,7 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
                     period]['mslp']['english'],
                 'date': lambda wu: wu.data['hourly_forecast'][
                     period]['FCTTIME']['pretty'],
-            },
+            }
         )
 
 
@@ -224,7 +228,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
     """Helper for defining field configurations for almanac sensors."""
 
     def __init__(self, friendly_name, field, value_type, wu_unit,
-                 unit_of_measurement, icon):
+                 unit_of_measurement, icon, device_class=None):
         """Constructor.
 
         Args:
@@ -241,7 +245,8 @@ class WUAlmanacSensorConfig(WUSensorConfig):
             feature="almanac",
             value=lambda wu: wu.data['almanac'][field][value_type][wu_unit],
             unit_of_measurement=unit_of_measurement,
-            icon=icon
+            icon=icon,
+            device_class="temperature"
         )
 
 
@@ -336,18 +341,22 @@ SENSOR_TYPES = {
     'precip_today_string': WUCurrentConditionsSensorConfig(
         'Precipitation Today', 'precip_today_string', "mdi:umbrella"),
     'pressure_in': WUCurrentConditionsSensorConfig(
-        'Pressure', 'pressure_in', "mdi:gauge", 'inHg'),
+        'Pressure', 'pressure_in', "mdi:gauge", 'inHg',
+        device_class="pressure"),
     'pressure_mb': WUCurrentConditionsSensorConfig(
-        'Pressure', 'pressure_mb', "mdi:gauge", 'mb'),
+        'Pressure', 'pressure_mb', "mdi:gauge", 'mb',
+        device_class="pressure"),
     'pressure_trend': WUCurrentConditionsSensorConfig(
-        'Pressure Trend', 'pressure_trend', "mdi:gauge"),
+        'Pressure Trend', 'pressure_trend', "mdi:gauge",
+        device_class="pressure"),
     'relative_humidity': WUSensorConfig(
         'Relative Humidity',
         'conditions',
         value=lambda wu: int(wu.data['current_observation'][
             'relative_humidity'][:-1]),
         unit_of_measurement='%',
-        icon="mdi:water-percent"),
+        icon="mdi:water-percent",
+        device_class="humidity"),
     'station_id': WUCurrentConditionsSensorConfig(
         'Station ID', 'station_id', "mdi:home"),
     'solarradiation': WUCurrentConditionsSensorConfig(
@@ -355,9 +364,11 @@ SENSOR_TYPES = {
     'temperature_string': WUCurrentConditionsSensorConfig(
         'Temperature Summary', 'temperature_string', "mdi:thermometer"),
     'temp_c': WUCurrentConditionsSensorConfig(
-        'Temperature', 'temp_c', "mdi:thermometer", TEMP_CELSIUS),
+        'Temperature', 'temp_c', "mdi:thermometer", TEMP_CELSIUS,
+        device_class="temperature"),
     'temp_f': WUCurrentConditionsSensorConfig(
-        'Temperature', 'temp_f', "mdi:thermometer", TEMP_FAHRENHEIT),
+        'Temperature', 'temp_f', "mdi:thermometer", TEMP_FAHRENHEIT,
+        device_class="temperature"),
     'UV': WUCurrentConditionsSensorConfig(
         'UV', 'UV', "mdi:sunglasses"),
     'visibility_km': WUCurrentConditionsSensorConfig(
@@ -462,52 +473,52 @@ SENSOR_TYPES = {
     'weather_36h': WUHourlyForecastSensorConfig(35, "condition"),
     'temp_high_1d_c': WUDailySimpleForecastSensorConfig(
         "High Temperature Today", 0, "high", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_2d_c': WUDailySimpleForecastSensorConfig(
         "High Temperature Tomorrow", 1, "high", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_3d_c': WUDailySimpleForecastSensorConfig(
         "High Temperature in 3 Days", 2, "high", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_4d_c': WUDailySimpleForecastSensorConfig(
         "High Temperature in 4 Days", 3, "high", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_1d_f': WUDailySimpleForecastSensorConfig(
         "High Temperature Today", 0, "high", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_2d_f': WUDailySimpleForecastSensorConfig(
         "High Temperature Tomorrow", 1, "high", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_3d_f': WUDailySimpleForecastSensorConfig(
         "High Temperature in 3 Days", 2, "high", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_high_4d_f': WUDailySimpleForecastSensorConfig(
         "High Temperature in 4 Days", 3, "high", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_1d_c': WUDailySimpleForecastSensorConfig(
         "Low Temperature Today", 0, "low", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_2d_c': WUDailySimpleForecastSensorConfig(
         "Low Temperature Tomorrow", 1, "low", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_3d_c': WUDailySimpleForecastSensorConfig(
         "Low Temperature in 3 Days", 2, "low", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_4d_c': WUDailySimpleForecastSensorConfig(
         "Low Temperature in 4 Days", 3, "low", "celsius", TEMP_CELSIUS,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_1d_f': WUDailySimpleForecastSensorConfig(
         "Low Temperature Today", 0, "low", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_2d_f': WUDailySimpleForecastSensorConfig(
         "Low Temperature Tomorrow", 1, "low", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_3d_f': WUDailySimpleForecastSensorConfig(
         "Low Temperature in 3 Days", 2, "low", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'temp_low_4d_f': WUDailySimpleForecastSensorConfig(
         "Low Temperature in 4 Days", 3, "low", "fahrenheit", TEMP_FAHRENHEIT,
-        "mdi:thermometer"),
+        "mdi:thermometer", device_class="temperature"),
     'wind_gust_1d_kph': WUDailySimpleForecastSensorConfig(
         "Max. Wind Today", 0, "maxwind", "kph", "kph", "mdi:weather-windy"),
     'wind_gust_2d_kph': WUDailySimpleForecastSensorConfig(
@@ -679,6 +690,7 @@ class WUndergroundSensor(Entity):
         # the entity registry later.
         self.entity_id = sensor.ENTITY_ID_FORMAT.format('pws_' + condition)
         self._unique_id = "{},{}".format(unique_id_base, condition)
+        self._device_class = self._cfg_expand("device_class")
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
@@ -740,6 +752,11 @@ class WUndergroundSensor(Entity):
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the units of measurement."""
+        return self._device_class
 
     async def async_update(self):
         """Update current conditions."""

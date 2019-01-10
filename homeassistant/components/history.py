@@ -38,20 +38,6 @@ SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 
-def last_recorder_run(hass):
-    """Retrieve the last closed recorder run from the database."""
-    from homeassistant.components.recorder.models import RecorderRuns
-
-    with session_scope(hass=hass) as session:
-        res = (session.query(RecorderRuns)
-               .filter(RecorderRuns.end.isnot(None))
-               .order_by(RecorderRuns.end.desc()).first())
-        if res is None:
-            return None
-        session.expunge(res)
-        return res
-
-
 def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
                            filters=None, include_start_time_state=True):
     """

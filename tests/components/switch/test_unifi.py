@@ -64,6 +64,18 @@ CLIENT_4 = {
     'wired-rx_bytes': 1234000000,
     'wired-tx_bytes': 5678000000
 }
+CLOUDKEY = {
+    'hostname': 'client_1',
+    'ip': 'mock-host',
+    'is_wired': True,
+    'mac': '10:00:00:00:00:01',
+    'name': 'Cloud key',
+    'oui': 'Producer',
+    'sw_mac': '00:00:00:00:01:01',
+    'sw_port': 1,
+    'wired-rx_bytes': 1234000000,
+    'wired-tx_bytes': 5678000000
+}
 POE_SWITCH_CLIENTS = [
     {
         'hostname': 'client_1',
@@ -179,6 +191,7 @@ def mock_controller(hass):
         api=Mock(),
         spec=unifi.UniFiController
     )
+    controller.mac = '10:00:00:00:00:01'
     controller.mock_requests = []
 
     controller.mock_client_responses = deque()
@@ -228,6 +241,17 @@ async def test_no_clients(hass, mock_controller):
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
     assert not hass.states.async_all()
+
+
+async def test_controller_not_client(hass, mock_controller):
+    """Test that the controller doesn't become a switch."""
+    mock_controller.mock_client_responses.append([CLOUDKEY])
+    mock_controller.mock_device_responses.append([DEVICE_1])
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert not hass.states.async_all()
+    cloudkey = hass.states.get('switch.cloud_key')
+    assert cloudkey is None
 
 
 async def test_switches(hass, mock_controller):

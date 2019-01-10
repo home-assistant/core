@@ -59,8 +59,16 @@ def mock_http_client_with_urls(hass, aiohttp_client):
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
+@pytest.fixture
+def mock_onboarded():
+    """Mock that we're onboarded."""
+    with patch('homeassistant.components.onboarding.async_is_onboarded',
+               return_value=True):
+        yield
+
+
 @asyncio.coroutine
-def test_frontend_and_static(mock_http_client):
+def test_frontend_and_static(mock_http_client, mock_onboarded):
     """Test if we can get the frontend."""
     resp = yield from mock_http_client.get('')
     assert resp.status == 200
@@ -220,7 +228,7 @@ async def test_missing_themes(hass, hass_ws_client):
 
 
 @asyncio.coroutine
-def test_extra_urls(mock_http_client_with_urls):
+def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
     resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
@@ -229,7 +237,7 @@ def test_extra_urls(mock_http_client_with_urls):
 
 
 @asyncio.coroutine
-def test_extra_urls_es5(mock_http_client_with_urls):
+def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
     """Test that es5 extra urls are loaded."""
     resp = yield from mock_http_client_with_urls.get('/states?es5')
     assert resp.status == 200
@@ -280,7 +288,7 @@ async def test_get_translations(hass, hass_ws_client):
     assert msg['result'] == {'resources': {'lang': 'nl'}}
 
 
-async def test_auth_load(mock_http_client):
+async def test_auth_load(mock_http_client, mock_onboarded):
     """Test auth component loaded by default."""
     resp = await mock_http_client.get('/auth/providers')
     assert resp.status == 200

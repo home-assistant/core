@@ -80,7 +80,6 @@ async def test_light_basic(hass, hk_driver, cls, events):
 async def test_light_brightness(hass, hk_driver, cls, events):
     """Test light with brightness."""
     entity_id = 'light.demo'
-    event_value = "brightness at "
 
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255})
@@ -108,7 +107,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "{}20%".format(event_value)
+    assert events[-1].data[ATTR_VALUE] == 'brightness at 20%'
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 40)
@@ -117,7 +116,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "{}40%".format(event_value)
+    assert events[-1].data[ATTR_VALUE] == 'brightness at 40%'
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 0)
@@ -154,7 +153,7 @@ async def test_light_color_temperature(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
+    assert events[-1].data[ATTR_VALUE] == 'color temperature at 250'
 
 
 async def test_light_rgb_color(hass, hk_driver, cls, events):
@@ -185,4 +184,4 @@ async def test_light_rgb_color(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_HS_COLOR] == (145, 75)
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
+    assert events[-1].data[ATTR_VALUE] == 'set color at (145, 75)'

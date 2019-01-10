@@ -1,5 +1,5 @@
 """
-Demo platform for the geo location component.
+Demo platform for the geolocation component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
@@ -10,7 +10,7 @@ from math import cos, pi, radians, sin
 import random
 from typing import Optional
 
-from homeassistant.components.geo_location import GeoLocationEvent
+from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,15 +30,15 @@ SOURCE = 'demo'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Demo geo locations."""
+    """Set up the Demo geolocations."""
     DemoManager(hass, add_entities)
 
 
 class DemoManager:
-    """Device manager for demo geo location events."""
+    """Device manager for demo geolocation events."""
 
     def __init__(self, hass, add_entities):
-        """Initialise the demo geo location event manager."""
+        """Initialise the demo geolocation event manager."""
         self._hass = hass
         self._add_entities = add_entities
         self._managed_devices = []
@@ -62,7 +62,7 @@ class DemoManager:
             cos(radians(home_latitude))
 
         event_name = random.choice(EVENT_NAMES)
-        return DemoGeoLocationEvent(event_name, radius_in_km, latitude,
+        return DemoGeolocationEvent(event_name, radius_in_km, latitude,
                                     longitude, DEFAULT_UNIT_OF_MEASUREMENT)
 
     def _init_regular_updates(self):
@@ -90,8 +90,8 @@ class DemoManager:
         self._add_entities(new_devices)
 
 
-class DemoGeoLocationEvent(GeoLocationEvent):
-    """This represents a demo geo location event."""
+class DemoGeolocationEvent(GeolocationEvent):
+    """This represents a demo geolocation event."""
 
     def __init__(self, name, distance, latitude, longitude,
                  unit_of_measurement):
@@ -114,7 +114,7 @@ class DemoGeoLocationEvent(GeoLocationEvent):
 
     @property
     def should_poll(self):
-        """No polling needed for a demo geo location event."""
+        """No polling needed for a demo geolocation event."""
         return False
 
     @property
