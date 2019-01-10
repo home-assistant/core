@@ -12,14 +12,14 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PORT,
-    CONF_SSL, CONF_VERIFY_SSL)
+    CONF_SSL, CONF_VERIFY_SSL, CONF_PATH)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytautulli==0.4.1']
+REQUIREMENTS = ['pytautulli==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ CONF_MONITORED_USERS = 'monitored_users'
 
 DEFAULT_NAME = 'Tautulli'
 DEFAULT_PORT = '8181'
+DEFAULT_PATH = ''
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
@@ -40,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
@@ -53,6 +55,7 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     host = config[CONF_HOST]
     port = config.get(CONF_PORT)
+    path = config.get(CONF_PATH)
     api_key = config[CONF_API_KEY]
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     user = config.get(CONF_MONITORED_USERS)
@@ -61,7 +64,7 @@ async def async_setup_platform(
 
     session = async_get_clientsession(hass, verify_ssl)
     tautulli = TautulliData(Tautulli(
-        host, port, api_key, hass.loop, session, use_ssl))
+        host, port, api_key, hass.loop, session, use_ssl, path))
 
     if not await tautulli.test_connection():
         raise PlatformNotReady

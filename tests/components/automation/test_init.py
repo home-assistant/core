@@ -864,3 +864,24 @@ def test_automation_not_trigger_on_bootstrap(hass):
 
     assert len(calls) == 1
     assert ['hello.world'] == calls[0].data.get(ATTR_ENTITY_ID)
+
+
+async def test_automation_with_error_in_script(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+
+    hass.bus.async_fire('test_event')
+    await hass.async_block_till_done()
+    assert 'Service test.automation not found' in caplog.text

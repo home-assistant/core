@@ -32,6 +32,7 @@ CONF_DEVICE_TYPE = 'type'
 CONF_PANEL_DISPLAY = 'panel_display'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
+CONF_ZONE_LOOP = 'loop'
 CONF_ZONE_RFID = 'rfid'
 CONF_ZONES = 'zones'
 CONF_RELAY_ADDR = 'relayaddr'
@@ -75,6 +76,8 @@ ZONE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ZONE_TYPE,
                  default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
     vol.Optional(CONF_ZONE_RFID): cv.string,
+    vol.Optional(CONF_ZONE_LOOP):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
     vol.Inclusive(CONF_RELAY_ADDR, 'relaylocation',
                   'Relay address and channel must exist together'): cv.byte,
     vol.Inclusive(CONF_RELAY_CHAN, 'relaylocation',

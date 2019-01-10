@@ -21,7 +21,7 @@ from homeassistant.config import (
 from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.4',)
+REQUIREMENTS = ('colorlog==4.0.2',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 

@@ -24,7 +24,8 @@ SENSORS = [
                    "mdi:speedometer"),
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
-    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery")
+    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery",
+                   ["charging"])
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,9 +118,11 @@ class EVSensor(Entity):
         self._conn = connection
         self._name = config.name
         self._attr = config.attr
+        self._extra_attrs = config.extra_attrs
         self._unit_of_measurement = config.unit_of_measurement
         self._icon = config.icon
         self._state = None
+        self._state_attributes = {}
         self._car_vid = car_vid
 
         self.entity_id = ENTITY_ID_FORMAT.format(
@@ -141,7 +144,8 @@ class EVSensor(Entity):
     def icon(self):
         """Return the icon."""
         if self._attr == BATTERY_SENSOR:
-            return icon_for_battery_level(self.state)
+            charging = self.state_attributes.get("charging", False)
+            return icon_for_battery_level(self.state, charging)
         return self._icon
 
     @property
@@ -154,12 +158,19 @@ class EVSensor(Entity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
+            for attr in self._extra_attrs:
+                self._state_attributes[attr] = getattr(self._car, attr)
             self.async_schedule_update_ha_state()
 
     @property
     def state(self):
         """Return the state."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return all the state attributes."""
+        return self._state_attributes
 
     @property
     def unit_of_measurement(self):

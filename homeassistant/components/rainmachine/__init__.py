@@ -24,7 +24,7 @@ from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.0.7']
+REQUIREMENTS = ['regenmaschine==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,8 +164,7 @@ async def async_setup_entry(hass, config_entry):
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(SENSORS)),
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
-        )
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN))
         await rainmachine.async_update()
     except RainMachineError as err:
         _LOGGER.error('An error occurred: %s', err)

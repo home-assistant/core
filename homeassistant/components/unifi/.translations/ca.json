@@ -18,7 +18,7 @@
                     "username": "Nom d'usuari",
                     "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
                 },
-                "title": "Configura el controlador UniFi"
+                "title": "Configuraci\u00f3 del controlador UniFi"
             }
         },
         "title": "Controlador UniFi"
