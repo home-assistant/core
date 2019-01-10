@@ -1,5 +1,5 @@
 """
-Support for HomematicIP Cloud cover.
+Support for HomematicIP Cloud cover devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homematicip_cloud/
