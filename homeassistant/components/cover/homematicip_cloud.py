@@ -38,11 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
-    """representation of a HomematicIP Cloud cover device."""
-
-    def __init__(self, home, device):
-        """Initialize the cover device."""
-        super().__init__(home, device)
+    """Representation of a HomematicIP Cloud cover device."""
 
     @property
     def current_cover_position(self):
@@ -51,10 +47,9 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            level = position / 100.0
-            await self._device.set_shutter_level(level)
+        position = kwargs[ATTR_POSITION]
+        level = position / 100.0
+        await self._device.set_shutter_level(level)
 
     @property
     def is_closed(self):
