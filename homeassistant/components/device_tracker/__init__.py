@@ -201,8 +201,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     hass.data[DOMAIN] = async_setup_platform
 
+    tracker_platforms = dict(config_per_platform(config, DOMAIN))
+
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
+                   in tracker_platforms.items()]
     if setup_tasks:
         await asyncio.wait(setup_tasks, loop=hass.loop)
 
@@ -210,7 +212,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     async def async_platform_discovered(platform, info):
         """Load a platform."""
-        await async_setup_platform(platform, {}, disc_info=info)
+        if platform not in tracker_platforms:
+            await async_setup_platform(platform, {}, disc_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 

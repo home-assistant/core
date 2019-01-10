@@ -190,6 +190,25 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
         hass, {}, mock_see, {'test_key': 'test_val'})
 
 
+@patch(
+    'homeassistant.components.device_tracker.DeviceTracker.see')
+@patch(
+    'homeassistant.components.device_tracker.demo.setup_scanner',
+    autospec=True)
+async def test_discover_platform_configured(mock_demo_setup_scanner, mock_see, hass):
+    """Test discovery of device_tracker demo platform."""
+    assert await async_setup_component(hass, device_tracker.DOMAIN,
+                                       {device_tracker.DOMAIN: {CONF_PLATFORM:
+                                           'demo'}})
+    assert device_tracker.DOMAIN in hass.config.components
+    await discovery.async_load_platform(
+        hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
+        {'demo': {}})
+    await hass.async_block_till_done()
+    assert mock_demo_setup_scanner.called
+    assert mock_demo_setup_scanner.call_count == 1
+
+
 async def test_update_stale(hass):
     """Test stalled update."""
     scanner = get_component(hass, 'device_tracker.test').SCANNER
