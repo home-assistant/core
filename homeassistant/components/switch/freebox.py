@@ -16,13 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
     perms_settings = discovery_info.get('perms_settings')
-    add_entities([
-        FbxWifiSwitch(fbx, perms_settings),
-    ])
+    async_add_entities([
+        FbxWifiSwitch(fbx, perms_settings)
+    ], True)
 
 
 class FbxWifiSwitch(ToggleEntity):
@@ -31,7 +31,7 @@ class FbxWifiSwitch(ToggleEntity):
     def __init__(self, fbx, perms_settings):
         """Initilize the Wifi switch."""
         self._name = 'Freebox WiFi'
-        self._state = STATE_OFF
+        self._state = None
         self.perms_settings = perms_settings
         self.fbx = fbx
 
