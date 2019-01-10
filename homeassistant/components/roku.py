@@ -80,7 +80,7 @@ async def async_setup(hass, config):
 
     async def roku_discovered(service, info):
         """Set up an Roku that was auto discovered."""
-        await _setup_roku(hass, {
+        await _setup_roku(hass, config, {
             CONF_HOST: info['host']
         })
 
@@ -97,7 +97,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _setup_roku(hass, roku_config):
+async def _setup_roku(hass, hass_config, roku_config):
     """Set up a Roku."""
     from roku import Roku
     host = roku_config.get(CONF_HOST)
@@ -113,7 +113,7 @@ async def _setup_roku(hass, roku_config):
     }
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'media_player', DOMAIN, roku_config))
+        hass, 'media_player', DOMAIN, roku_config, hass_config))
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'remote', DOMAIN, roku_config))
+        hass, 'remote', DOMAIN, roku_config, hass_config))
