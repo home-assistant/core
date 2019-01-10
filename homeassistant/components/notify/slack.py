@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
     BaseNotificationService)
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 
-REQUIREMENTS = ['slacker==0.11.0']
+REQUIREMENTS = ['slacker==0.12.0']
 
 _LOGGER = logging.getLogger(__name__)
 

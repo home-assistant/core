@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
+    STATE_ON, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
-
+from homeassistant.helpers.restore_state import RestoreEntity
 
 REQUIREMENTS = ['rflink==0.0.37']
 
@@ -178,7 +178,7 @@ async def async_setup(hass, config):
                 _LOGGER.debug('device_id not known, adding new device')
                 # Add bogus event_id first to avoid race if we get another
                 # event before the device is created
-                # Any additional events recevied before the device has been
+                # Any additional events received before the device has been
                 # created will thus be ignored.
                 hass.data[DATA_ENTITY_LOOKUP][event_type][
                     event_id].append(TMP_ENTITY.format(event_id))
@@ -348,9 +348,9 @@ class RflinkDevice(Entity):
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id]:
+                EVENT_KEY_COMMAND][self._device_id]:
             self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id].remove(tmp_entity)
+                EVENT_KEY_COMMAND][self._device_id].remove(tmp_entity)
 
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][
@@ -499,8 +499,16 @@ class RflinkCommand(RflinkDevice):
                 self._async_send_command(cmd, repetitions - 1))
 
 
-class SwitchableRflinkDevice(RflinkCommand):
+class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     """Rflink entity which can switch on/off (eg: light, switch)."""
+
+    async def async_added_to_hass(self):
+        """Restore RFLink device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_ON
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

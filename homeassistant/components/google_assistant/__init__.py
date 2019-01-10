@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
-            with async_timeout.timeout(5, loop=hass.loop):
+            with async_timeout.timeout(15, loop=hass.loop):
                 agent_user_id = call.data.get('agent_user_id') or \
                                 call.context.user_id
                 res = await websession.post(

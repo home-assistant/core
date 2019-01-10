@@ -35,7 +35,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     from homematicip.aio.device import (
         AsyncHeatingThermostat, AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
-        AsyncTemperatureHumiditySensorOutdoor)
+        AsyncTemperatureHumiditySensorOutdoor,
+        AsyncMotionDetectorPushButton)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
@@ -47,7 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                AsyncTemperatureHumiditySensorOutdoor)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
-        if isinstance(device, AsyncMotionDetectorIndoor):
+        if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorPushButton)):
             devices.append(HomematicipIlluminanceSensor(home, device))
 
     if devices:

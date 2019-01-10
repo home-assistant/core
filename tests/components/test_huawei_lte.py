@@ -1,4 +1,6 @@
 """Huawei LTE component tests."""
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant.components import huawei_lte
@@ -7,7 +9,7 @@ from homeassistant.components import huawei_lte
 @pytest.fixture(autouse=True)
 def routerdata():
     """Set up a router data for testing."""
-    rd = huawei_lte.RouterData(None)
+    rd = huawei_lte.RouterData(Mock())
     rd.device_information = {
         'SoftwareVersion': '1.0',
         'nested': {'foo': 'bar'},

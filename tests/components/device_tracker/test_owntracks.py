@@ -252,10 +252,10 @@ WAYPOINT_MESSAGE = {
 }
 
 WAYPOINT_ENTITY_NAMES = [
-    'zone.greg_phone__exp_wayp1',
-    'zone.greg_phone__exp_wayp2',
-    'zone.ram_phone__exp_wayp1',
-    'zone.ram_phone__exp_wayp2',
+    'zone.greg_phone_exp_wayp1',
+    'zone.greg_phone_exp_wayp2',
+    'zone.ram_phone_exp_wayp1',
+    'zone.ram_phone_exp_wayp2',
 ]
 
 LWT_MESSAGE = {
@@ -407,7 +407,7 @@ def assert_mobile_tracker_accuracy(hass, accuracy, beacon=IBEACON_DEVICE):
 async def test_location_invalid_devid(hass, context):
     """Test the update of a location."""
     await send_message(hass, 'owntracks/paulus/nexus-5x', LOCATION_MESSAGE)
-    state = hass.states.get('device_tracker.paulus_nexus5x')
+    state = hass.states.get('device_tracker.paulus_nexus_5x')
     assert state.state == 'outer'
 
 

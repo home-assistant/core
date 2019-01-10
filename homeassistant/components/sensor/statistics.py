@@ -80,8 +80,7 @@ class StatisticsSensor(Entity):
                  precision):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
-        self.is_binary = True if self._entity_id.split('.')[0] == \
-            'binary_sensor' else False
+        self.is_binary = self._entity_id.split('.')[0] == 'binary_sensor'
         if not self.is_binary:
             self._name = '{} {}'.format(name, ATTR_MEAN)
         else:
