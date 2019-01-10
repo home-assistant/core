@@ -1749,3 +1749,6 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.0
+
+# homeassistant.components.sensor.repetier
+pyrepetier==1.4.1
