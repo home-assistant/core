@@ -14,6 +14,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+REQUIREMENTS = ['defusedxml==0.5.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'namecheapdns'
@@ -55,7 +57,7 @@ async def async_setup(hass, config):
 
 async def _update_namecheapdns(session, host, domain, password):
     """Update namecheap DNS entry."""
-    import xml.etree.ElementTree as ET
+    import defusedxml.ElementTree as ET
 
     params = {
         'host': host,

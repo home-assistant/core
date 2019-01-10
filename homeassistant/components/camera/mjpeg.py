@@ -46,17 +46,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a MJPEG IP Camera."""
-    # Filter header errors from urllib3 due to a urllib3 bug
+    filter_urllib3_logging()
+
+    if discovery_info:
+        config = PLATFORM_SCHEMA(discovery_info)
+    async_add_entities([MjpegCamera(config)])
+
+
+def filter_urllib3_logging():
+    """Filter header errors from urllib3 due to a urllib3 bug."""
     urllib3_logger = logging.getLogger("urllib3.connectionpool")
     if not any(isinstance(x, NoHeaderErrorFilter)
                for x in urllib3_logger.filters):
         urllib3_logger.addFilter(
             NoHeaderErrorFilter()
         )
-
-    if discovery_info:
-        config = PLATFORM_SCHEMA(discovery_info)
-    async_add_entities([MjpegCamera(config)])
 
 
 def extract_image_from_mjpeg(stream):
