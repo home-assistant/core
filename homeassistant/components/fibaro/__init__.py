@@ -270,7 +270,6 @@ def setup(hass, base_config):
         _LOGGER.info("Shutting down Fibaro connection")
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.disable_state_handler()
-        hass.data[FIBARO_CONTROLLERS] = {}
 
     hass.data[FIBARO_DEVICES] = {}
     for component in FIBARO_COMPONENTS:
