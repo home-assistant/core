@@ -73,16 +73,22 @@ SCHEMA_SENSORS = vol.Schema({
 
 PLANT_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
-    vol.Optional(CONF_MIN_BATTERY_LEVEL, default=DEFAULT_MIN_BATTERY_LEVEL): cv.positive_int,
+    vol.Optional(CONF_MIN_BATTERY_LEVEL,
+                 default=DEFAULT_MIN_BATTERY_LEVEL): cv.positive_int,
     vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_MIN_MOISTURE, default=DEFAULT_MIN_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MAX_MOISTURE, default=DEFAULT_MAX_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MIN_CONDUCTIVITY, default=DEFAULT_MIN_CONDUCTIVITY): cv.positive_int,
-    vol.Optional(CONF_MAX_CONDUCTIVITY, default=DEFAULT_MAX_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MIN_MOISTURE,
+                 default=DEFAULT_MIN_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MAX_MOISTURE,
+                 default=DEFAULT_MAX_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MIN_CONDUCTIVITY,
+                 default=DEFAULT_MIN_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MAX_CONDUCTIVITY,
+                 default=DEFAULT_MAX_CONDUCTIVITY): cv.positive_int,
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
-    vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
+    vol.Optional(CONF_CHECK_DAYS,
+                 default=DEFAULT_CHECK_DAYS): cv.positive_int,
 })
 
 DOMAIN = 'plant'
