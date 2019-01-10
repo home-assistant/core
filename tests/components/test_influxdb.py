@@ -360,6 +360,7 @@ class TestInfluxDB(unittest.TestCase):
                 'password': 'pass',
                 'include': {
                     'domains': ['fake'],
+                    'entities': ['some.other'],
                 }
             }
         }
