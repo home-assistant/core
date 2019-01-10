@@ -140,6 +140,7 @@ class DenonDevice(MediaPlayerDevice):
         except OSError as exc:
             _LOGGER.debug("%s: Opening telnet for update failed: %s",
                           self.entity_id, exc)
+            self._pwstate = 'PWSTANDBY'
             return False
 
         if self._should_setup_sources:
