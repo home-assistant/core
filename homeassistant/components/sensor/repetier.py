@@ -164,7 +164,7 @@ class RepetierSensor(Entity):
                         self._data.data[self._repetier_id]['online'],
                 }
             else:
-                if SHOW_PCT:
+                if self._show_pct:
                     self._state = STATE_IDLE
                 else:
                     self._state = STATE_IDLE
@@ -196,4 +196,3 @@ class RepetierSensor(Entity):
                     self._data.data[self._repetier_id]['online'],
             }
             self._units = None
-
