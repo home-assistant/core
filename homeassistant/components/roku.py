@@ -74,8 +74,7 @@ async def async_setup(hass, config):
     async def async_service_handler(service):
         """Handle service calls."""
         if service.service == SERVICE_SCAN:
-            hass.async_add_job(scan_for_rokus, hass)
-            return
+            await scan_for_rokus(hass)
 
     async def roku_discovered(service, info):
         """Set up an Roku that was auto discovered."""
