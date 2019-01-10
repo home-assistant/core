@@ -213,6 +213,10 @@ homeassistant/components/melissa.py @kennedyshead
 homeassistant/components/*/melissa.py @kennedyshead
 homeassistant/components/*/mystrom.py @fabaff
 
+# N
+homeassistant/components/ness_alarm.py @nickw444
+homeassistant/components/*/ness_alarm.py @nickw444
+
 # O
 homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya

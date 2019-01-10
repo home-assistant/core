@@ -20,8 +20,8 @@ REQUIREMENTS = ['pywemo==0.4.34']
 
 DOMAIN = 'wemo'
 
-# Mapping from Wemo model_name to component.
-WEMO_MODEL_DISPATCH = {
+# Mapping from Wemo device type to Home Assistant component type.
+WEMO_DEVICE_TYPE_DISPATCH = {
     'Bridge':  'light',
     'CoffeeMaker': 'switch',
     'Dimmer': 'light',
@@ -30,8 +30,7 @@ WEMO_MODEL_DISPATCH = {
     'LightSwitch': 'switch',
     'Maker':   'switch',
     'Motion': 'binary_sensor',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch'
+    'Switch':  'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -110,7 +109,7 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for incoming WeMo discovery events."""
         # name, model, location, mac
-        model_name = discovery_info.get('model_name')
+        device_type = discovery_info.get('device_type')
         serial = discovery_info.get('serial')
 
         # Only register a device once
@@ -122,7 +121,7 @@ def setup(hass, config):
         _LOGGER.debug('Discovered unique WeMo device: %s', serial)
         KNOWN_DEVICES.append(serial)
 
-        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
+        component = WEMO_DEVICE_TYPE_DISPATCH.get(device_type, 'switch')
 
         discovery.load_platform(hass, component, DOMAIN,
                                 discovery_info, config)
@@ -166,7 +165,7 @@ def setup(hass, config):
                           device.host, device.port)
 
             discovery_info = {
-                'model_name': device.model_name,
+                'device_type': device.__class__.__name__,
                 'serial': device.serialnumber,
                 'mac_address': device.mac,
                 'ssdp_description': url,

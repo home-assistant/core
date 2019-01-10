@@ -125,16 +125,23 @@ class AdsHub:
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
+        import pyads
         _LOGGER.debug("Shutting down ADS")
         for notification_item in self._notification_items.values():
-            self._client.del_device_notification(
-                notification_item.hnotify,
-                notification_item.huser
-            )
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
                 notification_item.hnotify, notification_item.huser)
-        self._client.close()
+            try:
+                self._client.del_device_notification(
+                    notification_item.hnotify,
+                    notification_item.huser
+                )
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+        try:
+            self._client.close()
+        except pyads.ADSError as err:
+            _LOGGER.error(err)
 
     def register_device(self, device):
         """Register a new device."""

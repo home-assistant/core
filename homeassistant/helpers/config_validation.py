@@ -200,10 +200,10 @@ def icon(value):
     """Validate icon."""
     value = str(value)
 
-    if value.startswith('mdi:'):
+    if ':' in value:
         return value
 
-    raise vol.Invalid('Icons should start with prefix "mdi:"')
+    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
 
 
 time_period_dict = vol.All(

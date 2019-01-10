@@ -3,7 +3,7 @@ import json
 from unittest.mock import ANY
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import fan
+from homeassistant.components import fan, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
@@ -111,7 +111,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     """Test removal of discovered fan."""
-    entry = MockConfigEntry(domain='mqtt')
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
@@ -132,8 +132,8 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
 
 
 async def test_discovery_update_fan(hass, mqtt_mock, caplog):
-    """Test removal of discovered fan."""
-    entry = MockConfigEntry(domain='mqtt')
+    """Test update of discovered fan."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
@@ -160,6 +160,38 @@ async def test_discovery_update_fan(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == 'Milk'
     state = hass.states.get('fan.milk')
+    assert state is None
+
+
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+    assert state is None
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.milk')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('fan.beer')
     assert state is None
 
 

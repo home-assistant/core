@@ -59,6 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     planner = vasttrafik.JournyPlanner(
         config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
+
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
@@ -83,6 +84,8 @@ class VasttrafikDepartureSensor(Entity):
         self._lines = lines if lines else None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
+        self._state = None
+        self._attributes = None
 
     @property
     def name(self):
@@ -97,42 +100,12 @@ class VasttrafikDepartureSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if not self._departureboard:
-            return
-
-        for departure in self._departureboard:
-            line = departure.get('sname')
-            if not self._lines or line in self._lines:
-                params = {
-                    ATTR_ACCESSIBILITY: departure.get('accessibility'),
-                    ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                    ATTR_DIRECTION: departure.get('direction'),
-                    ATTR_LINE: departure.get('sname'),
-                    ATTR_TRACK: departure.get('track'),
-                    }
-                return {k: v for k, v in params.items() if v}
+        return self._attributes
 
     @property
     def state(self):
         """Return the next departure time."""
-        if not self._departureboard:
-            _LOGGER.warning(
-                "No departures from %s heading %s",
-                self._departure['name'],
-                self._heading['name'] if self._heading else 'ANY')
-            return
-        for departure in self._departureboard:
-            line = departure.get('sname')
-            if not self._lines or line in self._lines:
-                if 'rtTime' in self._departureboard[0]:
-                    return self._departureboard[0]['rtTime']
-                return self._departureboard[0]['time']
-        # No departures of given lines found
-        _LOGGER.debug(
-            "No departures from %s heading %s on line(s) %s",
-            self._departure['name'],
-            self._heading['name'] if self._heading else 'ANY',
-            ', '.join((str(line) for line in self._lines)))
+        return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -143,5 +116,33 @@ class VasttrafikDepartureSensor(Entity):
                 direction=self._heading['id'] if self._heading else None,
                 date=datetime.now()+self._delay)
         except self._vasttrafik.Error:
-            _LOGGER.warning("Unable to read departure board, updating token")
+            _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()
+
+        if not self._departureboard:
+            _LOGGER.debug(
+                "No departures from %s heading %s",
+                self._departure['name'],
+                self._heading['name'] if self._heading else 'ANY')
+            self._state = None
+            self._attributes = {}
+        else:
+            for departure in self._departureboard:
+                line = departure.get('sname')
+                if not self._lines or line in self._lines:
+                    if 'rtTime' in self._departureboard[0]:
+                        self._state = self._departureboard[0]['rtTime']
+                    else:
+                        self._state = self._departureboard[0]['time']
+
+                    params = {
+                        ATTR_ACCESSIBILITY: departure.get('accessibility'),
+                        ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                        ATTR_DIRECTION: departure.get('direction'),
+                        ATTR_LINE: departure.get('sname'),
+                        ATTR_TRACK: departure.get('track'),
+                    }
+
+                    self._attributes = {
+                        k: v for k, v in params.items() if v}
+                    break
