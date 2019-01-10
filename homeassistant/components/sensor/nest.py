@@ -6,11 +6,13 @@ https://home-assistant.io/components/sensor.nest/
 """
 import logging
 
+from homeassistant.components.climate import (
+    STATE_COOL, STATE_HEAT)
 from homeassistant.components.nest import (
     DATA_NEST, DATA_NEST_CONFIG, CONF_SENSORS, NestSensorDevice)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, STATE_OFF)
 
 DEPENDENCIES = ['nest']
 
@@ -38,6 +40,10 @@ SENSOR_UNITS = {'humidity': '%'}
 SENSOR_DEVICE_CLASSES = {'humidity': DEVICE_CLASS_HUMIDITY}
 
 VARIABLE_NAME_MAPPING = {'eta': 'eta_begin', 'operation_mode': 'mode'}
+
+VALUE_MAPPING = {
+    'hvac_state': {
+        'heating': STATE_HEAT, 'cooling': STATE_COOL, 'off': STATE_OFF}}
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
@@ -142,6 +148,9 @@ class NestBasicSensor(NestSensorDevice):
         if self.variable in VARIABLE_NAME_MAPPING:
             self._state = getattr(self.device,
                                   VARIABLE_NAME_MAPPING[self.variable])
+        elif self.variable in VALUE_MAPPING:
+            state = getattr(self.device, self.variable)
+            self._state = VALUE_MAPPING[self.variable].get(state, state)
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
