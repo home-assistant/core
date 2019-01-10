@@ -119,7 +119,10 @@ class TautulliSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.sessions['stream_count']
+        try:
+            return self.sessions['stream_count']
+        except KeyError:
+            return -1
 
     @property
     def icon(self):
