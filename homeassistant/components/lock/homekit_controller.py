@@ -17,10 +17,12 @@ DEPENDENCIES = ['homekit_controller']
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_JAMMED = 'jammed'
+
 CURRENT_STATE_MAP = {
     0: STATE_UNLOCKED,
     1: STATE_LOCKED,
-    2: 'jammed',
+    2: STATE_JAMMED,
     3: None,
 }
 
