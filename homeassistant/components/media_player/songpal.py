@@ -4,7 +4,9 @@ Support for Songpal-enabled (Sony) media devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.songpal/
 """
+import asyncio
 import logging
+from collections import OrderedDict
 
 import voluptuous as vol
 
@@ -12,11 +14,12 @@ from homeassistant.components.media_player import (
     DOMAIN, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-songpal==0.0.8']
+REQUIREMENTS = ['python-songpal==0.0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +65,11 @@ async def async_setup_platform(
     else:
         name = config.get(CONF_NAME)
         endpoint = config.get(CONF_ENDPOINT)
-        device = SongpalDevice(name, endpoint)
+        device = SongpalDevice(name, endpoint, poll=False)
+
+    if endpoint in hass.data[PLATFORM]:
+        _LOGGER.debug("The endpoint exists already, skipping setup.")
+        return
 
     try:
         await device.initialize()
@@ -96,12 +103,13 @@ async def async_setup_platform(
 class SongpalDevice(MediaPlayerDevice):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, endpoint):
+    def __init__(self, name, endpoint, poll=False):
         """Init."""
-        import songpal
+        from songpal import Device
         self._name = name
-        self.endpoint = endpoint
-        self.dev = songpal.Device(self.endpoint)
+        self._endpoint = endpoint
+        self._poll = poll
+        self.dev = Device(self._endpoint)
         self._sysinfo = None
 
         self._state = False
@@ -114,12 +122,78 @@ class SongpalDevice(MediaPlayerDevice):
         self._volume = 0
         self._is_muted = False
 
-        self._sources = []
+        self._active_source = None
+        self._sources = {}
+
+    @property
+    def should_poll(self):
+        """Return True if the device should be polled."""
+        return self._poll
 
     async def initialize(self):
         """Initialize the device."""
         await self.dev.get_supported_methods()
         self._sysinfo = await self.dev.get_system_info()
+
+    async def async_activate_websocket(self):
+        """Activate websocket for listening if wanted."""
+        _LOGGER.info("Activating websocket connection..")
+        from songpal import (VolumeChange, ContentChange,
+                             PowerChange, ConnectChange)
+
+        async def _volume_changed(volume: VolumeChange):
+            _LOGGER.debug("Volume changed: %s", volume)
+            self._volume = volume.volume
+            self._is_muted = volume.mute
+            await self.async_update_ha_state()
+
+        async def _source_changed(content: ContentChange):
+            _LOGGER.debug("Source changed: %s", content)
+            if content.is_input:
+                self._active_source = self._sources[content.source]
+                _LOGGER.debug("New active source: %s", self._active_source)
+                await self.async_update_ha_state()
+            else:
+                _LOGGER.warning("Got non-handled content change: %s",
+                                content)
+
+        async def _power_changed(power: PowerChange):
+            _LOGGER.debug("Power changed: %s", power)
+            self._state = power.status
+            await self.async_update_ha_state()
+
+        async def _try_reconnect(connect: ConnectChange):
+            _LOGGER.error("Got disconnected with %s, trying to reconnect.",
+                          connect.exception)
+            self._available = False
+            self.dev.clear_notification_callbacks()
+            await self.async_update_ha_state()
+
+            # Try to reconnect forever, a successful reconnect will initialize
+            # the websocket connection again.
+            delay = 10
+            while not self._available:
+                _LOGGER.debug("Trying to reconnect in %s seconds", delay)
+                await asyncio.sleep(delay)
+                # We need to inform HA about the state in case we are coming
+                # back from a disconnected state.
+                await self.async_update_ha_state(force_refresh=True)
+                delay = min(2*delay, 300)
+
+        self.dev.on_notification(VolumeChange, _volume_changed)
+        self.dev.on_notification(ContentChange, _source_changed)
+        self.dev.on_notification(PowerChange, _power_changed)
+        self.dev.on_notification(ConnectChange, _try_reconnect)
+
+        async def listen_events():
+            await self.dev.listen_notifications()
+
+        async def handle_stop(event):
+            await self.dev.stop_listen_notifications()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+
+        self.hass.loop.create_task(listen_events())
 
     @property
     def name(self):
@@ -169,18 +243,28 @@ class SongpalDevice(MediaPlayerDevice):
 
             inputs = await self.dev.get_inputs()
             _LOGGER.debug("Got ins: %s", inputs)
-            self._sources = inputs
+
+            self._sources = OrderedDict()
+            for input_ in inputs:
+                self._sources[input_.uri] = input_
+                if input_.active:
+                    self._active_source = input_
+
+            _LOGGER.debug("Active source: %s", self._active_source)
 
             self._available = True
+
+            # activate notifications if wanted
+            if not self._poll:
+                await self.hass.async_create_task(
+                    self.async_activate_websocket())
         except SongpalException as ex:
-            # if we were available, print out the exception
-            if self._available:
-                _LOGGER.error("Got an exception: %s", ex)
+            _LOGGER.error("Unable to update: %s", ex)
             self._available = False
 
     async def async_select_source(self, source):
         """Select source."""
-        for out in self._sources:
+        for out in self._sources.values():
             if out.title == source:
                 await out.activate()
                 return
@@ -190,7 +274,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """Return list of available sources."""
-        return [x.title for x in self._sources]
+        return [src.title for src in self._sources.values()]
 
     @property
     def state(self):
@@ -202,11 +286,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently active source."""
-        for out in self._sources:
-            if out.active:
-                return out.title
-
-        return None
+        return self._active_source.title
 
     @property
     def volume_level(self):
