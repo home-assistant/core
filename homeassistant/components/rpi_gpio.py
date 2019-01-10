@@ -14,49 +14,28 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['RPi.GPIO==0.6.5',
-                'OrangePi.GPIO==0.6.3']
+                'OPi.GPIO==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BOARD_FAMILY = 'board_family'
-CONF_BOARD = 'board'
 
 DEFAULT_FAMILY = 'raspberry_pi'
 FAMILY_LIBRARIES = {'raspberry_pi': 'RPi.GPIO',
                     'orange_pi': 'OPi.GPIO'}
-
-ORANGEPI_BOARDS = {'zero': 'ZERO',
-                   'r1': 'R1',
-                   'zeroplus': 'ZEROPLUS',
-                   'zeroplus2h5': 'ZEROPLUS2H5',
-                   'zeroplus2h3': 'ZEROPLUS2H3',
-                   'pcpplus': 'PCPCPLUS',
-                   'one': 'ONE',
-                   'lite': 'LITE',
-                   'plus2e': 'PLUS2E',
-                   'pc2': 'PC2',
-                   'prime': 'PRIME',
-                   }
 
 DOMAIN = 'rpi_gpio'
 LIBRARY = 'gpio_library'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BOARD_FAMILY, default=DEFAULT_FAMILY): cv.string,
-        vol.Optional(CONF_BOARD): cv.string
+        vol.Optional(CONF_BOARD_FAMILY, default=DEFAULT_FAMILY): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 class UnknownBoardFamily(Exception):
     """board_family should be 'raspberry_pi' or 'orange_pi'."""
-
-    pass
-
-
-class UnknownOrangePiBoard(Exception):
-    """'board' config item not set."""
 
     pass
 
@@ -75,19 +54,6 @@ def setup(hass, base_config):
                                  % config.get(CONF_BOARD_FAMILY))
     hass.data[DOMAIN][LIBRARY] = importlib.import_module(lib_name)
 
-    # OrangePi GPIOS require knowledge of the specific board as well
-    if family_name == 'orange_pi':
-        board_name = config.get(CONF_BOARD)
-        board = ORANGEPI_BOARDS.get(board_name)
-        _LOGGER.info('OrangePi %s board specified', board_name)
-
-        if not board_name:
-            raise UnknownOrangePiBoard('You must specify a board type '
-                                       'with the "board" configuration '
-                                       'option.')
-        hass.data[DOMAIN][LIBRARY].setboard(
-            getattr(hass.data[DOMAIN][LIBRARY], board))
-
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
         hass.data[DOMAIN][LIBRARY].cleanup()
@@ -99,7 +65,8 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
     if family_name == 'orange_pi':
-        hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].BOARD)
+        import orangepi.pc
+        hass.data[DOMAIN][LIBRARY].setmode(orangepi.pc.BOARD)
     else:
         hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].BCM)
 
