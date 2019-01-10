@@ -66,16 +66,16 @@ class TestLocationUtil(TestCase):
 
         assert info is not None
         assert info.ip == '1.2.3.4'
-        assert info.country == 'US'
-        assert info.country_name == 'United States'
-        assert info.region_code == 'CA'
-        assert info.region == 'California'
-        assert info.city == 'San Diego'
-        assert info.postal == '92122'
-        assert info.time_zone == 'America/Los_Angeles'
-        assert info.latitude == 32.8594
-        assert info.longitude == -117.2073
-        assert not info.use_metric
+        assert info.country_code == 'CH'
+        assert info.country_name == 'Switzerland'
+        assert info.region_code == 'BE'
+        assert info.region_name == 'Bern'
+        assert info.city == 'Bern'
+        assert info.zip_code == '3000'
+        assert info.time_zone == 'Europe/Zurich'
+        assert info.latitude == 46.9480278
+        assert info.longitude == 7.4490812
+        assert info.use_metric
 
     @requests_mock.Mocker()
     @patch('homeassistant.util.location._get_ipapi', return_value=None)
@@ -103,7 +103,7 @@ class TestLocationUtil(TestCase):
     @patch('homeassistant.util.location._get_ipapi', return_value=None)
     @patch('homeassistant.util.location._get_ip_api', return_value=None)
     def test_detect_location_info_both_queries_fail(
-            self, mock_ipapi, mock_ipapi, mock_elevation):
+            self, mock_ipapi, mock_ip_api, mock_elevation):
         """Ensure we return None if both queries fail."""
         info = location_util.detect_location_info(_test_real=True)
         assert info is None

@@ -168,7 +168,7 @@ def _get_ipapi() -> Optional[Dict[str, Any]]:
 
     return {
         'ip': raw_info.get('ip'),
-        'country_code': raw_info.get('country_code'),
+        'country_code': raw_info.get('country'),
         'country_name': raw_info.get('country_name'),
         'region_code': raw_info.get('region_code'),
         'region_name': raw_info.get('region'),
