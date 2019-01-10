@@ -83,11 +83,11 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return true if device is locked."""
         return self._state != STATE_UNKNOWN
 
-    def lock(self):
+    def lock(self, **kwargs):
         """Lock the device."""
         self._set_lock_state(STATE_LOCKED)
 
-    def unlock(self):
+    def unlock(self, **kwargs):
         """Unlock the device."""
         self._set_lock_state(STATE_UNLOCKED)
 
