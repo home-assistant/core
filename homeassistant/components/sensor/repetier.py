@@ -55,8 +55,8 @@ def parse_repetier_api_response(response):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    import pyrepetier
     """Set up the Repetier sensors."""
+    import pyrepetier
     try:
         data = pyrepetier.RepetierData(
             parse_repetier_api_response,
