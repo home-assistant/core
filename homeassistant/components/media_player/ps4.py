@@ -174,12 +174,7 @@ class PS4Device(MediaPlayerDevice):
                     self._state = STATE_PLAYING
                     if self._media_content_id != titleid:
                         self._media_content_id = titleid
-                        app_name, art = self._ps4.get_ps_store_data(
-                            name, titleid)
-                        self._media_title = app_name or name
-                        self._source = self._media_title
-                        self._media_image = art
-                        self.update_list()
+                        self.get_title_data(titleid, name)
                 else:
                     self.idle()
             else:
@@ -187,6 +182,7 @@ class PS4Device(MediaPlayerDevice):
         elif self._retry > 5:
             self.state_unknown()
         else:
+            self._retry += 1
             self.update()
 
     def idle(self):
@@ -198,12 +194,14 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state off."""
         self.no_title()
         self._state = STATE_OFF
+        self.update()
 
     def state_unknown(self):
         """Set states for state unknown."""
-        self._retry += 1
         self.no_title()
         self._state = STATE_UNKNOWN
+        _LOGGER.debug("PS4 could not be reached")
+        self._retry = 0
         self.update()
 
     def no_title(self):
@@ -211,6 +209,22 @@ class PS4Device(MediaPlayerDevice):
         self._media_title = None
         self._media_content_id = None
         self._source = None
+
+    def get_title_data(self, titleid, name):
+        """Get PS Store Data."""
+        try:
+            app_name, art = self._ps4.get_ps_store_data(
+                name, titleid)
+        except TypeError:
+            app_name = None
+            art = None
+            _LOGGER.debug(
+                "Could not find data for PS ID: %s", titleid)
+        finally:
+            self._media_title = app_name or name
+            self._source = self._media_title
+            self._media_image = art
+            self.update_list()
 
     def update_list(self):
         """Update Game List, Correct data if different."""
@@ -225,9 +239,9 @@ class PS4Device(MediaPlayerDevice):
 
     def load_games(self):
         """Load games for sources."""
-        file = self._games_filename
+        g_file = self._games_filename
         try:
-            games = load_json(file)
+            games = load_json(g_file)
             return games
         except FileNotFoundError:
             games = {}
@@ -236,15 +250,15 @@ class PS4Device(MediaPlayerDevice):
 
     def save_games(self, games):
         """Save games to file."""
-        file = self._games_filename
+        g_file = self._games_filename
         try:
-            save_json(file, games)
+            save_json(g_file, games)
         except OSError as error:
             _LOGGER.error("Could not save game list, %s", error)
 
     def add_games(self, titleid, app_name):
         """Add games to list."""
-        games = self.load_games()
+        games = self._games
         if titleid is not None and titleid not in games:
             game = {titleid: app_name}
             games.update(game)
