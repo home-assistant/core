@@ -440,7 +440,8 @@ class TestInfluxDB(unittest.TestCase):
 
         for entity_id in ('one', 'two'):
             state = mock.MagicMock(
-                state=1, domain='other', entity_id='other.{}'.format(entity_id),
+                state=1, domain='other',
+                entity_id='other.{}'.format(entity_id),
                 object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -463,7 +464,6 @@ class TestInfluxDB(unittest.TestCase):
             else:
                 assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
-
 
     def test_event_listener_invalid_type(self, mock_client):
         """Test the event listener when an attribute has an invalid type."""
