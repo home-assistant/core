@@ -58,7 +58,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     """Representation of a HomeKit Garage Door."""
-
     def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
         super().__init__(accessory, discovery_info)
@@ -124,11 +123,11 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Send open command."""
         self.set_door_state(STATE_OPEN)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Send close command."""
         self.set_door_state(STATE_CLOSED)
 
@@ -152,7 +151,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
 class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     """Representation of a HomeKit Window or Window Covering."""
-
     def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
         super().__init__(accessory, discovery_info)
@@ -252,11 +250,11 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Send open command."""
         self.set_cover_position(position=100)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Send close command."""
         self.set_cover_position(position=0)
 
@@ -293,7 +291,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-
         state_attributes = {}
         if self._obstruction_detected is not None:
             state_attributes['obstruction-detected'] = \
