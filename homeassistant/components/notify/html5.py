@@ -335,6 +335,11 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
+    @property
+    def can_dismiss(self):
+        """Return true if dismiss is supported."""
+        return True
+
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
         payload = {

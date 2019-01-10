@@ -151,9 +151,11 @@ async def async_setup(hass, config):
             SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
-        hass.services.async_register(
-            DOMAIN, '{}_{}'.format(platform_name_slug, SERVICE_DISMISS),
-            async_dismiss_message, schema=DISMISS_SERVICE_SCHEMA)
+        if hasattr(notify_service, 'can_dismiss') and \
+           notify_service.can_dismiss:
+            hass.services.async_register(
+                DOMAIN, '{}_{}'.format(platform_name_slug, SERVICE_DISMISS),
+                async_dismiss_message, schema=DISMISS_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, platform_name_slug, async_notify_message,
             schema=NOTIFY_SERVICE_SCHEMA)
