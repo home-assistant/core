@@ -1,5 +1,5 @@
 """
-Support for Playstation 4.
+Support for PlayStation 4.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.ps4/
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
-DEFAULT_NAME = "Playstation 4"
+DEFAULT_NAME = "PlayStation 4"
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
