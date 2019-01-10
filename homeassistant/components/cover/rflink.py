@@ -15,8 +15,8 @@ from homeassistant.components.rflink import (
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
-
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.const import CONF_NAME, STATE_OPEN
 
 DEPENDENCIES = ['rflink']
 
@@ -60,8 +60,16 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(devices_from_config(config))
 
 
-class RflinkCover(RflinkCommand, CoverDevice):
+class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    async def async_added_to_hass(self):
+        """Restore RFLink cover state (OPEN/CLOSE)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_OPEN
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

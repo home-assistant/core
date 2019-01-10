@@ -46,7 +46,7 @@ DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({

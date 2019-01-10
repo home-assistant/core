@@ -22,8 +22,10 @@
             },
             "options": {
                 "data": {
-                    "allow_clip_sensor": "Virtu\u00e1lis szenzorok import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se"
-                }
+                    "allow_clip_sensor": "Virtu\u00e1lis szenzorok import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se",
+                    "allow_deconz_groups": "deCONZ csoportok import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se"
+                },
+                "title": "Extra be\u00e1ll\u00edt\u00e1si lehet\u0151s\u00e9gek a deCONZhoz"
             }
         },
         "title": "deCONZ Zigbee gateway"

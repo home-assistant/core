@@ -408,10 +408,10 @@ async def test_see_state(hass, yaml_devices):
                                                     timedelta(seconds=0))
     assert len(config) == 1
 
-    state = hass.states.get('device_tracker.examplecom')
+    state = hass.states.get('device_tracker.example_com')
     attrs = state.attributes
     assert state.state == 'Work'
-    assert state.object_id == 'examplecom'
+    assert state.object_id == 'example_com'
     assert state.name == 'example.com'
     assert attrs['friendly_name'] == 'example.com'
     assert attrs['battery'] == 100

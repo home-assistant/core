@@ -3,24 +3,24 @@
         "abort": {
             "all_configured": "Tots els enlla\u00e7os Philips Hue ja estan configurats",
             "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat",
-            "cannot_connect": "No es pot connectar amb l'enlla\u00e7",
+            "cannot_connect": "No s'ha pogut connectar amb l'enlla\u00e7",
             "discover_timeout": "No s'han pogut descobrir enlla\u00e7os Hue",
             "no_bridges": "No s'han trobat enlla\u00e7os Philips Hue",
             "unknown": "S'ha produ\u00eft un error desconegut"
         },
         "error": {
             "linking": "S'ha produ\u00eft un error desconegut al vincular.",
-            "register_failed": "No s'ha pogut registrar, torneu-ho a provar"
+            "register_failed": "No s'ha pogut registrar, torna-ho a provar"
         },
         "step": {
             "init": {
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "title": "Tria l'enlla\u00e7 Hue"
+                "title": "Tria de l'enlla\u00e7 Hue"
             },
             "link": {
-                "description": "Premeu el bot\u00f3 de l'ella\u00e7 per registrar Philips Hue amb Home Assistant. \n\n ![Ubicaci\u00f3 del bot\u00f3 al pont](/static/images/config_philips_hue.jpg)",
+                "description": "Prem el bot\u00f3 de l'enlla\u00e7 per registrar Philips Hue amb Home Assistant. \n\n ![Ubicaci\u00f3 del bot\u00f3 al pont](/static/images/config_philips_hue.jpg)",
                 "title": "Vincular concentrador"
             }
         },

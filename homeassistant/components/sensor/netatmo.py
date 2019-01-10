@@ -39,6 +39,7 @@ SENSOR_TYPES = {
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy', None],
     'battery_vp': ['Battery', '', 'mdi:battery', None],
     'battery_lvl': ['Battery_lvl', '', 'mdi:battery', None],
+    'battery_percent': ['battery_percent', '%', 'mdi:battery', None],
     'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'windangle': ['Angle', '', 'mdi:compass', None],
@@ -179,6 +180,8 @@ class NetAtmoSensor(Entity):
             self._state = data['CO2']
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
+        elif self.type == 'battery_percent':
+            self._state = data['battery_percent']
         elif self.type == 'battery_lvl':
             self._state = data['battery_vp']
         elif (self.type == 'battery_vp' and

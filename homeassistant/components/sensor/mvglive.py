@@ -147,10 +147,10 @@ class MVGLiveData:
         self._products = products
         self._timeoffset = timeoffset
         self._number = number
-        self._include_ubahn = True if 'U-Bahn' in self._products else False
-        self._include_tram = True if 'Tram' in self._products else False
-        self._include_bus = True if 'Bus' in self._products else False
-        self._include_sbahn = True if 'S-Bahn' in self._products else False
+        self._include_ubahn = 'U-Bahn' in self._products
+        self._include_tram = 'Tram' in self._products
+        self._include_bus = 'Bus' in self._products
+        self._include_sbahn = 'S-Bahn' in self._products
         self.mvg = MVGLive.MVGLive()
         self.departures = []
 

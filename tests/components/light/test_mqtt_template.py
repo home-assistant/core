@@ -26,7 +26,8 @@ If your light doesn't support white value feature, omit `white_value_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
-from unittest.mock import patch
+import json
+from unittest.mock import ANY, patch
 
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
@@ -37,7 +38,7 @@ import homeassistant.core as ha
 
 from tests.common import (
     async_fire_mqtt_message, assert_setup_component, mock_coro,
-    MockConfigEntry)
+    async_mock_mqtt_component, MockConfigEntry, mock_registry)
 
 
 async def test_setup_fails(hass, mqtt_mock):
@@ -484,6 +485,33 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert STATE_UNAVAILABLE == state.state
 
 
+async def test_unique_id(hass):
+    """Test unique id option only creates one light per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'schema': 'template',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'command_on_template': 'on,{{ transition }}',
+            'command_off_template': 'off,{{ transition|d }}',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'schema': 'template',
+            'status_topic': 'test-topic',
+            'command_topic': 'test_topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(light.DOMAIN)) == 1
+
+
 async def test_discovery(hass, mqtt_mock, caplog):
     """Test removal of discovered mqtt_json lights."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -562,3 +590,84 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     assert state.name == 'Milk'
     state = hass.states.get('light.milk')
     assert state is None
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT light device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'schema': 'template',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-topic',
+        'command_on_template': 'on,{{ transition }}',
+        'command_off_template': 'off,{{ transition|d }}',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'schema': 'template',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'command_on_template': 'on,{{ transition }}',
+            'command_off_template': 'off,{{ transition|d }}',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('light.beer', new_entity_id='light.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is None
+
+    state = hass.states.get('light.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
