@@ -4,9 +4,8 @@ Support for Ambient Weather Station Service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambient_station/
 """
-
-import asyncio
 from datetime import timedelta
+from time import sleep
 import logging
 
 import voluptuous as vol
@@ -18,6 +17,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['ambient_api==1.5.2']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_APP_KEY = 'app_key'
 
@@ -32,44 +33,42 @@ UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'winddir': ['Wind Dir', '°'],
-    'windspeedmph': ['Wind Speed', 'mph'],
-    'windgustmph': ['Wind Gust', 'mph'],
-    'maxdailygust': ['Max Gust', 'mph'],
-    'windgustdir': ['Gust Dir', '°'],
-    'windspdmph_avg2m': ['Wind Avg 2m', 'mph'],
-    'winddir_avg2m': ['Wind Dir Avg 2m', 'mph'],
-    'windspdmph_avg10m': ['Wind Avg 10m', 'mph'],
-    'winddir_avg10m': ['Wind Dir Avg 10m', '°'],
+    '24hourrainin': ['24 Hr Rain', 'in'],
+    'baromabsin': ['Abs Pressure', 'inHg'],
+    'baromrelin': ['Rel Pressure', 'inHg'],
+    'battout': ['Battery', ''],
+    'co2': ['co2', 'ppm'],
+    'dailyrainin': ['Daily Rain', 'in'],
+    'dewPoint': ['Dew Point', ['°F', '°C']],
+    'eventrainin': ['Event Rain', 'in'],
+    'feelsLike': ['Feels Like', ['°F', '°C']],
+    'hourlyrainin': ['Hourly Rain Rate', 'in/hr'],
     'humidity': ['Humidity', '%'],
     'humidityin': ['Humidity In', '%'],
+    'lastRain': ['Last Rain', ''],
+    'maxdailygust': ['Max Gust', 'mph'],
+    'monthlyrainin': ['Monthly Rain', 'in'],
+    'solarradiation': ['Solar Rad', 'W/m^2'],
     'tempf': ['Temp', ['°F', '°C']],
     'tempinf': ['Inside Temp', ['°F', '°C']],
-    'battout': ['Battery', ''],
-    'hourlyrainin': ['Hourly Rain Rate', 'in/hr'],
-    'dailyrainin': ['Daily Rain', 'in'],
-    '24hourrainin': ['24 Hr Rain', 'in'],
-    'weeklyrainin': ['Weekly Rain', 'in'],
-    'monthlyrainin': ['Monthly Rain', 'in'],
-    'yearlyrainin': ['Yearly Rain', 'in'],
-    'eventrainin': ['Event Rain', 'in'],
     'totalrainin': ['Lifetime Rain', 'in'],
-    'baromrelin': ['Rel Pressure', 'inHg'],
-    'baromabsin': ['Abs Pressure', 'inHg'],
     'uv': ['uv', 'Index'],
-    'solarradiation': ['Solar Rad', 'W/m^2'],
-    'co2': ['co2', 'ppm'],
-    'lastRain': ['Last Rain', ''],
-    'dewPoint': ['Dew Point', ['°F', '°C']],
-    'feelsLike': ['Feels Like', ['°F', '°C']],
+    'weeklyrainin': ['Weekly Rain', 'in'],
+    'winddir': ['Wind Dir', '°'],
+    'winddir_avg10m': ['Wind Dir Avg 10m', '°'],
+    'winddir_avg2m': ['Wind Dir Avg 2m', 'mph'],
+    'windgustdir': ['Gust Dir', '°'],
+    'windgustmph': ['Wind Gust', 'mph'],
+    'windspdmph_avg10m': ['Wind Avg 10m', 'mph'],
+    'windspdmph_avg2m': ['Wind Avg 2m', 'mph'],
+    'windspeedmph': ['Wind Speed', 'mph'],
+    'yearlyrainin': ['Yearly Rain', 'in'],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_APP_KEY): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_UNITS): vol.In([UNITS_SI, UNITS_US]),
 })
@@ -77,14 +76,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialze each sensor platform for each monitored condition."""
-    api_key = config[CONF_API_KEY]
-    app_key = config[CONF_APP_KEY]
-    station_data = AmbientStationData(hass, api_key, app_key)
-    if not station_data.connect_success:
-        _LOGGER.error("Could not connect to weather station API")
-        return
-
-    sensor_list = []
+    from ambient_api.ambientapi import AmbientAPI
 
     if CONF_UNITS in config:
         sys_units = config[CONF_UNITS]
@@ -93,35 +85,46 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         sys_units = UNITS_US
 
-    for condition in config[CONF_MONITORED_CONDITIONS]:
-        # create a sensor object for each monitored condition
-        sensor_params = SENSOR_TYPES[condition]
-        name = sensor_params[SENSOR_NAME]
-        units = sensor_params[SENSOR_UNITS]
-        if isinstance(units, list):
-            units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
+    api = AmbientAPI(
+        AMBIENT_API_KEY=config[CONF_API_KEY],
+        AMBIENT_APPLICATION_KEY=config[CONF_APP_KEY],
+        log_level='DEBUG')
 
-        sensor_list.append(AmbientWeatherSensor(station_data, condition,
-                                                name, units))
+    data = AmbientStationData(api)
+    data.update()
 
-    add_entities(sensor_list)
+    sensor_list = []
+    for station in data.stations:
+        for condition in config[CONF_MONITORED_CONDITIONS]:
+            sensor_params = SENSOR_TYPES[condition]
+            name = sensor_params[SENSOR_NAME]
+            units = sensor_params[SENSOR_UNITS]
+            if isinstance(units, list):
+                units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
+
+            sensor_list.append(
+                AmbientWeatherSensor(
+                    data, station, condition, name, units))
+
+    add_entities(sensor_list, True)
 
 
 class AmbientWeatherSensor(Entity):
-    """Representation of a Sensor."""
+    """Define an Ambient sensor."""
 
-    def __init__(self, station_data, condition, name, units):
+    def __init__(self, data, station, condition, name, units):
         """Initialize the sensor."""
-        self._state = None
-        self.station_data = station_data
         self._condition = condition
+        self._data = data
         self._name = name
+        self._state = None
+        self._station = station
         self._units = units
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return '{0}_{1}'.format(self._station.info['name'], self._name)
 
     @property
     def state(self):
@@ -133,80 +136,46 @@ class AmbientWeatherSensor(Entity):
         """Return the unit of measurement."""
         return self._units
 
-    async def async_update(self):
-        """Fetch new state data for the sensor.
+    @property
+    def unique_id(self):
+        """Return a unique, unchanging string that represents this sensor."""
+        return '{0}_{1}'.format(self._station.mac_address, self._name)
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        _LOGGER.debug("Getting data for sensor: %s", self._name)
-        data = await self.station_data.get_data()
-        if data is None:
-            # update likely got throttled and returned None, so use the cached
-            # data from the station_data object
-            self._state = self.station_data.data[self._condition]
-        else:
-            if self._condition in data:
-                self._state = data[self._condition]
-            else:
-                _LOGGER.warning("%s sensor data not available from the "
-                                "station", self._condition)
+    def update(self):
+        """Fetch new state data for the sensor."""
+        self._data.update()
+        latest_data = self._data.data[self._station.mac_address]
 
-        _LOGGER.debug("Sensor: %s | Data: %s", self._name, self._state)
+        try:
+            self._state = latest_data[self._condition]
+        except KeyError:
+            _LOGGER.warning('No data for condition: %s', self._condition)
 
 
 class AmbientStationData:
-    """Class to interface with ambient-api library."""
+    """Define an object to retrieve data from the Ambient API."""
 
-    def __init__(self, hass, api_key, app_key):
-        """Initialize station data object."""
-        self.hass = hass
-        self._api_keys = {
-            'AMBIENT_ENDPOINT':
-            'https://api.ambientweather.net/v1',
-            'AMBIENT_API_KEY': api_key,
-            'AMBIENT_APPLICATION_KEY': app_key,
-            'log_level': 'DEBUG'
-        }
+    def __init__(self, api):
+        """Initialize the station data object."""
+        self._api = api
+        self.data = {}
+        self.stations = []
 
-        self.data = None
-        self._station = None
-        self._api = None
-        self._devices = None
-        self.connect_success = False
+    @Throttle(SCAN_INTERVAL)
+    def update(self):
+        """Get new data for all stations."""
+        # Ambient's API has really aggressive rate limiting (no more than 1
+        # request per second), so throughout this method, we make sure to sleep
+        # at least 1 second before firing further requests:
+        self.stations = self._api.get_devices()
+        sleep(1)
 
-        self.get_data = Throttle(SCAN_INTERVAL)(self.async_update)
-        self._connect_api()     # attempt to connect to API
+        for idx, station in enumerate(self.stations):
+            if idx > 0:
+                sleep(1)
 
-    async def async_update(self):
-        """Get new data."""
-        # refresh API connection since servers turn over nightly
-        _LOGGER.debug("Getting new data from server")
-        new_data = None
-        await self.hass.async_add_executor_job(self._connect_api)
-        await asyncio.sleep(2)   # need minimum 2 seconds between API calls
-        if self._station is not None:
-            data = await self.hass.async_add_executor_job(
-                self._station.get_data)
-            if data is not None:
-                new_data = data[0]
-                self.data = new_data
-            else:
-                _LOGGER.debug("data is None type")
-        else:
-            _LOGGER.debug("Station is None type")
+            data = station.get_data()
+            _LOGGER.debug(
+                'New data for station "%s": %s', station.info['name'], data)
 
-        return new_data
-
-    def _connect_api(self):
-        """Connect to the API and capture new data."""
-        from ambient_api.ambientapi import AmbientAPI
-
-        self._api = AmbientAPI(**self._api_keys)
-        self._devices = self._api.get_devices()
-
-        if self._devices:
-            self._station = self._devices[0]
-            if self._station is not None:
-                self.connect_success = True
-        else:
-            _LOGGER.debug("No station devices available")
+            self.data[station.mac_address] = data[0]
