@@ -2,12 +2,11 @@
 Sensor for retrieving Repetier-Server device status.
 
 Creates one sensor for each device attached to Repetier-Server
-Created by Morten Trab (morten@trab.dk) - 2018
+Created by Morten Trab (morten@trab.dk) - 2019
 """
 from datetime import timedelta
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -59,7 +58,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pyrepetier
     """Set up the Repetier sensors."""
     try:
-        data = pyrepetier.RepetierData(parse_repetier_api_response,url=config.get(CONF_URL), port=config.get(CONF_PORT), api_key=config.get(CONF_API_KEY))
+        data = pyrepetier.RepetierData(
+            parse_repetier_api_response,
+            url=config.get(CONF_URL),
+            port=config.get(CONF_PORT),
+            api_key=config.get(CONF_API_KEY))
         data.update()
         sensors = []
         for key in data.data.keys():
