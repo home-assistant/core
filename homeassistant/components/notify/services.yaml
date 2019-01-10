@@ -16,6 +16,16 @@ notify:
       description: Extended information for notification. Optional depending on the platform.
       example: platform specific
 
+dismiss:
+  description: Dismiss a notification.
+  fields:
+    target:
+      description: An array of targets to send the notification to. Optional depending on the platform.
+      example: platform specific
+    data:
+      description: Extended information of notification.
+      example: platform specific
+
 apns_register:
   description: Registers a device to receive push notifications.
   fields:

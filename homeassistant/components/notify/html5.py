@@ -56,6 +56,7 @@ ATTR_ACTION = 'action'
 ATTR_ACTIONS = 'actions'
 ATTR_TYPE = 'type'
 ATTR_URL = 'url'
+ATTR_DISMISS = 'dismiss'
 
 ATTR_JWT = 'jwt'
 
@@ -334,12 +335,18 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
+    def dismiss(self, **kwargs):
+        """Dismisses a notification."""
+        payload = {
+            ATTR_TAG: kwargs.get(ATTR_DATA, {}).get(ATTR_TAG),
+            ATTR_DISMISS: True,
+            ATTR_DATA: {}
+        }
+
+        self._push_message(payload, **kwargs)
+
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import jwt
-        from pywebpush import WebPusher
-
-        timestamp = int(time.time())
         tag = str(uuid.uuid4())
 
         payload = {
@@ -348,7 +355,6 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_DATA: {},
             'icon': '/static/icons/favicon-192x192.png',
             ATTR_TAG: tag,
-            'timestamp': (timestamp*1000),  # Javascript ms since epoch
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         }
 
@@ -371,6 +377,17 @@ class HTML5NotificationService(BaseNotificationService):
         if (payload[ATTR_DATA].get(ATTR_URL) is None and
                 payload.get(ATTR_ACTIONS) is None):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
+
+        self._push_message(payload, **kwargs)
+
+    def _push_message(self, payload, **kwargs):
+        """Send the message."""
+        import jwt
+        from pywebpush import WebPusher
+
+        timestamp = int(time.time())
+
+        payload['timestamp'] = (timestamp*1000)  # Javascript ms since epoch
 
         targets = kwargs.get(ATTR_TARGET)
 
