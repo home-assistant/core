@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.freebox/
 import logging
 
 from homeassistant.components.freebox import DATA_FREEBOX
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['freebox']
 
@@ -24,7 +24,7 @@ async def async_setup_platform(
     ], True)
 
 
-class FbxSwitch(ToggleEntity):
+class FbxSwitch(SwitchDevice):
     """Representation of a Freebox switch."""
 
     _name = 'generic'
