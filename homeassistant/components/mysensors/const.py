@@ -23,6 +23,7 @@ SCHEMA = 'schema'
 CHILD_CALLBACK = 'mysensors_child_callback_{}_{}_{}_{}'
 NODE_CALLBACK = 'mysensors_node_callback_{}_{}'
 TYPE = 'type'
+UPDATE_DELAY = 0.1
 
 # MySensors const schemas
 BINARY_SENSOR_SCHEMA = {PLATFORM: 'binary_sensor', TYPE: 'V_TRIPPED'}
