@@ -206,7 +206,7 @@ async def entity_service_call(hass, platforms, func, call):
     else:
         _LOGGER.warning(
             'Not passing an entity ID to a service to target all entities is '
-            'deprecated. Use instead: entity_id: "all"')
+            'deprecated. Use instead: entity_id: "%s"', ENTITY_MATCH_ALL)
         target_all_entities = True
 
     if not target_all_entities:
