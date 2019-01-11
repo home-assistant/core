@@ -4,7 +4,6 @@ Support for Roku platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/roku/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -42,37 +41,34 @@ CONFIG_SCHEMA = vol.Schema({
 ROKU_SCAN_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Roku component."""
     hass.data[DATA_ROKU] = {}
 
-    async def async_service_handler(service):
+    def service_handler(service):
         """Handle service calls."""
         if service.service == SERVICE_SCAN:
-            await scan_for_rokus(hass)
+            scan_for_rokus(hass)
 
-    async def roku_discovered(service, info):
+    def roku_discovered(service, info):
         """Set up an Roku that was auto discovered."""
-        await _setup_roku(hass, config, {
+        _setup_roku(hass, config, {
             CONF_HOST: info['host']
         })
 
-    discovery.async_listen(hass, SERVICE_ROKU, roku_discovered)
+    discovery.listen(hass, SERVICE_ROKU, roku_discovered)
 
-    tasks = [
-        _setup_roku(hass, config, conf) for conf in config.get(DOMAIN, [])
-    ]
-    if tasks:
-        await asyncio.wait(tasks)
+    for conf in config.get(DOMAIN, []):
+        _setup_roku(hass, config, conf) 
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_service_handler,
+    hass.services.register(
+        DOMAIN, SERVICE_SCAN, service_handler,
         schema=ROKU_SCAN_SCHEMA)
 
     return True
 
 
-async def scan_for_rokus(hass):
+def scan_for_rokus(hass):
     """Scan for devices and present a notification of the ones found."""
     from roku import Roku, RokuException
     rokus = Roku.discover()
@@ -97,7 +93,7 @@ async def scan_for_rokus(hass):
         notification_id=NOTIFICATION_SCAN_ID)
 
 
-async def _setup_roku(hass, hass_config, roku_config):
+def _setup_roku(hass, hass_config, roku_config):
     """Set up a Roku."""
     from roku import Roku
     host = roku_config[CONF_HOST]
@@ -112,8 +108,8 @@ async def _setup_roku(hass, hass_config, roku_config):
         ATTR_ROKU: r_info.sernum
     }
 
-    hass.async_create_task(discovery.async_load_platform(
-        hass, 'media_player', DOMAIN, roku_config, hass_config))
+    discovery.load_platform(
+        hass, 'media_player', DOMAIN, roku_config, hass_config)
 
-    hass.async_create_task(discovery.async_load_platform(
-        hass, 'remote', DOMAIN, roku_config, hass_config))
+    discovery.load_platform(
+        hass, 'remote', DOMAIN, roku_config, hass_config)
