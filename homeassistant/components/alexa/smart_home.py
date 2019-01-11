@@ -1036,8 +1036,7 @@ class Config:
         self.entity_config = entity_config or {}
 
 
-@ha.callback
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the
@@ -1063,8 +1062,7 @@ def async_setup(hass, config):
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if AUTH_KEY in hass.data:
-        hass.loop.create_task(
-            async_enable_proactive_mode(hass, smart_home_config))
+        await async_enable_proactive_mode(hass, smart_home_config)
 
 
 async def async_enable_proactive_mode(hass, smart_home_config):
@@ -1380,8 +1378,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
         return
 
     headers = {
-        "Authorization": "Bearer {}".format(token),
-        "Content-Type": "application/json;charset=UTF-8"
+        "Authorization": "Bearer {}".format(token)
     }
 
     endpoint = alexa_entity.entity_id()
@@ -1402,14 +1399,14 @@ async def async_send_changereport_message(hass, config, alexa_entity):
                              payload=payload)
     message.set_endpoint_full(token, endpoint)
 
-    message_str = json.dumps(message.serialize())
+    message_serialized = message.serialize()
 
     try:
         session = aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
             response = await session.post(config.endpoint,
                                           headers=headers,
-                                          data=message_str,
+                                          json=message_serialized,
                                           allow_redirects=True)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -1418,7 +1415,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     response_text = await response.text()
 
-    _LOGGER.debug("Sent: %s", message_str)
+    _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status != 202:
