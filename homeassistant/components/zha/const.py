@@ -102,7 +102,7 @@ def populate_data():
     """
     from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
-    from homeassistant.components.zha.sensor import RelativeHumiditySensor
+    from .sensor import RelativeHumiditySensor
 
     if zha.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zha.PROFILE_ID] = {}
