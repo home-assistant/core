@@ -54,7 +54,8 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from pyopenuv.util import validate_api_key
+        from pyopenuv import Client
+        from pyopenuv.errors import OpenUvError
 
         if not user_input:
             return await self._show_form()
@@ -66,10 +67,11 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
             return await self._show_form({CONF_LATITUDE: 'identifier_exists'})
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        api_key_validation = await validate_api_key(
-            user_input[CONF_API_KEY], websession)
+        client = Client(user_input[CONF_API_KEY], 0, 0, websession)
 
-        if not api_key_validation:
+        try:
+            await client.uv_index()
+        except OpenUvError:
             return await self._show_form({CONF_API_KEY: 'invalid_api_key'})
 
         scan_interval = user_input.get(
