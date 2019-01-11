@@ -84,7 +84,9 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_ROKU, roku_discovered)
 
-    tasks = [_setup_roku(hass, config, conf) for conf in config.get(DOMAIN, [])]
+    tasks = [
+        _setup_roku(hass, config, conf) for conf in config.get(DOMAIN, [])
+    ]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
