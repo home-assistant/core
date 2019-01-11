@@ -29,7 +29,7 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.41.1']
+REQUIREMENTS = ['mutagen==1.42.0']
 
 _LOGGER = logging.getLogger(__name__)
 
