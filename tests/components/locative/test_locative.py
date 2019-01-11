@@ -1,13 +1,13 @@
 """The tests the for Locative device tracker platform."""
-import asyncio
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.device_tracker import \
+    DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.locative import URL, DOMAIN
+from homeassistant.const import HTTP_OK
 from homeassistant.setup import async_setup_component
-import homeassistant.components.device_tracker as device_tracker
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.components.device_tracker.locative import URL
 
 
 def _url(data=None):
@@ -22,18 +22,15 @@ def _url(data=None):
 def locative_client(loop, hass, hass_client):
     """Locative mock client."""
     assert loop.run_until_complete(async_setup_component(
-        hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'locative'
-            }
+        hass, DOMAIN, {
+            DOMAIN: {}
         }))
 
     with patch('homeassistant.components.device_tracker.update_config'):
         yield loop.run_until_complete(hass_client())
 
 
-@asyncio.coroutine
-def test_missing_data(locative_client):
+async def test_missing_data(locative_client):
     """Test missing data."""
     data = {
         'latitude': 1.0,
@@ -44,55 +41,54 @@ def test_missing_data(locative_client):
     }
 
     # No data
-    req = yield from locative_client.get(_url({}))
+    req = await locative_client.get(_url({}))
     assert req.status == 422
 
     # No latitude
     copy = data.copy()
     del copy['latitude']
-    req = yield from locative_client.get(_url(copy))
+    req = await locative_client.get(_url(copy))
     assert req.status == 422
 
     # No device
     copy = data.copy()
     del copy['device']
-    req = yield from locative_client.get(_url(copy))
+    req = await locative_client.get(_url(copy))
     assert req.status == 422
 
     # No location
     copy = data.copy()
     del copy['id']
-    req = yield from locative_client.get(_url(copy))
+    req = await locative_client.get(_url(copy))
     assert req.status == 422
 
     # No trigger
     copy = data.copy()
     del copy['trigger']
-    req = yield from locative_client.get(_url(copy))
+    req = await locative_client.get(_url(copy))
     assert req.status == 422
 
     # Test message
     copy = data.copy()
     copy['trigger'] = 'test'
-    req = yield from locative_client.get(_url(copy))
-    assert req.status == 200
+    req = await locative_client.get(_url(copy))
+    assert req.status == HTTP_OK
 
     # Test message, no location
     copy = data.copy()
     copy['trigger'] = 'test'
     del copy['id']
-    req = yield from locative_client.get(_url(copy))
-    assert req.status == 200
+    req = await locative_client.get(_url(copy))
+    assert req.status == HTTP_OK
 
     # Unknown trigger
     copy = data.copy()
     copy['trigger'] = 'foobar'
-    req = yield from locative_client.get(_url(copy))
+    req = await locative_client.get(_url(copy))
     assert req.status == 422
 
 
-@asyncio.coroutine
-def test_enter_and_exit(hass, locative_client):
+async def test_enter_and_exit(hass, locative_client):
     """Test when there is a known zone."""
     data = {
         'latitude': 40.7855,
@@ -103,9 +99,10 @@ def test_enter_and_exit(hass, locative_client):
     }
 
     # Enter the Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
-    state_name = hass.states.get('{}.{}'.format('device_tracker',
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
     assert 'home' == state_name
 
@@ -113,9 +110,10 @@ def test_enter_and_exit(hass, locative_client):
     data['trigger'] = 'exit'
 
     # Exit Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
-    state_name = hass.states.get('{}.{}'.format('device_tracker',
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
     assert 'not_home' == state_name
 
@@ -123,18 +121,20 @@ def test_enter_and_exit(hass, locative_client):
     data['trigger'] = 'enter'
 
     # Enter Home again
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
-    state_name = hass.states.get('{}.{}'.format('device_tracker',
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
     assert 'home' == state_name
 
     data['trigger'] = 'exit'
 
     # Exit Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
-    state_name = hass.states.get('{}.{}'.format('device_tracker',
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
     assert 'not_home' == state_name
 
@@ -142,15 +142,15 @@ def test_enter_and_exit(hass, locative_client):
     data['trigger'] = 'enter'
 
     # Enter Work
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
-    state_name = hass.states.get('{}.{}'.format('device_tracker',
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
     assert 'work' == state_name
 
 
-@asyncio.coroutine
-def test_exit_after_enter(hass, locative_client):
+async def test_exit_after_enter(hass, locative_client):
     """Test when an exit message comes after an enter message."""
     data = {
         'latitude': 40.7855,
@@ -161,20 +161,22 @@ def test_exit_after_enter(hass, locative_client):
     }
 
     # Enter Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
 
-    state = hass.states.get('{}.{}'.format('device_tracker',
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'home'
 
     data['id'] = 'Work'
 
     # Enter Work
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
 
-    state = hass.states.get('{}.{}'.format('device_tracker',
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'work'
 
@@ -182,16 +184,16 @@ def test_exit_after_enter(hass, locative_client):
     data['trigger'] = 'exit'
 
     # Exit Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
 
-    state = hass.states.get('{}.{}'.format('device_tracker',
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'work'
 
 
-@asyncio.coroutine
-def test_exit_first(hass, locative_client):
+async def test_exit_first(hass, locative_client):
     """Test when an exit message is sent first on a new device."""
     data = {
         'latitude': 40.7855,
@@ -202,9 +204,10 @@ def test_exit_first(hass, locative_client):
     }
 
     # Exit Home
-    req = yield from locative_client.get(_url(data))
-    assert req.status == 200
+    req = await locative_client.get(_url(data))
+    await hass.async_block_till_done()
+    assert req.status == HTTP_OK
 
-    state = hass.states.get('{}.{}'.format('device_tracker',
+    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'not_home'
