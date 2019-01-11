@@ -23,8 +23,27 @@ async def async_setup_platform(
         FbxWifiSwitch(fbx, perms_settings)
     ], True)
 
+class FbxSwitch(ToggleEntity):
+    """Representation of a Freebox switch."""
 
-class FbxWifiSwitch(ToggleEntity):
+    _name = 'generic'
+
+    def __init__(self, fbx):
+        """Initilize the switch."""
+        self.state = None
+        self.fbx = fbx
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
+
+    async def async_get_perms(self):
+        """Get permissions from Freebox."""
+        self._permissions = await self.fbx.get_permissions()
+
+
+class FbxWifiSwitch(FbxSwitch):
     """Representation of a freebox wifi switch."""
 
     def __init__(self, fbx, perms_settings):
@@ -81,12 +100,9 @@ class FbxWifiSwitch(ToggleEntity):
         """Get the state and update it."""
         from aiofreepybox.constants import PERMISSION_SETTINGS
 
-        permissions = await self.fbx.get_permissions()
-        if permissions.get(PERMISSION_SETTINGS):
-            self.perms_settings = True
-        else:
-            self.perms_settings = False
-
+        await super().async_get_perms()
+        self.perms_settings = True if self._permissions.get(
+                                      PERMISSION_SETTINGS) else False
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
         self._state = True if active else False
