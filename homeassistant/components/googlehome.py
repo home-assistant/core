@@ -58,6 +58,7 @@ async def async_setup(hass, config):
 
 class GoogleHomeClient:
     """Handle all communication with the Google Home unit."""
+
     def __init__(self, hass):
         """Initialize the Google Home Client."""
         self.hass = hass
@@ -78,7 +79,5 @@ class GoogleHomeClient:
         await asyncio.sleep(5)
         bluetooth_data = await bluetooth.get_scan_result()
 
-
         self.hass.data[DOMAIN][host]['info'] = device_info_data
         self.hass.data[DOMAIN][host]['bluetooth'] = bluetooth_data
-
