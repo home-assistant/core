@@ -112,7 +112,7 @@ class HueBridge:
         return await self.hass.config_entries.async_forward_entry_unload(
             self.config_entry, 'light')
 
-    async def hue_activate_scene(self, call, updated=False, 
+    async def hue_activate_scene(self, call, updated=False,
                                  hide_warnings=False):
         """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
