@@ -252,7 +252,7 @@ class HueOneLightChangeView(HomeAssistantView):
             domain = entity.domain
             if service == SERVICE_TURN_ON:
                 service = SERVICE_OPEN_COVER
-            elif service == SERVICE_TURN_OFF:
+            else:
                 service = SERVICE_CLOSE_COVER
 
             if entity_features & SUPPORT_SET_POSITION:
@@ -344,10 +344,7 @@ def parse_hue_api_put_light_body(request_json, entity):
             report_brightness = False
             result = True
 
-        elif (entity.domain == "script" or
-              entity.domain == "media_player" or
-              entity.domain == "fan" or
-              entity.domain == "cover"):
+        elif entity.domain in [ "script", "media_player", "fan", "cover"]:
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
