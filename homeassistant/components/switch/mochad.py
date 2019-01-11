@@ -33,9 +33,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 switches over a mochad controller."""
     devs = config.get(CONF_DEVICES)
     controller = hass.data[mochad.DOMAIN]
+    controller.ctrl_recv.connect_event.wait()
     add_entities([MochadSwitch(
         hass, controller.ctrl_recv, dev) for dev in devs])
-    return True
 
 
 class MochadSwitch(SwitchDevice):
@@ -44,27 +44,26 @@ class MochadSwitch(SwitchDevice):
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Switch Device."""
         self._controller = ctrl
-        self._address = dev[CONF_ADDRESS]
+        self._address = dev[CONF_ADDRESS] 
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-
-        # Init with false to avoid locking HA for long on CM19A (goes from rf
-        # to pl via TM751, but not other way around)
-        if self._comm_type == 'pl':
-            self._state = self._get_device_status()
-        else:
-            self._state = False
+        self._state = False
 
     @property
     def name(self):
         """Get the name of the switch."""
         return self._name
 
+    @property
+    def should_poll(self):
+        """No poll for X10 lights and switches. """
+        return False
+
     def send_cmd(self, cmd):
         """Send cmd to pymochad controller."""
         from pymochad import device
 
-        if self._controller.ctrl and self._controller.connect_event.wait():
+        if self._controller.ctrl:
             switch = device.Device(self._controller.ctrl, self._address,
                                    comm_type=self._comm_type)
             switch.send_cmd(cmd)
@@ -93,7 +92,6 @@ class MochadSwitch(SwitchDevice):
         """Turn the switch off."""
         from pymochad.exceptions import MochadException
 
-        self._controller.connect_event.wait()
         _LOGGER.debug("Reconnect %s:%s", self._controller.ctrl.server,
                       self._controller.ctrl.port)
         with mochad.REQ_LOCK:
@@ -112,7 +110,7 @@ class MochadSwitch(SwitchDevice):
         """Get the status of the switch from mochad."""
         from pymochad import device
 
-        if self._controller.ctrl and self._controller.connect_event.wait():
+        if self._controller.ctrl:
             switch = device.Device(self._controller.ctrl, self._address,
                                    comm_type=self._comm_type)
             with mochad.REQ_LOCK:
