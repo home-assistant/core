@@ -62,7 +62,6 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
-
             pass
 
     def get_source_list(self):

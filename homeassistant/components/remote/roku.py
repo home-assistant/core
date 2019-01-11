@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     host = discovery_info[CONF_HOST]
-    async_add_entities([RokuRemote(host)])
+    async_add_entities([RokuRemote(host)], True)
 
 
 class RokuRemote(remote.RemoteDevice):
@@ -29,21 +29,30 @@ class RokuRemote(remote.RemoteDevice):
         """Initialize the Roku device."""
         from roku import Roku
 
-        self._roku = Roku(host)
-        self._unique_id = self._roku.device_info.sernum
+        self.roku = Roku(host)
+        self._device_info = {}
+
+    def update(self):
+        """Retrieve latest state."""
+        import requests.exceptions
+
+        try:
+            self._device_info = self.roku.device_info
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout):
+            pass
 
     @property
     def name(self):
         """Return the name of the device."""
-        info = self._roku.device_info
-        if info.userdevicename:
-            return info.userdevicename
-        return "Roku {}".format(info.sernum)
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._unique_id
+        return self._device_info.sernum
 
     @property
     def is_on(self):
@@ -58,7 +67,7 @@ class RokuRemote(remote.RemoteDevice):
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
         for single_command in command:
-            if not hasattr(self._roku, single_command):
+            if not hasattr(self.roku, single_command):
                 continue
 
-            getattr(self._roku, single_command)()
+            getattr(self.roku, single_command)()
