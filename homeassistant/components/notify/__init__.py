@@ -187,12 +187,12 @@ class BaseNotificationService:
         """Dismisses a notifaction."""
         raise NotImplementedError()
 
-    def async_dismiss(self, **kwargs):
+    async def async_dismiss(self, **kwargs):
         """Dismisses a notification.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             partial(self.dismiss, **kwargs))
 
     def send_message(self, message, **kwargs):
