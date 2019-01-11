@@ -231,6 +231,19 @@ class TestMQTTComponent(unittest.TestCase):
             'model': 'Glass',
             'sw_version': '0.1-beta',
         })
+        # full device info with via_hub
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['helloworld', 'hello'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+                ["zigbee", "zigbee_id"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+            'via_hub': 'test-hub',
+        })
         # no identifiers
         with pytest.raises(vol.Invalid):
             mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
