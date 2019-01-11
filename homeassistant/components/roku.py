@@ -33,9 +33,9 @@ NOTIFICATION_SCAN_TITLE = 'Roku Scan'
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
-    })
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
+        vol.Required(CONF_HOST): cv.string
+    })])
 }, extra=vol.ALLOW_EXTRA)
 
 # Currently no attributes but it might change later
@@ -84,7 +84,7 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_ROKU, roku_discovered)
 
-    tasks = [_setup_roku(hass, conf) for conf in config.get(DOMAIN, [])]
+    tasks = [_setup_roku(hass, config, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
