@@ -11,8 +11,8 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, CONF_DEVICE_CLASS,
-    CONF_EXCLUDE, CONF_ICON, CONF_PASSWORD, CONF_URL, CONF_USERNAME,
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, CONF_DEVICE_CLASS, CONF_EXCLUDE,
+    CONF_ICON, CONF_PASSWORD, CONF_URL, CONF_USERNAME,
     CONF_WHITE_VALUE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -24,10 +24,11 @@ REQUIREMENTS = ['fiblary3==0.1.7']
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
 FIBARO_DEVICES = 'fibaro_devices'
-FIBARO_CONTROLLER = 'fibaro_controller'
+FIBARO_CONTROLLERS = 'fibaro_controllers'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
+CONF_GATEWAYS = 'gateways'
 CONF_DIMMING = "dimming"
 CONF_COLOR = "color"
 CONF_RESET_COLOR = "reset_color"
@@ -65,15 +66,20 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 
 FIBARO_ID_LIST_SCHEMA = vol.Schema([cv.string])
 
+GATEWAY_CONFIG = vol.Schema({
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_URL): cv.url,
+    vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
+    vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
+    vol.Optional(CONF_DEVICE_CONFIG, default={}):
+        vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
+}, extra=vol.ALLOW_EXTRA)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_URL): cv.url,
-        vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
-        vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
-        vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY})
+        vol.Required(CONF_GATEWAYS):
+            vol.All(cv.ensure_list, [GATEWAY_CONFIG])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -81,20 +87,23 @@ CONFIG_SCHEMA = vol.Schema({
 class FibaroController():
     """Initiate Fibaro Controller Class."""
 
-    def __init__(self, username, password, url, import_plugins, config):
+    def __init__(self, config):
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
-        self._client = FibaroClient(url, username, password)
+
+        self._client = FibaroClient(config[CONF_URL],
+                                    config[CONF_USERNAME],
+                                    config[CONF_PASSWORD])
         self._scene_map = None
         # Whether to import devices from plugins
-        self._import_plugins = import_plugins
+        self._import_plugins = config[CONF_PLUGINS]
         self._device_config = config[CONF_DEVICE_CONFIG]
         self._room_map = None         # Mapping roomId to room object
         self._device_map = None       # Mapping deviceId to device object
         self.fibaro_devices = None    # List of devices by type
         self._callbacks = {}          # Update value callbacks by deviceId
         self._state_handler = None    # Fiblary's StateHandler object
-        self._excluded_devices = config.get(CONF_EXCLUDE, [])
+        self._excluded_devices = config[CONF_EXCLUDE]
         self.hub_serial = None          # Unique serial number of the hub
 
     def connect(self):
@@ -167,12 +176,11 @@ class FibaroController():
     def _map_device_to_type(device):
         """Map device to HA device type."""
         # Use our lookup table to identify device type
+        device_type = None
         if 'type' in device:
             device_type = FIBARO_TYPEMAP.get(device.type)
-        elif 'baseType' in device:
+        if device_type is None and 'baseType' in device:
             device_type = FIBARO_TYPEMAP.get(device.baseType)
-        else:
-            device_type = None
 
         # We can also identify device type by its capabilities
         if device_type is None:
@@ -200,6 +208,7 @@ class FibaroController():
         for device in scenes:
             if not device.visible:
                 continue
+            device.fibaro_controller = self
             if device.roomID == 0:
                 room_name = 'Unknown'
             else:
@@ -220,6 +229,7 @@ class FibaroController():
         self.fibaro_devices = defaultdict(list)
         for device in devices:
             try:
+                device.fibaro_controller = self
                 if device.roomID == 0:
                     room_name = 'Unknown'
                 else:
@@ -242,33 +252,43 @@ class FibaroController():
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
-                else:
-                    _LOGGER.debug("%s (%s, %s) not used",
-                                  device.ha_id, device.type,
-                                  device.baseType)
+                _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
+                              device.ha_id, device.type,
+                              device.baseType, device.mapped_type,
+                              str(device.properties), str(device.actions))
             except (KeyError, ValueError):
                 pass
 
 
-def setup(hass, config):
+def setup(hass, base_config):
     """Set up the Fibaro Component."""
-    hass.data[FIBARO_CONTROLLER] = controller = \
-        FibaroController(config[DOMAIN][CONF_USERNAME],
-                         config[DOMAIN][CONF_PASSWORD],
-                         config[DOMAIN][CONF_URL],
-                         config[DOMAIN][CONF_PLUGINS],
-                         config[DOMAIN])
+    gateways = base_config[DOMAIN][CONF_GATEWAYS]
+    hass.data[FIBARO_CONTROLLERS] = {}
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
         _LOGGER.info("Shutting down Fibaro connection")
-        hass.data[FIBARO_CONTROLLER].disable_state_handler()
+        for controller in hass.data[FIBARO_CONTROLLERS].values():
+            controller.disable_state_handler()
 
-    if controller.connect():
-        hass.data[FIBARO_DEVICES] = controller.fibaro_devices
+    hass.data[FIBARO_DEVICES] = {}
+    for component in FIBARO_COMPONENTS:
+        hass.data[FIBARO_DEVICES][component] = []
+
+    for gateway in gateways:
+        controller = FibaroController(gateway)
+        if controller.connect():
+            hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
+            for component in FIBARO_COMPONENTS:
+                hass.data[FIBARO_DEVICES][component].extend(
+                    controller.fibaro_devices[component])
+
+    if hass.data[FIBARO_CONTROLLERS]:
         for component in FIBARO_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
-        controller.enable_state_handler()
+            discovery.load_platform(hass, component, DOMAIN, {},
+                                    base_config)
+        for controller in hass.data[FIBARO_CONTROLLERS].values():
+            controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
         return True
 
@@ -278,10 +298,10 @@ def setup(hass, config):
 class FibaroDevice(Entity):
     """Representation of a Fibaro device entity."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the device."""
         self.fibaro_device = fibaro_device
-        self.controller = controller
+        self.controller = fibaro_device.fibaro_controller
         self._name = fibaro_device.friendly_name
         self.ha_id = fibaro_device.ha_id
 
