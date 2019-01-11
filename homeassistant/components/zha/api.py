@@ -32,7 +32,6 @@ ATTR_IEEE = 'ieee'
 
 SERVICE_PERMIT = 'permit'
 SERVICE_REMOVE = 'remove'
-SERVICE_RECONFIGURE_DEVICE = 'reconfigure_device'
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = 'set_zigbee_cluster_attribute'
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = 'issue_zigbee_cluster_command'
 ZIGBEE_CLUSTER_SERVICE = 'zigbee_cluster_service'
@@ -69,6 +68,12 @@ SERVICE_SCHEMAS = {
         vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
     }),
 }
+
+WS_RECONFIGURE_NODE = 'zha/reconfigure_node'
+SCHEMA_WS_RECONFIGURE_NODE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required(TYPE): WS_RECONFIGURE_NODE,
+    vol.Required(ATTR_IEEE): str
+})
 
 WS_ENTITIES_BY_IEEE = 'zha/entities'
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -243,20 +248,6 @@ def async_load_api(hass, application_controller, listener):
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
                                  schema=SERVICE_SCHEMAS[IEEE_SERVICE])
 
-    async def reconfigure_device(service):
-        """Reconfigure a ZHA device entity by its ieee address."""
-        ieee = service.data.get(ATTR_IEEE_ADDRESS)
-        entities = listener.get_entities_for_ieee(ieee)
-        _LOGGER.debug("Reconfiguring device with ieee_address: %s", ieee)
-        for entity in entities:
-            if hasattr(entity, 'async_configure'):
-                hass.async_create_task(entity.async_configure())
-
-    hass.services.async_register(DOMAIN, SERVICE_RECONFIGURE_DEVICE,
-                                 reconfigure_device, schema=SERVICE_SCHEMAS[
-                                     IEEE_SERVICE
-                                 ])
-
     async def set_zigbee_cluster_attributes(service):
         """Set zigbee attribute for cluster on zha entity."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
@@ -329,6 +320,21 @@ def async_load_api(hass, application_controller, listener):
                                  schema=SERVICE_SCHEMAS[
                                      SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
                                  ])
+
+    @websocket_api.async_response
+    async def websocket_reconfigure_node(hass, connection, msg):
+        """Reconfigure a ZHA nodes entities by its ieee address."""
+        ieee = msg[ATTR_IEEE_ADDRESS]
+        entities = listener.get_entities_for_ieee(ieee)
+        _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
+        for entity in entities:
+            if hasattr(entity, 'async_configure'):
+                hass.async_create_task(entity.async_configure())
+
+    hass.components.websocket_api.async_register_command(
+        WS_RECONFIGURE_NODE, websocket_reconfigure_node,
+        SCHEMA_WS_RECONFIGURE_NODE
+    )
 
     @websocket_api.async_response
     async def websocket_entities_by_ieee(hass, connection, msg):
@@ -406,6 +412,5 @@ def async_unload_api(hass):
     """Unload the ZHA API."""
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
-    hass.services.async_remove(DOMAIN, SERVICE_RECONFIGURE_DEVICE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
