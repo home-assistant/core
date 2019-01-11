@@ -4,7 +4,6 @@ Support for DoorBird device.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
 """
-from homeassistant.util import dt as dt_util
 import logging
 
 import voluptuous as vol
@@ -13,7 +12,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util import slugify, dt as dt_util
 
 REQUIREMENTS = ['doorbirdpy==2.0.4']
 
