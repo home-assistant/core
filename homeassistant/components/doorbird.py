@@ -4,7 +4,7 @@ Support for DoorBird device.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
 """
-import datetime
+from homeassistant.util import dt as dt_util
 import logging
 
 import voluptuous as vol
@@ -307,7 +307,7 @@ class ConfiguredDoorBird():
     def get_event_data(self):
         """Get data to pass along with HA event."""
         return {
-            'timestamp': datetime.datetime.now().isoformat(),
+            'timestamp': dt_util.utcnow().isoformat(),
             'live_video_url': self._device.live_video_url,
             'live_image_url': self._device.live_image_url,
             'rtsp_live_video_url': self._device.rtsp_live_video_url,
