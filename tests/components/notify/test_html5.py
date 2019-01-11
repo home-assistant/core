@@ -227,8 +227,7 @@ async def test_registering_existing_device_view(hass, hass_client):
 
 
 async def test_registering_existing_device_view_with_name(hass, hass_client):
-    """Test subscription is updated when registering existing device
-       with name."""
+    """Test subscription is updated when reg'ing existing device with name."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
 
