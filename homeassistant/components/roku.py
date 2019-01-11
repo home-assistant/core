@@ -88,7 +88,7 @@ async def async_setup(hass, config):
         _setup_roku(hass, config, conf) for conf in config.get(DOMAIN, [])
     ]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_service_handler,
@@ -100,7 +100,7 @@ async def async_setup(hass, config):
 async def _setup_roku(hass, hass_config, roku_config):
     """Set up a Roku."""
     from roku import Roku
-    host = roku_config.get(CONF_HOST)
+    host = roku_config[CONF_HOST]
 
     if host in hass.data[DATA_ROKU]:
         return
