@@ -12,7 +12,6 @@ from operator import attrgetter
 import os
 import socket
 import ssl
-import time
 from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
 
 import attr
@@ -585,6 +584,51 @@ class Message:
 class MQTT:
     """Home Assistant MQTT client."""
 
+    class AsyncioHelper:
+        """Helper to handle paho-mqtt async callbacks."""
+
+        def __init__(self, hass, client):
+            """Initialize helper."""
+            self.hass = hass
+            self.task_misc = None
+            self.client = client
+            self.client.on_socket_open = self.on_socket_open
+            self.client.on_socket_close = self.on_socket_close
+            self.client.on_socket_register_write = self.on_socket_reg_write
+            self.client.on_socket_unregister_write = self.on_socket_unreg_write
+
+        def on_socket_open(self, client, userdata, sock):
+            """Socket open callback."""
+            def cb():
+                client.loop_read()
+
+            self.hass.loop.add_reader(sock, cb)
+            self.task_misc = self.hass.async_create_task(self.misc_loop())
+
+        def on_socket_close(self, client, userdata, sock):
+            """Socket closed callback."""
+            self.hass.loop.remove_reader(sock)
+            self.task_misc.cancel()
+
+        def on_socket_reg_write(self, client, userdata, sock):
+            """Schedule socket write callback."""
+            def cb():
+                client.loop_write()
+
+            self.hass.loop.add_writer(sock, cb)
+
+        def on_socket_unreg_write(self, client, userdata, sock):
+            """Unschedule socket write callback."""
+            self.hass.loop.remove_writer(sock)
+
+        async def misc_loop(self):
+            """Peridocially call loop_misc()."""
+            while self.client.loop_misc() == 0:
+                try:
+                    await asyncio.sleep(1)
+                except asyncio.CancelledError:
+                    break
+
     def __init__(self, hass: HomeAssistantType, broker: str, port: int,
                  client_id: Optional[str], keepalive: Optional[int],
                  username: Optional[str], password: Optional[str],
@@ -604,6 +648,7 @@ class MQTT:
         self.birth_message = birth_message
         self._mqttc = None  # type: mqtt.Client
         self._paho_lock = asyncio.Lock(loop=hass.loop)
+        self._task_reconnect = None
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31  # type: int
@@ -629,6 +674,7 @@ class MQTT:
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
+        self._asynciohelper = self.AsyncioHelper(hass, self._mqttc)
 
         if will_message is not None:
             self._mqttc.will_set(*attr.astuple(will_message))
@@ -662,7 +708,6 @@ class MQTT:
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
             return False
 
-        self._mqttc.loop_start()
         return True
 
     @callback
@@ -673,8 +718,9 @@ class MQTT:
         """
         def stop():
             """Stop the MQTT client."""
+            if self._task_reconnect:
+                self._task_reconnect.cancel()
             self._mqttc.disconnect()
-            self._mqttc.loop_stop()
 
         return self.hass.async_add_job(stop)
 
@@ -786,12 +832,18 @@ class MQTT:
         if result_code == 0:
             return
 
+        self._task_reconnect = \
+            self.hass.async_create_task(self._mqtt_reconnect(result_code))
+
+    async def _mqtt_reconnect(self, result_code) -> None:
+        """Reconnect to broker."""
         tries = 0
 
         while True:
             try:
-                if self._mqttc.reconnect() == 0:
+                if await self.hass.async_add_job(self._mqttc.reconnect) == 0:
                     _LOGGER.info("Successfully reconnected to the MQTT server")
+                    self._task_reconnect = None
                     break
             except socket.error:
                 pass
@@ -800,8 +852,8 @@ class MQTT:
             _LOGGER.warning(
                 "Disconnected from MQTT (%s). Trying to reconnect in %s s",
                 result_code, wait_time)
-            # It is ok to sleep here as we are in the MQTT thread.
-            time.sleep(wait_time)
+
+            asyncio.sleep(wait_time)
             tries += 1
 
 
