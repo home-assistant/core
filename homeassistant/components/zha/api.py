@@ -69,7 +69,7 @@ SERVICE_SCHEMAS = {
     }),
 }
 
-WS_RECONFIGURE_NODE = 'zha/reconfigure_node'
+WS_RECONFIGURE_NODE = 'zha/nodes/reconfigure'
 SCHEMA_WS_RECONFIGURE_NODE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required(TYPE): WS_RECONFIGURE_NODE,
     vol.Required(ATTR_IEEE): str
