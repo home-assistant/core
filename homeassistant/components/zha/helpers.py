@@ -126,3 +126,9 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
     except Exception:  # pylint: disable=broad-except
         return False
     return True
+
+
+def convert_ieee(ieee_str):
+    """Convert given ieee string to EUI64."""
+    from zigpy.types import EUI64, uint8_t
+    return EUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])
