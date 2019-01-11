@@ -72,6 +72,6 @@ async def async_setup(hass, config):
         pass
     else:
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        smart_home.async_setup(hass, smart_home_config)
+        await smart_home.async_setup(hass, smart_home_config)
 
     return True
