@@ -7,7 +7,6 @@ https://home-assistant.io/components/switch.freebox/
 import logging
 
 from homeassistant.components.freebox import DATA_FREEBOX
-from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['freebox']
