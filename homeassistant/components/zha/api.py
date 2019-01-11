@@ -324,7 +324,7 @@ def async_load_api(hass, application_controller, listener):
     @websocket_api.async_response
     async def websocket_reconfigure_node(hass, connection, msg):
         """Reconfigure a ZHA nodes entities by its ieee address."""
-        ieee = msg[ATTR_IEEE_ADDRESS]
+        ieee = msg[ATTR_IEEE]
         entities = listener.get_entities_for_ieee(ieee)
         _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
         for entity in entities:
