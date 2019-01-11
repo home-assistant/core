@@ -1,5 +1,6 @@
 """Handle MySensors devices."""
 import logging
+from functools import partial
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
@@ -7,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CHILD_CALLBACK, NODE_CALLBACK
+from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,8 @@ class MySensorsDevice:
         child = gateway.sensors[node_id].children[child_id]
         self.child_type = child.type
         self._values = {}
+        self._update_scheduled = False
+        self.hass = None
 
     @property
     def name(self):
@@ -84,6 +87,29 @@ class MySensorsDevice:
             else:
                 self._values[value_type] = value
 
+    async def _async_update_callback(self):
+        """Update the device."""
+        raise NotImplementedError
+
+    @callback
+    def async_update_callback(self):
+        """Update the device after delay."""
+        if self._update_scheduled:
+            return
+
+        async def update():
+            """Perform update."""
+            try:
+                await self._async_update_callback()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error updating %s", self.name)
+            finally:
+                self._update_scheduled = False
+
+        self._update_scheduled = True
+        delayed_update = partial(self.hass.async_create_task, update())
+        self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
+
 
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""
@@ -98,10 +124,9 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return true if entity is available."""
         return self.value_type in self._values
 
-    @callback
-    def async_update_callback(self):
+    async def _async_update_callback(self):
         """Update the entity."""
-        self.async_schedule_update_ha_state(True)
+        await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register update callback."""
