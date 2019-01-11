@@ -344,7 +344,7 @@ def parse_hue_api_put_light_body(request_json, entity):
             report_brightness = False
             result = True
 
-        elif entity.domain in [ "script", "media_player", "fan", "cover"]:
+        elif entity.domain in ["script", "media_player", "fan", "cover"]:
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
