@@ -165,7 +165,7 @@ async def async_setup_entry(hass, config_entry):
                 config_entry, component)
         )
 
-    await api.async_load_api(hass, application_controller, listener)
+    api.async_load_api(hass, application_controller, listener)
 
     def zha_shutdown(event):
         """Close radio."""
@@ -177,7 +177,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
-    await api.async_unload_api(hass)
+    api.async_unload_api(hass)
 
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
     for unsub_dispatcher in dispatchers:
