@@ -140,6 +140,7 @@ FLOWS = [
     'deconz',
     'dialogflow',
     'esphome',
+    'emulated_roku',
     'geofency',
     'hangouts',
     'homematicip_cloud',
