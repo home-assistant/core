@@ -1,9 +1,8 @@
 """
 Remote control support for the LG Netcast TV.
 
-
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/remove.lg_netcast/
+https://home-assistant.io/components/remote.lg_netcast/
 """
 import time
 from requests import RequestException
