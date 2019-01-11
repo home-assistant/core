@@ -188,7 +188,7 @@ homeassistant/components/*/esphome.py @OttoWinter
 
 # G
 homeassistant/components/googlehome.py @ludeeus
-homeassistant/components/*/googlehome.py
+homeassistant/components/*/googlehome.py @ludeeus
 
 # H
 homeassistant/components/hive.py @Rendili @KJonline
