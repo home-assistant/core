@@ -196,7 +196,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.debug('Stopping API polling at sunset')
         openuv.is_nighttime = True
 
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNRISE][
+    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNSET][
         config_entry.entry_id] = async_track_sunset(hass, set_sunset)
 
     return True
