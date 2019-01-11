@@ -12,14 +12,14 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_BINARY_SENSORS, CONF_ELEVATION,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_SENSORS)
+    CONF_SENSORS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from .config_flow import configured_instances
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
@@ -91,8 +91,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_BINARY_SENSORS, default={}):
             BINARY_SENSOR_SCHEMA,
         vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -118,7 +116,6 @@ async def async_setup(hass, config):
         CONF_API_KEY: conf[CONF_API_KEY],
         CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
         CONF_SENSORS: conf[CONF_SENSORS],
-        CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
     }
 
     if CONF_LATITUDE in conf:
