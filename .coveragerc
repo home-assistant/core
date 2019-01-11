@@ -426,6 +426,7 @@ omit =
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
     homeassistant/components/zha/event.py
+    homeassistant/components/zha/api.py
     homeassistant/components/zha/entities/*
     homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
@@ -442,7 +443,7 @@ omit =
     homeassistant/components/spider.py
     homeassistant/components/*/spider.py
 
-    homeassistant/components/air_pollutants/opensensemap.py
+    homeassistant/components/air_quality/opensensemap.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py

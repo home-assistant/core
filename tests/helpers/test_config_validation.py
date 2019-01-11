@@ -258,11 +258,12 @@ def test_icon():
     """Test icon validation."""
     schema = vol.Schema(cv.icon)
 
-    for value in (False, 'work', 'icon:work'):
+    for value in (False, 'work'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     schema('mdi:work')
+    schema('custom:prefix')
 
 
 def test_time_period():

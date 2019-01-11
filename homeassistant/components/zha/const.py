@@ -36,6 +36,21 @@ DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = 'zigbee.db'
 
+ATTR_CLUSTER_ID = 'cluster_id'
+ATTR_CLUSTER_TYPE = 'cluster_type'
+ATTR_ATTRIBUTE = 'attribute'
+ATTR_VALUE = 'value'
+ATTR_MANUFACTURER = 'manufacturer'
+ATTR_COMMAND = 'command'
+ATTR_COMMAND_TYPE = 'command_type'
+ATTR_ARGS = 'args'
+
+IN = 'in'
+OUT = 'out'
+CLIENT_COMMANDS = 'client_commands'
+SERVER_COMMANDS = 'server_commands'
+SERVER = 'server'
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
@@ -129,7 +144,6 @@ def populate_data():
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
-        zcl.clusters.general.LevelControl: 'light',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',

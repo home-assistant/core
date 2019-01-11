@@ -11,7 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN, CONF_TYPE, ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, STATE_UNKNOWN, STATE_UNAVAILABLE, CONF_TYPE,
+    ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -125,7 +126,8 @@ class MinMaxSensor(Entity):
         @callback
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
-            if new_state.state is None or new_state.state in STATE_UNKNOWN:
+            if (new_state.state is None
+                    or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 self.states[entity] = STATE_UNKNOWN
                 hass.async_add_job(self.async_update_ha_state, True)
                 return

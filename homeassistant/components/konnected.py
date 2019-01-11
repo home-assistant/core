@@ -96,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DEPENDENCIES = ['http', 'discovery']
+DEPENDENCIES = ['http']
 
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
