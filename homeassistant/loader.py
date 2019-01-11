@@ -52,17 +52,42 @@ def set_component(hass,  # type: HomeAssistant
 
 
 def get_platform(hass,  # type: HomeAssistant
-                 domain: str, platform: str) -> Optional[ModuleType]:
+                 domain: str, platform_name: str) -> Optional[ModuleType]:
     """Try to load specified platform.
 
     Async friendly.
     """
-    return get_component(hass, PLATFORM_FORMAT.format(domain, platform))
+    platform = _load_file(hass, PLATFORM_FORMAT.format(
+        domain=domain, platform=platform_name))
+
+    if platform is None:
+        # Turn it around for legacy purposes
+        platform = _load_file(hass, PLATFORM_FORMAT.format(
+            domain=platform_name, platform=domain))
+
+    if platform is None:
+        _LOGGER.error("Unable to find platform %s", platform_name)
+
+    return platform
 
 
 def get_component(hass,  # type: HomeAssistant
                   comp_or_platform: str) -> Optional[ModuleType]:
     """Try to load specified component.
+
+    Async friendly.
+    """
+    comp = _load_file(hass, comp_or_platform)
+
+    if comp is None:
+        _LOGGER.error("Unable to find component %s", comp_or_platform)
+
+    return comp
+
+
+def _load_file(hass,  # type: HomeAssistant
+               comp_or_platform: str) -> Optional[ModuleType]:
+    """Try to load specified file.
 
     Looks in config dir first, then built-in components.
     Only returns it if also found to be valid.
@@ -133,8 +158,6 @@ def get_component(hass,  # type: HomeAssistant
                 _LOGGER.exception(
                     ("Error loading %s. Make sure all "
                      "dependencies are installed"), path)
-
-    _LOGGER.error("Unable to find component %s", comp_or_platform)
 
     return None
 
