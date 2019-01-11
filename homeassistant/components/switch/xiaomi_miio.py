@@ -149,7 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model in ['chuangmi.plug.m1', 'chuangmi.plug.m3',
-                    'chuangmi.plug.v2', 'chuangmi.plug.hmi205']:
+                   'chuangmi.plug.v2', 'chuangmi.plug.hmi205']:
         from miio import ChuangmiPlug
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
