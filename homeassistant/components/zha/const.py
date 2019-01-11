@@ -102,7 +102,7 @@ def populate_data():
     """
     from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
-    from homeassistant.components.sensor import zha as sensor_zha
+    from homeassistant.components.zha.sensor import RelativeHumiditySensor
 
     if zha.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zha.PROFILE_ID] = {}
@@ -162,7 +162,7 @@ def populate_data():
     # A map of device/cluster to component/sub-component
     CUSTOM_CLUSTER_MAPPINGS.update({
         (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
-            ('sensor', sensor_zha.RelativeHumiditySensor)
+            ('sensor', RelativeHumiditySensor)
     })
 
     # A map of hass components to all Zigbee clusters it could use
