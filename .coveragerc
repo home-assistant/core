@@ -127,7 +127,7 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
-    homeassistant/components/fibaro.py
+    homeassistant/components/fibaro/__init__.py
     homeassistant/components/*/fibaro.py
 
     homeassistant/components/gc100.py
