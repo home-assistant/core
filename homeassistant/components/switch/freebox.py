@@ -23,6 +23,7 @@ async def async_setup_platform(
         FbxWifiSwitch(fbx, perms_settings)
     ], True)
 
+
 class FbxSwitch(ToggleEntity):
     """Representation of a Freebox switch."""
 
