@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.device_tracker import \
     DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.locative import URL, DOMAIN
-from homeassistant.const import HTTP_OK
+from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.setup import async_setup_component
 
 
@@ -42,31 +42,31 @@ async def test_missing_data(locative_client):
 
     # No data
     req = await locative_client.get(_url({}))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No latitude
     copy = data.copy()
     del copy['latitude']
     req = await locative_client.get(_url(copy))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No device
     copy = data.copy()
     del copy['device']
     req = await locative_client.get(_url(copy))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No location
     copy = data.copy()
     del copy['id']
     req = await locative_client.get(_url(copy))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No trigger
     copy = data.copy()
     del copy['trigger']
     req = await locative_client.get(_url(copy))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # Test message
     copy = data.copy()
@@ -85,7 +85,7 @@ async def test_missing_data(locative_client):
     copy = data.copy()
     copy['trigger'] = 'foobar'
     req = await locative_client.get(_url(copy))
-    assert req.status == 422
+    assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
 
 async def test_enter_and_exit(hass, locative_client):
