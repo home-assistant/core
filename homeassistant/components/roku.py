@@ -42,31 +42,6 @@ CONFIG_SCHEMA = vol.Schema({
 ROKU_SCAN_SCHEMA = vol.Schema({})
 
 
-async def scan_for_rokus(hass):
-    """Scan for devices and present a notification of the ones found."""
-    from roku import Roku, RokuException
-    rokus = Roku.discover()
-
-    devices = []
-    for roku in rokus:
-        try:
-            r_info = roku.device_info
-        except RokuException:  # skip non-roku device
-            continue
-        devices.append('Name: {0}<br />Host: {1}<br />'.format(
-            r_info.userdevicename if r_info.userdevicename
-            else "{} {}".format(r_info.modelname, r_info.sernum),
-            roku.host))
-    if not devices:
-        devices = ['No device(s) found']
-
-    hass.components.persistent_notification.create(
-        'The following devices were found:<br /><br />' +
-        '<br /><br />'.join(devices),
-        title=NOTIFICATION_SCAN_TITLE,
-        notification_id=NOTIFICATION_SCAN_ID)
-
-
 async def async_setup(hass, config):
     """Set up the Roku component."""
     hass.data[DATA_ROKU] = {}
@@ -95,6 +70,31 @@ async def async_setup(hass, config):
         schema=ROKU_SCAN_SCHEMA)
 
     return True
+
+
+async def scan_for_rokus(hass):
+    """Scan for devices and present a notification of the ones found."""
+    from roku import Roku, RokuException
+    rokus = Roku.discover()
+
+    devices = []
+    for roku in rokus:
+        try:
+            r_info = roku.device_info
+        except RokuException:  # skip non-roku device
+            continue
+        devices.append('Name: {0}<br />Host: {1}<br />'.format(
+            r_info.userdevicename if r_info.userdevicename
+            else "{} {}".format(r_info.modelname, r_info.sernum),
+            roku.host))
+    if not devices:
+        devices = ['No device(s) found']
+
+    hass.components.persistent_notification.create(
+        'The following devices were found:<br /><br />' +
+        '<br /><br />'.join(devices),
+        title=NOTIFICATION_SCAN_TITLE,
+        notification_id=NOTIFICATION_SCAN_ID)
 
 
 async def _setup_roku(hass, hass_config, roku_config):

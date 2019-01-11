@@ -47,7 +47,7 @@ class RokuDevice(MediaPlayerDevice):
         self.current_app = None
         self._device_info = {}
 
-        """fetch device info right away"""
+        # fetch device info right away
         self.update()
 
     def update(self):
