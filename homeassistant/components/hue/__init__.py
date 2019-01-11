@@ -56,7 +56,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
 
+    """ Set up the Hue platform """
+
     async def hue_activate_scene(call, skip_reload=True):
+
+        """ Handle activation of Hue scene """
 
         # Get parameters
         group_name = call.data[ATTR_GROUP_NAME]
