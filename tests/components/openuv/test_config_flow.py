@@ -30,6 +30,9 @@ async def test_duplicate_error(hass):
 
 async def test_invalid_api_key(hass):
     """Test that an invalid API key throws an error."""
+    import pyopenuv
+    from pyopenuv.errors import OpenUvError
+
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
@@ -40,8 +43,8 @@ async def test_invalid_api_key(hass):
     flow = config_flow.OpenUvFlowHandler()
     flow.hass = hass
 
-    with patch('pyopenuv.util.validate_api_key',
-               return_value=mock_coro(False)):
+    with patch.object(pyopenuv.Client, 'uv_index',
+                      return_value=mock_coro(exception=OpenUvError)):
         result = await flow.async_step_user(user_input=conf)
         assert result['errors'] == {CONF_API_KEY: 'invalid_api_key'}
 
@@ -59,6 +62,8 @@ async def test_show_form(hass):
 
 async def test_step_import(hass):
     """Test that the import step works."""
+    import pyopenuv
+
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
@@ -69,8 +74,7 @@ async def test_step_import(hass):
     flow = config_flow.OpenUvFlowHandler()
     flow.hass = hass
 
-    with patch('pyopenuv.util.validate_api_key',
-               return_value=mock_coro(True)):
+    with patch.object(pyopenuv.Client, 'uv_index', return_value=mock_coro()):
         result = await flow.async_step_import(import_config=conf)
 
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -86,6 +90,8 @@ async def test_step_import(hass):
 
 async def test_step_user(hass):
     """Test that the user step works."""
+    import pyopenuv
+
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
@@ -97,8 +103,7 @@ async def test_step_user(hass):
     flow = config_flow.OpenUvFlowHandler()
     flow.hass = hass
 
-    with patch('pyopenuv.util.validate_api_key',
-               return_value=mock_coro(True)):
+    with patch.object(pyopenuv.Client, 'uv_index', return_value=mock_coro()):
         result = await flow.async_step_user(user_input=conf)
 
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
