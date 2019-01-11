@@ -15,13 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    add_entities([
+    async_add_entities([
         FbxRXSensor(fbx),
         FbxTXSensor(fbx)
-    ])
+    ], True)
 
 
 class FbxSensor(Entity):
