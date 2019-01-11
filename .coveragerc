@@ -77,7 +77,7 @@ omit =
     homeassistant/components/daikin/const.py
     homeassistant/components/*/daikin.py
 
-    homeassistant/components/depict.py
+    homeassistant/components/depict/__init__.py
     homeassistant/components/light/depict.py
     homeassistant/components/media_player/depict.py
 
