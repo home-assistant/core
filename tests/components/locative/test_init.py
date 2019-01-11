@@ -18,6 +18,12 @@ def _url(data=None):
     return "{}?{}".format(URL, data)
 
 
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf):
+    """Mock device tracker config loading."""
+    pass
+
+
 @pytest.fixture
 def locative_client(loop, hass, hass_client):
     """Locative mock client."""
