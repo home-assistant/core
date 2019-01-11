@@ -82,10 +82,6 @@ class HueBridge:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
 
-        hass.services.async_register(
-            DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
-            schema=SCENE_SCHEMA)
-
         return True
 
     async def async_reset(self):
@@ -116,7 +112,8 @@ class HueBridge:
         return await self.hass.config_entries.async_forward_entry_unload(
             self.config_entry, 'light')
 
-    async def hue_activate_scene(self, call, updated=False):
+    async def hue_activate_scene(self, call, updated=False,
+                                 hide_warnings=False):
         """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
@@ -137,18 +134,21 @@ class HueBridge:
         if not updated and (group is None or scene is None):
             await self.api.groups.update()
             await self.api.scenes.update()
-            await self.hue_activate_scene(call, updated=True)
-            return
+            return await self.hue_activate_scene(call, updated=True)
 
         if group is None:
-            LOGGER.warning('Unable to find group %s', group_name)
-            return
+            if not hide_warnings:
+                LOGGER.warning('Unable to find group %s'
+                               ' on bridge %s', group_name, self.host)
+            return False
 
         if scene is None:
-            LOGGER.warning('Unable to find scene %s', scene_name)
-            return
+            if not hide_warnings:
+                LOGGER.warning('Unable to find scene %s'
+                               ' on bridge %s', scene_name, self.host)
+            return False
 
-        await group.set_action(scene=scene.id)
+        return await group.set_action(scene=scene.id)
 
 
 async def get_bridge(hass, host, username=None):
