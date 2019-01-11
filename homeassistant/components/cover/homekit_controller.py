@@ -13,7 +13,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_SET_TILT_POSITION,
     ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.const import (
-    STATE_UNKNOWN, STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
+    STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 
 STATE_STOPPED = 'stopped'
 
@@ -102,7 +102,7 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state != STATE_UNKNOWN
+        return self._state is not None
 
     @property
     def supported_features(self):
@@ -167,7 +167,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state != STATE_UNKNOWN
+        return self._state is not None
 
     def update_characteristics(self, characteristics):
         """Synchronise the Cover state with Home Assistant."""
