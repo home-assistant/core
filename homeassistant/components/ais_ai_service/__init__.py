@@ -608,6 +608,8 @@ def select_entity(hass, long_press):
             else:
                 # we will change this item directly
                 if CURR_ENTITIE.startswith("media_player."):
+                    # enter to media player
+                    CURR_ENTITIE_ENTERED = True
                     # play / pause on selected player
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == 'playing':
@@ -689,7 +691,19 @@ def select_entity(hass, long_press):
                 commit_current_position(hass)
             elif CURR_ENTITIE.startswith('input_number.'):
                 commit_current_position(hass)
-
+            elif CURR_ENTITIE.startswith("media_player."):
+                # play / pause on selected player
+                curr_state = hass.states.get(CURR_ENTITIE).state
+                if curr_state == 'playing':
+                    if long_press is True:
+                        _say_it(hass, "stop", None)
+                        hass.services.call('media_player', 'media_stop', {"entity_id": CURR_ENTITIE})
+                    else:
+                        _say_it(hass, "pauza", None)
+                        hass.services.call('media_player', 'media_pause', {"entity_id": CURR_ENTITIE})
+                else:
+                    _say_it(hass, "graj", None)
+                    hass.services.call('media_player', 'media_play', {"entity_id": CURR_ENTITIE})
         else:
             # eneter on unchanged item
             _say_it(hass, "Tej pozycji nie można zmieniać", None)
@@ -805,9 +819,12 @@ def set_focus_on_prev_entity(hass, long_press):
     # entity in the group is selected
     # check if the entity option can be selected
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
-        set_prev_position(hass)
-    else:
         if CURR_ENTITIE.startswith("media_player."):
+            hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
+        else:
+            set_prev_position(hass)
+    else:
+        if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED:
             hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
         else:
             # entity not selected or no way to change the entity, go to next one
@@ -836,9 +853,12 @@ def set_focus_on_next_entity(hass, long_press):
     # entity in the group is selected
     # check if the entity option can be selected
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
-        set_next_position(hass)
-    else:
         if CURR_ENTITIE.startswith("media_player."):
+            hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
+        else:
+            set_next_position(hass)
+    else:
+        if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED is True:
             hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
         else:
             # entity not selected or no way to change the entity, go to next one
@@ -908,7 +928,7 @@ def go_to_player(hass, say):
         if group['entity_id'] == 'group.audio_player':
             set_curr_group(hass, group)
             set_curr_entity(hass, 'media_player.wbudowany_glosnik')
-            CURR_ENTITIE_ENTERED = False
+            CURR_ENTITIE_ENTERED = True
             if say:
                 _say_it(hass, "Sterowanie odtwarzaczem", None)
 
@@ -1779,7 +1799,7 @@ def _process(hass, text, callback):
             if s is False:
                 m = m_org
 
-        # the was no match - try again but with context
+        # the was no match - try again but with current context
         if found_intent is None:
             suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
             if suffix is not None:
@@ -1801,6 +1821,30 @@ def _process(hass, text, callback):
                             # in this case we will know if the call source
                             CURR_BUTTON_CODE = 0
                             break
+
+        # the was no match - try again but with player context - TODO
+        # we should get media player source first
+        # if found_intent is None:
+        #     suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
+        #     if suffix is not None:
+        #         for intent_type, matchers in intents.items():
+        #             if found_intent is not None:
+        #                 break
+        #             for matcher in matchers:
+        #                 match = matcher.match(suffix + " " + text)
+        #                 if match:
+        #                     # we have a match
+        #                     found_intent = intent_type
+        #                     m, s = yield from hass.helpers.intent.async_handle(
+        #                         DOMAIN, intent_type,
+        #                         {key: {'value': value} for key, value
+        #                          in match.groupdict().items()},
+        #                         suffix + " " + text)
+        #                     # reset the curr button code
+        #                     # TODO the mic should send a button code too
+        #                     # in this case we will know if the call source
+        #                     CURR_BUTTON_CODE = 0
+        #                     break
         if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
@@ -1991,7 +2035,7 @@ class PlayRadioIntent(intent.IntentHandler):
                 yield from hass.services.async_call(
                      'ais_cloud', 'play_audio',
                      json_ws_resp, blocking=False)
-                message = "OK, włączam radio " + name
+                message = "OK, gramy radio " + name
                 success = True
         return message, success
 

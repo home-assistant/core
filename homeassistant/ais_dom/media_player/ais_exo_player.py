@@ -390,7 +390,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         name = self.hass.states.get(entity_id).state
         if self._media_source == ais_global.G_AN_LOCAL:
             name = os.path.basename(name)
-        name = 'Włączam kolejny: ' + name
+        name = 'Odtwarzam kolejny: ' + name
         self.hass.services.call(
             'ais_ai_service',
             'say_it', {
@@ -424,7 +424,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         name = self.hass.states.get(entity_id).state
         if self._media_source == ais_global.G_AN_LOCAL:
             name = os.path.basename(name)
-        name = 'Włączam poprzedni: ' + name
+        name = 'Odtwarzam poprzedni: ' + name
         self.hass.services.call(
             'ais_ai_service',
             'say_it', {

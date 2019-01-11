@@ -346,17 +346,17 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
 
         # ais config
-        ais_config_path = str(os.path.dirname(__file__))
-        ais_config_path += '/ais-dom-config/configuration.yaml'
-        ais_config = load_yaml_config_file(ais_config_path)
-        merge_packages_config(hass, ais_config, config)
-        # try:
-        #     import homeassistant.ais_dom.ais_utils as ais_utils
-        #     ais_utils.dict_merge(ais_config, conf)
-        # except:
-        #     _LOGGER.error("Error loading user customize")
-        # return ais_config
-        return config
+        try:
+            import homeassistant.ais_dom.ais_utils as ais_utils
+            ais_config_path = str(os.path.dirname(__file__))
+            ais_config_path += '/ais-dom-config/configuration.yaml'
+            ais_config = load_yaml_config_file(ais_config_path)
+            ais_utils.dict_merge(ais_config, config)
+        except:
+            _LOGGER.error("Error loading user customize")
+            return config
+        return ais_config
+
 
     return await hass.async_add_executor_job(_load_hass_yaml_config)
 

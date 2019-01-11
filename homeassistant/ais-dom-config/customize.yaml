@@ -145,11 +145,6 @@ weblink.https_localhost_cert:
   friendly_name: CERTYFIKAT HTTPS
 weblink.uncertified_android_registration:
   friendly_name: Rejestracja urządzenia w Google Android
-sensor.memory_free:
-  friendly_name: Dostępna pamięć RAM
-sensor.since_last_boot_templated:
-  friendly_name: Czas od ostatniego uruchomienia
-  icon: mdi:camera-timer
 sensor.internal_ip_address:
   friendly_name: Adres IP
   icon: mdi:access-point-network
@@ -159,21 +154,6 @@ sensor.ais_android_wifi_current_network_info:
 sensor.local_host_name:
   friendly_name: Lokalna nazwa hosta
   icon: mdi:dns
-sensor.speedtest_download:
-  friendly_name: Prędkość pobierania
-sensor.speedtest_upload:
-  friendly_name: Prędkość wysyłania
-sensor.speedtest_ping:
-  friendly_name: Ping
-sensor.uzycie_procesora:
-  icon: mdi:chip
-  friendly_name: Użycie procesora
-sensor.uzycie_dysku:
-  icon: mdi:harddisk
-  friendly_name: Użycie dysku
-sensor.wolna_pamiec:
-  icon: mdi:memory
-  friendly_name: Wolna pamięć
 sensor.ais_rss_help_text:
   custom_ui_state_card: state-card-text
   friendly_name: Tekst strony
