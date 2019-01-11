@@ -16,13 +16,13 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
 )
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING,
+    CONF_HOST, CONF_NAME, CONF_REGION, STATE_IDLE, STATE_OFF, STATE_PLAYING,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pyps4-homeassistant==0.1.8']
+REQUIREMENTS = ['pyps4-homeassistant==0.2.1']
 
 _CONFIGURING = {}
 PLATFORM = 'PS4'
@@ -34,6 +34,7 @@ SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_STOP | SUPPORT_SELECT_SOURCE
 
 DEFAULT_NAME = "PlayStation 4"
+DEFAULT_REGION = 'R1'
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
@@ -42,9 +43,13 @@ CONFIG_FILE = '.ps4.conf'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=10)
 
+REGIONS = ('R1', 'R2', 'R3', 'R4', 'R5')
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION):
+        (vol.In(REGIONS)),
 })
 
 
@@ -125,6 +130,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the PS4 platform."""
     import pyps4_homeassistant as pyps4
     host = config.get(CONF_HOST)
+    region = config.get(CONF_REGION)
     creds = None
     creds = get_credentials(hass, config)
     if creds is not None:
@@ -133,7 +139,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         ps4 = pyps4.Ps4(host, creds)
         games_file = hass.config.path(GAMES_FILE)
-        add_devices([PS4Device(name, host, ps4, games_file)], True)
+        add_devices([PS4Device(name, host, region, ps4, games_file)], True)
     elif creds is None:
         _creds = pyps4.Credentials()
         request_configuration(hass, config, add_devices, _creds)
@@ -143,11 +149,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, name, host, ps4, games_file):
+    def __init__(self, name, host, region, ps4, games_file):
         """Initialize the ps4 device."""
         self._ps4 = ps4
         self._host = host
         self._name = name
+        self._region = region
         self._state = STATE_UNKNOWN
         self._games_filename = games_file
         self._media_content_id = None
@@ -214,12 +221,13 @@ class PS4Device(MediaPlayerDevice):
         """Get PS Store Data."""
         try:
             app_name, art = self._ps4.get_ps_store_data(
-                name, titleid)
+                name, titleid, self._region)
         except TypeError:
             app_name = None
             art = None
-            _LOGGER.debug(
-                "Could not find data for PS ID: %s", titleid)
+            _LOGGER.error(
+                "Could not find data in region: %s for PS ID: %s",
+                self._region, titleid)
         finally:
             self._media_title = app_name or name
             self._source = self._media_title
