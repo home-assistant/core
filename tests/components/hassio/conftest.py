@@ -44,18 +44,23 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
 
 @pytest.fixture
 def hassio_client(hassio_stubs, hass, hass_client):
+    """Return a Hass.io HTTP client."""
     yield hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture
 def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
+    """Return a Hass.io HTTP client without auth."""
     yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
 def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""
-    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+    async def get_client_session():
+        return hass.helpers.aiohttp_client.async_get_clientsession()
+
+    websession = hass.loop.run_until_complete(get_client_session())
 
     with patch.dict(os.environ, {'HASSIO_TOKEN': HASSIO_TOKEN}):
         yield HassIO(hass.loop, websession, "127.0.0.1")
