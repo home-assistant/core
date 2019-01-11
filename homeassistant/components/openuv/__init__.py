@@ -20,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_sunrise, async_track_sunset, async_track_time_interval)
+from homeassistant.helpers.sun import is_up
 
 from .config_flow import configured_instances
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -171,6 +172,10 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(
                 config_entry, component))
+
+    # Check for whether it's nighttime upon startup:
+    if not is_up(hass):
+        openuv.is_nighttime = True
 
     async def refresh(event_time):
         """Refresh OpenUV data."""
