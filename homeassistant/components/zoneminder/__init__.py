@@ -8,10 +8,10 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PATH, CONF_SSL, CONF_USERNAME,
-    CONF_VERIFY_SSL, ATTR_NAME, CONF_HOSTS, ATTR_ID)
-import homeassistant.helpers.config_validation as cv
+    CONF_VERIFY_SSL, ATTR_NAME, ATTR_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
