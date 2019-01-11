@@ -57,7 +57,7 @@ SERVICE_SCHEMAS = {
         vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
         vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
         vol.Required(ATTR_VALUE): cv.string,
-        vol.Optional(ATTR_MANUFACTURER): object,
+        vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
     }),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema({
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -66,7 +66,7 @@ SERVICE_SCHEMAS = {
         vol.Required(ATTR_COMMAND): cv.positive_int,
         vol.Required(ATTR_COMMAND_TYPE): cv.string,
         vol.Optional(ATTR_ARGS, default=''): cv.string,
-        vol.Optional(ATTR_MANUFACTURER): object,
+        vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
     }),
 }
 
