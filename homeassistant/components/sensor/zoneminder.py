@@ -52,7 +52,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(ZMSensorMonitors(monitor))
 
             for sensor in config[CONF_MONITORED_CONDITIONS]:
-                sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
+                sensors.append(
+                    ZMSensorEvents(monitor, include_archived, sensor)
+                )
 
         sensors.append(ZMSensorRunState(zm_client))
         add_entities(sensors)

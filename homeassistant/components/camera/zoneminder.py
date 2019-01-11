@@ -22,7 +22,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
+            _LOGGER.warning(
+                "Could not fetch monitors from ZoneMinder host: %s"
+            )
             return
 
         cameras = []
