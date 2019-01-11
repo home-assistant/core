@@ -35,7 +35,7 @@ async def async_setup(hass, config):
     return True
 
 
-class GeoLocationEvent(Entity):
+class GeolocationEvent(Entity):
     """This represents an external event with an associated geolocation."""
 
     @property
