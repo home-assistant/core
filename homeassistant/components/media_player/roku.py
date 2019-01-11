@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
 import logging
+import requests.exceptions
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
@@ -49,8 +50,6 @@ class RokuDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        import requests.exceptions
-
         try:
             self._device_info = self.roku.device_info
             self.ip_address = self.roku.host

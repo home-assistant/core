@@ -4,6 +4,7 @@ Support for the Roku remote.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.roku/
 """
+import requests.exceptions
 
 from homeassistant.components import remote
 from homeassistant.const import (CONF_HOST)
@@ -34,8 +35,6 @@ class RokuRemote(remote.RemoteDevice):
 
     def update(self):
         """Retrieve latest state."""
-        import requests.exceptions
-
         try:
             self._device_info = self.roku.device_info
         except (requests.exceptions.ConnectionError,
