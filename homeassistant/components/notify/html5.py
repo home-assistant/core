@@ -182,14 +182,15 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-    def find_registration_name(self, data, suggested = None):
+    def find_registration_name(self, data, suggested=None):
         """Find a registration name matching data or generate a unique one."""
         endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
         for key, registration in self.registrations.items():
             subscription = registration.get(ATTR_SUBSCRIPTION)
             if subscription.get(ATTR_ENDPOINT) == endpoint:
                 return key
-        return ensure_unique_string(suggested or 'unnamed device', self.registrations)
+        return ensure_unique_string(suggested or 'unnamed device',
+                                    self.registrations)
 
     async def delete(self, request):
         """Delete a registration."""
