@@ -4,9 +4,9 @@ Support for Ambient Weather Station Service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambient_station/
 """
-from datetime import timedelta
-from time import sleep
+import asyncio
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -75,7 +75,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Initialze each sensor platform for each monitored condition."""
     from ambient_api.ambientapi import AmbientAPI
 
@@ -91,8 +92,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         AMBIENT_APPLICATION_KEY=DEFAULT_APP_KEY,
         log_level='DEBUG')
 
-    data = AmbientStationData(api)
-    data.update()
+    data = AmbientStationData(hass, api)
+    await data.async_update()
 
     sensor_list = []
     for station in data.stations:
@@ -107,7 +108,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 AmbientWeatherSensor(
                     data, station, condition, name, units))
 
-    add_entities(sensor_list, True)
+    async_add_entities(sensor_list, True)
 
 
 class AmbientWeatherSensor(Entity):
@@ -142,9 +143,9 @@ class AmbientWeatherSensor(Entity):
         """Return a unique, unchanging string that represents this sensor."""
         return '{0}_{1}'.format(self._station.mac_address, self._name)
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        self._data.update()
+        await self._data.async_update()
         latest_data = self._data.data[self._station.mac_address]
 
         try:
@@ -156,26 +157,28 @@ class AmbientWeatherSensor(Entity):
 class AmbientStationData:
     """Define an object to retrieve data from the Ambient API."""
 
-    def __init__(self, api):
+    def __init__(self, hass, api):
         """Initialize the station data object."""
         self._api = api
+        self._hass = hass
         self.data = {}
         self.stations = []
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
-    def update(self):
+    async def async_update(self):
         """Get new data for all stations."""
         # Ambient's API has really aggressive rate limiting (no more than 1
         # request per second), so throughout this method, we make sure to sleep
         # at least 1 second before firing further requests:
-        self.stations = self._api.get_devices()
-        sleep(1)
+        self.stations = await self._hass.async_add_executor_job(
+            self._api.get_devices)
+        await asyncio.sleep(1)
 
         for idx, station in enumerate(self.stations):
             if idx > 0:
-                sleep(1)
+                await asyncio.sleep(1)
 
-            data = station.get_data()
+            data = await self._hass.async_add_executor_job(station.get_data)
             _LOGGER.debug(
                 'New data for station "%s": %s', station.info['name'], data)
 
