@@ -3,7 +3,7 @@ aiohttp==3.5.1
 astral==1.7.1
 async_timeout==3.0.1
 attrs==18.2.0
-bcrypt==3.1.4
+bcrypt==3.1.5
 certifi>=2018.04.16
 jinja2>=2.10
 PyJWT==1.6.4
@@ -196,7 +196,7 @@ bellows==0.7.0
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
-blinkpy==0.11.0
+blinkpy==0.11.1
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -351,6 +351,9 @@ eliqonline==1.2.2
 # homeassistant.components.elkm1
 elkm1-lib==0.7.13
 
+# homeassistant.components.emulated_roku
+emulated_roku==0.1.7
+
 # homeassistant.components.enocean
 enocean==0.40
 
@@ -487,7 +490,7 @@ hangups==0.4.6
 hbmqtt==0.9.4
 
 # homeassistant.components.sensor.jewish_calendar
-hdate==0.7.5
+hdate==0.8.7
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
@@ -511,10 +514,10 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181219.0
+home-assistant-frontend==20190109.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.1
+homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
 # homekit==0.12.0
@@ -677,7 +680,7 @@ mitemp_bt==0.0.1
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.41.1
+mutagen==1.42.0
 
 # homeassistant.components.mychevy
 mychevy==1.2.0
@@ -689,8 +692,7 @@ mycroftapi==2.0
 myusps==1.3.2
 
 # homeassistant.components.media_player.nad
-# homeassistant.components.media_player.nadtcp
-nad_receiver==0.0.9
+nad_receiver==0.0.11
 
 # homeassistant.components.light.nanoleaf_aurora
 nanoleaf==0.4.1
@@ -788,7 +790,7 @@ pilight==0.1.1
 
 # homeassistant.components.camera.proxy
 # homeassistant.components.image_processing.tensorflow
-pillow==5.3.0
+pillow==5.4.1
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -988,7 +990,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.sensor.flunearyou
-pyflunearyou==1.0.0
+pyflunearyou==1.0.1
 
 # homeassistant.components.light.futurenow
 pyfnip==0.2
@@ -1019,7 +1021,7 @@ pyhaversion==2.0.3
 pyhik==0.1.9
 
 # homeassistant.components.hive
-pyhiveapi==0.2.14
+pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
 pyhomematic==0.1.54
@@ -1058,7 +1060,7 @@ pykwb==0.0.8
 pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
-pylast==2.4.0
+pylast==3.0.0
 
 # homeassistant.components.sensor.launch_library
 pylaunches==0.2.0
@@ -1724,7 +1726,7 @@ yeelight==0.4.3
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.12.17
+youtube_dl==2019.01.10
 
 # homeassistant.components.light.zengge
 zengge==0.2

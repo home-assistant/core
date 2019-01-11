@@ -20,7 +20,8 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
     MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
@@ -63,9 +64,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT binary sensor dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT binary sensor."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(binary_sensor.DOMAIN, 'mqtt'),

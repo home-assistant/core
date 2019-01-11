@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "device_fail": "Onverwachte fout bij het aanmaken van een apparaat.",
+            "device_timeout": "Time-out voor verbinding met het apparaat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Voer het IP-adres van uw Daikin AC in.",
+                "title": "Daikin AC instellen"
+            }
+        },
+        "title": "Daikin AC"
+    }
+}
