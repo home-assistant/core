@@ -53,11 +53,6 @@ class FbxWifiSwitch(ToggleEntity):
         return self._state
 
     @property
-    def should_poll(self):
-        """Poll for status."""
-        return True
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON
