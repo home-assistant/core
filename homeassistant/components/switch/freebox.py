@@ -31,7 +31,7 @@ class FbxSwitch(SwitchDevice):
 
     def __init__(self, fbx):
         """Initilize the switch."""
-        self.state = None
+        self._state = None
         self.fbx = fbx
 
     @property
@@ -41,7 +41,7 @@ class FbxSwitch(SwitchDevice):
 
     async def async_get_perms(self):
         """Get permissions from Freebox."""
-        self._permissions = await self.fbx.get_permissions()
+        self.permissions = await self.fbx.get_permissions()
 
 
 class FbxWifiSwitch(FbxSwitch):
@@ -65,11 +65,6 @@ class FbxWifiSwitch(FbxSwitch):
     def name(self):
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -102,7 +97,7 @@ class FbxWifiSwitch(FbxSwitch):
         from aiofreepybox.constants import PERMISSION_SETTINGS
 
         await super().async_get_perms()
-        self.perms_settings = True if self._permissions.get(
+        self.perms_settings = True if self.permissions.get(
                                       PERMISSION_SETTINGS) else False
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
