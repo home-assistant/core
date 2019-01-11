@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import mock_coro, register_auth_provider
+from tests.common import mock_coro
 from . import API_PASSWORD
 
 
