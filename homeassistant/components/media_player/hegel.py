@@ -65,7 +65,7 @@ class HegelDevice(MediaPlayerDevice):
         self._source_number_to_name = {}
 
     @classmethod
-    def telnet_request(cls, telnet, command, expected_prefix):
+    def telnet_request(cls, telnet, command):
         """Execute `command` and return the response."""
         try:
             telnet.write(command.encode("ASCII") + b"\r")
@@ -78,7 +78,7 @@ class HegelDevice(MediaPlayerDevice):
         for _ in range(3):
             result = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII") \
                 .strip()
-            if result.startswith(expected_prefix):
+            if result.startswith(''):
                 return result
 
         return None
@@ -107,38 +107,40 @@ class HegelDevice(MediaPlayerDevice):
             _LOGGER.warning("Hegel %s refused connection", self._name)
             return False
 
-        pwstate = self.telnet_request(telnet, "?P", "PWR")
+        pwstate = self.telnet_request(telnet, "-p.?")
         if pwstate:
             self._pwstate = pwstate
 
-        volume_str = self.telnet_request(telnet, "?V", "VOL")
-        self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
+        volume_str = self.telnet_request(telnet, "-v.?")
+        self._volume = (volume_str.split('.')[1]) if volume_str else None
 
-        muted_value = self.telnet_request(telnet, "?M", "MUT")
+        muted_value = self.telnet_request(telnet, "-m.?")
         self._muted = (muted_value == "MUT0") if muted_value else None
 
-        # Build the source name dictionaries if necessary
-        if not self._source_name_to_number:
-            for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(
-                    telnet, "?RGB" + str(i).zfill(2), "RGB")
+        _LOGGER.info("DATA HEGEL: %s, %s, %s", pwstate, volume_str, muted_value)
 
-                if not result:
-                    continue
+        # # Build the source name dictionaries if necessary
+        # if not self._source_name_to_number:
+        #     for i in range(MAX_SOURCE_NUMBERS):
+        #         result = self.telnet_request(
+        #             telnet, "?RGB" + str(i).zfill(2), "RGB")
 
-                source_name = result[6:]
-                source_number = str(i).zfill(2)
+        #         if not result:
+        #             continue
 
-                self._source_name_to_number[source_name] = source_number
-                self._source_number_to_name[source_number] = source_name
+        #         source_name = result[6:]
+        #         source_number = str(i).zfill(2)
 
-        source_number = self.telnet_request(telnet, "?F", "FN")
+        #         self._source_name_to_number[source_name] = source_number
+        #         self._source_number_to_name[source_number] = source_name
 
-        if source_number:
-            self._selected_source = self._source_number_to_name \
-                .get(source_number[2:])
-        else:
-            self._selected_source = None
+        # source_number = self.telnet_request(telnet, "?F")
+
+        # if source_number:
+        #     self._selected_source = self._source_number_to_name \
+        #         .get(source_number[2:])
+        # else:
+        #     self._selected_source = None
 
         telnet.close()
         return True
@@ -201,9 +203,10 @@ class HegelDevice(MediaPlayerDevice):
         self.telnet_command("VD")
 
     def set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        """Set volume level, range 0..100."""
+        
+        self.telnet_command("-v." + str(int(volume*100)))
+        _LOGGER.info("Volume Hegel changed: %s percent", volume)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
