@@ -11,7 +11,7 @@ from homeassistant.components.homekit_controller import (HomeKitEntity,
                                                          KNOWN_ACCESSORIES)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
-                                 STATE_UNKNOWN, ATTR_BATTERY_LEVEL)
+                                 ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -82,8 +82,8 @@ class HomeKitLock(HomeKitEntity, LockDevice):
 
     @property
     def available(self):
-        """Return true if device is locked."""
-        return self._state != STATE_UNKNOWN
+        """Return True if entity is available."""
+        return self._state is not None
 
     def lock(self, **kwargs):
         """Lock the device."""
