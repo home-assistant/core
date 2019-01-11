@@ -59,7 +59,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
     _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
-    _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
     async_add_entities([device])
