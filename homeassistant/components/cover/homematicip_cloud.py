@@ -39,6 +39,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     """Representation of a HomematicIP Cloud cover device."""
 
+    def __init__(self, home, device):
+        """Initialize the cover device."""
+        super().__init__(home, device)
+
     @property
     def current_cover_position(self):
         """Return current position of cover."""
