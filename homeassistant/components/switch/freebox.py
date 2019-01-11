@@ -48,14 +48,9 @@ class FbxWifiSwitch(ToggleEntity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the switch."""
-        return self._state
-
-    @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state == STATE_ON
+        return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -95,4 +90,4 @@ class FbxWifiSwitch(ToggleEntity):
 
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
-        self._state = STATE_ON if active else STATE_OFF
+        self._state = True if active else False
