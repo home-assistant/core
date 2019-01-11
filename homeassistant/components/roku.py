@@ -59,7 +59,7 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_ROKU, roku_discovered)
 
     for conf in config.get(DOMAIN, []):
-        _setup_roku(hass, config, conf) 
+        _setup_roku(hass, config, conf)
 
     hass.services.register(
         DOMAIN, SERVICE_SCAN, service_handler,
