@@ -2,9 +2,9 @@
 
 import typing as T
 
-import collections
-
 import asyncio.subprocess
+import collections
+import logging
 
 import voluptuous as vol
 
@@ -22,9 +22,11 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
     vol.Optional(CONF_ARGS, default=None): vol.Any(vol.DefaultTo(list), [str]),
 }, extra=vol.PREVENT_EXTRA)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class InvalidAuthError(HomeAssistantError):
-    """Raised when submitting invalid authentication."""
+    """Raised when authentication with given credentials fails."""
 
 
 @AUTH_PROVIDERS.register("external")
@@ -55,12 +57,17 @@ class ExternalAuthProvider(AuthProvider):
             "username": username,
             "password": password,
         }
-        process = await asyncio.subprocess.create_subprocess_exec(
-            self.config[CONF_PROGRAM], *self.config[CONF_ARGS],
-            env=env,
-            stdout=asyncio.subprocess.PIPE,
-        )
-        stdout = (await process.communicate())[0]
+        try:
+            process = await asyncio.subprocess.create_subprocess_exec(
+                self.config[CONF_PROGRAM], *self.config[CONF_ARGS],
+                env=env,
+                stdout=asyncio.subprocess.PIPE,
+            )
+            stdout = (await process.communicate())[0]
+        except OSError as err:
+            _LOGGER.error("Error while authenticating '%s': %s",
+                          username, err)
+            raise InvalidAuthError
 
         if process.returncode != 0:
             raise InvalidAuthError
