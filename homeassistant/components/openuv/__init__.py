@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/openuv/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,9 +17,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_sunrise, async_track_sunset, async_track_time_interval)
-from homeassistant.helpers.sun import is_up
 
 from .config_flow import configured_instances
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -29,9 +25,7 @@ REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OPENUV_CLIENT = 'data_client'
-DATA_OPENUV_LISTENER_REFRESH = 'data_listener_refresh'
-DATA_OPENUV_LISTENER_SUNRISE = 'data_listener_sunrise'
-DATA_OPENUV_LISTENER_SUNSET = 'data_listener_sunset'
+DATA_OPENUV_LISTENER = 'data_listener'
 DATA_PROTECTION_WINDOW = 'protection_window'
 DATA_UV = 'uv'
 
@@ -107,9 +101,7 @@ async def async_setup(hass, config):
     """Set up the OpenUV component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_REFRESH] = {}
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNRISE] = {}
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNSET] = {}
+    hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
 
     if DOMAIN not in config:
         return True
@@ -173,36 +165,13 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(
                 config_entry, component))
 
-    # Check for whether it's nighttime upon startup:
-    if not is_up(hass):
-        openuv.is_nighttime = True
-
-    async def refresh(event_time):
+    async def update_data(service):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_REFRESH][
-        config_entry.entry_id] = async_track_time_interval(
-            hass, refresh,
-            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
-
-    async def set_sunrise():
-        _LOGGER.debug('Starting API polling at sunrise')
-        openuv.is_nighttime = False
-        await openuv.async_update()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNRISE][
-        config_entry.entry_id] = async_track_sunrise(hass, set_sunrise)
-
-    async def set_sunset():
-        _LOGGER.debug('Stopping API polling at sunset')
-        openuv.is_nighttime = True
-
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER_SUNSET][
-        config_entry.entry_id] = async_track_sunset(hass, set_sunset)
+    hass.services.async_register(DOMAIN, 'update_data', update_data)
 
     return True
 
@@ -210,11 +179,6 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
-
-    for key in (DATA_OPENUV_LISTENER_REFRESH, DATA_OPENUV_LISTENER_SUNRISE,
-                DATA_OPENUV_LISTENER_SUNSET):
-        remove_listener = hass.data[DOMAIN][key].pop(config_entry.entry_id)
-        remove_listener()
 
     for component in ('binary_sensor', 'sensor'):
         await hass.config_entries.async_forward_entry_unload(
@@ -231,14 +195,10 @@ class OpenUV:
         self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
         self.data = {}
-        self.is_nighttime = False
         self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        if self.is_nighttime:
-            return
-
         if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
             resp = await self.client.uv_protection_window()
             data = resp['result']
