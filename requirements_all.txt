@@ -680,7 +680,7 @@ mitemp_bt==0.0.1
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.41.1
+mutagen==1.42.0
 
 # homeassistant.components.mychevy
 mychevy==1.2.0
