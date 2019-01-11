@@ -10,9 +10,9 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -32,7 +32,7 @@ UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 
 DEFAULT_APP_KEY = '32f561c4cb3a400d9c71ae0e96495466beaea220e315403c955b8f2bb' \
     '12ac9a1'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
     '24hourrainin': ['24 Hr Rain', 'in'],
