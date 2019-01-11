@@ -31,7 +31,7 @@ async def async_setup_platform(
         return
 
     host = discovery_info[CONF_HOST]
-    async_add_entities([RokuDevice(host)])
+    async_add_entities([RokuDevice(host)], True)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -46,9 +46,6 @@ class RokuDevice(MediaPlayerDevice):
         self.channels = []
         self.current_app = None
         self._device_info = {}
-
-        # fetch device info right away
-        self.update()
 
     def update(self):
         """Retrieve latest state."""
