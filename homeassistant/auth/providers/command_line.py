@@ -5,6 +5,7 @@ import typing as T
 import asyncio.subprocess
 import collections
 import logging
+import os
 
 import voluptuous as vol
 
@@ -14,11 +15,15 @@ from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
 
 
-CONF_PROGRAM = "program"
+CONF_COMMAND = "command"
 CONF_ARGS = "args"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
-    vol.Required(CONF_PROGRAM): str,
+    vol.Required(CONF_COMMAND): vol.All(
+        str,
+        os.path.normpath,
+        msg="must be an absolute path"
+    ),
     vol.Optional(CONF_ARGS, default=None): vol.Any(vol.DefaultTo(list), [str]),
 }, extra=vol.PREVENT_EXTRA)
 
@@ -59,12 +64,13 @@ class CommandLineAuthProvider(AuthProvider):
         }
         try:
             process = await asyncio.subprocess.create_subprocess_exec(
-                self.config[CONF_PROGRAM], *self.config[CONF_ARGS],
+                self.config[CONF_COMMAND], *self.config[CONF_ARGS],
                 env=env,
                 stdout=asyncio.subprocess.PIPE,
             )
             stdout = (await process.communicate())[0]
         except OSError as err:
+            # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating '%s': %s",
                           username, err)
             raise InvalidAuthError
