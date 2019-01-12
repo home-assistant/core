@@ -47,6 +47,8 @@ DEFAULT_KEY = 'no key'
 CURRENT = '0,0'
 ZONE_CHECK = 'a'
 SCAN_INTERVAL = timedelta(seconds=60)
+ZONE_CHECK_COUNT = None
+USER_DISPLAY = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_API_KEY, default=DEFAULT_KEY): cv.string,
@@ -71,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Adding Reverse Geocode sensor for %s", name)
         add_devices([GoogleGeocode(hass, origin, name,
                                    api_key, options, display_zone)])
-
+    global SCAN_INTERVAL
     SCAN_INTERVAL = timedelta(seconds=len(
         hass.states.entity_ids('device_tracker') * 34))
     _LOGGER.info(
@@ -313,17 +315,10 @@ class GoogleGeocode(Entity):
         if append_check == "":
             pass
         else:
-            USER_DISPLAY.append(append_check)
+            self.append(append_check)
 
     @staticmethod
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
         return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-
-    def _get_gravatar_for_email(self, email: str):
-        """Return an 80px Gravatar for the given email address."""
-        import hashlib
-        url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
-        return url.format(hashlib.md5(
-            email.encode('utf-8').lower()).hexdigest())
