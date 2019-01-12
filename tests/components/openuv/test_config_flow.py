@@ -1,12 +1,10 @@
 """Define tests for the OpenUV config flow."""
-from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN, config_flow
 from homeassistant.const import (
-    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_SCAN_INTERVAL)
+    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -84,7 +82,6 @@ async def test_step_import(hass):
             CONF_ELEVATION: 59.1234,
             CONF_LATITUDE: 39.128712,
             CONF_LONGITUDE: -104.9812612,
-            CONF_SCAN_INTERVAL: 1800,
         }
 
 
@@ -97,7 +94,6 @@ async def test_step_user(hass):
         CONF_ELEVATION: 59.1234,
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
-        CONF_SCAN_INTERVAL: timedelta(minutes=5)
     }
 
     flow = config_flow.OpenUvFlowHandler()
@@ -113,5 +109,4 @@ async def test_step_user(hass):
             CONF_ELEVATION: 59.1234,
             CONF_LATITUDE: 39.128712,
             CONF_LONGITUDE: -104.9812612,
-            CONF_SCAN_INTERVAL: 300,
         }
