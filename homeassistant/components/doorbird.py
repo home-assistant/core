@@ -113,7 +113,16 @@ def setup(hass, config):
 
         # Subscribe to doorbell or motion events
         if events:
-            doorstation.update_schedule(hass)
+            try:
+                doorstation.update_schedule(hass)
+            except:
+                hass.components.persistent_notification.create(
+                    'Doorbird configuration failed.  Please verify that API '
+                    'Operator permission is enabled for the Doorbird user. '
+                    'A restart will be required once permissions have been '
+                    'verified.',
+                    title='Doorbird Configuration Failure',
+                    notification_id='doorbird_schedule_error')
 
     hass.data[DOMAIN] = doorstations
 
@@ -230,6 +239,7 @@ class ConfiguredDoorBird():
         if not self.webhook_is_registered(hass_url):
             self.device.change_favorite('http', 'Home Assistant ({} events)'
                                         .format(event), hass_url)
+
         fav_id = self.get_webhook_id(hass_url)
 
         if not fav_id:
@@ -253,8 +263,6 @@ class ConfiguredDoorBird():
             for relay in self._relay_nums:
                 entry = self.device.get_schedule_entry(event, str(relay))
                 entry.output.append(output)
-                resp = self.device.change_schedule(entry)
-                return resp
         else:
             entry = self.device.get_schedule_entry(event)
             entry.output.append(output)
