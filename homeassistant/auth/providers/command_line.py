@@ -29,11 +29,11 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when authentication with given credentials fails."""
 
 
-@AUTH_PROVIDERS.register("external")
-class ExternalAuthProvider(AuthProvider):
-    """External auth provider validating credentials by calling a script."""
+@AUTH_PROVIDERS.register("command_line")
+class CommandLineAuthProvider(AuthProvider):
+    """Auth provider validating credentials by calling a command."""
 
-    DEFAULT_TITLE = "External Authentication"
+    DEFAULT_TITLE = "Command Line Authentication"
 
     # which keys to accept from a program's stdout
     ALLOWED_META_KEYS = ("name",)
@@ -49,7 +49,7 @@ class ExternalAuthProvider(AuthProvider):
 
     async def async_login_flow(self, context: T.Optional[T.Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return ExternalLoginFlow(self)
+        return CommandLineLoginFlow(self)
 
     async def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
@@ -116,7 +116,7 @@ class ExternalAuthProvider(AuthProvider):
         )
 
 
-class ExternalLoginFlow(LoginFlow):
+class CommandLineLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -127,7 +127,7 @@ class ExternalLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                await T.cast(ExternalAuthProvider, self._auth_provider) \
+                await T.cast(CommandLineAuthProvider, self._auth_provider) \
                         .async_validate_login(
                             user_input["username"], user_input["password"]
                         )
