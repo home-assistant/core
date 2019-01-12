@@ -226,7 +226,7 @@ class ConfigEntry:
                  '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, connection_class: str, options: dict = {},
+                 source: str, connection_class: str, options: dict = None,
                  entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
@@ -668,23 +668,11 @@ class Options:
         self.active_options = {}
 
     @callback
-    def async_domains(self) -> List[str]:
-        """Return domains for which we have options."""
-        result = []
-
-        for domain in FLOWS:
-            if HANDLERS[domain].async_get_options_flow():
-                result.append(domain)
-
-        return result
-
-    @callback
     def async_active_flow(self, entry: ConfigEntry):
         """"""
         if entry in self.active_options.values():
             return True
         return False
-
 
     @callback
     def _async_create_flow(self, handler, context, data: ConfigEntry):
@@ -702,12 +690,3 @@ class Options:
         self.hass.config_entries.async_update_entry(
             entry, options=result['data'])
         return result
-
-
-class OptionsFlow(data_entry_flow.FlowHandler):
-    """"""
-
-    @property
-    def data(self):
-        """"""
-        return self._config_entry['data']

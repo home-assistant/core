@@ -187,6 +187,6 @@ class DeconzOptionsFlowHandler(data_entry_flow.FlowHandler):
         """"""
         pass
 
-    def async_step_user(self, user_input=None):
+    def async_step_init(self, user_input=None):
         """"""
         pass
