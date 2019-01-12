@@ -28,7 +28,8 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 from . import config_flow
 from .const import (DOMAIN, DATA_LOGI, SIGNAL_LOGI_CIRCLE_UPDATE,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    CONF_ATTRIBUTION, LOGI_SENSORS, LOGI_BINARY_SENSORS)
+                    CONF_ATTRIBUTION, LOGI_SENSORS, LOGI_BINARY_SENSORS,
+                    DEFAULT_CACHEDB)
 
 REQUIREMENTS = [
     'https://github.com/evanjd/python-logi-circle/archive/'
@@ -65,17 +66,20 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def logi_circle_update_event_broker(hass, subscription):
+def logi_circle_update_event_broker(hass, subscription):
     """Dispatch SIGNAL_LOGI_CIRCLE_UPDATE to devices when API wrapper has processed a WS frame."""
 
-    await subscription.open()
-    while hass.is_running and subscription.is_open:
-        await subscription.get_next_event()
+    async def async_start(hass, subscription):
+        await subscription.open()
+        while hass.is_running and subscription.is_open:
+            await subscription.get_next_event()
 
-        if not hass.is_running or not subscription.is_open:
-            break
+            if not hass.is_running or not subscription.is_open:
+                break
 
-        async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
+            async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
+
+    asyncio.new_event_loop().run_until_complete(async_start(hass, subscription))
 
 
 async def async_setup(hass, config):
@@ -112,7 +116,8 @@ async def async_setup_entry(hass, entry):
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
         api_key=entry.data[CONF_API_KEY],
-        redirect_uri=entry.data[CONF_REDIRECT_URI]
+        redirect_uri=entry.data[CONF_REDIRECT_URI],
+        cache_file=DEFAULT_CACHEDB
     )
 
     if not logi_circle.authorized:
@@ -130,8 +135,11 @@ async def async_setup_entry(hass, entry):
 
     async def start_up(event):
         """Start Logi update event listener."""
-        hass.async_create_task(
-            logi_circle_update_event_broker(hass, event_subscription))
+        threading.Thread(
+            name='Logi update listener',
+            target=logi_circle_update_event_broker,
+            args=(hass, event_subscription)
+        ).start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
 
@@ -147,15 +155,13 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     for component in 'camera', 'sensor', 'binary_sensor':
-        print('unloading %s' % (component))
         await hass.config_entries.async_forward_entry_unload(
             entry, component)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 
-    # Tell API wrapper to close all aiohttp sessions, websockets
+    # Tell API wrapper to close all aiohttp sessions
     # and clear all locally cached tokens
-    # await logi_circle.auth_provider.clear_authorization()
-    print('welp')
+    await logi_circle.auth_provider.clear_authorization()
 
     return True

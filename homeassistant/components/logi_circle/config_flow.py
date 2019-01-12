@@ -12,7 +12,8 @@ from homeassistant.core import callback
 
 from homeassistant.const import CONF_SENSORS, CONF_BINARY_SENSORS
 
-from .const import DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI
+from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
+                    DEFAULT_CACHEDB)
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
@@ -163,7 +164,8 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             client_id=client_id,
             client_secret=client_secret,
             api_key=api_key,
-            redirect_uri=redirect_uri)
+            redirect_uri=redirect_uri,
+            cache_file=DEFAULT_CACHEDB)
 
         try:
             with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):

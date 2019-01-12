@@ -10,6 +10,7 @@ CONF_REDIRECT_URI = 'redirect_uri'
 
 SIGNAL_LOGI_CIRCLE_UPDATE = 'logi_circle_update'
 
+DEFAULT_CACHEDB = '.logi_cache.pickle'
 
 # Activity dict
 ACTIVITY_PROP = 'activity'
