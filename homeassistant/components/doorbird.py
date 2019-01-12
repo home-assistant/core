@@ -7,6 +7,7 @@ https://home-assistant.io/components/doorbird/
 import logging
 
 import voluptuous as vol
+from urllib.error import HTTPError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
@@ -115,7 +116,7 @@ def setup(hass, config):
         if events:
             try:
                 doorstation.update_schedule(hass)
-            except:
+            except HTTPError:
                 hass.components.persistent_notification.create(
                     'Doorbird configuration failed.  Please verify that API '
                     'Operator permission is enabled for the Doorbird user. '
