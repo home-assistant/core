@@ -8,9 +8,8 @@ https://home-assistant.io/components/sensor.google_reverse_geocode/
 from datetime import timedelta
 import logging
 import json
-import voluptuous as vol
-import requests
 from requests import get
+import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
@@ -30,7 +29,6 @@ DEPENDENCIES = ['device_tracker']
 CONF_OPTIONS = 'options'
 CONF_DISPLAY_ZONE = 'display_zone'
 CONF_ATTRIBUTION = "Data provided by maps.google.com"
-CONF_GRAVATAR = 'gravatar'
 
 ATTR_STREET_NUMBER = 'Street Number'
 ATTR_STREET = 'Street'
@@ -46,15 +44,14 @@ DEFAULT_NAME = 'Google Reverse Geocode'
 DEFAULT_OPTION = 'street, city'
 DEFAULT_DISPLAY_ZONE = 'display'
 DEFAULT_KEY = 'no key'
-current = '0,0'
-zone_check = 'a'
+CURRENT = '0,0'
+ZONE_CHECK = 'a'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_API_KEY, default=DEFAULT_KEY): cv.string,
     vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTION): cv.string,
     vol.Optional(CONF_DISPLAY_ZONE, default=DEFAULT_DISPLAY_ZONE): cv.string,
-    vol.Optional(CONF_GRAVATAR, default=None): vol.Any(None, cv.string),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
         cv.time_period,
@@ -62,31 +59,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor']
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the sensor platform."""
     api_key = config.get(CONF_API_KEY)
     options = config.get(CONF_OPTIONS)
     display_zone = config.get(CONF_DISPLAY_ZONE)
-    gravatar = config.get(CONF_GRAVATAR)
 
     for origin in hass.states.entity_ids('device_tracker'):
         name = hass.states.get(origin).name
         _LOGGER.info("Adding Reverse Geocode sensor for %s", name)
         add_devices([GoogleGeocode(hass, origin, name,
-                                   api_key, options, display_zone, gravatar)])
+                                   api_key, options, display_zone)])
 
     SCAN_INTERVAL = timedelta(seconds=len(
         hass.states.entity_ids('device_tracker') * 34))
     _LOGGER.info(
         "SCAN_INTERVAL for reverse geocode is set to %s", SCAN_INTERVAL)
 
-
 class GoogleGeocode(Entity):
     """Representation of a Google Geocode Sensor."""
 
     def __init__(self, hass, origin, name, api_key,
-                 options, display_zone, gravatar):
+                 options, display_zone):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
@@ -94,7 +88,6 @@ class GoogleGeocode(Entity):
         self._options = options.lower()
         self._display_zone = display_zone.lower()
         self._state = "Awaiting Update"
-        self._gravatar = gravatar
 
         self._street_number = None
         self._street = None
@@ -114,10 +107,7 @@ class GoogleGeocode(Entity):
         else:
             self._origin = origin
 
-        if gravatar is not None:
-            self._picture = self._get_gravatar_for_email(gravatar)
-        else:
-            self._picture = None
+        self._picture = None
 
     @property
     def name(self):
@@ -153,50 +143,46 @@ class GoogleGeocode(Entity):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data and updates the states."""
-
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._get_location_from_entity(
                 self._origin_entity_id
             )
 
-        """Update if location has changed."""
+        global CURRENT
+        global ZONE_CHECK_COUNT
+        ZONE_CHECK_COUNT = 2
+        global ZONE_CHECK
+        ZONE_CHECK = self.hass.states.get(self._origin_entity_id).state
+        global USER_DISPLAY
+        try:
+            self._picture = self.hass.states.get(
+                self._origin_entity_id).attributes['entity_picture']
+        except KeyError:
+            _LOGGER.info("No entity picture set for %s", 
+                self.hass.states.get(self._origin_entity_id).name)
 
-        global current
-        global zone_check_count
-        global zone_check
-        global user_display
-        zone_check = self.hass.states.get(self._origin_entity_id).state
-        zone_check_count = 2
-        if self._gravatar is None:
-            try:
-                self._picture = self.hass.states.get(
-                    self._origin_entity_id).attributes['entity_picture']
-            except KeyError:
-                _LOGGER.info("No entity picture set for %s",
-                             self.hass.states.get(self._origin_entity_id).name)
-
-        if zone_check == self._zone_check_current:
-            zone_check_count = 1
-        if zone_check == 'not_home':
-            zone_check_count = 2
-        if zone_check_count == 1:
+        if ZONE_CHECK == self._zone_check_current:
+            ZONE_CHECK_COUNT = 1
+        if ZONE_CHECK == 'not_home':
+            ZONE_CHECK_COUNT = 2
+        if ZONE_CHECK_COUNT == 1:
             pass
         elif self._origin is None:
             pass
-        elif current == self._origin:
+        elif CURRENT == self._origin:
             pass
         else:
             _LOGGER.info("Updating Reverse Geocode results for %s",
                          self.hass.states.get(self._origin_entity_id).name)
             self._zone_check_current = self.hass.states.get(
                 self._origin_entity_id).state
-            zone_check_count = 2
+            ZONE_CHECK_COUNT = 2
             lat = self._origin
-            current = lat
+            CURRENT = lat
             self._reset_attributes()
             if self._api_key == 'no key':
-                url = "https://maps.google.com/maps/api/geocode/json?latlng="
-                + lat
+                url = "https://maps.google.com/maps/api/geocode/json?latlng=" \
+                      + lat
             else:
                 url = "https://maps.googleapis.com/maps/api/geocode/json?" \
                       "latlng=" + lat + "&key=" + self._api_key
@@ -256,7 +242,7 @@ class GoogleGeocode(Entity):
                 _LOGGER.error(
                     "You have exceeded your daily requests or entered a "
                     "incorrect key please create or check the api key.")
-            elif self._display_zone == 'hide' or zone_check == "not_home":
+            elif self._display_zone == 'hide' or ZONE_CHECK == "not_home":
                 if street == 'Unnamed Road':
                     street = alt_street
                     self._street = alt_street
@@ -266,12 +252,12 @@ class GoogleGeocode(Entity):
                         city = county
 
                 display_options = self._options
-                user_display = []
+                USER_DISPLAY = []
 
                 if "street_number" in display_options:
-                    user_display.append(street_number)
+                    USER_DISPLAY.append(street_number)
                 if "street" in display_options:
-                    user_display.append(street)
+                    USER_DISPLAY.append(street)
                 if "city" in display_options:
                     self._append_to_user_display(city)
                 if "county" in display_options:
@@ -285,13 +271,13 @@ class GoogleGeocode(Entity):
                 if "formatted_address" in display_options:
                     self._append_to_user_display(formatted_address)
 
-                user_display = ', '.join(x for x in user_display)
+                USER_DISPLAY = ', '.join(x for x in USER_DISPLAY)
 
-                if user_display == '':
-                    user_display = street
-                self._state = user_display
+                if USER_DISPLAY == '':
+                    USER_DISPLAY = street
+                self._state = USER_DISPLAY
             else:
-                self._state = zone_check[0].upper() + zone_check[1:]
+                self._state = ZONE_CHECK[0].upper() + ZONE_CHECK[1:]
 
     def _get_location_from_entity(self, entity_id):
         """Get the origin from the entity state or attributes."""
@@ -309,7 +295,7 @@ class GoogleGeocode(Entity):
         return None
 
     def _reset_attributes(self):
-        """Resets attributes."""
+        """Re-set attributes."""
         self._street = None
         self._street_number = None
         self._city = None
@@ -321,11 +307,11 @@ class GoogleGeocode(Entity):
         self._formatted_address = None
 
     def _append_to_user_display(self, append_check):
-        """Appends attribute to state if false."""
+        """Append attribute to state if false."""
         if append_check == "":
             pass
         else:
-            user_display.append(append_check)
+            USER_DISPLAY.append(append_check)
 
     @staticmethod
     def _get_location_from_attributes(entity):
