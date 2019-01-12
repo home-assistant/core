@@ -99,9 +99,6 @@ class FbxWifiSwitch(FbxSwitch):
 
         await super().async_get_perms()
         self.perms_settings = bool(self.permissions.get(PERMISSION_SETTINGS))
-#        self.perms_settings = True if self.permissions.get(
-#            PERMISSION_SETTINGS) else False
         datas = await self.fbx.wifi.get_global_config()
         active = datas['enabled']
         self._state = bool(active)
-#        self._state = True if active else False
