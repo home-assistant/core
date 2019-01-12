@@ -44,7 +44,8 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
-from homeassistant.core import State, DOMAIN as HASS_DOMAIN
+from homeassistant.core import (
+    Context, State, DOMAIN as HASS_DOMAIN)
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
@@ -142,14 +143,56 @@ def reproduce_state(hass: HomeAssistantType,
 
 
 @bind_hass
-async def async_reproduce_state(hass: HomeAssistantType,
-                                states: Union[State, Iterable[State]],
-                                blocking: bool = False) -> None:
-    """Reproduce given state."""
+async def async_reproduce_state(
+        hass: HomeAssistantType,
+        states: Union[State, Iterable[State]],
+        blocking: bool = False,
+        context: Optional[Context] = None) -> None:
+    """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
         states = [states]
 
-    to_call = defaultdict(list)  # type: Dict[Tuple[str, str, str], List[str]]
+    to_call = defaultdict(list)  # type: Dict[str, List[State]]
+
+    for state in states:
+        to_call[state.domain].append(state)
+
+    async def worker(domain: str, data: List[State]) -> None:
+        component = getattr(hass.components, domain)
+        if hasattr(component, 'async_reproduce_states'):
+            await component.async_reproduce_states(
+                data,
+                context=context)
+        else:
+            await async_reproduce_state_legacy(
+                hass,
+                domain,
+                data,
+                blocking=blocking,
+                context=context)
+
+    if to_call:
+        # run all domains in parallel
+        await asyncio.gather(*[
+            worker(domain, data)
+            for domain, data in to_call.items()
+        ])
+
+
+@bind_hass
+async def async_reproduce_state_legacy(
+        hass: HomeAssistantType,
+        domain: str,
+        states: Iterable[State],
+        blocking: bool = False,
+        context: Optional[Context] = None) -> None:
+    """Reproduce given state."""
+    to_call = defaultdict(list)  # type: Dict[Tuple[str, str], List[str]]
+
+    if domain == GROUP_DOMAIN:
+        service_domain = HASS_DOMAIN
+    else:
+        service_domain = domain
 
     for state in states:
 
@@ -157,11 +200,6 @@ async def async_reproduce_state(hass: HomeAssistantType,
             _LOGGER.warning("reproduce_state: Unable to find entity %s",
                             state.entity_id)
             continue
-
-        if state.domain == GROUP_DOMAIN:
-            service_domain = HASS_DOMAIN
-        else:
-            service_domain = state.domain
 
         domain_services = hass.services.async_services().get(service_domain)
 
@@ -189,32 +227,22 @@ async def async_reproduce_state(hass: HomeAssistantType,
 
         # We group service calls for entities by service call
         # json used to create a hashable version of dict with maybe lists in it
-        key = (service_domain, service,
+        key = (service,
                json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
-    domain_tasks = {}  # type: Dict[str, List[Awaitable[Optional[bool]]]]
-    for (service_domain, service, service_data), entity_ids in to_call.items():
+    domain_tasks = []  # type: List[Awaitable[Optional[bool]]]
+    for (service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
 
-        if service_domain not in domain_tasks:
-            domain_tasks[service_domain] = []
-
-        domain_tasks[service_domain].append(
-            hass.services.async_call(service_domain, service, data, blocking)
+        domain_tasks.append(
+            hass.services.async_call(service_domain, service, data, blocking,
+                                     context)
         )
 
-    async def async_handle_service_calls(
-            coro_list: Iterable[Awaitable]) -> None:
-        """Handle service calls by domain sequence."""
-        for coro in coro_list:
-            await coro
-
-    execute_tasks = [async_handle_service_calls(coro_list)
-                     for coro_list in domain_tasks.values()]
-    if execute_tasks:
-        await asyncio.wait(execute_tasks, loop=hass.loop)
+    if domain_tasks:
+        await asyncio.wait(domain_tasks, loop=hass.loop)
 
 
 def state_as_number(state: State) -> float:
