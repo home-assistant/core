@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, \
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify, dt as dt_util
 
-REQUIREMENTS = ['doorbirdpy==2.0.4']
+REQUIREMENTS = ['doorbirdpy==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
