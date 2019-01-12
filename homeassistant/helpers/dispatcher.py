@@ -79,13 +79,15 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
     if signal not in hass.data[DATA_DISPATCHER]:
         hass.data[DATA_DISPATCHER][signal] = []
 
-    hass.data[DATA_DISPATCHER][signal].append(wrap_callback(target))
+    wrapped_target = wrap_callback(target)
+
+    hass.data[DATA_DISPATCHER][signal].append(wrapped_target)
 
     @callback
     def async_remove_dispatcher() -> None:
         """Remove signal listener."""
         try:
-            hass.data[DATA_DISPATCHER][signal].remove(target)
+            hass.data[DATA_DISPATCHER][signal].remove(wrapped_target)
         except (KeyError, ValueError):
             # KeyError is key target listener did not exist
             # ValueError if listener did not exist within signal
