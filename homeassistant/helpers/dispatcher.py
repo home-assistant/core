@@ -1,5 +1,10 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
+import asyncio
+import inspect
+from functools import wraps
 import logging
+import sys
+import traceback
 from typing import Any, Callable
 
 from homeassistant.core import callback
@@ -26,6 +31,40 @@ def dispatcher_connect(hass: HomeAssistantType, signal: str,
     return remove_dispatcher
 
 
+def wrap_callback(func):
+    """Decorate a signal callback to catch and log exceptions."""
+    def log_exception(signal, *args):
+        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        # Do not print the wrapper in the traceback
+        exc_tb = exc_tb.tb_next
+        err = traceback.format_exception(exc_type, exc_value, exc_tb)
+        logging.getLogger(module_name).error(
+            "Exception in %s when dispatching '%s': '%s'\n%s",
+            func.__name__, signal, *args, ''.join(err))
+
+    wrapper_func = None
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def wrapper(signal, *args):
+            """Catch and log exception."""
+            try:
+                await func(*args)
+            except Exception:  # pylint: disable=broad-except
+                log_exception(signal, *args)
+        wrapper_func = wrapper
+    else:
+        @wraps(func)
+        def wrapper(signal, *args):
+            """Catch and log exception."""
+            try:
+                func(*args)
+            except Exception:  # pylint: disable=broad-except
+                log_exception(signal, *args)
+        wrapper_func = wrapper
+    return wrapper_func
+
+
 @callback
 @bind_hass
 def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
@@ -40,7 +79,7 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
     if signal not in hass.data[DATA_DISPATCHER]:
         hass.data[DATA_DISPATCHER][signal] = []
 
-    hass.data[DATA_DISPATCHER][signal].append(target)
+    hass.data[DATA_DISPATCHER][signal].append(wrap_callback(target))
 
     @callback
     def async_remove_dispatcher() -> None:
@@ -73,4 +112,4 @@ def async_dispatcher_send(
     target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, [])
 
     for target in target_list:
-        hass.async_add_job(target, *args)
+        hass.async_add_job(target, signal, *args)
