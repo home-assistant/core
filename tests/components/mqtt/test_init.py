@@ -482,7 +482,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
         assert not self.hass.data['mqtt']._mqttc.reconnect.called
 
-    @mock.patch('homeassistant.components.mqtt.time.sleep')
+    @mock.patch('homeassistant.components.mqtt.asyncio.sleep')
     def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
         """Test the re-connect tries."""
         self.hass.data['mqtt'].subscriptions = [
@@ -492,6 +492,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         ]
         self.hass.data['mqtt']._mqttc.reconnect.side_effect = [1, 1, 1, 0]
         self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 1)
+        self.hass.block_till_done()
         assert self.hass.data['mqtt']._mqttc.reconnect.called
         assert 4 == len(self.hass.data['mqtt']._mqttc.reconnect.mock_calls)
         assert [1, 2, 4] == \
