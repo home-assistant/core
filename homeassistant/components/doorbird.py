@@ -12,7 +12,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util import slugify, dt as dt_util
 
 REQUIREMENTS = ['doorbirdpy==2.0.4']
 
@@ -319,6 +319,16 @@ class ConfiguredDoorBird():
 
         return None
 
+    def get_event_data(self):
+        """Get data to pass along with HA event."""
+        return {
+            'timestamp': dt_util.utcnow().isoformat(),
+            'live_video_url': self._device.live_video_url,
+            'live_image_url': self._device.live_image_url,
+            'rtsp_live_video_url': self._device.rtsp_live_video_url,
+            'html5_viewer_url': self._device.html5_viewer_url
+        }
+
 
 class DoorBirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -346,7 +356,14 @@ class DoorBirdRequestView(HomeAssistantView):
         if request_token == '' or not authenticated:
             return web.Response(status=401, text='Unauthorized')
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        doorstation = get_doorstation_by_slug(hass, sensor)
+
+        if doorstation:
+            event_data = doorstation.get_event_data()
+        else:
+            event_data = {}
+
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), event_data)
 
         return web.Response(status=200, text='OK')
 
