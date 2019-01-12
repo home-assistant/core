@@ -30,7 +30,10 @@ from .const import (
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
     DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType,
-    EVENTABLE_CLUSTERS, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
+    EVENTABLE_CLUSTERS, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS,
+    DEVICE_CLASS, SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
+    SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS, CUSTOM_CLUSTER_MAPPINGS,
+    COMPONENT_CLUSTERS)
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -92,6 +95,7 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    establish_device_mappings()
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
 
@@ -203,6 +207,88 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+def establish_device_mappings():
+    """Establish mappings between ZCL objects and HA ZHA objects.
+
+    These cannot be module level, as importing bellows must be done in a
+    in a function.
+    """
+    from zigpy import zcl, quirks
+    from zigpy.profiles import PROFILES, zha, zll
+    from .sensor import RelativeHumiditySensor
+
+    if zha.PROFILE_ID not in DEVICE_CLASS:
+        DEVICE_CLASS[zha.PROFILE_ID] = {}
+    if zll.PROFILE_ID not in DEVICE_CLASS:
+        DEVICE_CLASS[zll.PROFILE_ID] = {}
+
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.AnalogInput.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.MultistateInput.cluster_id)
+    EVENTABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
+
+    DEVICE_CLASS[zha.PROFILE_ID].update({
+        zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
+        zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
+        zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
+        zha.DeviceType.SMART_PLUG: 'switch',
+        zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: 'light',
+        zha.DeviceType.ON_OFF_LIGHT: 'light',
+        zha.DeviceType.DIMMABLE_LIGHT: 'light',
+        zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
+        zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
+        zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
+    })
+    DEVICE_CLASS[zll.PROFILE_ID].update({
+        zll.DeviceType.ON_OFF_LIGHT: 'light',
+        zll.DeviceType.ON_OFF_PLUGIN_UNIT: 'switch',
+        zll.DeviceType.DIMMABLE_LIGHT: 'light',
+        zll.DeviceType.DIMMABLE_PLUGIN_UNIT: 'light',
+        zll.DeviceType.COLOR_LIGHT: 'light',
+        zll.DeviceType.EXTENDED_COLOR_LIGHT: 'light',
+        zll.DeviceType.COLOR_TEMPERATURE_LIGHT: 'light',
+        zll.DeviceType.COLOR_CONTROLLER: 'binary_sensor',
+        zll.DeviceType.COLOR_SCENE_CONTROLLER: 'binary_sensor',
+        zll.DeviceType.CONTROLLER: 'binary_sensor',
+        zll.DeviceType.SCENE_CONTROLLER: 'binary_sensor',
+        zll.DeviceType.ON_OFF_SENSOR: 'binary_sensor',
+    })
+
+    SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
+        zcl.clusters.general.OnOff: 'switch',
+        zcl.clusters.measurement.RelativeHumidity: 'sensor',
+        zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
+        zcl.clusters.measurement.PressureMeasurement: 'sensor',
+        zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
+        zcl.clusters.smartenergy.Metering: 'sensor',
+        zcl.clusters.homeautomation.ElectricalMeasurement: 'sensor',
+        zcl.clusters.general.PowerConfiguration: 'sensor',
+        zcl.clusters.security.IasZone: 'binary_sensor',
+        zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
+        zcl.clusters.hvac.Fan: 'fan',
+    })
+    SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
+        zcl.clusters.general.OnOff: 'binary_sensor',
+    })
+
+    # A map of device/cluster to component/sub-component
+    CUSTOM_CLUSTER_MAPPINGS.update({
+        (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
+            ('sensor', RelativeHumiditySensor)
+    })
+
+    # A map of hass components to all Zigbee clusters it could use
+    for profile_id, classes in DEVICE_CLASS.items():
+        profile = PROFILES[profile_id]
+        for device_type, component in classes.items():
+            if component not in COMPONENT_CLUSTERS:
+                COMPONENT_CLUSTERS[component] = (set(), set())
+            clusters = profile.CLUSTERS[device_type]
+            COMPONENT_CLUSTERS[component][0].update(clusters[0])
+            COMPONENT_CLUSTERS[component][1].update(clusters[1])
+
+
 class ApplicationListener:
     """All handlers for events that happen on the ZigBee application."""
 
@@ -213,7 +299,6 @@ class ApplicationListener:
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         self._events = {}
-        zha_const.populate_data()
 
         for component in COMPONENTS:
             hass.data[DATA_ZHA][component] = (
