@@ -21,6 +21,7 @@ DEPENDENCIES = [ELK_DOMAIN]
 
 SIGNAL_ARM_ENTITY = 'elkm1_arm'
 SIGNAL_DISPLAY_MESSAGE = 'elkm1_display_message'
+FORMAT_NUMBER = 'number'
 
 ELK_ALARM_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
@@ -116,7 +117,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the alarm code format."""
-        return '^[0-9]{4}([0-9]{2})?$'
+        return FORMAT_NUMBER
 
     @property
     def state(self):
