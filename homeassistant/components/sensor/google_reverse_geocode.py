@@ -59,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform."""
     api_key = config.get(CONF_API_KEY)
@@ -75,6 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.states.entity_ids('device_tracker') * 34))
     _LOGGER.info(
         "SCAN_INTERVAL for reverse geocode is set to %s", SCAN_INTERVAL)
+
 
 class GoogleGeocode(Entity):
     """Representation of a Google Geocode Sensor."""
@@ -158,8 +160,8 @@ class GoogleGeocode(Entity):
             self._picture = self.hass.states.get(
                 self._origin_entity_id).attributes['entity_picture']
         except KeyError:
-            _LOGGER.info("No entity picture set for %s", 
-                self.hass.states.get(self._origin_entity_id).name)
+            _LOGGER.info("No entity picture set for %s",
+                         self.hass.states.get(self._origin_entity_id).name)
 
         if ZONE_CHECK == self._zone_check_current:
             ZONE_CHECK_COUNT = 1
