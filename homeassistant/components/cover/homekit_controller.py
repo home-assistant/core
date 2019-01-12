@@ -262,12 +262,11 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Send position command."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            characteristics = [{'aid': self._aid,
-                                'iid': self._chars['position.target'],
-                                'value': position}]
-            self.put_characteristics(characteristics)
+        position = kwargs[ATTR_POSITION]
+        characteristics = [{'aid': self._aid,
+                            'iid': self._chars['position.target'],
+                            'value': position}]
+        self.put_characteristics(characteristics)
 
     @property
     def current_cover_tilt_position(self):
@@ -276,19 +275,18 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            tilt_position = kwargs[ATTR_TILT_POSITION]
-            if 'vertical-tilt.target' in self._chars:
-                characteristics = [{'aid': self._aid,
-                                    'iid': self._chars['vertical-tilt.target'],
-                                    'value': tilt_position}]
-                self.put_characteristics(characteristics)
-            elif 'horizontal-tilt.target' in self._chars:
-                characteristics = [{'aid': self._aid,
-                                    'iid':
-                                    self._chars['horizontal-tilt.target'],
-                                    'value': tilt_position}]
-                self.put_characteristics(characteristics)
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+        if 'vertical-tilt.target' in self._chars:
+            characteristics = [{'aid': self._aid,
+                                'iid': self._chars['vertical-tilt.target'],
+                                'value': tilt_position}]
+            self.put_characteristics(characteristics)
+        elif 'horizontal-tilt.target' in self._chars:
+            characteristics = [{'aid': self._aid,
+                                'iid':
+                                self._chars['horizontal-tilt.target'],
+                                'value': tilt_position}]
+            self.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):
