@@ -26,6 +26,7 @@ REQUIREMENTS = ['aioharmony==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CHANNEL = 'channel'
 ATTR_CURRENT_ACTIVITY = 'current_activity'
 
 DEFAULT_PORT = 8088
@@ -33,6 +34,7 @@ DEVICES = []
 CONF_DEVICE_CACHE = 'harmony_device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
+SERVICE_CHANGE_CHANNEL = 'harmony_change_channel'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string,
@@ -45,6 +47,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_CHANNEL): cv.positive_int
 })
 
 
@@ -112,6 +119,10 @@ def register_services(hass):
         DOMAIN, SERVICE_SYNC, _sync_service,
         schema=HARMONY_SYNC_SCHEMA)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_CHANGE_CHANNEL, _change_channel_service,
+        schema=HARMONY_CHANGE_CHANNEL_SCHEMA)
+
 
 async def _apply_service(service, service_func, *service_func_args):
     """Handle services to apply."""
@@ -129,6 +140,11 @@ async def _apply_service(service, service_func, *service_func_args):
 
 async def _sync_service(service):
     await _apply_service(service, HarmonyRemote.sync)
+
+
+async def _change_channel_service(service):
+    channel = service.data.get(ATTR_CHANNEL)
+    await _apply_service(service, HarmonyRemote.change_channel, channel)
 
 
 class HarmonyRemote(remote.RemoteDevice):
@@ -347,6 +363,19 @@ class HarmonyRemote(remote.RemoteDevice):
                           result.command.code,
                           result.command.msg
                           )
+
+    async def change_channel(self, channel):
+        """Change the channel using Harmony remote."""
+        import aioharmony.exceptions as aioexc
+
+        _LOGGER.debug("%s: Changing channel to %s",
+                      self.name, channel)
+        try:
+            await self._client.change_channel(channel)
+        except aioexc.TimeOut:
+            _LOGGER.error("%s: Changing channel to %s timed-out",
+                          self.name,
+                          channel)
 
     async def sync(self):
         """Sync the Harmony device with the web service."""
