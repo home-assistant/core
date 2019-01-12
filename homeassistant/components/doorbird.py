@@ -6,8 +6,8 @@ https://home-assistant.io/components/doorbird/
 """
 import logging
 
-import voluptuous as vol
 from urllib.error import HTTPError
+import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
