@@ -127,7 +127,7 @@ class GEMSensor(Entity):
             monitors.remove_listener(self._on_new_monitor)
 
     def _try_connect_to_monitor(self, monitors):
-        monitor = monitors.monitors.get(int(self._monitor_serial_number))
+        monitor = monitors.monitors.get(self._monitor_serial_number)
         if not monitor:
             return False
 
