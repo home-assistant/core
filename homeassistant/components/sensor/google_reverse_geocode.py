@@ -15,7 +15,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL, ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE)
 import homeassistant.helpers.location as location
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
@@ -82,7 +87,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GoogleGeocode(Entity):
     """Representation of a Google Geocode Sensor."""
 
-    def __init__(self, hass, origin, name, api_key, options, display_zone, gravatar):
+    def __init__(self, hass, origin, name, api_key,
+                 options, display_zone, gravatar):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
@@ -177,7 +183,7 @@ class GoogleGeocode(Entity):
             zone_check_count = 2
         if zone_check_count == 1:
             pass
-        elif self._origin == None:
+        elif self._origin is None:
             pass
         elif current == self._origin:
             pass
@@ -191,10 +197,11 @@ class GoogleGeocode(Entity):
             current = lat
             self._reset_attributes()
             if self._api_key == 'no key':
-                url = "https://maps.google.com/maps/api/geocode/json?latlng=" + lat
+                url = "https://maps.google.com/maps/api/geocode/json?latlng="
+                + lat
             else:
-                url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + \
-                    lat + "&key=" + self._api_key
+                url = "https://maps.googleapis.com/maps/api/geocode/json?"
+                "latlng=" + lat + "&key=" + self._api_key
             response = get(url)
             json_input = response.text
             _LOGGER.debug("Reverse Geocode response is : %s", json_input)
@@ -240,7 +247,8 @@ class GoogleGeocode(Entity):
 
             try:
                 if 'formatted_address' in decoded['results'][0]:
-                    formatted_address = decoded['results'][0]['formatted_address']
+                    formatted_address = decoded['results'][0]
+                    ['formatted_address']
                     self._formatted_address = formatted_address
             except IndexError:
                 pass
@@ -248,7 +256,8 @@ class GoogleGeocode(Entity):
             if 'error_message' in decoded:
                 self._state = decoded['error_message']
                 _LOGGER.error(
-                    "You have exceeded your daily requests or entered a incorrect key please create or check the api key.")
+                    "You have exceeded your daily requests or entered a "
+                    "incorrect key please create or check the api key.")
             elif self._display_zone == 'hide' or zone_check == "not_home":
                 if street == 'Unnamed Road':
                     street = alt_street
@@ -327,7 +336,8 @@ class GoogleGeocode(Entity):
         return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
     def _get_gravatar_for_email(self, email: str):
-        """Return an 80px Gravatar for the given email address. Async friendly."""
+        """Return an 80px Gravatar for the given email address."""
         import hashlib
         url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
-        return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
+        return url.format(hashlib.md5(
+            email.encode('utf-8').lower()).hexdigest())
