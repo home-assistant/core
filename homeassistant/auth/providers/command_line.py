@@ -1,4 +1,4 @@
-"""Auth provider that validates credentials via an external script."""
+"""Auth provider that validates credentials via an external command."""
 
 import typing as T
 
@@ -17,6 +17,7 @@ from ..models import Credentials, UserMeta
 
 CONF_COMMAND = "command"
 CONF_ARGS = "args"
+CONF_META = "meta"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
     vol.Required(CONF_COMMAND): vol.All(
@@ -25,6 +26,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
         msg="must be an absolute path"
     ),
     vol.Optional(CONF_ARGS, default=None): vol.Any(vol.DefaultTo(list), [str]),
+    vol.Optional(CONF_META, default=False): bool,
 }, extra=vol.PREVENT_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +68,8 @@ class CommandLineAuthProvider(AuthProvider):
             process = await asyncio.subprocess.create_subprocess_exec(
                 self.config[CONF_COMMAND], *self.config[CONF_ARGS],
                 env=env,
-                stdout=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE
+                       if self.config[CONF_META] else None,
             )
             stdout = (await process.communicate())[0]
         except OSError as err:
@@ -78,21 +81,22 @@ class CommandLineAuthProvider(AuthProvider):
         if process.returncode != 0:
             raise InvalidAuthError
 
-        meta = {}  # type: T.Dict[str, str]
-        for _line in stdout.splitlines():
-            try:
-                line = _line.decode().lstrip()
-                if line.startswith("#"):
+        if self.config[CONF_META]:
+            meta = {}  # type: T.Dict[str, str]
+            for _line in stdout.splitlines():
+                try:
+                    line = _line.decode().lstrip()
+                    if line.startswith("#"):
+                        continue
+                    key, value = line.split("=", 1)
+                except ValueError:
+                    # malformed line
                     continue
-                key, value = line.split("=", 1)
-            except ValueError:
-                # malformed line
-                continue
-            key = key.strip()
-            value = value.strip()
-            if key in self.ALLOWED_META_KEYS:
-                meta[key] = value
-        self._user_meta[username] = meta
+                key = key.strip()
+                value = value.strip()
+                if key in self.ALLOWED_META_KEYS:
+                    meta[key] = value
+            self._user_meta[username] = meta
 
     async def async_get_or_create_credentials(
             self, flow_result: T.Dict[str, str]
