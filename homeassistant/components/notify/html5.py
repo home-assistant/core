@@ -44,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 ATTR_SUBSCRIPTION = 'subscription'
 ATTR_BROWSER = 'browser'
+ATTR_NAME = 'name'
 
 ATTR_ENDPOINT = 'endpoint'
 ATTR_KEYS = 'keys'
@@ -82,6 +83,7 @@ SUBSCRIPTION_SCHEMA = vol.All(
 REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox']),
+    vol.Optional(ATTR_NAME): cv.string
 })
 
 CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
@@ -156,7 +158,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = self.find_registration_name(data)
+        devname = data.get(ATTR_NAME)
+        data.pop(ATTR_NAME, None)
+
+        name = self.find_registration_name(data, devname)
         previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
@@ -177,14 +182,15 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-    def find_registration_name(self, data):
+    def find_registration_name(self, data, suggested=None):
         """Find a registration name matching data or generate a unique one."""
         endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
         for key, registration in self.registrations.items():
             subscription = registration.get(ATTR_SUBSCRIPTION)
             if subscription.get(ATTR_ENDPOINT) == endpoint:
                 return key
-        return ensure_unique_string('unnamed device', self.registrations)
+        return ensure_unique_string(suggested or 'unnamed device',
+                                    self.registrations)
 
     async def delete(self, request):
         """Delete a registration."""

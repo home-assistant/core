@@ -12,6 +12,7 @@ import types
 import voluptuous as vol
 
 from homeassistant import config_entries, const as ha_const
+
 from homeassistant.components.zha.entities import ZhaDeviceEntity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -22,6 +23,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import const as zha_const
 from .event import ZhaEvent, ZhaRelayEvent
+from . import api
+from .helpers import convert_ieee
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
@@ -34,7 +37,7 @@ REQUIREMENTS = [
     'bellows==0.7.0',
     'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
-    'zha-quirks==0.0.5'
+    'zha-quirks==0.0.6'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -55,22 +58,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ENABLE_QUIRKS, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-ATTR_DURATION = 'duration'
-ATTR_IEEE = 'ieee_address'
-
-SERVICE_PERMIT = 'permit'
-SERVICE_REMOVE = 'remove'
-SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema({
-        vol.Optional(ATTR_DURATION, default=60):
-            vol.All(vol.Coerce(int), vol.Range(1, 254)),
-    }),
-    SERVICE_REMOVE: vol.Schema({
-        vol.Required(ATTR_IEEE): cv.string,
-    }),
-}
-
 
 # Zigbee definitions
 CENTICELSIUS = 'C-100'
@@ -179,25 +166,7 @@ async def async_setup_entry(hass, config_entry):
                 config_entry, component)
         )
 
-    async def permit(service):
-        """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        _LOGGER.info("Permitting joins for %ss", duration)
-        await application_controller.permit(duration)
-
-    hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
-
-    async def remove(service):
-        """Remove a node from the network."""
-        from bellows.types import EmberEUI64, uint8_t
-        ieee = service.data.get(ATTR_IEEE)
-        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
-        _LOGGER.info("Removing node %s", ieee)
-        await application_controller.remove(ieee)
-
-    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
-                                 schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+    api.async_load_api(hass, application_controller, listener)
 
     def zha_shutdown(event):
         """Close radio."""
@@ -209,8 +178,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
+    api.async_unload_api(hass)
 
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
     for unsub_dispatcher in dispatchers:
@@ -284,6 +252,28 @@ class ApplicationListener:
             self._hass.async_create_task(device_entity.async_remove())
         if device.ieee in self._events:
             self._events.pop(device.ieee)
+
+    def get_device_entity(self, ieee_str):
+        """Return ZHADeviceEntity for given ieee."""
+        ieee = convert_ieee(ieee_str)
+        if ieee in self._device_registry:
+            entities = self._device_registry[ieee]
+            entity = next(
+                ent for ent in entities if isinstance(ent, ZhaDeviceEntity))
+            return entity
+        return None
+
+    def get_entities_for_ieee(self, ieee_str):
+        """Return list of entities for given ieee."""
+        ieee = convert_ieee(ieee_str)
+        if ieee in self._device_registry:
+            return self._device_registry[ieee]
+        return []
+
+    @property
+    def device_registry(self) -> str:
+        """Return devices."""
+        return self._device_registry
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""

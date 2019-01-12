@@ -59,7 +59,9 @@ class PostNLSensor(Entity):
     def __init__(self, api, name):
         """Initialize the PostNL sensor."""
         self._name = name
-        self._attributes = None
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
         self._state = None
         self._api = api
 
@@ -92,18 +94,5 @@ class PostNLSensor(Entity):
     def update(self):
         """Update device state."""
         shipments = self._api.get_relevant_shipments()
-        status_counts = {}
-
-        for shipment in shipments:
-            status = shipment['status']['formatted']['short']
-            status = self._api.parse_datetime(status, '%d-%m-%Y', '%H:%M')
-
-            name = shipment['settings']['title']
-            status_counts[name] = status
-
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            **status_counts
-        }
-
-        self._state = len(status_counts)
+        self._attributes['shipments'] = shipments
+        self._state = len(shipments)

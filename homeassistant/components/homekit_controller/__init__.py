@@ -27,7 +27,8 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'security-system': 'alarm_control_panel',
     'garage-door-opener': 'cover',
     'window': 'cover',
-    'window-covering': 'cover'
+    'window-covering': 'cover',
+    'lock-mechanism': 'lock'
 }
 
 HOMEKIT_IGNORE = [
@@ -122,6 +123,7 @@ class HKDevice():
                 service_info = {'serial': serial,
                                 'aid': aid,
                                 'iid': service['iid'],
+                                'model': self.model,
                                 'device-type': devtype}
                 component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:

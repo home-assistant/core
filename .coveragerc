@@ -127,7 +127,7 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
-    homeassistant/components/fibaro.py
+    homeassistant/components/fibaro/__init__.py
     homeassistant/components/*/fibaro.py
 
     homeassistant/components/gc100.py
@@ -424,8 +424,14 @@ omit =
     homeassistant/components/*/zabbix.py
 
     homeassistant/components/zha/__init__.py
+    homeassistant/components/zha/binary_sensor.py
     homeassistant/components/zha/const.py
     homeassistant/components/zha/event.py
+    homeassistant/components/zha/fan.py
+    homeassistant/components/zha/light.py
+    homeassistant/components/zha/sensor.py
+    homeassistant/components/zha/switch.py
+    homeassistant/components/zha/api.py
     homeassistant/components/zha/entities/*
     homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
