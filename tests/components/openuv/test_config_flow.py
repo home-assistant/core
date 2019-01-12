@@ -1,6 +1,9 @@
 """Define tests for the OpenUV config flow."""
 from unittest.mock import patch
 
+import pyopenuv
+from pyopenuv.errors import OpenUvError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN, config_flow
 from homeassistant.const import (
@@ -28,9 +31,6 @@ async def test_duplicate_error(hass):
 
 async def test_invalid_api_key(hass):
     """Test that an invalid API key throws an error."""
-    import pyopenuv
-    from pyopenuv.errors import OpenUvError
-
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
@@ -60,8 +60,6 @@ async def test_show_form(hass):
 
 async def test_step_import(hass):
     """Test that the import step works."""
-    import pyopenuv
-
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
@@ -87,8 +85,6 @@ async def test_step_import(hass):
 
 async def test_step_user(hass):
     """Test that the user step works."""
-    import pyopenuv
-
     conf = {
         CONF_API_KEY: '12345abcde',
         CONF_ELEVATION: 59.1234,
