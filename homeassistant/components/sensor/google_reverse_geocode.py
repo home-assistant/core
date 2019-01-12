@@ -4,15 +4,13 @@ Support for Google Reverse Geocode sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.google_reverse_geocode/
 """
-from datetime import datetime
+
 from datetime import timedelta
 import logging
 import json
+import voluptuous as vol
 import requests
 from requests import get
-
-import voluptuous as vol
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
@@ -200,8 +198,8 @@ class GoogleGeocode(Entity):
                 url = "https://maps.google.com/maps/api/geocode/json?latlng="
                 + lat
             else:
-                url = "https://maps.googleapis.com/maps/api/geocode/json?"
-                "latlng=" + lat + "&key=" + self._api_key
+                url = "https://maps.googleapis.com/maps/api/geocode/json?" \
+                      "latlng=" + lat + "&key=" + self._api_key
             response = get(url)
             json_input = response.text
             _LOGGER.debug("Reverse Geocode response is : %s", json_input)
