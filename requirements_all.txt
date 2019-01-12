@@ -127,7 +127,7 @@ aiolifx_effects==0.2.1
 aiopvapi==1.6.14
 
 # homeassistant.components.unifi
-aiounifi==3
+aiounifi==4
 
 # homeassistant.components.cover.aladdin_connect
 aladdin_connect==0.3
