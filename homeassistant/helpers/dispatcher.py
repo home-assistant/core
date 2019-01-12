@@ -3,7 +3,6 @@ import asyncio
 import inspect
 from functools import wraps
 import logging
-import sys
 import traceback
 from typing import Any, Callable
 
@@ -35,13 +34,12 @@ def wrap_callback(func):
     """Decorate a signal callback to catch and log exceptions."""
     def log_exception(signal, *args):
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-        exc_type, exc_value, exc_tb = sys.exc_info()
         # Do not print the wrapper in the traceback
-        exc_tb = exc_tb.tb_next
-        err = traceback.format_exception(exc_type, exc_value, exc_tb)
+        frames = len(inspect.trace()) - 1
+        err = traceback.format_exc(-frames)
         logging.getLogger(module_name).error(
             "Exception in %s when dispatching '%s': '%s'\n%s",
-            func.__name__, signal, *args, ''.join(err))
+            func.__name__, signal, *args, err)
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(func):
