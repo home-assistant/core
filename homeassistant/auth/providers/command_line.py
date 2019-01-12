@@ -65,7 +65,8 @@ class CommandLineAuthProvider(AuthProvider):
             "password": password,
         }
         try:
-            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
+            # pylint: disable=no-member
+            process = await asyncio.subprocess.create_subprocess_exec(
                 self.config[CONF_COMMAND], *self.config[CONF_ARGS],
                 env=env,
                 stdout=asyncio.subprocess.PIPE
