@@ -1,5 +1,4 @@
 """The tests for local file sensor platform."""
-from datetime import timedelta
 import unittest
 from unittest.mock import Mock, patch
 
