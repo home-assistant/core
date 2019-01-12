@@ -99,6 +99,8 @@ async def async_setup(hass, config):
         kwargs[CONF_GOOGLE_ACTIONS] = GACTIONS_SCHEMA({})
 
     kwargs[CONF_ALEXA] = alexa_sh.Config(
+        endpoint=None,
+        async_get_access_token=None,
         should_expose=alexa_conf[CONF_FILTER],
         entity_config=alexa_conf.get(CONF_ENTITY_CONFIG),
     )

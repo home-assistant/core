@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.2.0']
+REQUIREMENTS = ['pytraccar==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

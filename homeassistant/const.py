@@ -1,14 +1,14 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 85
+MINOR_VERSION = 86
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
 
 # Format for platforms
-PLATFORM_FORMAT = '{}.{}'
+PLATFORM_FORMAT = '{domain}.{platform}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'

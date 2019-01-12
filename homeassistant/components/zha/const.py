@@ -36,6 +36,21 @@ DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = 'zigbee.db'
 
+ATTR_CLUSTER_ID = 'cluster_id'
+ATTR_CLUSTER_TYPE = 'cluster_type'
+ATTR_ATTRIBUTE = 'attribute'
+ATTR_VALUE = 'value'
+ATTR_MANUFACTURER = 'manufacturer'
+ATTR_COMMAND = 'command'
+ATTR_COMMAND_TYPE = 'command_type'
+ATTR_ARGS = 'args'
+
+IN = 'in'
+OUT = 'out'
+CLIENT_COMMANDS = 'client_commands'
+SERVER_COMMANDS = 'server_commands'
+SERVER = 'server'
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
@@ -87,7 +102,7 @@ def populate_data():
     """
     from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
-    from homeassistant.components.sensor import zha as sensor_zha
+    from .sensor import RelativeHumiditySensor
 
     if zha.PROFILE_ID not in DEVICE_CLASS:
         DEVICE_CLASS[zha.PROFILE_ID] = {}
@@ -129,7 +144,6 @@ def populate_data():
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
-        zcl.clusters.general.LevelControl: 'light',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
@@ -148,7 +162,7 @@ def populate_data():
     # A map of device/cluster to component/sub-component
     CUSTOM_CLUSTER_MAPPINGS.update({
         (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
-            ('sensor', sensor_zha.RelativeHumiditySensor)
+            ('sensor', RelativeHumiditySensor)
     })
 
     # A map of hass components to all Zigbee clusters it could use

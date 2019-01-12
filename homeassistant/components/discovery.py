@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.2.0']
+REQUIREMENTS = ['netdisco==2.3.0']
 
 DOMAIN = 'discovery'
 
@@ -51,6 +51,7 @@ SERVICE_DLNA_DMR = 'dlna_dmr'
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
+    'esphome': 'esphome',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
@@ -173,10 +174,13 @@ async def async_setup(hass, config):
 
     async def scan_devices(now):
         """Scan for devices."""
-        results = await hass.async_add_job(_discover, netdisco)
+        try:
+            results = await hass.async_add_job(_discover, netdisco)
 
-        for result in results:
-            hass.async_create_task(new_service_found(*result))
+            for result in results:
+                hass.async_create_task(new_service_found(*result))
+        except OSError:
+            logger.error("Network is unreachable")
 
         async_track_point_in_utc_time(
             hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL)
