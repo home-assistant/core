@@ -107,17 +107,10 @@ class FlowHandler(config_entries.ConfigFlow):
         """Run when a Tellstick is discovered."""
         from tellduslive import supports_local_api
         _LOGGER.info('Discovered tellstick device: %s', user_input)
-        # Ignore any known devices
-        for entry in self._async_current_entries():
-            if entry.data[KEY_HOST] == user_input[0]:
-                return self.async_abort(reason='already_configured')
+        if supports_local_api(user_input[1]):
+            _LOGGER.info('%s support local API', user_input[1])
+            self._hosts.append(user_input[0])
 
-        if not supports_local_api(user_input[1]):
-            _LOGGER.debug('Tellstick does not support local API')
-            # Configure the cloud service
-            return await self.async_step_auth()
-
-        self._hosts.append(user_input[0])
         return await self.async_step_user()
 
     async def async_step_import(self, user_input):
