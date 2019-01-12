@@ -25,6 +25,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'switch': 'switch',
     'thermostat': 'climate',
     'security-system': 'alarm_control_panel',
+    'lock-mechanism': 'lock'
 }
 
 HOMEKIT_IGNORE = [
@@ -116,6 +117,7 @@ class HKDevice():
             for service in accessory['services']:
                 service_info = {'serial': serial,
                                 'aid': aid,
+                                'model': self.model,
                                 'iid': service['iid']}
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
