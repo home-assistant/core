@@ -196,10 +196,12 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                     self._hold = characteristic['value']
             elif ctype == "vertical-tilt.current":
                 self._chars['vertical-tilt.current'] = characteristic['iid']
-                self._tilt_position = characteristic['value']
+                if characteristic['value'] is not None:
+                    self._tilt_position = characteristic['value']
             elif ctype == "horizontal-tilt.current":
                 self._chars['horizontal-tilt.current'] = characteristic['iid']
-                self._tilt_position = characteristic['value']
+                if characteristic['value'] is not None:
+                    self._tilt_position = characteristic['value']
             elif ctype == "vertical-tilt.target":
                 self._chars['vertical-tilt.target'] = \
                     characteristic['iid']
