@@ -14,6 +14,7 @@ from operator import attrgetter
 import os
 import socket
 import ssl
+import sys
 import time
 import traceback
 from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
@@ -308,9 +309,13 @@ def wrap_callback(func):
     """Decorate an MQTT message callback to catch and log exceptions."""
     def log_exception(topic, payload):
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        # Do not print the wrapper in the traceback
+        exc_tb = exc_tb.tb_next
+        err = traceback.format_exception(exc_type, exc_value, exc_tb)
         logging.getLogger(module_name).error(
             "Exception in %s when handling msg on '%s': '%s'\n%s",
-            func.__name__, topic, payload, traceback.format_exc(limit=-1))
+            func.__name__, topic, payload, ''.join(err))
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(func):
