@@ -141,7 +141,7 @@ class EVSensor(Entity):
     def icon(self):
         """Return the icon."""
         if self._attr == BATTERY_SENSOR:
-            charging = self.state_attributes.get("charging", False)
+            charging = self._state_attributes.get("charging", False)
             return icon_for_battery_level(self.state, charging)
         return self._icon
 
