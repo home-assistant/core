@@ -69,7 +69,7 @@ class CommandLineAuthProvider(AuthProvider):
                 self.config[CONF_COMMAND], *self.config[CONF_ARGS],
                 env=env,
                 stdout=asyncio.subprocess.PIPE
-                       if self.config[CONF_META] else None,
+                if self.config[CONF_META] else None,
             )
             stdout = (await process.communicate())[0]
         except OSError as err:
