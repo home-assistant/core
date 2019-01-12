@@ -1,7 +1,7 @@
 """Config flow to configure Logi Circle component."""
-import asyncio
 from collections import OrderedDict
 import logging
+import asyncio
 
 import async_timeout
 import voluptuous as vol
@@ -10,22 +10,31 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 
+from homeassistant.const import CONF_SENSORS, CONF_BINARY_SENSORS
+
 from .const import DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI
+
+_LOGGER = logging.getLogger(__name__)
+_TIMEOUT = 15  # seconds
+
 DATA_FLOW_IMPL = 'logi_circle_flow_implementation'
+EXTERNAL_ERRORS = 'logi_errors'
 AUTH_CALLBACK_PATH = '/api/logi_circle'
 AUTH_CALLBACK_NAME = 'api:logi_circle'
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @callback
-def register_flow_implementation(hass, domain, client_id, client_secret, api_key, redirect_uri):
+def register_flow_implementation(hass, domain, client_id, client_secret, api_key, redirect_uri,
+                                 sensors, binary_sensors):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
-    name: Name of the component.
-    client_id: Client id.
+    client_id: Client ID.
     client_secret: Client secret.
+    api_key: API key issued by Logitech.
+    redirect_uri: Auth callback redirect URI.
+    sensors: Sensor config.
+    binary_sensors: Binary sensor config.
     """
     if DATA_FLOW_IMPL not in hass.data:
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
@@ -34,8 +43,12 @@ def register_flow_implementation(hass, domain, client_id, client_secret, api_key
         CONF_CLIENT_ID: client_id,
         CONF_CLIENT_SECRET: client_secret,
         CONF_API_KEY: api_key,
-        CONF_REDIRECT_URI: redirect_uri
+        CONF_REDIRECT_URI: redirect_uri,
+        CONF_SENSORS: sensors,
+        CONF_BINARY_SENSORS: binary_sensors
     }
+    # For storing errors encountered in non-UI triggered flows (auth callback)
+    hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = None
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -66,7 +79,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         if not flows:
-            _LOGGER.debug("no flows")
             return self.async_abort(reason='no_flows')
 
         if len(flows) == 1:
@@ -89,9 +101,13 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='external_setup')
 
+        external_error = self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS]
         errors = {}
-
-        if user_input is not None:
+        if external_error:
+            # Handle error from another flow
+            errors['base'] = external_error
+            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = None
+        elif user_input is not None:
             errors['base'] = 'follow_link'
 
         url = self._get_authorization_url()
@@ -99,17 +115,16 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id='auth',
             description_placeholders={'authorization_url': url},
-            errors=errors,
-        )
+            errors=errors)
 
     def _get_authorization_url(self):
         """Create temporary Logi Circle session and generate authorization url."""
         from logi_circle import LogiCircle
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
-        api_key = flow[API_KEY]
-        redirect_uri = flow[REDIRECT_URI]
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
+        api_key = flow[CONF_API_KEY]
+        redirect_uri = flow[CONF_REDIRECT_URI]
 
         logi_session = LogiCircle(
             client_id=client_id,
@@ -129,20 +144,20 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         if code is None:
             return self.async_abort(reason='no_code')
 
-        _LOGGER.debug("Should close all flows below %s",
-                      self.hass.config_entries.flow.async_progress())
-        # Remove notification if no other discovery config entries in progress
-
         return await self._async_create_session(code)
 
     async def _async_create_session(self, code):
-        """Create point session and entries."""
+        """Create Logi Circle session and entries."""
         from logi_circle import LogiCircle
+        from logi_circle.exception import AuthorizationFailed
+
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
-        api_key = flow[API_KEY]
-        redirect_uri = flow[REDIRECT_URI]
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
+        api_key = flow[CONF_API_KEY]
+        redirect_uri = flow[CONF_REDIRECT_URI]
+        sensors = flow[CONF_SENSORS]
+        binary_sensors = flow[CONF_BINARY_SENSORS]
 
         logi_session = LogiCircle(
             client_id=client_id,
@@ -150,23 +165,27 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             api_key=api_key,
             redirect_uri=redirect_uri)
 
-        await logi_session.authorize(code)
+        try:
+            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
+                await logi_session.authorize(code)
+        except AuthorizationFailed:
+            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = 'auth_error'
+            return self.async_abort(reason='external_error')
+        except asyncio.TimeoutError:
+            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = 'auth_timeout'
+            return self.async_abort(reason='external_error')
 
-        if not logi_session.authorized:
-            _LOGGER.error('Authentication Error')
-            return self.async_abort(reason='auth_error')
-
-        _LOGGER.info('Successfully authenticated with Logi Circle API')
+        account_id = (await logi_session.account)['accountId']
         await logi_session.close()
-
         return self.async_create_entry(
-            title='user_email',
+            title='Logi Circle ({})'.format(account_id),
             data={
                 CONF_CLIENT_ID: client_id,
                 CONF_CLIENT_SECRET: client_secret,
                 CONF_API_KEY: api_key,
-                CONF_REDIRECT_URI: redirect_uri
-            }
+                CONF_REDIRECT_URI: redirect_uri,
+                CONF_SENSORS: sensors,
+                CONF_BINARY_SENSORS: binary_sensors}
         )
 
 
@@ -188,4 +207,3 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
                     context={'source': 'code'},
                     data=request.query['code'],
                 ))
-        return "OK!"

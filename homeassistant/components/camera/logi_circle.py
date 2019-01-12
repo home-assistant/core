@@ -5,23 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.logi_circle/
 """
 import logging
-import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.components.logi_circle import (
-    SIGNAL_LOGI_CIRCLE_UPDATE, DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
+    DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
     ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
+    CONF_SCAN_INTERVAL)
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
@@ -60,11 +57,11 @@ LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
 
-    raw_cameras = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     ffmpeg = hass.data[DATA_FFMPEG]
 
-    cameras = [LogiCam(camera, entry, ffmpeg)
-               for camera in raw_cameras]
+    cameras = [LogiCam(device, entry, ffmpeg)
+               for device in devices]
 
     async_add_entities(cameras, True)
 
@@ -127,6 +124,19 @@ class LogiCam(Camera):
     def supported_features(self):
         """Logi Circle camera's support turning on and off ("soft" switch)."""
         return SUPPORT_ON_OFF
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'name': self._name,
+            'identifiers': {
+                (LOGI_CIRCLE_DOMAIN, self._camera.id)
+            },
+            'model': '{} ({})'.format(self._camera.mount, self._camera.model),
+            'sw_version': self._camera.firmware,
+            'manufacturer': 'Logitech'
+        }
 
     @property
     def device_state_attributes(self):
@@ -200,7 +210,8 @@ class LogiCam(Camera):
 
         await self._camera.live_stream.download_rtsp(
             filename=stream_file,
-            duration=timedelta(seconds=duration))
+            duration=timedelta(seconds=duration),
+            ffmpeg_bin=self._ffmpeg.binary)
 
     async def livestream_snapshot(self, filename):
         """Download a still frame from the camera's livestream."""
@@ -218,16 +229,3 @@ class LogiCam(Camera):
         await self._camera.live_stream.download_jpeg(
             filename=snapshot_file,
             refresh=True)
-
-    async def async_added_to_hass(self):
-        """Register update signal handler."""
-        async def async_update_state():
-            """Update device state."""
-            await self.async_update_ha_state()
-
-        async_dispatcher_connect(self.hass, SIGNAL_LOGI_CIRCLE_UPDATE,
-                                 async_update_state)
-
-    async def async_update(self):
-        """Update camera entity and refresh attributes."""
-        await self._camera.update()

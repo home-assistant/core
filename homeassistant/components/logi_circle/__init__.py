@@ -14,7 +14,8 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.camera import CAMERA_SERVICE_SCHEMA, ATTR_FILENAME
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+                                 EVENT_HOMEASSISTANT_STOP, CONF_BINARY_SENSORS, CONF_SENSORS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.core import callback as async_callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -24,11 +25,10 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
-# Have to import for config_flow to work even if they are not used here
 from . import config_flow
-from .const import (DOMAIN, DATA_LOGI, DEFAULT_NAME, SIGNAL_LOGI_CIRCLE_UPDATE,
+from .const import (DOMAIN, DATA_LOGI, SIGNAL_LOGI_CIRCLE_UPDATE,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    CONF_ATTRIBUTION)
+                    CONF_ATTRIBUTION, LOGI_SENSORS, LOGI_BINARY_SENSORS)
 
 REQUIREMENTS = [
     'https://github.com/evanjd/python-logi-circle/archive/'
@@ -38,6 +38,16 @@ REQUIREMENTS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_BINARY_SENSORS)):
+        vol.All(cv.ensure_list, [vol.In(LOGI_BINARY_SENSORS)])
+})
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_SENSORS)):
+        vol.All(cv.ensure_list, [vol.In(LOGI_SENSORS)])
+})
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
@@ -46,6 +56,9 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_CLIENT_SECRET): cv.string,
             vol.Required(CONF_API_KEY): cv.string,
             vol.Required(CONF_REDIRECT_URI): cv.string,
+            vol.Optional(CONF_BINARY_SENSORS, default={}):
+                BINARY_SENSOR_SCHEMA,
+            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
         })
     },
     extra=vol.ALLOW_EXTRA,
@@ -59,7 +72,7 @@ async def logi_circle_update_event_broker(hass, subscription):
     while hass.is_running and subscription.is_open:
         await subscription.get_next_event()
 
-        if not hass.is_running:
+        if not hass.is_running or not subscription.is_open:
             break
 
         async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
@@ -75,10 +88,12 @@ async def async_setup(hass, config):
     config_flow.register_flow_implementation(
         hass,
         DOMAIN,
-        conf[CONF_CLIENT_ID],
-        conf[CONF_CLIENT_SECRET],
-        conf[CONF_API_KEY],
-        conf[CONF_REDIRECT_URI])
+        client_id=conf[CONF_CLIENT_ID],
+        client_secret=conf[CONF_CLIENT_SECRET],
+        api_key=conf[CONF_API_KEY],
+        redirect_uri=conf[CONF_REDIRECT_URI],
+        sensors=conf[CONF_SENSORS],
+        binary_sensors=conf[CONF_BINARY_SENSORS])
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -89,7 +104,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass, entry):
     """Set up Logi Circle from a config entry."""
     from logi_circle import LogiCircle
 
@@ -129,6 +144,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    print('TODO!')
+    for component in 'camera', 'sensor', 'binary_sensor':
+        print('unloading %s' % (component))
+        await hass.config_entries.async_forward_entry_unload(
+            entry, component)
+
+    logi_circle = hass.data.pop(DATA_LOGI)
+
+    # Tell API wrapper to close all aiohttp sessions, websockets
+    # and clear all locally cached tokens
+    # await logi_circle.auth_provider.clear_authorization()
+    print('welp')
+
+    return True
