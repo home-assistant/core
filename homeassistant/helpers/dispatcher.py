@@ -30,9 +30,9 @@ def dispatcher_connect(hass: HomeAssistantType, signal: str,
     return remove_dispatcher
 
 
-def wrap_callback(func):
+def wrap_callback(func: Callable[..., Any]) -> Callable[[], None]:
     """Decorate a signal callback to catch and log exceptions."""
-    def log_exception(signal, *args):
+    def log_exception(signal: str, *args: Any) -> None:
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
         # Do not print the wrapper in the traceback
         frames = len(inspect.trace()) - 1
@@ -44,16 +44,16 @@ def wrap_callback(func):
     wrapper_func = None
     if asyncio.iscoroutinefunction(func):
         @wraps(func)
-        async def wrapper(signal, *args):
+        async def async_wrapper(signal: str, *args: Any) -> None:
             """Catch and log exception."""
             try:
                 await func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(signal, *args)
-        wrapper_func = wrapper
+        wrapper_func = async_wrapper
     else:
         @wraps(func)
-        def wrapper(signal, *args):
+        def wrapper(signal: str, *args: Any) -> None:
             """Catch and log exception."""
             try:
                 func(*args)
