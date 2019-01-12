@@ -7,16 +7,16 @@ at https://home-assistant.io/components/light.zha/
 import logging
 
 from homeassistant.components import light
-from homeassistant.components.zha import helpers
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
-    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
-from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha.entities.listeners import (
-    OnOffListener, LevelListener
-)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
+from . import helpers
+from .const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
+from .entities import ZhaEntity
+from .entities.listeners import (
+    OnOffListener, LevelListener
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,8 +12,6 @@ import types
 import voluptuous as vol
 
 from homeassistant import config_entries, const as ha_const
-
-from homeassistant.components.zha.entities import ZhaDeviceEntity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -25,6 +23,7 @@ from . import const as zha_const
 from .event import ZhaEvent, ZhaRelayEvent
 from . import api
 from .helpers import convert_ieee
+from .entities import ZhaDeviceEntity
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
