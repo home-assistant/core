@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE]),
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL]),
     vol.Required(CONF_ADS_VALUE): cv.match_all,
     vol.Required(CONF_ADS_VAR): cv.string,
 })
