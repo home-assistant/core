@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pycarwings2==2.3']
+REQUIREMENTS = ['pycarwings2==2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
