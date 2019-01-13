@@ -10,7 +10,7 @@ from requests import RequestException
 
 import voluptuous as vol
 
-from custom_components.amcrest import (
+from homeassistant.components.amcrest import (
     DATA_AMCREST, DATA_AMCREST_LOCK, STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import (
     Camera, DOMAIN, SUPPORT_ON_OFF, CAMERA_SERVICE_SCHEMA)
@@ -228,25 +228,25 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     services = (
         (SERVICE_ENABLE_RECORDING, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_DISABLE_RECORDING, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_GOTO_PRESET, async_goto_preset,
-            SERVICE_GOTO_PRESET_SCHEMA),
+         SERVICE_GOTO_PRESET_SCHEMA),
         (SERVICE_SET_COLOR_BW, async_set_color_bw,
-            SERVICE_SET_COLOR_BW_SCHEMA),
+         SERVICE_SET_COLOR_BW_SCHEMA),
         (SERVICE_AUDIO_OFF, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_AUDIO_ON, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_MASK_OFF, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_MASK_ON, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_TOUR_OFF, async_service_handler,
-            CAMERA_SERVICE_SCHEMA),
+         CAMERA_SERVICE_SCHEMA),
         (SERVICE_TOUR_ON, async_service_handler,
-            CAMERA_SERVICE_SCHEMA))
+         CAMERA_SERVICE_SCHEMA))
     if not hass.services.has_service(DOMAIN, services[0][0]):
         for service in services:
             hass.services.async_register(DOMAIN, *service)
@@ -381,7 +381,7 @@ class AmcrestCam(Camera):
         rec_mode = {'Automatic': 0, 'Manual': 1}
         try:
             self._camera.record_mode = rec_mode['Manual'
-                if enable else 'Automatic']
+                                                if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -518,14 +518,14 @@ class AmcrestCam(Camera):
                                                      str(exc)))
         else:
             self._is_streaming = 'true' in [s.split('=')[-1]
-                for s in encode_media if '.VideoEnable=' in s]
+                                            for s in encode_media if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
-                for s in video_in_options if '].DayNightColor=' in s][0])]
+                                      for s in video_in_options if '].DayNightColor=' in s][0])]
             self._is_audio_on = 'true' in [s.split('=')[-1]
-                for s in encode_media if '.AudioEnable=' in s]
+                                           for s in encode_media if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
-                for s in video_widget_config
-                    if '.Covers' in s and '.EncodeBlend=' in s]
+                                          for s in video_widget_config
+                                          if '.Covers' in s and '.EncodeBlend=' in s]
 
     # Other Camera method overrides
 
@@ -573,7 +573,7 @@ class AmcrestCam(Camera):
             self._check_result(
                 self._camera.go_to_preset(action='start',
                                           preset_point_number=preset),
-                                          'preset={}'.format(preset))
+                'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In goto_preset: {}: {}'.format(
                 exc.__class__.__name__, str(exc)))
@@ -651,7 +651,7 @@ class AmcrestCam(Camera):
     def _set_color_bw(self, cbw):
         self._check_result(
             self._camera.command(
-                    'configManager.cgi?action=setConfig&VideoInOptions[0].'
+    'configManager.cgi?action=setConfig&VideoInOptions[0].'
                     'DayNightColor={}'.format(CBW.index(cbw))
                 ).content.decode(),
             'cbw = {}'.format(cbw))
