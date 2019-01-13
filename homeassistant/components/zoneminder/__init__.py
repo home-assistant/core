@@ -37,7 +37,7 @@ HOST_CONFIG_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ensure_list(HOST_CONFIG_SCHEMA)
+    DOMAIN: vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SET_RUN_STATE = 'set_run_state'
