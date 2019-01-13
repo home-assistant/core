@@ -18,7 +18,6 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'NMBS'
-DEFAULT_NAME_LIVE = "NMBS Live"
 
 DEFAULT_ICON = "mdi:train"
 DEFAULT_ICON_ALERT = "mdi:alert-octagon"
@@ -90,18 +89,19 @@ class NMBSLiveBoard(Entity):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
+
         self._attrs = {}
         self._state = None
 
     @property
     def name(self):
         """Return the sensor default name."""
-        return DEFAULT_NAME_LIVE
+        return "NMBS Live"
 
     @property
     def icon(self):
         """Return the default icon or an alert icon if delays."""
-        if self._attrs is not None and int(self._attrs['delay']) > 0:
+        if self._attrs and int(self._attrs['delay']) > 0:
             return DEFAULT_ICON_ALERT
 
         return DEFAULT_ICON
@@ -114,7 +114,7 @@ class NMBSLiveBoard(Entity):
     @property
     def device_state_attributes(self):
         """Return the sensor attributes if data is available."""
-        if self._state is None or self._attrs is None:
+        if self._state is None or not self._attrs:
             return None
 
         delay = get_delay_in_minutes(self._attrs["delay"])
