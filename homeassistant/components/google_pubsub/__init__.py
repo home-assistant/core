@@ -7,7 +7,8 @@ from typing import Dict, Any
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_STATE_CHANGED, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import HomeAssistant, Event, State
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
