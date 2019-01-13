@@ -8,7 +8,7 @@ class TestDateTimeJSONEncoder(object):
 
     def test_datetime(self):
         time = datetime(2019, 1, 13, 12, 30, 5)
-        assert victim().encode(time) == '"2019-01-13T12:30:05.000000"'
+        assert victim().encode(time) == '"2019-01-13T12:30:05"'
 
     def test_no_datetime(self):
         assert victim().encode(42) == '42'
