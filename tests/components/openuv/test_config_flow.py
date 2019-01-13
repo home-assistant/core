@@ -2,8 +2,6 @@
 from unittest.mock import patch
 
 import pytest
-
-import pyopenuv
 from pyopenuv.errors import OpenUvError
 
 from homeassistant import data_entry_flow
