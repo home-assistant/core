@@ -6,10 +6,13 @@ https://home-assistant.io/components/locative/
 """
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import \
     DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, ATTR_LATITUDE, \
-    ATTR_LONGITUDE, STATE_NOT_HOME, CONF_WEBHOOK_ID
+    ATTR_LONGITUDE, STATE_NOT_HOME, CONF_WEBHOOK_ID, ATTR_ID
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -22,6 +25,18 @@ DEPENDENCIES = ['webhook']
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 
+ATTR_DEVICE_ID = 'device'
+ATTR_TRIGGER = 'trigger'
+
+WEBHOOK_SCHEMA = vol.Schema({
+    vol.Required(ATTR_LATITUDE): cv.latitude,
+    vol.Required(ATTR_LONGITUDE): cv.longitude,
+    vol.Required(ATTR_DEVICE_ID): cv.string,
+    vol.Required(ATTR_TRIGGER): cv.string,
+    vol.Optional(ATTR_ID): cv.string,
+}, extra=vol.ALLOW_EXTRA)
+
+
 async def async_setup(hass, hass_config):
     """Set up the Locative component."""
     hass.async_create_task(
@@ -32,30 +47,19 @@ async def async_setup(hass, hass_config):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Locative."""
-    data = await request.post()
+    try:
+        data = WEBHOOK_SCHEMA(dict(await request.post()))
+    except vol.MultipleInvalid as e:
+        return e.error_message, HTTP_UNPROCESSABLE_ENTITY
 
-    if 'latitude' not in data or 'longitude' not in data:
-        return ('Latitude and longitude not specified.',
-                HTTP_UNPROCESSABLE_ENTITY)
-
-    if 'device' not in data:
-        _LOGGER.error('Device id not specified.')
-        return ('Device id not specified.',
-                HTTP_UNPROCESSABLE_ENTITY)
-
-    if 'trigger' not in data:
-        _LOGGER.error('Trigger is not specified.')
-        return ('Trigger is not specified.',
-                HTTP_UNPROCESSABLE_ENTITY)
-
-    if 'id' not in data and data['trigger'] != 'test':
+    if ATTR_ID not in data and data[ATTR_TRIGGER] != 'test':
         _LOGGER.error('Location id not specified.')
         return ('Location id not specified.',
                 HTTP_UNPROCESSABLE_ENTITY)
 
-    device = data['device'].replace('-', '')
-    location_name = data.get('id', data['trigger']).lower()
-    direction = data['trigger']
+    device = data[ATTR_DEVICE_ID].replace('-', '')
+    location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
+    direction = data[ATTR_TRIGGER]
     gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
     if direction == 'enter':
