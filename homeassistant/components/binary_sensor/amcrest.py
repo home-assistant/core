@@ -15,7 +15,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, 
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up a binary sensor for an Amcrest IP Camera."""
     if discovery_info is None:
