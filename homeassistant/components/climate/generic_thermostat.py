@@ -30,10 +30,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['switch', 'sensor']
 
 DEFAULT_TOLERANCE = 0.3
+DEFAULT_SENSOR_MAX_TEMP =  1000000 
+DEFAULT_SENSOR_MIN_TEMP = -1000000 
 DEFAULT_NAME = 'Generic Thermostat'
 
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
+CONF_SENSOR_MIN_TEMP = 'sensor_min_temp'
+CONF_SENSOR_MAX_TEMP = 'sensor_max_temp'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
@@ -52,14 +56,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
     vol.Required(CONF_SENSOR): cv.entity_id,
     vol.Optional(CONF_AC_MODE): cv.boolean,
+    vol.Optional(CONF_SENSOR_MIN_TEMP, default=DEFAULT_SENSOR_MIN_TEMP):
+        vol.Coerce(float),
+    vol.Optional(CONF_SENSOR_MAX_TEMP, default=DEFAULT_SENSOR_MAX_TEMP):
+        vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
-        float),
-    vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(
-        float),
+    vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+    vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_KEEP_ALIVE): vol.All(
         cv.time_period, cv.positive_timedelta),
@@ -77,6 +83,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
+    sensor_min_temp = config.get(CONF_SENSOR_MIN_TEMP)
+    sensor_max_temp = config.get(CONF_SENSOR_MAX_TEMP)
     min_temp = config.get(CONF_MIN_TEMP)
     max_temp = config.get(CONF_MAX_TEMP)
     target_temp = config.get(CONF_TARGET_TEMP)
@@ -91,6 +99,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
+        sensor_min_temp, sensor_max_temp,
         target_temp, ac_mode, min_cycle_duration, cold_tolerance,
         hot_tolerance, keep_alive, initial_operation_mode, away_temp,
         precision)])
@@ -100,7 +109,8 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
-                 min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
+                 min_temp, max_temp, sensor_min_temp, sensor_max_temp,
+                 target_temp, ac_mode, min_cycle_duration,
                  cold_tolerance, hot_tolerance, keep_alive,
                  initial_operation_mode, away_temp, precision):
         """Initialize the thermostat."""
@@ -130,6 +140,8 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         self._active = False
         self._cur_temp = None
         self._temp_lock = asyncio.Lock()
+        self._sensor_max_temp = sensor_max_temp
+        self._sensor_min_temp = sensor_min_temp
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
@@ -318,7 +330,11 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
-            self._cur_temp = float(state.state)
+            newvalue = float(state.state)
+            if newvalue > self._sensor_max_temp or newvalue < self._sensor_min_temp:
+                _LOGGER.error("Sensor value ignored because it is outside the range: %f not in (%f, %f)", newvalue, self._sensor_min_temp, self._sensor_max_temp)
+            else:
+                self._cur_temp = newvalue
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
