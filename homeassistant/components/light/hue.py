@@ -218,14 +218,19 @@ class HueLight(Light):
         self.bridge = bridge
         self.is_group = is_group
 
-        (self.gamut_typ, self.gamut) = self.get_gamut()
-
         if is_group:
             self.is_osram = False
             self.is_philips = False
+            self.gamut_typ = 'None'
+            self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
             self.is_philips = light.manufacturername == 'Philips'
+            self.gamut_typ = self.light.colorgamuttype
+            self.gamut = self.light.colorgamut
+            if not self.gamut:
+                err_msg = 'Can not get color gamut of light "%s"'
+                _LOGGER.warning(err_msg, self.name)
 
     @property
     def unique_id(self):
@@ -407,21 +412,3 @@ class HueLight(Light):
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
         return attributes
-
-    def get_gamut(self):
-        """Return the gamut information of the light."""
-        if self.is_group:
-            return ('None', None)
-
-        try:
-            light_spec = self.light.raw['capabilities']['control']
-            color_gamut_type = light_spec['colorgamuttype']
-            gtup = tuple([color.XYPoint(*x) for x in light_spec['colorgamut']])
-            color_gamut = color.GamutType(*gtup)
-        except KeyError:
-            err_msg = 'Can not get color gamut of light "%s"'
-            _LOGGER.warning(err_msg, self.name)
-            color_gamut = None
-            color_gamut_type = 'None'
-
-        return (color_gamut_type, color_gamut)
