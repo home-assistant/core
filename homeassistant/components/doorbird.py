@@ -125,6 +125,8 @@ def setup(hass, config):
                     title='Doorbird Configuration Failure',
                     notification_id='doorbird_schedule_error')
 
+                return False
+
     hass.data[DOMAIN] = doorstations
 
     def _reset_device_favorites_handler(event):
