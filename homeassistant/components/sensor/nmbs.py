@@ -26,6 +26,7 @@ DEFAULT_ICON_ALERT = "mdi:alert-octagon"
 CONF_STATION_FROM = 'station_from'
 CONF_STATION_TO = 'station_to'
 CONF_STATION_LIVE = 'station_live'
+CONF_EXCLUDE_VIAS = 'exclude_vias'
 
 REQUIREMENTS = ["pyrail==0.0.3"]
 
@@ -33,8 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_FROM): cv.string,
     vol.Required(CONF_STATION_TO): cv.string,
     vol.Optional(CONF_STATION_LIVE): cv.string,
+    vol.Optional(CONF_EXCLUDE_VIAS, default=False): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ON_MAP): cv.boolean,
+    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
 })
 
 
@@ -70,9 +72,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_from = config[CONF_STATION_FROM]
     station_to = config[CONF_STATION_TO]
     station_live = config.get(CONF_STATION_LIVE)
+    excl_vias = config[CONF_EXCLUDE_VIAS]
 
     sensors = [NMBSSensor(
-        api_client, name, show_on_map, station_from, station_to)]
+        api_client, name, show_on_map, station_from, station_to, excl_vias)]
 
     if station_live is not None:
         sensors.append(NMBSLiveBoard(api_client, station_live))
@@ -144,13 +147,14 @@ class NMBSLiveBoard(Entity):
 class NMBSSensor(Entity):
     """Get the the total travel time for a given connection."""
 
-    def __init__(self, api_client, name, show_on_map, station_from, station_to):
+    def __init__(self, api_client, name, show_on_map, station_from, station_to, excl_vias):
         """Initialize the NMBS connection sensor."""
         self._name = name
         self._show_on_map = show_on_map
         self._api_client = api_client
         self._station_from = station_from
         self._station_to = station_to
+        self._excl_vias = excl_vias
 
         self._attrs = {}
         self._state = None
@@ -224,12 +228,14 @@ class NMBSSensor(Entity):
         connections = self._api_client.get_connections(
             self._station_from, self._station_to)
 
-        next_connection = None
-
         if int(connections['connection'][0]['departure']['left']) > 0:
             next_connection = connections['connection'][1]
         else:
             next_connection = connections['connection'][0]
+
+        if self._excl_vias and next_connection['vias'] and int(
+                next_connection['vias']['number']) > 0:
+            return
 
         self._attrs = next_connection
 
