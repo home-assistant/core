@@ -9,7 +9,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNKNOWN, STATE_UNAVAILABLE)
-from homeassistant.core import HomeAssistant, Event, State
+from homeassistant.core import HomeAssistant, Event
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
