@@ -584,53 +584,6 @@ class Message:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    class AsyncioHelper:
-        """Helper to handle paho-mqtt async callbacks."""
-
-        def __init__(self, hass, client):
-            """Initialize helper."""
-            self.hass = hass
-            self.task_misc = None
-            self.client = client
-            self.client.on_socket_open = self.on_socket_open
-            self.client.on_socket_close = self.on_socket_close
-            self.client.on_socket_register_write = self.on_socket_reg_write
-            self.client.on_socket_unregister_write = self.on_socket_unreg_write
-
-        def on_socket_open(self, client, userdata, sock):
-            """Socket open callback."""
-            def cb():
-                client.loop_read()
-
-            self.hass.loop.add_reader(sock, cb)
-            self.task_misc = self.hass.async_create_task(self.misc_loop())
-
-        def on_socket_close(self, client, userdata, sock):
-            """Socket closed callback."""
-            self.hass.loop.remove_reader(sock)
-            self.task_misc.cancel()
-
-        def on_socket_reg_write(self, client, userdata, sock):
-            """Schedule socket write callback."""
-            def cb():
-                client.loop_write()
-
-            self.hass.loop.add_writer(sock, cb)
-
-        def on_socket_unreg_write(self, client, userdata, sock):
-            """Unschedule socket write callback."""
-            self.hass.loop.remove_writer(sock)
-
-        async def misc_loop(self):
-            """Peridocially call loop_misc()."""
-            import paho.mqtt.client as mqtt
-
-            while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
-                try:
-                    await asyncio.sleep(1)
-                except asyncio.CancelledError:
-                    break
-
     def __init__(self, hass: HomeAssistantType, broker: str, port: int,
                  client_id: Optional[str], keepalive: Optional[int],
                  username: Optional[str], password: Optional[str],
@@ -650,6 +603,7 @@ class MQTT:
         self.birth_message = birth_message
         self._mqttc = None  # type: mqtt.Client
         self._paho_lock = asyncio.Lock(loop=hass.loop)
+        self._task_misc = None
         self._task_reconnect = None
 
         if protocol == PROTOCOL_31:
@@ -676,7 +630,11 @@ class MQTT:
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
-        self._asynciohelper = self.AsyncioHelper(hass, self._mqttc)
+        self._mqttc.on_socket_open = self._mqtt_on_socket_open
+        self._mqttc.on_socket_close = self._mqtt_on_socket_close
+        self._mqttc.on_socket_register_write = self._mqtt_on_socket_reg_write
+        self._mqttc.on_socket_unregister_write = \
+            self._mqtt_on_socket_unreg_write
 
         if will_message is not None:
             self._mqttc.will_set(*attr.astuple(will_message))
@@ -865,6 +823,40 @@ class MQTT:
             except asyncio.CancelledError:
                 break
             tries += 1
+
+    def _mqtt_on_socket_open(self, client, userdata, sock):
+        """Socket open callback."""
+        def cb():
+            client.loop_read()
+
+        self.hass.loop.add_reader(sock, cb)
+        self._task_misc = self.hass.async_create_task(self._misc_loop())
+
+    def _mqtt_on_socket_close(self, client, userdata, sock):
+        """Socket closed callback."""
+        self.hass.loop.remove_reader(sock)
+        self._task_misc.cancel()
+
+    def _mqtt_on_socket_reg_write(self, client, userdata, sock):
+        """Schedule socket write callback."""
+        def cb():
+            client.loop_write()
+
+        self.hass.loop.add_writer(sock, cb)
+
+    def _mqtt_on_socket_unreg_write(self, client, userdata, sock):
+        """Unschedule socket write callback."""
+        self.hass.loop.remove_writer(sock)
+
+    async def _misc_loop(self):
+        """Peridocially call loop_misc()."""
+        import paho.mqtt.client as mqtt
+
+        while self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
+            try:
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                break
 
 
 def _raise_on_error(result_code: int) -> None:
