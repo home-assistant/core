@@ -290,7 +290,7 @@ class AmcrestCam(Camera):
         if self._lock.acquire(timeout=9):
             try:
                 return self._camera.snapshot(channel=self._resolution).data
-            except (RequestException, ReadTimeoutError, ValueError) as exc:    
+            except (RequestException, ReadTimeoutError, ValueError) as exc:
                 _LOGGER.error('In camera_image: %s: %s',
                     exc.__class__.__name__, str(exc))
                 return None
@@ -523,17 +523,17 @@ class AmcrestCam(Camera):
                           str(exc))
         else:
             self._is_streaming = 'true' in [s.split('=')[-1]
-                                            for s in encode_media 
+                                            for s in encode_media
                                                 if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
-                                      for s in video_in_options 
+                                      for s in video_in_options
                                         if '].DayNightColor=' in s][0])]
             self._is_audio_on = 'true' in [s.split('=')[-1]
-                                           for s in encode_media 
+                                           for s in encode_media
                                            if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
                                           for s in video_widget_config
-                                          if '.Covers' in s and 
+                                          if '.Covers' in s and
                                             '.EncodeBlend=' in s]
 
     # Other Camera method overrides
