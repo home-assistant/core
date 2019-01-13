@@ -12,6 +12,7 @@
                     "radio_type": "Radio Type",
                     "usb_path": "USB Device Path"
                 },
+                "description": "",
                 "title": "ZHA"
             }
         },
