@@ -33,7 +33,7 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 CONFIG_SCHEMA = vol.Schema({

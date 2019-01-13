@@ -5,7 +5,10 @@ import unittest.mock as mock
 import os
 from io import StringIO
 
+import pytest
+
 from homeassistant import core, loader
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -495,3 +498,22 @@ async def test_light_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_light_turn_on_auth(hass, hass_admin_user):
+    """Test that light context works."""
+    assert await async_setup_component(hass, 'light', {
+        'light': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('light.ceiling')
+    assert state is not None
+
+    hass_admin_user.mock_policy({})
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call('light', 'turn_on', {
+            'entity_id': state.entity_id,
+        }, True, core.Context(user_id=hass_admin_user.id))

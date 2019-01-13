@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant.components.homematicip_cloud import hap as hmipc
 from homeassistant.components.homematicip_cloud import const, errors
-from tests.common import mock_coro
+from tests.common import mock_coro, mock_coro_func
 
 
 async def test_auth_setup(hass):
@@ -95,6 +95,7 @@ async def test_hap_reset_unloads_entry_if_setup():
     hass = Mock()
     entry = Mock()
     home = Mock()
+    home.disable_events = mock_coro_func()
     entry.data = {
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',

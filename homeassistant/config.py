@@ -437,9 +437,10 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     """
     message = "Invalid config for [{}]: ".format(domain)
     if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join(str(m) for m in ex.path))
+        message += '[{option}] is an invalid option for [{domain}]. ' \
+            'Check: {domain}->{path}.'.format(
+                option=ex.path[-1], domain=domain,
+                path='->'.join(str(m) for m in ex.path))
     else:
         message += '{}.'.format(humanize_error(config, ex))
 

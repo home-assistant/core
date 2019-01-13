@@ -13,13 +13,14 @@ from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components import mqtt
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
-    CONF_NAME, CONF_CODE)
+    CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
-    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate, subscription)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
@@ -45,6 +47,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -73,7 +77,7 @@ async def _async_setup_entity(config, async_add_entities,
     async_add_entities([MqttAlarm(config, discovery_hash)])
 
 
-class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
+class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
@@ -81,17 +85,20 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         """Init the MQTT Alarm Control Panel."""
         self._state = STATE_UNKNOWN
         self._config = config
+        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
         qos = config.get(CONF_QOS)
+        device_config = config.get(CONF_DEVICE)
 
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
@@ -127,7 +134,8 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
@@ -139,6 +147,11 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     def name(self):
         """Return the name of the device."""
         return self._config.get(CONF_NAME)
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def state(self):

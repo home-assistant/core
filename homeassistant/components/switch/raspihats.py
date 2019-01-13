@@ -123,7 +123,7 @@ class I2CHatSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         try:
-            state = True if self._invert_logic is False else False
+            state = self._invert_logic is False
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
@@ -132,7 +132,7 @@ class I2CHatSwitch(ToggleEntity):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         try:
-            state = False if self._invert_logic is False else True
+            state = self._invert_logic is not False
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:

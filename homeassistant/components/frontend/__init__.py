@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20181211.2']
+REQUIREMENTS = ['home-assistant-frontend==20190109.1']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -55,8 +55,8 @@ MANIFEST_JSON = {
 
 for size in (192, 384, 512, 1024):
     MANIFEST_JSON['icons'].append({
-        'src': '/static/icons/favicon-{}x{}.png'.format(size, size),
-        'sizes': '{}x{}'.format(size, size),
+        'src': '/static/icons/favicon-{size}x{size}.png'.format(size=size),
+        'sizes': '{size}x{size}'.format(size=size),
         'type': 'image/png'
     })
 
