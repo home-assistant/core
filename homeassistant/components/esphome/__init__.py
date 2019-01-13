@@ -481,7 +481,7 @@ class EsphomeEntity(Entity):
         self._remove_callbacks.append(
             async_dispatcher_connect(self.hass,
                                      DISPATCHER_REMOVE_ENTITY.format(**kwargs),
-                                     self.async_schedule_update_ha_state)
+                                     self.async_remove)
         )
 
         self._remove_callbacks.append(
