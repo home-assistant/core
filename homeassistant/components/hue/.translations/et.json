@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Ilmnes tundmatu viga"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": ""
+                }
+            }
+        },
+        "title": ""
+    }
+}
