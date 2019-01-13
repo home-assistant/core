@@ -50,7 +50,7 @@ WEBHOOK_SCHEMA = vol.All(
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_TRIGGER): cv.string,
         vol.Optional(ATTR_ID): vol.All(cv.string, _id)
-    }, extra=vol.ALLOW_EXTRA),
+    }),
     _validate_test_mode
 )
 
