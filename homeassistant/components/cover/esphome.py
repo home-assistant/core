@@ -8,7 +8,6 @@ from homeassistant.components.cover import CoverDevice, SUPPORT_CLOSE, \
 from homeassistant.components.esphome import EsphomeEntity, \
     platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -31,12 +30,6 @@ async def async_setup_entry(hass: HomeAssistantType,
         info_type=CoverInfo, entity_type=EsphomeCover,
         state_type=CoverState
     )
-
-
-COVER_STATE_INT_TO_STR = {
-    0: STATE_OPEN,
-    1: STATE_CLOSED
-}
 
 
 class EsphomeCover(EsphomeEntity, CoverDevice):
@@ -65,7 +58,7 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         """Return if the cover is closed or not."""
         if self._state is None:
             return None
-        return COVER_STATE_INT_TO_STR[self._state.state]
+        return bool(self._state.state)
 
     async def async_open_cover(self, **kwargs) -> None:
         """Open the cover."""

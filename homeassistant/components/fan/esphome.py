@@ -91,6 +91,8 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Return the current speed."""
         if self._state is None:
             return None
+        if not self._static_info.supports_speed:
+            return None
         return FAN_SPEED_INT_TO_STR[self._state.speed]
 
     @property
@@ -98,11 +100,15 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Return the oscillation state."""
         if self._state is None:
             return None
+        if not self._static_info.supports_oscillation:
+            return None
         return self._state.oscillating
 
     @property
-    def speed_list(self) -> List[str]:
+    def speed_list(self) -> Optional[List[str]]:
         """Get the list of available speeds."""
+        if not self._static_info.supports_speed:
+            return None
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     @property
