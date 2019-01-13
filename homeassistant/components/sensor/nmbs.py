@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import (
+    CONF_NAME, ATTR_ATTRIBUTION, CONF_SHOW_ON_MAP, ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -33,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_TO): cv.string,
     vol.Optional(CONF_STATION_LIVE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SHOW_ON_MAP): cv.boolean,
 })
 
 
@@ -64,14 +66,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api_client = iRail()
 
     name = config[CONF_NAME]
+    show_on_map = config[CONF_SHOW_ON_MAP]
     station_from = config[CONF_STATION_FROM]
     station_to = config[CONF_STATION_TO]
     station_live = config.get(CONF_STATION_LIVE)
 
-    sensors = [NMBSSensor(name, station_from, station_to, api_client)]
+    sensors = [NMBSSensor(
+        api_client, name, show_on_map, station_from, station_to)]
 
     if station_live is not None:
-        sensors.append(NMBSLiveBoard(station_live, api_client))
+        sensors.append(NMBSLiveBoard(api_client, station_live))
 
     add_entities(sensors, True)
 
@@ -79,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NMBSLiveBoard(Entity):
     """Get the next train from a station's liveboard."""
 
-    def __init__(self, live_station, api_client):
+    def __init__(self, api_client, live_station):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
@@ -140,12 +144,14 @@ class NMBSLiveBoard(Entity):
 class NMBSSensor(Entity):
     """Get the the total travel time for a given connection."""
 
-    def __init__(self, name, station_from, station_to, api_client):
+    def __init__(self, api_client, name, show_on_map, station_from, station_to):
         """Initialize the NMBS connection sensor."""
         self._name = name
+        self._show_on_map = show_on_map
+        self._api_client = api_client
         self._station_from = station_from
         self._station_to = station_to
-        self._api_client = api_client
+
         self._attrs = {}
         self._state = None
 
@@ -189,6 +195,10 @@ class NMBSSensor(Entity):
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
+        if self._show_on_map and self.station_coordinates:
+            attrs[ATTR_LATITUDE] = self.station_coordinates[0]
+            attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
+
         if delay > 0:
             attrs['delay'] = "{} minutes".format(delay)
 
@@ -198,6 +208,16 @@ class NMBSSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def station_coordinates(self):
+        """Get the lat, long coordinates for station."""
+        if self._state is None or self._attrs is None:
+            return []
+
+        latitude = float(self._attrs['departure']['stationinfo']['locationY'])
+        longitude = float(self._attrs['departure']['stationinfo']['locationX'])
+        return [latitude, longitude]
 
     def update(self):
         """Set the state to the duration of a connection."""
