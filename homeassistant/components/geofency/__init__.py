@@ -61,7 +61,8 @@ WEBHOOK_SCHEMA = vol.Schema({
     vol.Required(ATTR_LONGITUDE): cv.longitude,
     vol.Required(ATTR_NAME): vol.All(cv.string, slugify),
     vol.Optional(ATTR_CURRENT_LATITUDE): cv.latitude,
-    vol.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude
+    vol.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude,
+    vol.Optional(ATTR_BEACON_ID): cv.string
 }, extra=vol.ALLOW_EXTRA)
 
 
