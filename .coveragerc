@@ -164,7 +164,6 @@ omit =
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
-    homeassistant/components/homematicip_cloud/__init__.py
     homeassistant/components/homematicip_cloud/hap.py
     homeassistant/components/homematicip_cloud/device.py
     homeassistant/components/*/homematicip_cloud.py
