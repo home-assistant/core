@@ -6,8 +6,7 @@ of the main platform component.
 """
 import logging
 from homeassistant.util import slugify
-from homeassistant.helpers.dispatcher import (
-    dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.nissan_leaf import (
     DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF
 )
