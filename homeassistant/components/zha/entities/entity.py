@@ -70,7 +70,7 @@ class ZhaEntity(entity.Entity):
 
         self._initialized = False
         self.manufacturer_code = None
-        application_listener.register_entity(ieee, self)
+        self._application_listener = application_listener
 
     async def get_clusters(self):
         """Get zigbee clusters from this entity."""
@@ -171,6 +171,8 @@ class ZhaEntity(entity.Entity):
 
         It is now safe to update the entity state
         """
+        self._application_listener.register_entity(self._endpoint.device.ieee,
+                                                   self)
         for cluster_id, cluster in self._in_clusters.items():
             cluster.add_listener(self._in_listeners.get(cluster_id, self))
         for cluster_id, cluster in self._out_clusters.items():
@@ -265,6 +267,11 @@ class ZhaEntity(entity.Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def ieee(self):
+        """Return ieee."""
+        return self._endpoint.device.ieee
 
     @property
     def device_state_attributes(self):

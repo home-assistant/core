@@ -29,11 +29,18 @@ DEVICE_INFO = 'device_info'
 ATTR_DURATION = 'duration'
 ATTR_IEEE_ADDRESS = 'ieee_address'
 ATTR_IEEE = 'ieee'
+SOURCE_ENTITY_ID = 'source_entity_id'
+TARGET_ENTITY_ID = 'target_entity_id'
+BIND_REQUEST = 0x0021
+UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = 'permit'
 SERVICE_REMOVE = 'remove'
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = 'set_zigbee_cluster_attribute'
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = 'issue_zigbee_cluster_command'
+SERVICE_DIRECT_ZIGBEE_BIND = 'issue_direct_zigbee_bind'
+SERVICE_DIRECT_ZIGBEE_UNBIND = 'issue_direct_zigbee_unbind'
+SERVICE_ZIGBEE_BIND = 'service_zigbee_bind'
 ZIGBEE_CLUSTER_SERVICE = 'zigbee_cluster_service'
 IEEE_SERVICE = 'ieee_based_service'
 
@@ -66,6 +73,10 @@ SERVICE_SCHEMAS = {
         vol.Required(ATTR_COMMAND_TYPE): cv.string,
         vol.Optional(ATTR_ARGS, default=''): cv.string,
         vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+    }),
+    SERVICE_ZIGBEE_BIND: vol.Schema({
+        vol.Required(SOURCE_ENTITY_ID): cv.entity_id,
+        vol.Required(TARGET_ENTITY_ID): cv.entity_id,
     }),
 }
 
@@ -321,6 +332,42 @@ def async_load_api(hass, application_controller, listener):
                                      SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
                                  ])
 
+    binding_helper = BindingHelper(listener)
+
+    async def issue_direct_zigbee_bind(service):
+        """Bind 2 zigbee devices."""
+        source_entity_id = service.data.get(SOURCE_ENTITY_ID)
+        target_entity_id = service.data.get(TARGET_ENTITY_ID)
+        await binding_helper.async_binding_operation(
+            source_entity_id, target_entity_id, BIND_REQUEST)
+        _LOGGER.info("Issue direct bind: %s %s",
+                     "{}: [{}]".format(SOURCE_ENTITY_ID, source_entity_id),
+                     "{}: [{}]".format(TARGET_ENTITY_ID, target_entity_id)
+                     )
+
+    hass.services.async_register(DOMAIN, SERVICE_DIRECT_ZIGBEE_BIND,
+                                 issue_direct_zigbee_bind,
+                                 schema=SERVICE_SCHEMAS[
+                                     SERVICE_ZIGBEE_BIND
+                                 ])
+
+    async def issue_direct_zigbee_unbind(service):
+        """Unbind 2 zigbee devices."""
+        source_entity_id = service.data.get(SOURCE_ENTITY_ID)
+        target_entity_id = service.data.get(TARGET_ENTITY_ID)
+        await binding_helper.async_binding_operation(
+            source_entity_id, target_entity_id, UNBIND_REQUEST)
+        _LOGGER.info("Issue direct unbind: %s %s",
+                     "{}: [{}]".format(SOURCE_ENTITY_ID, source_entity_id),
+                     "{}: [{}]".format(TARGET_ENTITY_ID, target_entity_id)
+                     )
+
+    hass.services.async_register(DOMAIN, SERVICE_DIRECT_ZIGBEE_UNBIND,
+                                 issue_direct_zigbee_unbind,
+                                 schema=SERVICE_SCHEMAS[
+                                     SERVICE_ZIGBEE_BIND
+                                 ])
+
     @websocket_api.async_response
     async def websocket_reconfigure_node(hass, connection, msg):
         """Reconfigure a ZHA nodes entities by its ieee address."""
@@ -414,3 +461,85 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
+
+
+class ClusterPair:
+    """Pair of zigbee clusters."""
+
+    def __init__(self, source_cluster, target_cluster):
+        """Initialize the ClusterPair."""
+        self._source_cluster = source_cluster
+        self._target_cluster = target_cluster
+
+    @property
+    def source_cluster(self):
+        """Return source cluster."""
+        return self._source_cluster
+
+    @property
+    def target_cluster(self):
+        """Return target cluster."""
+        return self._target_cluster
+
+
+class BindingHelper:
+    """Helper class for zigbee binding operations."""
+
+    def __init__(self, application_listener):
+        """Initialize the BindingHelper."""
+        self._application_listener = application_listener
+
+    async def async_binding_operation(self, source_entity_id, target_entity_id,
+                                      operation):
+        """Create or remove a direct zigbee binding between 2 devices."""
+        from zigpy.zdo import types as zdo_types
+        source_entity = self._application_listener.get_entity(source_entity_id)
+        target_entity = self._application_listener.get_entity(target_entity_id)
+        source_ieee = source_entity.ieee
+        target_ieee = target_entity.ieee
+        response = []
+
+        clusters_to_bind = await self.get_matched_clusters(
+            source_entity,
+            target_entity
+        )
+
+        for cluster_pair in clusters_to_bind:
+            destination_address = zdo_types.MultiAddress()
+            destination_address.addrmode = 3
+            destination_address.ieee = target_ieee
+            destination_address.endpoint = \
+                cluster_pair.target_cluster.endpoint.endpoint_id
+
+            zdo = cluster_pair.source_cluster.endpoint.device.zdo
+
+            response.append(await zdo.request(
+                operation,
+                source_ieee,
+                cluster_pair.source_cluster.endpoint.endpoint_id,
+                cluster_pair.source_cluster.cluster_id,
+                destination_address
+            ))
+        return response
+
+    async def get_matched_clusters(self, source_entity, target_entity):
+        """Get matched input/output cluster pairs for 2 entities."""
+        source_clusters = await source_entity.get_clusters()
+        target_clusters = await target_entity.get_clusters()
+        clusters_to_bind = []
+
+        for cluster in source_clusters[IN]:
+            if cluster in target_clusters[OUT]:
+                cluster_pair = ClusterPair(
+                    source_clusters[IN][cluster],
+                    target_clusters[OUT][cluster]
+                )
+                clusters_to_bind.append(cluster_pair)
+        for cluster in source_clusters[OUT]:
+            if cluster in target_clusters[IN]:
+                cluster_pair = ClusterPair(
+                    source_clusters[OUT][cluster],
+                    target_clusters[IN][cluster]
+                )
+                clusters_to_bind.append(cluster_pair)
+        return clusters_to_bind

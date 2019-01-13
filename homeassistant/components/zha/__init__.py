@@ -214,6 +214,7 @@ class ApplicationListener:
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         self._events = {}
+        self._entities = {}
         zha_const.populate_data()
 
         for component in COMPONENTS:
@@ -249,6 +250,8 @@ class ApplicationListener:
     def device_removed(self, device):
         """Handle device being removed from the network."""
         for device_entity in self._device_registry[device.ieee]:
+            if device_entity.entity_id in self._entities:
+                self._entities.pop(device_entity.entity_id)
             self._hass.async_create_task(device_entity.async_remove())
         if device.ieee in self._events:
             self._events.pop(device.ieee)
@@ -269,6 +272,10 @@ class ApplicationListener:
         if ieee in self._device_registry:
             return self._device_registry[ieee]
         return []
+
+    def get_entity(self, entity_id):
+        """Return entity for given entity_id."""
+        return self._entities[entity_id]
 
     @property
     def device_registry(self) -> str:
@@ -374,6 +381,7 @@ class ApplicationListener:
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(entity_obj)
+        self._entities[entity_obj.entity_id] = entity_obj
 
     async def _attempt_single_cluster_device(self, endpoint, cluster,
                                              profile_clusters, device_key,

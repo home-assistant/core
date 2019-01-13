@@ -14,16 +14,28 @@ remove:
       description: IEEE address of the node to remove
       example: "00:0d:6f:00:05:7d:2d:34"
 
-reconfigure_device:
+issue_direct_zigbee_bind:
   description: >- 
-    Reconfigure ZHA device (heal device). Use this if you are having issues 
-    with the device. If the device in question is a battery powered device
-    please ensure it is awake and accepting commands when you use this
-    service. 
+    Directly bind 2 zigbee devices. This is useful when you want to bind
+    a remote like device directly to a light.  
   fields:
-    ieee_address:
-      description: IEEE address of the device to reconfigure
-      example: "00:0d:6f:00:05:7d:2d:34"
+    source_entity_id:
+      description: Entity id
+      example: "binary_sensor.centralite_3130_00e8fb4e_1"
+    target_entity_id:
+      description: Entity id
+      example: "light.sengled_z01a19nae26_03011d28_1"
+
+issue_direct_zigbee_unbind:
+  description: >- 
+    Remove a direct binding between to zigbee devices.  
+  fields:
+    source_entity_id:
+      description: Entity id
+      example: "binary_sensor.centralite_3130_00e8fb4e_1"
+    target_entity_id:
+      description: Entity id
+      example: "light.sengled_z01a19nae26_03011d28_1"
 
 set_zigbee_cluster_attribute:
   description: >- 
