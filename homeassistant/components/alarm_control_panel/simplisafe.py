@@ -65,7 +65,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return alarm.FORMAT_NUMBER
-        return 'Any'
+        return alarm.FORMAT_TEXT
 
     @property
     def state(self):
