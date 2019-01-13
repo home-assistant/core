@@ -327,7 +327,7 @@ distro==1.3.0
 dlipower==0.7.165
 
 # homeassistant.components.doorbird
-doorbirdpy==2.0.4
+doorbirdpy==2.0.6
 
 # homeassistant.components.sensor.dovado
 dovado==0.4.1
