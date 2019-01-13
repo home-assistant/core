@@ -290,7 +290,7 @@ class AmcrestCam(Camera):
         if self._lock.acquire(timeout=9):
             try:
                 return self._camera.snapshot(channel=self._resolution).data
-            except Exception as exc:
+            except (RequestException, ReadTimeoutError, ValueError) as exc:    
                 _LOGGER.error('In camera_image: {}: {}'.format(
                     exc.__class__.__name__, str(exc)))
                 return None
