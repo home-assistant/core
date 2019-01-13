@@ -453,10 +453,12 @@ class AmcrestCam(Camera):
 
     @property
     def color_bw(self):
+        """ Return the color_bw """
         return self._color_bw
 
     @color_bw.setter
     def color_bw(self, cbw):
+        """ Set the color_bw """
         try:
             self._set_color_bw(cbw)
         except (RequestException, ValueError, IndexError) as exc:
@@ -485,10 +487,12 @@ class AmcrestCam(Camera):
 
     @property
     def is_mask_on(self):
+        """ Returns whether mask is on"""
         return self._is_mask_on
 
     @is_mask_on.setter
     def is_mask_on(self, enable):
+        """ Set masking state """
         try:
             self._set_mask(enable)
         except (RequestException, ValueError) as exc:
@@ -502,6 +506,7 @@ class AmcrestCam(Camera):
     # Other Entity method overrides
 
     def update(self):
+        """ Updates entity state """
         _LOGGER.debug('Pulling data from %s camera.',self._name)
         try:
             encode_media = self._camera.encode_media.split()
@@ -580,44 +585,56 @@ class AmcrestCam(Camera):
 
     @callback
     def async_goto_preset(self, preset):
+        """ Handles the async_goto_preset callback """
         return self.hass.async_add_job(self.goto_preset, preset)
 
     def set_color_bw(self, cbw):
+        """ Set color """
         self.color_bw = cbw
 
     @callback
     def async_set_color_bw(self, cbw):
+        """ Set color async """
         return self.hass.async_add_job(self.set_color_bw, cbw)
 
     def audio_on(self):
+        """ Return audio on """
         self.is_audio_on = True
 
     @callback
     def async_audio_on(self):
+        """ Return audio on async """
         return self.hass.async_add_job(self.audio_on)
 
     def audio_off(self):
+        """ Turn off audio """
         self.is_audio_on = False
 
     @callback
     def async_audio_off(self):
+        """ Turn off audio async """
         return self.hass.async_add_job(self.audio_off)
 
     def mask_on(self):
+        """ Return masking state """
         self.is_mask_on = True
 
     @callback
     def async_mask_on(self):
+        """ Return masking state async """
         return self.hass.async_add_job(self.mask_on)
 
     def mask_off(self):
+        """ Set mask off """
         self.is_mask_on = False
 
     @callback
     def async_mask_off(self):
+        """ Set mask off async """
         return self.hass.async_add_job(self.mask_off)
 
     def tour_on(self):
+        """ Trigger touring """
         try:
             self._tour(True)
         except (RequestException, ValueError) as exc:
@@ -626,9 +643,11 @@ class AmcrestCam(Camera):
 
     @callback
     def async_tour_on(self):
+        """ Trigger touring async """
         return self.hass.async_add_job(self.tour_on)
 
     def tour_off(self):
+        """ Turn off touring """
         try:
             self._tour(False)
         except (RequestException, ValueError) as exc:
@@ -637,6 +656,7 @@ class AmcrestCam(Camera):
 
     @callback
     def async_tour_off(self):
+        """ Turn off touring async """
         return self.hass.async_add_job(self.tour_off)
 
     # Methods missing from self._camera.
