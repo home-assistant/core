@@ -80,9 +80,12 @@ class IntegrationSensor(RestoreEntity):
             else '{} integral'.format(source_entity)
 
         if unit_of_measurement is None:
-            self._unit_of_measurement = "" if unit_prefix is None\
-                                        else unit_prefix
-            self._unit_of_measurement += "{}" + unit_time
+            self._unit_template = "{}{}{}".format(
+                "" if unit_prefix is None else unit_prefix,
+                "{}",
+                unit_time)
+            # we postpone the definition of unit_of_measurement to later
+            self._unit_of_measurement = None
         else:
             self._unit_of_measurement = unit_of_measurement
 
@@ -107,9 +110,9 @@ class IntegrationSensor(RestoreEntity):
                     new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
-            if "{}" in self._unit_of_measurement:
+            if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._unit_of_measurement = self._unit_of_measurement.format(
+                self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit)
 
             try:
