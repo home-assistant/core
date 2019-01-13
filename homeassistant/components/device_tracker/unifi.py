@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyunifi==2.13']
+REQUIREMENTS = ['pyunifi==2.16']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
