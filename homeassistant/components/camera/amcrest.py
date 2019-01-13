@@ -6,7 +6,7 @@ https://home-assistant.io/components/camera.amcrest/
 """
 import asyncio
 import logging
-from requests import RequestException
+from requests import RequestException, ReadTimeoutError
 
 import voluptuous as vol
 
