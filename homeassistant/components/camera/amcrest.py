@@ -690,10 +690,10 @@ class AmcrestCam(Camera):
         formats = [('Extra', 3), ('Main', 4)]
         if param == 'Video':
             formats.append(('Snap', 3))
-        for f, n in formats:
+        for ff, nn in formats:
             for i in range(n):
                 cmd += '&Encode[0].{}Format[{}].{}Enable={}'.format(
-                    f, i, param, str(enable).lower())
+                    ff, i, param, str(enable).lower())
         self._camera.command(cmd)
 
     def _set_mask(self, enable):
