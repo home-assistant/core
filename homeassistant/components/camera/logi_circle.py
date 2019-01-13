@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.logi_circle.const import (
-    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN)
+    CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS, DEVICE_BRAND,
+    DOMAIN as LOGI_CIRCLE_DOMAIN)
 from homeassistant.components.camera import (
     Camera, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
     ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
@@ -108,7 +109,8 @@ class LogiCam(Camera):
         self._id = self._camera.id
         self._has_battery = self._camera.supports_feature('battery_level')
         self._ffmpeg = ffmpeg
-        self._ffmpeg_arguments = None
+        self._ffmpeg_arguments = device_info.data.get(
+            CONF_CAMERAS).get(CONF_FFMPEG_ARGUMENTS)
 
     @property
     def unique_id(self):
@@ -150,14 +152,14 @@ class LogiCam(Camera):
         return await self._camera.live_stream.download_jpeg()
 
     async def handle_async_mjpeg_stream(self, request):
-        """Generate an HTTP MJPEG stream from the camera's last activity."""
+        """Generate an HTTP MJPEG stream from the camera's live stream."""
         from haffmpeg import CameraMjpeg
 
-        mp4_stream = await self._camera.live_stream.get_rtsp_url()
+        live_stream = await self._camera.live_stream.get_rtsp_url()
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
         await stream.open_camera(
-            mp4_stream, extra_cmd=self._ffmpeg_arguments)
+            live_stream, extra_cmd=self._ffmpeg_arguments)
 
         try:
             return await async_aiohttp_proxy_stream(

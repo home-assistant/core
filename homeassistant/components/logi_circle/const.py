@@ -8,6 +8,9 @@ CONF_CLIENT_SECRET = 'client_secret'
 CONF_API_KEY = 'api_key'
 CONF_REDIRECT_URI = 'redirect_uri'
 
+CONF_CAMERAS = 'cameras'
+CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+
 SIGNAL_LOGI_CIRCLE_UPDATE = 'logi_circle_update'
 
 DEFAULT_CACHEDB = '.logi_cache.pickle'

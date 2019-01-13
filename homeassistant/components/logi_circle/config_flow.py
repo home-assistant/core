@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_SENSORS, CONF_BINARY_SENSORS
 
 from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    DEFAULT_CACHEDB)
+                    CONF_CAMERAS, DEFAULT_CACHEDB)
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
@@ -26,7 +26,7 @@ AUTH_CALLBACK_NAME = 'api:logi_circle'
 
 @callback
 def register_flow_implementation(hass, domain, client_id, client_secret, api_key, redirect_uri,
-                                 sensors, binary_sensors):
+                                 sensors, binary_sensors, cameras):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
@@ -36,6 +36,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret, api_key
     redirect_uri: Auth callback redirect URI.
     sensors: Sensor config.
     binary_sensors: Binary sensor config.
+    cameras: Camera config.
     """
     if DATA_FLOW_IMPL not in hass.data:
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
@@ -46,10 +47,10 @@ def register_flow_implementation(hass, domain, client_id, client_secret, api_key
         CONF_API_KEY: api_key,
         CONF_REDIRECT_URI: redirect_uri,
         CONF_SENSORS: sensors,
-        CONF_BINARY_SENSORS: binary_sensors
+        CONF_BINARY_SENSORS: binary_sensors,
+        CONF_CAMERAS: cameras,
+        EXTERNAL_ERRORS: None
     }
-    # For storing errors encountered in non-UI triggered flows (auth callback)
-    hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = None
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -102,12 +103,12 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='external_setup')
 
-        external_error = self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS]
+        external_error = self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
         errors = {}
         if external_error:
             # Handle error from another flow
             errors['base'] = external_error
-            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = None
+            self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS] = None
         elif user_input is not None:
             errors['base'] = 'follow_link'
 
@@ -159,6 +160,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         redirect_uri = flow[CONF_REDIRECT_URI]
         sensors = flow[CONF_SENSORS]
         binary_sensors = flow[CONF_BINARY_SENSORS]
+        cameras = flow[CONF_CAMERAS]
 
         logi_session = LogiCircle(
             client_id=client_id,
@@ -171,10 +173,10 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
-            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = 'auth_error'
+            self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS] = 'auth_error'
             return self.async_abort(reason='external_error')
         except asyncio.TimeoutError:
-            self.hass.data[DATA_FLOW_IMPL][EXTERNAL_ERRORS] = 'auth_timeout'
+            self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS] = 'auth_timeout'
             return self.async_abort(reason='external_error')
 
         account_id = (await logi_session.account)['accountId']
@@ -187,8 +189,8 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
                 CONF_API_KEY: api_key,
                 CONF_REDIRECT_URI: redirect_uri,
                 CONF_SENSORS: sensors,
-                CONF_BINARY_SENSORS: binary_sensors}
-        )
+                CONF_BINARY_SENSORS: binary_sensors,
+                CONF_CAMERAS: cameras})
 
 
 class LogiCircleAuthCallbackView(HomeAssistantView):

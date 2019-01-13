@@ -13,10 +13,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.camera import CAMERA_SERVICE_SCHEMA, ATTR_FILENAME
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, CONF_BINARY_SENSORS, CONF_SENSORS,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+                                 CONF_BINARY_SENSORS, CONF_SENSORS, CONF_MONITORED_CONDITIONS)
 from homeassistant.core import callback as async_callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -29,8 +27,8 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 from . import config_flow
 from .const import (DOMAIN, DATA_LOGI, SIGNAL_LOGI_CIRCLE_UPDATE,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    CONF_ATTRIBUTION, LOGI_SENSORS, LOGI_BINARY_SENSORS,
-                    DEFAULT_CACHEDB, LOGI_ACTIVITY_KEYS)
+                    CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS,
+                    LOGI_SENSORS, LOGI_BINARY_SENSORS, DEFAULT_CACHEDB, LOGI_ACTIVITY_KEYS)
 
 REQUIREMENTS = [
     'https://github.com/evanjd/python-logi-circle/archive/'
@@ -50,6 +48,10 @@ SENSOR_SCHEMA = vol.Schema({
         vol.All(cv.ensure_list, [vol.In(LOGI_SENSORS)])
 })
 
+CAMERA_SCHEMA = vol.Schema({
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
+})
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
@@ -61,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_BINARY_SENSORS, default={}):
                 BINARY_SENSOR_SCHEMA,
             vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_CAMERAS, default={}): CAMERA_SCHEMA,
         })
     },
     extra=vol.ALLOW_EXTRA,
@@ -116,7 +119,8 @@ async def async_setup(hass, config):
         api_key=conf[CONF_API_KEY],
         redirect_uri=conf[CONF_REDIRECT_URI],
         sensors=conf[CONF_SENSORS],
-        binary_sensors=conf[CONF_BINARY_SENSORS])
+        binary_sensors=conf[CONF_BINARY_SENSORS],
+        cameras=conf[CONF_CAMERAS])
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
