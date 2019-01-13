@@ -21,8 +21,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
-FORMAT_TEXT = 'text'
-FORMAT_NUMBER = 'number'
+FORMAT_TEXT = 'Text'
+FORMAT_NUMBER = 'Number'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
