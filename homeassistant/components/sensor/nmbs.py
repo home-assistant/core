@@ -118,6 +118,7 @@ class NMBSLiveBoard(Entity):
             'extra_train': int(self._attrs['isExtra']) > 0,
             'occupancy': self._attrs['occupancy']['name'],
             'vehicle_id': self._attrs['vehicle'],
+            'monitored_station': self._station,
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
@@ -179,6 +180,7 @@ class NMBSSensor(Entity):
 
         attrs = {
             'departure': "In {} minutes".format(departure),
+            'destination': self._station_to,
             'direction': self._attrs['departure']['direction']['name'],
             'occupancy': self._attrs['departure']['occupancy']['name'],
             "platform_arriving": self._attrs['arrival']['platform'],
