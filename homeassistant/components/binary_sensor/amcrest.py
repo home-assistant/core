@@ -15,7 +15,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, 
+                         discovery_info=None):
     """Set up a binary sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -54,11 +55,11 @@ class AmcrestBinarySensor(BinarySensorDevice):
         return 'motion'
 
     def update(self):
-        _LOGGER.debug('Pulling data from {} for {} binary sensor.'.format(
-            self._camera_name, self._name))
+        _LOGGER.debug('Pulling data from %s for %s binary sensor.',
+                      self._camera_name, self._name)
 
         if self._sensor_type == 'motion_detected':
             try:
                 self._state = self._camera.is_motion_detected
             except RequestException as exc:
-                _LOGGER.error('{}: {}'.format(exc.__class__.__name__, str(exc)))
+                _LOGGER.error('%s: %s', exc.__class__.__name__, str(exc))
