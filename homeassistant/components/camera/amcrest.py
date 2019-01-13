@@ -428,7 +428,7 @@ class AmcrestCam(Camera):
             self._set_video(enable)
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_streaming_on setter: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_streaming = enable
@@ -445,7 +445,7 @@ class AmcrestCam(Camera):
             self._camera.motion_detection = str(enable).lower()
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_motion_detection_on setter: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_motion_detection_on = enable
@@ -463,7 +463,7 @@ class AmcrestCam(Camera):
             self._set_color_bw(cbw)
         except (RequestException, ValueError, IndexError) as exc:
             _LOGGER.error('In color_bw setter, cbw=%s: %s: %s',
-                cbw, exc.__class__.__name__, str(exc))
+                          cbw, exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._color_bw = cbw
@@ -479,7 +479,7 @@ class AmcrestCam(Camera):
             self._set_audio(enable)
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_audio_on setter: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_audio_on = enable
@@ -497,7 +497,7 @@ class AmcrestCam(Camera):
             self._set_mask(enable)
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_mask_on setter: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_mask_on = enable
@@ -507,7 +507,7 @@ class AmcrestCam(Camera):
 
     def update(self):
         """ Updates entity state """
-        _LOGGER.debug('Pulling data from %s camera.',self._name)
+        _LOGGER.debug('Pulling data from %s camera.', self._name)
         try:
             encode_media = self._camera.encode_media.split()
             self._is_recording = self._camera.record_mode == 'Manual'
@@ -520,17 +520,21 @@ class AmcrestCam(Camera):
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In update: %s: %s', exc.__class__.__name__,
-                                                     str(exc))
+                          str(exc))
         else:
             self._is_streaming = 'true' in [s.split('=')[-1]
-                                            for s in encode_media if '.VideoEnable=' in s]
+                                            for s in encode_media 
+                                                if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
-                                      for s in video_in_options if '].DayNightColor=' in s][0])]
+                                      for s in video_in_options 
+                                        if '].DayNightColor=' in s][0])]
             self._is_audio_on = 'true' in [s.split('=')[-1]
-                                           for s in encode_media if '.AudioEnable=' in s]
+                                           for s in encode_media 
+                                           if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
                                           for s in video_widget_config
-                                          if '.Covers' in s and '.EncodeBlend=' in s]
+                                          if '.Covers' in s and 
+                                            '.EncodeBlend=' in s]
 
     # Other Camera method overrides
 
@@ -581,7 +585,7 @@ class AmcrestCam(Camera):
                 'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In goto_preset: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
 
     @callback
     def async_goto_preset(self, preset):
@@ -639,7 +643,7 @@ class AmcrestCam(Camera):
             self._tour(True)
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In tour_on: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
 
     @callback
     def async_tour_on(self):
@@ -652,7 +656,7 @@ class AmcrestCam(Camera):
             self._tour(False)
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In tour_off: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
 
     @callback
     def async_tour_off(self):
@@ -671,7 +675,7 @@ class AmcrestCam(Camera):
     def _set_color_bw(self, cbw):
         self._check_result(
             self._camera.command(
-    'configManager.cgi?action=setConfig&VideoInOptions[0].'
+                'configManager.cgi?action=setConfig&VideoInOptions[0].'
                     'DayNightColor={}'.format(CBW.index(cbw))
                 ).content.decode(),
             'cbw = {}'.format(cbw))
@@ -691,7 +695,7 @@ class AmcrestCam(Camera):
         if param == 'Video':
             formats.append(('Snap', 3))
         for ff, nn in formats:
-            for i in range(n):
+            for i in range(nn):
                 cmd += '&Encode[0].{}Format[{}].{}Enable={}'.format(
                     ff, i, param, str(enable).lower())
         self._camera.command(cmd)
