@@ -203,6 +203,14 @@ class NMBSSensor(Entity):
             attrs[ATTR_LATITUDE] = self.station_coordinates[0]
             attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
 
+        if self.is_via_connection and not self._excl_vias:
+            attrs['via'] = self._attrs['vias']['via'][0]['station']
+            attrs['via_arrival_platform'] = self._attrs['vias']['via'][0]['arrival']['platform']
+            attrs['via_transfer_platform'] = self._attrs['vias']['via'][0]['departure']['platform']
+            attrs['via_transfer_time'] = get_delay_in_minutes(
+                self._attrs['vias']['via'][0]['timeBetween']
+            ) + get_delay_in_minutes(self._attrs['vias']['via'][0]['departure']['delay'])
+
         if delay > 0:
             attrs['delay'] = "{} minutes".format(delay)
 
