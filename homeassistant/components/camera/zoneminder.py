@@ -19,6 +19,7 @@ DEPENDENCIES = ['zoneminder']
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
+    cameras = []
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
@@ -27,11 +28,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             return
 
-        cameras = []
         for monitor in monitors:
             _LOGGER.info("Initializing camera %s", monitor.id)
             cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
-        add_entities(cameras)
+    add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):

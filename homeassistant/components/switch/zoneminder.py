@@ -29,16 +29,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
+    switches = []
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
             _LOGGER.warning('Could not fetch monitors from ZoneMinder')
             return
 
-        switches = []
         for monitor in monitors:
             switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
-        add_entities(switches)
+    add_entities(switches)
 
 
 class ZMSwitchMonitors(SwitchDevice):

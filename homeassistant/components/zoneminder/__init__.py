@@ -37,7 +37,7 @@ HOST_CONFIG_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ensure_list([HOST_CONFIG_SCHEMA])
+    DOMAIN: cv.ensure_list(HOST_CONFIG_SCHEMA)
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SET_RUN_STATE = 'set_run_state'
@@ -63,7 +63,7 @@ def setup(hass, config):
 
         host_name = conf[CONF_HOST]
         server_origin = '{}://{}'.format(schema, host_name)
-        hass.data[DOMAIN][host_name] = ZoneMinder(
+        zm = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),
             conf.get(CONF_PASSWORD),
@@ -71,16 +71,22 @@ def setup(hass, config):
             conf.get(CONF_PATH_ZMS),
             conf.get(CONF_VERIFY_SSL)
         )
+        hass.data[DOMAIN][host_name] = zm
 
-        success = hass.data[DOMAIN][host_name].login() and success
+        success = zm.login() and success
 
     def set_active_state(call):
         """Set the ZoneMinder run state to the given state name."""
         zm_id = call.data[ATTR_ID]
+        state_name = call.data[ATTR_NAME]
         if zm_id not in hass.data[DOMAIN]:
             _LOGGER.error('Invalid ZoneMinder host provided: %s', zm_id)
-            return False
-        return hass.data[DOMAIN][zm_id].set_active_state(call.data[ATTR_NAME])
+        if not hass.data[DOMAIN][zm_id].set_active_state(state_name):
+            _LOGGER.error(
+                'Unable to change ZoneMinder state. Host: %s, state: %s',
+                zm_id,
+                state_name
+            )
 
     hass.services.register(
         DOMAIN, SERVICE_SET_RUN_STATE, set_active_state,
