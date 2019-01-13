@@ -15,7 +15,6 @@ import ssl
 from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
 
 import attr
-from paho.mqtt.client import MQTT_ERR_SUCCESS
 import requests.certs
 import voluptuous as vol
 
@@ -624,7 +623,9 @@ class MQTT:
 
         async def misc_loop(self):
             """Peridocially call loop_misc()."""
-            while self.client.loop_misc() == MQTT_ERR_SUCCESS:
+            import paho.mqtt.client as mqtt
+
+            while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
                 try:
                     await asyncio.sleep(1)
                 except asyncio.CancelledError:
@@ -696,16 +697,17 @@ class MQTT:
 
         This method is a coroutine.
         """
+        import paho.mqtt.client as mqtt
+
         result = None  # type: int
         try:
-            result = await self.hass.async_add_job(
+            result = await self.hass.async_add_executor_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
             _LOGGER.error("Failed to connect due to exception: %s", err)
             return False
 
-        if result != MQTT_ERR_SUCCESS:
-            import paho.mqtt.client as mqtt
+        if result != mqtt.MQTT_ERR_SUCCESS:
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
             return False
 
@@ -829,8 +831,10 @@ class MQTT:
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
+        import paho.mqtt.client as mqtt
+
         # When disconnected because of calling disconnect()
-        if result_code == MQTT_ERR_SUCCESS:
+        if result_code == mqtt.MQTT_ERR_SUCCESS:
             return
 
         self._task_reconnect = \
@@ -838,12 +842,13 @@ class MQTT:
 
     async def _mqtt_reconnect(self, result_code) -> None:
         """Reconnect to broker."""
+        import paho.mqtt.client as mqtt
         tries = 0
 
         while True:
             try:
-                if await self.hass.async_add_job(self._mqttc.reconnect) == \
-                        MQTT_ERR_SUCCESS:
+                if await self.hass.async_add_executor_job(
+                        self._mqttc.reconnect) == mqtt.MQTT_ERR_SUCCESS:
                     _LOGGER.info("Successfully reconnected to the MQTT server")
                     self._task_reconnect = None
                     break
@@ -864,9 +869,9 @@ class MQTT:
 
 def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
-    if result_code != MQTT_ERR_SUCCESS:
-        import paho.mqtt.client as mqtt
+    import paho.mqtt.client as mqtt
 
+    if result_code != mqtt.MQTT_ERR_SUCCESS:
         raise HomeAssistantError(
             'Error talking to MQTT: {}'.format(mqtt.error_string(result_code)))
 
