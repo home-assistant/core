@@ -36,12 +36,6 @@ class LeafPluggedInSensor(LeafEntity):
         """Sensor name."""
         return self.car.leaf.nickname + " Plug Status"
 
-    def log_registration(self):
-        """Log registration."""
-        _LOGGER.debug(
-            "Registered LeafPluggedInSensor component with HASS for VIN %s",
-            self.car.leaf.vin)
-
     @property
     def state(self):
         """Return true if plugged in."""

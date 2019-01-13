@@ -448,8 +448,10 @@ class LeafEntity(Entity):
         self.car = car
 
     def log_registration(self):
-        """Abstract log registration."""
-        raise NotImplementedError("Please implement this method")
+        """Log registration."""
+        _LOGGER.debug(
+            "Registered %s component for VIN %s",
+            self.__class__.__name__, self.car.leaf.vin)
 
     @property
     def device_state_attributes(self):

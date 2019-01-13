@@ -39,12 +39,6 @@ class LeafBatterySensor(LeafEntity):
         """Sensor Name."""
         return self.car.leaf.nickname + " Charge"
 
-    def log_registration(self):
-        """Log registration."""
-        _LOGGER.debug(
-            "Registered LeafBatterySensor component with HASS for VIN %s",
-            self.car.leaf.vin)
-
     @property
     def device_class(self):
         """Return the device class of the sensor."""
