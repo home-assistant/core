@@ -7,8 +7,8 @@ from homeassistant.components import zone
 from homeassistant.components.device_tracker import \
     DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import URL, DOMAIN
-from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME, \
-    STATE_NOT_HOME
+from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, \
+    STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
 HOME_LATITUDE = 37.239622
