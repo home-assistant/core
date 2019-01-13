@@ -223,6 +223,14 @@ class NMBSSensor(Entity):
         longitude = float(self._attrs['departure']['stationinfo']['locationX'])
         return [latitude, longitude]
 
+    @property
+    def is_via_connection(self):
+        """Returns whether the connection goes through another station."""
+        if not self._attrs:
+            return False
+
+        return 'vias' in self._attrs and int(self._attrs['vias']['number']) > 0
+
     def update(self):
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
@@ -233,11 +241,11 @@ class NMBSSensor(Entity):
         else:
             next_connection = connections['connection'][0]
 
-        if self._excl_vias and next_connection['vias'] and int(
-                next_connection['vias']['number']) > 0:
-            return
-
         self._attrs = next_connection
+
+        if self._excl_vias and self.is_via_connection:
+            _LOGGER.info("Skipping update of NMBSSensor because this connection is a via")
+            return
 
         duration = get_ride_duration(
             next_connection['departure']['time'],
