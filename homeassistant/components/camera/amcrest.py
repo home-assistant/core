@@ -291,8 +291,8 @@ class AmcrestCam(Camera):
             try:
                 return self._camera.snapshot(channel=self._resolution).data
             except (RequestException, ReadTimeoutError, ValueError) as exc:    
-                _LOGGER.error('In camera_image: {}: {}'.format(
-                    exc.__class__.__name__, str(exc)))
+                _LOGGER.error('In camera_image: %s: %s',
+                    exc.__class__.__name__, str(exc))
                 return None
             finally:
                 self._lock.release()
@@ -383,8 +383,8 @@ class AmcrestCam(Camera):
             self._camera.record_mode = rec_mode['Manual'
                                                 if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In is_recording setter: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In is_recording setter: %s: %s',
+                exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_recording = enable
@@ -427,8 +427,8 @@ class AmcrestCam(Camera):
         try:
             self._set_video(enable)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In is_streaming_on setter: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In is_streaming_on setter: %s: %s',
+                exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_streaming = enable
@@ -444,8 +444,8 @@ class AmcrestCam(Camera):
         try:
             self._camera.motion_detection = str(enable).lower()
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In is_motion_detection_on setter: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In is_motion_detection_on setter: %s: %s',
+                exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_motion_detection_on = enable
@@ -460,8 +460,8 @@ class AmcrestCam(Camera):
         try:
             self._set_color_bw(cbw)
         except (RequestException, ValueError, IndexError) as exc:
-            _LOGGER.error('In color_bw setter, cbw={}: {}: {}'.format(
-                cbw, exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In color_bw setter, cbw=%s: %s: %s',
+                cbw, exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._color_bw = cbw
@@ -476,8 +476,8 @@ class AmcrestCam(Camera):
         try:
             self._set_audio(enable)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In is_audio_on setter: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In is_audio_on setter: %s: %s',
+                exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_audio_on = enable
@@ -492,8 +492,8 @@ class AmcrestCam(Camera):
         try:
             self._set_mask(enable)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In is_mask_on setter: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In is_mask_on setter: %s: %s',
+                exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_mask_on = enable
@@ -502,7 +502,7 @@ class AmcrestCam(Camera):
     # Other Entity method overrides
 
     def update(self):
-        _LOGGER.debug('Pulling data from {} camera.'.format(self._name))
+        _LOGGER.debug('Pulling data from %s camera.',self._name)
         try:
             encode_media = self._camera.encode_media.split()
             self._is_recording = self._camera.record_mode == 'Manual'
@@ -514,8 +514,8 @@ class AmcrestCam(Camera):
             video_in_options = self._camera.video_in_options.split()
             video_widget_config = self._camera.video_widget_config.split()
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In update: {}: {}'.format(exc.__class__.__name__,
-                                                     str(exc)))
+            _LOGGER.error('In update: %s: %s', exc.__class__.__name__,
+                                                     str(exc))
         else:
             self._is_streaming = 'true' in [s.split('=')[-1]
                                             for s in encode_media if '.VideoEnable=' in s]
@@ -575,8 +575,8 @@ class AmcrestCam(Camera):
                                           preset_point_number=preset),
                 'preset={}'.format(preset))
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In goto_preset: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In goto_preset: %s: %s',
+                exc.__class__.__name__, str(exc))
 
     @callback
     def async_goto_preset(self, preset):
@@ -621,8 +621,8 @@ class AmcrestCam(Camera):
         try:
             self._tour(True)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In tour_on: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In tour_on: %s: %s',
+                exc.__class__.__name__, str(exc))
 
     @callback
     def async_tour_on(self):
@@ -632,8 +632,8 @@ class AmcrestCam(Camera):
         try:
             self._tour(False)
         except (RequestException, ValueError) as exc:
-            _LOGGER.error('In tour_off: {}: {}'.format(
-                exc.__class__.__name__, str(exc)))
+            _LOGGER.error('In tour_off: %s: %s',
+                exc.__class__.__name__, str(exc))
 
     @callback
     def async_tour_off(self):
