@@ -21,8 +21,9 @@ from homeassistant.components.mqtt import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH, FanEntity,
+from homeassistant.components.fan import (SPEED_MINIMUM, SPEED_LOW,
+                                          SPEED_MEDIUM, SPEED_HIGH,
+                                          FanEntity,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
                                           SPEED_OFF, ATTR_SPEED)
 from homeassistant.components.mqtt.discovery import (
@@ -41,6 +42,7 @@ CONF_OSCILLATION_COMMAND_TOPIC = 'oscillation_command_topic'
 CONF_OSCILLATION_VALUE_TEMPLATE = 'oscillation_value_template'
 CONF_PAYLOAD_OSCILLATION_ON = 'payload_oscillation_on'
 CONF_PAYLOAD_OSCILLATION_OFF = 'payload_oscillation_off'
+CONF_PAYLOAD_MINIMUM_SPEED = 'payload_minimum_speed'
 CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
 CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
 CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
@@ -72,11 +74,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF,
                  default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_MINIMUM_SPEED, default=SPEED_MINIMUM): cv.string,
     vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
     vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
     vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
     vol.Optional(CONF_SPEED_LIST,
-                 default=[SPEED_OFF, SPEED_LOW,
+                 default=[SPEED_OFF, SPEED_MINIMUM, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -189,6 +192,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             STATE_OFF: config.get(CONF_PAYLOAD_OFF),
             OSCILLATE_ON_PAYLOAD: config.get(CONF_PAYLOAD_OSCILLATION_ON),
             OSCILLATE_OFF_PAYLOAD: config.get(CONF_PAYLOAD_OSCILLATION_OFF),
+            SPEED_MINIMUM: config.get(CONF_PAYLOAD_MINIMUM_SPEED),
             SPEED_LOW: config.get(CONF_PAYLOAD_LOW_SPEED),
             SPEED_MEDIUM: config.get(CONF_PAYLOAD_MEDIUM_SPEED),
             SPEED_HIGH: config.get(CONF_PAYLOAD_HIGH_SPEED),
@@ -239,7 +243,9 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         def speed_received(topic, payload, qos):
             """Handle new received MQTT message for the speed."""
             payload = templates[ATTR_SPEED](payload)
-            if payload == self._payload[SPEED_LOW]:
+            if payload == self._payload[SPEED_MINIMUM]:
+                self._speed = SPEED_MINIMUM
+            elif payload == self._payload[SPEED_LOW]:
                 self._speed = SPEED_LOW
             elif payload == self._payload[SPEED_MEDIUM]:
                 self._speed = SPEED_MEDIUM
@@ -351,7 +357,9 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
             return
 
-        if speed == SPEED_LOW:
+        if speed == SPEED_MINIMUM:
+            mqtt_payload = self._payload[SPEED_MINIMUM]
+        elif speed == SPEED_LOW:
             mqtt_payload = self._payload[SPEED_LOW]
         elif speed == SPEED_MEDIUM:
             mqtt_payload = self._payload[SPEED_MEDIUM]
