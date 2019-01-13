@@ -6,6 +6,7 @@ https://home-assistant.io/components/doorbird/
 """
 import logging
 
+from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -14,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, \
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify, dt as dt_util
 
-REQUIREMENTS = ['doorbirdpy==2.0.4']
+REQUIREMENTS = ['doorbirdpy==2.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +114,18 @@ def setup(hass, config):
 
         # Subscribe to doorbell or motion events
         if events:
-            doorstation.update_schedule(hass)
+            try:
+                doorstation.update_schedule(hass)
+            except HTTPError:
+                hass.components.persistent_notification.create(
+                    'Doorbird configuration failed.  Please verify that API '
+                    'Operator permission is enabled for the Doorbird user. '
+                    'A restart will be required once permissions have been '
+                    'verified.',
+                    title='Doorbird Configuration Failure',
+                    notification_id='doorbird_schedule_error')
+
+                return False
 
     hass.data[DOMAIN] = doorstations
 
@@ -230,6 +242,7 @@ class ConfiguredDoorBird():
         if not self.webhook_is_registered(hass_url):
             self.device.change_favorite('http', 'Home Assistant ({} events)'
                                         .format(event), hass_url)
+
         fav_id = self.get_webhook_id(hass_url)
 
         if not fav_id:
@@ -253,8 +266,6 @@ class ConfiguredDoorBird():
             for relay in self._relay_nums:
                 entry = self.device.get_schedule_entry(event, str(relay))
                 entry.output.append(output)
-                resp = self.device.change_schedule(entry)
-                return resp
         else:
             entry = self.device.get_schedule_entry(event)
             entry.output.append(output)
