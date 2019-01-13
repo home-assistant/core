@@ -6,15 +6,16 @@ https://home-assistant.io/components/amcrest/
 """
 import logging
 from datetime import timedelta
+import threading
 
 import aiohttp
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
-from requests.exceptions import ConnectionError as ConnectError
+from requests.exceptions import RequestException
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+    CONF_BINARY_SENSORS, CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL,
+    HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -35,6 +36,7 @@ DEFAULT_STREAM_SOURCE = 'snapshot'
 TIMEOUT = 10
 
 DATA_AMCREST = 'amcrest'
+DATA_AMCREST_LOCK = 'amcrest_lock'
 DOMAIN = 'amcrest'
 
 NOTIFICATION_ID = 'amcrest_notification'
@@ -55,6 +57,10 @@ STREAM_SOURCE_LIST = {
     'mjpeg': 0,
     'snapshot': 1,
     'rtsp': 2,
+}
+
+BINARY_SENSORS = {
+    'motion_detected': 'Motion Detected'
 }
 
 # Sensor types are defined like: Name, units, icon
@@ -86,6 +92,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS):
+            vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
         vol.Optional(CONF_SWITCHES):
@@ -98,7 +106,10 @@ def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
-    hass.data[DATA_AMCREST] = {}
+    if DATA_AMCREST not in hass.data:
+        hass.data[DATA_AMCREST] = {}
+    if DATA_AMCREST_LOCK not in hass.data:
+        hass.data[DATA_AMCREST_LOCK] = {}
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
@@ -106,11 +117,13 @@ def setup(hass, config):
             camera = AmcrestCamera(device.get(CONF_HOST),
                                    device.get(CONF_PORT),
                                    device.get(CONF_USERNAME),
-                                   device.get(CONF_PASSWORD)).camera
+                                   device.get(CONF_PASSWORD),
+                                   retries_connection=1,
+                                   timeout_protocol=5).camera
             # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectError, ConnectTimeout, HTTPError) as ex:
+        except RequestException as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
@@ -123,6 +136,7 @@ def setup(hass, config):
         ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
         name = device.get(CONF_NAME)
         resolution = RESOLUTION_LIST[device.get(CONF_RESOLUTION)]
+        binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
         switches = device.get(CONF_SWITCHES)
         stream_source = STREAM_SOURCE_LIST[device.get(CONF_STREAM_SOURCE)]
@@ -141,11 +155,19 @@ def setup(hass, config):
         hass.data[DATA_AMCREST][name] = AmcrestDevice(
             camera, name, authentication, ffmpeg_arguments, stream_source,
             resolution)
+        hass.data[DATA_AMCREST_LOCK][name] = threading.Lock()
 
         discovery.load_platform(
             hass, 'camera', DOMAIN, {
                 CONF_NAME: name,
             }, config)
+
+        if binary_sensors:
+            discovery.load_platform(
+                hass, 'binary_sensor', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_BINARY_SENSORS: binary_sensors
+                }, config)
 
         if sensors:
             discovery.load_platform(
@@ -161,7 +183,7 @@ def setup(hass, config):
                     CONF_SWITCHES: switches
                 }, config)
 
-    return True
+    return len(hass.data[DATA_AMCREST]) >= 1
 
 
 class AmcrestDevice:
