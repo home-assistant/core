@@ -172,7 +172,7 @@ class NMBSSensor(Entity):
     @property
     def icon(self):
         """Return the sensor default icon or an alert icon if any delay."""
-        if self._attrs is not None:
+        if self._attrs:
             delay = get_delay_in_minutes(self._attrs['departure']['delay'])
             if delay > 0:
                 return "mdi:alert-octagon"
@@ -182,7 +182,7 @@ class NMBSSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return sensor attributes if data is available."""
-        if self._state is None or self._attrs is None:
+        if self._state is None or not self._attrs:
             return None
 
         delay = get_delay_in_minutes(self._attrs['departure']['delay'])
@@ -216,7 +216,7 @@ class NMBSSensor(Entity):
     @property
     def station_coordinates(self):
         """Get the lat, long coordinates for station."""
-        if self._state is None or self._attrs is None:
+        if self._state is None or not self._attrs:
             return []
 
         latitude = float(self._attrs['departure']['stationinfo']['locationY'])
