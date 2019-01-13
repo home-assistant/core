@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, CONF_SHOW_ON_MAP, ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME,
+    CONF_SHOW_ON_MAP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -147,7 +148,8 @@ class NMBSLiveBoard(Entity):
 class NMBSSensor(Entity):
     """Get the the total travel time for a given connection."""
 
-    def __init__(self, api_client, name, show_on_map, station_from, station_to, excl_vias):
+    def __init__(self, api_client, name, show_on_map,
+                 station_from, station_to, excl_vias):
         """Initialize the NMBS connection sensor."""
         self._name = name
         self._show_on_map = show_on_map
@@ -204,12 +206,14 @@ class NMBSSensor(Entity):
             attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
-            attrs['via'] = self._attrs['vias']['via'][0]['station']
-            attrs['via_arrival_platform'] = self._attrs['vias']['via'][0]['arrival']['platform']
-            attrs['via_transfer_platform'] = self._attrs['vias']['via'][0]['departure']['platform']
+            via = self._attrs['vias']['via'][0]
+
+            attrs['via'] = via['station']
+            attrs['via_arrival_platform'] = via['arrival']['platform']
+            attrs['via_transfer_platform'] = via['departure']['platform']
             attrs['via_transfer_time'] = get_delay_in_minutes(
-                self._attrs['vias']['via'][0]['timeBetween']
-            ) + get_delay_in_minutes(self._attrs['vias']['via'][0]['departure']['delay'])
+                via['timeBetween']
+            ) + get_delay_in_minutes(via['departure']['delay'])
 
         if delay > 0:
             attrs['delay'] = "{} minutes".format(delay)
@@ -233,7 +237,7 @@ class NMBSSensor(Entity):
 
     @property
     def is_via_connection(self):
-        """Returns whether the connection goes through another station."""
+        """Return whether the connection goes through another station."""
         if not self._attrs:
             return False
 
@@ -252,7 +256,8 @@ class NMBSSensor(Entity):
         self._attrs = next_connection
 
         if self._excl_vias and self.is_via_connection:
-            _LOGGER.info("Skipping update of NMBSSensor because this connection is a via")
+            _LOGGER.info("Skipping update of NMBSSensor \
+                because this connection is a via")
             return
 
         duration = get_ride_duration(
