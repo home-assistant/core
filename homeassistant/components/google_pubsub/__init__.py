@@ -1,3 +1,9 @@
+"""
+Support for Google Cloud Pub/Sub.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/google_pubsub/
+"""
 import datetime
 import json
 import logging
@@ -35,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Pub/Sub component."""
-    from google.cloud import pubsub_v1
+    from google.cloud import pubsub_v1  # pylint: disable=E0611
 
     config = yaml_config.get(DOMAIN, {})
     project_id = config[CONF_PROJECT_ID]
@@ -52,12 +58,13 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     entities_filter = config[CONF_FILTER]
 
     publisher = pubsub_v1.PublisherClient()
-    topic_path = publisher.topic_path(project_id, topic_name)
+    topic_path = publisher.topic_path(project_id,  # pylint: disable=E1101
+                                      topic_name)
 
     encoder = DateTimeJSONEncoder()
 
     def send_to_pubsub(event: Event):
-        """Sends states to Pub/Sub."""
+        """Send states to Pub/Sub."""
         state = event.data.get('new_state')
         if (state is None
                 or state.state in (STATE_UNKNOWN, '', STATE_UNAVAILABLE)
@@ -78,10 +85,13 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
-    """Encodes python objects, adding the encoding of
-    datetime objects as isoformat.
+    """Encode python objects.
+
+    Additonaly add encoding for datetime objects as isoformat.
     """
-    def default(self, o):
+
+    def default(self, o):  # pylint: disable=E0202
+        """Implement encoding logic."""
         if isinstance(o, datetime.datetime):
             return o.isoformat()
         return super(DateTimeJSONEncoder, self).default(o)
