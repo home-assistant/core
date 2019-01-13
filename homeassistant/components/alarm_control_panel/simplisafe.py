@@ -7,7 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.simplisafe/
 import logging
 import re
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.simplisafe.const import (
     DATA_CLIENT, DOMAIN, TOPIC_UPDATE)
 from homeassistant.const import (
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ], True)
 
 
-class SimpliSafeAlarm(AlarmControlPanel):
+class SimpliSafeAlarm(alarm.AlarmControlPanel):
     """Representation of a SimpliSafe alarm."""
 
     def __init__(self, system, code):
@@ -64,7 +64,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
         if not self._code:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
+            return alarm.FORMAT_NUMBER
         return 'Any'
 
     @property
