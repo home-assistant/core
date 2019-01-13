@@ -12,18 +12,13 @@ SIGNAL_LOGI_CIRCLE_UPDATE = 'logi_circle_update'
 
 DEFAULT_CACHEDB = '.logi_cache.pickle'
 
-# Activity dict
-ACTIVITY_PROP = 'activity'
-ACTIVITY_ID = 'activity_id'
-ACTIVITY_RELEVANCE = 'relevance_level'
-ACTIVITY_START_TIME = 'start_time'
-ACTIVITY_DURATION = 'duration'
-ACTIVITY_BASE = {
-    'activity_id': None,
-    'relevance_level': None,
-    'start_time': None,
-    'duration': None
-}
+# Activity properties: hass state prop, API wrapper prop
+LOGI_ACTIVITY_KEYS = [
+    ['activity_id', 'activity_id'],
+    ['relevance_level', 'relevance_level'],
+    ['start_time', 'start_time_utc'],
+    ['duration', 'duration']
+]
 
 # Sensor types: Name, unit of measure, icon per sensor key.
 LOGI_SENSORS = {

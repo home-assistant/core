@@ -10,15 +10,13 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.logi_circle import (
-    DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
+from homeassistant.components.logi_circle.const import (
+    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN)
 from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
+    Camera, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
     ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
@@ -35,11 +33,6 @@ DATA_KEY = 'camera.logi_circle'
 ATTR_VALUE = 'value'
 ATTR_DURATION = 'duration'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-        cv.time_period,
-})
-
 LOGI_CIRCLE_SERVICE_SET_PRIVACY_MODE = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_VALUE): cv.boolean
 })
@@ -52,6 +45,13 @@ LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template,
     vol.Required(ATTR_DURATION): cv.positive_int
 })
+
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up a camera for a Logi Circle device. Obsolete."""
+    _LOGGER.warning(
+        'Logi Circle no longer works with camera platform configuration.')
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -135,22 +135,15 @@ class LogiCam(Camera):
             },
             'model': '{} ({})'.format(self._camera.mount, self._camera.model),
             'sw_version': self._camera.firmware,
-            'manufacturer': 'Logitech'
+            'manufacturer': DEVICE_BRAND
         }
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state = {
+        return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION
         }
-
-        # Add battery attributes if camera is battery-powered
-        if self._has_battery:
-            state[ATTR_BATTERY_CHARGING] = self._camera.is_charging
-            state[ATTR_BATTERY_LEVEL] = self._camera.battery_level
-
-        return state
 
     async def async_camera_image(self):
         """Return a still image from the camera."""

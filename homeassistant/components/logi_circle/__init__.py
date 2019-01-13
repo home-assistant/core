@@ -7,6 +7,7 @@ https://home-assistant.io/components/smhi/
 import asyncio
 import logging
 import threading
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -29,7 +30,7 @@ from . import config_flow
 from .const import (DOMAIN, DATA_LOGI, SIGNAL_LOGI_CIRCLE_UPDATE,
                     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
                     CONF_ATTRIBUTION, LOGI_SENSORS, LOGI_BINARY_SENSORS,
-                    DEFAULT_CACHEDB)
+                    DEFAULT_CACHEDB, LOGI_ACTIVITY_KEYS)
 
 REQUIREMENTS = [
     'https://github.com/evanjd/python-logi-circle/archive/'
@@ -80,6 +81,24 @@ def logi_circle_update_event_broker(hass, subscription):
             async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
 
     asyncio.new_event_loop().run_until_complete(async_start(hass, subscription))
+
+
+def parse_logi_activity(activity):
+    """Read props from Activity instance."""
+
+    activity_state_props = {}
+    for prop in LOGI_ACTIVITY_KEYS:
+        prop_value = getattr(activity or {}, prop[1], None)
+
+        if isinstance(prop_value, datetime):
+            activity_state_props[prop[0]] = as_local(
+                prop_value)
+        elif isinstance(prop_value, timedelta):
+            activity_state_props[prop[0]] = prop_value.total_seconds()
+        else:
+            activity_state_props[prop[0]] = prop_value
+
+    return activity_state_props
 
 
 async def async_setup(hass, config):
@@ -160,7 +179,7 @@ async def async_unload_entry(hass, entry):
 
     logi_circle = hass.data.pop(DATA_LOGI)
 
-    # Tell API wrapper to close all aiohttp sessions
+    # Tell API wrapper to close all aiohttp sessions, invalidate WS connections
     # and clear all locally cached tokens
     await logi_circle.auth_provider.clear_authorization()
 

@@ -6,33 +6,20 @@ https://home-assistant.io/components/binary_sensor.logi_circle/
 """
 import logging
 
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect)
-from homeassistant.components.logi_circle import (
-    SIGNAL_LOGI_CIRCLE_UPDATE,
-    CONF_ATTRIBUTION,
-    DOMAIN as LOGI_CIRCLE_DOMAIN)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
-    ACTIVITY_PROP,
-    ACTIVITY_ID,
-    ACTIVITY_RELEVANCE,
-    ACTIVITY_START_TIME,
-    ACTIVITY_DURATION,
-    ACTIVITY_BASE,
-    LOGI_BINARY_SENSORS as BINARY_SENSOR_TYPES
-)
-
+    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
+    LOGI_BINARY_SENSORS as BINARY_SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS)
-
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
-
-from homeassistant.util.dt import as_local
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = ['logi_circle']
 
 _LOGGER = logging.getLogger(__name__)
+
+LOGI_ACTIVITY_PROP = 'activity'
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -62,7 +49,7 @@ class LogiBinarySensor(BinarySensorDevice):
             BINARY_SENSOR_TYPES.get(self._sensor_type)[2])
         self._state = None
         self._id = '{}-{}'.format(self._camera.id, self._sensor_type)
-        self._activity = ACTIVITY_BASE.copy()
+        self._activity = {}
         self._async_unsub_dispatcher_connect = None
 
     @property
@@ -116,7 +103,7 @@ class LogiBinarySensor(BinarySensorDevice):
             },
             'model': '{} ({})'.format(self._camera.mount, self._camera.model),
             'sw_version': self._camera.firmware,
-            'manufacturer': 'Logitech'
+            'manufacturer': DEVICE_BRAND
         }
 
     @property
@@ -125,7 +112,7 @@ class LogiBinarySensor(BinarySensorDevice):
         state = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION
         }
-        if self._sensor_type == ACTIVITY_PROP:
+        if self._sensor_type == LOGI_ACTIVITY_PROP:
             return {**state, **self._activity}
         return state
 
@@ -146,19 +133,12 @@ class LogiBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Pulling data from %s sensor", self._name)
-        if self._sensor_type == ACTIVITY_PROP:
+        _LOGGER.debug(
+            "Processing data from %s binary sensor (push)", self._name)
+        if self._sensor_type == LOGI_ACTIVITY_PROP:
             activity = self._camera.current_activity
-            if activity:
-                self._state = True
-                self._activity[ACTIVITY_ID] = activity.activity_id
-                self._activity[ACTIVITY_RELEVANCE] = activity.relevance_level
-                self._activity[ACTIVITY_START_TIME] = as_local(
-                    activity.start_time_utc)
-                self._activity[ACTIVITY_DURATION] = activity.duration.total_seconds()
-            else:
-                self._state = False
-                self._activity = ACTIVITY_BASE.copy()
+            self._state = activity is not None
+            self._activity = parse_logi_activity(activity)
         else:
             state = getattr(self._camera, self._sensor_type, None)
             self._state = state

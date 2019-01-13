@@ -9,12 +9,10 @@ from datetime import timedelta
 
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect)
-from homeassistant.components.logi_circle import (
-    SIGNAL_LOGI_CIRCLE_UPDATE, CONF_ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN,
-    LOGI_SENSORS as SENSOR_TYPES)
+from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
-    ACTIVITY_BASE, ACTIVITY_ID, ACTIVITY_DURATION,
-    ACTIVITY_RELEVANCE, ACTIVITY_START_TIME, DEVICE_BRAND)
+    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
+    LOGI_SENSORS as SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_SENSORS)
 from homeassistant.helpers.entity import Entity
@@ -27,9 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
+LOGI_ACTIVITY_PROP = 'last_activity_time'
 LOGI_POLLING_SENSORS = ['battery_level',
                         'signal_strength_category',
                         'signal_strength_percentage']
+
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up a sensor for a Logi Circle device. Obsolete."""
+    _LOGGER.warning(
+        'Logi Circle no longer works with sensor platform configuration.')
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -58,7 +64,7 @@ class LogiSensor(Entity):
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[2])
         self._name = "{0} {1}".format(
             self._camera.name, SENSOR_TYPES.get(self._sensor_type)[0])
-        self._activity = ACTIVITY_BASE.copy()
+        self._activity = {}
         self._state = None
         self._tz = time_zone
         self._async_unsub_dispatcher_connect = None
@@ -89,7 +95,7 @@ class LogiSensor(Entity):
         state = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION
         }
-        if self._sensor_type == 'last_activity_time':
+        if self._sensor_type == LOGI_ACTIVITY_PROP:
             return {**state, **self._activity}
         return state
 
@@ -138,21 +144,18 @@ class LogiSensor(Entity):
 
     async def async_update(self, poll=True):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Pulling data from %s sensor", self._name)
+        _LOGGER.debug("Processing data from %s sensor (%s)",
+                      'poll' if poll else 'push', self._name)
         if poll and self.should_poll:
             await self._camera.update()
 
-        if self._sensor_type == 'last_activity_time':
+        if self._sensor_type == LOGI_ACTIVITY_PROP:
             activity = self._camera.current_activity or await self._camera.get_last_activity()
             if activity is not None:
                 last_activity_time = as_local(activity.end_time_utc)
                 self._state = '{0:0>2}:{1:0>2}'.format(
                     last_activity_time.hour, last_activity_time.minute)
-                self._activity[ACTIVITY_ID] = activity.activity_id
-                self._activity[ACTIVITY_RELEVANCE] = activity.relevance_level
-                self._activity[ACTIVITY_START_TIME] = as_local(
-                    activity.start_time_utc)
-                self._activity[ACTIVITY_DURATION] = activity.duration.total_seconds()
+                self._activity = parse_logi_activity(activity)
         else:
             state = getattr(self._camera, self._sensor_type, None)
             self._state = state
