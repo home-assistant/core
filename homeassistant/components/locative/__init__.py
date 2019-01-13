@@ -5,9 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/locative/
 """
 import logging
+from typing import Dict
 
 import voluptuous as vol
-from typing import Dict
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import \
@@ -67,8 +67,8 @@ async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Locative."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as e:
-        return e.error_message, HTTP_UNPROCESSABLE_ENTITY
+    except vol.MultipleInvalid as error:
+        return error.error_message, HTTP_UNPROCESSABLE_ENTITY
 
     device = data[ATTR_DEVICE_ID]
     location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
