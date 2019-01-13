@@ -2,14 +2,14 @@ import datetime
 import json
 import logging
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_UNKNOWN, STATE_UNAVAILABLE)
-from homeassistant.core import HomeAssistant, Event
+    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN)
+from homeassistant.core import Event, HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+    """Activate Google Pub/Sub component."""
     from google.cloud import pubsub_v1
 
     config = yaml_config.get(DOMAIN, {})
@@ -41,6 +42,10 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     topic_name = config[CONF_TOPIC_NAME]
     service_principal_path = os.path.join(hass.config.config_dir,
                                           config[CONF_SERVICE_PRINCIPAL])
+
+    if not os.path.isfile(service_principal_path):
+        _LOGGER.error("Path to credentials file cannot be found")
+        return False
 
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_principal_path
 
@@ -52,6 +57,7 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     encoder = DateTimeJSONEncoder()
 
     def send_to_pubsub(event: Event):
+        """Sends states to Pub/Sub."""
         state = event.data.get('new_state')
         if (state is None
                 or state.state in (STATE_UNKNOWN, '', STATE_UNAVAILABLE)
@@ -72,8 +78,10 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        else:
-            return super(DateTimeJSONEncoder, self).default(obj)
+    """Encodes python objects, adding the encoding of
+    datetime objects as isoformat.
+    """
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat()
+        return super(DateTimeJSONEncoder, self).default(o)
