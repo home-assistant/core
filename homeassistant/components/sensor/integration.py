@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the integration sensor."""
-    integral = IntegrationSensor(hass, config[CONF_SOURCE_SENSOR],
+    integral = IntegrationSensor(config[CONF_SOURCE_SENSOR],
                                  config.get(CONF_NAME),
                                  config[CONF_ROUND_DIGITS],
                                  config[CONF_UNIT_PREFIX],
@@ -65,16 +65,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities([integral])
 
-    return True
-
 
 class IntegrationSensor(RestoreEntity):
     """Representation of an integration sensor."""
 
-    def __init__(self, hass, source_entity, name, round_digits, unit_prefix,
+    def __init__(self, source_entity, name, round_digits, unit_prefix,
                  unit_time, unit_of_measurement):
         """Initialize the integration sensor."""
-        self._hass = hass
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
@@ -88,7 +85,6 @@ class IntegrationSensor(RestoreEntity):
             self._unit_of_measurement += "{}" + unit_time
         else:
             self._unit_of_measurement = unit_of_measurement
-        print(self._unit_of_measurement)
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
@@ -137,7 +133,7 @@ class IntegrationSensor(RestoreEntity):
                 self.async_schedule_update_ha_state()
 
         async_track_state_change(
-            self._hass, self._sensor_source_id, calc_integration)
+            self.hass, self._sensor_source_id, calc_integration)
 
         @callback
         def async_set_state(entity, old_state, new_state):
@@ -148,7 +144,7 @@ class IntegrationSensor(RestoreEntity):
                 _LOGGER.error("State must be a number")
 
         async_track_state_change(
-            self._hass, self.entity_id, async_set_state)
+            self.hass, self.entity_id, async_set_state)
 
     @property
     def name(self):
