@@ -861,7 +861,7 @@ class MQTT:
                 result_code, wait_time)
 
             try:
-                asyncio.sleep(wait_time)
+                await asyncio.sleep(wait_time)
             except asyncio.CancelledError:
                 break
             tries += 1
