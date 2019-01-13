@@ -11,14 +11,6 @@ from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.setup import async_setup_component
 
 
-def _url(data=None):
-    """Generate URL."""
-    data = data or {}
-    data = "&".join(["{}={}".format(name, value) for
-                     name, value in data.items()])
-    return "{}?{}".format(URL, data)
-
-
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
