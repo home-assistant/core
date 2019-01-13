@@ -52,7 +52,7 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     encoder = DateTimeJSONEncoder()
 
     def send_to_pubsub(event: Event):
-        state: State = event.data.get('new_state')
+        state = event.data.get('new_state')
         if (state is None
                 or state.state in (STATE_UNKNOWN, '', STATE_UNAVAILABLE)
                 or not entities_filter(state.entity_id)):
