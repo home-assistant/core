@@ -158,15 +158,17 @@ class LogiCam(Camera):
         live_stream = await self._camera.live_stream.get_rtsp_url()
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        timeout = 60 if self._camera.pir_wake_up else 10
+
         await stream.open_camera(
             live_stream, extra_cmd=self._ffmpeg_arguments)
 
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                'multipart/x-mixed-replace;boundary=ffserver', timeout=timeout)
         finally:
-            await stream.close(timeout=60)
+            await stream.close()
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""

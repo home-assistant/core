@@ -35,10 +35,7 @@ LOGI_SENSORS = {
         'WiFi Signal Category', None, 'wifi'],
 
     'signal_strength_percentage': [
-        'WiFi Signal Strength', '%', 'wifi'],
-
-    'speaker_volume': [
-        'Volume', '%', 'volume-high'],
+        'WiFi Signal Strength', '%', 'wifi']
 }
 
 # Binary sensor types: Name, device_class, icon
