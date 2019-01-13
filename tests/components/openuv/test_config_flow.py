@@ -1,6 +1,4 @@
 """Define tests for the OpenUV config flow."""
-from unittest.mock import patch
-
 import pytest
 from pyopenuv.errors import OpenUvError
 
