@@ -82,7 +82,7 @@ class IAlarmPanel(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
+            return alarm.FORMAT_NUMBER
         return 'Any'
 
     @property
