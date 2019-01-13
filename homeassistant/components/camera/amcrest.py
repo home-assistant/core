@@ -470,10 +470,12 @@ class AmcrestCam(Camera):
 
     @property
     def is_audio_on(self):
+        """ Returns is audio on """
         return self._is_audio_on
 
     @is_audio_on.setter
     def is_audio_on(self, enable):
+        """ Set audio on """
         try:
             self._set_audio(enable)
         except (RequestException, ValueError) as exc:
@@ -578,7 +580,7 @@ class AmcrestCam(Camera):
         """Move camera position and zoom to preset."""
         # self.preset = preset
         try:
-            self._check_result(
+            self.check_result(
                 self._camera.go_to_preset(action='start',
                                           preset_point_number=preset),
                 'preset={}'.format(preset))
@@ -664,7 +666,7 @@ class AmcrestCam(Camera):
 
     # Methods missing from self._camera.
 
-    def _check_result(self, result, data=None):
+    def check_result(self, result, data=None):
         if not result.upper().startswith('OK'):
             msg = 'Camera operation failed'
             if data:
@@ -672,7 +674,7 @@ class AmcrestCam(Camera):
             raise ValueError(msg)
 
     def _set_color_bw(self, cbw):
-        self._check_result(
+        self.check_result(
             self._camera.command(
                 'configManager.cgi?action=setConfig&VideoInOptions[0].'
                 'DayNightColor={}'.format(CBW.index(cbw))
@@ -693,10 +695,10 @@ class AmcrestCam(Camera):
         formats = [('Extra', 3), ('Main', 4)]
         if param == 'Video':
             formats.append(('Snap', 3))
-        for ff, nn in formats:
-            for i in range(nn):
+        for format_f, format_n in formats:
+            for i in range(format_n):
                 cmd += '&Encode[0].{}Format[{}].{}Enable={}'.format(
-                    ff, i, param, str(enable).lower())
+                    format_f, i, param, str(enable).lower())
         self._camera.command(cmd)
 
     def _set_mask(self, enable):
