@@ -18,7 +18,6 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, STATE_ON, STATE_OFF)
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_web,
     async_aiohttp_proxy_stream)
@@ -292,7 +291,7 @@ class AmcrestCam(Camera):
                 return self._camera.snapshot(channel=self._resolution).data
             except (RequestException, ReadTimeoutError, ValueError) as exc:
                 _LOGGER.error('In camera_image: %s: %s',
-                    exc.__class__.__name__, str(exc))
+                              exc.__class__.__name__, str(exc))
                 return None
             finally:
                 self._lock.release()
@@ -384,7 +383,7 @@ class AmcrestCam(Camera):
                                                 if enable else 'Automatic']
         except (RequestException, ValueError) as exc:
             _LOGGER.error('In is_recording setter: %s: %s',
-                exc.__class__.__name__, str(exc))
+                          exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
                 self._is_recording = enable
@@ -524,17 +523,17 @@ class AmcrestCam(Camera):
         else:
             self._is_streaming = 'true' in [s.split('=')[-1]
                                             for s in encode_media
-                                                if '.VideoEnable=' in s]
+                                            if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
                                       for s in video_in_options
-                                        if '].DayNightColor=' in s][0])]
+                                      if '].DayNightColor=' in s][0])]
             self._is_audio_on = 'true' in [s.split('=')[-1]
                                            for s in encode_media
                                            if '.AudioEnable=' in s]
             self._is_mask_on = 'true' in [s.split('=')[-1]
                                           for s in video_widget_config
                                           if '.Covers' in s and
-                                            '.EncodeBlend=' in s]
+                                          '.EncodeBlend=' in s]
 
     # Other Camera method overrides
 
@@ -676,7 +675,7 @@ class AmcrestCam(Camera):
         self._check_result(
             self._camera.command(
                 'configManager.cgi?action=setConfig&VideoInOptions[0].'
-                    'DayNightColor={}'.format(CBW.index(cbw))
+                'DayNightColor={}'.format(CBW.index(cbw))
                 ).content.decode(),
             'cbw = {}'.format(cbw))
 
