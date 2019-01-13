@@ -46,12 +46,14 @@ DEFAULT_DISPLAY_ZONE = 'display'
 DEFAULT_KEY = 'no key'
 CURRENT = '0,0'
 ZONE_CHECK = 'a'
-SCAN_INTERVAL = timedelta(seconds=60)
 ZONE_CHECK_COUNT = None
 USER_DISPLAY = None
+global SCAN_INTERVAL
+SCAN_INTERVAL = timedelta(seconds=300)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_API_KEY, default=DEFAULT_KEY): cv.string,
+    vol.Required(CONF_API_KEY, default=DEFAULT_KEY): cv.string,
     vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTION): cv.string,
     vol.Optional(CONF_DISPLAY_ZONE, default=DEFAULT_DISPLAY_ZONE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -73,11 +75,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Adding Reverse Geocode sensor for %s", name)
         add_devices([GoogleGeocode(hass, origin, name,
                                    api_key, options, display_zone)])
+
     global SCAN_INTERVAL
-    SCAN_INTERVAL = timedelta(seconds=len(
-        hass.states.entity_ids('device_tracker') * 34))
-    _LOGGER.info(
-        "SCAN_INTERVAL for reverse geocode is set to %s", SCAN_INTERVAL)
+    SCAN_INTERVAL = (
+        timedelta(seconds=len(hass.states.entity_ids('device_tracker') * 34)))
+    _LOGGER.info("Google Reverse Geocode API"
+                 " will be polled every %s", SCAN_INTERVAL)
 
 
 class GoogleGeocode(Entity):
@@ -184,12 +187,9 @@ class GoogleGeocode(Entity):
             lat = self._origin
             CURRENT = lat
             self._reset_attributes()
-            if self._api_key == 'no key':
-                url = "https://maps.google.com/maps/api/geocode/json?latlng=" \
-                      + lat
-            else:
-                url = "https://maps.googleapis.com/maps/api/geocode/json?" \
-                      "latlng=" + lat + "&key=" + self._api_key
+            url = (
+                "https://maps.googleapis.com/maps/api/geocode/"
+                "json?latlng=" + lat + "&key=" + self._api_key)
             response = get(url)
             json_input = response.text
             _LOGGER.debug("Reverse Geocode response is : %s", json_input)
@@ -235,8 +235,8 @@ class GoogleGeocode(Entity):
 
             try:
                 if 'formatted_address' in decoded['results'][0]:
-                    formatted_address = decoded['results'][0]
-                    ['formatted_address']
+                    formatted_address = (
+                        decoded['results'][0]['formatted_address'])
                     self._formatted_address = formatted_address
             except IndexError:
                 pass
@@ -315,7 +315,7 @@ class GoogleGeocode(Entity):
         if append_check == "":
             pass
         else:
-            self.append(append_check)
+            USER_DISPLAY.append(append_check)
 
     @staticmethod
     def _get_location_from_attributes(entity):
