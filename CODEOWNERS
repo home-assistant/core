@@ -218,7 +218,6 @@ homeassistant/components/*/ness_alarm.py @nickw444
 
 # O
 homeassistant/components/openuv/* @bachya
-homeassistant/components/*/openuv.py @bachya
 
 # P
 homeassistant/components/point/* @fredrike
