@@ -18,7 +18,6 @@ DEPENDENCIES = ['gpslogger']
 async def async_setup_scanner(hass: HomeAssistantType, config: ConfigType,
                               async_see, discovery_info=None):
     """Set up an endpoint for the GPSLogger device tracker."""
-
     async def _set_location(device, gps_location, battery, accuracy, attrs):
         """Fire HA event to set location."""
         await async_see(
