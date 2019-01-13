@@ -7,6 +7,7 @@ https://home-assistant.io/components/locative/
 import logging
 
 import voluptuous as vol
+from typing import Dict
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import \
@@ -28,13 +29,30 @@ TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 ATTR_DEVICE_ID = 'device'
 ATTR_TRIGGER = 'trigger'
 
-WEBHOOK_SCHEMA = vol.Schema({
-    vol.Required(ATTR_LATITUDE): cv.latitude,
-    vol.Required(ATTR_LONGITUDE): cv.longitude,
-    vol.Required(ATTR_DEVICE_ID): cv.string,
-    vol.Required(ATTR_TRIGGER): cv.string,
-    vol.Optional(ATTR_ID): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+
+def _id(value: str) -> str:
+    """Coerce id by removing '-'."""
+    return value.replace('-', '')
+
+
+def _validate_test_mode(obj: Dict) -> Dict:
+    """Validate that id is provided outside of test mode."""
+    if ATTR_ID not in obj and obj[ATTR_TRIGGER] != 'test':
+        raise vol.Invalid('Location id not specified')
+    return obj
+
+
+WEBHOOK_SCHEMA = vol.All(
+    dict,
+    vol.Schema({
+        vol.Required(ATTR_LATITUDE): cv.latitude,
+        vol.Required(ATTR_LONGITUDE): cv.longitude,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_TRIGGER): cv.string,
+        vol.Optional(ATTR_ID): vol.All(cv.string, _id)
+    }, extra=vol.ALLOW_EXTRA),
+    _validate_test_mode
+)
 
 
 async def async_setup(hass, hass_config):
@@ -52,12 +70,7 @@ async def handle_webhook(hass, webhook_id, request):
     except vol.MultipleInvalid as e:
         return e.error_message, HTTP_UNPROCESSABLE_ENTITY
 
-    if ATTR_ID not in data and data[ATTR_TRIGGER] != 'test':
-        _LOGGER.error('Location id not specified.')
-        return ('Location id not specified.',
-                HTTP_UNPROCESSABLE_ENTITY)
-
-    device = data[ATTR_DEVICE_ID].replace('-', '')
+    device = data[ATTR_DEVICE_ID]
     location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
     direction = data[ATTR_TRIGGER]
     gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
