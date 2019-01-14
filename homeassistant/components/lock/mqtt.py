@@ -92,9 +92,9 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._optimistic = False
 
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        qos = config.get(CONF_QOS)
+        payload_available = config[CONF_PAYLOAD_AVAILABLE]
+        payload_not_available = config[CONF_PAYLOAD_NOT_AVAILABLE]
+        qos = config[CONF_QOS]
         device_config = config.get(CONF_DEVICE)
 
         MqttAvailability.__init__(self, availability_topic, qos,
@@ -128,9 +128,9 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
                     payload)
-            if payload == self._config.get(CONF_PAYLOAD_LOCK):
+            if payload == self._config[CONF_PAYLOAD_LOCK]:
                 self._state = True
-            elif payload == self._config.get(CONF_PAYLOAD_UNLOCK):
+            elif payload == self._config[CONF_PAYLOAD_UNLOCK]:
                 self._state = False
 
             self.async_schedule_update_ha_state()
@@ -143,7 +143,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 self.hass, self._sub_state,
                 {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
                                  'msg_callback': message_received,
-                                 'qos': self._config.get(CONF_QOS)}})
+                                 'qos': self._config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -159,7 +159,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def name(self):
         """Return the name of the lock."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):
@@ -182,10 +182,10 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_LOCK),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self.hass, self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_LOCK],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
@@ -197,10 +197,10 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_UNLOCK),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self.hass, self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_UNLOCK],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
