@@ -26,11 +26,11 @@ DEFAULT_NAME = 'Xiaomi Miio Device'
 DATA_KEY = 'fan.xiaomi_miio'
 
 CONF_MODEL = 'model'
-MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
 MODEL_AIRPURIFIER_V1 = 'zhimi.airpurifier.v1'
 MODEL_AIRPURIFIER_V2 = 'zhimi.airpurifier.v2'
 MODEL_AIRPURIFIER_V3 = 'zhimi.airpurifier.v3'
 MODEL_AIRPURIFIER_V5 = 'zhimi.airpurifier.v5'
+MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
 MODEL_AIRPURIFIER_PRO_V7 = 'zhimi.airpurifier.v7'
 MODEL_AIRPURIFIER_M1 = 'zhimi.airpurifier.m1'
 MODEL_AIRPURIFIER_M2 = 'zhimi.airpurifier.m2'
@@ -50,18 +50,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MODEL): vol.In(
-        [MODEL_AIRPURIFIER_M1,
+        [MODEL_AIRPURIFIER_V1,
+         MODEL_AIRPURIFIER_V2,
+         MODEL_AIRPURIFIER_V3,
+         MODEL_AIRPURIFIER_V5,
+         MODEL_AIRPURIFIER_PRO,
+         MODEL_AIRPURIFIER_PRO_V7,
+         MODEL_AIRPURIFIER_M1,
          MODEL_AIRPURIFIER_M2,
          MODEL_AIRPURIFIER_MA1,
          MODEL_AIRPURIFIER_MA2,
          MODEL_AIRPURIFIER_SA1,
          MODEL_AIRPURIFIER_SA2,
-         MODEL_AIRPURIFIER_V1,
-         MODEL_AIRPURIFIER_V2,
-         MODEL_AIRPURIFIER_V3,
-         MODEL_AIRPURIFIER_V5,
-         MODEL_AIRPURIFIER_PRO_V7,
-         MODEL_AIRPURIFIER_PRO,
          MODEL_AIRPURIFIER_MC1,
          MODEL_AIRHUMIDIFIER_V1,
          MODEL_AIRHUMIDIFIER_CA,
