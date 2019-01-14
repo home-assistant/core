@@ -111,3 +111,15 @@ class TelldusLiveEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._id
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        device = self._client.device_info(self.device.device_id)
+        return {
+            'identifiers': {('tellduslive', self.device.device_id)},
+            'name': self.device.name,
+            'model': device['model'].title(),
+            'manufacturer': device['protocol'].title(),
+            'via_hub': ('tellduslive', device.get('client')),
+        }

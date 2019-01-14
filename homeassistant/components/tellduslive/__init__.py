@@ -6,6 +6,7 @@ https://home-assistant.io/components/tellduslive/
 """
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -23,7 +24,7 @@ from .const import (
 
 APPLICATION_NAME = 'Home Assistant'
 
-REQUIREMENTS = ['tellduslive==0.10.4']
+REQUIREMENTS = ['tellduslive==0.10.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,9 @@ async def async_setup_entry(hass, entry):
     conf = entry.data[KEY_SESSION]
 
     if KEY_HOST in conf:
-        session = Session(**conf)
+        # Session(**conf) does blocking IO when
+        # communicating with local devices.
+        session = await hass.async_add_executor_job(partial(Session, **conf))
     else:
         session = Session(
             PUBLIC_KEY,
@@ -70,8 +73,8 @@ async def async_setup_entry(hass, entry):
 
     client = TelldusLiveClient(hass, entry, session)
     hass.data[DOMAIN] = client
-
-    await client.update()
+    await async_add_hubs(hass, client, entry.entry_id)
+    hass.async_create_task(client.update())
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
@@ -79,6 +82,21 @@ async def async_setup_entry(hass, entry):
         hass, client.update, interval)
 
     return True
+
+
+async def async_add_hubs(hass, client, entry_id):
+    """Add the hubs associated with the current client to device_registry."""
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    for hub in await client.async_get_hubs():
+        _LOGGER.debug("Connected hub %s", hub['name'])
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, hub['id'])},
+            manufacturer='Telldus',
+            name=hub['name'],
+            model=hub['type'],
+            sw_version=hub['version'],
+        )
 
 
 async def async_setup(hass, config):
@@ -116,10 +134,21 @@ class TelldusLiveClient:
     def __init__(self, hass, config_entry, session):
         """Initialize the Tellus data object."""
         self._known_devices = set()
+        self._device_infos = {}
 
         self._hass = hass
         self._config_entry = config_entry
         self._client = session
+
+    async def async_get_hubs(self):
+        """Return hubs registered for the user."""
+        clients = await self._hass.async_add_executor_job(
+            self._client.get_clients)
+        return clients or []
+
+    def device_info(self, device_id):
+        """Return device info."""
+        return self._device_infos.get(device_id)
 
     @staticmethod
     def identify_device(device):
@@ -143,6 +172,10 @@ class TelldusLiveClient:
         """Discover the component."""
         device = self._client.device(device_id)
         component = self.identify_device(device)
+        self._device_infos.update({
+            device_id:
+            await self._hass.async_add_executor_job(device.info)
+        })
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
             if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                 await self._hass.config_entries.async_forward_entry_setup(
@@ -161,13 +194,14 @@ class TelldusLiveClient:
 
     async def update(self, *args):
         """Periodically poll the servers for current state."""
-        _LOGGER.debug('Updating')
-        if not self._client.update():
+        if not await self._hass.async_add_executor_job(self._client.update):
             _LOGGER.warning('Failed request')
 
         dev_ids = {dev.device_id for dev in self._client.devices}
         new_devices = dev_ids - self._known_devices
-        await asyncio.gather(*[self._discover(d_id) for d_id in new_devices])
+        # just await each discover as `gather` use up all HTTPAdapter pools
+        for d_id in new_devices:
+            await self._discover(d_id)
         self._known_devices |= new_devices
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 

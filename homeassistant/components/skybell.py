@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['skybellpy==0.2.0']
+REQUIREMENTS = ['skybellpy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

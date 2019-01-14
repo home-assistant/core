@@ -80,6 +80,7 @@ CONF_CONNECTIONS = 'connections'
 CONF_MANUFACTURER = 'manufacturer'
 CONF_MODEL = 'model'
 CONF_SW_VERSION = 'sw_version'
+CONF_VIA_HUB = 'via_hub'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -224,6 +225,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_MODEL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SW_VERSION): cv.string,
+    vol.Optional(CONF_VIA_HUB): cv.string,
 }), validate_device_has_at_least_one_identifier)
 
 MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
@@ -878,7 +880,8 @@ class MqttAttributes(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         from .subscription import async_unsubscribe_topics
-        await async_unsubscribe_topics(self.hass, self._attributes_sub_state)
+        self._attributes_sub_state = await async_unsubscribe_topics(
+            self.hass, self._attributes_sub_state)
 
     @property
     def device_state_attributes(self):
@@ -947,7 +950,8 @@ class MqttAvailability(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         from .subscription import async_unsubscribe_topics
-        await async_unsubscribe_topics(self.hass, self._availability_sub_state)
+        self._availability_sub_state = await async_unsubscribe_topics(
+            self.hass, self._availability_sub_state)
 
     @property
     def available(self) -> bool:
@@ -970,7 +974,7 @@ class MqttDiscoveryUpdate(Entity):
 
         from homeassistant.helpers.dispatcher import async_dispatcher_connect
         from homeassistant.components.mqtt.discovery import (
-            ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
+            MQTT_DISCOVERY_UPDATED, clear_discovery_hash)
 
         @callback
         def discovery_callback(payload):
@@ -981,7 +985,7 @@ class MqttDiscoveryUpdate(Entity):
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
-                del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
+                clear_discovery_hash(self.hass, self._discovery_hash)
                 self._remove_signal()
             elif self._discovery_update:
                 # Non-empty payload: Notify component
@@ -1029,5 +1033,8 @@ class MqttEntityDeviceInfo(Entity):
 
         if CONF_SW_VERSION in self._device_config:
             info['sw_version'] = self._device_config[CONF_SW_VERSION]
+
+        if CONF_VIA_HUB in self._device_config:
+            info['via_hub'] = (DOMAIN, self._device_config[CONF_VIA_HUB])
 
         return info

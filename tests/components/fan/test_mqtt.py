@@ -1,13 +1,14 @@
 """Test MQTT fans."""
 import json
+from unittest.mock import ANY
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import fan
+from homeassistant.components import fan, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
 from tests.common import async_fire_mqtt_message, MockConfigEntry, \
-    async_mock_mqtt_component
+    async_mock_mqtt_component, mock_registry
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
@@ -110,7 +111,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     """Test removal of discovered fan."""
-    entry = MockConfigEntry(domain='mqtt')
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
@@ -131,8 +132,8 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
 
 
 async def test_discovery_update_fan(hass, mqtt_mock, caplog):
-    """Test removal of discovered fan."""
-    entry = MockConfigEntry(domain='mqtt')
+    """Test update of discovered fan."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
@@ -159,6 +160,38 @@ async def test_discovery_update_fan(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == 'Milk'
     state = hass.states.get('fan.milk')
+    assert state is None
+
+
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+    assert state is None
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.milk')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('fan.beer')
     assert state is None
 
 
@@ -224,3 +257,39 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, fan.DOMAIN, {
+        fan.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('fan.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('fan.beer', new_entity_id='fan.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+    assert state is None
+
+    state = hass.states.get('fan.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
