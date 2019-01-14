@@ -1,0 +1,24 @@
+{
+  "config": {
+    "title": "Telldus Live",
+    "step": {
+      "user": {
+        "title": "Pick endpoint.",
+        "description": "",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "auth": {
+          "title": "Authenticate against TelldusLive",
+          "description": "To link your TelldusLive account:\n 1. Click the link below\n 2. Login to Telldus Live\n 3. Authorize **{app_name}** (click **Yes**).\n 4. Come back here and click **SUBMIT**.\n\n [Link TelldusLive account]({auth_url})"
+      }
+    },
+    "abort": {
+      "authorize_url_timeout": "Timeout generating authorize url.",
+      "authorize_url_fail": "Unknown error generating an authorize url.",
+      "all_configured": "TelldusLive is already configured",
+      "unknown": "Unknown error occurred"
+    }
+  }
+}

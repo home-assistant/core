@@ -5,14 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.ialarm/
 """
 import logging
+import re
 
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    CONF_CODE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyialarm==0.3']
@@ -36,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): vol.All(cv.string, no_application_protocol),
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CODE): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -43,23 +46,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an iAlarm control panel."""
     name = config.get(CONF_NAME)
+    code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
 
     url = 'http://{}'.format(host)
-    ialarm = IAlarmPanel(name, username, password, url)
+    ialarm = IAlarmPanel(name, code, username, password, url)
     add_entities([ialarm], True)
 
 
 class IAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an iAlarm status."""
 
-    def __init__(self, name, username, password, url):
+    def __init__(self, name, code, username, password, url):
         """Initialize the iAlarm status."""
         from pyialarm import IAlarm
 
         self._name = name
+        self._code = str(code) if code else None
         self._username = username
         self._password = password
         self._url = url
@@ -70,6 +75,15 @@ class IAlarmPanel(alarm.AlarmControlPanel):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def code_format(self):
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     @property
     def state(self):
@@ -98,12 +112,22 @@ class IAlarmPanel(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.disarm()
+        if self._validate_code(code):
+            self._client.disarm()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.arm_away()
+        if self._validate_code(code):
+            self._client.arm_away()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._client.arm_stay()
+        if self._validate_code(code):
+            self._client.arm_stay()
+
+    def _validate_code(self, code):
+        """Validate given code."""
+        check = self._code is None or code == self._code
+        if not check:
+            _LOGGER.warning("Wrong code entered")
+        return check

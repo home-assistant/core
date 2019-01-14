@@ -319,7 +319,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(self._status['random'])
+        return bool(int(self._status['random']))
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""

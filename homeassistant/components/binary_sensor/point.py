@@ -7,8 +7,7 @@ https://home-assistant.io/components/binary_sensor.point/
 
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as PARENT_DOMAIN, BinarySensorDevice)
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.point import MinutPointEntity
 from homeassistant.components.point.const import (
     DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
@@ -49,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
              for device_class in EVENTS), True)
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(PARENT_DOMAIN, POINT_DOMAIN),
+        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN),
         async_discover_sensor)
 
 

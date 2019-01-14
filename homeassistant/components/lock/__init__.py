@@ -34,7 +34,7 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 LOCK_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
 
