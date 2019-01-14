@@ -1085,6 +1085,7 @@ pyloopenergy==0.0.18
 pylutron-caseta==0.5.0
 
 # homeassistant.components.lutron
+# homeassistant.components.binary_sensor.lutron
 pylutron==0.2.0
 
 # homeassistant.components.notify.mailgun

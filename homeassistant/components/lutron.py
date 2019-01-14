@@ -39,7 +39,8 @@ def setup(hass, base_config):
     hass.data[LUTRON_DEVICES] = {'light': [],
                                  'cover': [],
                                  'switch': [],
-                                 'scene': []}
+                                 'scene': [],
+                                 'binary_sensor': []}
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -70,7 +71,11 @@ def setup(hass, base_config):
                         hass.data[LUTRON_DEVICES]['scene'].append(
                             (area.name, keypad.name, button, led))
 
-    for component in ('light', 'cover', 'switch', 'scene'):
+                button_name = "{}: {}".format(keypad.name, button.name)
+                hass.data[LUTRON_DEVICES]['binary_sensor'].append(
+                    (button_name, button))
+
+    for component in ('light', 'cover', 'switch', 'scene', 'binary_sensor'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
 
