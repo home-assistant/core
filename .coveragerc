@@ -337,7 +337,7 @@ omit =
     homeassistant/components/*/sense.py
 
     homeassistant/components/simplisafe/__init__.py
-    homeassistant/components/*/simplisafe.py
+    homeassistant/components/simplisafe/alarm_control_panel.py
 
     homeassistant/components/sisyphus.py
     homeassistant/components/*/sisyphus.py
