@@ -106,6 +106,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     try:
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs)
+        if not await device.connect():
+            raise PlatformNotReady
+
         DEVICES.append(device)
         async_add_entities([device])
         register_services(hass)
@@ -175,10 +178,14 @@ class HarmonyRemote(remote.RemoteDevice):
         self._config_path = out_path
         self._delay_secs = delay_secs
         self._available = False
+        self._platform_added = False
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
         _LOGGER.debug("%s: Harmony Hub added", self._name)
+        self._platform_added = True
+        await self.new_config()
+
         import aioharmony.exceptions as aioexc
 
         async def shutdown(_):
@@ -190,21 +197,6 @@ class HarmonyRemote(remote.RemoteDevice):
                 _LOGGER.warning("%s: Disconnect timed-out", self._name)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-        _LOGGER.debug("%s: Connecting", self._name)
-        while True:
-            try:
-                if await self._client.connect():
-                    break
-            except aioexc.TimeOut:
-                _LOGGER.error("%s: Connection timed-out", self._name)
-
-            _LOGGER.warning("%s: Unable to connect, will retry in 60 seconds",
-                            self._name)
-            await asyncio.sleep(60)
-
-        # Set initial state
-        self.new_activity(self._client.current_activity)
 
     @property
     def name(self):
@@ -231,6 +223,22 @@ class HarmonyRemote(remote.RemoteDevice):
         """Return True if connected to Hub, otherwise False."""
         return self._available
 
+    async def connect(self):
+        """Connect to the Harmony HUB."""
+        import aioharmony.exceptions as aioexc
+
+        _LOGGER.debug("%s: Connecting", self._name)
+        try:
+            if not await self._client.connect():
+                _LOGGER.warning("%s: Unable to connect to HUB.", self._name)
+                await self._client.close()
+                return False
+        except aioexc.TimeOut:
+            _LOGGER.warning("%s: Connection timed-out", self._name)
+            return False
+
+        return True
+
     def new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
         activity_id, activity_name = activity_info
@@ -239,13 +247,15 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        self.async_schedule_update_ha_state()
+        if self._platform_added:
+            self.async_schedule_update_ha_state()
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
         _LOGGER.debug("%s: configuration has been updated", self._name)
         self.new_activity(self._client.current_activity)
-        await self.hass.async_add_executor_job(self.write_config_file)
+        if self._platform_added:
+            await self.hass.async_add_executor_job(self.write_config_file)
 
     async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
@@ -262,7 +272,7 @@ class HarmonyRemote(remote.RemoteDevice):
         # unavailable, this to allow a reconnection to happen.
         await asyncio.sleep(10)
 
-        if not self._available:
+        if not self._available and self._platform_added:
             # Still disconnected. Let the state engine know.
             self.async_schedule_update_ha_state()
 
@@ -366,8 +376,8 @@ class HarmonyRemote(remote.RemoteDevice):
                           "%s: %s",
                           result.command.command,
                           result.command.device,
-                          result.command.code,
-                          result.command.msg
+                          result.code,
+                          result.msg
                           )
 
     async def change_channel(self, channel):
