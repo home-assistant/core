@@ -138,17 +138,6 @@ class IntegrationSensor(RestoreEntity):
         async_track_state_change(
             self.hass, self._sensor_source_id, calc_integration)
 
-        @callback
-        def async_set_state(entity, old_state, new_state):
-            """Handle set state from dev-state."""
-            try:
-                self._state = Decimal(new_state.state)
-            except ValueError:
-                _LOGGER.error("State must be a number")
-
-        async_track_state_change(
-            self.hass, self.entity_id, async_set_state)
-
     @property
     def name(self):
         """Return the name of the sensor."""
