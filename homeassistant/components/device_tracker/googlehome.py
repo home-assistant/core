@@ -23,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Google Home scanner."""
     if discovery_info is None:
-        _LOGGER.error(
-            "To use this you need to configure the 'googlehome' component.")
+        _LOGGER.warning(
+            "To use this you need to configure the 'googlehome' component")
         return False
     scanner = GoogleHomeDeviceScanner(hass, hass.data[CLIENT],
                                       discovery_info, async_see)
