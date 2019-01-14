@@ -63,17 +63,21 @@ class GoogleHomeDeviceScanner(DeviceScanner):
         google_home_name = info.get('name', NAME)
 
         for device in bluetooth:
-            if (device['rssi'] > self.rssi) and (device['device_type']
-                                                 in self.device_types):
-                name = "{} {}".format(self.host, device['mac_address'])
+            if device['device_type'] not in self.device_types:
+                continue
 
-                attributes = {}
-                attributes['btle_mac_address'] = device['mac_address']
-                attributes['ghname'] = google_home_name
-                attributes['rssi'] = device['rssi']
-                attributes['source_type'] = 'bluetooth'
-                if device['name']:
-                    attributes['name'] = device['name']
+            elif  device['rssi'] < self.rssi:
+                continue
 
-                await self.async_see(dev_id=slugify(name),
-                                     attributes=attributes)
+            name = "{} {}".format(self.host, device['mac_address'])
+
+            attributes = {}
+            attributes['btle_mac_address'] = device['mac_address']
+            attributes['ghname'] = google_home_name
+            attributes['rssi'] = device['rssi']
+            attributes['source_type'] = 'bluetooth'
+            if device['name']:
+                attributes['name'] = device['name']
+
+            await self.async_see(dev_id=slugify(name),
+                                 attributes=attributes)
