@@ -8,6 +8,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
+import functools
 import logging
 import os
 import pathlib
@@ -258,11 +259,15 @@ class HomeAssistant:
         """
         task = None
 
-        if asyncio.iscoroutine(target):
+        check_target = target
+        if isinstance(target, functools.partial):
+            check_target = target.func
+
+        if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(target):
+        elif is_callback(check_target):
             self.loop.call_soon(target, *args)
-        elif asyncio.iscoroutinefunction(target):
+        elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
         else:
             task = self.loop.run_in_executor(  # type: ignore
