@@ -88,8 +88,18 @@ CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
                 "media_player", "script"]
-KEYBOARD_MODE = ['Litery', 'Duże litery', 'Cyfry', 'Znaki specjalne']
-CURR_KEYBOARD_MODE = None
+
+# wirtualna klawiatura
+# kodowała to Asia Raczkowska w roku 2019 roku
+VIRTUAL_KEYBOARD_MODE = ['Litery', 'Duże litery', 'Cyfry', 'Symbole']
+CURR_VIRTUAL_KEYBOARD_MODE = None
+VIRTUAL_KEYBOARD_LETERS = ['A','Ą','B','C'.'Ć'.'D'.'E','Ę','F','G','H','I','J','K','L','Ł','M','N','Ń','O','Ó','P','R','S','Ś','T','U','W','Y','Z','Ź','Ż']
+VIRTUAL_KEYBOARD_NUMBERS = [0,1,2,3,4,5,6,7,8,9]
+VIRTUAL_KEYBOARD_SYMBOLS = ['!','"','#','$','%','&'."'",'(',')'.'*'.'+',',','-','_','.','/',':',';','<','=','>','?','@','[','\\',']','^','{','|','}']
+VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['wykrzyknik','cudzysłów','kratka','dolar','procent','symbol and',"pojedynczy cudzysłów",'nawias otwierający','nawias zamykający'.'gwiazdka'.'plus','przecinek','podkreślenie','myślnik','kropka','ukośnik','dwukropek','średnik','znak mniejszości','znak równości','znak większości','znak zapytania','małpa','kwadratowy nawias otwierający','ukośnik lewy','kwadratowy nawias zamykający','daszek','nawias klamrowy otwierający','kreska','nawias klamrowy zamykający']
+CURR_VIRTUAL_KEY = None
+# wirtualna klawiatura
+
 GLOBAL_TTS_TEXT = None
 
 def get_tts_text():
