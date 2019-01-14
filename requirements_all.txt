@@ -1418,6 +1418,9 @@ raincloudy==0.0.5
 # homeassistant.components.switch.raspyrfm
 raspyrfm-client==1.2.8
 
+# homeassistant.components.sensor.recollect_waste
+recollect-waste==1.0.0
+
 # homeassistant.components.rainmachine
 regenmaschine==1.1.0
 
