@@ -122,7 +122,12 @@ omit =
     homeassistant/components/*/ecovacs.py
 
     homeassistant/components/esphome/__init__.py
-    homeassistant/components/*/esphome.py
+    homeassistant/components/esphome/binary_sensor.py
+    homeassistant/components/esphome/cover.py
+    homeassistant/components/esphome/fan.py
+    homeassistant/components/esphome/light.py
+    homeassistant/components/esphome/sensor.py
+    homeassistant/components/esphome/switch.py
 
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
