@@ -523,6 +523,7 @@ async def async_setup_entry(hass, entry):
     if not success:
         return False
 
+    @callback
     def async_stop_mqtt(event: Event):
         """Stop MQTT component."""
         hass.data[DATA_MQTT].async_disconnect()
@@ -658,6 +659,7 @@ class MQTT:
 
         result = None  # type: int
         try:
+            # reconnect() blocks, call through worker thread
             result = await self.hass.async_add_executor_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
@@ -676,11 +678,9 @@ class MQTT:
 
         This method must be run in the event loop.
         """
-        """Stop the MQTT client."""
         if self._task_reconnect:
             self._task_reconnect.cancel()
         self._mqttc.disconnect()
-
 
     @callback
     def async_subscribe(self, topic: str,
@@ -760,6 +760,8 @@ class MQTT:
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
+        # Add job because the subscription callback may call back into the
+        # MQTT client, which will deadlock
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @callback
@@ -801,6 +803,7 @@ class MQTT:
 
         while True:
             try:
+                # reconnect() blocks, call through worker thread
                 if await self.hass.async_add_executor_job(
                         self._mqttc.reconnect) == mqtt.MQTT_ERR_SUCCESS:
                     _LOGGER.info("Successfully reconnected to the MQTT server")
@@ -822,6 +825,7 @@ class MQTT:
 
     def _mqtt_on_socket_open(self, client, userdata, sock):
         """Socket open callback."""
+        # Add job because we might be called by a (re)connect worker thread
         self.hass.add_job(self._handle_socket_open, sock)
 
     @callback
@@ -830,12 +834,14 @@ class MQTT:
         def cb():
             self._mqttc.loop_read()
 
+        # Add job because we might be called by a (re)connect worker thread
         self.hass.add_job(self.hass.loop.add_reader, sock, cb)
         # Use self.hass.loop.create_task to not hang at startup
         self._task_misc = self.hass.loop.create_task(self._misc_loop())
 
     def _mqtt_on_socket_close(self, client, userdata, sock):
         """Socket closed callback."""
+        # Add job because we might be called by a (re)connect worker thread
         self.hass.add_job(self._handle_socket_close, sock)
 
     @callback
@@ -853,6 +859,7 @@ class MQTT:
 
     def _mqtt_on_socket_unreg_write(self, client, userdata, sock):
         """Unschedule socket write callback."""
+        # Add job because we might be called by a (re)connect worker thread
         self.hass.add_job(self._handle_socket_unreg_write, sock)
 
     @callback
