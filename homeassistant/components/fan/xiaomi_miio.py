@@ -152,9 +152,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_PURIFY_VOLUME: 'purify_volume',
-    ATTR_SLEEP_TIME: 'sleep_time',
-    ATTR_SLEEP_LEARN_COUNT: 'sleep_mode_learn_count',
-    ATTR_AUTO_DETECT: 'auto_detect',
     ATTR_USE_TIME: 'use_time',
     ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
     ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
@@ -162,11 +159,14 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     ATTR_ILLUMINANCE: 'illuminance',
     ATTR_MOTOR2_SPEED: 'motor2_speed',
     ATTR_VOLUME: 'volume',
+    # perhaps supported but unconfirmed
+    ATTR_AUTO_DETECT: 'auto_detect',
+    ATTR_SLEEP_TIME: 'sleep_time',
+    ATTR_SLEEP_LEARN_COUNT: 'sleep_mode_learn_count',
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    # perhaps supported but unconfirmed
     ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
     ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
     ATTR_FILTER_TYPE: 'filter_type',
