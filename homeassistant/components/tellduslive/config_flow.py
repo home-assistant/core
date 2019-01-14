@@ -66,7 +66,7 @@ class FlowHandler(config_entries.ConfigFlow):
         errors = {}
         if user_input is not None:
             if await self.hass.async_add_executor_job(
-                    self._session.authorize()):
+                    self._session.authorize):
                 host = self._host or CLOUD_NAME
                 if self._host:
                     session = {
