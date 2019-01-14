@@ -6,8 +6,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, DOMAIN, SPEED_OFF,
-                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION, ATTR_SPEED, )
+from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
+                                          SUPPORT_SET_SPEED, DOMAIN, SPEED_OFF,
+                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION,
+                                          ATTR_SPEED, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
