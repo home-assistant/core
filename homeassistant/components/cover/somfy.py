@@ -19,9 +19,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                   Category.EXTERIOR_BLIND.value}
 
     devices = hass.data[DOMAIN][DEVICES]
-    for cover in devices:
-        if categories & set(cover.categories):
-            add_entities([SomfyCover(cover, hass)])
+    covers = [SomfyCover(cover, hass) for cover in devices if
+              categories & set(cover.categories)]
+    add_entities(covers)
 
 
 class SomfyCover(SomfyEntity, CoverDevice):
