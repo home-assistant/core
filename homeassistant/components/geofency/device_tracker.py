@@ -1,5 +1,5 @@
 """
-Support for the Geofency platform.
+This platform provides the device tracker for the Geofency component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.geofency/
