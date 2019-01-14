@@ -27,8 +27,10 @@ DEFAULT_PULL_MODE = 'UP'
 
 DEPENDENCIES = ['rpi_gpio']
 
+# Note that pin numbers of Raspberry Pis are positive integers, but on
+# OrangePi are strings of the form "PA7".
 _SENSORS_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
+    cv.string: cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

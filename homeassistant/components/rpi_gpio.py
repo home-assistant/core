@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['RPi.GPIO==0.6.5',
-                'OPi.GPIO==0.3.5']
+                'OPi.GPIO==0.3.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +65,7 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
     if family_name == 'orange_pi':
-        import orangepi.pc
-        hass.data[DOMAIN][LIBRARY].setmode(orangepi.pc.BOARD)
+        hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].SUNXI)
     else:
         hass.data[DOMAIN][LIBRARY].setmode(hass.data[DOMAIN][LIBRARY].BCM)
 

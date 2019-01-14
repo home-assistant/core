@@ -24,8 +24,10 @@ CONF_INVERT_LOGIC = 'invert_logic'
 
 DEFAULT_INVERT_LOGIC = False
 
+# Note that pin numbers of Raspberry Pis are positive integers, but on
+# OrangePi are strings of the form "PA7".
 _SWITCHES_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
+    cv.string: cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
