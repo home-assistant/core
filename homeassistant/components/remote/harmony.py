@@ -28,8 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANNEL = 'channel'
 ATTR_CURRENT_ACTIVITY = 'current_activity'
-ATTR_CONFIG_VERSION = 'config_version'
-ATTR_FIRMWARE_VERSION = 'firmware_version'
 
 DEFAULT_PORT = 8088
 DEVICES = []
@@ -221,11 +219,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def device_state_attributes(self):
         """Add platform specific attributes."""
-        return {
-            ATTR_CURRENT_ACTIVITY: self._current_activity,
-            ATTR_FIRMWARE_VERSION: self._client.fw_version,
-            ATTR_CONFIG_VERSION: self._client.hub_config.config_version
-        }
+        return {ATTR_CURRENT_ACTIVITY: self._current_activity}
 
     @property
     def is_on(self):
