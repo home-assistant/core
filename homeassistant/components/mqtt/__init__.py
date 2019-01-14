@@ -307,7 +307,7 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
 
     Call the return value to unsubscribe.
     """
-    async_remove = await hass.data[DATA_MQTT].async_subscribe(
+    async_remove = hass.data[DATA_MQTT].async_subscribe(
         topic, msg_callback, qos, encoding)
     return async_remove
 
@@ -523,9 +523,9 @@ async def async_setup_entry(hass, entry):
     if not success:
         return False
 
-    async def async_stop_mqtt(event: Event):
+    def async_stop_mqtt(event: Event):
         """Stop MQTT component."""
-        await hass.data[DATA_MQTT].async_disconnect()
+        hass.data[DATA_MQTT].async_disconnect()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
@@ -547,7 +547,7 @@ async def async_setup_entry(hass, entry):
                     msg_topic, payload_template, exc)
                 return
 
-        await hass.data[DATA_MQTT].async_publish(
+        hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
 
     hass.services.async_register(
@@ -639,16 +639,15 @@ class MQTT:
         if will_message is not None:
             self._mqttc.will_set(*attr.astuple(will_message))
 
-    async def async_publish(self, topic: str, payload: PublishPayloadType,
-                            qos: int, retain: bool) -> None:
+    @callback
+    def async_publish(self, topic: str, payload: PublishPayloadType,
+                      qos: int, retain: bool) -> None:
         """Publish a MQTT message.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        async with self._paho_lock:
-            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
-            await self.hass.async_add_job(
-                self._mqttc.publish, topic, payload, qos, retain)
+        _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
+        self._mqttc.publish(topic, payload, qos, retain)
 
     async def async_connect(self) -> bool:
         """Connect to the host. Does process messages yet.
@@ -675,19 +674,18 @@ class MQTT:
     def async_disconnect(self):
         """Stop the MQTT client.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        def stop():
-            """Stop the MQTT client."""
-            if self._task_reconnect:
-                self._task_reconnect.cancel()
-            self._mqttc.disconnect()
+        """Stop the MQTT client."""
+        if self._task_reconnect:
+            self._task_reconnect.cancel()
+        self._mqttc.disconnect()
 
-        return self.hass.async_add_job(stop)
 
-    async def async_subscribe(self, topic: str,
-                              msg_callback: MessageCallbackType,
-                              qos: int, encoding: str) -> Callable[[], None]:
+    @callback
+    def async_subscribe(self, topic: str,
+                        msg_callback: MessageCallbackType,
+                        qos: int, encoding: str) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos.
 
         This method is a coroutine.
@@ -698,7 +696,7 @@ class MQTT:
         subscription = Subscription(topic, msg_callback, qos, encoding)
         self.subscriptions.append(subscription)
 
-        await self._async_perform_subscription(topic, qos)
+        self._async_perform_subscription(topic, qos)
 
         @callback
         def async_remove() -> None:
@@ -714,26 +712,24 @@ class MQTT:
 
         return async_remove
 
-    async def _async_unsubscribe(self, topic: str) -> None:
+    @callback
+    def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic.
 
         This method is a coroutine.
         """
-        async with self._paho_lock:
-            result = None  # type: int
-            result, _ = await self.hass.async_add_job(
-                self._mqttc.unsubscribe, topic)
-            _raise_on_error(result)
+        result = None  # type: int
+        result, _ = self._mqttc.unsubscribe(topic)
+        _raise_on_error(result)
 
-    async def _async_perform_subscription(self, topic: str, qos: int) -> None:
+    @callback
+    def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
         _LOGGER.debug("Subscribing to %s", topic)
 
-        async with self._paho_lock:
-            result = None  # type: int
-            result, _ = await self.hass.async_add_job(
-                self._mqttc.subscribe, topic, qos)
-            _raise_on_error(result)
+        result = None  # type: int
+        result, _ = self._mqttc.subscribe(topic, qos)
+        _raise_on_error(result)
 
     def _mqtt_on_connect(
             self, _mqttc, _userdata, _flags, result_code: int) -> None:
@@ -826,13 +822,24 @@ class MQTT:
 
     def _mqtt_on_socket_open(self, client, userdata, sock):
         """Socket open callback."""
-        def cb():
-            client.loop_read()
+        self.hass.add_job(self._handle_socket_open, sock)
 
-        self.hass.loop.add_reader(sock, cb)
-        self._task_misc = self.hass.async_create_task(self._misc_loop())
+    @callback
+    def _handle_socket_open(self, sock):
+        """Socket open callback."""
+        def cb():
+            self._mqttc.loop_read()
+
+        self.hass.add_job(self.hass.loop.add_reader, sock, cb)
+        # Use self.hass.loop.create_task to not hang at startup
+        self._task_misc = self.hass.loop.create_task(self._misc_loop())
 
     def _mqtt_on_socket_close(self, client, userdata, sock):
+        """Socket closed callback."""
+        self.hass.add_job(self._handle_socket_close, sock)
+
+    @callback
+    def _handle_socket_close(self, sock):
         """Socket closed callback."""
         self.hass.loop.remove_reader(sock)
         self._task_misc.cancel()
@@ -845,6 +852,11 @@ class MQTT:
         self.hass.loop.add_writer(sock, cb)
 
     def _mqtt_on_socket_unreg_write(self, client, userdata, sock):
+        """Unschedule socket write callback."""
+        self.hass.add_job(self._handle_socket_unreg_write, sock)
+
+    @callback
+    def _handle_socket_unreg_write(self, sock):
         """Unschedule socket write callback."""
         self.hass.loop.remove_writer(sock)
 
