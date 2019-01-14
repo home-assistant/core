@@ -69,8 +69,7 @@ class BrottsplatskartanSensor(Entity):
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        import brottsplatskartan
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
+        self._attributes = dict()
         self._brottsplatskartan = bpk
         self._name = name
         self._previous_incidents = set()
@@ -93,6 +92,7 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
+        import brottsplatskartan
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
@@ -108,5 +108,6 @@ class BrottsplatskartanSensor(Entity):
             incident_counts[incident_type] += 1
             self._previous_incidents.add(incident.get('id'))
 
+        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
         self._attributes.update(incident_counts)
         self._state = len(incidents)
