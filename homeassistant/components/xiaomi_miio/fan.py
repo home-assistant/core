@@ -64,16 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          MODEL_AIRPURIFIER_MA2,
          MODEL_AIRPURIFIER_SA1,
          MODEL_AIRPURIFIER_SA2,
-<<<<<<< HEAD:homeassistant/components/xiaomi_miio/fan.py
          MODEL_AIRPURIFIER_2S,
-=======
-         MODEL_AIRPURIFIER_V1,
-         MODEL_AIRPURIFIER_V2,
-         MODEL_AIRPURIFIER_V3,
-         MODEL_AIRPURIFIER_V5,
-         MODEL_AIRPURIFIER_PRO,
-         MODEL_AIRPURIFIER_MC1,
->>>>>>> Remove Air Purifier V7 support:homeassistant/components/fan/xiaomi_miio.py
          MODEL_AIRHUMIDIFIER_V1,
          MODEL_AIRHUMIDIFIER_CA,
          MODEL_AIRFRESH_VA2,
