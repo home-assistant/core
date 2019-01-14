@@ -53,7 +53,8 @@ async def async_setup(hass, config):
     for device in config[DOMAIN][CONF_DEVICES]:
         hass.data[DOMAIN][device['host']] = {}
         hass.async_create_task(
-            discovery.async_load_platform(hass, 'device_tracker', DOMAIN, device, config))
+            discovery.async_load_platform(
+                hass, 'device_tracker', DOMAIN, device, config))
 
     return True
 
