@@ -14,7 +14,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['aioiliad==0.1.1']
@@ -23,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:phone'
 
-THROTTLE = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -107,7 +106,6 @@ class IliadSensor(Entity):
         }
         return attr
 
-    @Throttle(THROTTLE)
     async def async_update(self):
         """Update device state."""
         await self._iliaddata.update()
