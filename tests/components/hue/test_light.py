@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
-import homeassistant.components.light.hue as hue_light
+from homeassistant.components.hue import light as hue_light
 from homeassistant.util import color
 
 _LOGGER = logging.getLogger(__name__)
