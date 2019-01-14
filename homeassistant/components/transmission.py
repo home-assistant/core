@@ -9,17 +9,17 @@ from datetime import timedelta
 import logging
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_USERNAME,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers.event import track_time_interval
+
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
