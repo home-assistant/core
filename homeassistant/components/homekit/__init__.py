@@ -30,7 +30,7 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-REQUIREMENTS = ['HAP-python==2.4.1']
+REQUIREMENTS = ['HAP-python==2.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,7 +245,7 @@ class HomeKit():
             return
         self.status = STATUS_WAIT
 
-        # pylint: disable=unused-variable
+        # pylint: disable=unused-import
         from . import (  # noqa F401
             type_covers, type_fans, type_lights, type_locks,
             type_media_players, type_security_systems, type_sensors,

@@ -1,6 +1,4 @@
 =============================================================
-=======
-Asystent domowy |Build Status| |Coverage Status| |Chat Status| |Reviewed by Hound|
 =================================================================================
 
 home automation platform able to track and control all devices at home and offer a control by voice and automating the control.

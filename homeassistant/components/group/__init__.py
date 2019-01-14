@@ -49,7 +49,7 @@ SERVICE_REMOVE = 'remove'
 CONTROL_TYPES = vol.In(['hidden', None])
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_VISIBLE): cv.boolean
 })
 
