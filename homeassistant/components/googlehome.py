@@ -25,14 +25,14 @@ NAME = DOMAIN
 CONF_DEVICE_TYPES = 'device_types'
 CONF_RSSI_THRESHOLD = 'rssi_threshold'
 
-DEFAULT_DEVICE_TYPES = [1, 2, 3]
+DEVICE_TYPES = [1, 2, 3]
 DEFAULT_RSSI_THRESHOLD = -70
 
 DEVICE_CONFIG = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DEVICE_TYPES,
-                 default=DEFAULT_DEVICE_TYPES):
-        vol.All(cv.ensure_list, [vol.In(DEFAULT_DEVICE_TYPES)]),
+                 default=DEVICE_TYPES): vol.All(cv.ensure_list,
+                                                [vol.In(DEVICE_TYPES)]),
     vol.Optional(CONF_RSSI_THRESHOLD,
                  default=DEFAULT_RSSI_THRESHOLD): vol.Coerce(int),
 })
