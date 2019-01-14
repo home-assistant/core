@@ -24,6 +24,8 @@ DOMAIN = 'recollect_waste'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLACE_ID): cv.string,
+    vol.Required(CONF_SERVICE_ID): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(days=1)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
 })
