@@ -8,7 +8,8 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.components.googlehome import CLIENT, NAME
+from homeassistant.components.googlehome import (
+    CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
@@ -41,7 +42,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
     async def async_init(self):
         """Further initialize connection to Google Home."""
         await self.client.update_data(self.host)
-        data = self.hass.data[NAME][self.host]
+        data = self.hass.data[GOOGLEHOME_DOMAIN][self.host]
         info = data.get('info', {})
         connected = bool(info)
         if connected:
@@ -55,7 +56,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
         """Ensure the information from Google Home is up to date."""
         _LOGGER.debug('Checking Devices on %s', self.host)
         await self.client.update_data(self.host)
-        data = self.hass.data[NAME][self.host]
+        data = self.hass.data[GOOGLEHOME_DOMAIN][self.host]
         info = data.get('info')
         bluetooth = data.get('bluetooth')
         if info is None or bluetooth is None:
