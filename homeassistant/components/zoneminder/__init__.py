@@ -63,7 +63,7 @@ def setup(hass, config):
 
         host_name = conf[CONF_HOST]
         server_origin = '{}://{}'.format(schema, host_name)
-        zm = ZoneMinder(
+        zm_client = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),
             conf.get(CONF_PASSWORD),
@@ -71,9 +71,9 @@ def setup(hass, config):
             conf.get(CONF_PATH_ZMS),
             conf.get(CONF_VERIFY_SSL)
         )
-        hass.data[DOMAIN][host_name] = zm
+        hass.data[DOMAIN][host_name] = zm_client
 
-        success = zm.login() and success
+        success = zm_client.login() and success
 
     def set_active_state(call):
         """Set the ZoneMinder run state to the given state name."""
