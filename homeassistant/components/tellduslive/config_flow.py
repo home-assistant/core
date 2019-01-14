@@ -35,6 +35,13 @@ class FlowHandler(config_entries.ConfigFlow):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
+        from tellduslive import Session
+        self._session = Session(
+            public_key=PUBLIC_KEY,
+            private_key=NOT_SO_PRIVATE_KEY,
+            host=self._host,
+            application=APPLICATION_NAME,
+        )
         return self._session.authorize_url
 
     async def async_step_user(self, user_input=None):
@@ -56,38 +63,35 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Handle the submitted configuration."""
-        if not self._session:
-            from tellduslive import Session
-            self._session = Session(
-                public_key=PUBLIC_KEY,
-                private_key=NOT_SO_PRIVATE_KEY,
-                host=self._host,
-                application=APPLICATION_NAME,
-            )
-
-        if user_input is not None and self._session.authorize():
-            host = self._host or CLOUD_NAME
-            if self._host:
-                session = {
-                    KEY_HOST: host,
-                    KEY_TOKEN: self._session.access_token
-                }
+        errors = {}
+        if user_input is not None:
+            if self._session.authorize():
+                host = self._host or CLOUD_NAME
+                if self._host:
+                    session = {
+                        KEY_HOST: host,
+                        KEY_TOKEN: self._session.access_token
+                    }
+                else:
+                    session = {
+                        KEY_TOKEN: self._session.access_token,
+                        KEY_TOKEN_SECRET: self._session.access_token_secret
+                    }
+                return self.async_create_entry(
+                    title=host, data={
+                        KEY_HOST: host,
+                        KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                        KEY_SESSION: session,
+                    })
             else:
-                session = {
-                    KEY_TOKEN: self._session.access_token,
-                    KEY_TOKEN_SECRET: self._session.access_token_secret
-                }
-            return self.async_create_entry(
-                title=host, data={
-                    KEY_HOST: host,
-                    KEY_SCAN_INTERVAL: self._scan_interval.seconds,
-                    KEY_SESSION: session,
-                })
+                errors['base'] = 'auth_error'
 
         try:
             with async_timeout.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(
                     self._get_auth_url)
+            if not auth_url:
+                return self.async_abort(reason='authorize_url_fail')
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
         except Exception:  # pylint: disable=broad-except
@@ -97,6 +101,7 @@ class FlowHandler(config_entries.ConfigFlow):
         _LOGGER.debug('Got authorization URL %s', auth_url)
         return self.async_show_form(
             step_id='auth',
+            errors=errors,
             description_placeholders={
                 'app_name': APPLICATION_NAME,
                 'auth_url': auth_url,
