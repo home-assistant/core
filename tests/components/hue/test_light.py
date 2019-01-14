@@ -754,4 +754,4 @@ def test_hs_color():
         is_group=False,
     )
 
-    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5)
+    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, None)
