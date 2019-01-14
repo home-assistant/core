@@ -17,7 +17,7 @@ REQUIREMENTS = ['temescal==0.1']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LG = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE \
-             | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_SELECT_SOUND_MODE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -37,39 +37,31 @@ class LGDevice(MediaPlayerDevice):
         port = discovery_info.get('port')
 
         self._name = ""
+        self._unique_id = ""
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
         self._function = -1
-        self._functions = []
+        self._functions = set()
         self._equaliser = -1
-        self._equalisers = []
+        self._equalisers = set()
         self._mute = 0
-        self._rear_volume = 0
-        self._rear_volume_min = 0
-        self._rear_volume_max = 0
-        self._woofer_volume = 0
-        self._woofer_volume_min = 0
-        self._woofer_volume_max = 0
-        self._bass = 0
-        self._treble = 0
+
+        if 'UUID' in discovery_info.get('properties', {}):
+            self._unique_id = discovery_info['properties']['UUID']
 
         self._device = temescal.temescal(host, port=port,
                                          callback=self.handle_event)
-        self.update()
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
         data = response['data']
         if response['msg'] == "EQ_VIEW_INFO":
-            if 'i_bass' in data:
-                self._bass = data['i_bass']
-            if 'i_treble' in data:
-                self._treble = data['i_treble']
             if 'ai_eq_list' in data:
-                self._equalisers = data['ai_eq_list']
+                self._equalisers.update(data['ai_eq_list'])
             if 'i_curr_eq' in data:
                 self._equaliser = data['i_curr_eq']
+                self._equalisers.add(data['i_curr_eq'])
         elif response['msg'] == "SPK_LIST_VIEW_INFO":
             if 'i_vol' in data:
                 self._volume = data['i_vol']
@@ -83,42 +75,30 @@ class LGDevice(MediaPlayerDevice):
                 self._mute = data['b_mute']
             if 'i_curr_func' in data:
                 self._function = data['i_curr_func']
+                self._functions.add(data['i_curr_func'])
         elif response['msg'] == "FUNC_VIEW_INFO":
             if 'i_curr_func' in data:
                 self._function = data['i_curr_func']
+                self._functions.add(data['i_curr_func'])
             if 'ai_func_list' in data:
-                self._functions = data['ai_func_list']
-        elif response['msg'] == "SETTING_VIEW_INFO":
-            if 'i_rear_min' in data:
-                self._rear_volume_min = data['i_rear_min']
-            if 'i_rear_max' in data:
-                self._rear_volume_max = data['i_rear_max']
-            if 'i_rear_level' in data:
-                self._rear_volume = data['i_rear_level']
-            if 'i_woofer_min' in data:
-                self._woofer_volume_min = data['i_woofer_min']
-            if 'i_woofer_max' in data:
-                self._woofer_volume_max = data['i_woofer_max']
-            if 'i_woofer_level' in data:
-                self._woofer_volume = data['i_woofer_level']
-            if 'i_curr_eq' in data:
-                self._equaliser = data['i_curr_eq']
-            if 's_user_name' in data:
-                self._name = data['s_user_name']
+                self._functions.update(data['ai_func_list'])
         self.schedule_update_ha_state()
 
     def update(self):
         """Trigger updates from the device."""
-        self._device.get_eq()
         self._device.get_info()
+        self._device.get_eq()
         self._device.get_func()
-        self._device.get_settings()
-        self._device.get_product_info()
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._unique_id
 
     @property
     def volume_level(self):
