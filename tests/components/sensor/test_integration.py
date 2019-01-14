@@ -25,7 +25,7 @@ async def test_state(hass):
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 1, {}, force_update=True)
         await hass.async_block_till_done()
@@ -58,7 +58,7 @@ async def test_prefix(hass):
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 1000, {'unit_of_measurement': 'W'},
                               force_update=True)
@@ -92,7 +92,7 @@ async def test_suffix(hass):
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 1000, {}, force_update=True)
         await hass.async_block_till_done()
