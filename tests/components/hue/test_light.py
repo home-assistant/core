@@ -209,7 +209,9 @@ LIGHT_RAW = {
     },
     "swversion": "66009461",
 }
-
+LIGHT_GAMUT = color.GamutType(color.XYPoint(0.675, 0.322),
+                              color.XYPoint(0.409, 0.518),
+                              color.XYPoint(0.167, 0.04))
 
 @pytest.fixture
 def mock_bridge(hass):
@@ -754,4 +756,4 @@ def test_hs_color():
         is_group=False,
     )
 
-    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, None)
+    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
