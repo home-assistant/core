@@ -20,7 +20,7 @@ CONF_SECONDS = 'seconds'
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
-    vol.Required(CONF_PLATFORM): 'schedule',
+    vol.Required(CONF_PLATFORM): 'time_pattern',
     CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
@@ -44,7 +44,7 @@ async def async_trigger(hass, config, action, automation_info):
         """Listen for time changes and calls action."""
         hass.async_run_job(action, {
             'trigger': {
-                'platform': 'schedule',
+                'platform': 'time_pattern',
                 'now': now,
             },
         })
