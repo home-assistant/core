@@ -88,6 +88,8 @@ CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
                 "media_player", "script"]
+KEYBOARD_MODE = ['Litery', 'Duże litery', 'Cyfry', 'Znaki specjalne']
+CURR_KEYBOARD_MODE = None
 GLOBAL_TTS_TEXT = None
 
 def get_tts_text():
@@ -266,6 +268,29 @@ def set_prev_group_view():
     CURR_GROUP_VIEW = get_prev(GROUP_VIEWS, get_curr_group_view())
     # to reset
     set_curr_group_view()
+
+
+# Group views: Litery -> Duże litery -> Cyfry -> Znaki specjalne
+def get_curr_keyboard_mode():
+    if CURR_KEYBOARD_MODE is None:
+        return KEYBOARD_MODE[0]
+    return CURR_KEYBOARD_MODE
+
+
+def set_next_keyboard_mode():
+    # set focus on next menu group view
+    global CURR_KEYBOARD_MODE
+    CURR_KEYBOARD_MODE = get_next(KEYBOARD_MODE, get_curr_keyboard_mode())
+
+
+def set_prev_keyboard_mode():
+    # set focus on prev menu group view
+    global CURR_KEYBOARD_MODE
+    CURR_KEYBOARD_MODE = get_prev(KEYBOARD_MODE, get_curr_keyboard_mode())
+
+
+def say_curr_keyboard_mode(hass):
+    _say_it(hass, get_curr_keyboard_mode(), None)
 
 
 # Groups in Groups views
@@ -662,7 +687,8 @@ def select_entity(hass, long_press):
                         CURR_ENTITIE.split('.')[1]
                     )
                 elif CURR_ENTITIE.startswith('input_text.'):
-                    _say_it(hass, "Wpisywanie tekstu - ta funkcjonalność jest w przygotowaniu", None)
+                    CURR_ENTITIE_ENTERED = True
+                    _say_it(hass, "Wpisywanie tekstu włączone", None)
 
         else:
             # do some special staff for some entries
@@ -769,6 +795,8 @@ def set_on_dpad_down(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
+        elif CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
+            pass
 
 
 def set_on_dpad_up(hass, long_press):
@@ -795,7 +823,8 @@ def set_on_dpad_up(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
-
+        elif CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
+            pass
 
 def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
@@ -902,21 +931,12 @@ def go_up_in_menu(hass):
 
 
 def type_to_input_text(hass, key):
-   if CURR_ENTITIE.startswith('input_text.'):
-       # add the leter to the input
-       # state = hass.states.get(CURR_ENTITIE)
-       # text = state + key
-       # hass.services.call(
-       #     'input_text',
-       #     'set_value', {
-       #         "entity_id": CURR_ENTITIE,
-       #         "value": text})
-
-       _beep_it(hass, 91)
-   else:
-       #_beep_it(hass, 86)
-       pass
-
+    if CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
+        # add the letter to the input
+        state = hass.states.get(CURR_ENTITIE)
+        _say_it(hass, chr(key), None)
+        text = state + chr(key)
+        hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
 
 
 def go_to_player(hass, say):
