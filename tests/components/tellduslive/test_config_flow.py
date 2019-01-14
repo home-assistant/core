@@ -39,7 +39,7 @@ def mock_tellduslive(supports_local_api, authorize):
     """Mock tellduslive."""
     with MockDependency('tellduslive') as mock_tellduslive_:
         mock_tellduslive_.supports_local_api.return_value = supports_local_api
-        mock_tellduslive_.Session().authorize.return_value = authorize
+        mock_tellduslive_.Session().authorize.return_value = Mock(return_value=authorize)
         mock_tellduslive_.Session().access_token = 'token'
         mock_tellduslive_.Session().access_token_secret = 'token_secret'
         mock_tellduslive_.Session().authorize_url = 'https://example.com'
