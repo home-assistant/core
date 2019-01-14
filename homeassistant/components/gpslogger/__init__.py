@@ -67,9 +67,9 @@ async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook with GPSLogger request."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as e:
+    except vol.MultipleInvalid as error:
         return web.Response(
-            body='Invalid data',
+            body=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 

@@ -16,14 +16,6 @@ HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
 
-def _url(data=None):
-    """Generate URL."""
-    data = data or {}
-    data = "&".join(["{}={}".format(name, value) for
-                     name, value in data.items()])
-    return "{}?{}".format(URL, data)
-
-
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
@@ -32,7 +24,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 @pytest.fixture
 def gpslogger_client(loop, hass, aiohttp_client):
-    """GPSLogger mock client (unauthenticated)."""
+    """Mock client for GPSLogger (unauthenticated)."""
     assert loop.run_until_complete(async_setup_component(
         hass, 'persistent_notification', {}))
 
