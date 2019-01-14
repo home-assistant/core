@@ -1,5 +1,6 @@
 """The tests for the MQTT lock platform."""
 import json
+from unittest.mock import ANY
 
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
@@ -8,7 +9,8 @@ from homeassistant.components import lock, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
-    async_fire_mqtt_message, async_mock_mqtt_component, MockConfigEntry)
+    async_fire_mqtt_message, async_mock_mqtt_component, MockConfigEntry,
+    mock_registry)
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -214,6 +216,40 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     assert state is None
 
 
+async def test_discovery_update_lock(hass, mqtt_mock, caplog):
+    """Test update of discovered lock."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "command_topic",'
+        '  "availability_topic": "availability_topic1" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "state_topic": "test_topic2",'
+        '  "command_topic": "command_topic",'
+        '  "availability_topic": "availability_topic2" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+    state = hass.states.get('lock.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('lock.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('lock.milk')
+    assert state is None
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT lock device registry integration."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -251,3 +287,39 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
+    registry = mock_registry(hass, {})
+    mock_mqtt = await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, lock.DOMAIN, {
+        lock.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'beer',
+            'state_topic': 'test-topic',
+            'command_topic': 'test-topic',
+            'availability_topic': 'avty-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    state = hass.states.get('lock.beer')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.reset_mock()
+
+    registry.async_update_entity('lock.beer', new_entity_id='lock.milk')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('lock.beer')
+    assert state is None
+
+    state = hass.states.get('lock.milk')
+    assert state is not None
+    assert mock_mqtt.async_subscribe.call_count == 2
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('avty-topic', ANY, 0, 'utf-8')
