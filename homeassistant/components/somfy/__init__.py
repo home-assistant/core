@@ -120,10 +120,10 @@ class SomfyAuthCallbackView(HomeAssistantView):
                 notification_id=NOTIFICATION_ID
             )
         except MismatchingStateError:
-            _LOGGER.error("OAuth state not equal in request and response.",
+            _LOGGER.error("OAuth state not equal in request and response",
                           exc_info=True)
         except InsecureTransportError:
-            _LOGGER.error("Somfy redirect URI %s is insecure.", request.url,
+            _LOGGER.error("Somfy redirect URI %s is insecure", request.url,
                           exc_info=True)
 
         return response
@@ -181,6 +181,6 @@ def update_all_devices(hass):
         data = hass.data[DOMAIN]
         data[DEVICES] = data[API].get_devices()
     except HTTPError:
-        _LOGGER.warning("Cannot update devices.", exc_info=True)
+        _LOGGER.warning("Cannot update devices", exc_info=True)
         return False
     return True
