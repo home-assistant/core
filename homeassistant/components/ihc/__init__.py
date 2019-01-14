@@ -264,9 +264,9 @@ def get_discovery_info(component_setup, groups, controller_id):
                         'ihc_id': ihc_id,
                         'ctrl_id': controller_id,
                         'product': {
-                            'name': product.attrib['name'],
-                            'note': product.attrib['note'],
-                            'position': product.attrib['position']},
+                            'name': product.get('name') or '',
+                            'note': product.get('note') or '',
+                            'position': product.get('position') or ''},
                         'product_cfg': product_cfg}
                     discovery_data[name] = device
     return discovery_data
