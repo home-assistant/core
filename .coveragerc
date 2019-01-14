@@ -281,7 +281,8 @@ omit =
     homeassistant/components/*/opentherm_gw.py
 
     homeassistant/components/openuv/__init__.py
-    homeassistant/components/*/openuv.py
+    homeassistant/components/openuv/binary_sensor.py
+    homeassistant/components/openuv/sensor.py
 
     homeassistant/components/plum_lightpad.py
     homeassistant/components/*/plum_lightpad.py
