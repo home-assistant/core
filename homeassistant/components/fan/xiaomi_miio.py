@@ -616,7 +616,8 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
-            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
+            self._available_attributes = \
+                AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO_V7
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
