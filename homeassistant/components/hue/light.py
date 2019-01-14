@@ -221,9 +221,16 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
+            self.gamut_typ = 'None'
+            self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
             self.is_philips = light.manufacturername == 'Philips'
+            self.gamut_typ = self.light.colorgamuttype
+            self.gamut = self.light.colorgamut
+            if not self.gamut:
+                err_msg = 'Can not get color gamut of light "%s"'
+                _LOGGER.warning(err_msg, self.name)
 
     @property
     def unique_id(self):
@@ -256,7 +263,7 @@ class HueLight(Light):
         source = self.light.action if self.is_group else self.light.state
 
         if mode in ('xy', 'hs') and 'xy' in source:
-            return color.color_xy_to_hs(*source['xy'])
+            return color.color_xy_to_hs(*source['xy'], self.gamut)
 
         return None
 
@@ -291,6 +298,11 @@ class HueLight(Light):
         return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
 
     @property
+    def effect(self):
+        """Return the current effect."""
+        return self.light.state.get('effect', None)
+
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
@@ -298,8 +310,7 @@ class HueLight(Light):
     @property
     def device_info(self):
         """Return the device info."""
-        if self.light.type in ('LightGroup', 'Room',
-                               'Luminaire', 'LightSource'):
+        if self.light.type in ('LightGroup', 'Room'):
             return None
 
         return {
@@ -331,7 +342,9 @@ class HueLight(Light):
                 # Philips hue bulb models respond differently to hue/sat
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
-                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                xy_color = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR],
+                                                self.gamut)
+                command['xy'] = xy_color
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
