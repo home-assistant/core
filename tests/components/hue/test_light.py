@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
-from homeassistant.components.hue import light as hue_light
+import homeassistant.components.light.hue as hue_light
 from homeassistant.util import color
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +85,16 @@ LIGHT_1_ON = {
         "colormode": "xy",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
@@ -104,6 +114,16 @@ LIGHT_1_OFF = {
         "effect": "none",
         "colormode": "xy",
         "reachable": True
+    },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
     },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
@@ -125,6 +145,16 @@ LIGHT_2_OFF = {
         "colormode": "hs",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 2",
     "modelid": "LCT001",
@@ -145,6 +175,16 @@ LIGHT_2_ON = {
         "colormode": "hs",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 2 new",
     "modelid": "LCT001",
@@ -155,6 +195,19 @@ LIGHT_2_ON = {
 LIGHT_RESPONSE = {
     "1": LIGHT_1_ON,
     "2": LIGHT_2_OFF,
+}
+LIGHT_RAW = {
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "B",
+            "colorgamut": [
+                [0.675, 0.322],
+                [0.409, 0.518],
+                [0.167, 0.04]
+            ]
+        }
+    },
+    "swversion": "66009461",
 }
 
 
@@ -380,6 +433,16 @@ async def test_new_light_discovered(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True
         },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "B",
+                "colorgamut": [
+                    [0.675, 0.322],
+                    [0.409, 0.518],
+                    [0.167, 0.04]
+                ]
+            }
+        },
         "type": "Extended color light",
         "name": "Hue Lamp 3",
         "modelid": "LCT001",
@@ -492,6 +555,16 @@ async def test_other_light_update(hass, mock_bridge):
             "effect": "none",
             "colormode": "hs",
             "reachable": True
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "B",
+                "colorgamut": [
+                    [0.675, 0.322],
+                    [0.409, 0.518],
+                    [0.167, 0.04]
+                ]
+            }
         },
         "type": "Extended color light",
         "name": "Hue Lamp 2 new",
@@ -608,7 +681,8 @@ async def test_light_turn_off_service(hass, mock_bridge):
 def test_available():
     """Test available property."""
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=False,
@@ -617,7 +691,8 @@ def test_available():
     assert light.available is False
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=True),
         is_group=False,
@@ -626,7 +701,8 @@ def test_available():
     assert light.available is True
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=True,
@@ -639,10 +715,11 @@ def test_hs_color():
     """Test hs_color property."""
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'ct',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'ct',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -652,10 +729,11 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'hs',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'hs',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -665,11 +743,12 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'xy',
-            'hue': 1234,
-            'sat': 123,
-            'xy': [0.4, 0.5]
-        }),
+                       'colormode': 'xy',
+                       'hue': 1234,
+                       'sat': 123,
+                       'xy': [0.4, 0.5]
+                   },
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
