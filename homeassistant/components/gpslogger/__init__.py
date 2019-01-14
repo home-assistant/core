@@ -118,4 +118,3 @@ config_entry_flow.register_webhook_flow(
         'docs_url': 'https://www.home-assistant.io/components/gpslogger/'
     }
 )
-
