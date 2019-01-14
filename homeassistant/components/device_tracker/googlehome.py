@@ -66,10 +66,8 @@ class GoogleHomeDeviceScanner(DeviceScanner):
         google_home_name = info.get('name', NAME)
 
         for device in bluetooth:
-            if device['device_type'] not in self.device_types:
-                continue
-
-            elif device['rssi'] < self.rssi:
+            if (device['device_type'] not in
+                    self.device_types or device['rssi'] < self.rssi):
                 continue
 
             name = "{} {}".format(self.host, device['mac_address'])
