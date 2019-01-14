@@ -230,7 +230,6 @@ homeassistant/components/*/qwikswitch.py @kellerza
 
 # R
 homeassistant/components/rainmachine/* @bachya
-homeassistant/components/*/rainmachine.py @bachya
 homeassistant/components/*/random.py @fabaff
 homeassistant/components/*/rfxtrx.py @danielhiversen
 
