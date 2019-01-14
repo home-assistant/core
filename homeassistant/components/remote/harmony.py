@@ -194,13 +194,19 @@ class HarmonyRemote(remote.RemoteDevice):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
         _LOGGER.debug("%s: Connecting", self._name)
-        try:
-            await self._client.connect()
-        except aioexc.TimeOut:
-            _LOGGER.error("%s: Connection timed-out", self._name)
-        else:
-            # Set initial state
-            self.new_activity(self._client.current_activity)
+        while True:
+            try:
+                if await self._client.connect():
+                    break
+            except aioexc.TimeOut:
+                _LOGGER.error("%s: Connection timed-out", self._name)
+
+            _LOGGER.warning("%s: Unable to connect, will retry in 60 seconds",
+                            self._name)
+            await asyncio.sleep(60)
+
+        # Set initial state
+        self.new_activity(self._client.current_activity)
 
     @property
     def name(self):
