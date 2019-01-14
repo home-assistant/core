@@ -20,7 +20,7 @@ REQUIREMENTS = ['googledevices==1.0.2']
 DOMAIN = 'googlehome'
 CLIENT = 'googlehome_client'
 
-NAME = 'GoogleHome'
+NAME = DOMAIN
 
 CONF_DEVICE_TYPES = 'device_types'
 CONF_RSSI_THRESHOLD = 'rssi_threshold'
