@@ -49,7 +49,7 @@ TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 
 def _address(value: str) -> str:
-    """Coerce address by replacing '\n' with ' '."""
+    r"""Coerce address by replacing '\n' with ' '."""
     return value.replace('\n', ' ')
 
 
@@ -79,12 +79,12 @@ async def async_setup(hass, hass_config):
 
 
 async def handle_webhook(hass, webhook_id, request):
-    """Handle incoming webhook with Mailgun inbound messages."""
+    """Handle incoming webhook from Geofency."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as e:
+    except vol.MultipleInvalid as error:
         return web.Response(
-            body="Invalid data",
+            body=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
