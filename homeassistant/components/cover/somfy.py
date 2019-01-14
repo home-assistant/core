@@ -47,8 +47,7 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
-        self.cover.set_position(100 - position)
+        self.cover.set_position(100 - kwargs[ATTR_POSITION])
 
     @property
     def current_cover_position(self):
@@ -79,8 +78,7 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        orientation = kwargs.get(ATTR_TILT_POSITION)
-        self.cover.orientation = orientation
+        self.cover.orientation = kwargs[ATTR_TILT_POSITION]
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
