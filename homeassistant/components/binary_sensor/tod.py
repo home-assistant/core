@@ -68,10 +68,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if not sensors:
         _LOGGER.error("No sensors added")
-        return False
+        return
 
     async_add_entities(sensors)
-    return True
+    return
 
 
 def is_sun_event(event):
@@ -102,10 +102,8 @@ class TodSensor(Entity):
         self._next_sunsetting = None
 
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f'tod_{sensor_name}', hass=hass)
+            ENTITY_ID_FORMAT, 'tod_{}'.format(sensor_name), hass=hass)
         self._calculate_initial_boudary_time()
-        _LOGGER.error(self._time_after.isoformat())
-        _LOGGER.error(self._time_before.isoformat())
 
     def _calculate_initial_boudary_time(self):
         """Calculate internal absolute time boudaries."""
