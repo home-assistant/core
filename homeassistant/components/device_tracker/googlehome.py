@@ -66,7 +66,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
             if device['device_type'] not in self.device_types:
                 continue
 
-            elif  device['rssi'] < self.rssi:
+            elif device['rssi'] < self.rssi:
                 continue
 
             name = "{} {}".format(self.host, device['mac_address'])
