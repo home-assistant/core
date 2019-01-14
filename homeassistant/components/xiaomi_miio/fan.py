@@ -6,8 +6,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED, DOMAIN, )
+from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, DOMAIN, SPEED_OFF,
+                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION, ATTR_SPEED, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
@@ -40,6 +40,11 @@ MODEL_AIRHUMIDIFIER_CA = 'zhimi.humidifier.ca1'
 
 MODEL_AIRFRESH_VA2 = 'zhimi.airfresh.va2'
 
+MODEL_FAN_V2 = 'zhimi.fan.v2'
+MODEL_FAN_V3 = 'zhimi.fan.v3'
+MODEL_FAN_SA1 = 'zhimi.fan.sa1'
+MODEL_FAN_ZA1 = 'zhimi.fan.za1'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
@@ -61,6 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          MODEL_AIRHUMIDIFIER_V1,
          MODEL_AIRHUMIDIFIER_CA,
          MODEL_AIRFRESH_VA2,
+         MODEL_FAN_V2,
+         MODEL_FAN_V3,
+         MODEL_FAN_SA1,
+         MODEL_FAN_ZA1
          ]),
 })
 
@@ -112,6 +121,18 @@ ATTR_DRY = 'dry'
 
 # Air Fresh
 ATTR_CO2 = 'co2'
+
+# Smart Fan
+ATTR_NATURAL_SPEED = 'natural_speed'
+ATTR_OSCILLATE = 'oscillate'
+ATTR_BATTERY = 'battery'
+ATTR_BATTERY_CHARGE = 'battery_charge'
+ATTR_BATTERY_STATE = 'battery_state'
+ATTR_AC_POWER = 'ac_power'
+ATTR_DELAY_OFF_COUNTDOWN = 'delay_off_countdown'
+ATTR_ANGLE = 'angle'
+ATTR_DIRECT_SPEED = 'direct_speed'
+ATTR_SPEED_LEVEL = 'speed_level'
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
@@ -250,6 +271,53 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_EXTRA_FEATURES: 'extra_features',
 }
 
+AVAILABLE_ATTRIBUTES_FAN = {
+    ATTR_ANGLE: 'angle',
+    ATTR_SPEED: 'speed',
+    ATTR_DELAY_OFF_COUNTDOWN: 'delay_off_countdown',
+
+    ATTR_AC_POWER: 'ac_power',
+    ATTR_OSCILLATE: 'oscillate',
+    ATTR_DIRECT_SPEED: 'direct_speed',
+    ATTR_NATURAL_SPEED: 'natural_speed',
+    ATTR_CHILD_LOCK: 'child_lock',
+    ATTR_BUZZER: 'buzzer',
+    ATTR_LED_BRIGHTNESS: 'led_brightness',
+    ATTR_USE_TIME: 'use_time',
+
+    # Additional properties of version 2 and 3
+    ATTR_TEMPERATURE: 'temperature',
+    ATTR_HUMIDITY: 'humidity',
+    ATTR_BATTERY: 'battery',
+    ATTR_BATTERY_CHARGE: 'battery_charge',
+    ATTR_BUTTON_PRESSED: 'button_pressed',
+
+    # Additional properties of version 2
+    ATTR_LED: 'led',
+    ATTR_BATTERY_STATE: 'battery_state',
+}
+
+FAN_SPEED_LEVEL1 = 'Level 1'
+FAN_SPEED_LEVEL2 = 'Level 2'
+FAN_SPEED_LEVEL3 = 'Level 3'
+FAN_SPEED_LEVEL4 = 'Level 4'
+
+FAN_SPEED_LIST = {
+    SPEED_OFF: range(0, 1),
+    FAN_SPEED_LEVEL1: range(1, 26),
+    FAN_SPEED_LEVEL2: range(26, 51),
+    FAN_SPEED_LEVEL3: range(51, 76),
+    FAN_SPEED_LEVEL4: range(76, 101)
+}
+
+FAN_SPEED_VALUES = {
+    SPEED_OFF: 0,
+    FAN_SPEED_LEVEL1: 1,
+    FAN_SPEED_LEVEL2: 45,
+    FAN_SPEED_LEVEL3: 74,
+    FAN_SPEED_LEVEL4: 100
+}
+
 OPERATION_MODES_AIRPURIFIER = ['Auto', 'Silent', 'Favorite', 'Idle']
 OPERATION_MODES_AIRPURIFIER_PRO = ['Auto', 'Silent', 'Favorite']
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
@@ -273,6 +341,10 @@ FEATURE_RESET_FILTER = 256
 FEATURE_SET_EXTRA_FEATURES = 512
 FEATURE_SET_TARGET_HUMIDITY = 1024
 FEATURE_SET_DRY = 2048
+
+# Smart Fan
+FEATURE_SET_OSCILLATION_ANGLE = 4096
+FEATURE_SET_NATURAL_MODE = 8192
 
 FEATURE_FLAGS_AIRPURIFIER = (FEATURE_SET_BUZZER |
                              FEATURE_SET_CHILD_LOCK |
@@ -319,6 +391,12 @@ FEATURE_FLAGS_AIRFRESH = (FEATURE_SET_BUZZER |
                           FEATURE_RESET_FILTER |
                           FEATURE_SET_EXTRA_FEATURES)
 
+FEATURE_FLAGS_FAN = (FEATURE_SET_BUZZER |
+                     FEATURE_SET_CHILD_LOCK |
+                     FEATURE_SET_LED_BRIGHTNESS |
+                     FEATURE_SET_OSCILLATION_ANGLE |
+                     FEATURE_SET_NATURAL_MODE)
+
 SERVICE_SET_BUZZER_ON = 'xiaomi_miio_set_buzzer_on'
 SERVICE_SET_BUZZER_OFF = 'xiaomi_miio_set_buzzer_off'
 SERVICE_SET_LED_ON = 'xiaomi_miio_set_led_on'
@@ -337,6 +415,11 @@ SERVICE_SET_EXTRA_FEATURES = 'xiaomi_miio_set_extra_features'
 SERVICE_SET_TARGET_HUMIDITY = 'xiaomi_miio_set_target_humidity'
 SERVICE_SET_DRY_ON = 'xiaomi_miio_set_dry_on'
 SERVICE_SET_DRY_OFF = 'xiaomi_miio_set_dry_off'
+
+# Smart Fan
+SERVICE_SET_OSCILLATION_ANGLE = 'xiaomi_miio_set_oscillation_angle'
+SERVICE_SET_NATURAL_MODE_ON = 'xiaomi_miio_set_natural_mode_on'
+SERVICE_SET_NATURAL_MODE_OFF = 'xiaomi_miio_set_natural_mode_off'
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -365,6 +448,11 @@ SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend({
 SERVICE_SCHEMA_TARGET_HUMIDITY = AIRPURIFIER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_HUMIDITY):
         vol.All(vol.Coerce(int), vol.In([30, 40, 50, 60, 70, 80]))
+})
+
+SERVICE_SCHEMA_OSCILLATION_ANGLE = AIRPURIFIER_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_ANGLE):
+        vol.All(vol.Coerce(int), vol.In([30, 60, 90, 120]))
 })
 
 SERVICE_TO_METHOD = {
@@ -396,6 +484,11 @@ SERVICE_TO_METHOD = {
         'schema': SERVICE_SCHEMA_TARGET_HUMIDITY},
     SERVICE_SET_DRY_ON: {'method': 'async_set_dry_on'},
     SERVICE_SET_DRY_OFF: {'method': 'async_set_dry_off'},
+    SERVICE_SET_OSCILLATION_ANGLE: {
+        'method': 'async_set_oscillation_angle',
+        'schema': SERVICE_SCHEMA_OSCILLATION_ANGLE},
+    SERVICE_SET_NATURAL_MODE_ON: {'method': 'async_set_natural_mode_on'},
+    SERVICE_SET_NATURAL_MODE_OFF: {'method': 'async_set_natural_mode_off'},
 }
 
 
@@ -439,6 +532,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         from miio import AirFresh
         air_fresh = AirFresh(host, token)
         device = XiaomiAirFresh(name, air_fresh, model, unique_id)
+    elif model.startswith('zhimi.fan.'):
+        from miio import Fan
+        fan = Fan(host, token, model=model)
+        device = XiaomiFan(name, fan, model, unique_id)
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
@@ -1024,3 +1121,168 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter)
+
+
+class XiaomiFan(XiaomiGenericDevice):
+    """Representation of a Xiaomi Smart Pedestal Fan."""
+
+    def __init__(self, name, device, model, unique_id):
+        """Initialize the fan entity."""
+        super().__init__(name, device, model, unique_id)
+
+        self._device_features = FEATURE_FLAGS_FAN
+        self._available_attributes = AVAILABLE_ATTRIBUTES_FAN
+        self._speed_list = list(FAN_SPEED_LIST)
+        self._speed = None
+        self._oscillate = None
+        self._natural_mode = False
+
+        self._state_attrs[ATTR_SPEED_LEVEL] = None
+        self._state_attrs.update(
+            {attribute: None for attribute in self._available_attributes})
+
+    @property
+    def supported_features(self) -> int:
+        """Supported features."""
+        return SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
+        try:
+            state = await self.hass.async_add_job(self._device.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._available = True
+            self._oscillate = state.oscillate
+            self._natural_mode = (state.natural_speed != 0)
+            self._state = state.is_on
+
+            if self._natural_mode:
+                for level, range in FAN_SPEED_LIST.items():
+                    if state.natural_speed in range:
+                        self._speed = level
+                        break
+            else:
+                for level, range in FAN_SPEED_LIST.items():
+                    if state.direct_speed in range:
+                        self._speed = level
+                        break
+
+            self._state_attrs[ATTR_SPEED_LEVEL] = self._speed
+            self._state_attrs.update(
+                {key: self._extract_value_from_attribute(state, value) for
+                 key, value in self._available_attributes.items()})
+
+        except DeviceException as ex:
+            self._available = False
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return self._speed_list
+
+    @property
+    def speed(self):
+        """Return the current speed."""
+        return self._speed
+
+    async def async_set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        if self.supported_features & SUPPORT_SET_SPEED == 0:
+            return
+
+        _LOGGER.debug("Setting the fan speed to: %s", speed)
+
+        if speed.isdigit():
+            speed = int(speed)
+
+        if speed in [SPEED_OFF, 0]:
+            await self.async_turn_off()
+            return
+
+        # Map speed level to speed
+        if speed in FAN_SPEED_VALUES:
+            speed = FAN_SPEED_VALUES[speed]
+
+        if self._natural_mode:
+            await self._try_command(
+                "Setting fan speed of the miio device failed.",
+                self._device.set_natural_speed, speed)
+        else:
+            await self._try_command(
+                "Setting fan speed of the miio device failed.",
+                self._device.set_direct_speed, speed)
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        from miio.fan import MoveDirection
+
+        if direction in ['left', 'right']:
+            if self._oscillate:
+                await self._try_command(
+                    "Setting oscillate off of the miio device failed.",
+                    self._device.set_oscillate, False)
+
+            await self._try_command(
+                "Setting move direction of the miio device failed.",
+                self._device.set_rotate, MoveDirection(direction))
+
+    @property
+    def oscillating(self):
+        """Return the oscillation state."""
+        return self._oscillate
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        if oscillating:
+            await self._try_command(
+                "Setting oscillate on of the miio device failed.",
+                self._device.set_oscillate, True)
+        else:
+            await self._try_command(
+                "Setting oscillate off of the miio device failed.",
+                self._device.set_oscillate, False)
+
+    async def async_set_oscillation_angle(self, angle: int) -> None:
+        """Set oscillation angle."""
+        if self._device_features & FEATURE_SET_OSCILLATION_ANGLE == 0:
+            return
+
+        await self._try_command(
+            "Setting angle of the miio device failed.",
+            self._device.set_angle, angle)
+
+    async def async_set_led_brightness(self, brightness: int = 2):
+        """Set the led brightness."""
+        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
+            return
+
+        from miio.fan import LedBrightness
+
+        await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness, LedBrightness(brightness))
+
+    async def async_set_natural_mode_on(self):
+        """Turn the natural mode on."""
+        if self._device_features & FEATURE_SET_NATURAL_MODE == 0:
+            return
+
+        self._natural_mode = True
+        await self.async_set_speed(self._speed)
+
+    async def async_set_natural_mode_off(self):
+        """Turn the natural mode off."""
+        if self._device_features & FEATURE_SET_NATURAL_MODE == 0:
+            return
+
+        self._natural_mode = False
+        await self.async_set_speed(self._speed)
