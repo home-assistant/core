@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.somfy/
 
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION, \
     ATTR_TILT_POSITION
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES
+from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
 
 DEPENDENCIES = ['somfy']
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                   Category.EXTERIOR_BLIND.value}
 
     devices = hass.data[DOMAIN][DEVICES]
-    covers = [SomfyCover(cover, hass) for cover in devices if
+    covers = [SomfyCover(cover, hass.data[DOMAIN][API]) for cover in devices if
               categories & set(cover.categories)]
     add_entities(covers)
 
@@ -27,10 +27,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
-    def __init__(self, device, hass):
+    def __init__(self, device, api):
         """Initialize the Somfy device."""
         from pymfy.api.devices.blind import Blind
-        super().__init__(device, hass)
+        super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
 
     def close_cover(self, **kwargs):

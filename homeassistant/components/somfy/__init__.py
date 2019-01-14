@@ -132,11 +132,10 @@ class SomfyAuthCallbackView(HomeAssistantView):
 class SomfyEntity(Entity):
     """Representation of a generic Somfy device."""
 
-    def __init__(self, device, hass):
+    def __init__(self, device, api):
         """Initialize the Somfy device."""
-        self.hass = hass
         self.device = device
-        self.api = hass.data[DOMAIN][API]
+        self.api = api
 
     @property
     def unique_id(self):
