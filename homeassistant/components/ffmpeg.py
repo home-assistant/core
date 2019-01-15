@@ -122,6 +122,19 @@ class FFmpegManager:
                 self._version = result.group(0)
             
         return self._version
+    
+    async def async_get_ffmpeg_stream_content_type(self):
+        """Return HTTP content type for ffmpeg stream."""
+        version_string = await self.async_get_version()
+        result = re.search(r"(\d+)\.", version_string)
+        major_version = 3
+        if result is not None:
+            major_version = int(result.group(0))
+        
+        if major_version > 3:
+            return 'multipart/x-mixed-replace;boundary=ffmpeg'
+        
+        return 'multipart/x-mixed-replace;boundary=ffserver'
 
 
 class FFmpegBase(Entity):
