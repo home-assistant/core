@@ -34,10 +34,13 @@ def component_translation_file(hass: HomeAssistantType, component: str,
                                language: str) -> str:
     """Return the translation json file location for a component.
 
-    For component: light/.translations/nl.json
+    For component one of:
+     - components/light/.translations/nl.json
+     - components/.translations/group.nl.json
+
     For platform one of:
-     - light/.translations/hue.nl.json
-     - hue/.translations/light.nl.json
+     - components/light/.translations/hue.nl.json
+     - components/hue/.translations/light.nl.json
     """
     is_platform = '.' in component
 
