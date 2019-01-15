@@ -16,10 +16,8 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
     CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
@@ -96,15 +94,10 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._sub_state = None
         self._delay_listener = None
 
-        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)

@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
     CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.const import (
@@ -91,14 +90,9 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._sub_state = None
         self._optimistic = False
 
-        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config[CONF_PAYLOAD_AVAILABLE]
-        payload_not_available = config[CONF_PAYLOAD_NOT_AVAILABLE]
-        qos = config[CONF_QOS]
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)
