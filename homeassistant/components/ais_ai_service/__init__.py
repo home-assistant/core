@@ -89,16 +89,24 @@ CURR_ENTITIE_POSITION = None
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
                 "media_player", "script"]
 
-# wirtualna klawiatura
-# kodowała to Asia Raczkowska w roku 2019 roku
-VIRTUAL_KEYBOARD_MODE = ['Litery', 'Duże litery', 'Cyfry', 'Symbole']
+# ais-dom virtual keyboard
+# kodowała to Asia Raczkowska w 2019 roku
+VIRTUAL_KEYBOARD_MODE = ['Litery', 'Wielkie litery', 'Cyfry', 'Symbole']
 CURR_VIRTUAL_KEYBOARD_MODE = None
-VIRTUAL_KEYBOARD_LETERS = ['A','Ą','B','C'.'Ć'.'D'.'E','Ę','F','G','H','I','J','K','L','Ł','M','N','Ń','O','Ó','P','R','S','Ś','T','U','W','Y','Z','Ź','Ż']
-VIRTUAL_KEYBOARD_NUMBERS = [0,1,2,3,4,5,6,7,8,9]
-VIRTUAL_KEYBOARD_SYMBOLS = ['!','"','#','$','%','&'."'",'(',')'.'*'.'+',',','-','_','.','/',':',';','<','=','>','?','@','[','\\',']','^','{','|','}']
-VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['wykrzyknik','cudzysłów','kratka','dolar','procent','symbol and',"pojedynczy cudzysłów",'nawias otwierający','nawias zamykający'.'gwiazdka'.'plus','przecinek','podkreślenie','myślnik','kropka','ukośnik','dwukropek','średnik','znak mniejszości','znak równości','znak większości','znak zapytania','małpa','kwadratowy nawias otwierający','ukośnik lewy','kwadratowy nawias zamykający','daszek','nawias klamrowy otwierający','kreska','nawias klamrowy zamykający']
+VIRTUAL_KEYBOARD_LETTERS = ['A', 'Ą', 'B', 'C', 'Ć', 'D', 'E', 'Ę', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Ł', 'M', 'N',
+                            'Ń', 'O', 'Ó', 'P', 'R', 'S', 'Ś', 'T', 'U', 'W', 'Y', 'Z', 'Ź', 'Ż']
+VIRTUAL_KEYBOARD_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+VIRTUAL_KEYBOARD_SYMBOLS = ['!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '_', '.', '/', ':', ';',
+                            '<', '=', '>', '?', '@', '[', '\\', ']', '^', '{', '|', '}']
+VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['wykrzyknik', 'cudzysłów', 'kratka', 'dolar', 'procent', 'symbol and',
+                                  'pojedynczy cudzysłów', 'nawias otwierający', 'nawias zamykający', 'gwiazdka',
+                                  'plus', 'przecinek', 'podkreślenie', 'myślnik', 'kropka', 'ukośnik', 'dwukropek',
+                                  'średnik', 'znak mniejszości', 'znak równości', 'znak większości', 'znak zapytania',
+                                  'małpa', 'kwadratowy nawias otwierający', 'ukośnik lewy',
+                                  'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający', 'kreska',
+                                  'nawias klamrowy zamykający']
 CURR_VIRTUAL_KEY = None
-# wirtualna klawiatura
+# ais-dom virtual keyboard
 
 GLOBAL_TTS_TEXT = None
 
@@ -213,7 +221,7 @@ def get_next(arra, curr):
                 _next = a
             if _first is None:
                 _first = a
-            if (curr == a):
+            if curr == a:
                 _curr = a
     if _next is not None:
         return _next
@@ -229,7 +237,7 @@ def get_prev(arra, curr):
         # ignore empy option
         if a != ais_global.G_EMPTY_OPTION:
             _last = a
-            if (curr == a):
+            if curr == a:
                 _curr = a
             if _curr is None:
                 _prev = a
@@ -280,27 +288,73 @@ def set_prev_group_view():
     set_curr_group_view()
 
 
-# Group views: Litery -> Duże litery -> Cyfry -> Znaki specjalne
-def get_curr_keyboard_mode():
-    if CURR_KEYBOARD_MODE is None:
-        return KEYBOARD_MODE[0]
-    return CURR_KEYBOARD_MODE
+# virtual keybord
+# Group views: Litery -> Wielkie litery -> Cyfry -> Znaki specjalne
+def get_curr_virtual_keyboard_mode():
+    if CURR_VIRTUAL_KEYBOARD_MODE is None:
+        return VIRTUAL_KEYBOARD_MODE[0]
+    return CURR_VIRTUAL_KEYBOARD_MODE
 
 
-def set_next_keyboard_mode():
-    # set focus on next menu group view
-    global CURR_KEYBOARD_MODE
-    CURR_KEYBOARD_MODE = get_next(KEYBOARD_MODE, get_curr_keyboard_mode())
+def set_next_virtual_keyboard_mode():
+    global CURR_VIRTUAL_KEYBOARD_MODE
+    global CURR_VIRTUAL_KEY
+    CURR_VIRTUAL_KEY = None
+    CURR_VIRTUAL_KEYBOARD_MODE = get_next(VIRTUAL_KEYBOARD_MODE, get_curr_virtual_keyboard_mode())
 
 
-def set_prev_keyboard_mode():
-    # set focus on prev menu group view
-    global CURR_KEYBOARD_MODE
-    CURR_KEYBOARD_MODE = get_prev(KEYBOARD_MODE, get_curr_keyboard_mode())
+def set_prev_virtual_keyboard_mode():
+    global CURR_VIRTUAL_KEYBOARD_MODE
+    global CURR_VIRTUAL_KEY
+    CURR_VIRTUAL_KEY = None
+    CURR_VIRTUAL_KEYBOARD_MODE = get_prev(VIRTUAL_KEYBOARD_MODE, get_curr_virtual_keyboard_mode())
 
 
-def say_curr_keyboard_mode(hass):
-    _say_it(hass, get_curr_keyboard_mode(), None)
+def say_curr_virtual_keyboard_mode(hass):
+    _say_it(hass, get_curr_virtual_keyboard_mode(), None)
+
+
+def get_curr_virtual_key():
+    km = get_curr_virtual_keyboard_mode()
+    idx = 0
+    if CURR_VIRTUAL_KEY is not None:
+        idx = CURR_VIRTUAL_KEY
+    if km == "Litery":
+        return VIRTUAL_KEYBOARD_LETTERS[idx].lower()
+    elif km == "Wielkie litery":
+        return VIRTUAL_KEYBOARD_LETTERS[idx]
+    elif km == "Cyfry":
+        return VIRTUAL_KEYBOARD_NUMBERS[idx]
+    elif km == "Znaki specjalne":
+        return VIRTUAL_KEYBOARD_SYMBOLS[idx]
+
+
+def set_next_virtual_key():
+    global CURR_VIRTUAL_KEY
+    CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+
+
+def set_prev_virtual_key():
+    global CURR_VIRTUAL_KEY
+    CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+
+
+def say_curr_virtual_key(hass):
+    km = get_curr_virtual_keyboard_mode()
+    idx = 0
+    text = ""
+    if CURR_VIRTUAL_KEY is not None:
+        idx = CURR_VIRTUAL_KEY
+    if km == "Litery":
+        text = "litera " + VIRTUAL_KEYBOARD_LETTERS[idx].lower()
+    elif km == "Wielkie litery":
+        text = "wielka litera " + VIRTUAL_KEYBOARD_LETTERS[idx]
+    elif km == "Cyfry":
+        text = "cyfra " + VIRTUAL_KEYBOARD_NUMBERS[idx]
+    elif km == "Znaki specjalne":
+        text = "znak " + VIRTUAL_KEYBOARD_SYMBOLS[idx]
+
+    _say_it(hass, text, None)
 
 
 # Groups in Groups views
@@ -369,7 +423,7 @@ def set_next_group(hass):
                 next_group_in_view = group
             if first_group_in_view is None:
                 first_group_in_view = group
-            if (CURR_GROUP['entity_id'] == group['entity_id']):
+            if CURR_GROUP['entity_id'] == group['entity_id']:
                 curr_group_in_view = group
 
     if next_group_in_view is not None:
@@ -456,7 +510,7 @@ def set_prev_entity(hass):
     global CURR_ENTITIE
     idx = get_curr_entity_idx()
     l_group_len = len(GROUP_ENTITIES[get_curr_group_idx()]['entities'])
-    if (idx == 0):
+    if idx == 0:
         idx = l_group_len - 1
     else:
         idx = idx - 1
@@ -480,10 +534,10 @@ def say_curr_entity(hass):
     if not text:
         text = ""
     # handle special cases...
-    if (entity_id == "sensor.ais_knowledge_answer"):
+    if entity_id == "sensor.ais_knowledge_answer":
         _say_it(hass, "Odpowiedź: " + text, None)
         return
-    elif (entity_id.startswith('script.')):
+    elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
         return
     # normal case
@@ -520,7 +574,7 @@ def commit_current_position(hass):
             'select_option', {
                 "entity_id": CURR_ENTITIE,
                 "option": possition})
-    elif (CURR_ENTITIE.startswith('input_number.')):
+    elif CURR_ENTITIE.startswith('input_number.'):
         hass.services.call(
             'input_number',
             'set_value', {
@@ -533,8 +587,6 @@ def commit_current_position(hass):
     #     _say_it(hass, "wybrano", None)
     else:
         _beep_it(hass, 33)
-
-
     # TODO - run the script for the item,
     # the automation on state should be executed only from app not from remote
 
@@ -573,7 +625,6 @@ def set_next_position(hass):
         _curr = float(CURR_ENTITIE_POSITION)
         CURR_ENTITIE_POSITION = str(round(min(_curr+_step, _max), 2))
         _say_it(hass, str(CURR_ENTITIE_POSITION), None)
-
 
 
 def set_prev_position(hass):
@@ -740,12 +791,11 @@ def select_entity(hass, long_press):
                 else:
                     _say_it(hass, "graj", None)
                     hass.services.call('media_player', 'media_play', {"entity_id": CURR_ENTITIE})
+            elif CURR_ENTITIE.startswith('input_text.'):
+                type_to_input_text_from_virtual_keyboard(hass)
         else:
             # eneter on unchanged item
             _say_it(hass, "Tej pozycji nie można zmieniać", None)
-
-    #hass.block_till_done()
-    # say_curr_entity(hass)
 
 
 def can_entity_be_changed(hass, entity):
@@ -805,8 +855,8 @@ def set_on_dpad_down(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
-        elif CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
-            pass
+        elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
+            set_prev_virtual_keyboard_mode()
 
 
 def set_on_dpad_up(hass, long_press):
@@ -833,8 +883,9 @@ def set_on_dpad_up(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
-        elif CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
-            pass
+        elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
+            set_next_virtual_keyboard_mode()
+
 
 def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
@@ -860,6 +911,9 @@ def set_focus_on_prev_entity(hass, long_press):
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
         if CURR_ENTITIE.startswith("media_player."):
             hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
+        elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
+            set_prev_virtual_key()
+            say_curr_virtual_key(hass)
         else:
             set_prev_position(hass)
     else:
@@ -894,6 +948,9 @@ def set_focus_on_next_entity(hass, long_press):
     if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_ENTERED is True:
         if CURR_ENTITIE.startswith("media_player."):
             hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
+        elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
+            set_next_virtual_key()
+            say_curr_virtual_key(hass)
         else:
             set_next_position(hass)
     else:
@@ -941,12 +998,21 @@ def go_up_in_menu(hass):
 
 
 def type_to_input_text(hass, key):
-    if CURR_ENTITIE.startswith('input_text.') & CURR_ENTITIE_ENTERED:
+    if CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
         # add the letter to the input
         state = hass.states.get(CURR_ENTITIE)
-        _say_it(hass, chr(key), None)
+        _say_it(hass, "wpisano: " + chr(key), None)
         text = state + chr(key)
         hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
+
+
+def type_to_input_text_from_virtual_keyboard(hass):
+    # add the letter to the input
+    state = hass.states.get(CURR_ENTITIE)
+    key = get_curr_virtual_key()
+    text = state + key
+    hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
+    _say_it(hass, "wpisuje: " + key, None)
 
 
 def go_to_player(hass, say):
