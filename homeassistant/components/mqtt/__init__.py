@@ -756,7 +756,7 @@ class MQTT:
 
         if self.birth_message:
             self.hass.add_job(
-                self.async_publish(*attr.astuple(self.birth_message)))
+                self.async_publish, *attr.astuple(self.birth_message))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
