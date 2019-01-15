@@ -139,11 +139,11 @@ xiaomi_clean_zone:
       description: Name of the vacuum entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
     zone:
-      description: Array of zones. Each zone is an array of 4 integer value.
+      description: Array of zones. Each zone is an array of 4 integer values.
       example: '[[23510,25311,25110,26361]]'
     repeats:
       description: Number of cleaning repeats for each zone between 1 and 3.
       example: '1'
     repeats_template:
-      description: Template that rapresents the number of cleaning repeats for each zone between 1 and 3..
+      description: Template that represents the number of cleaning repeats for each zone between 1 and 3.
       example: '{{states.input_number.vacuum_passes.state|int}}'
