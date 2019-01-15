@@ -39,7 +39,7 @@ HAP-python==2.4.2
 Mastodon.py==1.3.1
 
 # homeassistant.components.rpi_gpio
-OrangePi.GPIO==0.6.3
+OPi.GPIO==0.3.6
 
 # homeassistant.components.isy994
 PyISY==1.1.0
