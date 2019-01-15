@@ -649,13 +649,13 @@ async def test_light_turn_on_service(hass, mock_bridge):
     light = hass.states.get('light.hue_lamp_2')
     assert light is not None
     assert light.state == 'on'
-    
+
     # test hue gamut in turn_on service
     await hass.services.async_call('light', 'turn_on', {
         'entity_id': 'light.hue_lamp_2',
         'rgb_color': [0, 0, 255],
     }, blocking=True)
-    
+
     assert mock_bridge.mock_requests[1]['json'] == {
         'on': True,
         'xy': [0.139, 0.085],
