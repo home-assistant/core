@@ -4,7 +4,9 @@ Component that will help set the FFmpeg component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ffmpeg/
 """
+import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -96,11 +98,30 @@ class FFmpegManager:
         self.hass = hass
         self._cache = {}
         self._bin = ffmpeg_bin
+        self._version = None
 
     @property
     def binary(self):
         """Return ffmpeg binary from config."""
         return self._bin
+    
+    async def async_get_version(self):
+        """Return ffmpeg version."""
+        if self._version is None:
+            proc = await asyncio.create_subprocess_exec(
+                self._bin, "-version",
+                loop = self.hass.loop,
+                stdout = asyncio.subprocess.PIPE,
+                stderr = asyncio.subprocess.PIPE)
+            
+            first_line = (await proc.stdout.readline()).decode()
+            _LOGGER.debug(first_line)
+
+            result = re.search(r"ffmpeg version (\S*)", first_line)
+            if result is not None:
+                self._version = result.group(0)
+            
+        return self._version
 
 
 class FFmpegBase(Entity):
