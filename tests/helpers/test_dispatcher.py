@@ -149,5 +149,5 @@ class TestHelpersDispatcher(unittest.TestCase):
 
             self.hass.block_till_done()
             assert \
-                "Exception in bad_handler when dispatching 'test': ('bad',)" in \
-                test_handle.output[0]
+                "Exception in bad_handler when dispatching 'test': ('bad',)" \
+                in test_handle.output[0]
