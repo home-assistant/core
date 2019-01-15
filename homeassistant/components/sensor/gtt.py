@@ -13,7 +13,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pygtt==1.1.2']
 
@@ -80,7 +79,8 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        next_time = dt_util.parse_time(self.data.state_bus['time'][0]['run'])
+        next_time = datetime.strptime(
+            self.data.state_bus['time'][0]['run'], "%H:%M")
         self._state = next_time.isoformat()
 
 
