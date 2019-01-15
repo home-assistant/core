@@ -34,6 +34,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+CONF_TOKEN = 'token'
 CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
@@ -68,6 +69,7 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
 
 GATEWAY_CONFIG = vol.Schema({
     vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
+    vol.Optional(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_KEY):
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
