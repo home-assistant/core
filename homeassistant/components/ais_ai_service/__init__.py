@@ -91,20 +91,21 @@ ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
 
 # ais-dom virtual keyboard
 # kodowała to Asia Raczkowska w 2019 roku
-VIRTUAL_KEYBOARD_MODE = ['Litery', 'Wielkie litery', 'Cyfry', 'Symbole']
+VIRTUAL_KEYBOARD_MODE = ['Litery', 'Wielkie litery', 'Cyfry', 'Znaki specjalne', 'Usuwanie']
 CURR_VIRTUAL_KEYBOARD_MODE = None
-VIRTUAL_KEYBOARD_LETTERS = ['A', 'Ą', 'B', 'C', 'Ć', 'D', 'E', 'Ę', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Ł', 'M', 'N',
-                            'Ń', 'O', 'Ó', 'P', 'R', 'S', 'Ś', 'T', 'U', 'W', 'Y', 'Z', 'Ź', 'Ż']
-VIRTUAL_KEYBOARD_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-VIRTUAL_KEYBOARD_SYMBOLS = ['!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '_', '.', '/', ':', ';',
-                            '<', '=', '>', '?', '@', '[', '\\', ']', '^', '{', '|', '}']
-VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['wykrzyknik', 'cudzysłów', 'kratka', 'dolar', 'procent', 'symbol and',
+VIRTUAL_KEYBOARD_LETTERS = ['-', 'A', 'Ą', 'B', 'C', 'Ć', 'D', 'E', 'Ę', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Ł', 'M',
+                            'N', 'Ń', 'O', 'Ó', 'P', 'R', 'S', 'Ś', 'T', 'U', 'W', 'Y', 'Z', 'Ź', 'Ż']
+VIRTUAL_KEYBOARD_NUMBERS = ['-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+VIRTUAL_KEYBOARD_SYMBOLS = ['-', ' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '_', '.', '/',
+                            ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '{', '|', '}']
+VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['-', 'spacja', 'wykrzyknik', 'cudzysłów', 'kratka', 'dolar', 'procent', 'symbol and',
                                   'pojedynczy cudzysłów', 'nawias otwierający', 'nawias zamykający', 'gwiazdka',
-                                  'plus', 'przecinek', 'podkreślenie', 'myślnik', 'kropka', 'ukośnik', 'dwukropek',
+                                  'plus', 'przecinek', 'myślnik', 'podkreślenie', 'kropka', 'ukośnik', 'dwukropek',
                                   'średnik', 'znak mniejszości', 'znak równości', 'znak większości', 'znak zapytania',
                                   'małpa', 'kwadratowy nawias otwierający', 'ukośnik lewy',
                                   'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający', 'kreska',
                                   'nawias klamrowy zamykający']
+VIRTUAL_KEYBOARD_DELETE = ['-', 'ostatni znak', 'ostatni wyraz', 'całe pole']
 CURR_VIRTUAL_KEY = None
 # ais-dom virtual keyboard
 
@@ -289,7 +290,7 @@ def set_prev_group_view():
 
 
 # virtual keybord
-# Group views: Litery -> Wielkie litery -> Cyfry -> Znaki specjalne
+# Group views: Litery -> Wielkie litery -> Cyfry -> Znaki specjalne -> Usuwanie
 def get_curr_virtual_keyboard_mode():
     if CURR_VIRTUAL_KEYBOARD_MODE is None:
         return VIRTUAL_KEYBOARD_MODE[0]
@@ -315,46 +316,75 @@ def say_curr_virtual_keyboard_mode(hass):
 
 
 def get_curr_virtual_key():
-    km = get_curr_virtual_keyboard_mode()
-    idx = 0
     if CURR_VIRTUAL_KEY is not None:
-        idx = CURR_VIRTUAL_KEY
+        return str(CURR_VIRTUAL_KEY)
+    km = get_curr_virtual_keyboard_mode()
     if km == "Litery":
-        return VIRTUAL_KEYBOARD_LETTERS[idx].lower()
+        return VIRTUAL_KEYBOARD_LETTERS[0]
     elif km == "Wielkie litery":
-        return VIRTUAL_KEYBOARD_LETTERS[idx]
+        return VIRTUAL_KEYBOARD_LETTERS[0]
     elif km == "Cyfry":
-        return VIRTUAL_KEYBOARD_NUMBERS[idx]
+        return VIRTUAL_KEYBOARD_NUMBERS[0]
     elif km == "Znaki specjalne":
-        return VIRTUAL_KEYBOARD_SYMBOLS[idx]
+        return VIRTUAL_KEYBOARD_SYMBOLS[0]
+    elif km == "Usuwanie":
+        return VIRTUAL_KEYBOARD_DELETE[0]
 
 
 def set_next_virtual_key():
     global CURR_VIRTUAL_KEY
-    CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    km = get_curr_virtual_keyboard_mode()
+    if km == "Litery":
+        CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    elif km == "Wielkie litery":
+        CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    elif km == "Cyfry":
+        CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_NUMBERS, get_curr_virtual_key())
+    elif km == "Znaki specjalne":
+        CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_SYMBOLS, get_curr_virtual_key())
+    elif km == "Usuwanie":
+        CURR_VIRTUAL_KEY = get_next(VIRTUAL_KEYBOARD_DELETE, get_curr_virtual_key())
 
 
 def set_prev_virtual_key():
     global CURR_VIRTUAL_KEY
-    CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    km = get_curr_virtual_keyboard_mode()
+    if km == "Litery":
+        CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    elif km == "Wielkie litery":
+        CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_LETTERS, get_curr_virtual_key())
+    elif km == "Cyfry":
+        CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_NUMBERS, get_curr_virtual_key())
+    elif km == "Znaki specjalne":
+        CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_SYMBOLS, get_curr_virtual_key())
+    elif km == "Usuwanie":
+        CURR_VIRTUAL_KEY = get_prev(VIRTUAL_KEYBOARD_DELETE, get_curr_virtual_key())
 
 
 def say_curr_virtual_key(hass):
+    key = get_curr_virtual_key()
     km = get_curr_virtual_keyboard_mode()
-    idx = 0
     text = ""
-    if CURR_VIRTUAL_KEY is not None:
-        idx = CURR_VIRTUAL_KEY
     if km == "Litery":
-        text = "litera " + VIRTUAL_KEYBOARD_LETTERS[idx].lower()
+        text = "" + key.lower()
     elif km == "Wielkie litery":
-        text = "wielka litera " + VIRTUAL_KEYBOARD_LETTERS[idx]
+        text = "" + key
     elif km == "Cyfry":
-        text = "cyfra " + VIRTUAL_KEYBOARD_NUMBERS[idx]
+        text = "" + key
     elif km == "Znaki specjalne":
-        text = "znak " + VIRTUAL_KEYBOARD_SYMBOLS[idx]
+        idx = VIRTUAL_KEYBOARD_SYMBOLS.index(key)
+        text = "" + VIRTUAL_KEYBOARD_SYMBOLS_NAMES[idx]
+    elif km == "Usuwanie":
+        text = "" + key
 
     _say_it(hass, text, None)
+
+
+def reset_virtual_keyboard():
+    global CURR_VIRTUAL_KEYBOARD_MODE
+    global CURR_VIRTUAL_KEY
+    CURR_VIRTUAL_KEYBOARD_MODE = None
+    CURR_VIRTUAL_KEY = None
 
 
 # Groups in Groups views
@@ -415,7 +445,6 @@ def set_next_group(hass):
     first_group_in_view = None
     curr_group_in_view = None
     next_group_in_view = None
-    selected_group = None
     for group in GROUP_ENTITIES:
         if group['remote_group_view'] == get_curr_group_view():
             # select the first group
@@ -427,10 +456,9 @@ def set_next_group(hass):
                 curr_group_in_view = group
 
     if next_group_in_view is not None:
-        selected_group = next_group_in_view
+        CURR_GROUP = next_group_in_view
     else:
-        selected_group = first_group_in_view
-    CURR_GROUP = selected_group
+        CURR_GROUP = first_group_in_view
     # to reset
     set_curr_group(hass, CURR_GROUP)
 
@@ -441,20 +469,18 @@ def set_prev_group(hass):
     last_group_in_view = None
     curr_group_in_view = None
     prev_group_in_view = None
-    selected_group = None
     for group in GROUP_ENTITIES:
         if group['remote_group_view'] == get_curr_group_view():
             # select the last group
             last_group_in_view = group
-            if (CURR_GROUP['entity_id'] == group['entity_id']):
+            if CURR_GROUP['entity_id'] == group['entity_id']:
                 curr_group_in_view = group
             if curr_group_in_view is None:
                 prev_group_in_view = group
     if prev_group_in_view is not None:
-        selected_group = prev_group_in_view
+        CURR_GROUP = prev_group_in_view
     else:
-        selected_group = last_group_in_view
-    CURR_GROUP = selected_group
+        CURR_GROUP = last_group_in_view
     # to reset
     set_curr_group(hass, CURR_GROUP)
 
@@ -689,7 +715,11 @@ def select_entity(hass, long_press):
         if can_entity_be_changed(hass, CURR_ENTITIE):
             if can_entity_be_entered(hass, CURR_ENTITIE):
                 CURR_ENTITIE_ENTERED = True
-                set_next_position(hass)
+                if CURR_ENTITIE.startswith('input_text.'):
+                    _say_it(hass, "Wpisywanie tekstu włączone", None)
+                    reset_virtual_keyboard()
+                else:
+                    set_next_position(hass)
                 return
             else:
                 # we will change this item directly
@@ -747,9 +777,6 @@ def select_entity(hass, long_press):
                         'script',
                         CURR_ENTITIE.split('.')[1]
                     )
-                elif CURR_ENTITIE.startswith('input_text.'):
-                    CURR_ENTITIE_ENTERED = True
-                    _say_it(hass, "Wpisywanie tekstu włączone", None)
 
         else:
             # do some special staff for some entries
@@ -766,7 +793,6 @@ def select_entity(hass, long_press):
                     _say_it(hass, "Twoja wersja jest aktualna", None)
             else:
                 _say_it(hass, "Tej pozycji nie można zmieniać", None)
-        #return
 
     if CURR_ENTITIE_ENTERED is True:
         # check if we can change this item
@@ -817,14 +843,12 @@ def can_entity_be_changed(hass, entity):
 
 def can_entity_be_entered(hass, entity):
     # check if entity can be changed
-    # TODO - we will allow to change the input text soon
     if CURR_ENTITIE.startswith((
         "media_player.",
         "input_boolean.",
         "switch.",
         "script.",
-        "light.",
-        "input_text."
+        "light."
     )):
         return False
     else:
@@ -857,6 +881,7 @@ def set_on_dpad_down(hass, long_press):
             return
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_prev_virtual_keyboard_mode()
+            say_curr_virtual_keyboard_mode(hass)
 
 
 def set_on_dpad_up(hass, long_press):
@@ -885,6 +910,7 @@ def set_on_dpad_up(hass, long_press):
             return
         elif CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
             set_next_virtual_keyboard_mode()
+            say_curr_virtual_keyboard_mode(hass)
 
 
 def set_focus_on_prev_entity(hass, long_press):
@@ -1008,11 +1034,44 @@ def type_to_input_text(hass, key):
 
 def type_to_input_text_from_virtual_keyboard(hass):
     # add the letter to the input
-    state = hass.states.get(CURR_ENTITIE)
+    if CURR_VIRTUAL_KEY is None:
+        if get_curr_virtual_keyboard_mode() == "Usuwanie":
+            _say_it(hass, "wybierz tryb usuwania", None)
+        else:
+            _say_it(hass, "wybierz znak do wpisania", None)
+        return
+
+    state = hass.states.get(CURR_ENTITIE).state
     key = get_curr_virtual_key()
-    text = state + key
+    km = get_curr_virtual_keyboard_mode()
+    if km == "Litery":
+        key = key.lower()
+    if km == "Usuwanie":
+        if key == 'ostatni znak':
+            text = state[:-1]
+        elif key == 'ostatni wyraz':
+            text = state.rsplit(' ', 1)[0]
+        else:
+            text = ""
+    else:
+        text = state + key
+
     hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
-    _say_it(hass, "wpisuje: " + key, None)
+    text = ""
+    if km == "Litery":
+        text = "wpisuje literę: " + key.lower()
+    elif km == "Wielkie litery":
+        text = "wpisuje wielką literę: " + key
+    elif km == "Cyfry":
+        text = "wpisuje cyfrę: " + key
+    elif km == "Znaki specjalne":
+        idx = VIRTUAL_KEYBOARD_SYMBOLS.index(key)
+        text = "" + VIRTUAL_KEYBOARD_SYMBOLS_NAMES[idx]
+        text = "wpisuje znak: " + text
+    elif km == "Usuwanie":
+        text = "OK, usuwam " + key
+
+    _say_it(hass, text, None)
 
 
 def go_to_player(hass, say):
@@ -1345,7 +1404,6 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_NEXT, ['[włącz] następny', '[włącz] kolejny', '[graj] następny', '[graj] kolejny'])
     async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni', '[graj] wcześniejszy'])
 
-
     return True
 
 
@@ -1644,7 +1702,7 @@ def _post_message(message, hosts):
 
 def _beep_it(hass, tone):
     """Post the beep to Android frame."""
-    # tone https://android.googlesource.com/platform/frameworks/base/+/b267554/media/java/android/media/ToneGenerator.java
+    # https://android.googlesource.com/platform/frameworks/base/+/b267554/media/java/android/media/ToneGenerator.java
     hass.services.call(
         'ais_ai_service',
         'publish_command_to_frame', {
@@ -1768,10 +1826,7 @@ def _process_code(hass, data, callback):
             CURR_BUTTON_LONG_PRESS = False
             return
 
-
-
     _LOGGER.info("KeyCode: -> " + str(code))
-    #_beep_it(hass, 24)
     # set the code in global variable
     CURR_BUTTON_CODE = code
     # show the code in web app
@@ -1862,7 +1917,6 @@ def _process(hass, text, callback):
                 {key: {'value': value} for key, value
                  in match.groupdict().items()}, text)
             return response
-
 
     # check the AIS dom intents
     intents = hass.data.get(DOMAIN, {})
@@ -2235,7 +2289,7 @@ class ChangeContextIntent(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        if (len(GROUP_ENTITIES) == 0):
+        if len(GROUP_ENTITIES) == 0:
             get_groups(hass)
         text = intent_obj.text_input.lower()
         _LOGGER.debug('text: ' + text)
