@@ -209,9 +209,11 @@ LIGHT_RAW = {
     },
     "swversion": "66009461",
 }
-LIGHT_GAMUT = color.GamutType(color.XYPoint(0.675, 0.322),
-                              color.XYPoint(0.409, 0.518),
-                              color.XYPoint(0.167, 0.04))
+LIGHT_GAMUT = color.GamutType(color.XYPoint(0.704, 0.296),
+                              color.XYPoint(0.2151, 0.7106),
+                              color.XYPoint(0.138, 0.08))
+LIGHT_GAMUT_TYPE = 'A'
+
 
 @pytest.fixture
 def mock_bridge(hass):
@@ -721,7 +723,9 @@ def test_hs_color():
                        'hue': 1234,
                        'sat': 123,
                    },
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -735,7 +739,9 @@ def test_hs_color():
                        'hue': 1234,
                        'sat': 123,
                    },
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -750,7 +756,9 @@ def test_hs_color():
                        'sat': 123,
                        'xy': [0.4, 0.5]
                    },
-                   raw=LIGHT_RAW),
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
