@@ -44,7 +44,7 @@ class MochadSwitch(SwitchDevice):
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Switch Device."""
         self._controller = ctrl
-        self._address = dev[CONF_ADDRESS] 
+        self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self._state = False
@@ -53,11 +53,6 @@ class MochadSwitch(SwitchDevice):
     def name(self):
         """Get the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No poll for X10 lights and switches. """
-        return False
 
     def send_cmd(self, cmd):
         """Send cmd to pymochad controller."""

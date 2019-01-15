@@ -51,11 +51,11 @@ def setup(hass, config):
     def stop_mochad(event):
         """Stop the Mochad service."""
         controller = hass.data[DOMAIN]
-        controller.stop_X10_receiving()
+        controller.stop_x10_receiving()
 
     def start_mochad(event):
         """Start the Mochad service."""
-        controller.start_X10_receiving()
+        controller.start_x10_receiving()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mochad)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mochad)
 
@@ -79,8 +79,9 @@ class MochadCtrl:
         self.ctrl_recv = PyMochadMqtt(mochad_server=self._host,
                                       mochad_port=self._port,
                                       mqtt_pub_callback=mqtt_pub_callback)
-    
-    def start_X10_receiving(self):
+
+    def start_x10_receiving(self):
+        """Start receiving loop for X10 messages."""
         self.ctrl_recv.start()
 
     @property
@@ -93,6 +94,6 @@ class MochadCtrl:
         """Return the port mochad is running on."""
         return self._port
 
-    def stop_X10_receiving(self):
+    def stop_x10_receiving(self):
         """Close the connection to the mochad socket."""
         self.ctrl_recv.disconnect()

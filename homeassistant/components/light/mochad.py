@@ -42,8 +42,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MochadLight(
         hass, controller.ctrl_recv, dev) for dev in devs])
 
-
-
 class MochadLight(Light):
     """Representation of a X10 dimmer over Mochad."""
 
