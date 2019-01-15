@@ -94,6 +94,7 @@ class BrottsplatskartanSensor(Entity):
     def update(self):
         """Update device state."""
         incident_counts = defaultdict(int)
+        incident_descs = []
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
@@ -106,7 +107,12 @@ class BrottsplatskartanSensor(Entity):
         for incident in incidents:
             incident_type = incident.get('title_type')
             incident_counts[incident_type] += 1
+            incident_descs.append('{} - {}'.format(
+                incident_type, 
+                incident.get('description')
+            )
             self._previous_incidents.add(incident.get('id'))
 
         self._attributes.update(incident_counts)
+        self._attributes['incidents'] = incident_descs
         self._state = len(incidents)
