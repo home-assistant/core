@@ -129,7 +129,8 @@ def get_service(hass, config, discovery_info=None):
         add_manifest_json_key(
             ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(hass, gcm_api_key, registrations, json_path)
+    return HTML5NotificationService(
+        hass, gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
