@@ -354,10 +354,7 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
         await server.async_start(
             hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED))
 
-    if not success:
-        return None
-
-    return broker_config
+    return success, broker_config
 
 
 async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
@@ -407,23 +404,24 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "mqtt/broker#embedded-broker for details")
             return False
 
-        broker_config = await _async_setup_server(hass, config)
+        success, broker_config = await _async_setup_server(hass, config)
 
-        if broker_config is None:
+        if not success:
             _LOGGER.error("Unable to start embedded MQTT broker")
             return False
 
-        conf.update({
-            CONF_BROKER: broker_config[0],
-            CONF_PORT: broker_config[1],
-            CONF_USERNAME: broker_config[2],
-            CONF_PASSWORD: broker_config[3],
-            CONF_CERTIFICATE: broker_config[4],
-            CONF_PROTOCOL: broker_config[5],
-            CONF_CLIENT_KEY: None,
-            CONF_CLIENT_CERT: None,
-            CONF_TLS_INSECURE: None,
-        })
+        if broker_config:
+            conf.update({
+                CONF_BROKER: broker_config[0],
+                CONF_PORT: broker_config[1],
+                CONF_USERNAME: broker_config[2],
+                CONF_PASSWORD: broker_config[3],
+                CONF_CERTIFICATE: broker_config[4],
+                CONF_PROTOCOL: broker_config[5],
+                CONF_CLIENT_KEY: None,
+                CONF_CLIENT_CERT: None,
+                CONF_TLS_INSECURE: None,
+            })
 
     hass.data[DATA_MQTT_CONFIG] = conf
 
