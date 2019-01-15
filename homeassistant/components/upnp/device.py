@@ -35,7 +35,7 @@ class Device:
         # add extra info and store devices
         devices = []
         for discovery_info in discovery_infos:
-            discovery_info['udn'] = discovery_info['usn'].split('::')[0]
+            discovery_info['udn'] = discovery_info['_udn']
             discovery_info['ssdp_description'] = discovery_info['location']
             discovery_info['source'] = 'async_upnp_client'
             _LOGGER.debug('Discovered device: %s', discovery_info)
