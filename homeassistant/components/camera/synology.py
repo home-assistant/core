@@ -56,8 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except (requests.exceptions.RequestException, ValueError):
         _LOGGER.exception("Error when initializing SurveillanceStation")
         return False
-    _LOGGER.exception("Error when initializing SurveillanceStation")
-    print('DEBUG XXXXXXXXX' + CONF_USERNAME + CONF_PASSWORD)
+
     cameras = surveillance.get_all_cameras()
 
     # add cameras
@@ -70,7 +69,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices)
 
 
-class SynologyCamera(Camera):
+class SynologyyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
     def __init__(self, surveillance, camera_id, verify_ssl):
@@ -138,8 +137,8 @@ class SynologyCamera(Camera):
 
     def enable_home_mode(self):
         """Enable home mode."""
-        self._surveillance.set_home_mode(true)
+        self._surveillance.set_home_mode(True)
 
-    def disable_motion_detection(self):
+    def disable_home_mode(self):
         """Disable home mode."""
-        self._surveillance.set_home_mode(false)
+        self._surveillance.set_home_mode(False)
