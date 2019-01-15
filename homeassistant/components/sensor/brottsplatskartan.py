@@ -110,7 +110,7 @@ class BrottsplatskartanSensor(Entity):
             incident_descs.append('{} - {}'.format(
                 incident_type,
                 incident.get('description')
-            )
+            ))
             self._previous_incidents.add(incident.get('id'))
 
         self._attributes.update(incident_counts)
