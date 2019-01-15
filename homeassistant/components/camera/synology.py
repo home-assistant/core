@@ -69,7 +69,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices)
 
 
-class SynologyyCamera(Camera):
+class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
     def __init__(self, surveillance, camera_id, verify_ssl):
