@@ -4,9 +4,6 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-from homeassistant.components.deconz.const import (
-    CONF_ALLOW_DECONZ_GROUPS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
-    COVER_TYPES, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -16,6 +13,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
+
+from .const import (
+    CONF_ALLOW_DECONZ_GROUPS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
+    COVER_TYPES, SWITCH_TYPES)
 
 DEPENDENCIES = ['deconz']
 
