@@ -61,7 +61,7 @@ class LGNetcastRemote(RemoteDevice):
         """Retrieve the latest data from the LG TV."""
         from pylgnetcast import LgNetCastError
         try:
-            with self._client as client:
+            with self._client:
                 self._state = STATE_ON
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
