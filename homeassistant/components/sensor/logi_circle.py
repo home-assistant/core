@@ -45,7 +45,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     time_zone = str(hass.config.time_zone)
 
     sensors = []
-    for sensor_type in entry.data.get(CONF_SENSORS).get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in (entry.data.get(CONF_SENSORS)
+                        .get(CONF_MONITORED_CONDITIONS)):
         for device in devices:
             if device.supports_feature(sensor_type):
                 sensors.append(LogiSensor(device, time_zone, sensor_type))
@@ -150,7 +151,8 @@ class LogiSensor(Entity):
             await self._camera.update()
 
         if self._sensor_type == LOGI_ACTIVITY_PROP:
-            activity = self._camera.current_activity or await self._camera.get_last_activity()
+            activity = (self._camera.current_activity or
+                        await self._camera.get_last_activity())
             if activity is not None:
                 last_activity_time = as_local(activity.end_time_utc)
                 self._state = '{0:0>2}:{1:0>2}'.format(

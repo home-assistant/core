@@ -28,7 +28,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
 
     binary_sensors = []
-    for sensor_type in entry.data.get(CONF_BINARY_SENSORS).get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in (entry.data.get(CONF_BINARY_SENSORS)
+                        .get(CONF_MONITORED_CONDITIONS)):
         for binary_sensor in devices:
             binary_sensors.append(LogiBinarySensor(binary_sensor, sensor_type))
 

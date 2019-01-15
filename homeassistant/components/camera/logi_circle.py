@@ -16,8 +16,8 @@ from homeassistant.components.logi_circle.const import (
 from homeassistant.components.camera import (
     Camera, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
     ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
-from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']

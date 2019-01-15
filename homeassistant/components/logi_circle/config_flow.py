@@ -12,8 +12,8 @@ from homeassistant.core import callback
 
 from homeassistant.const import CONF_SENSORS, CONF_BINARY_SENSORS
 
-from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    CONF_CAMERAS, DEFAULT_CACHEDB)
+from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY,
+                    CONF_REDIRECT_URI, CONF_CAMERAS, DEFAULT_CACHEDB)
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
@@ -25,8 +25,9 @@ AUTH_CALLBACK_NAME = 'api:logi_circle'
 
 
 @callback
-def register_flow_implementation(hass, domain, client_id, client_secret, api_key, redirect_uri,
-                                 sensors, binary_sensors, cameras):
+def register_flow_implementation(hass, domain, client_id, client_secret,
+                                 api_key, redirect_uri, sensors,
+                                 binary_sensors, cameras):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
@@ -103,7 +104,8 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='external_setup')
 
-        external_error = self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
+        external_error = (self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+                          [EXTERNAL_ERRORS])
         errors = {}
         if external_error:
             # Handle error from another flow
@@ -120,7 +122,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             errors=errors)
 
     def _get_authorization_url(self):
-        """Create temporary Logi Circle session and generate authorization url."""
+        """Create temporary Circle session and generate authorization url."""
         from logi_circle import LogiCircle
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
@@ -173,10 +175,12 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
-            self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS] = 'auth_error'
+            (self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+             [EXTERNAL_ERRORS]) = 'auth_error'
             return self.async_abort(reason='external_error')
         except asyncio.TimeoutError:
-            self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS] = 'auth_timeout'
+            (self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+             [EXTERNAL_ERRORS]) = 'auth_timeout'
             return self.async_abort(reason='external_error')
 
         account_id = (await logi_session.account)['accountId']

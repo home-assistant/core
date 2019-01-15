@@ -12,23 +12,20 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_BINARY_SENSORS, CONF_SENSORS, CONF_MONITORED_CONDITIONS)
-from homeassistant.core import callback as async_callback
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 CONF_BINARY_SENSORS, CONF_SENSORS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.dt import as_local
 
 from . import config_flow
 from .const import (DOMAIN, DATA_LOGI, SIGNAL_LOGI_CIRCLE_UPDATE,
-                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY, CONF_REDIRECT_URI,
-                    CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS,
-                    LOGI_SENSORS, LOGI_BINARY_SENSORS, DEFAULT_CACHEDB, LOGI_ACTIVITY_KEYS)
+                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY,
+                    CONF_REDIRECT_URI, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS,
+                    LOGI_SENSORS, LOGI_BINARY_SENSORS, DEFAULT_CACHEDB,
+                    LOGI_ACTIVITY_KEYS)
 
 REQUIREMENTS = [
     'https://github.com/evanjd/python-logi-circle/archive/'
@@ -71,7 +68,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def logi_circle_update_event_broker(hass, subscription):
-    """Dispatch SIGNAL_LOGI_CIRCLE_UPDATE to devices when API wrapper has processed a WS frame."""
+    """Dispatch SIGNAL_LOGI_CIRCLE_UPDATE to devices when
+       API wrapper has processed a WS frame."""
 
     async def async_start(hass, subscription):
         await subscription.open()
@@ -83,7 +81,8 @@ def logi_circle_update_event_broker(hass, subscription):
 
             async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
 
-    asyncio.new_event_loop().run_until_complete(async_start(hass, subscription))
+    asyncio.new_event_loop().run_until_complete(
+        async_start(hass, subscription))
 
 
 def parse_logi_activity(activity):
@@ -151,10 +150,11 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
-    event_subscription = await logi_circle.subscribe(['accessory_settings_changed',
-                                                      'activity_created',
-                                                      'activity_updated',
-                                                      'activity_finished'])
+    event_subscription = await logi_circle.subscribe(
+        ['accessory_settings_changed',
+         'activity_created',
+         'activity_updated',
+         'activity_finished'])
 
     async def start_up(event):
         """Start Logi update event listener."""

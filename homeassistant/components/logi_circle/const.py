@@ -55,4 +55,4 @@ LOGI_BINARY_SENSORS = {
 
 # Attribution
 CONF_ATTRIBUTION = "Data provided by circle.logi.com"
-DEVICE_BRAND = "Logitech"
+DEVICE_BRAND = 'Logitech'
