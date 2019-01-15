@@ -5,6 +5,10 @@ import homeassistant.util.color as color_util
 import pytest
 import voluptuous as vol
 
+GAMUT = color_util.GamutType(color_util.XYPoint(0.704, 0.296),
+                             color_util.XYPoint(0.2151, 0.7106),
+                             color_util.XYPoint(0.138, 0.08))
+
 
 class TestColorUtil(unittest.TestCase):
     """Test color util methods."""
@@ -29,6 +33,15 @@ class TestColorUtil(unittest.TestCase):
         assert (0.701, 0.299, 16) == \
             color_util.color_RGB_to_xy_brightness(128, 0, 0)
 
+        assert (0.7, 0.299, 72) == \
+            color_util.color_RGB_to_xy_brightness(255, 0, 0, GAMUT)
+
+        assert (0.215, 0.711, 170) == \
+            color_util.color_RGB_to_xy_brightness(0, 255, 0, GAMUT)
+
+        assert (0.138, 0.08, 12) == \
+            color_util.color_RGB_to_xy_brightness(0, 0, 255, GAMUT)
+
     def test_color_RGB_to_xy(self):
         """Test color_RGB_to_xy."""
         assert (0, 0) == \
@@ -47,6 +60,15 @@ class TestColorUtil(unittest.TestCase):
 
         assert (0.701, 0.299) == \
             color_util.color_RGB_to_xy(128, 0, 0)
+
+        assert (0.138, 0.08) == \
+            color_util.color_RGB_to_xy(0, 0, 255, GAMUT)
+
+        assert (0.215, 0.711) == \
+            color_util.color_RGB_to_xy(0, 255, 0, GAMUT)
+
+        assert (0.7, 0.299) == \
+            color_util.color_RGB_to_xy(255, 0, 0, GAMUT)
 
     def test_color_xy_brightness_to_RGB(self):
         """Test color_xy_brightness_to_RGB."""
@@ -68,6 +90,15 @@ class TestColorUtil(unittest.TestCase):
         assert (0, 63, 255) == \
             color_util.color_xy_brightness_to_RGB(0, 0, 255)
 
+        assert (255, 0, 3) == \
+            color_util.color_xy_brightness_to_RGB(1, 0, 255, GAMUT)
+
+        assert (82, 255, 0) == \
+            color_util.color_xy_brightness_to_RGB(0, 1, 255, GAMUT)
+
+        assert (9, 85, 255) == \
+            color_util.color_xy_brightness_to_RGB(0, 0, 255, GAMUT)
+
     def test_color_xy_to_RGB(self):
         """Test color_xy_to_RGB."""
         assert (255, 243, 222) == \
@@ -81,6 +112,15 @@ class TestColorUtil(unittest.TestCase):
 
         assert (0, 63, 255) == \
             color_util.color_xy_to_RGB(0, 0)
+
+        assert (255, 0, 3) == \
+            color_util.color_xy_to_RGB(1, 0, GAMUT)
+
+        assert (82, 255, 0) == \
+            color_util.color_xy_to_RGB(0, 1, GAMUT)
+
+        assert (9, 85, 255) == \
+            color_util.color_xy_to_RGB(0, 0, GAMUT)
 
     def test_color_RGB_to_hsv(self):
         """Test color_RGB_to_hsv."""
@@ -150,6 +190,15 @@ class TestColorUtil(unittest.TestCase):
         assert (225.176, 100) == \
             color_util.color_xy_to_hs(0, 0)
 
+        assert (359.294, 100) == \
+            color_util.color_xy_to_hs(1, 0, GAMUT)
+
+        assert (100.706, 100) == \
+            color_util.color_xy_to_hs(0, 1, GAMUT)
+
+        assert (221.463, 96.471) == \
+            color_util.color_xy_to_hs(0, 0, GAMUT)
+
     def test_color_hs_to_xy(self):
         """Test color_hs_to_xy."""
         assert (0.151, 0.343) == \
@@ -166,6 +215,21 @@ class TestColorUtil(unittest.TestCase):
 
         assert (0.323, 0.329) == \
             color_util.color_hs_to_xy(360, 0)
+
+        assert (0.7, 0.299) == \
+            color_util.color_hs_to_xy(0, 100, GAMUT)
+
+        assert (0.215, 0.711) == \
+            color_util.color_hs_to_xy(120, 100, GAMUT)
+
+        assert (0.17, 0.34) == \
+            color_util.color_hs_to_xy(180, 100, GAMUT)
+
+        assert (0.138, 0.08) == \
+            color_util.color_hs_to_xy(240, 100, GAMUT)
+
+        assert (0.7, 0.299) == \
+            color_util.color_hs_to_xy(360, 100, GAMUT)
 
     def test_rgb_hex_to_rgb_list(self):
         """Test rgb_hex_to_rgb_list."""

@@ -85,6 +85,16 @@ LIGHT_1_ON = {
         "colormode": "xy",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "A",
+            "colorgamut": [
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
@@ -104,6 +114,16 @@ LIGHT_1_OFF = {
         "effect": "none",
         "colormode": "xy",
         "reachable": True
+    },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "A",
+            "colorgamut": [
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
+            ]
+        }
     },
     "type": "Extended color light",
     "name": "Hue Lamp 1",
@@ -125,6 +145,16 @@ LIGHT_2_OFF = {
         "colormode": "hs",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "A",
+            "colorgamut": [
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 2",
     "modelid": "LCT001",
@@ -145,6 +175,16 @@ LIGHT_2_ON = {
         "colormode": "hs",
         "reachable": True
     },
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "A",
+            "colorgamut": [
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
+            ]
+        }
+    },
     "type": "Extended color light",
     "name": "Hue Lamp 2 new",
     "modelid": "LCT001",
@@ -156,6 +196,23 @@ LIGHT_RESPONSE = {
     "1": LIGHT_1_ON,
     "2": LIGHT_2_OFF,
 }
+LIGHT_RAW = {
+    "capabilities": {
+        "control": {
+            "colorgamuttype": "A",
+            "colorgamut": [
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
+            ]
+        }
+    },
+    "swversion": "66009461",
+}
+LIGHT_GAMUT = color.GamutType(color.XYPoint(0.704, 0.296),
+                              color.XYPoint(0.2151, 0.7106),
+                              color.XYPoint(0.138, 0.08))
+LIGHT_GAMUT_TYPE = 'A'
 
 
 @pytest.fixture
@@ -380,6 +437,16 @@ async def test_new_light_discovered(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True
         },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [
+                    [0.704, 0.296],
+                    [0.2151, 0.7106],
+                    [0.138, 0.08]
+                ]
+            }
+        },
         "type": "Extended color light",
         "name": "Hue Lamp 3",
         "modelid": "LCT001",
@@ -493,6 +560,16 @@ async def test_other_light_update(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True
         },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [
+                    [0.704, 0.296],
+                    [0.2151, 0.7106],
+                    [0.138, 0.08]
+                ]
+            }
+        },
         "type": "Extended color light",
         "name": "Hue Lamp 2 new",
         "modelid": "LCT001",
@@ -573,6 +650,21 @@ async def test_light_turn_on_service(hass, mock_bridge):
     assert light is not None
     assert light.state == 'on'
 
+    # test hue gamut in turn_on service
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_2',
+        'rgb_color': [0, 0, 255],
+    }, blocking=True)
+
+    assert len(mock_bridge.mock_requests) == 5
+
+    assert mock_bridge.mock_requests[3]['json'] == {
+        'on': True,
+        'xy': (0.138, 0.08),
+        'effect': 'none',
+        'alert': 'none',
+    }
+
 
 async def test_light_turn_off_service(hass, mock_bridge):
     """Test calling the turn on service on a light."""
@@ -608,7 +700,8 @@ async def test_light_turn_off_service(hass, mock_bridge):
 def test_available():
     """Test available property."""
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=False,
@@ -617,7 +710,8 @@ def test_available():
     assert light.available is False
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=True),
         is_group=False,
@@ -626,7 +720,8 @@ def test_available():
     assert light.available is True
 
     light = hue_light.HueLight(
-        light=Mock(state={'reachable': False}),
+        light=Mock(state={'reachable': False},
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=True,
@@ -639,10 +734,13 @@ def test_hs_color():
     """Test hs_color property."""
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'ct',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'ct',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -652,10 +750,13 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'hs',
-            'hue': 1234,
-            'sat': 123,
-        }),
+                       'colormode': 'hs',
+                       'hue': 1234,
+                       'sat': 123,
+                   },
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
@@ -665,14 +766,17 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'xy',
-            'hue': 1234,
-            'sat': 123,
-            'xy': [0.4, 0.5]
-        }),
+                       'colormode': 'xy',
+                       'hue': 1234,
+                       'sat': 123,
+                       'xy': [0.4, 0.5]
+                   },
+                   raw=LIGHT_RAW,
+                   colorgamuttype=LIGHT_GAMUT_TYPE,
+                   colorgamut=LIGHT_GAMUT),
         request_bridge_update=None,
         bridge=Mock(),
         is_group=False,
     )
 
-    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5)
+    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
