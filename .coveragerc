@@ -80,6 +80,8 @@ omit =
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
+    homeassistant/components/danfoss_air.py
+
     homeassistant/components/dominos.py
 
     homeassistant/components/doorbird.py
@@ -471,6 +473,7 @@ omit =
     homeassistant/components/alarm_control_panel/yale_smart_alarm.py
     homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/danfoss_air.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/hikvision.py
@@ -739,6 +742,7 @@ omit =
     homeassistant/components/sensor/crimereports.py
     homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
+    homeassistant/components/sensor/danfoss_air.py
     homeassistant/components/sensor/deluge.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
