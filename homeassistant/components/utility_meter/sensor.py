@@ -11,9 +11,9 @@ import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID,
+    CONF_NAME, ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
@@ -21,6 +21,9 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.dispatcher import (
     dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
+from .const import (
+    SIGNAL_START_PAUSE_METER, SIGNAL_RESET_METER,
+    HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY, METER_TYPES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,34 +33,12 @@ ATTR_PERIOD = 'meter_period'
 ATTR_LAST_PERIOD = 'last_period'
 ATTR_LAST_RESET = 'last_reset'
 
-SIGNAL_START_PAUSE_METER = 'utility_meter_start_pause'
-SIGNAL_RESET_METER = 'utility_meter_reset'
-
-SERVICE_START_PAUSE = 'utility_meter_start_pause'
-SERVICE_RESET = 'utility_meter_reset'
-
-HOURLY = 'hourly'
-DAILY = 'daily'
-WEEKLY = 'weekly'
-MONTHLY = 'monthly'
-YEARLY = 'yearly'
-
-METER_TYPES = [HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY]
-
-SERVICE_METER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
 CONF_SOURCE_SENSOR = 'source'
 CONF_METER_TYPE = 'cycle'
 CONF_METER_OFFSET = 'offset'
 CONF_PAUSED = 'paused'
 
 ICON = 'mdi:counter'
-
-PRECISION = 3
-PAUSED = "paused"
-COLLECTING = "collecting"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
@@ -66,6 +47,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
     vol.Optional(CONF_PAUSED, default=False): cv.boolean,
 })
+
+PRECISION = 3
+PAUSED = "paused"
+COLLECTING = "collecting"
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -175,25 +160,6 @@ class UtilityMeterSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-
-        @callback
-        def async_service_start_pause_meter(service):
-            """Process service start_pause meter."""
-            for entity in service.data[ATTR_ENTITY_ID]:
-                dispatcher_send(self.hass, SIGNAL_START_PAUSE_METER, entity)
-
-        @callback
-        def async_service_reset_meter(service):
-            """Process service reset meter."""
-            for entity in service.data.get(ATTR_ENTITY_ID):
-                dispatcher_send(self.hass, SIGNAL_RESET_METER, entity)
-
-        self.hass.services.async_register(DOMAIN, SERVICE_START_PAUSE,
-                                          async_service_start_pause_meter,
-                                          schema=SERVICE_METER_SCHEMA)
-        self.hass.services.async_register(DOMAIN, SERVICE_RESET,
-                                          async_service_reset_meter,
-                                          schema=SERVICE_METER_SCHEMA)
 
         if self._period == HOURLY:
             async_track_time_change(self.hass, self._async_reset_meter,
