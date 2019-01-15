@@ -1,7 +1,6 @@
 """Hass representation of an UPnP/IGD."""
 import asyncio
 from ipaddress import IPv4Address
-from typing import Dict
 
 import aiohttp
 
@@ -30,7 +29,7 @@ class Device:
 
         # discover devices
         from async_upnp_client.profiles.igd import IgdDevice
-        discovery_infos = await IgdDevice.async_search( source_ip = local_ip)
+        discovery_infos = await IgdDevice.async_search(source_ip = local_ip)
 
         # add extra info and store devices
         devices = []
