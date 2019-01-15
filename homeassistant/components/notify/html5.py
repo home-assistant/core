@@ -7,6 +7,7 @@ https://home-assistant.io/components/notify.html5/
 import datetime
 import json
 import logging
+from functools import partial
 import time
 import uuid
 
@@ -20,7 +21,7 @@ from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TITLE, ATTR_TARGET, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT,
-    BaseNotificationService)
+    BaseNotificationService, DOMAIN)
 from homeassistant.const import (
     URL_ROOT, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.helpers import config_validation as cv
@@ -33,6 +34,8 @@ DEPENDENCIES = ['frontend']
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = 'html5_push_registrations.conf'
+
+SERVICE_DISMISS = 'html5_dismiss'
 
 ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
@@ -80,6 +83,11 @@ SUBSCRIPTION_SCHEMA = vol.All(
     })
 )
 
+DISMISS_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DATA): dict,
+})
+
 REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox']),
@@ -121,7 +129,7 @@ def get_service(hass, config, discovery_info=None):
         add_manifest_json_key(
             ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations, json_path)
+    return HTML5NotificationService(hass, gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
@@ -321,11 +329,28 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, gcm_key, registrations, json_path):
+    def __init__(self, hass, gcm_key, registrations, json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
         self.registrations_json_path = json_path
+
+        async def async_dismiss_message(service):
+            """Handle dismissing notification message service calls."""
+            kwargs = {}
+
+            if self.targets is not None:
+                kwargs[ATTR_TARGET] = self.targets
+            elif service.data.get(ATTR_TARGET) is not None:
+                kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
+
+            kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+
+            await self.async_dismiss(**kwargs)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_DISMISS, async_dismiss_message,
+            schema=DISMISS_SERVICE_SCHEMA)
 
     @property
     def targets(self):
@@ -334,11 +359,6 @@ class HTML5NotificationService(BaseNotificationService):
         for registration in self.registrations:
             targets[registration] = registration
         return targets
-
-    @property
-    def can_dismiss(self):
-        """Return true if dismiss is supported."""
-        return True
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
@@ -351,6 +371,14 @@ class HTML5NotificationService(BaseNotificationService):
         }
 
         self._push_message(payload, **kwargs)
+
+    async def async_dismiss(self, **kwargs):
+        """Dismisses a notification.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.dismiss, **kwargs))
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""

@@ -35,17 +35,11 @@ ATTR_TITLE_DEFAULT = "Home Assistant"
 DOMAIN = 'notify'
 
 SERVICE_NOTIFY = 'notify'
-SERVICE_DISMISS = 'dismiss'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 }, extra=vol.ALLOW_EXTRA)
-
-DISMISS_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_DATA): dict,
-})
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
@@ -101,19 +95,6 @@ async def async_setup(hass, config):
         if discovery_info is None:
             discovery_info = {}
 
-        async def async_dismiss_message(service):
-            """Handle dismissing notification message service calls."""
-            kwargs = {}
-
-            if targets.get(service.service) is not None:
-                kwargs[ATTR_TARGET] = [targets[service.service]]
-            elif service.data.get(ATTR_TARGET) is not None:
-                kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
-
-            kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
-
-            await notify_service.async_dismiss(**kwargs)
-
         async def async_notify_message(service):
             """Handle sending notification message service calls."""
             kwargs = {}
@@ -151,10 +132,6 @@ async def async_setup(hass, config):
             SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
-        if getattr(notify_service, 'can_dismiss', False):
-            hass.services.async_register(
-                DOMAIN, '{}_{}'.format(platform_name_slug, SERVICE_DISMISS),
-                async_dismiss_message, schema=DISMISS_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, platform_name_slug, async_notify_message,
             schema=NOTIFY_SERVICE_SCHEMA)
@@ -182,18 +159,6 @@ class BaseNotificationService:
     """An abstract class for notification services."""
 
     hass = None
-
-    def dismiss(self, **kwargs):
-        """Dismisses a notifaction."""
-        raise NotImplementedError()
-
-    async def async_dismiss(self, **kwargs):
-        """Dismisses a notification.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(
-            partial(self.dismiss, **kwargs))
 
     def send_message(self, message, **kwargs):
         """Send a message.
