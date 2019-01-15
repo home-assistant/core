@@ -1,10 +1,15 @@
-#from homeassistant.const import TEMP_CELSIUS
-#from homeassistant.loader import get_component
-#from homeassistant.const import CONF_TIMEOUT
+"""
+Binary sensors for Danfoss Air HRV.
+
+Configuration:
+    danfoss_air:
+        host: IP_OF_CCM_MODULE
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.danfoss_air/
+"""
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+     BinarySensorDevice)
 
 SENSORS = {
         'bypass_active': ["Danfoss Air Bypass Active", 'BYPASS_ACTIVE']
@@ -12,16 +17,17 @@ SENSORS = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
-    """Set up the available Netatmo weather sensors."""
+    """Set up the available Danfoss Air sensors etc."""
     data = hass.data["DANFOSS_DO"]
 
     dev = []
 
     for key in SENSORS.keys():
-        dev.append(DanfossAirBinarySensor(data, SENSORS[key][0], SENSORS[key][1]))
+        dev.append(DanfossAirBinarySensor(data, SENSORS[key][0],
+                                          SENSORS[key][1]))
 
     add_devices(dev, True)
+
 
 class DanfossAirBinarySensor(BinarySensorDevice):
     """Representation of a Danfoss Air binary sensor."""
@@ -45,12 +51,11 @@ class DanfossAirBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
+        """Type of device class."""
         return "opening"
 
     def update(self):
-        """Fetch new state data for the sensor.
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for the sensor."""
         self._data.update()
 
         self._state = self._data.getValue(self._type)
