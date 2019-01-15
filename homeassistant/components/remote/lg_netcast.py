@@ -59,9 +59,10 @@ class LGNetcastRemote(RemoteDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
-        from pylgnetcast import LgNetCastError
+        from pylgnetcast import LgNetCastError, LG_QUERY
         try:
-            with self._client:
+            with self._client as client:
+                client.query_data(LG_QUERY.VOLUME_INFO)
                 self._state = STATE_ON
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
