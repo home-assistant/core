@@ -5,7 +5,7 @@ from unittest.mock import ANY
 
 from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION)
-from homeassistant.components.cover.mqtt import MqttCover
+from homeassistant.components.mqtt.cover import MqttCover
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_ENTITY_ID,

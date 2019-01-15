@@ -8,8 +8,9 @@ from homeassistant.const import (
 from homeassistant.components import vacuum, mqtt
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON, ATTR_STATUS,
-    ATTR_FAN_SPEED, mqtt as mqttvacuum)
-from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
+    ATTR_FAN_SPEED)
+from homeassistant.components.mqtt import (
+    CONF_COMMAND_TOPIC, vacuum as mqttvacuum)
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     async_mock_mqtt_component,
