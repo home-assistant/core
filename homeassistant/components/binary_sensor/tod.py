@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_AFTER, CONF_BEFORE,
+    CONF_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_AFTER, CONF_BEFORE,
     CONF_SENSORS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -39,8 +39,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(
         vol.Lower, cv.sun_event)),
     vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -61,9 +60,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         after_offset = device_config[CONF_AFTER_OFFSET]
         before = device_config[CONF_BEFORE]
         before_offset = device_config[CONF_BEFORE_OFFSET]
+        friendly_name = device_config.get(CONF_FRIENDLY_NAME, name)
         sensors.append(
             TodSensor(
-                hass, name, after, after_offset, before, before_offset
+                hass, name, friendly_name, after, after_offset, before, before_offset
             )
         )
 
@@ -78,11 +78,13 @@ def is_sun_event(event):
 class TodSensor(BinarySensorDevice):
     """Time of the Day Sensor."""
 
-    def __init__(self, hass, name, after, after_offset,
+    def __init__(self, hass, name, friendly_name, after, after_offset,
                  before, before_offset):
         """Init the ToD Sensor..."""
         self.hass = hass
-        self._name = name
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, hass=hass)
+        self._name = friendly_name
 
         self._time_before = None
         self._time_after = None
@@ -91,9 +93,6 @@ class TodSensor(BinarySensorDevice):
         self._before = before
         self._after = after
         self._next_update = None
-
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, hass=hass)
 
         self._calculate_initial_boudary_time()
         self._calculate_next_update()
@@ -129,6 +128,11 @@ class TodSensor(BinarySensorDevice):
     def current_datetime(self):
         """Return local current datetime according to hass configuration."""
         return dt_util.utcnow()
+
+    @property
+    def next_update(self):
+        """Return the next update point in the UTC time."""
+        return self._next_update
 
     @property
     def state_attributes(self):
@@ -221,11 +225,6 @@ class TodSensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.point_in_time_listener(dt_util.now())
-
-    @property
-    def next_update(self):
-        """Return the next update point in the UTC time."""
-        return self._next_update
 
     def _calculate_next_update(self):
         """Datetime when the next update to the state."""
