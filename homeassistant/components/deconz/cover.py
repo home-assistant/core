@@ -4,15 +4,16 @@ Support for deCONZ covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.deconz/
 """
-from homeassistant.components.deconz.const import (
-    COVER_TYPES, DAMPERS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
-    WINDOW_COVERS)
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import (
+    COVER_TYPES, DAMPERS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
+    WINDOW_COVERS)
 
 DEPENDENCIES = ['deconz']
 

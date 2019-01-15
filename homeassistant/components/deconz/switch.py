@@ -4,12 +4,13 @@ Support for deCONZ switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.deconz/
 """
-from homeassistant.components.deconz.const import (
-    DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import (
+    DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 
 DEPENDENCIES = ['deconz']
 
