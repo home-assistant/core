@@ -19,8 +19,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, STATE_ON,
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
     MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
@@ -151,14 +150,9 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         # Load config
         self._setup_from_config(config)
 
-        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)

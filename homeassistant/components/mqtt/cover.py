@@ -20,10 +20,9 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN, CONF_DEVICE)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
-    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
@@ -92,12 +91,12 @@ def validate_options(value):
 
 
 PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-    vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SET_POSITION_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_GET_POSITION_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
@@ -110,8 +109,8 @@ PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_POSITION_CLOSED,
                  default=DEFAULT_POSITION_CLOSED): int,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
-    vol.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_TILT_STATUS_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TILT_CLOSED_POSITION,
                  default=DEFAULT_TILT_CLOSED_POSITION): int,
     vol.Optional(CONF_TILT_OPEN_POSITION,
@@ -175,14 +174,9 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         # Load config
         self._setup_from_config(config)
 
-        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)

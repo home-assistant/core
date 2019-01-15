@@ -196,14 +196,9 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         # Load config
         self._setup_from_config(config)
 
-        qos = config.get(mqtt.CONF_QOS)
-        availability_topic = config.get(mqtt.CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)
