@@ -60,6 +60,8 @@ class FFmpegCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
+        
+        content_type = await self._manager.async_get_ffmpeg_stream_content_type()
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(
@@ -68,7 +70,7 @@ class FFmpegCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                content_type)
         finally:
             await stream.close()
 

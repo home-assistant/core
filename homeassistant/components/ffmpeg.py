@@ -110,9 +110,9 @@ class FFmpegManager:
         if self._version is None:
             proc = await asyncio.create_subprocess_exec(
                 self._bin, "-version",
-                loop = self.hass.loop,
-                stdout = asyncio.subprocess.PIPE,
-                stderr = asyncio.subprocess.PIPE)
+                loop=self.hass.loop,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE)
             
             first_line = (await proc.stdout.readline()).decode()
             _LOGGER.debug(first_line)
