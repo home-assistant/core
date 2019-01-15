@@ -112,7 +112,7 @@ aioharmony==0.1.2
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.5.0
+aiohue==1.8.0
 
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
