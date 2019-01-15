@@ -155,9 +155,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
-        from aioharmony.harmonyapi import (
-            HarmonyAPI as HarmonyClient, ClientCallbackType
-        )
+        from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
         _LOGGER.debug("%s: Device init started", name)
         self._name = name
@@ -166,24 +164,26 @@ class HarmonyRemote(remote.RemoteDevice):
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-        self._client = HarmonyClient(
-            ip_address=host,
-            callbacks=ClientCallbackType(
-                new_activity=self.new_activity,
-                config_updated=self.new_config,
-                connect=self.got_connected,
-                disconnect=self.got_disconnected
-            )
-        )
+        self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self._delay_secs = delay_secs
         self._available = False
-        self._platform_added = False
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
+        from aioharmony.harmonyapi import ClientCallbackType
+
         _LOGGER.debug("%s: Harmony Hub added", self._name)
-        self._platform_added = True
+        # Register the callbacks
+        self._client.callbacks = ClientCallbackType(
+            new_activity=self.new_activity,
+            config_updated=self.new_config,
+            connect=self.got_connected,
+            disconnect=self.got_disconnected
+        )
+
+        # Store Harmony HUB config, this will also update our current
+        # activity
         await self.new_config()
 
         import aioharmony.exceptions as aioexc
@@ -247,15 +247,13 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        if self._platform_added:
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
         _LOGGER.debug("%s: configuration has been updated", self._name)
         self.new_activity(self._client.current_activity)
-        if self._platform_added:
-            await self.hass.async_add_executor_job(self.write_config_file)
+        await self.hass.async_add_executor_job(self.write_config_file)
 
     async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
@@ -272,7 +270,7 @@ class HarmonyRemote(remote.RemoteDevice):
         # unavailable, this to allow a reconnection to happen.
         await asyncio.sleep(10)
 
-        if not self._available and self._platform_added:
+        if not self._available:
             # Still disconnected. Let the state engine know.
             self.async_schedule_update_ha_state()
 
