@@ -406,10 +406,7 @@ class MiroboVacuum(StateVacuumDevice):
             except ValueError:
                 repeats = 1
                 _LOGGER.debug("Failed to cast template. Set default > 1")
-        if repeats < 1:
-            repeats = 1
-        if repeats > 3:
-            repeats = 3
+        repeats = max(1, min(3, repeats))
         _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
         _LOGGER.debug("Original zone: %s", zone)
