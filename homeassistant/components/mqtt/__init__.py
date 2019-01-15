@@ -921,9 +921,9 @@ class MqttAvailability(Entity):
                                           payload: SubscribePayloadType,
                                           qos: int) -> None:
             """Handle a new received MQTT availability message."""
-            if payload == self._avail_config.get(CONF_PAYLOAD_AVAILABLE):
+            if payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
                 self._available = True
-            elif payload == self._avail_config.get(CONF_PAYLOAD_NOT_AVAILABLE):
+            elif payload == self._avail_config[CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available = False
 
             self.async_schedule_update_ha_state()
@@ -933,7 +933,7 @@ class MqttAvailability(Entity):
             {'availability_topic': {
                 'topic': self._avail_config.get(CONF_AVAILABILITY_TOPIC),
                 'msg_callback': availability_message_received,
-                'qos': self._avail_config.get(CONF_QOS)}})
+                'qos': self._avail_config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
