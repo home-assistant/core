@@ -30,8 +30,11 @@ UNITS_US = 'us'
 UNITS_SI = 'si'
 UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 
+# This is the hardcoded Ambient application key for HASS.
+# https://github.com/ambient-weather/api-docs/issues/14#issuecomment-453263278
 DEFAULT_APP_KEY = '32f561c4cb3a400d9c71ae0e96495466beaea220e315403c955b8f2bb' \
     '12ac9a1'
+
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
