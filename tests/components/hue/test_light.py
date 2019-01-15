@@ -87,7 +87,7 @@ LIGHT_1_ON = {
     },
     "capabilities": {
         "control": {
-            "colorgamuttype": "B",
+            "colorgamuttype": "A",
             "colorgamut": [
                 [0.704, 0.296],
                 [0.2151, 0.7106],
@@ -117,7 +117,7 @@ LIGHT_1_OFF = {
     },
     "capabilities": {
         "control": {
-            "colorgamuttype": "B",
+            "colorgamuttype": "A",
             "colorgamut": [
                 [0.704, 0.296],
                 [0.2151, 0.7106],
@@ -147,7 +147,7 @@ LIGHT_2_OFF = {
     },
     "capabilities": {
         "control": {
-            "colorgamuttype": "B",
+            "colorgamuttype": "A",
             "colorgamut": [
                 [0.704, 0.296],
                 [0.2151, 0.7106],
@@ -177,7 +177,7 @@ LIGHT_2_ON = {
     },
     "capabilities": {
         "control": {
-            "colorgamuttype": "B",
+            "colorgamuttype": "A",
             "colorgamut": [
                 [0.704, 0.296],
                 [0.2151, 0.7106],
@@ -199,7 +199,7 @@ LIGHT_RESPONSE = {
 LIGHT_RAW = {
     "capabilities": {
         "control": {
-            "colorgamuttype": "B",
+            "colorgamuttype": "A",
             "colorgamut": [
                 [0.704, 0.296],
                 [0.2151, 0.7106],
@@ -439,7 +439,7 @@ async def test_new_light_discovered(hass, mock_bridge):
         },
         "capabilities": {
             "control": {
-                "colorgamuttype": "B",
+                "colorgamuttype": "A",
                 "colorgamut": [
                     [0.704, 0.296],
                     [0.2151, 0.7106],
@@ -562,7 +562,7 @@ async def test_other_light_update(hass, mock_bridge):
         },
         "capabilities": {
             "control": {
-                "colorgamuttype": "B",
+                "colorgamuttype": "A",
                 "colorgamut": [
                     [0.704, 0.296],
                     [0.2151, 0.7106],
