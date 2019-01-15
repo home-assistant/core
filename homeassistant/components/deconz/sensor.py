@@ -4,9 +4,6 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-from homeassistant.components.deconz.const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
-    DOMAIN as DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -14,6 +11,10 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+
+from .const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
+    DOMAIN as DECONZ_DOMAIN)
 
 DEPENDENCIES = ['deconz']
 
