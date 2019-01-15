@@ -412,10 +412,10 @@ class MiroboVacuum(StateVacuumDevice):
             repeats = 3
         _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
-        _LOGGER.debug("original zone: %s", zone)
+        _LOGGER.debug("Original zone: %s", zone)
         for _zone in zone:
             _zone.append(repeats)
-        _LOGGER.debug("zone with repeats: %s", zone)
+        _LOGGER.debug("Zone with repeats: %s", zone)
         try:
             self._vacuum.zoned_clean(zone)
         except (OSError, DeviceException) as exc:
