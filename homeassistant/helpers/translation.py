@@ -57,7 +57,7 @@ def component_translation_file(hass: HomeAssistantType, component: str,
             # group.py
             filename = '{}.{}.json'.format(component, language)
 
-        return module_path.parent / '.translations' / filename
+        return str(module_path.parent / '.translations' / filename)
 
     # It's a platform
     parts = component.split('.', 1)
@@ -76,7 +76,7 @@ def component_translation_file(hass: HomeAssistantType, component: str,
         # this is hue/light.py
         filename = "{}.{}.json".format(parts[0], language)
 
-    return module_path.parent / '.translations' / filename
+    return str(module_path.parent / '.translations' / filename)
 
 
 def load_translations_files(translation_files: Dict[str, str]) \
