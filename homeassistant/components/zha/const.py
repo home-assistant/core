@@ -57,6 +57,7 @@ class RadioType(enum.Enum):
 
     ezsp = 'ezsp'
     xbee = 'xbee'
+    deconz = 'deconz'
 
     @classmethod
     def list(cls):
