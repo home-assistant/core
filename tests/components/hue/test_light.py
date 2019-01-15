@@ -656,7 +656,9 @@ async def test_light_turn_on_service(hass, mock_bridge):
         'rgb_color': [0, 0, 255],
     }, blocking=True)
 
-    assert mock_bridge.mock_requests[1]['json'] == {
+    assert len(mock_bridge.mock_requests) == 6
+
+    assert mock_bridge.mock_requests[4]['json'] == {
         'on': True,
         'xy': [0.139, 0.085],
         'effect': 'none',
