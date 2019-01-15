@@ -56,7 +56,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except (requests.exceptions.RequestException, ValueError):
         _LOGGER.exception("Error when initializing SurveillanceStation")
         return False
-
+    _LOGGER.exception("Error when initializing SurveillanceStation")
+    print('DEBUG XXXXXXXXX' + CONF_USERNAME + CONF_PASSWORD)
     cameras = surveillance.get_all_cameras()
 
     # add cameras
@@ -130,3 +131,15 @@ class SynologyCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self._surveillance.disable_motion_detection(self._camera_id)
+
+    def home_mode_enabled(self):
+        """Return the camera home mode status."""
+        return self._surveilance.get_home_mode_status()
+
+    def enable_home_mode(self):
+        """Enable home mode."""
+        self._surveillance.set_home_mode(true)
+
+    def disable_motion_detection(self):
+        """Disable home mode."""
+        self._surveillance.set_home_mode(false)
