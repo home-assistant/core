@@ -268,7 +268,7 @@ class TestSensorMQTT(unittest.TestCase):
         assert '100' == \
             state.attributes.get('val')
 
-    @patch('homeassistant.components.sensor.mqtt._LOGGER')
+    @patch('homeassistant.components.mqtt.sensor._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         mock_component(self.hass, 'mqtt')
@@ -289,7 +289,7 @@ class TestSensorMQTT(unittest.TestCase):
         assert state.attributes.get('val') is None
         assert mock_logger.warning.called
 
-    @patch('homeassistant.components.sensor.mqtt._LOGGER')
+    @patch('homeassistant.components.mqtt.sensor._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         mock_component(self.hass, 'mqtt')
