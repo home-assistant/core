@@ -89,9 +89,9 @@ LIGHT_1_ON = {
         "control": {
             "colorgamuttype": "B",
             "colorgamut": [
-                [0.675, 0.322],
-                [0.409, 0.518],
-                [0.167, 0.04]
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
             ]
         }
     },
@@ -119,9 +119,9 @@ LIGHT_1_OFF = {
         "control": {
             "colorgamuttype": "B",
             "colorgamut": [
-                [0.675, 0.322],
-                [0.409, 0.518],
-                [0.167, 0.04]
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
             ]
         }
     },
@@ -149,9 +149,9 @@ LIGHT_2_OFF = {
         "control": {
             "colorgamuttype": "B",
             "colorgamut": [
-                [0.675, 0.322],
-                [0.409, 0.518],
-                [0.167, 0.04]
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
             ]
         }
     },
@@ -179,9 +179,9 @@ LIGHT_2_ON = {
         "control": {
             "colorgamuttype": "B",
             "colorgamut": [
-                [0.675, 0.322],
-                [0.409, 0.518],
-                [0.167, 0.04]
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
             ]
         }
     },
@@ -201,9 +201,9 @@ LIGHT_RAW = {
         "control": {
             "colorgamuttype": "B",
             "colorgamut": [
-                [0.675, 0.322],
-                [0.409, 0.518],
-                [0.167, 0.04]
+                [0.704, 0.296],
+                [0.2151, 0.7106],
+                [0.138, 0.08]
             ]
         }
     },
@@ -441,9 +441,9 @@ async def test_new_light_discovered(hass, mock_bridge):
             "control": {
                 "colorgamuttype": "B",
                 "colorgamut": [
-                    [0.675, 0.322],
-                    [0.409, 0.518],
-                    [0.167, 0.04]
+                    [0.704, 0.296],
+                    [0.2151, 0.7106],
+                    [0.138, 0.08]
                 ]
             }
         },
@@ -564,9 +564,9 @@ async def test_other_light_update(hass, mock_bridge):
             "control": {
                 "colorgamuttype": "B",
                 "colorgamut": [
-                    [0.675, 0.322],
-                    [0.409, 0.518],
-                    [0.167, 0.04]
+                    [0.704, 0.296],
+                    [0.2151, 0.7106],
+                    [0.138, 0.08]
                 ]
             }
         },
@@ -649,6 +649,19 @@ async def test_light_turn_on_service(hass, mock_bridge):
     light = hass.states.get('light.hue_lamp_2')
     assert light is not None
     assert light.state == 'on'
+    
+    # test hue gamut in turn_on service
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_2',
+        'rgb_color': [0, 0, 255],
+    }, blocking=True)
+    
+    assert mock_bridge.mock_requests[1]['json'] == {
+        'on': True,
+        'xy': [0.139, 0.085],
+        'effect': 'none',
+        'alert': 'none',
+    }
 
 
 async def test_light_turn_off_service(hass, mock_bridge):
