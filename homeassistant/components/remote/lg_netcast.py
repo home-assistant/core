@@ -89,9 +89,9 @@ class LGNetcastRemote(RemoteDevice):
         self._state = STATE_ON  # Turn on not support by LG Netcast TV
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the remote off."""
-        self.send_command(1)
+        await self.async_send_command(1)
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to a device."""
