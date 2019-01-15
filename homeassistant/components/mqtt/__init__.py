@@ -708,7 +708,7 @@ class MQTT:
             if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-            self.hass.async_create_task(self._async_unsubscribe(topic))
+            self.hass.async_add_job(self._async_unsubscribe(topic))
 
         return async_remove
 
