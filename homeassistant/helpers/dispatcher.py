@@ -38,8 +38,8 @@ def wrap_callback(func: Callable[..., Any]) -> Callable[[], None]:
         frames = len(inspect.trace()) - 1
         err = traceback.format_exc(-frames)
         logging.getLogger(module_name).error(
-            "Exception in %s when dispatching '%s': '%s'\n%s",
-            func.__name__, signal, *args, err)
+            "Exception in %s when dispatching '%s': %s\n%s",
+            func.__name__, signal, args, err)
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(func):
