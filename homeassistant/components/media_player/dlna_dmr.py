@@ -26,7 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.0']
+REQUIREMENTS = ['async-upnp-client==0.14.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -355,12 +355,12 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not self._available:
             return STATE_OFF
 
-        from async_upnp_client.profiles import dlna
+        from async_upnp_client.profiles import DeviceState
         if self._device.state is None:
             return STATE_ON
-        if self._device.state == dlna.STATE_PLAYING:
+        if self._device.state == DeviceState.PLAYING:
             return STATE_PLAYING
-        if self._device.state == dlna.STATE_PAUSED:
+        if self._device.state == DeviceState.PAUSED:
             return STATE_PAUSED
 
         return STATE_IDLE
