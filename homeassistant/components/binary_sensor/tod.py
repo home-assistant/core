@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_AFTER, CONF_BEFORE,
+    CONF_FRIENDLY_NAME, CONF_AFTER, CONF_BEFORE,
     CONF_SENSORS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -63,7 +63,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, name)
         sensors.append(
             TodSensor(
-                hass, name, friendly_name, after, after_offset, before, before_offset
+                hass, name, friendly_name,
+                after, after_offset, before, before_offset
             )
         )
 
