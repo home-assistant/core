@@ -110,7 +110,7 @@ class ArloBaseStation(AlarmControlPanel):
         self._base_station.mode = self._home_mode_name
 
     async def async_alarm_arm_night(self, code=None):
-        """Send arm away command. Uses custom mode."""
+        """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
 
     @property
