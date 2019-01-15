@@ -9,9 +9,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, STATE_HEAT,
-    STATE_IDLE, STATE_MANUAL, STATE_DRY,
-    STATE_FAN_ONLY, STATE_ECO, ClimateDevice)
+    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import callback
@@ -47,21 +45,6 @@ DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEPENDENCIES = ['knx']
 
-# Map KNX operation modes to HA modes. This list might not be full.
-OPERATION_MODES = {
-    # Map DPT 201.100 HVAC operating modes
-    "Frost Protection": STATE_MANUAL,
-    "Night": STATE_IDLE,
-    "Standby": STATE_ECO,
-    "Comfort": STATE_HEAT,
-    # Map DPT 201.104 HVAC control modes
-    "Fan only": STATE_FAN_ONLY,
-    "Dehumidification": STATE_DRY
-}
-
-OPERATION_MODES_INV = dict((
-    reversed(item) for item in OPERATION_MODES.items()))
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
@@ -86,8 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODES): vol.All(cv.ensure_list,
-                                                [vol.In(OPERATION_MODES)]),
+    vol.Optional(CONF_OPERATION_MODES): cv.ensure_list,
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
 })
@@ -246,23 +228,24 @@ class KNXClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self.device.mode.supports_operation_mode:
-            return OPERATION_MODES.get(self.device.mode.operation_mode.value)
+        if self.device.mode is not None \
+                and self.device.mode.supports_operation_mode:
+            return self.device.mode.operation_mode.value
         return None
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [OPERATION_MODES.get(operation_mode.value) for
+        return [operation_mode.value for
                 operation_mode in
                 self.device.mode.operation_modes]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        if self.device.mode.supports_operation_mode:
+        if self.device.mode is not None \
+                and self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode
-            knx_operation_mode = HVACOperationMode(
-                OPERATION_MODES_INV.get(operation_mode))
+            knx_operation_mode = HVACOperationMode(operation_mode)
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
 
