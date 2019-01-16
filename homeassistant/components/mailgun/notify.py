@@ -1,5 +1,5 @@
 """
-Support for the Mailgun mail service.
+Support for the Mailgun mail notification service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.mailgun/
