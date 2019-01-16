@@ -112,8 +112,8 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-def geofency_client(loop, hass, hass_client):
-    """Geofency mock client."""
+def geofency_client(loop, hass, aiohttp_client):
+    """Geofency mock client (unauthenticated)."""
     assert loop.run_until_complete(async_setup_component(
         hass, 'persistent_notification', {}))
 
@@ -126,7 +126,7 @@ def geofency_client(loop, hass, hass_client):
     loop.run_until_complete(hass.async_block_till_done())
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(hass_client())
+        yield loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture(autouse=True)
@@ -146,7 +146,7 @@ def setup_zones(loop, hass):
 async def webhook_id(hass, geofency_client):
     """Initialize the Geofency component and get the webhook_id."""
     hass.config.api = Mock(base_url='http://example.com')
-    result = await hass.config_entries.flow.async_init('geofency', context={
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={
         'source': 'user'
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM, result
