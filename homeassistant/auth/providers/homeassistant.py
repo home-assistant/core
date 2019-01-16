@@ -132,7 +132,8 @@ class Data:
         """Add a new authenticated user/pass."""
         username = self.normalize_username(username)
 
-        if any(user['username'] == username for user in self.users):
+        if any(self.normalize_username(user['username']) == username
+               for user in self.users):
             raise InvalidUser
 
         self.users.append({
@@ -147,7 +148,7 @@ class Data:
 
         index = None
         for i, user in enumerate(self.users):
-            if user['username'] == username:
+            if self.normalize_username(user['username']) == username:
                 index = i
                 break
 
@@ -164,7 +165,7 @@ class Data:
         username = self.normalize_username(username)
 
         for user in self.users:
-            if user['username'] == username:
+            if self.normalize_username(user['username']) == username:
                 user['password'] = self.hash_password(
                     new_password, True).decode()
                 break
