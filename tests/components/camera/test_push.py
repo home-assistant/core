@@ -4,7 +4,6 @@ import io
 from datetime import timedelta
 
 from homeassistant import core as ha
-from homeassistant.components import webhook
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
