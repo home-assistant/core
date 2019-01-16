@@ -2,7 +2,7 @@
 Email sensor support.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.email/
+https://home-assistant.io/components/sensor.imap_email_content/
 """
 import logging
 import datetime
@@ -97,7 +97,7 @@ class EmailReader:
         """Read the next email from the email server."""
         import imaplib
         try:
-            self.connection.select()
+            self.connection.select('Inbox', readonly=True)
 
             if not self._unread_ids:
                 search = "SINCE {0:%d-%b-%Y}".format(datetime.date.today())
