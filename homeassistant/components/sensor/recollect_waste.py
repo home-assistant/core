@@ -2,8 +2,9 @@
 Support for Recollect Waste curbside collection pickup.
 
 For more details about this platform, please refer to the documentation at
-https://github.com/stealthhacker/python-recollect-waste
+https://www.home-assistant.io/components/sensor.recollect_waste/
 """
+import logging
 from datetime import timedelta
 
 import voluptuous as vol
@@ -13,14 +14,16 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['recollect-waste==1.0.0']
+REQUIREMENTS = ['recollect-waste==1.0.1']
 
+_LOGGER = logging.getLogger(__name__)
 ATTR_PICKUP_TYPES = 'pickup_types'
 ATTR_AREA_NAME = 'area_name'
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_PLACE_ID = 'place_id'
 CONF_SERVICE_ID = 'service_id'
 DOMAIN = 'recollect_waste'
+ICON = 'mdi:trash-can-outline'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLACE_ID): cv.string,
@@ -35,8 +38,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Recollect Waste platform."""
     add_entities([RecollectWasteSensor(
         config.get(CONF_NAME),
-        config.get(CONF_PLACE_ID),
-        config.get(CONF_SERVICE_ID),
+        config[CONF_PLACE_ID],
+        config[CONF_SERVICE_ID],
         config.get(CONF_UPDATE_INTERVAL))])
 
 
@@ -51,11 +54,17 @@ class RecollectWasteSensor(Entity):
         self._attributes = {}
         self._state = None
         self.update = Throttle(interval)(self._update)
+        self._unique_id = "{}{}".format(place_id, service_id)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name or DOMAIN
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -70,16 +79,21 @@ class RecollectWasteSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return
+        return ICON
 
     def _update(self):
         """Update device state."""
         import recollect_waste
 
-        # pylint:disable=E1101
-        client = recollect_waste.RecollectWasteClient(self.place_id,
-                                                      self.service_id)
-        pickup_event = client.get_next_pickup()
-        self._state = pickup_event.event_date
-        self._attributes[ATTR_PICKUP_TYPES] = pickup_event.pickup_types
-        self._attributes[ATTR_AREA_NAME] = pickup_event.area_name
+        try:
+            # pylint:disable=E1101
+            client = recollect_waste.RecollectWasteClient(self.place_id,
+                                                          self.service_id)
+            pickup_event = client.get_next_pickup()
+            self._state = pickup_event.event_date
+            self._attributes.update({
+                ATTR_PICKUP_TYPES: pickup_event.pickup_types,
+                ATTR_AREA_NAME: pickup_event.area_name
+            })
+        except recollect_waste.RecollectWasteError as ex:
+            _LOGGER.error('Recollect Waste platform error. %s', ex)
