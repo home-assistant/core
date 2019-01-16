@@ -164,7 +164,8 @@ class ImapSensor(Entity):
                 self._email_count = len(lines[0].split())
             else:
                 _LOGGER.error("Can't parse IMAP server response to search "
-                    "'%s':  %s / %s", self._search, result, lines[0])
+                              "'%s':  %s / %s",
+                              self._search, result, lines[0])
 
     def disconnected(self):
         """Forget the connection after it was lost."""
