@@ -115,8 +115,12 @@ class PwmSimpleLed(Light, RestoreEntity):
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness',
                                                          DEFAULT_BRIGHTNESS)
-            self._led.set(is_on=self._is_on,
-                          brightness=_from_hass_brightness(self._brightness))
+
+            def restore_state():
+                """Set the led into the last known state."""
+                brightness = _from_hass_brightness(self._brightness)
+                self._led.set(is_on=self._is_on, brightness=brightness)
+            await self.hass.async_add_executor_job(restore_state)
 
     @property
     def should_poll(self):
@@ -188,7 +192,12 @@ class PwmRgbLed(PwmSimpleLed):
         last_state = await self.async_get_last_state()
         if last_state:
             self._color = last_state.attributes.get('hs_color', DEFAULT_COLOR)
-            self._led.set(color=_from_hass_color(self._color))
+
+            def restore_state():
+                """Set the led into the last known state."""
+                color = _from_hass_color(self._color)
+                self._led.set(color=color)
+            await self.hass.async_add_executor_job(restore_state)
 
     @property
     def hs_color(self):
