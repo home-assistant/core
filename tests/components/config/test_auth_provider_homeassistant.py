@@ -168,10 +168,6 @@ async def test_delete_removes_credential(hass, hass_ws_client,
     client = await hass_ws_client(hass, hass_access_token)
 
     user = MockUser().add_to_hass(hass)
-    user.credentials.append(
-        await hass.auth.auth_providers[0].async_get_or_create_credentials({
-            'username': 'test-user'}))
-
     hass_storage[prov_ha.STORAGE_KEY] = {
         'version': 1,
         'data': {
@@ -180,6 +176,10 @@ async def test_delete_removes_credential(hass, hass_ws_client,
             }]
         }
     }
+
+    user.credentials.append(
+        await hass.auth.auth_providers[0].async_get_or_create_credentials({
+            'username': 'test-user'}))
 
     await client.send_json({
         'id': 5,
