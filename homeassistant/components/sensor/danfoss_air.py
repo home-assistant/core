@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
 
-    for key in SENSORS.keys():
+    for key in SENSORS:
         dev.append(DanfossAir(data, SENSORS[key][0], SENSORS[key][1],
                               SENSORS[key][2]))
 
@@ -74,4 +74,4 @@ class DanfossAir(Entity):
         """
         self._data.update()
 
-        self._state = self._data.getValue(self._type)
+        self._state = self._data.get_value(self._type)

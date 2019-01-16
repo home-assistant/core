@@ -8,8 +8,7 @@ Configuration:
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.danfoss_air/
 """
-from homeassistant.components.binary_sensor import (
-     BinarySensorDevice)
+from homeassistant.components.binary_sensor import (BinarySensorDevice)
 
 SENSORS = {
         'bypass_active': ["Danfoss Air Bypass Active", 'BYPASS_ACTIVE']
@@ -22,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
 
-    for key in SENSORS.keys():
+    for key in SENSORS:
         dev.append(DanfossAirBinarySensor(data, SENSORS[key][0],
                                           SENSORS[key][1]))
 
@@ -58,4 +57,4 @@ class DanfossAirBinarySensor(BinarySensorDevice):
         """Fetch new state data for the sensor."""
         self._data.update()
 
-        self._state = self._data.getValue(self._type)
+        self._state = self._data.get_value(self._type)

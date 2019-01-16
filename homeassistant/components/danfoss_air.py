@@ -49,7 +49,7 @@ def setup(hass, config):
     return True
 
 
-class DanfossAir(object):
+class DanfossAir:
     """Handle all communication with Danfoss Air CCM unit."""
 
     def __init__(self, host):
@@ -59,12 +59,12 @@ class DanfossAir(object):
         from pydanfossair.danfossclient import DanfossClient
         self._client = DanfossClient(host)
 
-    def getValue(self, item):
+    def get_value(self, item):
         """Get value for sensor."""
         if item in self._data:
             return self._data[item]
-        else:
-            return None
+
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
