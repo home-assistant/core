@@ -7,14 +7,12 @@ https://home-assistant.io/components/sensor.deconz/
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
-    DOMAIN as DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
@@ -55,28 +53,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_sensor(gateway.api.sensors.values())
 
 
-class DeconzSensor(Entity):
-    """Representation of a sensor."""
-
-    def __init__(self, sensor, gateway):
-        """Set up sensor and add update callback to get data from websocket."""
-        self._sensor = sensor
-        self.gateway = gateway
-        self.unsub_dispatcher = None
-
-    async def async_added_to_hass(self):
-        """Subscribe to sensors events."""
-        self._sensor.register_async_callback(self.async_update_callback)
-        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DECONZ_REACHABLE, self.async_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect sensor object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-        self._sensor.remove_callback(self.async_update_callback)
-        self._sensor = None
+class DeconzSensor(DeconzDevice):
+    """Representation of a deCONZ sensor."""
 
     @callback
     def async_update_callback(self, reason):
@@ -94,105 +72,51 @@ class DeconzSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._sensor.state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._sensor.name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return self._sensor.uniqueid
+        return self._device.state
 
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._sensor.sensor_class
+        return self._device.sensor_class
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._sensor.sensor_icon
+        return self._device.sensor_icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return self._sensor.sensor_unit
-
-    @property
-    def available(self):
-        """Return true if sensor is available."""
-        return self.gateway.available and self._sensor.reachable
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        return self._device.sensor_unit
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         from pydeconz.sensor import LIGHTLEVEL
         attr = {}
-        if self._sensor.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
-        if self._sensor.on is not None:
-            attr[ATTR_ON] = self._sensor.on
-        if self._sensor.type in LIGHTLEVEL and self._sensor.dark is not None:
-            attr[ATTR_DARK] = self._sensor.dark
+        if self._device.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._device.battery
+        if self._device.on is not None:
+            attr[ATTR_ON] = self._device.on
+        if self._device.type in LIGHTLEVEL and self._device.dark is not None:
+            attr[ATTR_DARK] = self._device.dark
         if self.unit_of_measurement == 'Watts':
-            attr[ATTR_CURRENT] = self._sensor.current
-            attr[ATTR_VOLTAGE] = self._sensor.voltage
-        if self._sensor.sensor_class == 'daylight':
-            attr[ATTR_DAYLIGHT] = self._sensor.daylight
+            attr[ATTR_CURRENT] = self._device.current
+            attr[ATTR_VOLTAGE] = self._device.voltage
+        if self._device.sensor_class == 'daylight':
+            attr[ATTR_DAYLIGHT] = self._device.daylight
         return attr
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        if (self._sensor.uniqueid is None or
-                self._sensor.uniqueid.count(':') != 7):
-            return None
-        serial = self._sensor.uniqueid.split('-', 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-        return {
-            'connections': {(CONNECTION_ZIGBEE, serial)},
-            'identifiers': {(DECONZ_DOMAIN, serial)},
-            'manufacturer': self._sensor.manufacturer,
-            'model': self._sensor.modelid,
-            'name': self._sensor.name,
-            'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
-        }
 
-
-class DeconzBattery(Entity):
+class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, sensor, gateway):
+    def __init__(self, device, gateway):
         """Register dispatcher callback for update of battery state."""
-        self._sensor = sensor
-        self.gateway = gateway
-        self.unsub_dispatcher = None
+        super().__init__(device, gateway)
 
-        self._name = '{} {}'.format(self._sensor.name, 'Battery Level')
+        self._name = '{} {}'.format(self._device.name, 'Battery Level')
         self._unit_of_measurement = "%"
-
-    async def async_added_to_hass(self):
-        """Subscribe to sensors events."""
-        self._sensor.register_async_callback(self.async_update_callback)
-        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DECONZ_REACHABLE, self.async_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect sensor object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-        self._sensor.remove_callback(self.async_update_callback)
-        self._sensor = None
 
     @callback
     def async_update_callback(self, reason):
@@ -203,17 +127,12 @@ class DeconzBattery(Entity):
     @property
     def state(self):
         """Return the state of the battery."""
-        return self._sensor.battery
+        return self._device.battery
 
     @property
     def name(self):
         """Return the name of the battery."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for the device."""
-        return self._sensor.uniqueid
 
     @property
     def device_class(self):
@@ -226,37 +145,9 @@ class DeconzBattery(Entity):
         return self._unit_of_measurement
 
     @property
-    def available(self):
-        """Return true if sensor is available."""
-        return self.gateway.available and self._sensor.reachable
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {
-            ATTR_EVENT_ID: slugify(self._sensor.name),
+            ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        if (self._sensor.uniqueid is None or
-                self._sensor.uniqueid.count(':') != 7):
-            return None
-        serial = self._sensor.uniqueid.split('-', 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-        return {
-            'connections': {(CONNECTION_ZIGBEE, serial)},
-            'identifiers': {(DECONZ_DOMAIN, serial)},
-            'manufacturer': self._sensor.manufacturer,
-            'model': self._sensor.modelid,
-            'name': self._sensor.name,
-            'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
-        }

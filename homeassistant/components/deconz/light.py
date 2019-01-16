@@ -10,13 +10,13 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
-    CONF_ALLOW_DECONZ_GROUPS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
-    COVER_TYPES, SWITCH_TYPES)
+    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DECONZ_DOMAIN, COVER_TYPES,
+    SWITCH_TYPES)
+from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
@@ -60,51 +60,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_group(gateway.api.groups.values())
 
 
-class DeconzLight(Light):
+class DeconzLight(DeconzDevice, Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light, gateway):
+    def __init__(self, device, gateway):
         """Set up light and add update callback to get data from websocket."""
-        self._light = light
-        self.gateway = gateway
-        self.unsub_dispatcher = None
+        super().__init__(device, gateway)
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
         self._features |= SUPPORT_TRANSITION
 
-        if self._light.ct is not None:
+        if self._device.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
 
-        if self._light.xy is not None:
+        if self._device.xy is not None:
             self._features |= SUPPORT_COLOR
 
-        if self._light.effect is not None:
+        if self._device.effect is not None:
             self._features |= SUPPORT_EFFECT
-
-    async def async_added_to_hass(self):
-        """Subscribe to lights events."""
-        self._light.register_async_callback(self.async_update_callback)
-        self.gateway.deconz_ids[self.entity_id] = self._light.deconz_id
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DECONZ_REACHABLE, self.async_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect light object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-        self._light.remove_callback(self.async_update_callback)
-        self._light = None
-
-    @callback
-    def async_update_callback(self, reason):
-        """Update the light's state."""
-        self.async_schedule_update_ha_state()
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._light.brightness
+        return self._device.brightness
 
     @property
     def effect_list(self):
@@ -114,47 +93,27 @@ class DeconzLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value."""
-        if self._light.colormode != 'ct':
+        if self._device.colormode != 'ct':
             return None
 
-        return self._light.ct
+        return self._device.ct
 
     @property
     def hs_color(self):
         """Return the hs color value."""
-        if self._light.colormode in ('xy', 'hs') and self._light.xy:
-            return color_util.color_xy_to_hs(*self._light.xy)
+        if self._device.colormode in ('xy', 'hs') and self._device.xy:
+            return color_util.color_xy_to_hs(*self._device.xy)
         return None
 
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._light.state
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return self._light.name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this light."""
-        return self._light.uniqueid
+        return self._device.state
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
-
-    @property
-    def available(self):
-        """Return True if light is available."""
-        return self.gateway.available and self._light.reachable
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     async def async_turn_on(self, **kwargs):
         """Turn on light."""
@@ -186,7 +145,7 @@ class DeconzLight(Light):
             else:
                 data['effect'] = 'none'
 
-        await self._light.async_set_state(data)
+        await self._device.async_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
@@ -204,31 +163,13 @@ class DeconzLight(Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        await self._light.async_set_state(data)
+        await self._device.async_set_state(data)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
-        attributes['is_deconz_group'] = self._light.type == 'LightGroup'
-        if self._light.type == 'LightGroup':
-            attributes['all_on'] = self._light.all_on
+        attributes['is_deconz_group'] = self._device.type == 'LightGroup'
+        if self._device.type == 'LightGroup':
+            attributes['all_on'] = self._device.all_on
         return attributes
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        if (self._light.uniqueid is None or
-                self._light.uniqueid.count(':') != 7):
-            return None
-        serial = self._light.uniqueid.split('-', 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-        return {
-            'connections': {(CONNECTION_ZIGBEE, serial)},
-            'identifiers': {(DECONZ_DOMAIN, serial)},
-            'manufacturer': self._light.manufacturer,
-            'model': self._light.modelid,
-            'name': self._light.name,
-            'sw_version': self._light.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
-        }
