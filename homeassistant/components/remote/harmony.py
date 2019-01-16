@@ -157,7 +157,6 @@ class HarmonyRemote(remote.RemoteDevice):
         """Initialize HarmonyRemote class."""
         from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
-        _LOGGER.debug("%s: Device init started", name)
         self._name = name
         self.host = host
         self.port = port
