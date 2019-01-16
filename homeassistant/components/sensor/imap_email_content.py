@@ -45,7 +45,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
-        config.get(CONF_SERVER), config.get(CONF_PORT), config.get(CONF_FOLDER))
+        config.get(CONF_SERVER), config.get(CONF_PORT),
+        config.get(CONF_FOLDER))
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
