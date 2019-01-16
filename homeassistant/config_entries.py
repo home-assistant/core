@@ -142,6 +142,7 @@ FLOWS = [
     'esphome',
     'emulated_roku',
     'geofency',
+    'gpslogger',
     'hangouts',
     'homematicip_cloud',
     'hue',
