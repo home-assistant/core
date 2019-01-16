@@ -1206,6 +1206,12 @@ pysher==1.0.1
 # homeassistant.components.sensor.sma
 pysma==0.3.1
 
+# homeassistant.components.smartthings
+pysmartapp==0.3.0
+
+# homeassistant.components.smartthings
+pysmartthings==0.4.1
+
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
