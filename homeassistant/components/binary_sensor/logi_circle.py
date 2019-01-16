@@ -31,7 +31,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for sensor_type in (entry.data.get(CONF_BINARY_SENSORS)
                         .get(CONF_MONITORED_CONDITIONS)):
         for binary_sensor in devices:
-            binary_sensors.append(LogiBinarySensor(binary_sensor, sensor_type))
+            if binary_sensor.supports_feature(sensor_type):
+                binary_sensors.append(
+                    LogiBinarySensor(binary_sensor, sensor_type))
 
     async_add_entities(binary_sensors, True)
 
@@ -66,13 +68,13 @@ class LogiBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if (self._sensor_type == 'is_charging' and
+        if (self._sensor_type == 'charging' and
                 self._state is not None):
             return 'mdi:battery-charging' if self._state else 'mdi:battery'
-        if (self._sensor_type == 'privacy_mode' and
+        if (self._sensor_type == 'recording' and
                 self._state is not None):
-            return 'mdi:eye-off' if self._state else 'mdi:eye'
-        if (self._sensor_type == 'streaming_enabled' and
+            return 'mdi:eye' if self._state else 'mdi:eye-off'
+        if (self._sensor_type == 'streaming' and
                 self._state is not None):
             return (
                 'mdi:camera' if self._state else 'mdi:camera-off')

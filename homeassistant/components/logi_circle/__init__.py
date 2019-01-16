@@ -17,7 +17,8 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  CONF_BINARY_SENSORS, CONF_SENSORS,
                                  CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util.dt import as_local
 
 from . import config_flow
@@ -32,6 +33,8 @@ REQUIREMENTS = [
     'master.zip'
     '#logi_circle==0.2.1'
 ]
+
+SIGNAL_LOGI_RESTART_SUBSCRIPTION = 'logi_restart_ws'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,14 +75,22 @@ def logi_circle_update_event_broker(hass, subscription):
        API wrapper has processed a WS frame."""
 
     async def async_start(hass, subscription):
+        auto_restart_subscription = True
         await subscription.open()
-        while hass.is_running and subscription.is_open:
+        while hass.is_running and subscription.opened:
             await subscription.get_next_event()
 
-            if not hass.is_running or not subscription.is_open:
+            if not hass.is_running or subscription.invalidated:
+                auto_restart_subscription = False
                 break
 
             async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_UPDATE)
+
+        if auto_restart_subscription:
+            _LOGGER.warning(
+                "WS connection closed unexpectedly. Reopening in 10 secs.")
+            await asyncio.sleep(10)
+            async_dispatcher_send(hass, SIGNAL_LOGI_RESTART_SUBSCRIPTION)
 
     asyncio.new_event_loop().run_until_complete(
         async_start(hass, subscription))
@@ -145,30 +156,40 @@ async def async_setup_entry(hass, entry):
     if not logi_circle.authorized:
         return False
 
+    await logi_circle.synchronize_cameras()
+
     hass.data[DATA_LOGI] = logi_circle
     for component in 'camera', 'sensor', 'binary_sensor':
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
-    event_subscription = await logi_circle.subscribe(
-        ['accessory_settings_changed',
-         'activity_created',
-         'activity_updated',
-         'activity_finished'])
+    subscription = None
 
-    async def start_up(event):
+    async def start_up(event=None):
         """Start Logi update event listener."""
+        subscription = await logi_circle.subscribe(
+            ['accessory_settings_changed',
+             'activity_created',
+             'activity_updated',
+             'activity_finished'])
+
         threading.Thread(
             name='Logi update listener',
             target=logi_circle_update_event_broker,
-            args=(hass, event_subscription)
+            args=(hass, subscription)
         ).start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
+    async_unsub_dispatcher_connect = (
+        async_dispatcher_connect(hass, SIGNAL_LOGI_RESTART_SUBSCRIPTION,
+                                 start_up))
 
-    async def shut_down(event):
+    async def shut_down(event=None):
         """Stop Logi Circle update event listener."""
-        await event_subscription.close()
+        async_unsub_dispatcher_connect()
+        if subscription:
+            subscription.invalidate()
+            await subscription.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
 

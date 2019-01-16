@@ -29,13 +29,13 @@ LOGI_SENSORS = {
         'Battery', '%', 'battery-50'],
 
     'last_activity_time': [
-        'Last Activity', None, 'history'],
+        "Last Activity", None, 'history'],
 
     'signal_strength_category': [
-        'WiFi Signal Category', None, 'wifi'],
+        "WiFi Signal Category", None, 'wifi'],
 
     'signal_strength_percentage': [
-        'WiFi Signal Strength', '%', 'wifi']
+        "WiFi Signal Strength", '%', 'wifi']
 }
 
 # Binary sensor types: Name, device_class, icon
@@ -43,14 +43,14 @@ LOGI_BINARY_SENSORS = {
     'activity': [
         'Activity', 'motion', 'walk'],
 
-    'is_charging': [
+    'charging': [
         'Charging', 'connectivity', 'battery'],
 
-    'privacy_mode': [
-        'Privacy Mode', None, 'eye'],
+    'recording': [
+        'Recording', None, 'eye'],
 
-    'streaming_enabled': [
-        'Streaming Enabled', None, 'camera']
+    'streaming': [
+        'Streaming', None, 'camera']
 }
 
 # Attribution

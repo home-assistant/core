@@ -64,11 +64,11 @@ onvif_ptz:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
 
-logi_circle_set_privacy_mode:
-  description: Enables or disables activity recordings.
+logi_circle_set_recording_mode:
+  description: Enables or disables recording mode.
   fields:
     entity_id:
-      description: Name(s) of entities to change privacy mode for.
+      description: Name(s) of entities to change recording mode for.
       example: "camera.living_room_camera"
     value:
       description: "Privacy mode value. Allowed values: true, false"

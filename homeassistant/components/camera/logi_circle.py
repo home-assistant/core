@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SERVICE_SET_PRIVACY_MODE = 'logi_circle_set_privacy_mode'
+SERVICE_SET_RECORDING_MODE = 'logi_circle_set_recording_mode'
 SERVICE_LIVESTREAM_SNAPSHOT = 'logi_circle_livestream_snapshot'
 SERVICE_LIVESTREAM_RECORD = 'logi_circle_livestream_record'
 DATA_KEY = 'camera.logi_circle'
@@ -34,7 +34,7 @@ DATA_KEY = 'camera.logi_circle'
 ATTR_VALUE = 'value'
 ATTR_DURATION = 'duration'
 
-LOGI_CIRCLE_SERVICE_SET_PRIVACY_MODE = CAMERA_SERVICE_SCHEMA.extend({
+LOGI_CIRCLE_SERVICE_SET_RECORDING_MODE = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_VALUE): cv.boolean
 })
 
@@ -78,16 +78,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
             target_devices = cameras
 
         for target_device in target_devices:
-            if service.service == SERVICE_SET_PRIVACY_MODE:
-                await target_device.set_privacy_mode(**params)
+            if service.service == SERVICE_SET_RECORDING_MODE:
+                await target_device.set_recording_mode(**params)
             if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
                 await target_device.livestream_snapshot(**params)
             if service.service == SERVICE_LIVESTREAM_RECORD:
                 await target_device.download_livestream(**params)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_PRIVACY_MODE, service_handler,
-        schema=LOGI_CIRCLE_SERVICE_SET_PRIVACY_MODE)
+        DOMAIN, SERVICE_SET_RECORDING_MODE, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_SET_RECORDING_MODE)
 
     hass.services.async_register(
         DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
@@ -107,7 +107,6 @@ class LogiCam(Camera):
         self._camera = camera
         self._name = self._camera.name
         self._id = self._camera.id
-        self._has_battery = self._camera.supports_feature('battery_level')
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device_info.data.get(
             CONF_CAMERAS).get(CONF_FFMPEG_ARGUMENTS)
@@ -172,11 +171,11 @@ class LogiCam(Camera):
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""
-        await self._camera.set_config('streaming_enabled', False)
+        await self._camera.set_config('streaming', False)
 
     async def async_turn_on(self):
         """Enable streaming mode for this camera."""
-        await self._camera.set_config('streaming_enabled', True)
+        await self._camera.set_config('streaming', True)
 
     @property
     def should_poll(self):
@@ -186,11 +185,11 @@ class LogiCam(Camera):
     @property
     def is_on(self):
         """Return true if on."""
-        return self._camera.is_connected and self._camera.streaming_enabled
+        return self._camera.connected and self._camera.streaming
 
-    async def set_privacy_mode(self, value):
-        """Set an configuration property for the target camera."""
-        await self._camera.set_config('privacy_mode', value)
+    async def set_recording_mode(self, value):
+        """Set the recording mode for the target camera."""
+        await self._camera.set_config('recording_disabled', not value)
 
     async def download_livestream(self, filename, duration):
         """Download a recording from the camera's livestream."""
