@@ -34,6 +34,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa pylint: disable=unused-import
@@ -311,7 +312,11 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
     Call the return value to unsubscribe.
     """
     async_remove = await hass.data[DATA_MQTT].async_subscribe(
-        topic, msg_callback, qos, encoding)
+        topic, catch_log_exception(
+            msg_callback, lambda topic, msg, qos:
+            "Exception in {} when handling msg on '{}': '{}'".format(
+                msg_callback.__name__, topic, msg)),
+        qos, encoding)
     return async_remove
 
 
