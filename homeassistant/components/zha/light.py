@@ -155,7 +155,8 @@ class Light(ZhaEntity, light.Light):
 
         duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
         duration = duration * 10  # tenths of s
-        if light.ATTR_COLOR_TEMP in kwargs:
+        if light.ATTR_COLOR_TEMP in kwargs and \
+                self.supported_features & light.SUPPORT_COLOR_TEMP:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             try:
                 res = await self._endpoint.light_color.move_to_color_temp(
@@ -168,7 +169,8 @@ class Light(ZhaEntity, light.Light):
                 return
             self._color_temp = temperature
 
-        if light.ATTR_HS_COLOR in kwargs:
+        if light.ATTR_HS_COLOR in kwargs and \
+                self.supported_features & light.SUPPORT_COLOR:
             self._hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*self._hs_color)
             try:
@@ -187,7 +189,6 @@ class Light(ZhaEntity, light.Light):
         if self._brightness is not None:
             brightness = kwargs.get(
                 light.ATTR_BRIGHTNESS, self._brightness or 255)
-            self._brightness = brightness
             # Move to level with on/off:
             try:
                 res = await self._endpoint.level.move_to_level_with_on_off(
@@ -201,6 +202,7 @@ class Light(ZhaEntity, light.Light):
                               self.entity_id, ex)
                 return
             self._state = 1
+            self._brightness = brightness
             self.async_schedule_update_ha_state()
             return
 
