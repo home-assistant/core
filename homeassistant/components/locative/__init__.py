@@ -44,7 +44,6 @@ def _validate_test_mode(obj: Dict) -> Dict:
 
 
 WEBHOOK_SCHEMA = vol.All(
-    dict,
     vol.Schema({
         vol.Required(ATTR_LATITUDE): cv.latitude,
         vol.Required(ATTR_LONGITUDE): cv.longitude,
