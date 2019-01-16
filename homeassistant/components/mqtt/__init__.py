@@ -5,9 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
 import asyncio
-import inspect
 from itertools import groupby
-from functools import wraps
 import json
 import logging
 from operator import attrgetter
@@ -15,7 +13,6 @@ import os
 import socket
 import ssl
 import time
-import traceback
 from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
 
 import attr
@@ -37,6 +34,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa pylint: disable=unused-import
@@ -304,39 +302,6 @@ def publish_template(hass: HomeAssistantType, topic, payload_template,
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def wrap_callback(func):
-    """Decorate an MQTT message callback to catch and log exceptions."""
-    def log_exception(topic, payload):
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-        # Do not print the wrapper in the traceback
-        frames = len(inspect.trace()) - 1
-        err = traceback.format_exc(-frames)
-        logging.getLogger(module_name).error(
-            "Exception in %s when handling msg on '%s': '%s'\n%s",
-            func.__name__, topic, payload, err)
-
-    wrapper_func = None
-    if asyncio.iscoroutinefunction(func):
-        @wraps(func)
-        async def wrapper(topic, payload, qos):
-            """Catch and log exception."""
-            try:
-                await func(topic, payload, qos)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(topic, payload)
-        wrapper_func = wrapper
-    else:
-        @wraps(func)
-        def wrapper(topic, payload, qos):
-            """Catch and log exception."""
-            try:
-                func(topic, payload, qos)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(topic, payload)
-        wrapper_func = wrapper
-    return wrapper_func
-
-
 @bind_hass
 async def async_subscribe(hass: HomeAssistantType, topic: str,
                           msg_callback: MessageCallbackType,
@@ -347,7 +312,11 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
     Call the return value to unsubscribe.
     """
     async_remove = await hass.data[DATA_MQTT].async_subscribe(
-        topic, wrap_callback(msg_callback), qos, encoding)
+        topic, catch_log_exception(
+            msg_callback, lambda topic, msg, qos:
+            "Exception in {} when handling msg on '{}': '{}'".format(
+                msg_callback.__name__, topic, msg)),
+        qos, encoding)
     return async_remove
 
 

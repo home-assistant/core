@@ -1,8 +1,11 @@
 """Logging utilities."""
 import asyncio
 from asyncio.events import AbstractEventLoop
+from functools import wraps
+import inspect
 import logging
 import threading
+import traceback
 from typing import Optional
 
 from .async_ import run_coroutine_threadsafe
@@ -121,3 +124,35 @@ class AsyncHandler:
     def name(self, name: str) -> None:
         """Wrap property get_name to handler."""
         self.handler.set_name(name)  # type: ignore
+
+
+def catch_log_exception(func, format_err, *args):
+    """Decorate an callback to catch and log exceptions."""
+    def log_exception(*args):
+        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        # Do not print the wrapper in the traceback
+        frames = len(inspect.trace()) - 1
+        exc_msg = traceback.format_exc(-frames)
+        friendly_msg = format_err(*args)
+        logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
+
+    wrapper_func = None
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def wrapper(*args):
+            """Catch and log exception."""
+            try:
+                await func(*args)
+            except Exception:  # pylint: disable=broad-except
+                log_exception(*args)
+        wrapper_func = wrapper
+    else:
+        @wraps(func)
+        def wrapper(*args):
+            """Catch and log exception."""
+            try:
+                func(*args)
+            except Exception:  # pylint: disable=broad-except
+                log_exception(*args)
+        wrapper_func = wrapper
+    return wrapper_func
