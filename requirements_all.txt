@@ -1087,7 +1087,7 @@ pylutron-caseta==0.5.0
 # homeassistant.components.lutron
 pylutron==0.2.0
 
-# homeassistant.components.notify.mailgun
+# homeassistant.components.mailgun.notify
 pymailgunner==1.4
 
 # homeassistant.components.media_player.mediaroom
