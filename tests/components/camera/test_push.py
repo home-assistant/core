@@ -9,9 +9,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 
-async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
+async def test_bad_posting(hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
-    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
@@ -23,17 +22,9 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
 
     client = await aiohttp_client(hass.http.app)
 
-    # wrong webhook
-    files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post('/api/webhood/camera.wrong', data=files)
-    assert resp.status == 404
-
     # missing file
-    camera_state = hass.states.get('camera.config_test')
-    assert camera_state.state == 'idle'
-
-    resp = await client.post('/api/webhook/camera.config_test')
-    assert resp.status == 200  # webhooks always return 200
+    async with client.post('/api/webhook/camera.config_test') as resp:
+        assert resp.status == 200  # webhooks always return 200
 
     camera_state = hass.states.get('camera.config_test')
     assert camera_state.state == 'idle'  # no file supplied we are still idle
@@ -41,7 +32,6 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
 
 async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
-    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
