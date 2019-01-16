@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from tests.common import async_fire_time_changed
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID)
-from homeassistant.components.sensor.utility_meter import (
+from homeassistant.components.utility_meter import (
     SERVICE_START_PAUSE, SERVICE_RESET)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -15,8 +15,8 @@ import homeassistant.util.dt as dt_util
 @contextmanager
 def alter_time(retval):
     """Manage multiple time mocks."""
-    with patch("homeassistant.components.sensor."
-               "utility_meter.dt_util.now", return_value=retval):
+    with patch("homeassistant.components."
+               "utility_meter.sensor.dt_util.now", return_value=retval):
         yield
 
 
@@ -38,7 +38,7 @@ async def test_state(hass):
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 3, {"unit_of_measurement": "kWh"},
                               force_update=True)
@@ -53,6 +53,7 @@ async def test_state(hass):
 async def test_services(hass):
     """Test energy sensor reset service."""
     config = {
+        'utility_meter': {},
         'sensor': {
             'platform': 'utility_meter',
             'name': 'meter',
@@ -62,6 +63,7 @@ async def test_services(hass):
     }
 
     assert await async_setup_component(hass, 'sensor', config)
+    assert await async_setup_component(hass, 'utility_meter', config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     entity_id = config['sensor']['source']
@@ -69,7 +71,7 @@ async def test_services(hass):
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 3, {"unit_of_measurement": "kWh"},
                               force_update=True)
@@ -80,11 +82,11 @@ async def test_services(hass):
 
     # Pause meter - will not meter next period
     data = {ATTR_ENTITY_ID: 'sensor.meter'}
-    await hass.services.async_call('sensor', SERVICE_START_PAUSE, data)
+    await hass.services.async_call('utility_meter', SERVICE_START_PAUSE, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
-    with patch('homeassistant.helpers.condition.dt_util.utcnow',
+    with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.states.async_set(entity_id, 5, {"unit_of_measurement": "kWh"},
                               force_update=True)
@@ -94,7 +96,7 @@ async def test_services(hass):
     assert state.state == '2'
 
     data = {ATTR_ENTITY_ID: 'sensor.meter'}
-    await hass.services.async_call('sensor', SERVICE_RESET, data)
+    await hass.services.async_call('utility_meter', SERVICE_RESET, data)
     await hass.async_block_till_done()
 
     state = hass.states.get('sensor.meter')
