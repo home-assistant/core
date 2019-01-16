@@ -69,7 +69,7 @@ class BrottsplatskartanSensor(Entity):
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        self._attributes = dict()
+        self._attributes = {}
         self._brottsplatskartan = bpk
         self._name = name
         self._state = None
