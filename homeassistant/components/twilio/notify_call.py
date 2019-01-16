@@ -1,5 +1,5 @@
 """
-Twilio Call platform for notify component.
+Support for the Twilio Call platform notification service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.twilio_call/
