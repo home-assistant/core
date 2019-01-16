@@ -71,7 +71,7 @@ class ImapSensor(Entity):
         self._server = server
         self._port = port
         self._folder = folder
-        self._email_count = 0
+        self._email_count = None
         self._search = search
         self._connection = None
         self._does_push = None
@@ -163,8 +163,8 @@ class ImapSensor(Entity):
             if result == 'OK':
                 self._email_count = len(lines[0].split())
             else:
-                _LOGGER.warning("Can't parse IMAP server response to search '%s':  %s / %s", self._search, result, lines[0])
-                self._email_count = 0
+                _LOGGER.error("Can't parse IMAP server response to search "
+                    "'%s':  %s / %s", self._search, result, lines[0])
 
     def disconnected(self):
         """Forget the connection after it was lost."""
