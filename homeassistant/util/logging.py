@@ -126,7 +126,10 @@ class AsyncHandler:
         self.handler.set_name(name)  # type: ignore
 
 
-def catch_log_exception(func: Callable[..., Any], format_err: Callable[..., Any], *args: Any) -> Callable[[], None]:
+def catch_log_exception(
+        func: Callable[..., Any],
+        format_err: Callable[..., Any],
+        *args: Any) -> Callable[[], None]:
     """Decorate an callback to catch and log exceptions."""
     def log_exception(*args: Any) -> None:
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
