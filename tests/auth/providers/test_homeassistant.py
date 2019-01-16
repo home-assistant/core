@@ -1,5 +1,5 @@
 """Test the Home Assistant local auth provider."""
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -8,6 +8,8 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, auth_store
 from homeassistant.auth.providers import (
     auth_provider_from_config, homeassistant as hass_auth)
+
+from tests.common import mock_coro
 
 
 @pytest.fixture
@@ -146,23 +148,41 @@ async def test_saving_loading(data, hass):
     data.validate_login('second-user ', 'second-pass')
 
 
+async def test_get_or_create_credentials(hass, data):
+    """Test that we can get or create credentials."""
+    manager = await auth_manager_from_config(hass, [{
+        'type': 'homeassistant'
+    }], [])
+    provider = manager.auth_providers[0]
+    provider.data = data
+    credentials1 = await provider.async_get_or_create_credentials({
+        'username': 'hello'
+    })
+    with patch.object(provider, 'async_credentials',
+                      return_value=mock_coro([credentials1])):
+        credentials2 = await provider.async_get_or_create_credentials({
+            'username': 'hello '
+        })
+    assert credentials1 is credentials2
+
+
 # Legacy mode
 
 async def test_legacy_adding_user(legacy_data, hass):
-    """Test adding a user."""
+    """Test in legacy mode adding a user."""
     legacy_data.add_auth('test-user', 'test-pass')
     legacy_data.validate_login('test-user', 'test-pass')
 
 
 async def test_legacy_adding_user_duplicate_username(legacy_data, hass):
-    """Test adding a user with duplicate username."""
+    """Test in legacy mode adding a user with duplicate username."""
     legacy_data.add_auth('test-user', 'test-pass')
     with pytest.raises(hass_auth.InvalidUser):
         legacy_data.add_auth('test-user', 'other-pass')
 
 
 async def test_legacy_validating_password_invalid_password(legacy_data, hass):
-    """Test validating an invalid password."""
+    """Test in legacy mode validating an invalid password."""
     legacy_data.add_auth('test-user', 'test-pass')
 
     with pytest.raises(hass_auth.InvalidAuth):
@@ -170,7 +190,7 @@ async def test_legacy_validating_password_invalid_password(legacy_data, hass):
 
 
 async def test_legacy_changing_password(legacy_data, hass):
-    """Test adding a user."""
+    """Test in legacy mode adding a user."""
     user = 'test-user'
     legacy_data.add_auth(user, 'test-pass')
     legacy_data.change_password(user, 'new-pass')
@@ -182,13 +202,13 @@ async def test_legacy_changing_password(legacy_data, hass):
 
 
 async def test_legacy_changing_password_raises_invalid_user(legacy_data, hass):
-    """Test that we initialize an empty config."""
+    """Test in legacy mode that we initialize an empty config."""
     with pytest.raises(hass_auth.InvalidUser):
         legacy_data.change_password('non-existing', 'pw')
 
 
 async def test_legacy_login_flow_validates(legacy_data, hass):
-    """Test login flow."""
+    """Test in legacy mode login flow."""
     legacy_data.add_auth('test-user', 'test-pass')
     await legacy_data.async_save()
 
@@ -221,7 +241,7 @@ async def test_legacy_login_flow_validates(legacy_data, hass):
 
 
 async def test_legacy_saving_loading(legacy_data, hass):
-    """Test saving and loading JSON."""
+    """Test in legacy mode saving and loading JSON."""
     legacy_data.add_auth('test-user', 'test-pass')
     legacy_data.add_auth('second-user', 'second-pass')
     await legacy_data.async_save()
@@ -234,3 +254,29 @@ async def test_legacy_saving_loading(legacy_data, hass):
 
     with pytest.raises(hass_auth.InvalidAuth):
         legacy_data.validate_login('test-user ', 'test-pass')
+
+
+async def test_legacy_get_or_create_credentials(hass, legacy_data):
+    """Test in legacy mode that we can get or create credentials."""
+    manager = await auth_manager_from_config(hass, [{
+        'type': 'homeassistant'
+    }], [])
+    provider = manager.auth_providers[0]
+    provider.data = legacy_data
+    credentials1 = await provider.async_get_or_create_credentials({
+        'username': 'hello'
+    })
+
+    with patch.object(provider, 'async_credentials',
+                      return_value=mock_coro([credentials1])):
+        credentials2 = await provider.async_get_or_create_credentials({
+            'username': 'hello'
+        })
+    assert credentials1 is credentials2
+
+    with patch.object(provider, 'async_credentials',
+                      return_value=mock_coro([credentials1])):
+        credentials3 = await provider.async_get_or_create_credentials({
+            'username': 'hello '
+        })
+    assert credentials1 is not credentials3
