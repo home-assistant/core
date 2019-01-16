@@ -62,7 +62,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
         self._features |= SUPPORT_SET_POSITION
 
     @property
-    def current_device_position(self):
+    def current_cover_position(self):
         """Return the current position of the cover."""
         if self.is_closed:
             return 0
