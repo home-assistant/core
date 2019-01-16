@@ -117,7 +117,7 @@ class DeviceBroker:
     """Manages an individual SmartThings config entry."""
 
     def __init__(self, hass, devices, installed_app_id: str):
-        """Create a new instance of the SmartThingsInstalledApp."""
+        """Create a new instance of the DeviceBroker."""
         self.devices = {}
         self._hass = hass
         self._installed_app_id = installed_app_id
@@ -195,7 +195,7 @@ class SmartThingsEntity(Entity):
 
     @property
     def name(self) -> str:
-        """Return the name of the light if any."""
+        """Return the name of the device."""
         return self._device.label
 
     @property

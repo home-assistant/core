@@ -2,7 +2,7 @@
 Support for switches through the SmartThings cloud API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.smnartthings/
+https://home-assistant.io/components/switch.smartthings/
 """
 from homeassistant.components.smartthings import SmartThingsEntity
 from homeassistant.components.smartthings.const import (
