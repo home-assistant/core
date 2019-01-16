@@ -38,7 +38,7 @@ async def async_setup(hass, config):
     @callback
     def async_service_reset_meter(service):
         """Process service reset meter."""
-        for entity in service.data.get(ATTR_ENTITY_ID):
+        for entity in service.data[ATTR_ENTITY_ID]:
             dispatcher_send(hass, SIGNAL_RESET_METER, entity)
 
     hass.services.async_register(DOMAIN, SERVICE_START_PAUSE,

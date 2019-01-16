@@ -49,8 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 PRECISION = 3
-PAUSED = "paused"
-COLLECTING = "collecting"
+PAUSED = 'paused'
+COLLECTING = 'collecting'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
