@@ -239,7 +239,7 @@ omit =
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
-    homeassistant/components/*/mailgun.py
+    homeassistant/components/mailgun/notify.py
 
     homeassistant/components/matrix.py
     homeassistant/components/*/matrix.py
