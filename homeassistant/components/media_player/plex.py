@@ -17,9 +17,11 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice, _async_fetch_image)
 from homeassistant.const import (
-    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    CONF_VERIFY_SSL, DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
@@ -108,6 +110,7 @@ def setup_plexserver(
         _LOGGER.info("Ignoring SSL verification")
         cert_session = requests.Session()
         cert_session.verify = False
+        config[CONF_VERIFY_SSL] = False
     try:
         plexserver = plexapi.server.PlexServer(
             '%s://%s' % (http_prefix, host),
@@ -309,6 +312,7 @@ class PlexClient(MediaPlayerDevice):
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
+        self._verify_ssl = self.config.get(CONF_VERIFY_SSL, True)
         self._media_title = None
         self._media_position = None
         # Music
@@ -614,6 +618,14 @@ class PlexClient(MediaPlayerDevice):
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self._media_image_url
+
+    async def async_get_media_image(self):
+        """Fetch media image of current playing image."""
+        url = self.media_image_url
+        if url is None:
+            return None, None
+
+        return await _async_fetch_image(self.hass, url, self._verify_ssl)
 
     @property
     def media_title(self):
