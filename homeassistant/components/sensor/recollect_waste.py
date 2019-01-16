@@ -95,5 +95,5 @@ class RecollectWasteSensor(Entity):
                 ATTR_PICKUP_TYPES: pickup_event.pickup_types,
                 ATTR_AREA_NAME: pickup_event.area_name
             })
-        except recollect_waste.RecollectWasteError as ex:
+        except recollect_waste.RecollectWasteException as ex:
             _LOGGER.error('Recollect Waste platform error. %s', ex)
