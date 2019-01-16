@@ -7,12 +7,11 @@ https://home-assistant.io/components/binary_sensor.deconz/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DECONZ_REACHABLE,
-    DOMAIN as DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
@@ -45,28 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_sensor(gateway.api.sensors.values())
 
 
-class DeconzBinarySensor(BinarySensorDevice):
-    """Representation of a binary sensor."""
-
-    def __init__(self, sensor, gateway):
-        """Set up sensor and add update callback to get data from websocket."""
-        self._sensor = sensor
-        self.gateway = gateway
-        self.unsub_dispatcher = None
-
-    async def async_added_to_hass(self):
-        """Subscribe sensors events."""
-        self._sensor.register_async_callback(self.async_update_callback)
-        self.gateway.deconz_ids[self.entity_id] = self._sensor.deconz_id
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DECONZ_REACHABLE, self.async_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect sensor object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-        self._sensor.remove_callback(self.async_update_callback)
-        self._sensor = None
+class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
+    """Representation of a deCONZ binary sensor."""
 
     @callback
     def async_update_callback(self, reason):
@@ -84,65 +63,27 @@ class DeconzBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._sensor.is_tripped
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._sensor.name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return self._sensor.uniqueid
+        return self._device.is_tripped
 
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._sensor.sensor_class
+        return self._device.sensor_class
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._sensor.sensor_icon
-
-    @property
-    def available(self):
-        """Return True if sensor is available."""
-        return self.gateway.available and self._sensor.reachable
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        return self._device.sensor_icon
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         from pydeconz.sensor import PRESENCE
         attr = {}
-        if self._sensor.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
-        if self._sensor.on is not None:
-            attr[ATTR_ON] = self._sensor.on
-        if self._sensor.type in PRESENCE and self._sensor.dark is not None:
-            attr[ATTR_DARK] = self._sensor.dark
+        if self._device.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._device.battery
+        if self._device.on is not None:
+            attr[ATTR_ON] = self._device.on
+        if self._device.type in PRESENCE and self._device.dark is not None:
+            attr[ATTR_DARK] = self._device.dark
         return attr
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        if (self._sensor.uniqueid is None or
-                self._sensor.uniqueid.count(':') != 7):
-            return None
-        serial = self._sensor.uniqueid.split('-', 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-        return {
-            'connections': {(CONNECTION_ZIGBEE, serial)},
-            'identifiers': {(DECONZ_DOMAIN, serial)},
-            'manufacturer': self._sensor.manufacturer,
-            'model': self._sensor.modelid,
-            'name': self._sensor.name,
-            'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, bridgeid),
-        }
