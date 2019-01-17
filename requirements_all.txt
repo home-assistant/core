@@ -1124,7 +1124,7 @@ pynetgear==0.5.2
 pynetio==0.1.9.1
 
 # homeassistant.components.lock.nuki
-pynuki==1.3.1
+pynuki==1.3.2
 
 # homeassistant.components.sensor.nut
 pynut2==2.1.2
