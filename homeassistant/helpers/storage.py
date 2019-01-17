@@ -118,6 +118,12 @@ class Store:
         self._async_cleanup_stop_listener()
         await self._async_handle_write_data()
 
+    async def async_delete(self) -> None:
+        """Delete data."""
+        self._async_cleanup_delay_listener()
+        self._async_cleanup_stop_listener()
+        await self.hass.async_add_executor_job(os.remove, self.path)
+
     @callback
     def async_delay_save(self, data_func: Callable[[], Dict],
                          delay: Optional[int] = None):
