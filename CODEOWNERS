@@ -202,6 +202,8 @@ homeassistant/components/*/konnected.py @heythisisnate
 # L
 homeassistant/components/lifx.py @amelchio
 homeassistant/components/*/lifx.py @amelchio
+homeassistant/components/logi_circle/* @evanjd
+homeassistant/components/*/logi_circle.py @evanjd
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/*/luftdaten.py @fabaff
 
