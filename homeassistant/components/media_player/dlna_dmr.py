@@ -355,7 +355,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not self._available:
             return STATE_OFF
 
-        from async_upnp_client.profiles import DeviceState
+        from async_upnp_client.profiles.dlna import DeviceState
         if self._device.state is None:
             return STATE_ON
         if self._device.state == DeviceState.PLAYING:
