@@ -14,7 +14,6 @@ DEPENDENCIES = ['zoneminder']
 async def async_setup_platform(hass, config, add_entities,
                                discovery_info=None):
     """Set up the ZoneMinder binary sensor platform."""
-
     sensors = []
     for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
         sensors.append(ZMAvailabilitySensor(host_name, zm_client))
@@ -33,10 +32,12 @@ class ZMAvailabilitySensor(BinarySensorDevice):
 
     @property
     def name(self):
+        """Return the name of this binary sensor."""
         return self._name
 
     @property
     def is_on(self):
+        """Return true if the binary sensor is on."""
         return self._state
 
     @property
@@ -45,4 +46,5 @@ class ZMAvailabilitySensor(BinarySensorDevice):
         return 'connectivity'
 
     def update(self):
+        """Update the state of this sensor (availability of ZoneMinder)."""
         self._state = self._client.is_available
