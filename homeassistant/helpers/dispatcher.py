@@ -79,4 +79,4 @@ def async_dispatcher_send(
     target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, [])
 
     for target in target_list:
-        hass.async_add_job(target, signal, *args)
+        hass.async_add_job(target, *args)
