@@ -20,7 +20,8 @@ from homeassistant.const import (
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -107,7 +108,8 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
         vol.In(VALUES_ON_COMMAND_TYPE),
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_entity_basic(hass, config, async_add_entities,
@@ -120,8 +122,8 @@ async def async_setup_entity_basic(hass, config, async_add_entities,
 
 
 # pylint: disable=too-many-ancestors
-class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                Light, RestoreEntity):
+class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT light."""
 
     def __init__(self, config, discovery_hash):
@@ -152,6 +154,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -166,6 +169,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA_BASIC(discovery_payload)
         self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
@@ -467,6 +471,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
