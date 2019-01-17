@@ -81,6 +81,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         try:
             app = await find_app(self.hass, self.api)
             if app:
+                await app.refresh()  # load all attributes
                 await update_app(self.hass, app)
             else:
                 app = await create_app(self.hass, self.api)

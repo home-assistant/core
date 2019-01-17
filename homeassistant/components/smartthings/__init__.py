@@ -20,8 +20,7 @@ from .const import (
     CONF_APP_ID, CONF_INSTALLED_APP_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
     SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
 from .smartapp import (
-    setup_smartapp, setup_smartapp_endpoint, update_app,
-    validate_installed_app)
+    setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
 REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.1']
 DEPENDENCIES = ['webhook']
@@ -56,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         if not smart_app:
             # Validate and setup the app.
             app = await api.app(entry.data[CONF_APP_ID])
-            await update_app(hass, app)
             smart_app = setup_smartapp(hass, app)
 
         # Validate and retrieve the installed app.
@@ -76,11 +74,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
+        _LOGGER.exception(ex)
         if ex.status in (400, 401, 403, 422):
             remove_entry = True
         else:
             raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
+        _LOGGER.exception(ex)
         raise ConfigEntryNotReady from ex
 
     if remove_entry:

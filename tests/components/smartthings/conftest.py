@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components import webhook
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, WEBHOOK_ID)
+    CONF_LOCATION_ID, CONF_WEBHOOK_ID, DOMAIN, SETTINGS_INSTANCE_ID)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -64,7 +64,8 @@ def app_fixture(hass, config_file):
         'description': "Home Assistant at " + hass.config.api.base_url,
         'singleInstance': True,
         'webhookSmartApp': {
-            'targetUrl': webhook.async_generate_url(hass, WEBHOOK_ID),
+            'targetUrl': webhook.async_generate_url(
+                hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]),
             'publicKey': ''}
     })
     app.refresh = Mock()
@@ -114,7 +115,10 @@ def installed_apps_fixture(installed_app, locations, app):
 @pytest.fixture(name='config_file')
 def config_file_fixture():
     """Fixture representing the local config file contents."""
-    return {CONF_INSTANCE_ID: str(uuid4())}
+    return {
+        CONF_INSTANCE_ID: str(uuid4()),
+        CONF_WEBHOOK_ID: webhook.generate_secret()
+    }
 
 
 @pytest.fixture(name='smartthings_mock')

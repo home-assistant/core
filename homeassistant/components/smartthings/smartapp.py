@@ -24,7 +24,7 @@ from .const import (
     APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
     SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, SMARTTHINGS_CONFIG_FILE,
-    SUPPORTED_CAPABILITIES, WEBHOOK_ID)
+    SUPPORTED_CAPABILITIES, CONF_WEBHOOK_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,8 @@ def _get_app_template(hass: HomeAssistantType):
         'app_name': APP_NAME_PREFIX + str(uuid4()),
         'display_name': 'Home Assistant',
         'description': "Home Assistant at " + hass.config.api.base_url,
-        'webhook_target_url': webhook.async_generate_url(hass, WEBHOOK_ID),
+        'webhook_target_url': webhook.async_generate_url(
+            hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]),
         'app_type': APP_TYPE_WEBHOOK,
         'single_instance': True,
         'classifications': [CLASSIFICATION_AUTOMATION]
@@ -108,7 +109,6 @@ async def create_app(hass: HomeAssistantType, api):
 
 async def update_app(hass: HomeAssistantType, app):
     """Ensure the SmartApp is up-to-date and update if necessary."""
-    await app.refresh()  # load all attributes
     template = _get_app_template(hass)
     template.pop('app_name')  # don't update this
     update_required = False
@@ -161,7 +161,8 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     if not await hass.async_add_job(os.path.isfile, path):
         # Create config
         config = {
-            CONF_INSTANCE_ID: str(uuid4())
+            CONF_INSTANCE_ID: str(uuid4()),
+            CONF_WEBHOOK_ID: webhook.generate_secret()
         }
         await hass.async_add_job(save_json, path, config)
     else:
@@ -173,18 +174,19 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         signal_prefix=SIGNAL_SMARTAPP_PREFIX,
         connect=functools.partial(async_dispatcher_connect, hass),
         send=functools.partial(async_dispatcher_send, hass))
-    manager = SmartAppManager('/api/webhook/' + WEBHOOK_ID,
+    manager = SmartAppManager('/api/webhook/' + config[CONF_WEBHOOK_ID],
                               dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
     manager.connect_uninstall(functools.partial(smartapp_uninstall, hass))
 
     webhook.async_register(hass, DOMAIN, 'SmartApp',
-                           WEBHOOK_ID, smartapp_webhook)
+                           config[CONF_WEBHOOK_ID], smartapp_webhook)
 
     hass.data[DOMAIN] = {
         DATA_MANAGER: manager,
         CONF_INSTANCE_ID: config[CONF_INSTANCE_ID],
-        DATA_BROKERS: {}
+        DATA_BROKERS: {},
+        CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID]
     }
 
 
@@ -242,7 +244,12 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
 
 
 async def smartapp_webhook(hass: HomeAssistantType, webhook_id: str, request):
-    """Handle a webhook callback."""
+    """
+    Handle a smartapp lifecycle event callback from SmartThings.
+
+    Requests from SmartThings are digitally signed and the SmartAppManager
+    validates the signature for authenticity.
+    """
     manager = hass.data[DOMAIN][DATA_MANAGER]
     data = await request.json()
     result = await manager.handle_request(data, request.headers)

@@ -9,6 +9,7 @@ CONF_APP_ID = 'app_id'
 CONF_INSTALLED_APP_ID = 'installed_app_id'
 CONF_INSTANCE_ID = 'instance_id'
 CONF_LOCATION_ID = 'location_id'
+CONF_WEBHOOK_ID = 'webhook_id'
 DATA_MANAGER = 'manager'
 DATA_BROKERS = 'brokers'
 DOMAIN = 'smartthings'
@@ -25,4 +26,3 @@ SUPPORTED_CAPABILITIES = [
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
 VAL_UID_MATCHER = re.compile(VAL_UID)
-WEBHOOK_ID = 'smartapp'

@@ -6,7 +6,7 @@ from pysmartthings import AppEntity
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
-    DATA_MANAGER, DOMAIN, SUPPORTED_CAPABILITIES, WEBHOOK_ID)
+    DATA_MANAGER, DOMAIN, SUPPORTED_CAPABILITIES)
 
 from tests.common import mock_coro
 
@@ -14,7 +14,6 @@ from tests.common import mock_coro
 async def test_update_app(hass, app):
     """Test update_app does not save if app is current."""
     await smartapp.update_app(hass, app)
-    assert app.refresh.call_count == 1
     assert app.save.call_count == 0
 
 
@@ -27,7 +26,6 @@ async def test_update_app_updated_needed(hass, app):
 
     await smartapp.update_app(hass, mock_app)
 
-    assert mock_app.refresh.call_count == 1
     assert mock_app.save.call_count == 1
     assert mock_app.app_name == 'Test'
     assert mock_app.display_name == app.display_name
@@ -109,6 +107,6 @@ async def test_smartapp_webhook(hass):
     request = Mock()
     request.headers = []
     request.json.return_value = mock_coro(return_value={})
-    result = await smartapp.smartapp_webhook(hass, WEBHOOK_ID, request)
+    result = await smartapp.smartapp_webhook(hass, '', request)
 
     assert result.body == b'{}'
