@@ -314,8 +314,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        from async_upnp_client.profiles import dlna
-        if self._device.state == dlna.STATE_PLAYING:
+        from async_upnp_client.profiles.dlna import DeviceState
+        if self._device.state == DeviceState.PLAYING:
             return
 
         # Play it
