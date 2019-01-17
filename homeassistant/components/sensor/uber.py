@@ -18,6 +18,7 @@ REQUIREMENTS = ['uber_rides==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_NAME = 'name'
 CONF_END_LATITUDE = 'end_latitude'
 CONF_END_LONGITUDE = 'end_longitude'
 CONF_PRODUCT_IDS = 'product_ids'
@@ -31,6 +32,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVER_TOKEN): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_START_LATITUDE): cv.latitude,
     vol.Optional(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
@@ -44,6 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from uber_rides.session import Session
 
     session = Session(server_token=config.get(CONF_SERVER_TOKEN))
+    name = config.get(CONF_NAME)
     start_latitude = config.get(CONF_START_LATITUDE, hass.config.latitude)
     start_longitude = config.get(CONF_START_LONGITUDE, hass.config.longitude)
     end_latitude = config.get(CONF_END_LATITUDE)
@@ -58,12 +61,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
             continue
-        dev.append(UberSensor('time', timeandpriceest, product_id, product))
+        dev.append(UberSensor(
+            name, 'time', timeandpriceest, product_id, product))
 
         if product.get('price_details') is not None \
                 and product['display_name'] != 'TAXI':
             dev.append(UberSensor(
-                'price', timeandpriceest, product_id, product))
+                name, 'price', timeandpriceest, product_id, product))
 
     add_entities(dev, True)
 
@@ -71,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UberSensor(Entity):
     """Implementation of an Uber sensor."""
 
-    def __init__(self, sensorType, products, product_id, product):
+    def __init__(self, name, sensorType, products, product_id, product):
         """Initialize the Uber sensor."""
         self.data = products
         self._product_id = product_id
@@ -79,6 +83,9 @@ class UberSensor(Entity):
         self._sensortype = sensorType
         self._name = '{} {}'.format(
             self._product['display_name'], self._sensortype)
+        if name is not None:
+            self._name = '{} {}'.format(self._name, name)
+
         if self._sensortype == 'time':
             self._unit_of_measurement = 'min'
             time_estimate = self._product.get('time_estimate_seconds', 0)
