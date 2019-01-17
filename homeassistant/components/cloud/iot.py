@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import pprint
+import random
 import uuid
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
@@ -107,9 +108,11 @@ class CloudIoT:
             self.tries += 1
 
             try:
-                # Sleep 2^tries seconds between retries
-                self.retry_task = hass.async_create_task(asyncio.sleep(
-                    2**min(9, self.tries), loop=hass.loop))
+                # Sleep 2^tries + 0…tries*3 seconds between retries
+                self.retry_task = hass.async_create_task(
+                    asyncio.sleep(2**min(9, self.tries) +
+                                  random.randint(0, self.tries * 3),
+                                  loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
