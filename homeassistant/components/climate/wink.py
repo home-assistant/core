@@ -29,6 +29,7 @@ ATTR_SMART_TEMPERATURE = 'smart_temperature'
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_HEAT_ON = 'heat_on'
 ATTR_COOL_ON = 'cool_on'
+ATTR_FAN_ON = 'fan_on'
 
 DEPENDENCIES = ['wink']
 
@@ -122,6 +123,9 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.cool_on is not None:
             data[ATTR_COOL_ON] = self.cool_on
 
+        if self.fan_on is not None:
+            data[ATTR_FAN_ON] = self.fan_on
+
         current_humidity = self.current_humidity
         if current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -172,8 +176,13 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     @property
     def cool_on(self):
-        """Return whether or not the heat is actually heating."""
+        """Return whether or not the cooler is actually cooling."""
         return self.wink.cool_on()
+
+    @property
+    def fan_on(self):
+        """Return whether or not the fan is actually running."""
+        return self.wink.fan_on()
 
     @property
     def current_operation(self):
