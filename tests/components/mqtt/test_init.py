@@ -297,6 +297,23 @@ class TestMQTTCallbacks(unittest.TestCase):
                 "b'\\x9a' on test-topic with encoding utf-8" in \
                 test_handle.output[0]
 
+    def test_message_callback_exception_gets_logged(self):
+        """Test exception raised by message handler."""
+        @callback
+        def bad_handler(*args):
+            """Record calls."""
+            raise Exception('This is a bad message callback')
+        mqtt.subscribe(self.hass, 'test-topic', bad_handler)
+
+        with self.assertLogs(level='WARNING') as test_handle:
+            fire_mqtt_message(self.hass, 'test-topic', 'test')
+
+            self.hass.block_till_done()
+            assert \
+                "Exception in bad_handler when handling msg on 'test-topic':" \
+                " 'test'" in \
+                test_handle.output[0]
+
     def test_all_subscriptions_run_when_decode_fails(self):
         """Test all other subscriptions still run when decode fails for one."""
         mqtt.subscribe(self.hass, 'test-topic', self.record_calls,

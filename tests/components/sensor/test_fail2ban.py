@@ -118,7 +118,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_ipv6_ban(self):
         """Test that log is parsed correctly for IPV6 bans."""
-        log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
+        log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('ipv6_ban'))

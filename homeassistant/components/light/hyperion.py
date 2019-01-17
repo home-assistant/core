@@ -177,11 +177,6 @@ class Hyperion(Light):
     def turn_off(self, **kwargs):
         """Disconnect all remotes."""
         self.json_request({'command': 'clearall'})
-        self.json_request({
-            'command': 'color',
-            'priority': self._priority,
-            'color': [0, 0, 0]
-        })
 
     def update(self):
         """Get the lights status."""
