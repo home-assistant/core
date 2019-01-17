@@ -71,7 +71,7 @@ logi_circle_set_recording_mode:
       description: Name(s) of entities to change recording mode for.
       example: "camera.living_room_camera"
     value:
-      description: "Privacy mode value. Allowed values: true, false"
+      description: "Recording mode value. Allowed values: true, false"
       example: true
 
 logi_circle_livestream_snapshot:
