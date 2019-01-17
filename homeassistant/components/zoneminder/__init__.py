@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PATH, CONF_SSL, CONF_USERNAME,
     CONF_VERIFY_SSL, ATTR_NAME, ATTR_ID)
+from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +92,10 @@ def setup(hass, config):
     hass.services.register(
         DOMAIN, SERVICE_SET_RUN_STATE, set_active_state,
         schema=SET_RUN_STATE_SCHEMA
+    )
+
+    hass.async_create_task(
+        async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
     )
 
     return success
