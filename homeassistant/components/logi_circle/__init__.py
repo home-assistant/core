@@ -175,9 +175,9 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        # Ensure the cameras property returns the same Camera object for all
-        # devices. Performs implicit login and session validation.
         with async_timeout.timeout(_TIMEOUT, loop=hass.loop):
+            # Ensure the cameras property returns the same Camera objects for
+            # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()
     except AuthorizationFailed:
         hass.components.persistent_notification.create(
@@ -222,7 +222,10 @@ async def async_setup_entry(hass, entry):
             args=(hass, logi_circle)
         ).start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
+    if hass.is_running:
+        await start_up()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
 
     async def shut_down(event=None):
         """Stop Logi Circle update event listener."""
