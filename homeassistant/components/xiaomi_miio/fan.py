@@ -1211,8 +1211,7 @@ class XiaomiFan(XiaomiGenericDevice):
             return
 
         # Map speed level to speed
-        if speed in FAN_SPEED_VALUES:
-            speed = FAN_SPEED_VALUES[speed]
+        speed = FAN_SPEED_VALUES.get(speed, speed)
 
         if self._natural_mode:
             await self._try_command(
