@@ -1,14 +1,11 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
-import asyncio
-import inspect
-from functools import wraps
 import logging
-import traceback
 from typing import Any, Callable
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.logging import catch_log_exception
 from .typing import HomeAssistantType
 
 
@@ -30,39 +27,6 @@ def dispatcher_connect(hass: HomeAssistantType, signal: str,
     return remove_dispatcher
 
 
-def wrap_callback(func: Callable[..., Any]) -> Callable[[], None]:
-    """Decorate a signal callback to catch and log exceptions."""
-    def log_exception(signal: str, *args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-        # Do not print the wrapper in the traceback
-        frames = len(inspect.trace()) - 1
-        err = traceback.format_exc(-frames)
-        logging.getLogger(module_name).error(
-            "Exception in %s when dispatching '%s': %s\n%s",
-            func.__name__, signal, args, err)
-
-    wrapper_func = None
-    if asyncio.iscoroutinefunction(func):
-        @wraps(func)
-        async def async_wrapper(signal: str, *args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                await func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(signal, *args)
-        wrapper_func = async_wrapper
-    else:
-        @wraps(func)
-        def wrapper(signal: str, *args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(signal, *args)
-        wrapper_func = wrapper
-    return wrapper_func
-
-
 @callback
 @bind_hass
 def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
@@ -77,7 +41,10 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
     if signal not in hass.data[DATA_DISPATCHER]:
         hass.data[DATA_DISPATCHER][signal] = []
 
-    wrapped_target = wrap_callback(target)
+    wrapped_target = catch_log_exception(
+        target, lambda *args:
+        "Exception in {} when dispatching '{}': {}".format(
+            target.__name__, signal, args))
 
     hass.data[DATA_DISPATCHER][signal].append(wrapped_target)
 
