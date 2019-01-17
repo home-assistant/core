@@ -22,7 +22,7 @@ SUPPORTED_PLATFORMS = [
 SUPPORTED_CAPABILITIES = [
     'switch'
 ]
-URL_SMARTAPP = '/api/smartapp'
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
 VAL_UID_MATCHER = re.compile(VAL_UID)
+WEBHOOK_ID = 'smartapp'

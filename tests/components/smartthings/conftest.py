@@ -8,9 +8,10 @@ from pysmartthings import (
     InstalledApp, Location)
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, URL_SMARTAPP)
+    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, WEBHOOK_ID)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -63,7 +64,7 @@ def app_fixture(hass, config_file):
         'description': "Home Assistant at " + hass.config.api.base_url,
         'singleInstance': True,
         'webhookSmartApp': {
-            'targetUrl': hass.config.api.base_url + URL_SMARTAPP,
+            'targetUrl': webhook.async_generate_url(hass, WEBHOOK_ID),
             'publicKey': ''}
     })
     app.refresh = Mock()

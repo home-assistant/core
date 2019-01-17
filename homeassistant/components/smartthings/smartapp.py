@@ -11,9 +11,9 @@ import logging
 import os
 from uuid import uuid4
 
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPUnauthorized
+from aiohttp import web
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import webhook
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -24,7 +24,7 @@ from .const import (
     APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
     SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, SMARTTHINGS_CONFIG_FILE,
-    SUPPORTED_CAPABILITIES, URL_SMARTAPP)
+    SUPPORTED_CAPABILITIES, WEBHOOK_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def find_app(hass: HomeAssistantType, api):
             return app
 
 
-async def validate_installed_app(api, app_id: str, installed_app_id: str):
+async def validate_installed_app(api, installed_app_id: str):
     """
     Ensure the specified installed SmartApp is valid and functioning.
 
@@ -67,7 +67,7 @@ def _get_app_template(hass: HomeAssistantType):
         'app_name': APP_NAME_PREFIX + str(uuid4()),
         'display_name': 'Home Assistant',
         'description': "Home Assistant at " + hass.config.api.base_url,
-        'webhook_target_url': hass.config.api.base_url + URL_SMARTAPP,
+        'webhook_target_url': webhook.async_generate_url(hass, WEBHOOK_ID),
         'app_type': APP_TYPE_WEBHOOK,
         'single_instance': True,
         'classifications': [CLASSIFICATION_AUTOMATION]
@@ -173,11 +173,13 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         signal_prefix=SIGNAL_SMARTAPP_PREFIX,
         connect=functools.partial(async_dispatcher_connect, hass),
         send=functools.partial(async_dispatcher_send, hass))
-    manager = SmartAppManager(URL_SMARTAPP, dispatcher=dispatcher)
+    manager = SmartAppManager('/api/webhook/' + WEBHOOK_ID,
+                              dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
     manager.connect_uninstall(functools.partial(smartapp_uninstall, hass))
 
-    hass.http.register_view(APISmartAppView(manager))
+    webhook.async_register(hass, DOMAIN, 'SmartApp',
+                           WEBHOOK_ID, smartapp_webhook)
 
     hass.data[DOMAIN] = {
         DATA_MANAGER: manager,
@@ -239,26 +241,9 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
         await hass.config_entries.async_remove(entry.entry_id)
 
 
-class APISmartAppView(HomeAssistantView):
-    """View that routes requests to the SmartAppManager."""
-
-    def __init__(self, manager):
-        """Create a new instance of the view."""
-        self._manager = manager
-
-    url = URL_SMARTAPP
-    name = 'api:smartapp'
-    requires_auth = False
-
-    async def post(self, request):
-        """Process smartapp lifecycle event."""
-        from pysmartapp import SignatureVerificationError
-
-        try:
-            data = await request.json()
-            resp = await self._manager.handle_request(data, request.headers)
-        except SignatureVerificationError as ex:
-            raise HTTPUnauthorized from ex
-        except Exception as ex:
-            raise HTTPBadRequest from ex
-        return self.json(resp)
+async def smartapp_webhook(hass: HomeAssistantType, webhook_id: str, request):
+    """Handle a webhook callback."""
+    manager = hass.data[DOMAIN][DATA_MANAGER]
+    data = await request.json()
+    result = await manager.handle_request(data, request.headers)
+    return web.json_response(result)

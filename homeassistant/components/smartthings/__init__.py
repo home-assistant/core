@@ -24,7 +24,7 @@ from .smartapp import (
     validate_installed_app)
 
 REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.1']
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,8 +61,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
         # Validate and retrieve the installed app.
         installed_app = await validate_installed_app(
-            api, entry.data[CONF_APP_ID],
-            entry.data[CONF_INSTALLED_APP_ID])
+            api, entry.data[CONF_INSTALLED_APP_ID])
 
         # Get devices and their current status
         devices = await api.devices(

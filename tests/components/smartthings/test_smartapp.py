@@ -2,13 +2,11 @@
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPUnauthorized
-from pysmartapp import SignatureVerificationError
 from pysmartthings import AppEntity
-import pytest
 
 from homeassistant.components.smartthings import smartapp
-from homeassistant.components.smartthings.const import SUPPORTED_CAPABILITIES
+from homeassistant.components.smartthings.const import (
+    DATA_MANAGER, DOMAIN, SUPPORTED_CAPABILITIES, WEBHOOK_ID)
 
 from tests.common import mock_coro
 
@@ -102,49 +100,15 @@ async def test_smartapp_uninstall(hass, config_entry):
         assert remove.call_count == 1
 
 
-class TestAPISmartAppView:
-    """Test cases for the APISmartAppView class."""
+async def test_smartapp_webhook(hass):
+    """Test the smartapp webhook calls the manager."""
+    manager = Mock()
+    manager.handle_request = Mock()
+    manager.handle_request.return_value = mock_coro(return_value={})
+    hass.data[DOMAIN][DATA_MANAGER] = manager
+    request = Mock()
+    request.headers = []
+    request.json.return_value = mock_coro(return_value={})
+    result = await smartapp.smartapp_webhook(hass, WEBHOOK_ID, request)
 
-    @staticmethod
-    async def test_post_returns_json(hass):
-        """Test the api returns json from the manager."""
-        manager = Mock()
-        manager.handle_request = Mock()
-        manager.handle_request.return_value = mock_coro(return_value={})
-        request = Mock()
-        request.headers = []
-        request.json.return_value = mock_coro(return_value={})
-        view = smartapp.APISmartAppView(manager)
-
-        result = await view.post(request)
-
-        assert result.body == b'{}'
-
-    @staticmethod
-    async def test_post_signature_exception(hass):
-        """Test api raises unauthorized on signature failure."""
-        manager = Mock()
-        manager.handle_request = Mock()
-        manager.handle_request.return_value = mock_coro(
-            exception=SignatureVerificationError())
-        request = Mock()
-        request.headers = []
-        request.json.return_value = mock_coro(return_value={})
-        view = smartapp.APISmartAppView(manager)
-
-        with pytest.raises(HTTPUnauthorized):
-            await view.post(request)
-
-    @staticmethod
-    async def test_post_other_error(hass):
-        """Test api raises unauthorized on signature failure."""
-        manager = Mock()
-        manager.handle_request = Mock()
-        manager.handle_request.return_value = mock_coro(exception=Exception())
-        request = Mock()
-        request.headers = []
-        request.json.return_value = mock_coro(return_value={})
-        view = smartapp.APISmartAppView(manager)
-
-        with pytest.raises(HTTPBadRequest):
-            await view.post(request)
+    assert result.body == b'{}'
