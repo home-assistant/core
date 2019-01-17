@@ -4,20 +4,20 @@ This component provides support to the Logi Circle camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.logi_circle/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.camera import (
+    ATTR_ENTITY_ID, ATTR_FILENAME, CAMERA_SERVICE_SCHEMA, DOMAIN,
+    SUPPORT_ON_OFF, Camera)
+from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.components.logi_circle.const import (
     CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS, DEVICE_BRAND,
     DOMAIN as LOGI_CIRCLE_DOMAIN)
-from homeassistant.components.camera import (
-    Camera, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
-    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
@@ -52,12 +52,11 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up a camera for a Logi Circle device. Obsolete."""
     _LOGGER.warning(
-        'Logi Circle no longer works with camera platform configuration.')
+        "Logi Circle no longer works with camera platform configuration")
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
-
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     ffmpeg = hass.data[DATA_FFMPEG]
 

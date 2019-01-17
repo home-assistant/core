@@ -4,17 +4,16 @@ This component provides HA sensor support for Logi Circle cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.logi_circle/
 """
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect)
 from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
     CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
     LOGI_SENSORS as SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_SENSORS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
@@ -35,12 +34,11 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up a sensor for a Logi Circle device. Obsolete."""
     _LOGGER.warning(
-        'Logi Circle no longer works with sensor platform configuration.')
+        'Logi Circle no longer works with sensor platform configuration')
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle sensor based on a config entry."""
-
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     time_zone = str(hass.config.time_zone)
 
@@ -88,6 +86,9 @@ class LogiSensor(Entity):
     @property
     def should_poll(self):
         """Only poll properties not pushed by WS API."""
+        # Battery % and wifi signal % updates are not pushed by the
+        # Logi Circle API unless certain thresholds are crossed (eg. low batt).
+        # A 1 hour poll is used to augment pushed state changes.
         return self._sensor_type in LOGI_POLLING_SENSORS
 
     @property

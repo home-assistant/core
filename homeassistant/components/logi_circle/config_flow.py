@@ -1,21 +1,19 @@
 """Config flow to configure Logi Circle component."""
-from collections import OrderedDict
-import logging
 import asyncio
+from collections import OrderedDict
 
 import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS
 from homeassistant.core import callback
 
-from homeassistant.const import CONF_SENSORS, CONF_BINARY_SENSORS
+from .const import (
+    CONF_API_KEY, CONF_CAMERAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+    CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN)
 
-from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_API_KEY,
-                    CONF_REDIRECT_URI, CONF_CAMERAS, DEFAULT_CACHEDB)
-
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 DATA_FLOW_IMPL = 'logi_circle_flow_implementation'

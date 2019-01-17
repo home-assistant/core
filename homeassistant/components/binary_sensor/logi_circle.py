@@ -6,14 +6,14 @@ https://home-assistant.io/components/binary_sensor.logi_circle/
 """
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
     CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
     LOGI_BINARY_SENSORS as BINARY_SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS)
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['logi_circle']
 
@@ -24,7 +24,6 @@ LOGI_ACTIVITY_PROP = 'activity'
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle sensor based on a config entry."""
-
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
 
     binary_sensors = []
