@@ -146,7 +146,11 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
                 vol.Required(CONF_ACCESS_TOKEN,
                              default=self.access_token): str
             }),
-            errors=errors
+            errors=errors,
+            description_placeholders={
+                'token_url': 'https://account.smartthings.com/tokens',
+                'component_url': 'https://www.home-assistant.io/components/smartthings/'
+            }
         )
 
     def _show_step_wait_install(self, errors):

@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Enter Personal Access Token",
-        "description": "Please enter a SmartThings [Personal Access Token](https://account.smartthings.com/tokens) that has been created per the [instructions](https://www.home-assistant.io/components/smartthings/).",
+        "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}).",
         "data": {
           "access_token": "Access Token"
         }
