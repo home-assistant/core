@@ -1167,13 +1167,13 @@ class XiaomiFan(XiaomiGenericDevice):
             self._state = state.is_on
 
             if self._natural_mode:
-                for level, range in FAN_SPEED_LIST.items():
-                    if state.natural_speed in range:
+                for level, speed_range in FAN_SPEED_LIST.items():
+                    if state.natural_speed in speed_range:
                         self._speed = level
                         break
             else:
-                for level, range in FAN_SPEED_LIST.items():
-                    if state.direct_speed in range:
+                for level, speed_range in FAN_SPEED_LIST.items():
+                    if state.direct_speed in speed_range:
                         self._speed = level
                         break
 
