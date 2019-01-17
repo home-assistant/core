@@ -2,12 +2,12 @@
 Support for switches through the SmartThings cloud API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.smartthings/
+https://home-assistant.io/components/smartthings.switch/
 """
-from homeassistant.components.smartthings import SmartThingsEntity
-from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN as SMARTTHINGS_DOMAIN)
 from homeassistant.components.switch import ToggleEntity
+
+from . import SmartThingsEntity
+from .const import DATA_BROKERS, DOMAIN
 
 DEPENDENCIES = ['smartthings']
 
@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add switches for a config entry."""
-    broker = hass.data[SMARTTHINGS_DOMAIN][DATA_BROKERS][config_entry.entry_id]
+    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsSwitch(device) for device in broker.switches])
 

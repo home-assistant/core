@@ -20,10 +20,13 @@ from tests.common import mock_coro
 
 
 @pytest.fixture(autouse=True)
-async def setup_components(hass, smartthings_mock):
-    """Fixture that sets up the smartthings component."""
-    await async_setup_component(hass, 'smartthings', {})
-    hass.config.api.base_url = 'https://test.local'
+async def setup_component(hass, config_file):
+    """Load the SmartThing component."""
+    with patch("os.path.isfile", return_value=True), \
+        patch("homeassistant.components.smartthings.smartapp.load_json",
+              return_value=config_file):
+        await async_setup_component(hass, 'smartthings', {})
+        hass.config.api.base_url = 'https://test.local'
 
 
 def _create_location():
@@ -114,17 +117,14 @@ def config_file_fixture():
 
 
 @pytest.fixture(name='smartthings_mock')
-def smartthings_mock_fixture(locations, config_file):
+def smartthings_mock_fixture(locations):
     """Fixture to mock smartthings API calls."""
     def _location(location_id):
         return mock_coro(
             return_value=next(location for location in locations
                               if location.location_id == location_id))
 
-    with patch("os.path.isfile", return_value=True), \
-            patch("homeassistant.components.smartthings.smartapp.load_json",
-                  return_value=config_file), \
-            patch("pysmartthings.SmartThings", autospec=True) as mock:
+    with patch("pysmartthings.SmartThings", autospec=True) as mock:
         mock.return_value.location.side_effect = _location
         yield mock
 

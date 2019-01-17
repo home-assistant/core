@@ -10,10 +10,9 @@ from pysmartthings import DeviceEntity
 from pysmartthings.api import Api
 import pytest
 
-from homeassistant.components.smartthings import DeviceBroker
+from homeassistant.components.smartthings import DeviceBroker, switch
 from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN as SMARTTHINGS_DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.components.switch import smartthings
+    DATA_BROKERS, DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -71,11 +70,11 @@ def create_device_fixture():
 
 async def _setup_platform(hass, *devices):
     """Set up the SmartThings switch platform and prerequisites."""
-    hass.config.components.add(SMARTTHINGS_DOMAIN)
+    hass.config.components.add(DOMAIN)
     broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry("1", SMARTTHINGS_DOMAIN, "Test", {},
+    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
                                SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
-    hass.data[SMARTTHINGS_DOMAIN] = {
+    hass.data[DOMAIN] = {
         DATA_BROKERS: {
             config_entry.entry_id: broker
         }
@@ -87,7 +86,7 @@ async def _setup_platform(hass, *devices):
 
 async def test_async_setup_platform():
     """Test setup platform does nothing (it uses config entries)."""
-    await smartthings.async_setup_platform(None, None, None)
+    await switch.async_setup_platform(None, None, None)
 
 
 async def test_entity_attributes(hass, device_factory):
@@ -104,7 +103,7 @@ async def test_entity_attributes(hass, device_factory):
     assert not entity.should_poll
     assert entity.device_info == {
         'identifiers': {
-            (SMARTTHINGS_DOMAIN, device.device_id)
+            (DOMAIN, device.device_id)
         },
         'name': device.label,
         'model': device.device_type_name,
@@ -121,9 +120,9 @@ async def test_turn_off(hass, device_factory):
         'switch', 'turn_off', {'entity_id': 'switch.switch_1'},
         blocking=True)
     # Assert
-    switch = hass.states.get('switch.switch_1')
-    assert switch is not None
-    assert switch.state == 'off'
+    entity = hass.states.get('switch.switch_1')
+    assert entity is not None
+    assert entity.state == 'off'
 
 
 async def test_turn_on(hass, device_factory):
@@ -135,9 +134,9 @@ async def test_turn_on(hass, device_factory):
         'switch', 'turn_on', {'entity_id': 'switch.switch_1'},
         blocking=True)
     # Assert
-    switch = hass.states.get('switch.switch_1')
-    assert switch is not None
-    assert switch.state == 'on'
+    entity = hass.states.get('switch.switch_1')
+    assert entity is not None
+    assert entity.state == 'on'
 
 
 async def test_update_from_signal(hass, device_factory):
@@ -150,9 +149,9 @@ async def test_update_from_signal(hass, device_factory):
     async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
     # Assert
     await hass.async_block_till_done()
-    switch = hass.states.get('switch.switch_1')
-    assert switch is not None
-    assert switch.state == 'on'
+    entity = hass.states.get('switch.switch_1')
+    assert entity is not None
+    assert entity.state == 'on'
 
 
 async def test_unload_config_entry(hass, device_factory):
