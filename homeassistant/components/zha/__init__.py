@@ -39,7 +39,8 @@ REQUIREMENTS = [
     'bellows==0.7.0',
     'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
-    'zha-quirks==0.0.6'
+    'zha-quirks==0.0.6',
+    'zigpy-deconz==0.0.1'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -120,6 +121,11 @@ async def async_setup_entry(hass, config_entry):
         from zigpy_xbee.zigbee.application import ControllerApplication
         radio = zigpy_xbee.api.XBee()
         radio_description = "XBee"
+    elif radio_type == RadioType.deconz.name:
+        import zigpy_deconz.api
+        from zigpy_deconz.zigbee.application import ControllerApplication
+        radio = zigpy_deconz.api.Deconz()
+        radio_description = "Deconz"
 
     await radio.connect(usb_path, baudrate)
     hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
