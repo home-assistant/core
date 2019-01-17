@@ -164,6 +164,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         if platform is None:
             return
 
+        hass.data[DOMAIN].add_platform(p_type, platform)
+
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
             scanner = None
@@ -199,7 +201,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
 
-    hass.data[DOMAIN] = async_setup_platform
+    hass.data[DOMAIN] = PlatformManager(async_setup_platform)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -236,8 +238,49 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    await hass.data[DOMAIN](entry.domain, entry)
+    await hass.data[DOMAIN].get_async_setup_platform(entry.domain, entry)
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload an entry."""
+    platform = hass.data[DOMAIN].get_platform(entry.domain)
+    if platform and hasattr(platform, 'async_unload_entry'):
+        await platform.async_unload_entry(hass, entry)
+        return True
+    return False
+
+
+class PlatformManager:
+    """Store data needed to unload entries from loaded platforms."""
+
+    def __init__(self, async_setup_platform: callable):
+        """Initialize a platform manager."""
+        self.platforms = {}
+        self.async_setup_platform = async_setup_platform
+
+    def add_platform(self, platform_name: str, platform):
+        """Add a platform that has been loaded to the platform manager."""
+        _LOGGER.debug('Adding %s to PlatformManager', platform_name)
+        if platform_name is None:
+            return
+        if platform_name in self.platforms:
+            _LOGGER.warning(
+                'Cannot add duplicate platform %s to platform manager',
+                platform_name
+            )
+            return
+        self.platforms[platform_name] = platform
+
+    def get_platform(self, platform_name: str):
+        """Fetch a platform that has been loaded from the platform manager."""
+        if platform_name in self.platforms:
+            return self.platforms[platform_name]
+        return None
+
+    def get_async_setup_platform(self):
+        """Return this function stored by the platform manager."""
+        return self.async_setup_platform
 
 
 class DeviceTracker:
