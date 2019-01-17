@@ -1208,7 +1208,7 @@ pysma==0.3.1
 pysnmp==4.4.8
 
 # homeassistant.components.sonos
-pysonos==0.0.5
+pysonos==0.0.6
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
