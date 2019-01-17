@@ -1,15 +1,14 @@
 """Test dispatcher helpers."""
 import asyncio
-import unittest
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send, dispatcher_connect)
+    async_dispatcher_connect, dispatcher_send, dispatcher_connect)
 
 from tests.common import get_test_home_assistant
 
 
-class TestHelpersDispatcher(unittest.TestCase):
+class TestHelpersDispatcher:
     """Tests for discovery helper methods."""
 
     def setup_method(self, method):
@@ -136,18 +135,19 @@ class TestHelpersDispatcher(unittest.TestCase):
 
         assert calls == [3, 2, 'bla']
 
-    def test_callback_exception_gets_logged(self):
-        """Test exception raised by signal handler."""
-        @callback
-        def bad_handler(*args):
-            """Record calls."""
-            raise Exception('This is a bad message callback')
-        dispatcher_connect(self.hass, 'test', bad_handler)
 
-        with self.assertLogs(level='WARNING') as test_handle:
-            dispatcher_send(self.hass, 'test', 'bad')
+async def test_callback_exception_gets_logged(hass, caplog):
+    """Test exception raised by signal handler."""
+    @callback
+    def bad_handler(*args):
+        """Record calls."""
+        raise Exception('This is a bad message callback')
 
-            self.hass.block_till_done()
-            assert \
-                "Exception in bad_handler when dispatching 'test': ('bad',)" \
-                in test_handle.output[0]
+    async_dispatcher_connect(hass, 'test', bad_handler)
+    dispatcher_send(hass, 'test', 'bad')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert \
+        "Exception in bad_handler when dispatching 'test': ('bad',)" \
+        in caplog.text
