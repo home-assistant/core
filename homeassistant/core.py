@@ -77,8 +77,8 @@ def valid_entity_id(entity_id: str) -> bool:
 
     Format: <domain>.<entity> where both are slugs.
     """
-    _id = split_entity_id(entity_id)
-    return all([slugify(i) == i for i in _id])
+    return ('.' in entity_id and
+            slugify(entity_id) == entity_id.replace('.', '_', 1))
 
 
 def valid_state(state: str) -> bool:
