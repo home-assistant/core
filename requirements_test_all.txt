@@ -202,7 +202,7 @@ pyotp==2.2.6
 pyqwikswitch==0.8
 
 # homeassistant.components.sonos
-pysonos==0.0.5
+pysonos==0.0.6
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
