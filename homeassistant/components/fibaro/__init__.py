@@ -31,15 +31,8 @@ DOMAIN = 'fibaro'
 
 FIBARO_CONTROLLERS = 'fibaro_controllers'
 FIBARO_DEVICES = 'fibaro_devices'
-
-FIBARO_COMPONENTS = [
-    'binary_sensor',
-    'cover',
-    'light',
-    'scene',
-    'sensor',
-    'switch',
-]
+FIBARO_COMPONENTS = ['binary_sensor', 'climate', 'cover', 'light',
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -56,7 +49,8 @@ FIBARO_TYPEMAP = {
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
     'com.fibaro.colorController': 'light',
-    'com.fibaro.securitySensor': 'binary_sensor'
+    'com.fibaro.securitySensor': 'binary_sensor',
+    'com.fibaro.hvac': 'climate'
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -174,6 +168,18 @@ class FibaroController():
         """Register device with a callback for updates."""
         self._callbacks[device_id] = callback
 
+    def get_children(self, device_id):
+        """Get a list of child devices"""
+        result = []
+        for device in self._device_map.values():
+            if device.parentId == device_id:
+                result.append(device)
+        return result
+
+    def get_siblings(self, device_id):
+        """Get the siblings of a device"""
+        return self.get_children(self._device_map[device_id].parentId)
+
     @staticmethod
     def _map_device_to_type(device):
         """Map device to HA device type."""
@@ -229,6 +235,7 @@ class FibaroController():
         devices = self._client.devices.list()
         self._device_map = {}
         self.fibaro_devices = defaultdict(list)
+        last_climate_parent = None
         for device in devices:
             try:
                 device.fibaro_controller = self
@@ -253,13 +260,23 @@ class FibaroController():
                     device.unique_id_str = "{}.{}".format(
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
-                    self.fibaro_devices[device.mapped_type].append(device)
+                    if device.mapped_type != 'climate':
+                        self.fibaro_devices[device.mapped_type].append(device)
+                    else:
+                        # if a sibling of this has been added, skip this one
+                        if last_climate_parent != device.parentId:
+                            self.fibaro_devices[device.mapped_type].append(device)
+                            last_climate_parent = device.parentId
+                        else:
+                            # we don't create a separate HA climate element for it
+                            pass
                 _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
                               device.ha_id, device.type,
                               device.baseType, device.mapped_type,
                               str(device.properties), str(device.actions))
             except (KeyError, ValueError):
                 pass
+
 
 
 def setup(hass, base_config):
@@ -443,3 +460,4 @@ class FibaroDevice(Entity):
 
         attr['fibaro_id'] = self.fibaro_device.id
         return attr
+[<65;64;38M
