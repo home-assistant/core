@@ -70,7 +70,7 @@ INTENT_PLAY = 'AisPlay'
 INTENT_NEXT = 'AisNext'
 INTENT_PREV = 'AisPrev'
 INTENT_SCENE = 'AisSceneActive'
-
+INTENT_SAY_IT = 'AisSayIt'
 
 REGEX_TYPE = type(re.compile(''))
 
@@ -94,18 +94,19 @@ ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
 VIRTUAL_KEYBOARD_MODE = ['Litery', 'Wielkie litery', 'Cyfry', 'Znaki specjalne', 'Usuwanie']
 CURR_VIRTUAL_KEYBOARD_MODE = None
 VIRTUAL_KEYBOARD_LETTERS = ['-', 'A', 'Ą', 'B', 'C', 'Ć', 'D', 'E', 'Ę', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Ł', 'M',
-                            'N', 'Ń', 'O', 'Ó', 'P', 'R', 'S', 'Ś', 'T', 'U', 'W', 'Y', 'Z', 'Ź', 'Ż']
+                            'N', 'Ń', 'O', 'Ó', 'P', 'Q', 'R', 'S', 'Ś', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Ź', 'Ż']
 VIRTUAL_KEYBOARD_NUMBERS = ['-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 VIRTUAL_KEYBOARD_SYMBOLS = ['-', ' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '_', '.', '/',
                             ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '{', '|', '}']
-VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['-', 'spacja', 'wykrzyknik', 'cudzysłów', 'kratka', 'dolar', 'procent', 'symbol and',
+VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['-', 'spacja', 'wykrzyknik', 'cudzysłów', 'hash', 'dolar', 'procent', 'symbol and',
                                   'pojedynczy cudzysłów', 'nawias otwierający', 'nawias zamykający', 'gwiazdka',
-                                  'plus', 'przecinek', 'myślnik', 'podkreślenie', 'kropka', 'ukośnik', 'dwukropek',
+                                  'plus', 'przecinek', 'myślnik', 'podkreślenie dolne', 'kropka', 'ukośnik prawy', 'dwukropek',
                                   'średnik', 'znak mniejszości', 'znak równości', 'znak większości', 'znak zapytania',
                                   'małpa', 'kwadratowy nawias otwierający', 'ukośnik lewy',
-                                  'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający', 'kreska',
+                                  'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający', 'kreska pionowa',
                                   'nawias klamrowy zamykający']
 VIRTUAL_KEYBOARD_DELETE = ['-', 'ostatni znak', 'ostatni wyraz', 'całe pole']
+CURR_VIRTUAL_KEYBOARD_VALUE = None
 CURR_VIRTUAL_KEY = None
 # ais-dom virtual keyboard
 
@@ -383,8 +384,10 @@ def say_curr_virtual_key(hass):
 def reset_virtual_keyboard():
     global CURR_VIRTUAL_KEYBOARD_MODE
     global CURR_VIRTUAL_KEY
+    global CURR_VIRTUAL_KEYBOARD_VALUE
     CURR_VIRTUAL_KEYBOARD_MODE = None
     CURR_VIRTUAL_KEY = None
+    CURR_VIRTUAL_KEYBOARD_VALUE = None
 
 
 # Groups in Groups views
@@ -1011,6 +1014,9 @@ def go_up_in_menu(hass):
             say_curr_group(hass)
         else:
             CURR_ENTITIE_ENTERED = False
+            if CURR_ENTITIE.startswith('input_text.'):
+                hass.services.call('input_text', 'set_value', {
+                    "entity_id": CURR_ENTITIE, "value": CURR_VIRTUAL_KEYBOARD_VALUE})
             say_curr_entity(hass)
         return
     # no entity is selected, check if the group is selected
@@ -1025,15 +1031,21 @@ def go_up_in_menu(hass):
 
 def type_to_input_text(hass, key):
     if CURR_ENTITIE.startswith('input_text.') and CURR_ENTITIE_ENTERED:
-        # add the letter to the input
-        state = hass.states.get(CURR_ENTITIE)
+        # add the letter to the virtual input
+        global CURR_VIRTUAL_KEYBOARD_VALUE
+        if CURR_VIRTUAL_KEYBOARD_VALUE is None:
+            CURR_VIRTUAL_KEYBOARD_VALUE = chr(key)
+        else:
+            CURR_VIRTUAL_KEYBOARD_VALUE = CURR_VIRTUAL_KEYBOARD_VALUE + chr(key)
+
         _say_it(hass, "wpisano: " + chr(key), None)
-        text = state + chr(key)
-        hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
 
 
 def type_to_input_text_from_virtual_keyboard(hass):
-    # add the letter to the input
+    # add the letter to the virtual input
+    global CURR_VIRTUAL_KEYBOARD_VALUE
+    if CURR_VIRTUAL_KEYBOARD_VALUE is None:
+        CURR_VIRTUAL_KEYBOARD_VALUE = ""
     if CURR_VIRTUAL_KEY is None:
         if get_curr_virtual_keyboard_mode() == "Usuwanie":
             _say_it(hass, "wybierz tryb usuwania", None)
@@ -1041,33 +1053,33 @@ def type_to_input_text_from_virtual_keyboard(hass):
             _say_it(hass, "wybierz znak do wpisania", None)
         return
 
-    state = hass.states.get(CURR_ENTITIE).state
     key = get_curr_virtual_key()
     km = get_curr_virtual_keyboard_mode()
     if km == "Litery":
         key = key.lower()
     if km == "Usuwanie":
         if key == 'ostatni znak':
-            text = state[:-1]
+            text = CURR_VIRTUAL_KEYBOARD_VALUE[:-1]
         elif key == 'ostatni wyraz':
-            text = state.rsplit(' ', 1)[0]
+            text = CURR_VIRTUAL_KEYBOARD_VALUE.rsplit(' ', 1)[0]
         else:
             text = ""
     else:
-        text = state + key
+        text = CURR_VIRTUAL_KEYBOARD_VALUE + key
 
-    hass.services.call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
+    CURR_VIRTUAL_KEYBOARD_VALUE = text
+
     text = ""
     if km == "Litery":
-        text = "wpisuje literę: " + key.lower()
+        text = "wpisuję literę: " + key.lower()
     elif km == "Wielkie litery":
-        text = "wpisuje wielką literę: " + key
+        text = "wpisuję wielką literę: " + key
     elif km == "Cyfry":
-        text = "wpisuje cyfrę: " + key
+        text = "wpisuję cyfrę: " + key
     elif km == "Znaki specjalne":
         idx = VIRTUAL_KEYBOARD_SYMBOLS.index(key)
         text = "" + VIRTUAL_KEYBOARD_SYMBOLS_NAMES[idx]
-        text = "wpisuje znak: " + text
+        text = "wpisuję znak: " + text
     elif km == "Usuwanie":
         text = "OK, usuwam " + key
 
@@ -1303,6 +1315,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisNext())
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
+    hass.helpers.intent.async_register(AisSayIt())
     async_register(hass, INTENT_GET_WEATHER, [
             '[aktualna] pogoda',
             'pogoda w {location}',
@@ -1402,7 +1415,9 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_PLAY, ['Start', 'Graj', 'Odtwarzaj'])
     async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
     async_register(hass, INTENT_NEXT, ['[włącz] następny', '[włącz] kolejny', '[graj] następny', '[graj] kolejny'])
-    async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni', '[graj] wcześniejszy'])
+    async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni',
+                                       '[graj] wcześniejszy'])
+    async_register(hass, INTENT_SAY_IT, ['Powiedz', 'Mów', 'Powiedz {item}', 'Mów {item}', 'Echo {item}'])
 
     return True
 
@@ -1419,13 +1434,23 @@ def _publish_command_to_frame(hass, key, val, ip):
                 'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
         )
         ssid = val.split(';')[0]
-        _say_it(hass, "ok, łączymy z siecią: " + ssid, None)
+        if ssid is None or ssid == "-" or ssid == "":
+            _say_it(hass, "Wybierz sieć WiFi z listy", None)
+            return
+
+
         # TODO get password from file
         password = hass.states.get('input_text.ais_android_wifi_password').state
-        wifi_type = val.split(';')[-1]
+        if len(password.strip()) == 0:
+            _say_it(hass, "ok, przełączam na sieć: " + ssid, None)
+        else:
+            _say_it(hass, "ok, łączę z siecią: " + ssid, None)
+
+        wifi_type = val.split(';')[-2]
+        bssid = val.split(';')[-1].replace("MAC:", "").strip()
         requests.post(
             url + '/command',
-            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type},
+            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type, "bsssid": bssid},
             timeout=2)
     elif key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
@@ -1495,7 +1520,8 @@ def _publish_wifi_status(hass, service):
             wifis_names.append(
                 item["ssid"] + "; " +
                 _wifi_rssi_to_info(item["rssi"]) +
-                "; " + item["capabilities"] + "; " + _wifi_frequency_info(item["frequency_mhz"]))
+                "; " + item["capabilities"] + "; " + _wifi_frequency_info(item["frequency_mhz"]) +
+                "; MAC: " + item["bssid"])
     hass.async_run_job(
         hass.services.call(
             'input_select',
@@ -2597,4 +2623,32 @@ class AisSceneActive(intent.IntentHandler):
                 success = True
             else:
                 message = name + ' nie można aktywować'
+        return message, success
+
+
+class AisSayIt(intent.IntentHandler):
+    """Handle AisSayIt intents."""
+    intent_type = INTENT_SAY_IT
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        try:
+            slots = self.async_validate_slots(intent_obj.slots)
+            text = slots['item']['value']
+        except Exception:
+            text = None
+        success = False
+        if not text:
+            import random
+            answers = ['Nie wiem co mam powiedzieć?', 'Ale co?', 'Mówie mówie', 'OK, dobra zaraz coś wymyślę...',
+                       'Mowa jest tylko srebrem', 'To samo czy coś nowego?']
+            message = random.choice(answers)
+        else:
+            # check if we can open on this device
+            message = text
+            success = True
         return message, success

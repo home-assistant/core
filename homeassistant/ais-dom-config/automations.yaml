@@ -48,6 +48,11 @@
    - service: ais_cloud.get_radio_types
    - delay: '1'
    - service: ais_cloud.get_podcast_types
+   - service: ais_ai_service.publish_command_to_frame
+     data:
+       key: WifiConnectionInfo
+       val: true
+       ip: 127.0.0.1
 
 - id: '201807081853002'
   alias: 'Keyboard Command Received'
