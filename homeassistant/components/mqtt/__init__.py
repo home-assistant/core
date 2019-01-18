@@ -233,7 +233,7 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
     vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
 })
 
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA_2.extend(SCHEMA_BASE)
+MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
@@ -984,7 +984,6 @@ class MqttDiscoveryUpdate(Entity):
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
-                payload.pop(ATTR_DISCOVERY_HASH)
                 self.hass.async_create_task(self._discovery_update(payload))
 
         if self._discovery_hash:
