@@ -11,10 +11,10 @@ import pytest
 from homeassistant.components import webhook
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, CONF_WEBHOOK_ID, DOMAIN, SETTINGS_INSTANCE_ID)
+    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro

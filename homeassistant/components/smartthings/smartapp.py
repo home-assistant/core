@@ -14,6 +14,7 @@ from uuid import uuid4
 from aiohttp import web
 
 from homeassistant.components import webhook
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -24,7 +25,7 @@ from .const import (
     APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
     SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, SMARTTHINGS_CONFIG_FILE,
-    SUPPORTED_CAPABILITIES, CONF_WEBHOOK_ID)
+    SUPPORTED_CAPABILITIES)
 
 _LOGGER = logging.getLogger(__name__)
 
