@@ -789,6 +789,7 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.camera.proxy
+# homeassistant.components.image_processing.qrcode
 # homeassistant.components.image_processing.tensorflow
 pillow==5.4.1
 
@@ -1396,6 +1397,9 @@ pyxeoma==1.4.0
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
+
+# homeassistant.components.image_processing.qrcode
+pyzbar==0.1.7
 
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.7
