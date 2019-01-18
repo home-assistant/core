@@ -7,7 +7,8 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
 )
 from homeassistant.components.google_assistant import (
-    const, trait, helpers, smart_home as sh)
+    const, trait, helpers, smart_home as sh,
+    EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.light.demo import DemoLight
 
 
@@ -48,6 +49,9 @@ async def test_sync_message(hass):
         }
     )
 
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+
     result = await sh.async_handle_message(hass, config, {
         "requestId": REQ_ID,
         "inputs": [{
@@ -85,6 +89,13 @@ async def test_sync_message(hass):
             }]
         }
     }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+    }
 
 
 async def test_query_message(hass):
@@ -108,6 +119,9 @@ async def test_query_message(hass):
     light2.hass = hass
     light2.entity_id = 'light.another_light'
     await light2.async_update_ha_state()
+
+    events = []
+    hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
 
     result = await sh.async_handle_message(hass, BASIC_CONFIG, {
         "requestId": REQ_ID,
@@ -149,12 +163,33 @@ async def test_query_message(hass):
         }
     }
 
+    assert len(events) == 3
+    assert events[0].event_type == EVENT_QUERY_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.demo_light'
+    }
+    assert events[1].event_type == EVENT_QUERY_RECEIVED
+    assert events[1].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.another_light'
+    }
+    assert events[2].event_type == EVENT_QUERY_RECEIVED
+    assert events[2].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing'
+    }
+
 
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, 'light', {
         'light': {'platform': 'demo'}
     })
+
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+
     await hass.services.async_call(
         'light', 'turn_off', {'entity_id': 'light.ceiling_lights'},
         blocking=True)
@@ -209,6 +244,52 @@ async def test_execute(hass):
         }
     }
 
+    assert len(events) == 4
+    assert events[0].event_type == EVENT_COMMAND_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing',
+        'execution': {
+            'command': 'action.devices.commands.OnOff',
+            'params': {
+                'on': True
+            }
+        }
+    }
+    assert events[1].event_type == EVENT_COMMAND_RECEIVED
+    assert events[1].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing',
+        'execution': {
+            'command': 'action.devices.commands.BrightnessAbsolute',
+            'params': {
+                'brightness': 20
+            }
+        }
+    }
+    assert events[2].event_type == EVENT_COMMAND_RECEIVED
+    assert events[2].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.ceiling_lights',
+        'execution': {
+            'command': 'action.devices.commands.OnOff',
+            'params': {
+                'on': True
+            }
+        }
+    }
+    assert events[3].event_type == EVENT_COMMAND_RECEIVED
+    assert events[3].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.ceiling_lights',
+        'execution': {
+            'command': 'action.devices.commands.BrightnessAbsolute',
+            'params': {
+                'brightness': 20
+            }
+        }
+    }
+
 
 async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
@@ -218,6 +299,11 @@ async def test_raising_error_trait(hass):
         ATTR_SUPPORTED_FEATURES: SUPPORT_OPERATION_MODE,
         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
     })
+
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+    await hass.async_block_till_done()
+
     result = await sh.async_handle_message(hass, BASIC_CONFIG, {
         "requestId": REQ_ID,
         "inputs": [{
@@ -247,6 +333,19 @@ async def test_raising_error_trait(hass):
                 "status": "ERROR",
                 "errorCode": "valueOutOfRange"
             }]
+        }
+    }
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_COMMAND_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'climate.bla',
+        'execution': {
+            'command': 'action.devices.commands.ThermostatTemperatureSetpoint',
+            'params': {
+                'thermostatTemperatureSetpoint': 10
+            }
         }
     }
 
