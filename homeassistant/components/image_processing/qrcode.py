@@ -1,5 +1,5 @@
 """
-Support for the demo image processing.
+Support for the QR image processing.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.qr/
