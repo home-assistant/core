@@ -41,10 +41,12 @@ SENSOR_TYPES = {
                       'mdi:solar-power'],
     'current_power': ['currentPower', "Current Power", 'W',
                       'mdi:solar-power'],
-    'site_details': [None, 'Site details', None,
-                     None],
-    'inverter_details': ['inverters', 'Inverter', None,
-                         None]
+    'site_details': [None, 'Site details', None, None],
+    'inventory_meters': ['meters', 'Meters', None, None],
+    'inventory_sensors': ['sensors', 'Sensors', None, None],
+    'inventory_gateways': ['gateways', 'Gateways', None, None],
+    'inventory_batteries': ['batteries', 'Batteries', None, None],
+    'inventory_inverters': ['inverters', 'Inverters', None, None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -116,7 +118,7 @@ class SolarEdgeSensorFactory:
         if sensor_key == 'site_details':
             sensor = SolarEdgeDetailsSensor(self.platform_name, sensor_key,
                                             self.details_data_service)
-        elif sensor_key == 'inverter_details':
+        elif sensor_key.startswith('inventory'):
             sensor = SolarEdgeInventorySensor(self.platform_name, sensor_key,
                                               self.inventory_data_service)
         else:
@@ -320,9 +322,8 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
         self.attributes = {}
 
         for key, value in inventory.items():
-            if key == 'inverters' and value:
-                self.data[key] = value[0]['name']
-                self.attributes[key] = value[0]
+            self.data[key] = len(value)
+            self.attributes[key] = {key: value}
 
         _LOGGER.debug("Updated SolarEdge inventory: %s, %s",
                       self.data, self.attributes)
