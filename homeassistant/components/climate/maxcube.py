@@ -124,6 +124,21 @@ class MaxCubeClimate(ClimateDevice):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        temp = kwargs.get(ATTR_TEMPERATURE)
+
+        # select device and cube
+        device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        cube = self._cubehandle.cube
+
+        # Set device temperature
+        cube.set_target_temperature(device, temp)
+
+        # call the generic scheduling function,
+        # telling hass to update state in the future
+        self.async_schedule_update_ha_state()
+
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
