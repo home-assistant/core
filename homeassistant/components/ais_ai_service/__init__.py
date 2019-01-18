@@ -86,8 +86,7 @@ CURR_ENTITIE_ENTERED = False
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
-ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
-                "media_player", "script"]
+ALL_SWITCHES = ["input_boolean", "automation", "switch", "light", "media_player", "script"]
 
 # ais-dom virtual keyboard
 # kodowała to Asia Raczkowska w 2019 roku
@@ -100,11 +99,11 @@ VIRTUAL_KEYBOARD_SYMBOLS = ['-', ' ', '!', '"', '#', '$', '%', '&', "'", '(', ')
                             ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '{', '|', '}']
 VIRTUAL_KEYBOARD_SYMBOLS_NAMES = ['-', 'spacja', 'wykrzyknik', 'cudzysłów', 'hash', 'dolar', 'procent', 'symbol and',
                                   'pojedynczy cudzysłów', 'nawias otwierający', 'nawias zamykający', 'gwiazdka',
-                                  'plus', 'przecinek', 'myślnik', 'podkreślenie dolne', 'kropka', 'ukośnik prawy', 'dwukropek',
-                                  'średnik', 'znak mniejszości', 'znak równości', 'znak większości', 'znak zapytania',
-                                  'małpa', 'kwadratowy nawias otwierający', 'ukośnik lewy',
-                                  'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający', 'kreska pionowa',
-                                  'nawias klamrowy zamykający']
+                                  'plus', 'przecinek', 'myślnik', 'podkreślenie dolne', 'kropka', 'ukośnik prawy',
+                                  'dwukropek', 'średnik', 'znak mniejszości', 'znak równości', 'znak większości',
+                                  'znak zapytania', 'małpa', 'kwadratowy nawias otwierający', 'ukośnik lewy',
+                                  'kwadratowy nawias zamykający', 'daszek', 'nawias klamrowy otwierający',
+                                  'kreska pionowa', 'nawias klamrowy zamykający']
 VIRTUAL_KEYBOARD_DELETE = ['-', 'ostatni znak', 'ostatni wyraz', 'całe pole']
 CURR_VIRTUAL_KEYBOARD_VALUE = None
 CURR_VIRTUAL_KEY = None
@@ -1425,6 +1424,7 @@ async def async_setup(hass, config):
 def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
     url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
+
     if key == "WifiConnectToSid":
         # enable the wifi info
         hass.async_run_job(
@@ -1446,22 +1446,32 @@ def _publish_command_to_frame(hass, key, val, ip):
         else:
             _say_it(hass, "ok, łączę z siecią: " + ssid, None)
 
-        wifi_type = val.split(';')[-2]
+        wifi_type = val.split(';')[-3]
         bssid = val.split(';')[-1].replace("MAC:", "").strip()
         requests.post(
             url + '/command',
-            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type, "bsssid": bssid},
+            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type, "bssid": bssid},
             timeout=2)
+
     elif key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
         if iot == ais_global.G_EMPTY_OPTION:
             _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
             return
         # check if wifi is selected
-        wifi = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]
-        if wifi == ais_global.G_EMPTY_OPTION:
+        ssid = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]
+        if ssid == ais_global.G_EMPTY_OPTION:
             _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
             return
+
+        # take bssid
+        bssid = val.split(';')[-1].replace("MAC:", "").strip()
+
+        # check the frequency
+        wifi_frequency_mhz = val.split(';')[-2]
+        if not wifi_frequency_mhz.startswith("2.4"):
+            _say_it(hass, "Urządzenia mogą pracować tylko w sieci 2.4 GHz, wybierz inną sieć.", None)
+
         # check if name is selected, if not then add the device name
         name = hass.states.get('input_text.ais_iot_device_name').state
         # friendly name (32 chars max)
@@ -1475,7 +1485,8 @@ def _publish_command_to_frame(hass, key, val, ip):
 
         requests.post(
             url + '/command',
-            json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": wifi, "IotName": name},
+            json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": ssid,
+                  "IotName": name, "bsssid": bssid},
             timeout=2)
     else:
         try:
@@ -1812,6 +1823,7 @@ def _process_code(hass, data, callback):
     """Process a code from remote."""
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
+    global CURR_ENTITIE_ENTERED
     if 'Action' not in data or 'KeyCode' not in data:
         return
     # check if we have callback
@@ -1863,11 +1875,14 @@ def _process_code(hass, data, callback):
         # PG- -> KEYCODE_PAGE_DOWN
         set_bookmarks_curr_group(hass)
         set_curr_entity(hass, 'input_select.ais_bookmark_last_played')
+        CURR_ENTITIE_ENTERED = True
         say_curr_entity(hass)
     elif code == 92:
         # PG+ -> KEYCODE_PAGE_UP
         set_bookmarks_curr_group(hass)
+        CURR_ENTITIE_ENTERED = True
         set_curr_entity(hass, 'input_select.ais_bookmark_favorites')
+
         say_curr_entity(hass)
     elif code == 4:
         # Back arrow, go up in menu/groups -> KEYCODE_BACK

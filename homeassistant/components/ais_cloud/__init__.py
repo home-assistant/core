@@ -312,10 +312,10 @@ class AisCloudWS:
     def audio_type(self, nature):
         try:
             rest_url = self.url + "audio_type?nature=" + nature
-            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=2)
+            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
             return ws_resp
         except:
-            _LOGGER.error("Can't connect to AIS Cloud!!!")
+            _LOGGER.error("Can't connect to AIS Cloud!!! " + rest_url)
             ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, a_type):
