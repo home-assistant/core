@@ -146,13 +146,13 @@ async def test_unique_id(hass):
         lock.DOMAIN: [{
             'platform': 'mqtt',
             'name': 'Test 1',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }, {
             'platform': 'mqtt',
             'name': 'Test 2',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }]

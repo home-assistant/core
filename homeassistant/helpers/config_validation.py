@@ -499,10 +499,21 @@ def key_dependency(key, dependency):
 
 # Schemas
 
+COMPONENT_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
+}, extra=vol.ALLOW_EXTRA)
+
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
 }, extra=vol.ALLOW_EXTRA)
+
+# This will replace PLATFORM_SCHEMA once all base components are updated
+PLATFORM_SCHEMA_2 = vol.Schema({
+    vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
+})
 
 EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,

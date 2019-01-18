@@ -1077,13 +1077,13 @@ async def test_unique_id(hass):
         light.DOMAIN: [{
             'platform': 'mqtt',
             'name': 'Test 1',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }, {
             'platform': 'mqtt',
             'name': 'Test 2',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }]
@@ -1100,7 +1100,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -1145,12 +1145,12 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 

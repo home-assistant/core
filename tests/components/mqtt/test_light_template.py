@@ -265,7 +265,6 @@ async def test_optimistic(hass, mqtt_mock):
                                            '{{ blue|d }}',
                     'command_off_template': 'off',
                     'effect_list': ['colorloop', 'random'],
-                    'effect_command_topic': 'test_light_rgb/effect/set',
                     'qos': 2
                 }
             })
@@ -493,7 +492,7 @@ async def test_unique_id(hass):
             'platform': 'mqtt',
             'name': 'Test 1',
             'schema': 'template',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'command_on_template': 'on,{{ transition }}',
             'command_off_template': 'off,{{ transition|d }}',
@@ -502,7 +501,7 @@ async def test_unique_id(hass):
             'platform': 'mqtt',
             'name': 'Test 2',
             'schema': 'template',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }]
@@ -558,7 +557,7 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     data1 = (
         '{ "name": "Beer",'
         '  "schema": "template",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic",'
         '  "command_on_template": "on",'
         '  "command_off_template": "off"}'
@@ -566,7 +565,7 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     data2 = (
         '{ "name": "Milk",'
         '  "schema": "template",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic",'
         '  "command_on_template": "on",'
         '  "command_off_template": "off"}'

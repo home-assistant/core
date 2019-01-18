@@ -457,7 +457,7 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
                             data)
@@ -479,11 +479,11 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
                             data1)

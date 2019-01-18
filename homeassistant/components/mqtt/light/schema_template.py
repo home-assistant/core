@@ -23,6 +23,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import SCHEMA_SCHEMA
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt_template'
@@ -66,7 +68,7 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(SCHEMA_SCHEMA)
 
 
 async def async_setup_entity_template(hass, config, async_add_entities,
