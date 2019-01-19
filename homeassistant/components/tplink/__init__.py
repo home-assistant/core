@@ -70,6 +70,7 @@ async def async_setup_entry(hass, config_entry):
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
+
     # If discovery is defined and not disabled, discover devices
     # If initialized from configure integrations, there's no config
     # so we default here to True
@@ -119,8 +120,10 @@ async def async_setup_entry(hass, config_entry):
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
+        _LOGGER.debug("Got %s lights: %s", len(lights), lights)
         hass.async_create_task(forward_setup(config_entry, 'light'))
     if switches:
+        _LOGGER.debug("Got %s switches: %s", len(switches), switches)
         hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     return True

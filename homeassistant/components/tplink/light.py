@@ -216,6 +216,7 @@ class TPLinkSmartBulb(Light):
     def get_features(self):
         """Determine all supported features in one go."""
         self._sysinfo = self.smartbulb.sys_info
+        self._supported_features = 0
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
