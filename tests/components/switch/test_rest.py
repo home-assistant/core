@@ -106,7 +106,7 @@ class TestRestSwitch:
         self.body_off = Template('off', self.hass)
         self.switch = rest.RestSwitch(
             self.name, self.resource, self.method, self.headers, self.auth,
-            self.body_on, self.body_off, None, 10)
+            self.body_on, self.body_off, None, 10, True)
         self.switch.hass = self.hass
 
     def teardown_method(self):

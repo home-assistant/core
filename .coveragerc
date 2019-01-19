@@ -451,7 +451,6 @@ omit =
     homeassistant/components/*/zigbee.py
 
     homeassistant/components/zoneminder/*
-    homeassistant/components/*/zoneminder.py
 
     homeassistant/components/tuya.py
     homeassistant/components/*/tuya.py
@@ -574,6 +573,7 @@ omit =
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
     homeassistant/components/image_processing/tensorflow.py
+    homeassistant/components/image_processing/qrcode.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/avion.py
