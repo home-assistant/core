@@ -49,6 +49,37 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
         'yo': 'hello'
     }
 
+    # Delete config
+    await client.send_json({
+        'id': 8,
+        'type': 'lovelace/config/delete'
+    })
+    response = await client.receive_json()
+    assert response['success']
+
+    # Fetch data
+    await client.send_json({
+        'id': 9,
+        'type': 'lovelace/config'
+    })
+    response = await client.receive_json()
+    assert not response['success']
+    assert response['error']['code'] == 'config_not_found'
+
+    # Store new config
+    await client.send_json({
+        'id': 10,
+        'type': 'lovelace/config/save',
+        'config': {
+            'yo': 'hello'
+        }
+    })
+    response = await client.receive_json()
+    assert response['success']
+    assert hass_storage[lovelace.STORAGE_KEY]['data'] == {
+        'config': {'yo': 'hello'}
+    }
+
 
 async def test_lovelace_from_yaml(hass, hass_ws_client):
     """Test we load lovelace config from yaml."""
@@ -84,12 +115,20 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     response = await client.receive_json()
     assert not response['success']
 
+    # Delete config not allowed
+    await client.send_json({
+        'id': 7,
+        'type': 'lovelace/config/delete',
+    })
+    response = await client.receive_json()
+    assert not response['success']
+
     # Patch data
     with patch('homeassistant.components.lovelace.load_yaml', return_value={
         'hello': 'yo'
     }):
         await client.send_json({
-            'id': 7,
+            'id': 8,
             'type': 'lovelace/config'
         })
         response = await client.receive_json()

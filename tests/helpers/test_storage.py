@@ -32,6 +32,23 @@ async def test_loading(hass, store):
     assert data == MOCK_DATA
 
 
+async def test_deleting(hass, store):
+    """Test we can delete data."""
+    await store.async_save(MOCK_DATA)
+    await store.async_delete()
+    data = await store.async_load()
+    assert data is None
+
+
+async def test_deleting_saving(hass, store):
+    """Test we can delete data and then save again."""
+    await store.async_save(MOCK_DATA)
+    await store.async_delete()
+    await store.async_save(MOCK_DATA2)
+    data = await store.async_load()
+    assert data == MOCK_DATA2
+
+
 async def test_custom_encoder(hass):
     """Test we can save and load data."""
     class JSONEncoder(json.JSONEncoder):

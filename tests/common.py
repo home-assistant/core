@@ -859,10 +859,19 @@ def mock_storage(data=None):
         data[store.key] = json.loads(json.dumps(
             data_to_write, cls=store._encoder))
 
+    def mock_remove(file):
+        """Mock version of remove."""
+        key = os.path.basename(file)
+        _LOGGER.info('Deleting data from: %s', key)
+        if key in data:
+            del data[key]
+
     with patch('homeassistant.helpers.storage.Store._async_load',
                side_effect=mock_async_load, autospec=True), \
         patch('homeassistant.helpers.storage.Store._write_data',
-              side_effect=mock_write_data, autospec=True):
+              side_effect=mock_write_data, autospec=True), \
+        patch('os.remove',
+              side_effect=mock_remove, autospec=True):
         yield data
 
 

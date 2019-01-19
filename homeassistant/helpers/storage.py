@@ -120,6 +120,8 @@ class Store:
 
     async def async_delete(self) -> None:
         """Delete data."""
+        # if not os.path.isfile(self.path):
+        #    return
         self._async_cleanup_delay_listener()
         self._async_cleanup_stop_listener()
         await self.hass.async_add_executor_job(os.remove, self.path)
