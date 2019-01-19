@@ -1,5 +1,5 @@
 """
-Support for Hegel Integrated Amplifiers.
+Support for Hegel IP Controlable Integrated Amplifiers (currently Rost and H190).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.hegel/
@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
@@ -23,12 +23,13 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Hegel Integrated Amplifier'
 DEFAULT_PORT = 50001   # telnet default port for Hegel devices
 DEFAULT_TIMEOUT = None
+DEFAULT_PWR = 0
+DEFAULT_VOLUME = 0
+DEFAULT_MUTED = False
+DEFAULT_SOURCE = 1 ########## TODO: set to Network source
 
 SUPPORT_HEGEL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-
-MAX_VOLUME = 100
-MAX_SOURCE_NUMBERS = 60
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -36,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
 })
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Hegel platform."""
@@ -57,14 +57,20 @@ class HegelDevice(MediaPlayerDevice):
         self._host = host
         self._port = port
         self._timeout = timeout
-        self._pwstate = 'PWR1'
+        self._pwrstate = 1
         self._volume = 0
         self._muted = False
-        self._selected_source = ''
-        self._source_name_to_number = {}
-        self._source_number_to_name = {}
+        self._selected_source = 1
+        self._source_name_to_number = {} ###### TODO: check how to do
+        self._source_number_to_name = {} ###### TODO: check how to do
 
-    @classmethod
+    def telnet_connect(self):
+        try:
+            return telnetlib.Telnet(self._host, self._port, self._timeout)
+        except (ConnectionRefusedError, OSError):
+            _LOGGER.warning("%s refused connection", self._name)
+            return False
+
     def telnet_request(cls, telnet, command):
         """Execute `command` and return the response."""
         try:
@@ -86,38 +92,28 @@ class HegelDevice(MediaPlayerDevice):
     def telnet_command(self, command):
         """Establish a telnet connection and sends command."""
         try:
-            try:
-                telnet = telnetlib.Telnet(
-                    self._host, self._port, self._timeout)
-            except (ConnectionRefusedError, OSError):
-                _LOGGER.warning("Hegel %s refused connection", self._name)
-                return
+            telnet = self.telnet_connect()
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
             telnet.close()
         except telnetlib.socket.timeout:
-            _LOGGER.debug(
-                "Hegel %s command %s timed out", self._name, command)
+            _LOGGER.debug("%s command %s timed out", self._name, command)
 
     def update(self):
         """Get the latest details from the device."""
-        try:
-            telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except (ConnectionRefusedError, OSError):
-            _LOGGER.warning("Hegel %s refused connection", self._name)
-            return False
+        telnet = self.telnet_connect()
 
-        pwstate = self.telnet_request(telnet, "-p.?")
-        if pwstate:
-            self._pwstate = pwstate
+        pwrstate = self.telnet_request(telnet, "-p.?")
+        if pwrstate:
+            self._pwrstate = pwrstate
 
         volume_str = self.telnet_request(telnet, "-v.?")
-        self._volume = (volume_str.split('.')[1]) if volume_str else None
+        self._volume = (volume_str.split('.')[1]) if volume_str else 0
 
         muted_value = self.telnet_request(telnet, "-m.?")
-        self._muted = (muted_value == "MUT0") if muted_value else None
+        self._muted = (muted_value == "MUT0") if muted_value else False
 
-        _LOGGER.info("DATA HEGEL: %s, %s, %s", pwstate, volume_str, muted_value)
+        _LOGGER.info("DATA HEGEL: %s, %s, %s", pwrstate, volume_str, muted_value)
 
         # # Build the source name dictionaries if necessary
         # if not self._source_name_to_number:
@@ -153,9 +149,9 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._pwstate == "PWR1":
+        if self._pwrstate == 0:
             return STATE_OFF
-        if self._pwstate == "PWR0":
+        if self._pwrstate == 1:
             return STATE_ON
 
         return STATE_UNKNOWN
