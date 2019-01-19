@@ -255,27 +255,24 @@ class FibaroController():
                         self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
-                if device.mapped_type:
+                dtype = device.mapped_type
+                if dtype:
                     device.unique_id_str = "{}.{}".format(
                         self.hub_serial, device.id)
                     self._device_map[device.id] = device
-                    if device.mapped_type != 'climate':
-                        self.fibaro_devices[device.mapped_type].append(device)
+                    if dtype != 'climate':
+                        self.fibaro_devices[dtype].append(device)
                     else:
                         # if a sibling of this has been added, skip this one
                         if last_climate_parent != device.parentId:
-                            self.fibaro_devices[device.mapped_type].append(device)
+                            self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
-                        else:
-                            # we don't create a separate HA climate element for it
-                            pass
                 _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
                               device.ha_id, device.type,
-                              device.baseType, device.mapped_type,
+                              device.baseType, dtype,
                               str(device.properties), str(device.actions))
             except (KeyError, ValueError):
                 pass
-
 
 
 def setup(hass, base_config):

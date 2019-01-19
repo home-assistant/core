@@ -6,10 +6,10 @@ https://home-assistant.io/components/climate.fibaro/
 """
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, STATE_COOL,
-    STATE_HEAT, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
+    STATE_HEAT, STATE_FAN_ONLY, ENTITY_ID_FORMAT,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
     STATE_ON,
@@ -21,33 +21,40 @@ from homeassistant.const import (
 from homeassistant.components.fibaro import (
     FIBARO_DEVICES, FibaroDevice)
 
+SPEED_LOW = 'low'
+SPEED_MEDIUM = 'medium'
+SPEED_HIGH = 'high'
 DEPENDENCIES = ['fibaro']
 
 _LOGGER = logging.getLogger(__name__)
 
 
 FANMODE_MAP = {
-    "1": {0: "off", 1: "on"},
-    "1,128": {0: "off", 1: "on", 128: "auto"},
-    "1,3,5,128": {0: "off", 1: "low", 3: "medium", 5: "high", 128: "auto"},
+    "1": {0: STATE_OFF, 1: STATE_ON},
+    "1,128": {0: STATE_OFF, 1: STATE_ON, 128: STATE_AUTO},
+    "1,3,5,128": {0: STATE_OFF, 1: SPEED_LOW, 3: SPEED_MEDIUM,
+                  5: SPEED_HIGH, 128: STATE_AUTO},
 }
 
 IFANMODE_MAP = {
-    "1": {"off": 0, "on": 1},
-    "1,128": {"off": 0, "on": 1, "auto": 128},
-    "1,3,5,128": {"off": 0, "low": 1, "medium": 3, "high": 5, "auto": 128},
+    "1": {STATE_OFF: 0, STATE_ON: 1},
+    "1,128": {STATE_OFF: 0, STATE_ON: 1, STATE_AUTO: 128},
+    "1,3,5,128": {STATE_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 3,
+                  SPEED_HIGH: 5, STATE_AUTO: 128},
 }
 
 OPMODE_MAP = {
-    "0,1": {0: "off", 1: "on"},
-    "0,1,2": {0: "off", 1: "heat", 2: "cool"},
-    "0,1,2,6": {0: "off", 1: "heat", 2: "cool", 6: "ventillation"},
+    "0,1": {0: STATE_OFF, 1: STATE_ON},
+    "0,1,2": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL},
+    "0,1,2,6": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL,
+                6: STATE_FAN_ONLY},
 }
 
 IOPMODE_MAP = {
-    "0,1": {"off": 0, "on": 1},
-    "0,1,2": {"off": 0, "heat": 1, "cool": 2},
-    "0,1,2,6": {"off": 0, "heat": 1, "cool": 2, "ventillation": 6},
+    "0,1": {STATE_OFF: 0, STATE_ON: 1},
+    "0,1,2": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2},
+    "0,1,2,6": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2,
+                STATE_FAN_ONLY: 6},
 }
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
@@ -81,12 +88,13 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         tempunit = 'C'
         for device in siblings:
             if device != fibaro_device:
-                self.controller.register(device.id, self._update_callback)
+                self.controller.register(device.id,
+                                         self._update_callback)
             if device.type == 'com.fibaro.temperatureSensor':
                 self._tempsensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit
-            elif device.type == 'com.fibaro.setPoint' or \
-                 device.type == 'com.fibaro.thermostatDanfoss':
+            elif device.type == 'com.fibaro.setPoint' or\
+                    device.type == 'com.fibaro.thermostatDanfoss':
                 self._targettemp_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_TARGET_TEMPERATURE
                 tempunit = device.properties.unit
@@ -103,13 +111,15 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             self._unit_of_temp = TEMP_CELSIUS
 
         if self._fanmode_device:
-            sm = self._fanmode_device.fibaro_device.properties.supportedModes
-            self._fanmode_map = FANMODE_MAP.get(sm, {})
-            self._ifanmode_map = IFANMODE_MAP.get(sm, {})
+            smode = self._fanmode_device.fibaro_device.\
+                properties.supportedModes
+            self._fanmode_map = FANMODE_MAP.get(smode, {})
+            self._ifanmode_map = IFANMODE_MAP.get(smode, {})
         if self._opmode_device:
-            sm = self._opmode_device.fibaro_device.properties.supportedModes
-            self._opmode_map = OPMODE_MAP.get(sm, {})
-            self._iopmode_map = IOPMODE_MAP.get(sm, {})
+            omode = self._opmode_device.fibaro_device.\
+                properties.supportedModes
+            self._opmode_map = OPMODE_MAP.get(omode, {})
+            self._iopmode_map = IOPMODE_MAP.get(omode, {})
 
     @property
     def supported_features(self):
@@ -136,7 +146,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         """Set new target fan mode."""
         if self._fanmode_device is None:
             return
-        self._fanmode_device.action("setFanMode",self._ifanmode_map[fan_mode])
+        self._fanmode_device.action("setFanMode", self._ifanmode_map[fan_mode])
 
     @property
     def current_operation(self):
@@ -146,7 +156,6 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
 
         mode = int(self._opmode_device.fibaro_device.properties.mode)
         ret = self._opmode_map.get(mode, "")
-        _LOGGER.debug("current_operation %s: %s", str(self.ha_id), str(ret))
         return ret
 
     @property
@@ -155,14 +164,14 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         if self._opmode_device is None:
             return None
         ret = [k for k in self._opmode_map.values()]
-        _LOGGER.debug("operation_list %s: %s", str(self.ha_id), str(ret))
         return ret
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         if self._opmode_device is None:
             return
-        self._opmode_device.action("setMode",self._iopmode_map[operation_mode])
+        self._opmode_device.action("setMode",
+                                   self._iopmode_map[operation_mode])
 
     @property
     def temperature_unit(self):
@@ -173,38 +182,30 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         if self._tempsensor_device:
-            return float(self._tempsensor_device.fibaro_device.properties.value)
+            device = self._tempsensor_device.fibaro_device
+            return float(device.properties.value)
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self._targettemp_device:
-            return float(self._targettemp_device.fibaro_device.properties.targetLevel)
+            device = self._targettemp_device.fibaro_device
+            return float(device.properties.targetLevel)
         return None
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._targettemp_device.action("setTargetLevel", kwargs.get(ATTR_TEMPERATURE))
+            self._targettemp_device.action("setTargetLevel",
+                                           kwargs.get(ATTR_TEMPERATURE))
 
     @property
     def is_on(self):
         """Return true if on."""
-        if self.current_operation is "off":
-            _LOGGER.debug("is_on %s: false", str(self.ha_id))
+        if self.current_operation == STATE_OFF:
             return False
-        _LOGGER.debug("is_on %s: true", str(self.ha_id))
         return True
-
-    def turn_on(self):
-        """Turn device on."""
-        raise NotImplementedError()
-
-    def turn_off(self):
-        """Turn device off."""
-        raise NotImplementedError()
 
     def update(self):
         """Update the state."""
-        _LOGGER.debug("Update of %s ", str(self.ha_id))
