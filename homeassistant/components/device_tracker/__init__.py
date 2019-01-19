@@ -159,12 +159,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     async def async_setup_platform(p_type, p_config, disc_info=None):
         """Set up a device tracker platform."""
+        manager = hass.data[DOMAIN]
         platform = await async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
         if platform is None:
             return
 
-        hass.data[DOMAIN].add_platform(p_type, platform)
+        manager.add_platform(p_type, platform)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
@@ -196,10 +197,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
             if not setup:
                 _LOGGER.error("Error setting up platform %s", p_type)
+                manager.remove_platform(p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
+            manager.remove_platform(p_type)
 
     hass.data[DOMAIN] = PlatformManager(async_setup_platform)
 
@@ -238,15 +241,18 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    await hass.data[DOMAIN].get_async_setup_platform()(entry.domain, entry)
+    await hass.data[DOMAIN].async_setup_platform(entry.domain, entry)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload an entry."""
-    platform = hass.data[DOMAIN].get_platform(entry.domain)
+    manager = hass.data[DOMAIN]
+    platform_name = entry.domain
+    platform = manager.get_platform(platform_name)
     if platform and hasattr(platform, 'async_unload_entry'):
         await platform.async_unload_entry(hass, entry)
+        manager.remove_platform(platform_name)
         return True
     return False
 
@@ -278,9 +284,11 @@ class PlatformManager:
             return self.platforms[platform_name]
         return None
 
-    def get_async_setup_platform(self):
-        """Return this function stored by the platform manager."""
-        return self.async_setup_platform
+    def remove_platform(self, platform_name: str):
+        """Remove a platform that has been unloaded."""
+        _LOGGER.debug('Removing %s from PlatformManager', platform_name)
+        if platform_name in self.platforms:
+            self.platforms.pop(platform_name)
 
 
 class DeviceTracker:

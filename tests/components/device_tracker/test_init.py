@@ -513,8 +513,7 @@ async def test_see_failures(mock_warning, hass, yaml_devices):
     assert len(config) == 4
 
 
-@asyncio.coroutine
-def test_async_added_to_hass(hass):
+async def test_async_added_to_hass(hass):
     """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
@@ -532,7 +531,7 @@ def test_async_added_to_hass(hass):
         path: 'jk:\n  name: JK Phone\n  track: True',
     }
     with patch_yaml_files(files):
-        yield from device_tracker.async_setup(hass, {})
+        await device_tracker.async_setup(hass, {})
 
     state = hass.states.get('device_tracker.jk')
     assert state
@@ -543,8 +542,7 @@ def test_async_added_to_hass(hass):
         assert atr == val, "{}={} expected: {}".format(key, atr, val)
 
 
-@asyncio.coroutine
-def test_bad_platform(hass):
+async def test_bad_platform(hass):
     """Test bad platform."""
     config = {
         'device_tracker': [{
@@ -552,7 +550,7 @@ def test_bad_platform(hass):
         }]
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
-        assert (yield from device_tracker.async_setup(hass, config))
+        assert await device_tracker.async_setup(hass, config)
 
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
