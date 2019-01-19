@@ -83,9 +83,10 @@ class TahomaSensor(TahomaDevice, Entity):
                 'core:OccupancyState']
             self._available = True
         if self.tahoma_device.type == 'io:TemperatureIOSystemSensor':
-            """ round the temperature value, otherwise, it will show up as 13.4999999999999 """
-            self.current_value = float("{:.2f}".format(self.tahoma_device.active_states[
-                'core:TemperatureState']))
+            """ round the temperature value, otherwise, it will"""
+            """ show up as 13.4999999999999 """
+            self.current_value = float("{:.2f}".format(
+                self.tahoma_device.active_states['core:TemperatureState']))
             self._available = True
 
         _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
