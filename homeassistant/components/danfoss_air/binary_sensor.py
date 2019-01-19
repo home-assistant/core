@@ -7,6 +7,7 @@ https://home-assistant.io/components/binary_sensor.danfoss_air/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.danfoss_air import DOMAIN
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand

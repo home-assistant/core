@@ -8,6 +8,7 @@ from homeassistant.components.danfoss_air import DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand
