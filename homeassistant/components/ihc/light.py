@@ -30,8 +30,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
         if CONF_OFF_ID in product_cfg:
             ihc_off_id = product_cfg[CONF_OFF_ID]
+        else:
+            ihc_off_id = 0
         if CONF_ON_ID in product_cfg:
             ihc_on_id = product_cfg[CONF_ON_ID]
+        else:
+            ihc_on_id = 0
         dimmable = product_cfg[CONF_DIMMABLE]
         light = IhcLight(ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id,
                          info, dimmable, product)
