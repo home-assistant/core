@@ -276,7 +276,10 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._target_temp = temperature
+        if self._is_away:
+            self._saved_target_temp = temperature
+        else:
+            self._target_temp = temperature
         await self._async_control_heating(force=True)
         await self.async_update_ha_state()
 
