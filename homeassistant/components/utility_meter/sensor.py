@@ -9,9 +9,9 @@ import logging
 from decimal import Decimal, DecimalException
 import voluptuous as vol
 
+from . import DOMAIN
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
@@ -22,8 +22,10 @@ from homeassistant.helpers.dispatcher import (
     dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
-    SIGNAL_START_PAUSE_METER, SIGNAL_RESET_METER,
-    HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY, METER_TYPES)
+    DATA_UTILITY, UTILITY_COMPONENT, SIGNAL_START_PAUSE_METER,
+    SIGNAL_RESET_METER, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY, METER_TYPES,
+    CONF_SOURCE_SENSOR, CONF_METER_TYPE, CONF_METER_OFFSET,
+    CONF_TARIFF, CONF_TARIFF_ENTITY, CONF_METER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,21 +34,9 @@ ATTR_STATUS = 'status'
 ATTR_PERIOD = 'meter_period'
 ATTR_LAST_PERIOD = 'last_period'
 ATTR_LAST_RESET = 'last_reset'
-
-CONF_SOURCE_SENSOR = 'source'
-CONF_METER_TYPE = 'cycle'
-CONF_METER_OFFSET = 'offset'
-CONF_PAUSED = 'paused'
+ATTR_TARIFF = 'tariff'
 
 ICON = 'mdi:counter'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-    vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
-    vol.Optional(CONF_PAUSED, default=False): cv.boolean,
-})
 
 PRECISION = 3
 PAUSED = 'paused'
@@ -58,11 +48,19 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the utility meter sensor."""
     conf = discovery_info if discovery_info else config
 
-    meter = UtilityMeterSensor(conf[CONF_SOURCE_SENSOR],
+    meter = conf[CONF_METER]
+    conf_meter_source = hass.data[DATA_UTILITY][meter].get(CONF_SOURCE_SENSOR)
+    conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
+    conf_meter_offset = hass.data[DATA_UTILITY][meter].get(CONF_METER_OFFSET)
+    conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
+        CONF_TARIFF_ENTITY)
+
+    meter = UtilityMeterSensor(conf_meter_source,
                                conf.get(CONF_NAME),
-                               conf.get(CONF_METER_TYPE),
-                               conf.get(CONF_METER_OFFSET),
-                               conf.get(CONF_PAUSED))
+                               conf_meter_type,
+                               conf_meter_offset,
+                               conf.get(CONF_TARIFF),
+                               conf_meter_tariff_entity)
 
     async_add_entities([meter])
 
@@ -71,14 +69,13 @@ class UtilityMeterSensor(RestoreEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(self, source_entity, name, meter_type, meter_offset=0,
-                 paused=False):
+                 tariff=None, tariff_entity=None):
         """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
         self._last_reset = dt_util.now()
-        # _collecting initializes in inverted logic
-        self._collecting = None if not paused else lambda: None
+        self._collecting = None 
         if name:
             self._name = name
         else:
@@ -86,6 +83,8 @@ class UtilityMeterSensor(RestoreEntity):
         self._unit_of_measurement = None
         self._period = meter_type
         self._period_offset = meter_offset
+        self._tariff = tariff
+        self._tariff_entity = tariff_entity
 
     @callback
     def async_reading(self, entity, old_state, new_state):
@@ -115,25 +114,24 @@ class UtilityMeterSensor(RestoreEntity):
                             old_state.state, new_state.state, err)
         self.async_schedule_update_ha_state()
 
-    async def async_start_pause_meter(self, entity_id):
-        """Start/Pause meter."""
-        if self.entity_id != entity_id:
-            return
-        if self._collecting is None:
-            # Start collecting
+    @callback
+    def async_tariff_change(self, entity, old_state, new_state):
+        """Handle tariff changes."""
+        old = None if old_state is None else old_state.state
+
+        if self._tariff == new_state.state:
             self._collecting = async_track_state_change(
                 self.hass, self._sensor_source_id, self.async_reading)
         else:
-            # Pause collecting by cancel of async_track_state_change
             self._collecting()
             self._collecting = None
-
+        
         _LOGGER.debug("%s - %s - source <%s>", self._name,
                       COLLECTING if self._collecting is not None
                       else PAUSED, self._sensor_source_id)
 
-        await self.async_update_ha_state()
-
+        self.async_schedule_update_ha_state()
+            
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger then daily cycles."""
         now = dt_util.now()
@@ -144,12 +142,13 @@ class UtilityMeterSensor(RestoreEntity):
             return
         if self._period == YEARLY and\
                 (now.month != (1 + self._period_offset) or now.day != 1):
+            _LOGGER.error("%s / %s", now.month, now.day)
             return
-        await self.async_reset_meter(self.entity_id)
+        await self.async_reset_meter(self._tariff_entity)
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
-        if self.entity_id != entity_id:
+        if self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
@@ -173,9 +172,6 @@ class UtilityMeterSensor(RestoreEntity):
                                     hour=0, minute=0, second=0)
 
         async_dispatcher_connect(
-            self.hass, SIGNAL_START_PAUSE_METER, self.async_start_pause_meter)
-
-        async_dispatcher_connect(
             self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
         state = await self.async_get_last_state()
@@ -189,15 +185,22 @@ class UtilityMeterSensor(RestoreEntity):
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancelation function to init the meter paused
                 self._collecting = lambda: None
-            else:
-                # necessary to assure full restoration
-                self._collecting = None
 
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
-            dispatcher_send(self.hass, SIGNAL_START_PAUSE_METER,
-                            self.entity_id)
+            if self._tariff_entity is not None:
+                _LOGGER.debug("track %s", self._tariff_entity)
+                async_track_state_change(self.hass, self._tariff_entity, 
+                                         self.async_tariff_change)
+
+                component = self.hass.data[DATA_UTILITY][UTILITY_COMPONENT]
+                tariff_entity = component.get_entity(self._tariff_entity)
+                if self._tariff != tariff_entity.state:
+                    return
+
+            self._collecting = async_track_state_change(
+                self.hass, self._sensor_source_id, self.async_reading)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_source_tracking)
@@ -233,6 +236,8 @@ class UtilityMeterSensor(RestoreEntity):
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
+        if self._tariff is not None:
+            state_attr[ATTR_TARIFF] = self._tariff
         return state_attr
 
     @property
