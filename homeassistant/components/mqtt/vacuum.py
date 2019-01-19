@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, MqttAvailability, MqttDiscoveryUpdate,
+    ATTR_DISCOVERY_HASH, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
@@ -147,7 +147,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -176,8 +177,8 @@ async def _async_setup_entity(config, async_add_entities,
 
 
 # pylint: disable=too-many-ancestors
-class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                 VacuumDevice):
+class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                 MqttEntityDeviceInfo, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
     def __init__(self, config, discovery_info):
@@ -198,6 +199,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
@@ -253,6 +255,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
@@ -265,6 +268,7 @@ class MqttVacuum(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     async def _subscribe_topics(self):
