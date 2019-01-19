@@ -61,56 +61,62 @@ class HegelDevice(MediaPlayerDevice):
         self._volume = 0
         self._muted = False
         self._selected_source = 1
+        self._telnet_session = None
         self._source_name_to_number = {} ###### TODO: check how to do
         self._source_number_to_name = {} ###### TODO: check how to do
 
     def telnet_connect(self):
-        try:
-            return telnetlib.Telnet(self._host, self._port, self._timeout)
-        except (ConnectionRefusedError, OSError):
-            _LOGGER.warning("%s refused connection", self._name)
-            return False
+        """Establish a telnet connection or return an already opened one."""
+        if self._telnet_session is None:
+            try:
+                self._telnet_session = telnetlib.Telnet(self._host, self._port, self._timeout)
+                _LOGGER.debug("%s telnet connection established", self._name)
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.warning("%s refused connection", self._name)
+                return False
+        
+        return self._telnet_session
 
-    def telnet_request(cls, telnet, command):
-        """Execute `command` and return the response."""
-        try:
-            telnet.write(command.encode("ASCII") + b"\r")
-        except telnetlib.socket.timeout:
-            _LOGGER.debug("Hegel command %s timed out", command)
-            return None
+    def telnet_disconnect(self):
+        """Close the telnet connection."""
+        self.telnet_connect().close()
+        self._telnet_session = None
 
-        # The receiver will randomly send state change updates, make sure
-        # we get the response we are looking for
-        for _ in range(3):
-            result = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII") \
-                .strip()
-            if result.startswith(''):
-                return result
-
-        return None
-
-    def telnet_command(self, command):
-        """Establish a telnet connection and sends command."""
+    def telnet_send(self, command):
+        """Execute a telnet command and return the response."""
         try:
             telnet = self.telnet_connect()
             telnet.write(command.encode("ASCII") + b"\r")
-            telnet.read_very_eager()  # skip response
-            telnet.close()
+            return telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII") \
+                .strip()
         except telnetlib.socket.timeout:
-            _LOGGER.debug("%s command %s timed out", self._name, command)
+            self.telnet_disconnect()
+            _LOGGER.debug("Hegel command %s timed out", command)
+            return None
+
+        return None
+
+    # def telnet_command(self, command):
+    #     """Establish a telnet connection and sends command."""
+    #     try:
+    #         telnet = self.telnet_connect()
+    #         telnet.write(command.encode("ASCII") + b"\r")
+    #         telnet.read_very_eager()  # skip response
+    #         telnet.close()
+    #     except telnetlib.socket.timeout:
+    #         _LOGGER.debug("%s command %s timed out", self._name, command)
 
     def update(self):
         """Get the latest details from the device."""
-        telnet = self.telnet_connect()
-
-        pwrstate = self.telnet_request(telnet, "-p.?")
+        
+        pwrstate = self.telnet_send("-p.?")
         if pwrstate:
             self._pwrstate = pwrstate
 
-        volume_str = self.telnet_request(telnet, "-v.?")
+        volume_str = self.telnet_send("-v.?")
         self._volume = (volume_str.split('.')[1]) if volume_str else 0
 
-        muted_value = self.telnet_request(telnet, "-m.?")
+        muted_value = self.telnet_send("-m.?")
         self._muted = (muted_value == "MUT0") if muted_value else False
 
         _LOGGER.info("DATA HEGEL: %s, %s, %s", pwrstate, volume_str, muted_value)
@@ -138,7 +144,7 @@ class HegelDevice(MediaPlayerDevice):
         # else:
         #     self._selected_source = None
 
-        telnet.close()
+        self.telnet_disconnect()
         return True
 
     @property
