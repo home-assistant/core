@@ -1,31 +1,30 @@
 """The tests for the device tracker component."""
 # pylint: disable=protected-access
-import asyncio
 import json
 import logging
-from unittest.mock import call
-from datetime import datetime, timedelta
 import os
-from asynctest import patch
-import pytest
+from datetime import datetime, timedelta
+from unittest.mock import call
 
-from homeassistant.components import zone
-from homeassistant.core import callback, State
-from homeassistant.setup import async_setup_component
-from homeassistant.helpers import discovery
-from homeassistant.loader import get_component
+import pytest
+from asynctest import patch
+
+import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
+from homeassistant.components import zone
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
     STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, ATTR_ICON)
-import homeassistant.components.device_tracker as device_tracker
-from tests.components.device_tracker import common
+from homeassistant.core import callback, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import discovery
 from homeassistant.helpers.json import JSONEncoder
-
+from homeassistant.loader import get_component
+from homeassistant.setup import async_setup_component
 from tests.common import (
     async_fire_time_changed, patch_yaml_files, assert_setup_component,
     mock_restore_cache)
+from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
