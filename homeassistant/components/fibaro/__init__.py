@@ -28,7 +28,6 @@ CONF_PLUGINS = 'plugins'
 CONF_RESET_COLOR = 'reset_color'
 
 DOMAIN = 'fibaro'
-
 FIBARO_CONTROLLERS = 'fibaro_controllers'
 FIBARO_DEVICES = 'fibaro_devices'
 FIBARO_COMPONENTS = ['binary_sensor', 'climate', 'cover', 'light',
@@ -327,9 +326,11 @@ class FibaroDevice(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.controller.register(self.fibaro_device.id, self._update_callback)
+        _LOGGER.debug("Registered for callback: %s ", str(self.ha_id))
 
     def _update_callback(self):
         """Update the state."""
+        _LOGGER.debug("Updating: %s ", str(self.ha_id))
         self.schedule_update_ha_state(True)
 
     @property
@@ -460,4 +461,3 @@ class FibaroDevice(Entity):
 
         attr['fibaro_id'] = self.fibaro_device.id
         return attr
-[<65;64;38M
