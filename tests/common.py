@@ -868,7 +868,7 @@ def mock_storage(data=None):
         del data[store.key]
 
     with patch('homeassistant.helpers.storage.Store._async_load',
-                   side_effect=mock_async_load, autospec=True), \
+               side_effect=mock_async_load, autospec=True), \
             patch('homeassistant.helpers.storage.Store._write_data',
                   side_effect=mock_write_data, autospec=True), \
             patch('homeassistant.helpers.storage.Store.async_delete',
