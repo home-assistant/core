@@ -1,29 +1,23 @@
 """
-Binary sensors for Danfoss Air HRV.
-
-Configuration:
-    danfoss_air:
-        host: IP_OF_CCM_MODULE
+Support for the for Danfoss Air HRV binary sensor platform.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.danfoss_air/
 """
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
-
-SENSORS = {
-        'bypass_active': ["Danfoss Air Bypass Active", 'BYPASS_ACTIVE']
-        }
-
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.danfoss_air import DOMAIN
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data["DANFOSS_DO"]
+    from pydanfossair.commands import ReadCommand
+    data = hass.data[DOMAIN]
+
+    sensors = [["Danfoss Air Bypass Active", ReadCommand.bypass]]
 
     dev = []
 
-    for key in SENSORS:
-        dev.append(DanfossAirBinarySensor(data, SENSORS[key][0],
-                                          SENSORS[key][1]))
+    for sensor in sensors:
+        dev.append(DanfossAirBinarySensor(data, sensor[0], sensor[1]))
 
     add_devices(dev, True)
 

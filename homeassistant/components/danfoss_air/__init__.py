@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydanfossair==0.0.4']
+REQUIREMENTS = ['pydanfossair==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +38,7 @@ def setup(hass, config):
     """Set up the Danfoss Air component."""
     conf = config[DOMAIN]
 
-    danfoss_config = {}
-    danfoss_config['host'] = conf[CONF_HOST]
-
-    hass.data['DANFOSS_DO'] = DanfossAir(danfoss_config)
+    hass.data[DOMAIN] = DanfossAir(conf[CONF_HOST])
 
     for platform in DANFOSS_AIR_PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
@@ -57,6 +54,7 @@ class DanfossAir:
         self._data = {}
 
         from pydanfossair.danfossclient import DanfossClient
+
         self._client = DanfossClient(host)
 
     def get_value(self, item):
@@ -68,22 +66,22 @@ class DanfossAir:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Use the data from Digital Ocean API."""
+        """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
         from pydanfossair.commands import ReadCommand
-        self._data["EXHAUST_TEMPERATURE"] \
+        self._data[ReadCommand.exhaustTemperature] \
             = self._client.command(ReadCommand.exhaustTemperature)
-        self._data["OUTDOOR_TEMPERATURE"] \
+        self._data[ReadCommand.outdoorTemperature] \
             = self._client.command(ReadCommand.outdoorTemperature)
-        self._data["SUPPLY_TEMPERATURE"] \
+        self._data[ReadCommand.supplyTemperature] \
             = self._client.command(ReadCommand.supplyTemperature)
-        self._data["EXTRACT_TEMPERATURE"] \
+        self._data[ReadCommand.extractTemperature] \
             = self._client.command(ReadCommand.extractTemperature)
-        self._data["HUMIDITY_PERCENT"] \
+        self._data[ReadCommand.humidity] \
             = round(self._client.command(ReadCommand.humidity), 2)
-        self._data["FILTER_PERCENT"] \
+        self._data[ReadCommand.filterPercent] \
             = round(self._client.command(ReadCommand.filterPercent), 2)
-        self._data["BYPASS_ACTIVE"] \
+        self._data[ReadCommand.bypass] \
             = self._client.command(ReadCommand.bypass)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

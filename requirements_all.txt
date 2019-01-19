@@ -948,7 +948,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.9
 
 # homeassistant.components.danfoss_air
-pydanfossair==0.0.4
+pydanfossair==0.0.6
 
 # homeassistant.components.deconz
 pydeconz==47

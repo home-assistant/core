@@ -1,41 +1,38 @@
 """
-Sensors for Danfoss Air HRV.
-
-Configuration:
-    danfoss_air:
-        host: IP_OF_CCM_MODULE
+Support for the for Danfoss Air HRV sensor platform.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.danfoss_air/
 """
+from homeassistant.components.danfoss_air import DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-SENSORS = {
-        'exhaust': ["Danfoss Air Exhaust Temperature", TEMP_CELSIUS,
-                    'EXHAUST_TEMPERATURE'],
-        'outdoor': ["Danfoss Air Outdoor Temperature", TEMP_CELSIUS,
-                    'OUTDOOR_TEMPERATURE'],
-        'supply': ["Danfoss Air Supply Temperature", TEMP_CELSIUS,
-                   'SUPPLY_TEMPERATURE'],
-        'extract': ["Danfoss Air Extract Temperature", TEMP_CELSIUS,
-                    'EXTRACT_TEMPERATURE'],
-        'filterPercent': ["Danfoss Air Remaining Filter", '%',
-                          'FILTER_PERCENT'],
-        'humidityPercent': ["Danfoss Air Humidity", '%',
-                            'HUMIDITY_PERCENT']
-        }
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data["DANFOSS_DO"]
+    from pydanfossair.commands import ReadCommand
+
+    data = hass.data[DOMAIN]
+
+    sensors = [
+        ["Danfoss Air Exhaust Temperature", TEMP_CELSIUS,
+         ReadCommand.exhaustTemperature],
+        ["Danfoss Air Outdoor Temperature", TEMP_CELSIUS,
+         ReadCommand.outdoorTemperature],
+        ["Danfoss Air Supply Temperature", TEMP_CELSIUS,
+         ReadCommand.supplyTemperature],
+        ["Danfoss Air Extract Temperature", TEMP_CELSIUS,
+         ReadCommand.extractTemperature],
+        ["Danfoss Air Remaining Filter", '%',
+         ReadCommand.filterPercent],
+        ["Danfoss Air Humidity", '%',
+         ReadCommand.humidity]
+        ]
 
     dev = []
 
-    for key in SENSORS:
-        dev.append(DanfossAir(data, SENSORS[key][0], SENSORS[key][1],
-                              SENSORS[key][2]))
+    for sensor in sensors:
+        dev.append(DanfossAir(data, sensor[0], sensor[1], sensor[2]))
 
     add_devices(dev, True)
 
