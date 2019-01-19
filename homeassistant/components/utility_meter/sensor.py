@@ -7,11 +7,8 @@ https://home-assistant.io/components/sensor.utility_meter/
 import logging
 
 from decimal import Decimal, DecimalException
-import voluptuous as vol
 
-from . import DOMAIN
 import homeassistant.util.dt as dt_util
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
@@ -19,11 +16,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_change)
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send, async_dispatcher_connect)
+    async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
-    DATA_UTILITY, UTILITY_COMPONENT, SIGNAL_START_PAUSE_METER,
-    SIGNAL_RESET_METER, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY, METER_TYPES,
+    DATA_UTILITY, UTILITY_COMPONENT, SIGNAL_RESET_METER,
+    HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY,
     CONF_SOURCE_SENSOR, CONF_METER_TYPE, CONF_METER_OFFSET,
     CONF_TARIFF, CONF_TARIFF_ENTITY, CONF_METER)
 
@@ -75,7 +72,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._state = 0
         self._last_period = 0
         self._last_reset = dt_util.now()
-        self._collecting = None 
+        self._collecting = None
         if name:
             self._name = name
         else:
@@ -117,21 +114,19 @@ class UtilityMeterSensor(RestoreEntity):
     @callback
     def async_tariff_change(self, entity, old_state, new_state):
         """Handle tariff changes."""
-        old = None if old_state is None else old_state.state
-
         if self._tariff == new_state.state:
             self._collecting = async_track_state_change(
                 self.hass, self._sensor_source_id, self.async_reading)
         else:
             self._collecting()
             self._collecting = None
-        
+
         _LOGGER.debug("%s - %s - source <%s>", self._name,
                       COLLECTING if self._collecting is not None
                       else PAUSED, self._sensor_source_id)
 
         self.async_schedule_update_ha_state()
-            
+
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger then daily cycles."""
         now = dt_util.now()
@@ -191,7 +186,7 @@ class UtilityMeterSensor(RestoreEntity):
             """Wait for source to be ready, then start meter."""
             if self._tariff_entity is not None:
                 _LOGGER.debug("track %s", self._tariff_entity)
-                async_track_state_change(self.hass, self._tariff_entity, 
+                async_track_state_change(self.hass, self._tariff_entity,
                                          self.async_tariff_change)
 
                 component = self.hass.data[DATA_UTILITY][UTILITY_COMPONENT]
