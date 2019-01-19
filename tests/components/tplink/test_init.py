@@ -1,12 +1,12 @@
 """Tests for the TP-Link component."""
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch
 import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.components import tplink
 
 from tests.common import MockDependency, mock_coro
-from pyHS100 import SmartPlug, SmartBulb, TPLinkSmartHomeProtocol
+from pyHS100 import SmartPlug, SmartBulb
 
 
 mock_pyhs110 = MockDependency("pyHS100")
@@ -37,8 +37,7 @@ async def test_creating_entry_tries_discover(hass):
 # Only tplink: in the config file
 async def test_configuring_tplink_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
-    with mock_pyhs110, \
-         patch('pyHS100.Discover.discover') as discover:
+    with mock_pyhs110, patch('pyHS100.Discover.discover') as discover:
         discover.return_value = {'host': 1234}
         await async_setup_component(hass, tplink.DOMAIN, {
             'tplink': {}
@@ -48,7 +47,10 @@ async def test_configuring_tplink_causes_discovery(hass):
     assert len(discover.mock_calls) == 1
 
 
-@pytest.mark.parametrize("name,cls,platform", [('pyHS100.SmartPlug', SmartPlug, 'switch'), ('pyHS100.SmartBulb', SmartBulb, 'light')])
+@pytest.mark.parametrize("name,cls,platform", [
+    ('pyHS100.SmartPlug', SmartPlug, 'switch'),
+    ('pyHS100.SmartBulb', SmartBulb, 'light')
+])
 async def test_configuring_switch(hass, name, cls, platform):
     """Test that light or switch platform list is filled correctly."""
     with patch('pyHS100.Discover.discover') as discover, \
@@ -113,7 +115,8 @@ async def test_platforms_are_initialized(hass):
                   return_value=mock_coro(True)) as light_setup, \
             patch('homeassistant.components.tplink.switch.async_setup_entry',
                   return_value=mock_coro(True)) as switch_setup, \
-            patch('pyHS100.SmartPlug.is_dimmable', False): # to avoid misdetection as light.
+            patch('pyHS100.SmartPlug.is_dimmable', False):
+        # patching is_dimmable is necessray to avoid misdetection as light.
         await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
