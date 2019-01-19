@@ -14,7 +14,8 @@ from homeassistant.const import (
 import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import (
+    COMPONENT_SCHEMA, PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA)
 from homeassistant.helpers import discovery
 
 from tests.common import \
@@ -94,18 +95,24 @@ class TestSetup:
         platform_schema = PLATFORM_SCHEMA.extend({
             'hello': str,
         })
+        component_schema = COMPONENT_SCHEMA.extend({
+        })
         loader.set_component(
             self.hass,
             'platform_conf',
-            MockModule('platform_conf', platform_schema=platform_schema))
+            MockModule('platform_conf',
+                       component_schema=component_schema))
 
         loader.set_component(
             self.hass,
-            'platform_conf.whatever', MockPlatform('whatever'))
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
 
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
+                    'platform': 'whatever',
                     'hello': 'world',
                     'invalid': 'extra',
                 }
@@ -121,6 +128,7 @@ class TestSetup:
                     'hello': 'world',
                 },
                 'platform_conf 2': {
+                    'platform': 'whatever',
                     'invalid': True
                 }
             })
@@ -174,6 +182,99 @@ class TestSetup:
             })
             assert 'platform_conf' in self.hass.config.components
             assert not config['platform_conf']  # empty
+
+    def test_validate_platform_config_2(self):
+        """Test component COMPONENT_SCHEMA prioritized over PLATFORM_SCHEMA."""
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'cheers': str,
+            'hello': str,
+        })
+        component_schema = PLATFORM_SCHEMA.extend({
+            'hello': str,
+        })
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       component_schema=component_schema,
+                       platform_schema=platform_schema))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                },
+                'platform_conf 2': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                    'cheers': 'mate'
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+    def test_validate_platform_config_3(self):
+        """Test fallback to component PLATFORM_SCHEMA."""
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'hello': str,
+        })
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       platform_schema=platform_schema))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                },
+                'platform_conf 2': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                    'cheers': 'mate'
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
