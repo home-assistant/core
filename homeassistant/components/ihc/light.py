@@ -2,7 +2,9 @@
 import logging
 
 from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
-from homeassistant.components.ihc.const import CONF_DIMMABLE
+from homeassistant.components.ihc.const import (
+    CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID)
+from homeassistant.components.ihc.util import pulse
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
@@ -26,9 +28,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ihc_key = IHC_DATA.format(ctrl_id)
         info = hass.data[ihc_key][IHC_INFO]
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+        if CONF_OFF_ID in product_cfg:
+            ihc_off_id = product_cfg[CONF_OFF_ID]
+        if CONF_ON_ID in product_cfg:
+            ihc_on_id = product_cfg[CONF_ON_ID]
         dimmable = product_cfg[CONF_DIMMABLE]
-        light = IhcLight(ihc_controller, name, ihc_id, info,
-                         dimmable, product)
+        light = IhcLight(ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id,
+                         info, dimmable, product)
         devices.append(light)
     add_entities(devices)
 
@@ -41,10 +47,13 @@ class IhcLight(IHCDevice, Light):
     an on/off (boolean) resource
     """
 
-    def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 dimmable=False, product=None) -> None:
+    def __init__(self, ihc_controller, name, ihc_id: int, ihc_off_id: int,
+                 ihc_on_id: int, info: bool, dimmable=False,
+                 product=None) -> None:
         """Initialize the light."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
+        self._ihc_off_id = ihc_off_id
+        self._ihc_on_id = ihc_on_id
         self._brightness = 0
         self._dimmable = dimmable
         self._state = None
@@ -79,14 +88,20 @@ class IhcLight(IHCDevice, Light):
             self.ihc_controller.set_runtime_value_int(
                 self.ihc_id, int(brightness * 100 / 255))
         else:
-            self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
+            if self._ihc_on_id > 0:
+                pulse(self.ihc_controller, self._ihc_on_id)
+            else:
+                self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         if self._dimmable:
             self.ihc_controller.set_runtime_value_int(self.ihc_id, 0)
         else:
-            self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
+            if self._ihc_off_id > 0:
+                pulse(self.ihc_controller, self._ihc_off_id)
+            else:
+                self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC notifications."""
