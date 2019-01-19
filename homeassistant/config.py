@@ -743,7 +743,8 @@ def async_process_component_config(
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif hasattr(component, 'COMPONENT_SCHEMA') or hasattr(component, 'PLATFORM_SCHEMA'):
+    elif (hasattr(component, 'COMPONENT_SCHEMA') or
+          hasattr(component, 'PLATFORM_SCHEMA')):
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
