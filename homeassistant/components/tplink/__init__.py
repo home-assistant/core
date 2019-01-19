@@ -1,11 +1,13 @@
 """Component to embed TP-Link smart home devices."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+
 
 _LOGGER = logging.getLogger(__name__)
 

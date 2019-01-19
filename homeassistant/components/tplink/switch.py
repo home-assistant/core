@@ -136,7 +136,6 @@ class SmartPlugSwitch(SwitchDevice):
             self._available = True
 
         except (SmartDeviceException, OSError) as ex:
-            if self._available:
-                _LOGGER.warning(
-                    "Could not read state for %s: %s", self.name, ex)
-                self._available = False
+            _LOGGER.warning("Could not read state for %s: %s",
+                            self.smartplug.host, ex)
+            self._available = False
