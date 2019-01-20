@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS, CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME)
+    CONF_SWITCHES, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
@@ -95,6 +95,13 @@ LIGHTS_SCHEMA = vol.Schema({
                 lambda value: value * 1000),
 })
 
+SWITCHES_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_OUTPUT): vol.All(vol.Upper,
+                                       vol.In(OUTPUT_PORTS + RELAY_PORTS))
+})
+
 CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.port,
@@ -110,7 +117,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
-        vol.Required(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA])
+        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
+        vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -167,6 +175,10 @@ async def async_setup(hass, config):
     hass.async_create_task(
         async_load_platform(hass, 'light', DOMAIN,
                             config[DOMAIN][CONF_LIGHTS], config))
+
+    hass.async_create_task(
+        async_load_platform(hass, 'switch', DOMAIN,
+                            config[DOMAIN][CONF_SWITCHES], config))
 
     return True
 
