@@ -82,4 +82,3 @@ class OwletBinarySensor(BinarySensorDevice):
                 return False
 
         self._state = getattr(self._device.device, self._condition)
-

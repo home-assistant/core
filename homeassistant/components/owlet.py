@@ -77,7 +77,3 @@ class OwletDevice():
     def device(self):
         """Get device."""
         return self._device
-
-
-
-
