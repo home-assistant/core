@@ -1004,7 +1004,7 @@ pyfttt==0.3
 
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # homeassistant.components.sensor.skybeacon
-pygatt==3.2.0
+pygatt[GATTTOOL]==3.2.0
 
 # homeassistant.components.cover.gogogate2
 pygogogate2==0.1.1
