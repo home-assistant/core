@@ -60,8 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Discogs sensor."""
     import discogs_client
 
@@ -86,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
 
-    async_add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 class DiscogsSensor(Entity):
@@ -156,7 +155,7 @@ class DiscogsSensor(Entity):
             random_record.data['artists'][0]['name'],
             random_record.data['title'])
 
-    async def async_update(self):
+    def update(self):
         """Set state to the amount of records in user's collection."""
         if self._type == 'collection':
             self._state = self._discogs_data['collection_count']
