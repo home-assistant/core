@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_PASSWORD, CONF_PATH, CONF_NAME,
-    CONF_SCAN_INTERVAL)
+    CONF_SCAN_INTERVAL, ATTR_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -26,7 +26,6 @@ CONF_REPOS = 'repositories'
 CONF_SERVER_URL = 'server_url'
 
 ATTR_PATH = 'path'
-ATTR_NAME = 'name'
 ATTR_STARGAZERS = 'stargazers'
 ATTR_TOPICS = 'topics'
 ATTR_BRANCHES = 'branches'
@@ -53,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if config.get(CONF_ACCESS_TOKEN) is None \
             and config.get(CONF_USERNAME) is None:
         # Error if there is no authentication set
-        _LOGGER.error("You have not set an access_token or a username.")
+        _LOGGER.error("You have not set an access_token or a username")
         return
 
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
