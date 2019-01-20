@@ -678,7 +678,7 @@ class State:
                 "State max length is 255 characters.").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = state
+        self.state = state  # type: str
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
