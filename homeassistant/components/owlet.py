@@ -8,8 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyowlet==1.0.2']
