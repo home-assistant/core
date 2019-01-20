@@ -24,14 +24,12 @@ REQUIREMENTS = ['pyeverlights==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'everlights'
-
 SUPPORT_EVERLIGHTS = (SUPPORT_EFFECT | SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOSTS, default=[]): [cv.string],
+    vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 NAME_FORMAT = "EverLights {} Zone {}"
@@ -104,11 +102,6 @@ class EverLightsLight(Light):
     def name(self):
         """Return the name of the device."""
         return NAME_FORMAT.format(self._mac, self._channel)
-
-    @property
-    def should_poll(self):
-        """Return true because polling is required."""
-        return True
 
     @property
     def is_on(self):
