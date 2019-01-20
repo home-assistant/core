@@ -9,9 +9,11 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 REQUIREMENTS = ['pylutron==0.2.0']
 
@@ -19,8 +21,12 @@ DOMAIN = 'lutron'
 
 _LOGGER = logging.getLogger(__name__)
 
+LUTRON_BUTTONS = 'lutron_buttons'
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
+
+# Attribute on events that indicates what action was taken with the button.
+ATTR_ACTION = 'action'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -35,6 +41,7 @@ def setup(hass, base_config):
     """Set up the Lutron component."""
     from pylutron import Lutron
 
+    hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {'light': [],
                                  'cover': [],
@@ -69,6 +76,9 @@ def setup(hass, base_config):
                             button.button_type in ('SingleAction', 'Toggle')):
                         hass.data[LUTRON_DEVICES]['scene'].append(
                             (area.name, keypad.name, button, led))
+
+                hass.data[LUTRON_BUTTONS].append(
+                    LutronButton(hass, keypad, button))
 
     for component in ('light', 'cover', 'switch', 'scene'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
@@ -105,3 +115,43 @@ class LutronDevice(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+
+class LutronButton:
+    """Representation of a button on a Lutron keypad.
+
+    This is responsible for firing events as keypad buttons are pressed
+    (and possibly released, depending on the button type). It is not
+    represented as an entity; it simply fires events.
+    """
+
+    def __init__(self, hass, keypad, button):
+        """Register callback for activity on the button."""
+        name = '{}: {}'.format(keypad.name, button.name)
+        self._hass = hass
+        self._has_release_event = 'RaiseLower' in button.button_type
+        self._id = slugify(name)
+        self._event = 'lutron_event'
+
+        button.subscribe(self.button_callback, None)
+
+    def button_callback(self, button, context, event, params):
+        """Fire an event about a button being pressed or released."""
+        from pylutron import Button
+
+        if self._has_release_event:
+            # A raise/lower button; we will get callbacks when the button is
+            # pressed and when it's released, so fire events for each.
+            if event == Button.Event.PRESSED:
+                action = 'pressed'
+            else:
+                action = 'released'
+        else:
+            # A single-action button; the Lutron controller won't tell us
+            # when the button is released, so use a different action name
+            # than for buttons where we expect a release event.
+            action = 'single'
+
+        data = {ATTR_ID: self._id, ATTR_ACTION: action}
+
+        self._hass.bus.fire(self._event, data)
