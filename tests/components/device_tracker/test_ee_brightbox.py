@@ -4,10 +4,9 @@ from datetime import datetime
 from asynctest import patch
 import pytest
 
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, ee_brightbox)
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME)
+    CONF_PASSWORD, CONF_PLATFORM)
 from homeassistant.setup import async_setup_component
 
 
@@ -45,7 +44,8 @@ def _configure_mock_get_devices(eebrightbox_mock):
 def _configure_mock_failed_config_check(eebrightbox_mock):
     from eebrightbox import EEBrightBoxException
     eebrightbox_instance = eebrightbox_mock.return_value
-    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException("Failed to connect to the router")
+    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException(
+        "Failed to connect to the router")
 
 
 @pytest.fixture(autouse=True)
