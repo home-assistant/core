@@ -11,7 +11,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DEVICE_CLASS_TIMESTAMP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -85,6 +85,7 @@ class RovaSensor(Entity):
         self.platform_name = platform_name
         self.data_service = data_service
 
+        self._device_class = DEVICE_CLASS_TIMESTAMP
         self._state = None
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
@@ -98,6 +99,11 @@ class RovaSensor(Entity):
     def icon(self):
         """Return the sensor icon."""
         return SENSOR_TYPES[self.sensor_key][2]
+    
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return self._device_class
 
     @property
     def state(self):
