@@ -30,8 +30,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,7 +41,6 @@ def setup(hass, config):
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     name = config[DOMAIN].get(CONF_NAME)
-    monitor = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
 
     device = PyOwlet(username, password)
 
@@ -52,11 +49,7 @@ def setup(hass, config):
     if not name:
         name = '{}\'s Owlet'.format(device.baby_name)
 
-    # Monitor all conditions by default
-    if not monitor:
-        monitor = SENSOR_TYPES
-
-    hass.data[DOMAIN] = OwletDevice(device, name, monitor)
+    hass.data[DOMAIN] = OwletDevice(device, name, SENSOR_TYPES)
 
     return True
 
