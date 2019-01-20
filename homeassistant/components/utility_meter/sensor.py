@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
-    DATA_UTILITY, UTILITY_COMPONENT, SIGNAL_RESET_METER,
+    DATA_UTILITY, SIGNAL_RESET_METER,
     HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY,
     CONF_SOURCE_SENSOR, CONF_METER_TYPE, CONF_METER_OFFSET,
     CONF_TARIFF, CONF_TARIFF_ENTITY, CONF_METER)
@@ -43,23 +43,27 @@ COLLECTING = 'collecting'
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the utility meter sensor."""
-    conf = discovery_info if discovery_info else config
+    if discovery_info is None:
+        _LOGGER.error("This platform is only available through discovery")
+        return
 
-    meter = conf[CONF_METER]
-    conf_meter_source = hass.data[DATA_UTILITY][meter].get(CONF_SOURCE_SENSOR)
-    conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
-    conf_meter_offset = hass.data[DATA_UTILITY][meter].get(CONF_METER_OFFSET)
-    conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
-        CONF_TARIFF_ENTITY)
+    meters = []
+    for conf in discovery_info:
+        meter = conf[CONF_METER]
+        conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
+        conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
+        conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
+            CONF_TARIFF_ENTITY)
 
-    meter = UtilityMeterSensor(conf_meter_source,
-                               conf.get(CONF_NAME),
-                               conf_meter_type,
-                               conf_meter_offset,
-                               conf.get(CONF_TARIFF),
-                               conf_meter_tariff_entity)
+        meters.append(UtilityMeterSensor(conf_meter_source,
+                                         conf.get(CONF_NAME),
+                                         conf_meter_type,
+                                         conf_meter_offset,
+                                         conf.get(CONF_TARIFF),
+                                         conf_meter_tariff_entity))
 
-    async_add_entities([meter])
+    async_add_entities(meters)
 
 
 class UtilityMeterSensor(RestoreEntity):
@@ -188,8 +192,7 @@ class UtilityMeterSensor(RestoreEntity):
                 async_track_state_change(self.hass, self._tariff_entity,
                                          self.async_tariff_change)
 
-                component = self.hass.data[DATA_UTILITY][UTILITY_COMPONENT]
-                tariff_entity = component.get_entity(self._tariff_entity)
+                tariff_entity = self.hass.states.get(self._tariff_entity)
                 if self._tariff != tariff_entity.state:
                     return
 

@@ -19,9 +19,9 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from .const import (
     DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_SOURCE_SENSOR,
     CONF_METER_TYPE, CONF_METER_OFFSET, CONF_TARIFF_ENTITY, CONF_TARIFF,
-    CONF_TARIFFS, CONF_METER, DATA_UTILITY, UTILITY_COMPONENT,
-    SENSOR_PLATFORM_UTILITY_METER, SERVICE_RESET, SERVICE_SELECT_TARIFF,
-    SERVICE_SELECT_NEXT_TARIFF, ATTR_TARIFF)
+    CONF_TARIFFS, CONF_METER, DATA_UTILITY, SERVICE_RESET,
+    SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
+    ATTR_TARIFF)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,18 +56,18 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up an Utility Meter."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    hass.data[DATA_UTILITY] = {UTILITY_COMPONENT: component}
+    hass.data[DATA_UTILITY] = {}
 
     for meter, conf in config.get(DOMAIN).items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
         hass.data[DATA_UTILITY][meter] = conf
 
-        if conf[CONF_TARIFFS] == []:
+        if not conf[CONF_TARIFFS]:
             # only one entity is required
             hass.async_create_task(discovery.async_load_platform(
-                hass, SENSOR_DOMAIN, SENSOR_PLATFORM_UTILITY_METER,
-                {CONF_METER: meter, CONF_NAME: meter}, config))
+                hass, SENSOR_DOMAIN, DOMAIN,
+                [{CONF_METER: meter, CONF_NAME: meter}], config))
         else:
             # create tariff selection
             await component.async_add_entities([
@@ -77,15 +77,15 @@ async def async_setup(hass, config):
                 "{}.{}".format(DOMAIN, meter)
 
             # add one meter for each tariff
+            tariff_confs = []
             for tariff in conf[CONF_TARIFFS]:
-                tariff_conf = {
+                tariff_confs.append({
                     CONF_METER: meter,
                     CONF_NAME: "{} {}".format(meter, tariff),
                     CONF_TARIFF: tariff,
-                    }
-                hass.async_create_task(discovery.async_load_platform(
-                    hass, SENSOR_DOMAIN, SENSOR_PLATFORM_UTILITY_METER,
-                    tariff_conf, config))
+                    })
+            hass.async_create_task(discovery.async_load_platform(
+                hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config))
 
     component.async_register_entity_service(
         SERVICE_RESET, SERVICE_METER_SCHEMA,

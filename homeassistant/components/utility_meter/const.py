@@ -11,10 +11,6 @@ METER_TYPES = [HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY]
 
 DATA_UTILITY = 'utility_meter_data'
 
-UTILITY_COMPONENT = 'component'
-
-SENSOR_PLATFORM_UTILITY_METER = 'utility_meter'
-
 CONF_METER = 'meter'
 CONF_SOURCE_SENSOR = 'source'
 CONF_METER_TYPE = 'cycle'
