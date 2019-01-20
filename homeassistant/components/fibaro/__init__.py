@@ -168,7 +168,7 @@ class FibaroController():
         self._callbacks[device_id] = callback
 
     def get_children(self, device_id):
-        """Get a list of child devices"""
+        """Get a list of child devices."""
         result = []
         for device in self._device_map.values():
             if device.parentId == device_id:
@@ -176,7 +176,7 @@ class FibaroController():
         return result
 
     def get_siblings(self, device_id):
-        """Get the siblings of a device"""
+        """Get the siblings of a device."""
         return self.get_children(self._device_map[device_id].parentId)
 
     @staticmethod
