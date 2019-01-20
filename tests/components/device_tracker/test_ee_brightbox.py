@@ -1,15 +1,20 @@
 """Tests for the EE BrightBox device scanner."""
 from datetime import datetime
+
 from asynctest import patch
+import pytest
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, ee_brightbox)
+    DOMAIN, PLATFORM_SCHEMA, ee_brightbox)
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_USERNAME, CONF_PASSWORD, CONF_HOST)
+    CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME)
+from homeassistant.setup import async_setup_component
 
 
-def _get_devices_return_value():
-    return [
+def _configure_mock_get_devices(eebrightbox_mock):
+    eebrightbox_instance = eebrightbox_mock.return_value
+    eebrightbox_instance.__enter__.return_value = eebrightbox_instance
+    eebrightbox_instance.get_devices.return_value = [
         {
             'mac': 'AA:BB:CC:DD:EE:FF',
             'ip': '192.168.1.10',
@@ -37,66 +42,81 @@ def _get_devices_return_value():
     ]
 
 
-def _configure_scanner(eebrightbox_mock):
-    config = {
-        CONF_PASSWORD: 'password_test',
-        'version': 2,
-    }
-
+def _configure_mock_failed_config_check(eebrightbox_mock):
+    from eebrightbox import EEBrightBoxException
     eebrightbox_instance = eebrightbox_mock.return_value
-    eebrightbox_instance.__enter__.return_value = eebrightbox_instance
-    eebrightbox_instance.get_devices.return_value = _get_devices_return_value()
-
-    return ee_brightbox.EEBrightBoxScanner(config)
+    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException("Failed to connect to the router")
 
 
-async def test_get_scanner_returns_instance(hass):
-    """Test get scanner."""
-    config = {
-        ee_brightbox.DOMAIN: PLATFORM_SCHEMA({
-            CONF_PLATFORM: ee_brightbox.DOMAIN,
-            CONF_HOST: '192.168.1.1',
-            CONF_USERNAME: 'username_test',
-            CONF_PASSWORD: 'password_test',
-            'version': 2,
-        })
-    }
-
-    scanner = ee_brightbox.get_scanner(hass, config)
-    assert isinstance(scanner, ee_brightbox.EEBrightBoxScanner)
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf):
+    """Mock device tracker config loading."""
+    pass
 
 
 @patch('eebrightbox.EEBrightBox')
-async def test_scan_devices(eebrightbox_mock):
-    """Test scanner scan devices."""
-    scanner = _configure_scanner(eebrightbox_mock)
-    devices = scanner.scan_devices()
+async def test_missing_credentials(eebrightbox_mock, hass):
+    """Test missing credentials."""
+    _configure_mock_get_devices(eebrightbox_mock)
 
-    expected_devices = ['AA:BB:CC:DD:EE:FF', '11:22:33:44:55:66']
+    result = await async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            CONF_PLATFORM: 'ee_brightbox',
+        }
+    })
 
-    assert sorted(devices) == sorted(expected_devices)
+    assert result
 
+    await hass.async_block_till_done()
 
-@patch('eebrightbox.EEBrightBox')
-async def test_get_device_name_returns_device_hostname(eebrightbox_mock):
-    """Test scanner get device name."""
-    scanner = _configure_scanner(eebrightbox_mock)
-    scanner.scan_devices()
-
-    assert scanner.get_device_name('AA:BB:CC:DD:EE:FF') == 'hostnameAA'
-    assert scanner.get_device_name('11:22:33:44:55:66') == 'hostname11'
-    assert scanner.get_device_name('FF:FF:FF:FF:FF:FF') == 'hostnameFF'
+    assert hass.states.get('device_tracker.hostnameaa') is None
+    assert hass.states.get('device_tracker.hostname11') is None
+    assert hass.states.get('device_tracker.hostnameff') is None
 
 
 @patch('eebrightbox.EEBrightBox')
-async def test_get_extra_attributes(eebrightbox_mock):
-    """Test scanner get extra attributes."""
-    scanner = _configure_scanner(eebrightbox_mock)
-    scanner.scan_devices()
+async def test_invalid_credentials(eebrightbox_mock, hass):
+    """Test invalid credentials."""
+    _configure_mock_failed_config_check(eebrightbox_mock)
 
-    assert scanner.get_extra_attributes('AA:BB:CC:DD:EE:FF') == {
-        'mac': 'AA:BB:CC:DD:EE:FF',
-        'ip': '192.168.1.10',
-        'port': 'eth0',
-        'last_active': datetime(2019, 1, 20, 16, 4, 0)
-    }
+    result = await async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            CONF_PLATFORM: 'ee_brightbox',
+            CONF_PASSWORD: 'test_password',
+        }
+    })
+
+    assert result
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get('device_tracker.hostnameaa') is None
+    assert hass.states.get('device_tracker.hostname11') is None
+    assert hass.states.get('device_tracker.hostnameff') is None
+
+
+@patch('eebrightbox.EEBrightBox')
+async def test_get_devices(eebrightbox_mock, hass):
+    """Test valid configuration."""
+    _configure_mock_get_devices(eebrightbox_mock)
+
+    result = await async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            CONF_PLATFORM: 'ee_brightbox',
+            CONF_PASSWORD: 'test_password',
+        }
+    })
+
+    assert result
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get('device_tracker.hostnameaa') is not None
+    assert hass.states.get('device_tracker.hostname11') is not None
+    assert hass.states.get('device_tracker.hostnameff') is None
+
+    device = hass.states.get('device_tracker.hostnameaa')
+    assert device.attributes['mac'] == 'AA:BB:CC:DD:EE:FF'
+    assert device.attributes['ip'] == '192.168.1.10'
+    assert device.attributes['port'] == 'eth0'
+    assert device.attributes['last_active'] == datetime(2019, 1, 20, 16, 4, 0)

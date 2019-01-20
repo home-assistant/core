@@ -6,16 +6,13 @@ https://home-assistant.io/components/device_tracker.ee_brightbox/
 """
 
 import logging
-import datetime
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import utcnow
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['eebrightbox==0.0.4']
 
@@ -37,7 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Return a router scanner instance."""
-    return EEBrightBoxScanner(config[DOMAIN])
+    scanner = EEBrightBoxScanner(config[DOMAIN])
+
+    return scanner if scanner.check_config() else None
 
 
 class EEBrightBoxScanner(DeviceScanner):
@@ -47,6 +46,17 @@ class EEBrightBoxScanner(DeviceScanner):
         """Initialise the scanner."""
         self.config = config
         self.devices = {}
+
+    def check_config(self):
+        """Check if provided configuration and credentials are correct."""
+        from eebrightbox import EEBrightBox, EEBrightBoxException
+
+        try:
+            with EEBrightBox(self.config) as ee_brightbox:
+                return bool(ee_brightbox.get_devices())
+        except EEBrightBoxException:
+            _LOGGER.exception("Failed to connect to the router")
+            return False
 
     def scan_devices(self):
         """Scan for devices."""
