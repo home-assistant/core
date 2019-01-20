@@ -42,7 +42,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
         self._closure = 0
         # 100 equals open
-        self._position = 100
+        self._position = 50
         self._closed = False
         self._rssi_level = None
         self._icon = None
@@ -123,13 +123,15 @@ class TahomaCover(TahomaDevice, CoverDevice):
                 self._position = 100
             self._closed = self._position == 0
         else:
-            self._position = None
-            if 'core:OpenClosedState' in self.tahoma_device.active_states:
-                self._closed = \
-                    self.tahoma_device.active_states['core:OpenClosedState']\
-                    == 'closed'
-            else:
-                self._closed = False
+            if self.tahoma_device.type != \
+            'rts:RollerShutterRTSComponent':
+                self._position = None
+                if 'core:OpenClosedState' in self.tahoma_device.active_states:
+                    self._closed = \
+                        self.tahoma_device.active_states['core:OpenClosedState']\
+                        == 'closed'
+                else:
+                    self._closed = False
 
         _LOGGER.debug("Update %s, position: %d", self._name, self._position)
 
@@ -140,7 +142,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
+        if self.tahoma_device.type != \
+            'rts:RollerShutterRTSComponent':
+            self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
 
     @property
     def is_closed(self):
@@ -188,6 +192,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self.apply_action('close')
         else:
             self.apply_action('open')
+        if self.tahoma_device.type == 'rts:RollerShutterRTSComponent':
+            self._position = 100
 
     def close_cover(self, **kwargs):
         """Close the cover."""
@@ -195,6 +201,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self.apply_action('open')
         else:
             self.apply_action('close')
+        if self.tahoma_device.type == 'rts:RollerShutterRTSComponent':
+            self._position = 0
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -214,5 +222,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
                  'io:RollerShutterGenericIOComponent',
                  'io:VerticalExteriorAwningIOComponent'):
             self.apply_action('stop')
+        elif self.tahoma_device.type == \
+            'rts:RollerShutterRTSComponent':
+            self.apply_action('my')
+            self._position = 50
         else:
             self.apply_action('stopIdentify')
