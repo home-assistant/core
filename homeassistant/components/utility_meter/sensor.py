@@ -137,7 +137,6 @@ class UtilityMeterSensor(RestoreEntity):
             return
         if self._period == YEARLY and\
                 (now.month != (1 + self._period_offset) or now.day != 1):
-            _LOGGER.error("%s / %s", now.month, now.day)
             return
         await self.async_reset_meter(self._tariff_entity)
 
