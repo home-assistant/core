@@ -26,7 +26,6 @@ CONF_DIMMING = 'dimming'
 CONF_GATEWAYS = 'gateways'
 CONF_PLUGINS = 'plugins'
 CONF_RESET_COLOR = 'reset_color'
-
 DOMAIN = 'fibaro'
 FIBARO_CONTROLLERS = 'fibaro_controllers'
 FIBARO_DEVICES = 'fibaro_devices'
