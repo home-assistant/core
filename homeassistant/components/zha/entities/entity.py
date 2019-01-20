@@ -8,16 +8,16 @@ import asyncio
 import logging
 from random import uniform
 
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, ATTR_CLUSTER_ID, ATTR_ATTRIBUTE,
-    ATTR_VALUE, ATTR_MANUFACTURER, ATTR_COMMAND, SERVER, ATTR_COMMAND_TYPE,
-    ATTR_ARGS, IN, OUT, CLIENT_COMMANDS, SERVER_COMMANDS)
-from homeassistant.components.zha.helpers import bind_configure_reporting
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
+from ..const import (
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, ATTR_CLUSTER_ID, ATTR_ATTRIBUTE,
+    ATTR_VALUE, ATTR_MANUFACTURER, ATTR_COMMAND, SERVER, ATTR_COMMAND_TYPE,
+    ATTR_ARGS, IN, OUT, CLIENT_COMMANDS, SERVER_COMMANDS)
+from ..helpers import bind_configure_reporting
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ class ZhaEntity(entity.Entity):
                  **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
+        self._name = None
         ieee = endpoint.device.ieee
         ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if manufacturer and model is not None:
@@ -45,10 +46,7 @@ class ZhaEntity(entity.Entity):
                 endpoint.endpoint_id,
                 kwargs.get(ENTITY_SUFFIX, ''),
             )
-            self._device_state_attributes[CONF_FRIENDLY_NAME] = "{} {}".format(
-                manufacturer,
-                model,
-            )
+            self._name = "{} {}".format(manufacturer, model)
         else:
             self.entity_id = "{}.zha_{}_{}{}".format(
                 self._domain,
@@ -234,6 +232,11 @@ class ZhaEntity(entity.Entity):
         return cluster
 
     @property
+    def name(self):
+        """Return Entity's default name."""
+        return self._name
+
+    @property
     def zcl_reporting_config(self):
         """Return a dict of ZCL attribute reporting configuration.
 
@@ -302,10 +305,7 @@ class ZhaEntity(entity.Entity):
             'identifiers': {(DOMAIN, ieee)},
             ATTR_MANUFACTURER: self._endpoint.manufacturer,
             'model': self._endpoint.model,
-            'name': self._device_state_attributes.get(
-                CONF_FRIENDLY_NAME,
-                ieee
-            ),
+            'name': self.name or ieee,
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
