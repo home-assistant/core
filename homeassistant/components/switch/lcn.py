@@ -17,6 +17,9 @@ DEPENDENCIES = ['lcn']
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN switch platform."""
+    if discovery_info is None:
+        return
+
     import pypck
 
     devices = []
@@ -78,7 +81,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
                 input_obj.get_output_id() != self.output.value:
             return
 
-        self._is_on = (input_obj.get_percent() > 0)
+        self._is_on = input_obj.get_percent() > 0
         self.async_schedule_update_ha_state()
 
 
