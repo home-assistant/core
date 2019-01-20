@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.owlet import DOMAIN
 from homeassistant.util import dt as dt_util
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 BINARY_CONDITIONS = {
     'base_station_on': {

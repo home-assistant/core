@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 
 DEPENDENCIES = ['owlet']
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 SENSOR_CONDITIONS = {
     'oxygen_level': {
