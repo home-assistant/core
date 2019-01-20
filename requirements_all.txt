@@ -261,9 +261,6 @@ coinbase==2.1.0
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==5.0.3
 
-# homeassistant.scripts.check_config
-colorlog==4.0.2
-
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
 concord232==0.15
