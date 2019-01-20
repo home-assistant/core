@@ -319,6 +319,20 @@ def service(value):
                       .format(value))
 
 
+def schema_with_slug_keys(value_schema):
+    """Ensure dicts have slugs as keys.
+
+    Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
+    "Extra keys" errors from voluptuous.
+    """
+    schema = vol.Schema({str: value_schema})
+    def verify(value):
+        """Validate all keys are slugs and then the value_schema"""
+        keys = [slug(v) for v in value.keys()]
+        return schema(value)
+    return verify
+
+
 def slug(value):
     """Validate value is a valid slug."""
     if value is None:
