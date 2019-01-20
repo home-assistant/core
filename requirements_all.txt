@@ -1719,12 +1719,11 @@ yalesmartalarmclient==0.1.6
 
 # homeassistant.components.light.yeelight
 yeelight==0.4.3
-
-# homeassistant.components.light.yeelightsunflower
+youtube_dl==201# homeassistant.components.light.yeelightsunflower
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.12.17
+youtube_dl==2019.01.17
 
 # homeassistant.components.light.zengge
 zengge==0.2
