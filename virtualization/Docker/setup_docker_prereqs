@@ -35,7 +35,6 @@ PACKAGES=(
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
   cmake
-  git
   swig
 )
 
@@ -65,6 +64,10 @@ fi
 
 if [ "$INSTALL_DLIB" == "yes" ]; then
   pip3 install --no-cache-dir "dlib>=19.5"
+fi
+
+if [ "$INSTALL_GIT" != "yes" ]; then
+  PACKAGES_DEV+=(git)
 fi
 
 # Remove packages
