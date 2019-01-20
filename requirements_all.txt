@@ -1184,6 +1184,9 @@ pyruter==1.1.0
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
 
+# homeassistant.components.switch.sony_projector
+pysdcp==1
+
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.3
 

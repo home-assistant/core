@@ -3,13 +3,6 @@ Use SDCP network control to power on/off and check state of Sony projector.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/switch.sony_projector/
-
-Example configuration:
-
-switch:
-  - platform: sony_projector
-    host: "192.168.1.43"
-
 """
 import logging
 
@@ -33,15 +26,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Connect with serial port and return Acer Projector."""
-    host = config.get(CONF_HOST)
+    """Connect to Sony projector using network"""
+    host = config[CONF_HOST]
     name = config.get(CONF_NAME)
 
     add_entities([SonyProjector(host, name)], True)
 
 
 class SonyProjector(SwitchDevice):
-    """Represents an Acer Projector as a switch."""
+    """Represents a Sony Projector as a switch."""
 
     def __init__(self, host, name):
         """Init of the Sony projector."""
@@ -49,7 +42,7 @@ class SonyProjector(SwitchDevice):
         self._sdcp = pysdcp.Projector(host)
         self._name = name
         self._host = host
-        self._state = STATE_OFF
+        self._state = None
         self._available = False
         self._attributes = {}
 
@@ -79,8 +72,7 @@ class SonyProjector(SwitchDevice):
             self._state = self._sdcp.get_power()
             self._available = True
         except ConnectionRefusedError:
-            _LOGGER.error("Projector connection refused."
-                          " Check IP address (%s) is correct.", self._host)
+            _LOGGER.error("Projector connection refused")
             self._available = False
 
     def turn_on(self, **kwargs):
@@ -97,6 +89,6 @@ class SonyProjector(SwitchDevice):
         _LOGGER.debug("Powering off projector at %s...", self._host)
         if self._sdcp.set_power(False):
             _LOGGER.debug("Powered off successfully.")
-            self._state = STATE_ON
+            self._state = STATE_OFF
         else:
             _LOGGER.warning("Power off command was not successful")
