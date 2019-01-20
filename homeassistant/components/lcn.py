@@ -32,8 +32,10 @@ CONF_TRANSITION = 'transition'
 CONF_DIMMABLE = 'dimmable'
 CONF_CONNECTIONS = 'connections'
 
-DIM_MODES = ['steps50', 'steps200']
-OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
+DIM_MODES = ['STEPS50', 'STEPS200']
+OUTPUT_PORTS = ['OUTPUT1', 'OUTPUT2', 'OUTPUT3', 'OUTPUT4']
+RELAY_PORTS = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4',
+               'RELAY5', 'RELAY6', 'RELAY7', 'RELAY8']
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
@@ -85,7 +87,8 @@ def is_address(value):
 LIGHTS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
-    vol.Required(CONF_OUTPUT): vol.All(vol.In(OUTPUT_PORTS), vol.Upper),
+    vol.Required(CONF_OUTPUT): vol.All(vol.Upper,
+                                       vol.In(OUTPUT_PORTS + RELAY_PORTS)),
     vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
     vol.Optional(CONF_TRANSITION, default=0):
         vol.All(vol.Coerce(float), vol.Range(min=0., max=486.),
@@ -98,8 +101,8 @@ CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
-    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.All(vol.In(DIM_MODES),
-                                                            vol.Upper),
+    vol.Optional(CONF_DIM_MODE, default='steps50'): vol.All(vol.Upper,
+                                                            vol.In(DIM_MODES)),
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -180,11 +183,11 @@ class LcnDevice(Entity):
         self._name = config[CONF_NAME]
 
     @property
-    def should_poll(self) -> bool:
+    def should_poll(self):
         """Lcn device entity pushes its state to HA."""
         return False
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         self.address_connection.register_for_inputs(
             self.input_received)
