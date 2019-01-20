@@ -326,9 +326,11 @@ def schema_with_slug_keys(value_schema):
     "Extra keys" errors from voluptuous.
     """
     schema = vol.Schema({str: value_schema})
+
     def verify(value):
         """Validate all keys are slugs and then the value_schema"""
-        keys = [slug(v) for v in value.keys()]
+        for key in value.keys():
+            slug(key)
         return schema(value)
     return verify
 
