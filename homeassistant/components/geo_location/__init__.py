@@ -19,6 +19,7 @@ ATTR_DISTANCE = 'distance'
 ATTR_SOURCE = 'source'
 
 DOMAIN = 'geo_location'
+DEPENDENCIES = ['group']
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

@@ -39,10 +39,10 @@ class TestDemoPlatform(unittest.TestCase):
             with assert_setup_component(1, geo_location.DOMAIN):
                 assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
 
-            # In this test, only entities of the geolocation domain have been
-            # generated.
+            # In this test, only entities of the geolocation domain and
+            # one group have been generated.
             all_states = self.hass.states.all()
-            assert len(all_states) == NUMBER_OF_DEMO_DEVICES
+            assert len(all_states) == NUMBER_OF_DEMO_DEVICES + 1
 
             # Check a single device's attributes.
             state_first_entry = all_states[0]
@@ -62,5 +62,5 @@ class TestDemoPlatform(unittest.TestCase):
             # Get all states again, ensure that the number of states is still
             # the same, but the lists are different.
             all_states_updated = self.hass.states.all()
-            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
+            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES + 1
             assert all_states != all_states_updated

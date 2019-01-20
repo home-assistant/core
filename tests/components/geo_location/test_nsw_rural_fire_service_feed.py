@@ -96,7 +96,7 @@ async def test_setup(hass):
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(all_states) == 4
 
             state = hass.states.get("geo_location.title_1")
             assert state is not None
@@ -139,15 +139,26 @@ async def test_setup(hass):
                 ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
             assert round(abs(float(state.state)-25.5), 7) == 0
 
+            # Now check if all entities are found in the component's group.
+            group_state = hass.states.get("group.all_geolocation_events")
+            assert group_state.attributes['entity_id'] == (
+                'geo_location.title_1', 'geo_location.title_2',
+                'geo_location.title_3')
+
             # Simulate an update - one existing, one new entry,
-            # one outdated entry
+            # one outdated entry.
             mock_feed.return_value.update.return_value = 'OK', [
                 mock_entry_1, mock_entry_4, mock_entry_3]
             async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(all_states) == 4
+
+            group_state = hass.states.get("group.all_geolocation_events")
+            assert group_state.attributes['entity_id'] == (
+                'geo_location.title_1', 'geo_location.title_3',
+                'geo_location.title_4')
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
@@ -156,15 +167,21 @@ async def test_setup(hass):
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(all_states) == 4
 
-            # Simulate an update - empty data, removes all entities
+            group_state = hass.states.get("group.all_geolocation_events")
+            assert group_state.attributes['entity_id'] == (
+                'geo_location.title_1', 'geo_location.title_3',
+                'geo_location.title_4')
+
+            # Simulate an update - empty data, removes all entities, except
+            # for the group.
             mock_feed.return_value.update.return_value = 'ERROR', None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
-            assert len(all_states) == 0
+            assert len(all_states) == 1
 
 
 async def test_setup_with_custom_location(hass):
@@ -187,7 +204,11 @@ async def test_setup_with_custom_location(hass):
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
-            assert len(all_states) == 1
+            assert len(all_states) == 2
 
             assert mock_feed.call_args == call(
                 (15.1, 25.2), filter_categories=[], filter_radius=200.0)
+
+
+# async def test_group_updates(hass):
+#     """Test the behavior of the catch-all group."""
