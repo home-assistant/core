@@ -203,8 +203,9 @@ class TPLinkSmartBulb(Light):
             self._available = True
 
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read state for %s: %s",
-                            self.smartbulb.host, ex)
+            if self._available:
+                _LOGGER.warning("Could not read state for %s: %s",
+                                self.smartbulb.host, ex)
             self._available = False
 
     @property
