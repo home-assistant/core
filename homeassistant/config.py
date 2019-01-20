@@ -626,7 +626,7 @@ def _identify_config_schema(module: ModuleType) -> \
     except (AttributeError, KeyError):
         return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{'):
+    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)

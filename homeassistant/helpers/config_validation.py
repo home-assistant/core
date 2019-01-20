@@ -319,7 +319,7 @@ def service(value):
                       .format(value))
 
 
-def schema_with_slug_keys(value_schema):
+def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
     """Ensure dicts have slugs as keys.
 
     Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
@@ -327,15 +327,15 @@ def schema_with_slug_keys(value_schema):
     """
     schema = vol.Schema({str: value_schema})
 
-    def verify(value):
-        """Validate all keys are slugs and then the value_schema"""
+    def verify(value: Dict) -> Dict:
+        """Validate all keys are slugs and then the value_schema."""
         for key in value.keys():
             slug(key)
         return schema(value)
     return verify
 
 
-def slug(value):
+def slug(value: Any) -> str:
     """Validate value is a valid slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -346,7 +346,7 @@ def slug(value):
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
 
 
-def slugify(value):
+def slugify(value: Any) -> str:
     """Coerce a value to a slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
