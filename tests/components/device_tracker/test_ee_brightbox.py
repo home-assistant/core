@@ -1,5 +1,5 @@
 """Tests for the EE BrightBox device scanner."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from asynctest import patch
 
 from homeassistant.components.device_tracker import (
@@ -16,7 +16,7 @@ def _get_devices_return_value():
             'hostname': 'hostnameAA',
             'activity_ip': True,
             'port': 'eth0',
-            'time_last_active': datetime.now() - timedelta(minutes=5),
+            'time_last_active': datetime(2019, 1, 20, 16, 4, 0),
         },
         {
             'mac': '11:22:33:44:55:66',
@@ -24,7 +24,7 @@ def _get_devices_return_value():
             'ip': '192.168.1.11',
             'activity_ip': True,
             'port': 'wl0',
-            'time_last_active': datetime.now() - timedelta(hours=5),
+            'time_last_active': datetime(2019, 1, 20, 11, 9, 0),
         },
         {
             'mac': 'FF:FF:FF:FF:FF:FF',
@@ -32,7 +32,7 @@ def _get_devices_return_value():
             'ip': '192.168.1.12',
             'activity_ip': False,
             'port': 'wl1',
-            'time_last_active': datetime.now() - timedelta(days=5),
+            'time_last_active': datetime(2019, 1, 15, 16, 9, 0),
         }
     ]
 
@@ -98,5 +98,5 @@ async def test_get_extra_attributes(eebrightbox_mock):
         'mac': 'AA:BB:CC:DD:EE:FF',
         'ip': '192.168.1.10',
         'port': 'eth0',
-        'last active': '5 minutes ago'
+        'last_active': datetime(2019, 1, 20, 16, 4, 0)
     }

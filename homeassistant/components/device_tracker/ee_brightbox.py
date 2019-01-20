@@ -11,12 +11,13 @@ import datetime
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utcnow
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 
-REQUIREMENTS = ['eebrightbox==0.0.4', 'timeago==1.0.8']
+REQUIREMENTS = ['eebrightbox==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,10 +76,8 @@ class EEBrightBoxScanner(DeviceScanner):
         - ip
         - mac
         - port - ethX or wifiX
-        - last active
+        - last_active
         """
-        import timeago
-
         port_map = {
             'wl1': 'wifi5Ghz',
             'wl0': 'wifi2.4Ghz',
@@ -93,10 +92,7 @@ class EEBrightBoxScanner(DeviceScanner):
                 'ip': self.devices[device]['ip'],
                 'mac': self.devices[device]['mac'],
                 'port': port_map[self.devices[device]['port']],
-                'last active': timeago.format(
-                    self.devices[device]['time_last_active'],
-                    datetime.datetime.now()
-                ),
+                'last_active': self.devices[device]['time_last_active'],
             }
 
         return {}

@@ -269,9 +269,6 @@ srpenergy==1.0.5
 # homeassistant.components.statsd
 statsd==3.2.1
 
-# homeassistant.components.device_tracker.ee_brightbox
-timeago==1.0.8
-
 # homeassistant.components.camera.uvc
 uvcclient==0.11.0
 
