@@ -32,8 +32,6 @@ UNIT_RECORDS = 'records'
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-LIST_MONITORED_CONDITIONS = ['collection', 'wantlist', 'random_record']
-
 SENSORS = {
     'collection': {
         'name': 'Collection',
@@ -55,8 +53,8 @@ SENSORS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=LIST_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(LIST_MONITORED_CONDITIONS)])
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSORS):
+        vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
 
