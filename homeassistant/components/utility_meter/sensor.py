@@ -192,8 +192,8 @@ class UtilityMeterSensor(RestoreEntity):
                 async_track_state_change(self.hass, self._tariff_entity,
                                          self.async_tariff_change)
 
-                tariff_entity = self.hass.states.get(self._tariff_entity)
-                if self._tariff != tariff_entity.state:
+                tariff_entity_state = self.hass.states.get(self._tariff_entity)
+                if self._tariff != tariff_entity_state.state:
                     return
 
             self._collecting = async_track_state_change(
