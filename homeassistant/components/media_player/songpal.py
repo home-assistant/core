@@ -180,6 +180,8 @@ class SongpalDevice(MediaPlayerDevice):
                 await self.async_update_ha_state(force_refresh=True)
                 delay = min(2*delay, 300)
 
+            _LOGGER.info("Reconnected to %s", self.name)
+
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
         self.dev.on_notification(PowerChange, _power_changed)
