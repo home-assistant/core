@@ -19,6 +19,9 @@ DEPENDENCIES = ['lcn']
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN light platform."""
+    if discovery_info is None:
+        return
+
     import pypck
 
     devices = []
