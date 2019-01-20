@@ -10,8 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_EVENT, CONF_HOST, CONF_ID, CONF_PASSWORD, CONF_USERNAME)
-from homeassistant.core import EventOrigin, callback
+    ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -25,6 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 LUTRON_BUTTONS = 'lutron_buttons'
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
+
+# Attribute on events that indicates what action was taken with the button.
+ATTR_ACTION = 'action'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -125,16 +127,14 @@ class LutronButton:
 
     def __init__(self, hass, keypad, button):
         """Register callback for activity on the button."""
-        self._name = '{}: {}'.format(keypad.name, button.name)
+        name = '{}: {}'.format(keypad.name, button.name)
         self._hass = hass
-        self._button = button
         self._has_release_event = 'RaiseLower' in button.button_type
-        self._id = slugify(self._name)
-        self._event = 'lutron_{}'.format(CONF_EVENT)
+        self._id = slugify(name)
+        self._event = 'lutron_event'
 
         button.subscribe(self.button_callback, None)
 
-    @callback
     def button_callback(self, button, context, event, params):
         """Fire an event about a button being pressed or released."""
         from pylutron import Button
@@ -152,6 +152,6 @@ class LutronButton:
             # than for buttons where we expect a release event.
             action = 'single'
 
-        data = {CONF_ID: self._id, CONF_EVENT: action}
+        data = {ATTR_ID: self._id, ATTR_ACTION: action}
 
-        self._hass.bus.fire(self._event, data, EventOrigin.remote)
+        self._hass.bus.fire(self._event, data)
