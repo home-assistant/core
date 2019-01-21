@@ -22,7 +22,8 @@ from homeassistant.const import (
     STATE_OFF)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, MQTT_BASE_PLATFORM_SCHEMA,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
@@ -144,7 +145,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -183,8 +185,8 @@ async def _async_setup_entity(hass, config, async_add_entities,
         )])
 
 
-class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                  ClimateDevice):
+class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                  MqttEntityDeviceInfo, ClimateDevice):
     """Representation of an MQTT climate device."""
 
     def __init__(self, hass, config, discovery_hash):
@@ -210,6 +212,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -225,6 +228,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
@@ -463,6 +467,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
