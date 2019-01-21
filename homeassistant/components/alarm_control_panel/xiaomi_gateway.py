@@ -15,7 +15,8 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanel
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.xiaomi_aqara import (CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import ( CONF_NAME,STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+from homeassistant.const import (CONF_NAME ,STATE_ALARM_ARMED_AWAY,
+                                STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ ATTR_HARDWARE_VERSION = 'hardware_version'
 
 SUCCESS = ['ok']
 
+
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -61,10 +63,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     from miio import Device, DeviceException
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
-
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
-
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
@@ -83,13 +83,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hass.data[DATA_KEY][host] = device
     async_add_devices([device], update_before_add=True)
 
+
 class XiaomiGateway(AlarmControlPanel):
     """Representation of a Xiaomi Miio Generic Device."""
 
     def __init__(self, device, config, device_info):
         """Initialize the entity."""
         self._device = device
-
         self._name = config.get(CONF_NAME)
         self._turn_on_command = config.get(CONF_TURN_ON_COMMAND)
         self._turn_on_parameters = config.get(CONF_TURN_ON_PARAMETERS)
@@ -100,13 +100,11 @@ class XiaomiGateway(AlarmControlPanel):
         self._state_off_value = config.get(CONF_STATE_OFF_VALUE).pop()
         self._update_instant = config.get(CONF_UPDATE_INSTANT)
         self._skip_update = False
-
         self._model = device_info.model
         self._unique_id = "{}-{}-{}".format(device_info.model,
                                             device_info.mac_address,
                                             self._state_property)
         self._icon = 'mdi:flask-outline'
-
         self._available = None
         self._state = None
         self._state_attrs = {
@@ -150,7 +148,7 @@ class XiaomiGateway(AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
-   
+
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
