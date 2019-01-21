@@ -7,7 +7,8 @@ import logging
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE, MATCH_ALL)
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
+    ENTITY_MATCH_ALL)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -163,7 +164,7 @@ class EntityComponent:
         """
         data_ent_id = service.data.get(ATTR_ENTITY_ID)
 
-        if data_ent_id in (None, MATCH_ALL):
+        if data_ent_id in (None, ENTITY_MATCH_ALL):
             if data_ent_id is None:
                 self.logger.warning(
                     'Not passing an entity ID to a service to target all '
