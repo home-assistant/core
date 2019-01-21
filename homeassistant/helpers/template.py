@@ -165,7 +165,7 @@ class Template:
 
         try:
             variables['value_json'] = json.loads(value)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         try:

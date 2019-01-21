@@ -4,6 +4,7 @@ from datetime import datetime
 import unittest
 import random
 import math
+import pytz
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -421,6 +422,16 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template('{{ value_json.bye|is_defined }}', self.hass)
         assert '' == \
             tpl.render_with_possible_json_value('{"hello": "world"}', '')
+
+    def test_render_with_possible_json_value_non_string_value(self):
+        """Render with possible JSON value with non-string value."""
+        tpl = template.Template("""
+{{ strptime(value~'+0000', '%Y-%m-%d %H:%M:%S%z') }}
+            """, self.hass)
+        value = datetime(2019, 1, 18, 12, 13, 14)
+        expected = str(pytz.utc.localize(value))
+        assert expected == \
+            tpl.render_with_possible_json_value(value)
 
     def test_raise_exception_on_error(self):
         """Test raising an exception on error."""
