@@ -11,7 +11,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeoLocationEvent)
+    PLATFORM_SCHEMA, GeolocationEvent)
 from homeassistant.const import (
     CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START,
     CONF_LATITUDE, CONF_LONGITUDE)
@@ -108,7 +108,7 @@ class GeoJsonFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class GeoJsonLocationEvent(GeoLocationEvent):
+class GeoJsonLocationEvent(GeolocationEvent):
     """This represents an external event with GeoJSON data."""
 
     def __init__(self, feed_manager, external_id):

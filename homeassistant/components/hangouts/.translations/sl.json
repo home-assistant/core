@@ -6,7 +6,7 @@
         },
         "error": {
             "invalid_2fa": "Neveljavna 2FA avtorizacija, prosimo, poskusite znova.",
-            "invalid_2fa_method": "Neveljavna 2FA metoda (preveri na telefonu).",
+            "invalid_2fa_method": "Neveljavna 2FA Metoda (Preverite na Telefonu).",
             "invalid_login": "Neveljavna Prijava, prosimo, poskusite znova."
         },
         "step": {
@@ -15,7 +15,7 @@
                     "2fa": "2FA Pin"
                 },
                 "description": "prazno",
-                "title": "2-faktorska avtorizacija"
+                "title": "Dvofaktorska avtorizacija"
             },
             "user": {
                 "data": {

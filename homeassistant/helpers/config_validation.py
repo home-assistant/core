@@ -200,10 +200,10 @@ def icon(value):
     """Validate icon."""
     value = str(value)
 
-    if value.startswith('mdi:'):
+    if ':' in value:
         return value
 
-    raise vol.Invalid('Icons should start with prefix "mdi:"')
+    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -517,7 +517,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
-    vol.Optional(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
