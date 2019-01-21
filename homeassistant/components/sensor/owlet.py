@@ -1,8 +1,8 @@
 """
-Support for Ecobee sensors.
+Support for Owlet sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ecobee/
+https://home-assistant.io/components/binary_sensor.owlet/
 """
 from datetime import timedelta
 
