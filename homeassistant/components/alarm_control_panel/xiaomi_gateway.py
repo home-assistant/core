@@ -195,7 +195,7 @@ class XiaomiGateway(AlarmControlPanel):
         """Fetch state from the device."""
         from miio import DeviceException
 
-        # On state change some devices doesn't provide the new 
+        # On state change some devices doesn't provide the new
         # state immediately.
         if self._update_instant is False and self._skip_update:
             self._skip_update = False
