@@ -16,8 +16,16 @@ from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 def configured_sensors(hass):
     """Return a set of configured Luftdaten sensors."""
     return set(
-        '{0}'.format(entry.data[CONF_SENSOR_ID])
+        entry.data[CONF_SENSOR_ID]
         for entry in hass.config_entries.async_entries(DOMAIN))
+
+
+@callback
+def duplicate_stations(hass):
+    """Return a set of duplicate configured Luftdaten stations."""
+    stations = [int(entry.data[CONF_SENSOR_ID])
+                for entry in hass.config_entries.async_entries(DOMAIN)]
+    return {x for x in stations if stations.count(x) > 1}
 
 
 @config_entries.HANDLERS.register(DOMAIN)
