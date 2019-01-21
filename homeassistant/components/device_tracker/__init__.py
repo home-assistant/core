@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/
 """
 import asyncio
+from collections import namedtuple
 from datetime import timedelta
 import logging
 from typing import Any, List, Sequence, Callable
@@ -257,6 +258,9 @@ async def async_unload_entry(hass, entry):
     return False
 
 
+Platform = namedtuple('Platform', 'platform, count')
+
+
 class PlatformManager:
     """Store data needed to unload entries from loaded platforms."""
 
@@ -266,29 +270,45 @@ class PlatformManager:
         self.async_setup_platform = async_setup_platform
 
     def add_platform(self, platform_name: str, platform):
-        """Add a platform that has been loaded to the platform manager."""
-        _LOGGER.debug('Adding %s to PlatformManager', platform_name)
+        """
+        Add a platform that has been loaded to the platform manager.
+
+        If an instance of this platform has already been added, increment
+        the count of it.
+        """
+        _LOGGER.debug(
+            'Adding instance of %s to PlatformManager',
+            platform_name
+        )
         if platform_name is None:
             return
         if platform_name in self.platforms:
-            _LOGGER.warning(
-                'Cannot add duplicate platform %s to platform manager',
-                platform_name
-            )
-            return
-        self.platforms[platform_name] = platform
+            self.platforms[platform_name].count += 1
+        self.platforms[platform_name] = Platform(platform, 1)
 
     def get_platform(self, platform_name: str):
         """Fetch a platform that has been loaded from the platform manager."""
         if platform_name in self.platforms:
-            return self.platforms[platform_name]
+            return self.platforms[platform_name].platform
         return None
 
     def remove_platform(self, platform_name: str):
-        """Remove a platform that has been unloaded."""
-        _LOGGER.debug('Removing %s from PlatformManager', platform_name)
+        """
+        Decrement the count of a platform when an entity is unloaded.
+
+        If this is the last instance of the platform, remove it from the
+        platform manager.
+        """
+        _LOGGER.debug(
+            'Removing instance of %s from PlatformManager',
+            platform_name
+        )
         if platform_name in self.platforms:
-            self.platforms.pop(platform_name)
+            platform = self.platforms.get(platform_name)
+            if platform.count > 1:
+                platform.count -= 1
+            else:
+                self.platforms.pop(platform_name)
 
 
 class DeviceTracker:
