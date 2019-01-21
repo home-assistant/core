@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AQI = 'air_quality_index'
 ATTR_ATTRIBUTION = 'attribution'
-ATTR_C02 = 'carbon_dioxide'
+ATTR_CO2 = 'carbon_dioxide'
 ATTR_CO = 'carbon_monoxide'
 ATTR_N2O = 'nitrogen_oxide'
 ATTR_NO = 'nitrogen_monoxide'
@@ -25,6 +25,7 @@ ATTR_PM_0_1 = 'particulate_matter_0_1'
 ATTR_PM_10 = 'particulate_matter_10'
 ATTR_PM_2_5 = 'particulate_matter_2_5'
 ATTR_SO2 = 'sulphur_dioxide'
+ATTR_VOC = 'volatile_organic_compounds'
 
 DOMAIN = 'air_quality'
 
@@ -35,7 +36,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PROP_TO_ATTR = {
     'air_quality_index': ATTR_AQI,
     'attribution': ATTR_ATTRIBUTION,
-    'carbon_dioxide': ATTR_C02,
+    'carbon_dioxide': ATTR_CO2,
     'carbon_monoxide': ATTR_CO,
     'nitrogen_oxide': ATTR_N2O,
     'nitrogen_monoxide': ATTR_NO,
@@ -45,6 +46,7 @@ PROP_TO_ATTR = {
     'particulate_matter_10': ATTR_PM_10,
     'particulate_matter_2_5': ATTR_PM_2_5,
     'sulphur_dioxide': ATTR_SO2,
+    'volatile_organic_compounds': ATTR_VOC,
 }
 
 
@@ -127,6 +129,11 @@ class AirQualityEntity(Entity):
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
+        return None
+
+    @property
+    def volatile_organic_compounds(self):
+        """Return the VOC (volatile organic compounds) level."""
         return None
 
     @property
