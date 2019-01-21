@@ -113,7 +113,6 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'srpenergy',
     'statsd',
-    'timeago',
     'uvcclient',
     'vsure',
     'warrant',
