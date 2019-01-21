@@ -1,5 +1,5 @@
 """
-A component to connect to Owlet baby monitor
+Support for Owlet baby monitors
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/owlet/
