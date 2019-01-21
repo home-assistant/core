@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
     dev = []
-    for home in tibber_connection.get_homes():
+    for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
         except asyncio.TimeoutError as err:
