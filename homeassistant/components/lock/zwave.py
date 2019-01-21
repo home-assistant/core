@@ -32,17 +32,19 @@ POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
 WORKAROUND_V2BTZE = 1
 WORKAROUND_DEVICE_STATE = 2
 WORKAROUND_TRACK_MESSAGE = 4
+WORKAROUND_ALARM_TYPE = 8
 
 DEVICE_MAPPINGS = {
     POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE,
     # Kwikset 914TRL ZW500
     (0x0090, 0x440): WORKAROUND_DEVICE_STATE,
+    (0x0090, 0x446): WORKAROUND_DEVICE_STATE,
     # Yale YRD210
     (0x0129, 0x0209): WORKAROUND_DEVICE_STATE,
     (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE,
     (0x0129, 0x0000): WORKAROUND_DEVICE_STATE,
     # Yale YRD220 (as reported by adrum in PR #17386)
-    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE,
+    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
     # Schlage BE469
     (0x003B, 0x5044): WORKAROUND_DEVICE_STATE | WORKAROUND_TRACK_MESSAGE,
     # Schlage FE599NX
@@ -236,6 +238,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._state_workaround = False
         self._track_message_workaround = False
         self._previous_message = None
+        self._alarm_type_workaround = False
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -256,6 +259,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 if workaround & WORKAROUND_TRACK_MESSAGE:
                     self._track_message_workaround = True
                     _LOGGER.debug("Message tracking workaround enabled")
+                if workaround & WORKAROUND_ALARM_TYPE:
+                    self._alarm_type_workaround = True
+                    _LOGGER.debug(
+                        "Alarm Type device state workaround enabled")
         self.update_properties()
 
     def update_properties(self):
@@ -310,6 +317,12 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         if not alarm_type:
             return
+
+        if self._alarm_type_workaround:
+            self._state = LOCK_STATUS.get(str(alarm_type))
+            _LOGGER.debug("workaround: lock state set to %s -- alarm type: %s",
+                          self._state, str(alarm_type))
+
         if alarm_type == 21:
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)),
