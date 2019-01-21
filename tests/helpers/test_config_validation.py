@@ -333,6 +333,10 @@ def test_service_schema():
             'entity_id': 'light.kitchen',
         },
         {
+            'service': 'light.turn_on',
+            'entity_id': 'all',
+        },
+        {
             'service': 'homeassistant.turn_on',
             'entity_id': ['light.kitchen', 'light.ceiling'],
         },
