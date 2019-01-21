@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +34,7 @@ PERSON_SCHEMA = vol.Schema({
     vol.Optional(CONF_LAST_NAME): cv.string,
     vol.Optional(CONF_USER_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
-        cv.ensure_list, cv.entity_ids),
+        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 
 CONFIG_SCHEMA = vol.Schema({
