@@ -28,10 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
 DATA_KEY = 'vacuum.xiaomi_miio'
 
+DEFAULT_NEW_FAN_SPEEDS = False
+CONF_NEW_FAN_SPEEDS = 'new_fan_speeds'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NEW_FAN_SPEEDS, default=DEFAULT_NEW_FAN_SPEEDS): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
@@ -39,11 +43,18 @@ SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 
-FAN_SPEEDS = {
+FAN_SPEEDS_V1 = {
     'Quiet': 38,
     'Balanced': 60,
     'Turbo': 77,
     'Max': 90}
+
+FAN_SPEEDS_V2 = {
+    'Quiet': 101,
+    'Balanced': 102,
+    'Turbo': 103,
+    'Max': 104,
+    'Mop': 105}
 
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
@@ -116,12 +127,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
+    new_fan_speeds = config.get(CONF_NEW_FAN_SPEEDS)
+    speed_map = FAN_SPEEDS_V2 if new_fan_speeds else FAN_SPEEDS_V1
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
     vacuum = Vacuum(host, token)
 
-    mirobo = MiroboVacuum(name, vacuum)
+    mirobo = MiroboVacuum(name, vacuum, speed_map)
     hass.data[DATA_KEY][host] = mirobo
 
     async_add_entities([mirobo], update_before_add=True)
@@ -160,10 +173,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 class MiroboVacuum(StateVacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, name, vacuum):
+    def __init__(self, name, vacuum, speed_map):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self._name = name
         self._vacuum = vacuum
+        self._speed_map = speed_map
 
         self.vacuum_state = None
         self._available = False
@@ -205,15 +219,15 @@ class MiroboVacuum(StateVacuumDevice):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
             speed = self.vacuum_state.fanspeed
-            if speed in FAN_SPEEDS.values():
-                return [key for key, value in FAN_SPEEDS.items()
+            if speed in self._speed_map.values():
+                return [key for key, value in self._speed_map.items()
                         if value == speed][0]
             return speed
 
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(sorted(FAN_SPEEDS.keys(), key=lambda s: FAN_SPEEDS[s]))
+        return list(sorted(self._speed_map.keys(), key=lambda s: self._speed_map[s]))
 
     @property
     def device_state_attributes(self):
@@ -298,8 +312,8 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if fan_speed.capitalize() in FAN_SPEEDS:
-            fan_speed = FAN_SPEEDS[fan_speed.capitalize()]
+        if fan_speed.capitalize() in self._speed_map:
+            fan_speed = self._speed_map[fan_speed.capitalize()]
         else:
             try:
                 fan_speed = int(fan_speed)
