@@ -203,15 +203,23 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     from pysmartthings import SmartThings, Subscription, SourceType
 
     api = SmartThings(async_get_clientsession(hass), req.auth_token)
-    coroutines = []
-    for capability in SUPPORTED_CAPABILITIES:
+
+    async def create_subscription(target):
         sub = Subscription()
         sub.installed_app_id = req.installed_app_id
         sub.location_id = req.location_id
         sub.source_type = SourceType.CAPABILITY
-        sub.capability = capability
-        coroutines.append(api.create_subscription(sub))
-    await asyncio.gather(*coroutines)
+        sub.capability = target
+        try:
+            await api.create_subscription(sub)
+            _LOGGER.debug("Created subscription for '%s' under app '%s'.",
+                          target, req.installed_app_id)
+        except Exception:  # pylint:disable=broad-except
+            _LOGGER.exception("Failed to create subscription for '%s' under "
+                              "app '%s'", target, req.installed_app_id)
+
+    tasks = [create_subscription(c) for c in SUPPORTED_CAPABILITIES]
+    await asyncio.gather(*tasks)
     _LOGGER.debug("SmartApp '%s' under parent app '%s' was installed.",
                   req.installed_app_id, app.app_id)
 

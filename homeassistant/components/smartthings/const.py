@@ -20,7 +20,10 @@ SUPPORTED_PLATFORMS = [
     'switch'
 ]
 SUPPORTED_CAPABILITIES = [
-    'switch'
+    'colorControl',
+    'colorTemperature',
+    'switch',
+    'switchLevel'
 ]
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"

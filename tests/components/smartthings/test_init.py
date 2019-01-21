@@ -148,18 +148,6 @@ class TestDeviceBroker:
     """Test cases for the Devicebroker class."""
 
     @staticmethod
-    def test_maps_switches(device_factory):
-        """Test switches are correctly identified."""
-        devices = [
-            device_factory('Bedroom 1 Switch', ['switch']),
-            device_factory('Bathroom 1', ['switch']),
-            device_factory('Sensor', ['motionSensor']),
-        ]
-        broker = smartthings.DeviceBroker(None, devices, '')
-        assert len(broker.switches) == 2
-        assert len(broker.devices) == 3
-
-    @staticmethod
     async def test_event_handler_dispatches_updated_devices(
             hass, device_factory, event_request_factory):
         """Test the event handler dispatches updated devices."""
@@ -186,7 +174,7 @@ class TestDeviceBroker:
 
         assert called
         for device in devices:
-            assert device.status.apply_attribute_update.call_count == 1
+            assert device.status.attributes['Updated'] == 'Value'
 
     @staticmethod
     async def test_event_handler_ignores_other_installed_app(
@@ -206,4 +194,3 @@ class TestDeviceBroker:
         await hass.async_block_till_done()
 
         assert not called
-        assert device.status.apply_attribute_update.call_count == 0

@@ -205,7 +205,7 @@ pyqwikswitch==0.8
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.4.1
+pysmartthings==0.4.2
 
 # homeassistant.components.sonos
 pysonos==0.0.6

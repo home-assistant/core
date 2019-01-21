@@ -6,6 +6,7 @@ from uuid import uuid4
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppSettings, DeviceEntity,
     InstalledApp, Location)
+from pysmartthings.api import Api
 import pytest
 
 from homeassistant.components import webhook
@@ -215,13 +216,37 @@ def config_entry_fixture(hass, installed_app, location):
 @pytest.fixture(name="device_factory")
 def device_factory_fixture():
     """Fixture for creating mock devices."""
-    def _factory(label, capabilities):
-        device = Mock()
-        device.label = label
-        device.capabilities = capabilities
-        device.device_id = uuid4()
-        device.status = Mock()
-        device.status.apply_attribute_update = Mock()
+    api = Mock(spec=Api)
+    api.post_device_command.return_value = mock_coro(return_value={})
+
+    def _factory(label, capabilities, status: dict = None):
+        device_data = {
+            "deviceId": str(uuid4()),
+            "name": "Device Type Handler Name",
+            "label": label,
+            "deviceManufacturerCode": "9135fc86-0929-4436-bf73-5d75f523d9db",
+            "locationId": "fcd829e9-82f4-45b9-acfd-62fda029af80",
+            "components": [
+                {
+                    "id": "main",
+                    "capabilities": [
+                        {"id": capability, "version": 1}
+                        for capability in capabilities
+                    ]
+                }
+            ],
+            "dth": {
+                "deviceTypeId": "b678b29d-2726-4e4f-9c3f-7aa05bd08964",
+                "deviceTypeName": "Switch",
+                "deviceNetworkType": "ZWAVE"
+            },
+            "type": "DTH"
+        }
+        device = DeviceEntity(api, data=device_data)
+        if status:
+            for attribute, value in status.items():
+                device.status.apply_attribute_update(
+                    'main', '', attribute, value)
         return device
     return _factory
 
@@ -235,8 +260,8 @@ def event_factory_fixture():
         event.device_id = device_id
         event.component_id = 'main'
         event.capability = ''
-        event.attribute = ''
-        event.value = ''
+        event.attribute = 'Updated'
+        event.value = 'Value'
         return event
     return _factory
 

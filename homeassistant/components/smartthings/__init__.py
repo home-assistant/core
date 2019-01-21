@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import Iterable
 
 from aiohttp.client_exceptions import (
     ClientConnectionError, ClientResponseError)
@@ -22,7 +23,7 @@ from .const import (
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.1']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.2']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,21 +116,13 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 class DeviceBroker:
     """Manages an individual SmartThings config entry."""
 
-    def __init__(self, hass, devices, installed_app_id: str):
+    def __init__(self, hass: HomeAssistantType, devices: Iterable,
+                 installed_app_id: str):
         """Create a new instance of the DeviceBroker."""
-        self.devices = {}
         self._hass = hass
         self._installed_app_id = installed_app_id
+        self.devices = {device.device_id: device for device in devices}
         self.event_handler_disconnect = None
-        self.switches = []
-        self._map_entities(devices)
-
-    def _map_entities(self, devices):
-        # determine the device types...
-        for device in devices:
-            self.devices[device.device_id] = device
-            if 'switch' in device.capabilities:
-                self.switches.append(device)
 
     async def event_handler(self, req, resp, app):
         """Broker for incoming events."""
