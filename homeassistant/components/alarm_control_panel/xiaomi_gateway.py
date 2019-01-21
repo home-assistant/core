@@ -15,8 +15,8 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanel
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.xiaomi_aqara import (CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import (CONF_NAME ,STATE_ALARM_ARMED_AWAY,
-                                STATE_ALARM_DISARMED)
+from homeassistant.const import (CONF_NAME, STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
