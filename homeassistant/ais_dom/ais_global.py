@@ -49,22 +49,6 @@ G_BOOKMARK_MEDIA_POSITION = 0
 G_BOOKMARK_MEDIA_CONTENT_ID = ""
 
 
-G_Y_WEATHER_CODES = {0: 'tornado', 1: 'tropikalna burza', 2: 'huragany', 3: 'silne burze z piorunami',
-                     4: 'burze z piorunami', 5: 'mieszane opady deszczu i śniegu',
-                     6: 'mieszane opady deszczu i deszczu ze śniegiem', 7: 'mieszany śnieg i deszcz ze śniegiem',
-                     8: 'marznąca mżawka', 9: 'mżawka', 10: 'marznący deszcz', 11: 'przelotne opady',
-                     12: 'przelotne opady', 13: 'przelotne opady śniegu', 14: 'lekkie przelotne opady śniegu',
-                     15: 'śnieg', 16: 'śnieg', 17: 'grad', 18: 'deszcz ze śniegiem', 19: 'kurzu', 20: 'mglisto',
-                     21: 'zamglenie', 22: 'zamglenie', 23: 'przenikliwy wiatr', 24: 'wietrznie', 25: 'zimno',
-                     26: 'pochmurno', 27: 'pochmurno (noc)', 28: 'pochmurno (dzień)',
-                     29: 'częściowo zachmurzenie (noc)', 30: 'pochmurno (dzień)', 31: 'jasna noc',
-                     32: 'słonecznie', 33: 'ładna (noc)', 34: 'ładny (dzień)', 35: 'mieszany deszcz i grad',
-                     36: 'gorąco', 37: 'przelotne burze', 38: 'rozproszone burze z piorunami',
-                     39: 'rozproszone burze z piorunami', 40: 'rozproszonych przelotne opady', 41: 'ciężki śnieg',
-                     42: 'przelotne opady śniegu', 43: 'ciężki śnieg', 44: 'pochmurno', 45: 'przelotne opady deszczu',
-                     46: 'przelotne opady śniegu', 47: 'odizolowane przelotne opady deszczu', 3200: ''}
-
-
 def set_media_bookmark(media_content_id, position):
     global G_BOOKMARK_MEDIA_POSITION
     global G_BOOKMARK_MEDIA_CONTENT_ID
@@ -85,6 +69,7 @@ def get_bookmark_position(media_content_id):
 def set_my_ssid(ssid):
     global GLOBAL_MY_SSID
     GLOBAL_MY_SSID = ssid
+
 
 def get_my_global_ip():
     if GLOBAL_MY_IP is None:

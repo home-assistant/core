@@ -29,7 +29,6 @@ SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
 
 SUBSCTRIBE_TOPIC = 'ais/player_status'
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
-# DEPENDENCIES = ['mqtt']
 
 
 @asyncio.coroutine
@@ -52,6 +51,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class ExoPlayerDevice(MediaPlayerDevice):
     """Representation of a ExoPlayer ."""
+
+    def turn_on(self):
+        pass
+
+    def turn_off(self):
+        pass
+
+    def set_volume_level(self, volume):
+        pass
+
+    def select_sound_mode(self, sound_mode):
+        pass
+
+    def clear_playlist(self):
+        pass
 
     # pylint: disable=no-member
     def __init__(self, device_ip, device_mac, name):
@@ -91,7 +105,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_position = message.get("currentPosition", 0)
             self._duration = message.get("duration", 0)
             _LOGGER.debug(str.format("message_received: {0}", message))
-            if ("giveMeNextOne" in message):
+            if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
                 if play_next is True:
                     self.hass.async_add_job(
@@ -165,7 +179,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 }
             )
 
-
     def volume_up(self):
         """Service to send the exo the command for volume up."""
         self.hass.services.call(
@@ -185,6 +198,16 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "val": True
                 }
             )
+
+    def mute_volume(self, mute):
+        """Service to send the exo the command for mute."""
+        self.hass.services.call(
+            'ais_ai_service',
+            'publish_command_to_frame', {
+                "key": 'downVolume',
+                "val": True
+            }
+        )
 
     @property
     def shuffle(self):
@@ -291,8 +314,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of the player."""
-        attr = {}
-        attr['device_ip'] = self._device_ip
+        attr = {'device_ip': self._device_ip}
         # attr['device_mac'] = self._device_mac
         return attr
 
@@ -321,14 +343,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._playing = True
         self._status = 3
 
-    def add_bookmark(self):
-        self.hass.services.call('ais_bookmarks', 'add_bookmark',
-                                {"attr": {"media_title": self._media_title,
-                                          "source": self._album_name,
-                                          "media_position": self._media_position,
-                                          "media_content_id": self._media_content_id,
-                                          "media_stream_image": self._stream_image}})
-
     def media_pause(self):
         """Service to send the ExoPlayer the command for play/pause."""
         # to have more accurate media_position
@@ -343,17 +357,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
             )
 
         self._playing = False
-        if self._device_ip == 'localhost' and self._media_source == ais_global.G_AN_LOCAL and self._album_name is not None:
-            import threading
-            timer = threading.Timer(1, self.add_bookmark)
-            timer.start()
+        # if self._device_ip == 'localhost' and self._media_source == ais_global.G_AN_LOCAL and self._album_name is not None:
+        #     import threading
+        #     timer = threading.Timer(1, self.add_bookmark)
+        #     timer.start()
 
     def media_stop(self):
         """Service to send the ExoPlayer the command for stop."""
         self.hass.services.call(
             'ais_ai_service',
             'publish_command_to_frame', {
-                "key": 'stopAudio',
+                "key": 'pauseAudio',
                 "val": True,
                 "ip": self._device_ip
                 }
@@ -446,6 +460,22 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 self._album_name = j_info["ALBUM_NAME"]
             else:
                 self._album_name = None
+
+            try:
+                j_media_info = {"media_title": self._media_title,
+                                "media_source": self._media_source,
+                                "media_stream_image": self._stream_image,
+                                "media_album_name": self._album_name}
+                self.hass.services.call(
+                    'ais_ai_service',
+                    'publish_command_to_frame', {
+                        "key": 'setAudioInfo',
+                        "val": j_media_info,
+                        "ip": self._device_ip
+                    }
+                )
+            except Exception as e:
+                _LOGGER.info("problem to publish setAudioInfo: " + str(e))
         else:
             self._media_content_id = media_content_id
             self._media_position = 0

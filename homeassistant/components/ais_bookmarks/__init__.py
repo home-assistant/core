@@ -409,5 +409,4 @@ class PlayLastBookmarkIntent(intent.IntentHandler):
         yield from hass.services.async_call(
             'ais_ai_service', 'say_it', {"text": answer})
 
-
         return response

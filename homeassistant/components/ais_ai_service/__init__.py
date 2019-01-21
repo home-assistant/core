@@ -71,6 +71,11 @@ INTENT_NEXT = 'AisNext'
 INTENT_PREV = 'AisPrev'
 INTENT_SCENE = 'AisSceneActive'
 INTENT_SAY_IT = 'AisSayIt'
+INTENT_CLIMATE_SET_TEMPERATURE = 'AisClimateSetTemperature'
+INTENT_CLIMATE_SET_AWAY = 'AisClimateSetAway'
+INTENT_CLIMATE_UNSET_AWAY = 'AisClimateUnSetAway'
+INTENT_CLIMATE_SET_ALL_ON = 'AisClimateSetAllOn'
+INTENT_CLIMATE_SET_ALL_OFF = 'AisClimateSetAllOff'
 
 REGEX_TYPE = type(re.compile(''))
 
@@ -380,13 +385,17 @@ def say_curr_virtual_key(hass):
     _say_it(hass, text, None)
 
 
-def reset_virtual_keyboard():
+def reset_virtual_keyboard(hass):
     global CURR_VIRTUAL_KEYBOARD_MODE
     global CURR_VIRTUAL_KEY
     global CURR_VIRTUAL_KEYBOARD_VALUE
     CURR_VIRTUAL_KEYBOARD_MODE = None
     CURR_VIRTUAL_KEY = None
     CURR_VIRTUAL_KEYBOARD_VALUE = None
+    # reset field value
+    hass.services.call('input_text', 'set_value', {
+        "entity_id": CURR_ENTITIE, "value": CURR_VIRTUAL_KEYBOARD_VALUE})
+
 
 
 # Groups in Groups views
@@ -568,6 +577,21 @@ def say_curr_entity(hass):
     elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
         return
+    elif entity_id.startswith('input_text.'):
+        if CURR_BUTTON_CODE == 4:
+            _say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE, None)
+        else:
+            _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wpisać.", None)
+        return
+    elif entity_id.startswith('input_select.'):
+        if CURR_BUTTON_CODE == 4:
+            if info_data == ais_global.G_EMPTY_OPTION:
+                _say_it(hass, "Brak wyboru", None)
+            else:
+                _say_it(hass, "Wybrałeś " + info_data, None)
+        else:
+            _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać/zmienić.", None)
+        return
     # normal case
     # decode None
     if not info_name:
@@ -719,7 +743,7 @@ def select_entity(hass, long_press):
                 CURR_ENTITIE_ENTERED = True
                 if CURR_ENTITIE.startswith('input_text.'):
                     _say_it(hass, "Wpisywanie tekstu włączone", None)
-                    reset_virtual_keyboard()
+                    reset_virtual_keyboard(hass)
                 else:
                     set_next_position(hass)
                 return
@@ -1293,6 +1317,11 @@ async def async_setup(hass, config):
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
+    hass.helpers.intent.async_register(AisClimateSetTemperature())
+    hass.helpers.intent.async_register(AisClimateSetAway())
+    hass.helpers.intent.async_register(AisClimateUnSetAway())
+    hass.helpers.intent.async_register(AisClimateSetAllOn())
+    hass.helpers.intent.async_register(AisClimateSetAllOff())
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
     hass.helpers.intent.async_register(StatusIntent())
@@ -1315,6 +1344,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     hass.helpers.intent.async_register(AisSayIt())
+
     async_register(hass, INTENT_GET_WEATHER, [
             '[aktualna] pogoda',
             'pogoda w {location}',
@@ -1332,6 +1362,18 @@ async def async_setup(hass, config):
             'jaka będzie pogoda',
             'jaka będzie pogoda w {location}'
     ])
+    async_register(hass, INTENT_CLIMATE_SET_TEMPERATURE, [
+        "Ustaw temperaturę [ogrzewania] [na] {temp} stopni [w] {item} ",
+        "Temperatura ogrzewania {temp} stopni [w] {item}",
+        "Temperatura ogrzewania [w] {item} {temp} stopni",
+        "Ogrzewanie [w] {item} temperatura {temp} stopni",
+        "Ogrzewanie temperatura w {item} {temp} stopni"])
+    async_register(hass, INTENT_CLIMATE_SET_AWAY, [
+        "Ogrzewanie [na] [w] [tryb] poza domem", "Ogrzewanie włącz [tryb] poza domem"])
+    async_register(hass, INTENT_CLIMATE_UNSET_AWAY, [
+        "Ogrzewanie [na] [w] [tryb] w domu", "Ogrzewanie wyłącz [tryb] poza domem"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz [całe] ogrzewnie", "Ogrzewanie wyłącz"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz [całe] ogrzewnie", "Ogrzewanie włącz"])
     async_register(hass, INTENT_LAMPS_ON, [
             'włącz światła',
             'zapal światła',
@@ -1497,7 +1539,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         except Exception as e:
             _LOGGER.info(
                 "_publish_command_to_frame requests.post problem key: "
-                + str(key) + " val: " + str(val) + " ip " + str(ip))
+                + str(key) + " val: " + str(val) + " ip " + str(ip) + str(e))
 
 
 def _wifi_rssi_to_info(rssi):
@@ -1566,6 +1608,25 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/speech_status':
         # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
         _LOGGER.info('speech_status: ' + str(service.data["payload"]))
+        return
+    elif service.data["topic"] == 'ais/add_bookmark':
+        _LOGGER.info('add_bookmark: ' + str(service.data["payload"]))
+        try:
+            bookmark = json.loads(service.data["payload"])
+            if bookmark["media_source"] != ais_global.G_AN_LOCAL:
+                return
+            hass.async_run_job(
+                hass.services.call('ais_bookmarks',
+                                   'add_bookmark',
+                                   {"attr":
+                                    {"media_title": bookmark["media_title"],
+                                     "source": bookmark["media_source"],
+                                     "media_position": bookmark["media_position"],
+                                     "media_content_id": bookmark["media_content_id"],
+                                     "media_stream_image": bookmark["media_stream_image"]}})
+            )
+        except Exception as e:
+            _LOGGER.info("problem to add_bookmark: " + str(e))
         return
     elif service.data["topic"] == 'ais/player_speed':
         speed = json.loads(service.data["payload"])
@@ -1975,6 +2036,24 @@ def _process(hass, text, callback):
                         {key: {'value': value} for key, value
                          in match.groupdict().items()}, text)
                     break
+        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
+        if s is False and found_intent == INTENT_TURN_ON:
+            m_org = m
+            m, s = yield from hass.helpers.intent.async_handle(
+                DOMAIN, INTENT_CLIMATE_SET_ALL_ON,
+                {key: {'value': value} for key, value
+                    in match.groupdict().items()}, text)
+            if s is False:
+                m = m_org
+        # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
+        if s is False and found_intent == INTENT_TURN_OFF:
+            m_org = m
+            m, s = yield from hass.helpers.intent.async_handle(
+                DOMAIN, INTENT_CLIMATE_SET_ALL_OFF,
+                {key: {'value': value} for key, value
+                    in match.groupdict().items()}, text)
+            if s is False:
+                m = m_org
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
         if s is False and found_intent == INTENT_TURN_ON:
             m_org = m
@@ -2013,29 +2092,37 @@ def _process(hass, text, callback):
                             CURR_BUTTON_CODE = 0
                             break
 
-        # the was no match - try again but with player context - TODO
+        # the was no match - try again but with player context
         # we should get media player source first
-        # if found_intent is None:
-        #     suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
-        #     if suffix is not None:
-        #         for intent_type, matchers in intents.items():
-        #             if found_intent is not None:
-        #                 break
-        #             for matcher in matchers:
-        #                 match = matcher.match(suffix + " " + text)
-        #                 if match:
-        #                     # we have a match
-        #                     found_intent = intent_type
-        #                     m, s = yield from hass.helpers.intent.async_handle(
-        #                         DOMAIN, intent_type,
-        #                         {key: {'value': value} for key, value
-        #                          in match.groupdict().items()},
-        #                         suffix + " " + text)
-        #                     # reset the curr button code
-        #                     # TODO the mic should send a button code too
-        #                     # in this case we will know if the call source
-        #                     CURR_BUTTON_CODE = 0
-        #                     break
+        if found_intent is None:
+            if CURR_ENTITIE == 'media_player.wbudowany_glosnik' and CURR_ENTITIE_ENTERED:
+                state = hass.states.get(CURR_ENTITIE)
+                if "source" in state.attributes:
+                    suffix = ""
+                    source = state.attributes.get('source')
+                    if source == ais_global.G_AN_MUSIC:
+                        suffix = 'youtube'
+                    elif source == ais_global.G_AN_RADIO:
+                        suffix = 'radio'
+                    elif source == ais_global.G_AN_PODCAST:
+                        suffix = 'podcast'
+                    if suffix != "":
+                        for intent_type, matchers in intents.items():
+                            if found_intent is not None:
+                                break
+                            for matcher in matchers:
+                                match = matcher.match(suffix + " " + text)
+                                if match:
+                                    # we have a match
+                                    found_intent = intent_type
+                                    m, s = yield from hass.helpers.intent.async_handle(
+                                        DOMAIN, intent_type,
+                                        {key: {'value': value} for key, value
+                                         in match.groupdict().items()},
+                                        suffix + " " + text)
+                                    # reset the curr button code
+                                    CURR_BUTTON_CODE = 0
+                                    break
         if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
@@ -2537,7 +2624,7 @@ class AisCloseCover(intent.IntentHandler):
                     msg = 'Urządzenie {} jest już zamknięte'.format(
                         entity.name)
                 elif entity.state == 'unavailable':
-                    msg = 'Urządzenie {}} jest niedostępne'.format(
+                    msg = 'Urządzenie {} jest niedostępne'.format(
                         entity.name)
                 else:
                     yield from hass.services.async_call(
@@ -2667,3 +2754,184 @@ class AisSayIt(intent.IntentHandler):
             message = text
             success = True
         return message, success
+
+
+class AisClimateSetTemperature(intent.IntentHandler):
+    """Handle AisClimateSetTemperature intents."""
+    intent_type = INTENT_CLIMATE_SET_TEMPERATURE
+    slot_schema = {
+        'temp': cv.positive_int,
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        try:
+            hass = intent_obj.hass
+            slots = self.async_validate_slots(intent_obj.slots)
+            temp = slots['temp']['value']
+            name = slots['item']['value']
+            entity = _match_entity(hass, name)
+        except Exception:
+            text = None
+        success = False
+        if not entity:
+            msg = 'Nie znajduję grzejnika, o nazwie: ' + name
+        else:
+            # check if we can close on this device
+            if entity.entity_id.startswith('climate.'):
+                # check if the device has already this temperature
+                attr = hass.states.get(entity.entity_id).attributes
+                if attr.get('temperature') == temp:
+                    msg = '{} ma już ustawioną temperaturę {}'.format(
+                        entity.name, temp)
+                else:
+                    yield from hass.services.async_call(
+                        'climate', 'set_temperature', {
+                            ATTR_ENTITY_ID: entity.entity_id,
+                            "temperature": temp,
+                            "target_temp_high": temp + 2,
+                            "target_temp_low": temp - 6,
+                            "operation_mode": "Heat"
+                        }, blocking=True)
+                    msg = 'OK, ustawiono temperaturę {} w {}'.format(temp, entity.name)
+                    success = True
+            else:
+                msg = 'Na urządzeniu ' + name + ' nie można zmieniać temperatury.'
+        return msg, success
+
+
+class AisClimateSetAway(intent.IntentHandler):
+    """Handle AisClimateSetAway intents."""
+    intent_type = INTENT_CLIMATE_SET_AWAY
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'climate', 'set_away_mode', {"entity_id": "all", "away_mode": True})
+        message = 'ok, tryb poza domem włączony'
+        return message, True
+
+
+class AisClimateUnSetAway(intent.IntentHandler):
+    """Handle AisClimateUnSetAway intents."""
+    intent_type = INTENT_CLIMATE_UNSET_AWAY
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'climate', 'set_away_mode', {"entity_id": "all", "away_mode": False})
+        message = 'ok, tryb poza domem wyłączony'
+        return message, True
+
+
+class AisClimateSetAllOn(intent.IntentHandler):
+    """Handle AisClimateSetAllOn intents."""
+    intent_type = INTENT_CLIMATE_SET_ALL_ON
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'climate', 'set_operation_mode', {"entity_id": "all", 'operation_mode': 'heat'})
+        message = 'ok, całe ogrzewanie włączone'
+        return message, True
+
+
+class AisClimateSetAllOff(intent.IntentHandler):
+    """Handle AisClimateSetAllOff intents."""
+    intent_type = INTENT_CLIMATE_SET_ALL_OFF
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'climate', 'set_operation_mode', {"entity_id": "all", 'operation_mode': 'off'})
+        message = 'ok, całe ogrzewanie wyłączone'
+        return message, True
+
+# class AisClimateSetOff(intent.IntentHandler):
+#     """Handle AisClimateSetOff intents."""
+#     intent_type = INTENT_CLIMATE_SET_OFF
+#     slot_schema = {
+#         'item': cv.string,
+#     }
+#
+#     @asyncio.coroutine
+#     def async_handle(self, intent_obj):
+#         """Handle the intent."""
+#         try:
+#             hass = intent_obj.hass
+#             slots = self.async_validate_slots(intent_obj.slots)
+#             name = slots['item']['value']
+#             entity = _match_entity(hass, name)
+#         except Exception:
+#             text = None
+#         success = False
+#         if not entity:
+#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
+#         else:
+#             # check if we can close on this device
+#             if entity.entity_id.startswith('climate.'):
+#             # check if the device already is off
+#                 if entity.state == 'off':
+#                     msg = '{} jest już wyłączony'.format(entity.name)
+#                 elif entity.state == 'unavailable':
+#                     msg = '{} jest niedostępny'.format(entity.name)
+#                 else:
+#                     yield from hass.services.async_call(
+#                         'climate', 'turn_off', {
+#                             ATTR_ENTITY_ID: entity.entity_id
+#                         }, blocking=True)
+#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
+#                     success = True
+#             else:
+#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
+#             return msg, success
+#
+#
+# class AisClimateSetOn(intent.IntentHandler):
+#     """Handle AisClimateSetOn intents."""
+#     intent_type = INTENT_CLIMATE_SET_ON
+#     slot_schema = {
+#         'item': cv.string,
+#     }
+#
+#     @asyncio.coroutine
+#     def async_handle(self, intent_obj):
+#         """Handle the intent."""
+#         try:
+#             hass = intent_obj.hass
+#             slots = self.async_validate_slots(intent_obj.slots)
+#             name = slots['item']['value']
+#             entity = _match_entity(hass, name)
+#         except Exception:
+#             text = None
+#         success = False
+#         if not entity:
+#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
+#         else:
+#             # check if we can close on this device
+#             if entity.entity_id.startswith('climate.'):
+#                 # check if the device already is heat
+#                 if entity.state == 'heat':
+#                     msg = '{} jest już włączony'.format(entity.name)
+#                 elif entity.state == 'unavailable':
+#                     msg = '{} jest niedostępny'.format(entity.name)
+#                 else:
+#                     yield from hass.services.async_call(
+#                         'climate', 'turn_on', {
+#                             ATTR_ENTITY_ID: entity.entity_id
+#                         }, blocking=True)
+#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
+#                     success = True
+#             else:
+#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
+#             return msg, success

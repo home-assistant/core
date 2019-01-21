@@ -50,7 +50,7 @@ weblink:
 
 input_text:
   ais_android_wifi_password:
-    name: "Podaj hasło do Wifi:"
+    name: "Podaj hasło do Wifi (jeśli pierwszy raz łączysz się z tego urządzenia z wybraną siecią):"
     mode: password
     initial: ""
     icon: mdi:textbox-password
