@@ -5,13 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.danfoss_air/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.danfoss_air import DOMAIN
+from homeassistant.components.danfoss_air import DOMAIN \
+     as DANFOSS_AIR_DOMAIN
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand
-    data = hass.data[DOMAIN]
+    data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [["Danfoss Air Bypass Active", ReadCommand.bypass]]
 

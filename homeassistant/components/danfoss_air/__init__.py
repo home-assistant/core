@@ -1,10 +1,6 @@
 """
 Support for Danfoss Air HRV.
 
-Configuration:
-    danfoss_air:
-        host: IP_OF_CCM_MODULE
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/danfoss_air/
 """
