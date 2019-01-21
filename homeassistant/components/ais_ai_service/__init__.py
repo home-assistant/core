@@ -394,7 +394,7 @@ def reset_virtual_keyboard(hass):
     CURR_VIRTUAL_KEYBOARD_VALUE = None
     # reset field value
     hass.services.call('input_text', 'set_value', {
-        "entity_id": CURR_ENTITIE, "value": CURR_VIRTUAL_KEYBOARD_VALUE})
+        "entity_id": CURR_ENTITIE, "value": ""})
 
 
 
@@ -574,12 +574,18 @@ def say_curr_entity(hass):
     if entity_id == "sensor.ais_knowledge_answer":
         _say_it(hass, "Odpowiedź: " + text, None)
         return
+    elif entity_id == 'input_select.ais_bookmark_last_played':
+        _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
+        return
     elif entity_id.startswith('script.'):
         _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
         return
     elif entity_id.startswith('input_text.'):
         if CURR_BUTTON_CODE == 4:
-            _say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE, None)
+            if CURR_VIRTUAL_KEYBOARD_VALUE is None:
+                _say_it(hass, "Nic nie wpisałeś", None)
+            else:
+                _say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE, None)
         else:
             _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wpisać.", None)
         return
@@ -590,7 +596,10 @@ def say_curr_entity(hass):
             else:
                 _say_it(hass, "Wybrałeś " + info_data, None)
         else:
-            _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać/zmienić.", None)
+            if info_data != ais_global.G_EMPTY_OPTION:
+                _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by zmienić.", None)
+            else:
+                _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.", None)
         return
     # normal case
     # decode None
@@ -1038,8 +1047,12 @@ def go_up_in_menu(hass):
         else:
             CURR_ENTITIE_ENTERED = False
             if CURR_ENTITIE.startswith('input_text.'):
-                hass.services.call('input_text', 'set_value', {
-                    "entity_id": CURR_ENTITIE, "value": CURR_VIRTUAL_KEYBOARD_VALUE})
+                if CURR_VIRTUAL_KEYBOARD_VALUE is None:
+                    hass.services.call('input_text', 'set_value', {
+                        "entity_id": CURR_ENTITIE, "value": ""})
+                else:
+                    hass.services.call('input_text', 'set_value', {
+                        "entity_id": CURR_ENTITIE, "value": CURR_VIRTUAL_KEYBOARD_VALUE})
             say_curr_entity(hass)
         return
     # no entity is selected, check if the group is selected
@@ -2036,6 +2049,20 @@ def _process(hass, text, callback):
                         {key: {'value': value} for key, value
                          in match.groupdict().items()}, text)
                     break
+        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
+        if s is False and found_intent == INTENT_TURN_ON:
+            m_org = m
+            m, s = yield from hass.helpers.intent.async_handle(
+                DOMAIN, INTENT_PLAY_RADIO,
+                {key: {'value': value} for key, value
+                 in match.groupdict().items()}, text.replace("włącz", "włącz radio"))
+            if s is False:
+                m, s = yield from hass.helpers.intent.async_handle(
+                    DOMAIN, INTENT_PLAY_PODCAST,
+                    {key: {'value': value} for key, value
+                     in match.groupdict().items()}, text.replace("włącz", "włącz podcast"))
+            if s is False:
+                m = m_org
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
         if s is False and found_intent == INTENT_TURN_ON:
             m_org = m
@@ -2054,21 +2081,6 @@ def _process(hass, text, callback):
                     in match.groupdict().items()}, text)
             if s is False:
                 m = m_org
-        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
-        if s is False and found_intent == INTENT_TURN_ON:
-            m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
-                DOMAIN, INTENT_PLAY_RADIO,
-                {key: {'value': value} for key, value
-                 in match.groupdict().items()}, text.replace("włącz", "włącz radio"))
-            if s is False:
-                m, s = yield from hass.helpers.intent.async_handle(
-                    DOMAIN, INTENT_PLAY_PODCAST,
-                    {key: {'value': value} for key, value
-                     in match.groupdict().items()}, text.replace("włącz", "włącz podcast"))
-            if s is False:
-                m = m_org
-
         # the was no match - try again but with current context
         if found_intent is None:
             suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
