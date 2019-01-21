@@ -4,7 +4,6 @@ Support for EE Brightbox router.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ee_brightbox/
 """
-
 import logging
 
 import voluptuous as vol
