@@ -1,15 +1,16 @@
 """Test Home Assistant yaml loader."""
 import io
+import logging
 import os
 import unittest
-import logging
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
-from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
+
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
@@ -437,9 +438,9 @@ def test_representing_yaml_loaded_data():
     assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
 
 
-def test_duplicate_key(caplog):
+def test_duplicate_key():
     """Test duplicate dict keys."""
     files = {YAML_CONFIG_FILE: 'key: thing1\nkey: thing2'}
-    with patch_yaml_files(files):
-        load_yaml_config_file(YAML_CONFIG_FILE)
-    assert 'contains duplicate key' in caplog.text
+    with pytest.raises(HomeAssistantError):
+        with patch_yaml_files(files):
+            load_yaml_config_file(YAML_CONFIG_FILE)
