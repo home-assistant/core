@@ -13,12 +13,9 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA, )
 from homeassistant.components.xiaomi_aqara import (CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import ( CONF_NAME,STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
-
+from homeassistant.const import ( CONF_NAME,STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +54,6 @@ ATTR_HARDWARE_VERSION = 'hardware_version'
 
 SUCCESS = ['ok']
 
-
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -66,7 +62,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
 
@@ -87,7 +82,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.data[DATA_KEY][host] = device
     async_add_devices([device], update_before_add=True)
-
 
 class XiaomiGateway(AlarmControlPanel):
     """Representation of a Xiaomi Miio Generic Device."""
@@ -122,7 +116,6 @@ class XiaomiGateway(AlarmControlPanel):
             ATTR_STATE_PROPERTY: self._state_property
         }
 
-
     @property
     def should_poll(self):
         """Poll the miio device."""
@@ -152,12 +145,12 @@ class XiaomiGateway(AlarmControlPanel):
     def is_on(self):
         """Return true if switch is on."""
         return self._state
-    
+
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-    
+   
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
@@ -185,12 +178,10 @@ class XiaomiGateway(AlarmControlPanel):
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.send,
             'set_arming', ['on'])
-        
+
         print(result)
         if result:
             pass
-            #self._state = True
-            #self._skip_update = True
 
     async def async_alarm_disarm(self, code=None):
         """Turn off."""
@@ -200,14 +191,13 @@ class XiaomiGateway(AlarmControlPanel):
         print(result)
         if result:
             pass
-            #self._state = False
-            #self._skip_update = True
 
     async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
-        # On state change some devices doesn't provide the new state immediately.
+        # On state change some devices doesn't provide the new 
+        # state immediately.
         if self._update_instant is False and self._skip_update:
             self._skip_update = False
             return
@@ -218,7 +208,7 @@ class XiaomiGateway(AlarmControlPanel):
             state = state.pop()
 
             _LOGGER.debug("Got new state: %s", state)
-            
+
             self._available = True
 
             if state == self._state_on_value:
@@ -238,4 +228,3 @@ class XiaomiGateway(AlarmControlPanel):
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-
