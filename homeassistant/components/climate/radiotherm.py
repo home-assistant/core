@@ -220,18 +220,9 @@ class RadioThermostat(ClimateDevice):
         return self._away
 
     @property
-    def state(self):
-        """Return the current active state.
-
-        - STATE_OFF : thermostat is off
-        - STATE_IDLE: thermostat is on, but not actively heating or cooling
-        - STATE_HEAT: actively heating
-        - STATE_COOL: actively cooling
-        """
-        if self._tmode == STATE_OFF:
-            return STATE_OFF
-        else:
-            return self._tstate
+    def is_on(self):
+        """Return true if on."""
+        return self._tstate != STATE_IDLE
 
     def update(self):
         """Update and validate the data from the thermostat."""
