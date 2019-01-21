@@ -115,8 +115,8 @@ async def test_get_devices(eebrightbox_mock, hass):
     assert hass.states.get('device_tracker.hostname11') is not None
     assert hass.states.get('device_tracker.hostnameff') is None
 
-    device = hass.states.get('device_tracker.hostnameaa')
-    assert device.attributes['mac'] == 'AA:BB:CC:DD:EE:FF'
-    assert device.attributes['ip'] == '192.168.1.10'
-    assert device.attributes['port'] == 'eth0'
-    assert device.attributes['last_active'] == datetime(2019, 1, 20, 16, 4, 0)
+    state = hass.states.get('device_tracker.hostnameaa')
+    assert state.attributes['mac'] == 'AA:BB:CC:DD:EE:FF'
+    assert state.attributes['ip'] == '192.168.1.10'
+    assert state.attributes['port'] == 'eth0'
+    assert state.attributes['last_active'] == datetime(2019, 1, 20, 16, 4, 0)
