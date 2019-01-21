@@ -71,18 +71,22 @@ class OwletSensor(BinarySensorDevice):
 
     @property
     def is_charging(self):
+        """Return device is_charging value"""
         return self._is_charging
 
     @property
     def battery_level(self):
+        """Return device battery_level value"""
         return self._battery_level
 
     @property
     def sock_off(self):
+        """Return device sock_off value"""
         return self._sock_off
 
     @property
     def sock_connection(self):
+        """Return device sock_connection value"""
         return self._sock_connection
 
     @property
