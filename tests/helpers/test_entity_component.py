@@ -479,7 +479,7 @@ async def test_extract_all_use_match_all(hass, caplog):
         MockEntity(name='test_2'),
     ])
 
-    call = ha.ServiceCall('test', 'service', {'entity_id': '*'})
+    call = ha.ServiceCall('test', 'service', {'entity_id': 'all'})
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
