@@ -27,7 +27,7 @@ DEPENDENCIES = ['owlet']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup owlet binary sensor."""
+    """Set up owlet binary sensor."""
     device = hass.data[DOMAIN]
 
     entities = []

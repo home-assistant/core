@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup owlet component"""
+    """Set up owlet component."""
     from pyowlet.PyOwlet import PyOwlet
 
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -54,7 +54,7 @@ def setup(hass, config):
 
 
 class OwletDevice():
-    """Configured Owlet device"""
+    """Configured Owlet device."""
 
     def __init__(self, device, name, monitor):
         """Initialize device."""
