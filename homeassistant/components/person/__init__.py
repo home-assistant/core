@@ -95,6 +95,7 @@ class Person(RestoreEntity):
             name = '{} {}'.format(self.first_name, self.last_name)
         return name
 
+    @property
     def should_poll(self):
         """Return True if entity has to be polled for state.
 
