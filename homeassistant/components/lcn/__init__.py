@@ -121,7 +121,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
-        vol.Optional(CONF_COVERS, default=[]): vol.All(
+        vol.Optional(CONF_COVERS): vol.All(
             cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(
             cv.ensure_list, [LIGHTS_SCHEMA]),
