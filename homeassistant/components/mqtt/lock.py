@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
+    CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
@@ -44,7 +44,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -78,8 +79,8 @@ async def _async_setup_entity(config, async_add_entities,
     async_add_entities([MqttLock(config, discovery_hash)])
 
 
-class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-               LockDevice):
+class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+               MqttEntityDeviceInfo, LockDevice):
     """Representation of a lock that can be toggled using MQTT."""
 
     def __init__(self, config, discovery_hash):
@@ -92,6 +93,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -106,6 +108,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
@@ -143,6 +146,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
