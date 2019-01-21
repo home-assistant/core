@@ -11,8 +11,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.verisure import CONF_ALARM, CONF_CODE_DIGITS
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     def __init__(self):
         """Initialize the Verisure alarm panel."""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None
 

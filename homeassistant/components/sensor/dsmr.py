@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -270,7 +270,7 @@ class DSMREntity(Entity):
         if value is not None:
             return value
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -287,7 +287,7 @@ class DSMREntity(Entity):
         if value == '0001':
             return 'low'
 
-        return STATE_UNKNOWN
+        return None
 
 
 class DerivativeDSMREntity(DSMREntity):
@@ -300,7 +300,7 @@ class DerivativeDSMREntity(DSMREntity):
 
     _previous_reading = None
     _previous_timestamp = None
-    _state = STATE_UNKNOWN
+    _state = None
 
     @property
     def state(self):

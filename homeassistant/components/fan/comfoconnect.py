@@ -11,7 +11,6 @@ from homeassistant.components.comfoconnect import (
 from homeassistant.components.fan import (
     FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import (dispatcher_connect)
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +78,7 @@ class ComfoConnectFan(FanEntity):
             speed = self._ccb.data[SENSOR_FAN_SPEED_MODE]
             return SPEED_MAPPING[speed]
         except KeyError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def speed_list(self):

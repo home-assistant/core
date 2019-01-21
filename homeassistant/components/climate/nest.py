@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['nest']
@@ -163,7 +163,7 @@ class NestThermostat(ClimateDevice):
             return self._mode
         if self._mode == NEST_MODE_HEAT_COOL:
             return STATE_AUTO
-        return STATE_UNKNOWN
+        return None
 
     @property
     def target_temperature(self):

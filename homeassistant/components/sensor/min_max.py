@@ -97,7 +97,7 @@ def calc_mean(sensor_values, round_digits):
             val += sval
             count += 1
     if count == 0:
-        return STATE_UNKNOWN
+        return None
     return round(val/count, round_digits)
 
 
@@ -164,7 +164,7 @@ class MinMaxSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
-            return STATE_UNKNOWN
+            return None
         return getattr(self, next(
             k for k, v in SENSOR_TYPES.items() if self._sensor_type == v))
 

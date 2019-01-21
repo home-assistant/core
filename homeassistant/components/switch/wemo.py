@@ -15,7 +15,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
+    STATE_OFF, STATE_ON, STATE_STANDBY)
 
 DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -171,7 +171,7 @@ class WemoSwitch(SwitchDevice):
                 return STATE_OFF
             if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
-            return STATE_UNKNOWN
+            return None
 
     @property
     def is_on(self):

@@ -114,7 +114,7 @@ class AcerSwitch(SwitchDevice):
         match = re.search(r'\r(.+)\r', awns)
         if match:
             return match.group(1)
-        return STATE_UNKNOWN
+        return None
 
     @property
     def available(self):

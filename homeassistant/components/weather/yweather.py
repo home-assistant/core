@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ["yahooweather==0.10"]
@@ -109,7 +109,7 @@ class YahooWeatherWeather(WeatherEntity):
             return self.hass.data[DATA_CONDITION][int(
                 self._data.yahoo.Now['code'])]
         except (ValueError, IndexError):
-            return STATE_UNKNOWN
+            return None
 
     @property
     def temperature(self):
@@ -165,7 +165,7 @@ class YahooWeatherWeather(WeatherEntity):
                         self.hass.data[DATA_CONDITION][int(v['code'])]
                 } for v in self._data.yahoo.Forecast]
         except (ValueError, IndexError):
-            return STATE_UNKNOWN
+            return None
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""

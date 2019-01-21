@@ -15,7 +15,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['concord232==0.15']
@@ -57,7 +57,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         """Initialize the Concord232 alarm panel."""
         from concord232 import client as concord232_client
 
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._hass = hass
         self._name = name
         self._url = url
@@ -94,10 +94,8 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
-            newstate = STATE_UNKNOWN
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")
-            newstate = STATE_UNKNOWN
 
         if part['arming_level'] == 'Off':
             newstate = STATE_ALARM_DISARMED
