@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.owlet/
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.owlet import DOMAIN
+from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
 from homeassistant.util import dt as dt_util
 
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -28,7 +28,7 @@ DEPENDENCIES = ['owlet']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up owlet binary sensor."""
-    device = hass.data[DOMAIN]
+    device = hass.data[OWLET_DOMAIN]
 
     entities = []
     for condition in BINARY_CONDITIONS:

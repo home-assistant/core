@@ -6,8 +6,8 @@ https://home-assistant.io/components/binary_sensor.owlet/
 """
 from datetime import timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.owlet import DOMAIN
+from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 DEPENDENCIES = ['owlet']
@@ -28,7 +28,7 @@ SENSOR_CONDITIONS = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up owlet binary sensor."""
-    device = hass.data[DOMAIN]
+    device = hass.data[OWLET_DOMAIN]
 
     entities = []
     for condition in SENSOR_CONDITIONS:
@@ -38,8 +38,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class OwletSensor(BinarySensorDevice):
-    """Representation of owlet binary sensor."""
+class OwletSensor(Entity):
+    """Representation of Owlet sensor."""
 
     def __init__(self, device, condition):
         """Init owlet binary sensor."""

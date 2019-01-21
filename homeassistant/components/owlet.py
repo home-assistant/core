@@ -54,7 +54,7 @@ def setup(hass, config):
 
 
 class OwletDevice():
-    """Configured Owlet device."""
+    """Represents a configured Owlet device."""
 
     def __init__(self, device, name, monitor):
         """Initialize device."""
