@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Person component."""
-    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
     conf = config[DOMAIN]
     entities = []
     for person_conf in conf:
@@ -140,6 +140,9 @@ class Person(RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             self._parse_source_state(state)
+
+        if not self._trackers:
+            return
 
         @callback
         def async_handle_tracker_update(entity, old_state, new_state):
