@@ -259,9 +259,10 @@ class HomeAssistant:
         """
         task = None
 
+        # Check for partials to properly determine if coroutine function
         check_target = target
-        if isinstance(target, functools.partial):
-            check_target = target.func
+        while isinstance(check_target, functools.partial):
+            check_target = check_target.func
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
