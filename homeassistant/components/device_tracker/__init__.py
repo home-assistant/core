@@ -266,7 +266,7 @@ class PlatformManager:
 
     def __init__(self, async_setup_platform: callable):
         """Initialize a platform manager."""
-        self.platforms = {}
+        self._platforms = {}
         self.async_setup_platform = async_setup_platform
 
     def add_platform(self, platform_name: str, platform):
@@ -282,14 +282,18 @@ class PlatformManager:
         )
         if platform_name is None:
             return
-        if platform_name in self.platforms:
-            self.platforms[platform_name].count += 1
-        self.platforms[platform_name] = Platform(platform, 1)
+        platform = self._platforms.setdefault(
+            platform_name,
+            Platform(platform, 0)
+        )
+        self._platforms[platform_name] = platform._replace(
+            count=platform.count + 1
+        )
 
     def get_platform(self, platform_name: str):
         """Fetch a platform that has been loaded from the platform manager."""
-        if platform_name in self.platforms:
-            return self.platforms[platform_name].platform
+        if platform_name in self._platforms:
+            return self._platforms[platform_name].platform
         return None
 
     def remove_platform(self, platform_name: str):
@@ -303,12 +307,15 @@ class PlatformManager:
             'Removing instance of %s from PlatformManager',
             platform_name
         )
-        if platform_name in self.platforms:
-            platform = self.platforms.get(platform_name)
-            if platform.count > 1:
-                platform.count -= 1
-            else:
-                self.platforms.pop(platform_name)
+        if platform_name not in self._platforms:
+            return
+        platform = self._platforms.get(platform_name)
+        if platform.count > 1:
+            self._platforms[platform_name] = platform._replace(
+                count=platform.count - 1
+            )
+            return
+        self._platforms.pop(platform_name)
 
 
 class DeviceTracker:

@@ -23,7 +23,7 @@ from homeassistant.loader import get_component
 from homeassistant.setup import async_setup_component
 from tests.common import (
     async_fire_time_changed, patch_yaml_files, assert_setup_component,
-    mock_restore_cache)
+    mock_restore_cache, MockPlatform)
 from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -628,3 +628,81 @@ def test_see_schema_allowing_ios_calls():
         "gps_accuracy": 300,
         "hostname": 'beer',
     })
+
+
+@pytest.fixture
+def platform_manager():
+    """Create a new empty Platform Manager."""
+    return device_tracker.PlatformManager(None)
+
+
+def test_platform_manager_add_platform_multiple(platform_manager):
+    """Test that a platform can be added to the Platform Manager repeatedly."""
+    platform = MockPlatform()
+
+    platform_tuple = platform_manager._platforms.get('mock_platform')
+    assert None is platform_tuple
+
+    for i in range(1, 100):
+        platform_manager.add_platform('mock_platform', platform)
+        platform_tuple = platform_manager._platforms['mock_platform']
+        assert platform == platform_tuple.platform
+        assert i == platform_tuple.count
+
+
+def test_platform_manager_get_nonexistant(platform_manager):
+    """Test that a platform cannot be retrieved if never added."""
+    platform = platform_manager.get_platform('mock_platform')
+    assert None is platform
+
+
+def test_platform_manager_get_after_add(platform_manager):
+    """Test that a platform is retrievable after adding."""
+    platform = MockPlatform()
+    platform_manager.add_platform('mock_platform', platform)
+
+    platform = platform_manager.get_platform('mock_platform')
+    assert platform == platform
+
+
+def test_platform_manager_remove_empty(platform_manager):
+    """Test that removing before adding does nothing."""
+    platform_tuple = platform_manager._platforms.get('mock_platform')
+    assert None is platform_tuple
+
+    platform_manager.remove_platform('mock_platform')
+
+    platform_tuple = platform_manager._platforms.get('mock_platform')
+    assert None is platform_tuple
+
+
+def test_platform_manager_remove_after_add_single(platform_manager):
+    """Test that removing after adding leaves nothing behind."""
+    platform = MockPlatform()
+    platform_manager.add_platform('mock_platform', platform)
+
+    platform_manager.remove_platform('mock_platform')
+
+    platform_tuple = platform_manager._platforms.get('mock_platform')
+    assert None is platform_tuple
+
+
+def test_platform_manager_remove_after_add_multiple(platform_manager):
+    """Test that removing each instance decrements the count until the end."""
+    platform = MockPlatform()
+    starting_count = 100
+
+    platform_manager._platforms['mock_platform'] = device_tracker.Platform(
+        platform,
+        starting_count
+    )
+
+    for i in range(1, starting_count):
+        platform_manager.remove_platform('mock_platform')
+        platform_tuple = platform_manager._platforms['mock_platform']
+        assert platform == platform_tuple.platform
+        assert starting_count - i == platform_tuple.count
+
+    platform_manager.remove_platform('mock_platform')
+    platform_tuple = platform_manager._platforms.get('mock_platform')
+    assert None is platform_tuple
