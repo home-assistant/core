@@ -5,8 +5,8 @@ import re
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_SWITCHES, CONF_USERNAME)
+    CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
+    CONF_PASSWORD, CONF_PORT, CONF_SWITCHES, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
@@ -25,11 +25,15 @@ CONF_OUTPUT = 'output'
 CONF_TRANSITION = 'transition'
 CONF_DIMMABLE = 'dimmable'
 CONF_CONNECTIONS = 'connections'
+CONF_MOTOR = 'motor'
 
 DIM_MODES = ['STEPS50', 'STEPS200']
 OUTPUT_PORTS = ['OUTPUT1', 'OUTPUT2', 'OUTPUT3', 'OUTPUT4']
 RELAY_PORTS = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4',
-               'RELAY5', 'RELAY6', 'RELAY7', 'RELAY8']
+               'RELAY5', 'RELAY6', 'RELAY7', 'RELAY8',
+               'MOTORONOFF1', 'MOTORUPDOWN1', 'MOTORONOFF2', 'MOTORUPDOWN2',
+               'MOTORONOFF3', 'MOTORUPDOWN3', 'MOTORONOFF4', 'MOTORUPDOWN4']
+MOTOR_PORTS = ['MOTOR1', 'MOTOR2', 'MOTOR3', 'MOTOR4']
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
@@ -78,6 +82,12 @@ def is_address(value):
     raise vol.error.Invalid('Not a valid address string.')
 
 
+COVERS_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS))
+    })
+
 LIGHTS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
@@ -111,8 +121,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
-        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-        vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA])
+        vol.Optional(CONF_COVERS, default=[]): vol.All(
+            cv.ensure_list, [COVERS_SCHEMA]),
+        vol.Optional(CONF_LIGHTS): vol.All(
+            cv.ensure_list, [LIGHTS_SCHEMA]),
+        vol.Optional(CONF_SWITCHES): vol.All(
+            cv.ensure_list, [SWITCHES_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -166,10 +180,13 @@ async def async_setup(hass, config):
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
 
+    # load platforms
+    hass.async_create_task(
+        async_load_platform(hass, 'cover', DOMAIN,
+                            config[DOMAIN][CONF_COVERS], config))
     hass.async_create_task(
         async_load_platform(hass, 'light', DOMAIN,
                             config[DOMAIN][CONF_LIGHTS], config))
-
     hass.async_create_task(
         async_load_platform(hass, 'switch', DOMAIN,
                             config[DOMAIN][CONF_SWITCHES], config))
