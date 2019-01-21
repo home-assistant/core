@@ -517,7 +517,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
-    vol.Optional(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
