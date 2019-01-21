@@ -139,7 +139,7 @@ class Person(RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._state = state.state
+            self._parse_source_state(state)
 
         @callback
         def async_handle_tracker_update(entity, old_state, new_state):
