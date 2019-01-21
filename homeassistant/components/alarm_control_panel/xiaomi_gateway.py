@@ -7,18 +7,17 @@ https://home-assistant.io/components/
 
 import asyncio
 from functools import partial
-import loggingCONF_HOST
+import logging
 
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA, )
+from homeassistant.components.switch import (PLATFORM_SCHEMA, )
 from homeassistant.components.xiaomi_aqara import (CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
-
+from homeassistant.const import (CONF_NAME, STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,15 +33,18 @@ CONF_STATE_ON_VALUE = 'on'
 CONF_STATE_OFF_VALUE = 'off'
 CONF_UPDATE_INSTANT = 'update_instant'
 
+ATTR_STATE_PROPERTY = CONF_STATE_PROPERTY
+ATTR_STATE_VALUE = 'state_value'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TURN_ON_COMMAND, default='set_arming'): cv.string,
-    vol.Optional(CONF_TURN_ON_PARAMETERS, default=['on']):
+    vol.Optional(CONF_TURN_ON_PARAMETERS, default='on'):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_TURN_OFF_COMMAND, default='set_arming'): cv.string,
-    vol.Optional(CONF_TURN_OFF_PARAMETERS, default=['off']):
+    vol.Optional(CONF_TURN_OFF_PARAMETERS, default='off'):
         vol.All(cv.ensure_list, [cv.string]),
 })
 
@@ -58,10 +60,12 @@ SUCCESS = ['ok']
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-
+    """Set up the sensor from config."""
+    from miio import Device, DeviceException
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
-
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
@@ -81,30 +85,27 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([device], update_before_add=True)
 
 
-class XiaomiGateway(alarm.AlarmControlPanel):
+class XiaomiGateway(AlarmControlPanel):
     """Representation of a Xiaomi Miio Generic Device."""
 
     def __init__(self, device, config, device_info):
         """Initialize the entity."""
         self._device = device
-
         self._name = config.get(CONF_NAME)
         self._turn_on_command = config.get(CONF_TURN_ON_COMMAND)
         self._turn_on_parameters = config.get(CONF_TURN_ON_PARAMETERS)
         self._turn_off_command = config.get(CONF_TURN_OFF_COMMAND)
         self._turn_off_parameters = config.get(CONF_TURN_OFF_PARAMETERS)
         self._state_property = config.get(CONF_STATE_PROPERTY)
-        self._state_on_value = config.get(CONF_STATE_ON_VALUE)
-        self._state_off_value = config.get(CONF_STATE_OFF_VALUE)
+        self._state_on_value = config.get(CONF_STATE_ON_VALUE).pop()
+        self._state_off_value = config.get(CONF_STATE_OFF_VALUE).pop()
         self._update_instant = config.get(CONF_UPDATE_INSTANT)
         self._skip_update = False
-
         self._model = device_info.model
         self._unique_id = "{}-{}-{}".format(device_info.model,
                                             device_info.mac_address,
                                             self._state_property)
         self._icon = 'mdi:flask-outline'
-
         self._available = None
         self._state = None
         self._state_attrs = {
@@ -145,9 +146,17 @@ class XiaomiGateway(alarm.AlarmControlPanel):
         return self._state
 
     @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
+
+    def update(self):
+        return self._state
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
@@ -163,31 +172,31 @@ class XiaomiGateway(alarm.AlarmControlPanel):
             _LOGGER.error(mask_error, exc)
             return False
 
-    async def alarm_arm_away(self, **kwargs):
+    async def async_alarm_arm_away(self, code=None):
         """Turn on."""
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.send,
-            self._turn_on_command, self._turn_on_parameters)
+            'set_arming', ['on'])
 
+        print(result)
         if result:
-            self._state = True
-            self._skip_update = True
+            pass
 
-    async def alarm_disarm(self, **kwargs):
+    async def async_alarm_disarm(self, code=None):
         """Turn off."""
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.send,
-            self._turn_off_command, self._turn_off_parameters)
-
+            'set_arming', ['off'])
+        print(result)
         if result:
-            self._state = False
-            self._skip_update = True
+            pass
 
     async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
-        # On state change some devices doesn't provide the new state immediately.
+        # On state change some devices doesn't provide the new 
+        # state immediately.
         if self._update_instant is False and self._skip_update:
             self._skip_update = False
             return
@@ -212,10 +221,9 @@ class XiaomiGateway(alarm.AlarmControlPanel):
                 self._state = None
 
             self._state_attrs.update({
-                ATTR_STATE_VALUE: state
+                ATTR_STATE_VALUE: self._state
             })
-
+            _LOGGER.debug("State value: %s", self._state)
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-
