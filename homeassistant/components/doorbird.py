@@ -6,15 +6,16 @@ https://home-assistant.io/components/doorbird/
 """
 import logging
 
+from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util import slugify, dt as dt_util
 
-REQUIREMENTS = ['doorbirdpy==2.0.4']
+REQUIREMENTS = ['doorbirdpy==2.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ API_URL = '/api/{}'.format(DOMAIN)
 CONF_CUSTOM_URL = 'hass_url_override'
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_DOORBELL_NUMS = 'doorbell_numbers'
+CONF_RELAY_NUMS = 'relay_numbers'
 CONF_MOTION_EVENTS = 'motion_events'
 CONF_TOKEN = 'token'
 
@@ -37,6 +39,10 @@ SENSOR_TYPES = {
         'name': 'Motion',
         'device_class': 'motion',
     },
+    'relay': {
+        'name': 'Relay',
+        'device_class': 'relay',
+    }
 }
 
 RESET_DEVICE_FAVORITES = 'doorbird_reset_favorites'
@@ -46,6 +52,8 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_DOORBELL_NUMS, default=[1]): vol.All(
+        cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_RELAY_NUMS, default=[1]): vol.All(
         cv.ensure_list, [cv.positive_int]),
     vol.Optional(CONF_CUSTOM_URL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
@@ -80,6 +88,7 @@ def setup(hass, config):
         username = doorstation_config.get(CONF_USERNAME)
         password = doorstation_config.get(CONF_PASSWORD)
         doorbell_nums = doorstation_config.get(CONF_DOORBELL_NUMS)
+        relay_nums = doorstation_config.get(CONF_RELAY_NUMS)
         custom_url = doorstation_config.get(CONF_CUSTOM_URL)
         events = doorstation_config.get(CONF_MONITORED_CONDITIONS)
         name = (doorstation_config.get(CONF_NAME)
@@ -90,7 +99,7 @@ def setup(hass, config):
 
         if status[0]:
             doorstation = ConfiguredDoorBird(device, name, events, custom_url,
-                                             doorbell_nums, token)
+                                             doorbell_nums, relay_nums, token)
             doorstations.append(doorstation)
             _LOGGER.info('Connected to DoorBird "%s" as %s@%s',
                          doorstation.name, username, device_ip)
@@ -104,8 +113,19 @@ def setup(hass, config):
             return False
 
         # Subscribe to doorbell or motion events
-        if events is not None:
-            doorstation.update_schedule(hass)
+        if events:
+            try:
+                doorstation.update_schedule(hass)
+            except HTTPError:
+                hass.components.persistent_notification.create(
+                    'Doorbird configuration failed.  Please verify that API '
+                    'Operator permission is enabled for the Doorbird user. '
+                    'A restart will be required once permissions have been '
+                    'verified.',
+                    title='Doorbird Configuration Failure',
+                    notification_id='doorbird_schedule_error')
+
+                return False
 
     hass.data[DOMAIN] = doorstations
 
@@ -148,13 +168,15 @@ def handle_event(event):
 class ConfiguredDoorBird():
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events, custom_url, doorbell_nums, token):
+    def __init__(self, device, name, events, custom_url, doorbell_nums,
+                 relay_nums, token):
         """Initialize configured device."""
         self._name = name
         self._device = device
         self._custom_url = custom_url
         self._monitored_events = events
         self._doorbell_nums = doorbell_nums
+        self._relay_nums = relay_nums
         self._token = token
 
     @property
@@ -218,9 +240,9 @@ class ConfiguredDoorBird():
 
         # Register HA URL as webhook if not already, then get the ID
         if not self.webhook_is_registered(hass_url):
-            self.device.change_favorite('http',
-                                        'Home Assistant on {} ({} events)'
-                                        .format(hass_url, event), hass_url)
+            self.device.change_favorite('http', 'Home Assistant ({} events)'
+                                        .format(event), hass_url)
+
         fav_id = self.get_webhook_id(hass_url)
 
         if not fav_id:
@@ -239,6 +261,11 @@ class ConfiguredDoorBird():
                 entry = self.device.get_schedule_entry(event, str(doorbell))
                 entry.output.append(output)
                 self.device.change_schedule(entry)
+        elif event == 'relay':
+            # Repeat edit for each monitored doorbell number
+            for relay in self._relay_nums:
+                entry = self.device.get_schedule_entry(event, str(relay))
+                entry.output.append(output)
         else:
             entry = self.device.get_schedule_entry(event)
             entry.output.append(output)
@@ -303,6 +330,16 @@ class ConfiguredDoorBird():
 
         return None
 
+    def get_event_data(self):
+        """Get data to pass along with HA event."""
+        return {
+            'timestamp': dt_util.utcnow().isoformat(),
+            'live_video_url': self._device.live_video_url,
+            'live_image_url': self._device.live_image_url,
+            'rtsp_live_video_url': self._device.rtsp_live_video_url,
+            'html5_viewer_url': self._device.html5_viewer_url
+        }
+
 
 class DoorBirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -330,7 +367,14 @@ class DoorBirdRequestView(HomeAssistantView):
         if request_token == '' or not authenticated:
             return web.Response(status=401, text='Unauthorized')
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        doorstation = get_doorstation_by_slug(hass, sensor)
+
+        if doorstation:
+            event_data = doorstation.get_event_data()
+        else:
+            event_data = {}
+
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), event_data)
 
         return web.Response(status=200, text='OK')
 

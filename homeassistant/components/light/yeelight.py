@@ -76,6 +76,7 @@ EFFECT_CHRISTMAS = "Christmas"
 EFFECT_RGB = "RGB"
 EFFECT_RANDOM_LOOP = "Random Loop"
 EFFECT_FAST_RANDOM_LOOP = "Fast Random Loop"
+EFFECT_LSD = "LSD"
 EFFECT_SLOWDOWN = "Slowdown"
 EFFECT_WHATSAPP = "WhatsApp"
 EFFECT_FACEBOOK = "Facebook"
@@ -94,6 +95,7 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_RGB,
     EFFECT_RANDOM_LOOP,
     EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_LSD,
     EFFECT_SLOWDOWN,
     EFFECT_WHATSAPP,
     EFFECT_FACEBOOK,
@@ -413,34 +415,30 @@ class YeelightLight(Light):
             from yeelight.transitions import (disco, temp, strobe, pulse,
                                               strobe_color, alarm, police,
                                               police2, christmas, rgb,
-                                              randomloop, slowdown)
+                                              randomloop, lsd, slowdown)
             if effect == EFFECT_STOP:
                 self._bulb.stop_flow()
                 return
-            if effect == EFFECT_DISCO:
-                flow = Flow(count=0, transitions=disco())
-            if effect == EFFECT_TEMP:
-                flow = Flow(count=0, transitions=temp())
-            if effect == EFFECT_STROBE:
-                flow = Flow(count=0, transitions=strobe())
-            if effect == EFFECT_STROBE_COLOR:
-                flow = Flow(count=0, transitions=strobe_color())
-            if effect == EFFECT_ALARM:
-                flow = Flow(count=0, transitions=alarm())
-            if effect == EFFECT_POLICE:
-                flow = Flow(count=0, transitions=police())
-            if effect == EFFECT_POLICE2:
-                flow = Flow(count=0, transitions=police2())
-            if effect == EFFECT_CHRISTMAS:
-                flow = Flow(count=0, transitions=christmas())
-            if effect == EFFECT_RGB:
-                flow = Flow(count=0, transitions=rgb())
-            if effect == EFFECT_RANDOM_LOOP:
-                flow = Flow(count=0, transitions=randomloop())
+
+            effects_map = {
+                EFFECT_DISCO: disco,
+                EFFECT_TEMP: temp,
+                EFFECT_STROBE: strobe,
+                EFFECT_STROBE_COLOR: strobe_color,
+                EFFECT_ALARM: alarm,
+                EFFECT_POLICE: police,
+                EFFECT_POLICE2: police2,
+                EFFECT_CHRISTMAS: christmas,
+                EFFECT_RGB: rgb,
+                EFFECT_RANDOM_LOOP: randomloop,
+                EFFECT_LSD: lsd,
+                EFFECT_SLOWDOWN: slowdown,
+            }
+
+            if effect in effects_map:
+                flow = Flow(count=0, transitions=effects_map[effect]())
             if effect == EFFECT_FAST_RANDOM_LOOP:
                 flow = Flow(count=0, transitions=randomloop(duration=250))
-            if effect == EFFECT_SLOWDOWN:
-                flow = Flow(count=0, transitions=slowdown())
             if effect == EFFECT_WHATSAPP:
                 flow = Flow(count=2, transitions=pulse(37, 211, 102))
             if effect == EFFECT_FACEBOOK:

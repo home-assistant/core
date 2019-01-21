@@ -99,6 +99,7 @@ class TestAlert(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self._setup_notify()
 
     def tearDown(self):
         """Stop everything that was started."""

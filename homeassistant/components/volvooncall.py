@@ -14,15 +14,18 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send,
+    async_dispatcher_connect)
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.4.0']
+REQUIREMENTS = ['volvooncall==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,25 +36,56 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_REGION = 'region'
 CONF_SERVICE_URL = 'service_url'
 CONF_SCANDINAVIAN_MILES = 'scandinavian_miles'
+CONF_MUTABLE = 'mutable'
 
-SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
+SIGNAL_STATE_UPDATED = '{}.updated'.format(DOMAIN)
 
-RESOURCES = {'position': ('device_tracker',),
-             'lock': ('lock', 'Lock'),
-             'heater': ('switch', 'Heater', 'mdi:radiator'),
-             'odometer': ('sensor', 'Odometer', 'mdi:speedometer', 'km'),
-             'fuel_amount': ('sensor', 'Fuel amount', 'mdi:gas-station', 'L'),
-             'fuel_amount_level': (
-                 'sensor', 'Fuel level', 'mdi:water-percent', '%'),
-             'average_fuel_consumption': (
-                 'sensor', 'Fuel consumption', 'mdi:gas-station', 'L/100 km'),
-             'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
-             'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
-             'brake_fluid': ('binary_sensor', 'Brake Fluid'),
-             'service_warning_status': ('binary_sensor', 'Service'),
-             'bulb_failures': ('binary_sensor', 'Bulbs'),
-             'doors': ('binary_sensor', 'Doors'),
-             'windows': ('binary_sensor', 'Windows')}
+COMPONENTS = {
+    'sensor': 'sensor',
+    'binary_sensor': 'binary_sensor',
+    'lock': 'lock',
+    'device_tracker': 'device_tracker',
+    'switch': 'switch'
+}
+
+RESOURCES = [
+    'position',
+    'lock',
+    'heater',
+    'odometer',
+    'trip_meter1',
+    'trip_meter2',
+    'fuel_amount',
+    'fuel_amount_level',
+    'average_fuel_consumption',
+    'distance_to_empty',
+    'washer_fluid_level',
+    'brake_fluid',
+    'service_warning_status',
+    'bulb_failures',
+    'battery_range',
+    'battery_level',
+    'time_to_fully_charged',
+    'battery_charge_status',
+    'engine_start',
+    'last_trip',
+    'is_engine_running',
+    'doors_hood_open',
+    'doors_front_left_door_open',
+    'doors_front_right_door_open',
+    'doors_rear_left_door_open',
+    'doors_rear_right_door_open',
+    'windows_front_left_window_open',
+    'windows_front_right_window_open',
+    'windows_rear_left_window_open',
+    'windows_rear_right_window_open',
+    'tyre_pressure_front_left_tyre_pressure',
+    'tyre_pressure_front_right_tyre_pressure',
+    'tyre_pressure_rear_left_tyre_pressure',
+    'tyre_pressure_rear_right_tyre_pressure',
+    'any_door_open',
+    'any_window_open'
+]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -65,60 +99,77 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, [vol.In(RESOURCES)]),
         vol.Optional(CONF_REGION): cv.string,
         vol.Optional(CONF_SERVICE_URL): cv.string,
+        vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
         vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
+    session = async_get_clientsession(hass)
+
     from volvooncall import Connection
     connection = Connection(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_SERVICE_URL),
-        config[DOMAIN].get(CONF_REGION))
+        session=session,
+        username=config[DOMAIN].get(CONF_USERNAME),
+        password=config[DOMAIN].get(CONF_PASSWORD),
+        service_url=config[DOMAIN].get(CONF_SERVICE_URL),
+        region=config[DOMAIN].get(CONF_REGION))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
-    state = hass.data[DATA_KEY] = VolvoData(config)
+    data = hass.data[DATA_KEY] = VolvoData(config)
+
+    def is_enabled(attr):
+        """Return true if the user has enabled the resource."""
+        return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
 
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
-        state.entities[vehicle.vin] = []
-        for attr, (component, *_) in RESOURCES.items():
-            if (getattr(vehicle, attr + '_supported', True) and
-                    attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
-                discovery.load_platform(
-                    hass, component, DOMAIN, (vehicle.vin, attr), config)
+        data.vehicles.add(vehicle.vin)
 
-    def update_vehicle(vehicle):
-        """Receive updated information on vehicle."""
-        state.vehicles[vehicle.vin] = vehicle
-        if vehicle.vin not in state.entities:
-            discover_vehicle(vehicle)
+        dashboard = vehicle.dashboard(
+            mutable=config[DOMAIN][CONF_MUTABLE],
+            scandinavian_miles=config[DOMAIN][CONF_SCANDINAVIAN_MILES])
 
-        for entity in state.entities[vehicle.vin]:
-            entity.schedule_update_ha_state()
+        for instrument in (
+                instrument
+                for instrument in dashboard.instruments
+                if instrument.component in COMPONENTS and
+                is_enabled(instrument.slug_attr)):
 
-        dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
+            data.instruments.add(instrument)
 
-    def update(now):
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    COMPONENTS[instrument.component],
+                    DOMAIN,
+                    (vehicle.vin,
+                     instrument.component,
+                     instrument.attr),
+                    config))
+
+    async def update(now):
         """Update status from the online service."""
         try:
-            if not connection.update():
+            if not await connection.update(journal=True):
                 _LOGGER.warning("Could not query server")
                 return False
 
             for vehicle in connection.vehicles:
-                update_vehicle(vehicle)
+                if vehicle.vin not in data.vehicles:
+                    discover_vehicle(vehicle)
+
+            async_dispatcher_send(hass, SIGNAL_STATE_UPDATED)
 
             return True
         finally:
-            track_point_in_utc_time(hass, update, utcnow() + interval)
+            async_track_point_in_utc_time(hass, update, utcnow() + interval)
 
     _LOGGER.info("Logging in to service")
-    return update(utcnow())
+    return await update(utcnow())
 
 
 class VolvoData:
@@ -126,10 +177,18 @@ class VolvoData:
 
     def __init__(self, config):
         """Initialize the component state."""
-        self.entities = {}
-        self.vehicles = {}
+        self.vehicles = set()
+        self.instruments = set()
         self.config = config[DOMAIN]
         self.names = self.config.get(CONF_NAME)
+
+    def instrument(self, vin, component, attr):
+        """Return corresponding instrument."""
+        return next((instrument
+                     for instrument in self.instruments
+                     if instrument.vehicle.vin == vin and
+                     instrument.component == component and
+                     instrument.attr == attr), None)
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
@@ -148,29 +207,41 @@ class VolvoData:
 class VolvoEntity(Entity):
     """Base class for all VOC entities."""
 
-    def __init__(self, hass, vin, attribute):
+    def __init__(self, data, vin, component, attribute):
         """Initialize the entity."""
-        self._hass = hass
-        self._vin = vin
-        self._attribute = attribute
-        self._state.entities[self._vin].append(self)
+        self.data = data
+        self.vin = vin
+        self.component = component
+        self.attribute = attribute
+
+    async def async_added_to_hass(self):
+        """Register update dispatcher."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_STATE_UPDATED,
+            self.async_schedule_update_ha_state)
 
     @property
-    def _state(self):
-        return self._hass.data[DATA_KEY]
+    def instrument(self):
+        """Return corresponding instrument."""
+        return self.data.instrument(self.vin, self.component, self.attribute)
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self.instrument.icon
 
     @property
     def vehicle(self):
         """Return vehicle."""
-        return self._state.vehicles[self._vin]
+        return self.instrument.vehicle
 
     @property
     def _entity_name(self):
-        return RESOURCES[self._attribute][1]
+        return self.instrument.name
 
     @property
     def _vehicle_name(self):
-        return self._state.vehicle_name(self.vehicle)
+        return self.data.vehicle_name(self.vehicle)
 
     @property
     def name(self):
@@ -192,6 +263,7 @@ class VolvoEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return dict(model='{}/{}'.format(
-            self.vehicle.vehicle_type,
-            self.vehicle.model_year))
+        return dict(self.instrument.attributes,
+                    model='{}/{}'.format(
+                        self.vehicle.vehicle_type,
+                        self.vehicle.model_year))

@@ -2,15 +2,17 @@
 import asyncio
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from aiohttp import WSMsgType, client_exceptions
+from aiohttp import WSMsgType, client_exceptions, web
 import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import (
-    Cloud, iot, auth_api, MODE_DEV, STORAGE_ENABLE_ALEXA,
-    STORAGE_ENABLE_GOOGLE)
+    Cloud, iot, auth_api, MODE_DEV)
+from homeassistant.components.cloud.const import (
+    PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
+from homeassistant.util import dt as dt_util
 from tests.components.alexa import test_smart_home as test_alexa
-from tests.common import mock_coro
+from tests.common import mock_coro, async_fire_time_changed
 
 from . import mock_cloud_prefs
 
@@ -146,15 +148,34 @@ def test_handler_forwarding():
     assert payload == 'payload'
 
 
-@asyncio.coroutine
-def test_handling_core_messages(hass, mock_cloud):
+async def test_handling_core_messages_logout(hass, mock_cloud):
     """Test handling core messages."""
     mock_cloud.logout.return_value = mock_coro()
-    yield from iot.async_handle_cloud(hass, mock_cloud, {
+    await iot.async_handle_cloud(hass, mock_cloud, {
         'action': 'logout',
         'reason': 'Logged in at two places.'
     })
     assert len(mock_cloud.logout.mock_calls) == 1
+
+
+async def test_handling_core_messages_refresh_auth(hass, mock_cloud):
+    """Test handling core messages."""
+    mock_cloud.hass = hass
+    with patch('random.randint', return_value=0) as mock_rand, patch(
+        'homeassistant.components.cloud.auth_api.check_token'
+    ) as mock_check:
+        await iot.async_handle_cloud(hass, mock_cloud, {
+            'action': 'refresh_auth',
+            'seconds': 230,
+        })
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert len(mock_rand.mock_calls) == 1
+    assert mock_rand.mock_calls[0][1] == (0, 230)
+
+    assert len(mock_check.mock_calls) == 1
+    assert mock_check.mock_calls[0][1][0] is mock_cloud
 
 
 @asyncio.coroutine
@@ -308,7 +329,7 @@ def test_handler_alexa(hass):
 @asyncio.coroutine
 def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     """Test handler Alexa when user has disabled it."""
-    mock_cloud_fixture[STORAGE_ENABLE_ALEXA] = False
+    mock_cloud_fixture[PREF_ENABLE_ALEXA] = False
 
     resp = yield from iot.async_handle_alexa(
         hass, hass.data['cloud'],
@@ -377,7 +398,7 @@ def test_handler_google_actions(hass):
 
 async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
-    mock_cloud_fixture[STORAGE_ENABLE_GOOGLE] = False
+    mock_cloud_fixture[PREF_ENABLE_GOOGLE] = False
 
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
@@ -405,3 +426,96 @@ async def test_refresh_token_expired(hass):
 
     assert len(mock_check_token.mock_calls) == 1
     assert len(mock_create.mock_calls) == 1
+
+
+async def test_webhook_msg(hass):
+    """Test webhook msg."""
+    cloud = Cloud(hass, MODE_DEV, None, None)
+    await cloud.prefs.async_initialize()
+    await cloud.prefs.async_update(cloudhooks={
+        'hello': {
+            'webhook_id': 'mock-webhook-id',
+            'cloudhook_id': 'mock-cloud-id'
+        }
+    })
+
+    received = []
+
+    async def handler(hass, webhook_id, request):
+        """Handle a webhook."""
+        received.append(request)
+        return web.json_response({'from': 'handler'})
+
+    hass.components.webhook.async_register(
+        'test', 'Test', 'mock-webhook-id', handler)
+
+    response = await iot.async_handle_webhook(hass, cloud, {
+        'cloudhook_id': 'mock-cloud-id',
+        'body': '{"hello": "world"}',
+        'headers': {
+            'content-type': 'application/json'
+        },
+        'method': 'POST',
+        'query': None,
+    })
+
+    assert response == {
+        'status': 200,
+        'body': '{"from": "handler"}',
+        'headers': {
+            'Content-Type': 'application/json'
+        }
+    }
+
+    assert len(received) == 1
+    assert await received[0].json() == {
+        'hello': 'world'
+    }
+
+
+async def test_send_message_not_connected(mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+
+    with pytest.raises(iot.NotConnected):
+        await cloud_iot.async_send_message('webhook', {'msg': 'yo'})
+
+
+async def test_send_message_no_answer(mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+    cloud_iot.state = iot.STATE_CONNECTED
+    cloud_iot.client = MagicMock(send_json=MagicMock(return_value=mock_coro()))
+
+    await cloud_iot.async_send_message('webhook', {'msg': 'yo'},
+                                       expect_answer=False)
+    assert not cloud_iot._response_handler
+    assert len(cloud_iot.client.send_json.mock_calls) == 1
+    msg = cloud_iot.client.send_json.mock_calls[0][1][0]
+    assert msg['handler'] == 'webhook'
+    assert msg['payload'] == {'msg': 'yo'}
+
+
+async def test_send_message_answer(loop, mock_cloud):
+    """Test sending a message that expects no answer."""
+    cloud_iot = iot.CloudIoT(mock_cloud)
+    cloud_iot.state = iot.STATE_CONNECTED
+    cloud_iot.client = MagicMock(send_json=MagicMock(return_value=mock_coro()))
+
+    uuid = 5
+
+    with patch('homeassistant.components.cloud.iot.uuid.uuid4',
+               return_value=MagicMock(hex=uuid)):
+        send_task = loop.create_task(cloud_iot.async_send_message(
+            'webhook', {'msg': 'yo'}))
+        await asyncio.sleep(0)
+
+    assert len(cloud_iot.client.send_json.mock_calls) == 1
+    assert len(cloud_iot._response_handler) == 1
+    msg = cloud_iot.client.send_json.mock_calls[0][1][0]
+    assert msg['handler'] == 'webhook'
+    assert msg['payload'] == {'msg': 'yo'}
+
+    cloud_iot._response_handler[uuid].set_result({'response': True})
+    response = await send_task
+    assert response == {'response': True}

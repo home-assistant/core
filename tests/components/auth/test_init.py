@@ -114,8 +114,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     user.credentials.append(credential)
     assert len(user.credentials) == 1
 
-    with patch('homeassistant.auth.AuthManager.active', return_value=True):
-        client = await hass_ws_client(hass, hass_access_token)
+    client = await hass_ws_client(hass, hass_access_token)
 
     await client.send_json({
         'id': 5,

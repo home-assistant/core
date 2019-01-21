@@ -6,11 +6,12 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 import requests
-from tests.common import (
-    assert_setup_component, get_test_home_assistant, load_fixture)
 
 from homeassistant.components import sensor
+from homeassistant.components.sensor.bom import BOMCurrentData
 from homeassistant.setup import setup_component
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, load_fixture)
 
 VALID_CONFIG = {
     'platform': 'bom',
@@ -97,3 +98,12 @@ class TestBOMWeatherSensor(unittest.TestCase):
 
         feels_like = self.hass.states.get('sensor.bom_fake_feels_like_c').state
         assert '25.0' == feels_like
+
+
+class TestBOMCurrentData(unittest.TestCase):
+    """Test the BOM data container."""
+
+    def test_should_update_initial(self):
+        """Test that the first update always occurs."""
+        bom_data = BOMCurrentData('IDN60901.94767')
+        assert bom_data.should_update() is True

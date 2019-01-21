@@ -7,6 +7,7 @@ https://home-assistant.io/components/notify.html5/
 import datetime
 import json
 import logging
+from functools import partial
 import time
 import uuid
 
@@ -20,7 +21,7 @@ from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TITLE, ATTR_TARGET, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT,
-    BaseNotificationService)
+    BaseNotificationService, DOMAIN)
 from homeassistant.const import (
     URL_ROOT, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.helpers import config_validation as cv
@@ -34,6 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = 'html5_push_registrations.conf'
 
+SERVICE_DISMISS = 'html5_dismiss'
+
 ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
 
@@ -44,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 ATTR_SUBSCRIPTION = 'subscription'
 ATTR_BROWSER = 'browser'
+ATTR_NAME = 'name'
 
 ATTR_ENDPOINT = 'endpoint'
 ATTR_KEYS = 'keys'
@@ -56,6 +60,7 @@ ATTR_ACTION = 'action'
 ATTR_ACTIONS = 'actions'
 ATTR_TYPE = 'type'
 ATTR_URL = 'url'
+ATTR_DISMISS = 'dismiss'
 
 ATTR_JWT = 'jwt'
 
@@ -79,9 +84,15 @@ SUBSCRIPTION_SCHEMA = vol.All(
     })
 )
 
+DISMISS_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DATA): dict,
+})
+
 REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox']),
+    vol.Optional(ATTR_NAME): cv.string
 })
 
 CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
@@ -120,7 +131,8 @@ def get_service(hass, config, discovery_info=None):
         add_manifest_json_key(
             ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations, json_path)
+    return HTML5NotificationService(
+        hass, gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
@@ -156,7 +168,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = self.find_registration_name(data)
+        devname = data.get(ATTR_NAME)
+        data.pop(ATTR_NAME, None)
+
+        name = self.find_registration_name(data, devname)
         previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
@@ -177,14 +192,15 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-    def find_registration_name(self, data):
+    def find_registration_name(self, data, suggested=None):
         """Find a registration name matching data or generate a unique one."""
         endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
         for key, registration in self.registrations.items():
             subscription = registration.get(ATTR_SUBSCRIPTION)
             if subscription.get(ATTR_ENDPOINT) == endpoint:
                 return key
-        return ensure_unique_string('unnamed device', self.registrations)
+        return ensure_unique_string(suggested or 'unnamed device',
+                                    self.registrations)
 
     async def delete(self, request):
         """Delete a registration."""
@@ -242,7 +258,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2b. If decode is unsuccessful, return a 401.
 
         target_check = jwt.decode(token, verify=False)
-        if target_check[ATTR_TARGET] in self.registrations:
+        if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
@@ -320,11 +336,28 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, gcm_key, registrations, json_path):
+    def __init__(self, hass, gcm_key, registrations, json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
         self.registrations_json_path = json_path
+
+        async def async_dismiss_message(service):
+            """Handle dismissing notification message service calls."""
+            kwargs = {}
+
+            if self.targets is not None:
+                kwargs[ATTR_TARGET] = self.targets
+            elif service.data.get(ATTR_TARGET) is not None:
+                kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
+
+            kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+
+            await self.async_dismiss(**kwargs)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_DISMISS, async_dismiss_message,
+            schema=DISMISS_SERVICE_SCHEMA)
 
     @property
     def targets(self):
@@ -334,12 +367,28 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
+    def dismiss(self, **kwargs):
+        """Dismisses a notification."""
+        data = kwargs.get(ATTR_DATA)
+        tag = data.get(ATTR_TAG) if data else ""
+        payload = {
+            ATTR_TAG: tag,
+            ATTR_DISMISS: True,
+            ATTR_DATA: {}
+        }
+
+        self._push_message(payload, **kwargs)
+
+    async def async_dismiss(self, **kwargs):
+        """Dismisses a notification.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.dismiss, **kwargs))
+
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import jwt
-        from pywebpush import WebPusher
-
-        timestamp = int(time.time())
         tag = str(uuid.uuid4())
 
         payload = {
@@ -348,7 +397,6 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_DATA: {},
             'icon': '/static/icons/favicon-192x192.png',
             ATTR_TAG: tag,
-            'timestamp': (timestamp*1000),  # Javascript ms since epoch
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         }
 
@@ -371,6 +419,17 @@ class HTML5NotificationService(BaseNotificationService):
         if (payload[ATTR_DATA].get(ATTR_URL) is None and
                 payload.get(ATTR_ACTIONS) is None):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
+
+        self._push_message(payload, **kwargs)
+
+    def _push_message(self, payload, **kwargs):
+        """Send the message."""
+        import jwt
+        from pywebpush import WebPusher
+
+        timestamp = int(time.time())
+
+        payload['timestamp'] = (timestamp*1000)  # Javascript ms since epoch
 
         targets = kwargs.get(ATTR_TARGET)
 

@@ -10,6 +10,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.const import (
     ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
@@ -18,6 +19,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError
 
 from .auth import async_setup_auth
 from .handler import HassIO, HassioAPIError
@@ -143,6 +145,7 @@ async def async_check_config(hass):
         result = await hassio.check_homeassistant_config()
     except HassioAPIError as err:
         _LOGGER.error("Error on Hass.io API: %s", err)
+        raise HomeAssistantError() from None
     else:
         if result['result'] == "error":
             return result['message']
@@ -179,8 +182,14 @@ async def async_setup(hass, config):
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
+            # Migrate old hass.io users to be admin.
+            if not user.is_admin:
+                await hass.auth.async_update_user(
+                    user, group_ids=[GROUP_ID_ADMIN])
+
     if refresh_token is None:
-        user = await hass.auth.async_create_system_user('Hass.io')
+        user = await hass.auth.async_create_system_user(
+            'Hass.io', [GROUP_ID_ADMIN])
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data['hassio_user'] = user.id
         await store.async_save(data)
@@ -204,13 +213,7 @@ async def async_setup(hass, config):
             embed_iframe=True,
         )
 
-    # Temporary. No refresh token tells supervisor to use API password.
-    if hass.auth.active:
-        token = refresh_token.token
-    else:
-        token = None
-
-    await hassio.update_hass_api(config.get('http', {}), token)
+    await hassio.update_hass_api(config.get('http', {}), refresh_token.token)
 
     if 'homeassistant' in config:
         await hassio.update_hass_timezone(config['homeassistant'])

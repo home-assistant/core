@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.1.4']
+REQUIREMENTS = ['pyipma==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,12 @@ class IPMAWeather(WeatherEntity):
     async def async_update(self):
         """Update Condition and Forecast."""
         with async_timeout.timeout(10, loop=self.hass.loop):
-            self._condition = await self._station.observation()
+            _new_condition = await self._station.observation()
+            if _new_condition is None:
+                _LOGGER.warning("Could not update weather conditions")
+                return
+            self._condition = _new_condition
+
             _LOGGER.debug("Updating station %s, condition %s",
                           self._station.local, self._condition)
             self._forecast = await self._station.forecast()

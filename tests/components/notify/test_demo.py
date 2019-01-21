@@ -2,6 +2,9 @@
 import unittest
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+
 import homeassistant.components.notify as notify
 from homeassistant.setup import setup_component
 from homeassistant.components.notify import demo
@@ -81,7 +84,8 @@ class TestNotifyDemo(unittest.TestCase):
     def test_sending_none_message(self):
         """Test send with None as message."""
         self._setup_notify()
-        common.send_message(self.hass, None)
+        with pytest.raises(vol.Invalid):
+            common.send_message(self.hass, None)
         self.hass.block_till_done()
         assert len(self.events) == 0
 

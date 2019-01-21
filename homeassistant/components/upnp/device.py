@@ -8,6 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import LOGGER as _LOGGER
+from .const import (DOMAIN, CONF_LOCAL_IP)
 
 
 class Device:
@@ -17,6 +18,30 @@ class Device:
         """Initializer."""
         self._igd_device = igd_device
         self._mapped_ports = []
+
+    @classmethod
+    async def async_discover(cls, hass: HomeAssistantType):
+        """Discovery UPNP/IGD devices."""
+        _LOGGER.debug('Discovering UPnP/IGD devices')
+        local_ip = hass.data[DOMAIN]['config'].get(CONF_LOCAL_IP)
+        if local_ip:
+            local_ip = IPv4Address(local_ip)
+
+        # discover devices
+        from async_upnp_client.profiles.igd import IgdDevice
+        discovery_infos = await IgdDevice.async_search(source_ip=local_ip)
+
+        # add extra info and store devices
+        devices = []
+        for discovery_info in discovery_infos:
+            discovery_info['udn'] = discovery_info['_udn']
+            discovery_info['ssdp_description'] = discovery_info['location']
+            discovery_info['source'] = 'async_upnp_client'
+            _LOGGER.debug('Discovered device: %s', discovery_info)
+
+            devices.append(discovery_info)
+
+        return devices
 
     @classmethod
     async def async_create_device(cls,
@@ -34,8 +59,8 @@ class Device:
                               disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_description)
 
-        # wrap with async_upnp_client IgdDevice
-        from async_upnp_client.igd import IgdDevice
+        # wrap with async_upnp_client.IgdDevice
+        from async_upnp_client.profiles.igd import IgdDevice
         igd_device = IgdDevice(upnp_device, None)
 
         return cls(igd_device)
@@ -49,6 +74,11 @@ class Device:
     def name(self):
         """Get the name."""
         return self._igd_device.name
+
+    @property
+    def manufacturer(self):
+        """Get the manufacturer."""
+        return self._igd_device.manufacturer
 
     async def async_add_port_mappings(self, ports, local_ip):
         """Add port mappings."""

@@ -40,7 +40,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
     def test_binary_sensor_source(self):
         """Test if source is a sensor."""
-        values = [1, 0, 1, 0, 1, 0, 1]
+        values = ['on', 'off', 'on', 'off', 'on', 'off', 'on']
         assert setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'statistics',
@@ -305,6 +305,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     'max_age': {'hours': max_age}
                 }
             })
+            self.hass.block_till_done()
 
             self.hass.start()
             self.hass.block_till_done()

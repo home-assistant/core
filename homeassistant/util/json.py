@@ -1,6 +1,6 @@
 """JSON utility functions."""
 import logging
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 
 import json
 import os
@@ -41,7 +41,8 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
 
 
 def save_json(filename: str, data: Union[List, Dict],
-              private: bool = False) -> None:
+              private: bool = False, *,
+              encoder: Optional[json.JSONEncoder] = None) -> None:
     """Save JSON data to a file.
 
     Returns True on success.
@@ -49,7 +50,7 @@ def save_json(filename: str, data: Union[List, Dict],
     tmp_filename = ""
     tmp_path = os.path.split(filename)[0]
     try:
-        json_data = json.dumps(data, sort_keys=True, indent=4)
+        json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(mode="w", encoding='utf-8',
                                          dir=tmp_path, delete=False) as fdesc:

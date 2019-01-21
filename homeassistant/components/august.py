@@ -12,7 +12,7 @@ from requests import RequestException
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_TIMEOUT)
+    CONF_PASSWORD, CONF_USERNAME, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
 
-REQUIREMENTS = ['py-august==0.6.0']
+REQUIREMENTS = ['py-august==0.7.0']
 
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10
@@ -116,7 +116,8 @@ def setup_august(hass, config, api, authenticator):
         if DOMAIN in _CONFIGURING:
             hass.components.configurator.request_done(_CONFIGURING.pop(DOMAIN))
 
-        hass.data[DATA_AUGUST] = AugustData(api, authentication.access_token)
+        hass.data[DATA_AUGUST] = AugustData(
+            hass, api, authentication.access_token)
 
         for component in AUGUST_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -136,9 +137,16 @@ def setup(hass, config):
     """Set up the August component."""
     from august.api import Api
     from august.authenticator import Authenticator
+    from requests import Session
 
     conf = config[DOMAIN]
-    api = Api(timeout=conf.get(CONF_TIMEOUT))
+    api_http_session = None
+    try:
+        api_http_session = Session()
+    except RequestException as ex:
+        _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
+
+    api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
 
     authenticator = Authenticator(
         api,
@@ -148,14 +156,29 @@ def setup(hass, config):
         install_id=conf.get(CONF_INSTALL_ID),
         access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE))
 
+    def close_http_session(event):
+        """Close API sessions used to connect to August."""
+        _LOGGER.debug("Closing August HTTP sessions")
+        if api_http_session:
+            try:
+                api_http_session.close()
+            except RequestException:
+                pass
+
+        _LOGGER.debug("August HTTP session closed.")
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
+    _LOGGER.debug("Registered for HASS stop event")
+
     return setup_august(hass, config, api, authenticator)
 
 
 class AugustData:
     """August data object."""
 
-    def __init__(self, api, access_token):
+    def __init__(self, hass, api, access_token):
         """Init August data object."""
+        self._hass = hass
         self._api = api
         self._access_token = access_token
         self._doorbells = self._api.get_doorbells(self._access_token) or []
@@ -201,8 +224,11 @@ class AugustData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_device_activities(self, limit=ACTIVITY_FETCH_LIMIT):
         """Update data object with latest from August API."""
-        _LOGGER.debug("Updating device activities")
+        _LOGGER.debug("Start retrieving device activities")
         for house_id in self.house_ids:
+            _LOGGER.debug("Updating device activity for house id %s",
+                          house_id)
+
             activities = self._api.get_house_activities(self._access_token,
                                                         house_id,
                                                         limit=limit)
@@ -211,6 +237,7 @@ class AugustData:
             for device_id in device_ids:
                 self._activities_by_id[device_id] = [a for a in activities if
                                                      a.device_id == device_id]
+        _LOGGER.debug("Completed retrieving device activities")
 
     def get_doorbell_detail(self, doorbell_id):
         """Return doorbell detail."""
@@ -223,7 +250,7 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving doorbell details")
         for doorbell in self._doorbells:
-            _LOGGER.debug("Updating status for %s",
+            _LOGGER.debug("Updating doorbell status for %s",
                           doorbell.device_name)
             try:
                 detail_by_id[doorbell.device_id] =\
@@ -267,7 +294,7 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving door status")
         for lock in self._locks:
-            _LOGGER.debug("Updating status for %s",
+            _LOGGER.debug("Updating door status for %s",
                           lock.device_name)
 
             try:
@@ -291,7 +318,7 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving locks status")
         for lock in self._locks:
-            _LOGGER.debug("Updating status for %s",
+            _LOGGER.debug("Updating lock status for %s",
                           lock.device_name)
             try:
                 status_by_id[lock.device_id] = self._api.get_lock_status(

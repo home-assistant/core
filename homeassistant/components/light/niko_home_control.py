@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/light.niko_home_control/
 """
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -24,11 +23,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Niko Home Control light platform."""
     import nikohomecontrol
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
 
     try:
         hub = nikohomecontrol.Hub({
@@ -37,11 +36,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'timeout': 20000,
             'events': True
         })
-    except socket.error as err:
+    except OSError as err:
         _LOGGER.error("Unable to access %s (%s)", host, err)
         raise PlatformNotReady
 
-    add_devices(
+    add_entities(
         [NikoHomeControlLight(light, hub) for light in hub.list_actions()],
         True)
 
@@ -76,12 +75,10 @@ class NikoHomeControlLight(Light):
         """Instruct the light to turn on."""
         self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._light.turn_on()
-        self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self._light.turn_off()
-        self._state = False
 
     def update(self):
         """Fetch new state data for this light."""

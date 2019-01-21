@@ -3,6 +3,7 @@ Support for displaying IPs banned by fail2ban.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
+
 """
 import os
 import logging
@@ -13,10 +14,9 @@ import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_SCAN_INTERVAL, CONF_FILE_PATH
+    CONF_NAME, CONF_FILE_PATH
 )
 from homeassistant.helpers.entity import Entity
 
@@ -26,10 +26,10 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
-SCAN_INTERVAL = timedelta(seconds=120)
 
 STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
+SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
@@ -43,11 +43,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
     device_list = []
-    log_parser = BanLogParser(scan_interval, log_file)
+    log_parser = BanLogParser(log_file)
     for jail in jails:
         device_list.append(BanSensor(name, jail, log_parser))
 
@@ -65,7 +64,7 @@ class BanSensor(Entity):
         self.last_ban = None
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
-            r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
+            r"\[{}\]\s*(Ban|Unban) (.*)".format(re.escape(self.jail))
         )
         _LOGGER.debug("Setting up jail %s", self.jail)
 
@@ -86,8 +85,7 @@ class BanSensor(Entity):
 
     def update(self):
         """Update the list of banned ips."""
-        if self.log_parser.timer():
-            self.log_parser.read_log(self.jail)
+        self.log_parser.read_log(self.jail)
 
         if self.log_parser.data:
             for entry in self.log_parser.data:
@@ -114,21 +112,11 @@ class BanSensor(Entity):
 class BanLogParser:
     """Class to parse fail2ban logs."""
 
-    def __init__(self, interval, log_file):
+    def __init__(self, log_file):
         """Initialize the parser."""
-        self.interval = interval
         self.log_file = log_file
         self.data = list()
-        self.last_update = dt_util.now()
         self.ip_regex = dict()
-
-    def timer(self):
-        """Check if we are allowed to update."""
-        boundary = dt_util.now() - self.interval
-        if boundary > self.last_update:
-            self.last_update = dt_util.now()
-            return True
-        return False
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""

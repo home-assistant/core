@@ -17,14 +17,18 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['py17track==2.0.2']
+REQUIREMENTS = ['py17track==2.1.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = 'destination_country'
+ATTR_FRIENDLY_NAME = 'friendly_name'
 ATTR_INFO_TEXT = 'info_text'
 ATTR_ORIGIN_COUNTRY = 'origin_country'
+ATTR_PACKAGES = 'packages'
 ATTR_PACKAGE_TYPE = 'package_type'
+ATTR_STATUS = 'status'
 ATTR_TRACKING_INFO_LANGUAGE = 'tracking_info_language'
+ATTR_TRACKING_NUMBER = 'tracking_number'
 
 CONF_SHOW_ARCHIVED = 'show_archived'
 CONF_SHOW_DELIVERED = 'show_delivered'
@@ -116,7 +120,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return 'Packages {0}'.format(self._status)
+        return 'Seventeentrack Packages {0}'.format(self._status)
 
     @property
     def state(self):
@@ -138,6 +142,21 @@ class SeventeenTrackSummarySensor(Entity):
         """Update the sensor."""
         await self._data.async_update()
 
+        package_data = []
+        for package in self._data.packages:
+            if package.status != self._status:
+                continue
+
+            package_data.append({
+                ATTR_FRIENDLY_NAME: package.friendly_name,
+                ATTR_INFO_TEXT: package.info_text,
+                ATTR_STATUS: package.status,
+                ATTR_TRACKING_NUMBER: package.tracking_number,
+            })
+
+        if package_data:
+            self._attrs[ATTR_PACKAGES] = package_data
+
         self._state = self._data.summary.get(self._status)
 
 
@@ -154,8 +173,10 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
             ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
+            ATTR_TRACKING_NUMBER: package.tracking_number,
         }
         self._data = data
+        self._friendly_name = package.friendly_name
         self._state = package.status
         self._tracking_number = package.tracking_number
 
@@ -180,7 +201,10 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return self._tracking_number
+        name = self._friendly_name
+        if not name:
+            name = self._tracking_number
+        return 'Seventeentrack Package: {0}'.format(name)
 
     @property
     def state(self):

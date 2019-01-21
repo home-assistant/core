@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    ENTITY_MATCH_ALL)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -161,6 +162,12 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, ENTITY_MATCH_ALL),
+    entity_ids
+)
+
+
 def entity_domain(domain: str):
     """Validate that entity belong to domain."""
     def validate(value: Any) -> str:
@@ -193,10 +200,10 @@ def icon(value):
     """Validate icon."""
     value = str(value)
 
-    if value.startswith('mdi:'):
+    if ':' in value:
         return value
 
-    raise vol.Invalid('Icons should start with prefix "mdi:"')
+    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -312,7 +319,23 @@ def service(value):
                       .format(value))
 
 
-def slug(value):
+def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+    """Ensure dicts have slugs as keys.
+
+    Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
+    "Extra keys" errors from voluptuous.
+    """
+    schema = vol.Schema({str: value_schema})
+
+    def verify(value: Dict) -> Dict:
+        """Validate all keys are slugs and then the value_schema."""
+        for key in value.keys():
+            slug(key)
+        return schema(value)
+    return verify
+
+
+def slug(value: Any) -> str:
     """Validate value is a valid slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -323,7 +346,7 @@ def slug(value):
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
 
 
-def slugify(value):
+def slugify(value: Any) -> str:
     """Coerce a value to a slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -510,7 +533,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
-    vol.Optional(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({

@@ -55,7 +55,12 @@ class TestUVCSetup(unittest.TestCase):
         assert setup_component(self.hass, 'camera', {'camera': config})
 
         assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call('foo', 123, 'secret')
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            123,
+            'secret',
+            ssl=False
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front', 'bar'),
             mock.call(mock_remote.return_value, 'id2', 'Back', 'bar'),
@@ -81,7 +86,12 @@ class TestUVCSetup(unittest.TestCase):
         assert setup_component(self.hass, 'camera', {'camera': config})
 
         assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call('foo', 7080, 'secret')
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            7080,
+            'secret',
+            ssl=False
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front', 'ubnt'),
             mock.call(mock_remote.return_value, 'id2', 'Back', 'ubnt'),
@@ -107,7 +117,12 @@ class TestUVCSetup(unittest.TestCase):
         assert setup_component(self.hass, 'camera', {'camera': config})
 
         assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call('foo', 7080, 'secret')
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            7080,
+            'secret',
+            ssl=False
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'one', 'Front', 'ubnt'),
             mock.call(mock_remote.return_value, 'two', 'Back', 'ubnt'),

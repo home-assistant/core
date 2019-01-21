@@ -90,7 +90,7 @@ async def test_register_before_setup(hass):
     assert intent.text_input == 'I would like the Grolsch beer'
 
 
-async def test_http_processing_intent(hass, aiohttp_client):
+async def test_http_processing_intent(hass, hass_client):
     """Test processing intent via HTTP API."""
     class TestIntentHandler(intent.IntentHandler):
         """Test Intent Handler."""
@@ -120,7 +120,7 @@ async def test_http_processing_intent(hass, aiohttp_client):
     })
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     resp = await client.post('/api/conversation/process', json={
         'text': 'I would like the Grolsch beer'
     })
@@ -244,7 +244,7 @@ async def test_toggle_intent(hass, sentence):
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api(hass, aiohttp_client):
+async def test_http_api(hass, hass_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -252,7 +252,7 @@ async def test_http_api(hass, aiohttp_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     hass.states.async_set('light.kitchen', 'off')
     calls = async_mock_service(hass, HASS_DOMAIN, 'turn_on')
 
@@ -268,7 +268,7 @@ async def test_http_api(hass, aiohttp_client):
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api_wrong_data(hass, aiohttp_client):
+async def test_http_api_wrong_data(hass, hass_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -276,7 +276,7 @@ async def test_http_api_wrong_data(hass, aiohttp_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     resp = await client.post('/api/conversation/process', json={
         'text': 123

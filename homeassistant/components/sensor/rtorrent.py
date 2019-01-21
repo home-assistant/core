@@ -110,11 +110,11 @@ class RTorrentSensor(Entity):
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if self.data:
                 if upload > 0 and download > 0:
-                    self._state = 'Up/Down'
+                    self._state = 'up_down'
                 elif upload > 0 and download == 0:
-                    self._state = 'Seeding'
+                    self._state = 'seeding'
                 elif upload == 0 and download > 0:
-                    self._state = 'Downloading'
+                    self._state = 'downloading'
                 else:
                     self._state = STATE_IDLE
             else:

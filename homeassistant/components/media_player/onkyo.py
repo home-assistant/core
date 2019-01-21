@@ -220,6 +220,9 @@ class OnkyoDevice(MediaPlayerDevice):
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = volume_raw[1] / self._max_volume
+
+        if not hdmi_out_raw:
+            return
         self._attributes["video_out"] = ','.join(hdmi_out_raw[1])
 
     @property

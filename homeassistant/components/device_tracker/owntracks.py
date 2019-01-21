@@ -7,55 +7,29 @@ https://home-assistant.io/components/device_tracker.owntracks/
 import base64
 import json
 import logging
-from collections import defaultdict
 
-import voluptuous as vol
-
-from homeassistant.components import mqtt
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE,
-    SOURCE_TYPE_GPS
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS
 )
+from homeassistant.components.owntracks import DOMAIN as OT_DOMAIN
 from homeassistant.const import STATE_HOME
-from homeassistant.core import callback
 from homeassistant.util import slugify, decorator
 
-REQUIREMENTS = ['libnacl==1.6.1']
+
+DEPENDENCIES = ['owntracks']
 
 _LOGGER = logging.getLogger(__name__)
 
 HANDLERS = decorator.Registry()
 
-BEACON_DEV_ID = 'beacon'
 
-CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-CONF_SECRET = 'secret'
-CONF_WAYPOINT_IMPORT = 'waypoints'
-CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
-CONF_MQTT_TOPIC = 'mqtt_topic'
-CONF_REGION_MAPPING = 'region_mapping'
-CONF_EVENTS_ONLY = 'events_only'
-
-DEPENDENCIES = ['mqtt']
-
-DEFAULT_OWNTRACKS_TOPIC = 'owntracks/#'
-REGION_MAPPING = {}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-    vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-    vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-    vol.Optional(CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC):
-        mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
-        cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SECRET): vol.Any(
-        vol.Schema({vol.Optional(cv.string): cv.string}),
-        cv.string),
-    vol.Optional(CONF_REGION_MAPPING, default=REGION_MAPPING): dict
-})
+async def async_setup_entry(hass, entry, async_see):
+    """Set up OwnTracks based off an entry."""
+    hass.data[OT_DOMAIN]['context'].async_see = async_see
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        OT_DOMAIN, async_handle_message)
+    return True
 
 
 def get_cipher():
@@ -70,29 +44,6 @@ def get_cipher():
         """Decrypt ciphertext using key."""
         return SecretBox(key).decrypt(ciphertext)
     return (KEYLEN, decrypt)
-
-
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Set up an OwnTracks tracker."""
-    context = context_from_config(async_see, config)
-
-    async def async_handle_mqtt_message(topic, payload, qos):
-        """Handle incoming OwnTracks message."""
-        try:
-            message = json.loads(payload)
-        except ValueError:
-            # If invalid JSON
-            _LOGGER.error("Unable to parse payload as JSON: %s", payload)
-            return
-
-        message['topic'] = topic
-
-        await async_handle_message(hass, context, message)
-
-    await mqtt.async_subscribe(
-        hass, context.mqtt_topic, async_handle_mqtt_message, 1)
-
-    return True
 
 
 def _parse_topic(topic, subscribe_topic):
@@ -200,93 +151,6 @@ def _decrypt_payload(secret, topic, ciphertext):
             "Ignoring encrypted payload because unable to decrypt using "
             "key for topic %s", topic)
         return None
-
-
-def context_from_config(async_see, config):
-    """Create an async context from Home Assistant config."""
-    max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
-    waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
-    waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
-    secret = config.get(CONF_SECRET)
-    region_mapping = config.get(CONF_REGION_MAPPING)
-    events_only = config.get(CONF_EVENTS_ONLY)
-    mqtt_topic = config.get(CONF_MQTT_TOPIC)
-
-    return OwnTracksContext(async_see, secret, max_gps_accuracy,
-                            waypoint_import, waypoint_whitelist,
-                            region_mapping, events_only, mqtt_topic)
-
-
-class OwnTracksContext:
-    """Hold the current OwnTracks context."""
-
-    def __init__(self, async_see, secret, max_gps_accuracy, import_waypoints,
-                 waypoint_whitelist, region_mapping, events_only, mqtt_topic):
-        """Initialize an OwnTracks context."""
-        self.async_see = async_see
-        self.secret = secret
-        self.max_gps_accuracy = max_gps_accuracy
-        self.mobile_beacons_active = defaultdict(set)
-        self.regions_entered = defaultdict(list)
-        self.import_waypoints = import_waypoints
-        self.waypoint_whitelist = waypoint_whitelist
-        self.region_mapping = region_mapping
-        self.events_only = events_only
-        self.mqtt_topic = mqtt_topic
-
-    @callback
-    def async_valid_accuracy(self, message):
-        """Check if we should ignore this message."""
-        acc = message.get('acc')
-
-        if acc is None:
-            return False
-
-        try:
-            acc = float(acc)
-        except ValueError:
-            return False
-
-        if acc == 0:
-            _LOGGER.warning(
-                "Ignoring %s update because GPS accuracy is zero: %s",
-                message['_type'], message)
-            return False
-
-        if self.max_gps_accuracy is not None and \
-                acc > self.max_gps_accuracy:
-            _LOGGER.info("Ignoring %s update because expected GPS "
-                         "accuracy %s is not met: %s",
-                         message['_type'], self.max_gps_accuracy,
-                         message)
-            return False
-
-        return True
-
-    async def async_see_beacons(self, hass, dev_id, kwargs_param):
-        """Set active beacons to the current location."""
-        kwargs = kwargs_param.copy()
-
-        # Mobile beacons should always be set to the location of the
-        # tracking device. I get the device state and make the necessary
-        # changes to kwargs.
-        device_tracker_state = hass.states.get(
-            "device_tracker.{}".format(dev_id))
-
-        if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get("gps_accuracy")
-            lat = device_tracker_state.attributes.get("latitude")
-            lon = device_tracker_state.attributes.get("longitude")
-            kwargs['gps_accuracy'] = acc
-            kwargs['gps'] = (lat, lon)
-
-        # the battery state applies to the tracking device, not the beacon
-        # kwargs location is the beacon's configured lat/lon
-        kwargs.pop('battery', None)
-        for beacon in self.mobile_beacons_active[dev_id]:
-            kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
-            kwargs['host_name'] = beacon
-            await self.async_see(**kwargs)
 
 
 @HANDLERS.register('location')
@@ -452,14 +316,19 @@ async def async_handle_waypoints_message(hass, context, message):
 @HANDLERS.register('encrypted')
 async def async_handle_encrypted_message(hass, context, message):
     """Handle an encrypted message."""
-    plaintext_payload = _decrypt_payload(context.secret, message['topic'],
+    if 'topic' not in message and isinstance(context.secret, dict):
+        _LOGGER.error("You cannot set per topic secrets when using HTTP")
+        return
+
+    plaintext_payload = _decrypt_payload(context.secret, message.get('topic'),
                                          message['data'])
 
     if plaintext_payload is None:
         return
 
     decrypted = json.loads(plaintext_payload)
-    decrypted['topic'] = message['topic']
+    if 'topic' in message and 'topic' not in decrypted:
+        decrypted['topic'] = message['topic']
 
     await async_handle_message(hass, context, decrypted)
 
@@ -484,6 +353,8 @@ async def async_handle_unsupported_msg(hass, context, message):
 async def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
+
+    _LOGGER.debug("Received %s", message)
 
     handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 

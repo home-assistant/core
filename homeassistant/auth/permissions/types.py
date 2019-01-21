@@ -1,6 +1,5 @@
 """Common code for permissions."""
-from typing import (  # noqa: F401
-    Mapping, Union, Any)
+from typing import Mapping, Union
 
 # MyPy doesn't support recursion yet. So writing it out as far as we need.
 

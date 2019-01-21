@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.positive_int,
     vol.Optional(CONF_DESTINATION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OFFSET, default=1): cv.positive_int,
+    vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
     })
 
 
@@ -36,7 +36,9 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
     from pyruter.api import Departures
-
+    _LOGGER.warning("The API used in this sensor is shutting down soon, "
+                    "you should consider starting to use the "
+                    "'entur_public_transport' sensor instead")
     stop_id = config[CONF_STOP_ID]
     destination = config.get(CONF_DESTINATION)
     name = config[CONF_NAME]
