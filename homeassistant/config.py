@@ -170,10 +170,9 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
     return configs
 
 
-PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema(  # Package names are slugs
-        {cv.string: vol.Any(dict, list, None)})  # Component configuration
-})
+PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
+    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
+)
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -627,7 +626,7 @@ def _identify_config_schema(module: ModuleType) -> \
     except (AttributeError, KeyError):
         return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{'):
+    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
