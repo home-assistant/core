@@ -104,8 +104,8 @@ class LeafRangeSensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery range unit."""
-        if (self.car.hass.config.units.is_metric is False or
-                self.car.force_miles is True):
+        if (not self.car.hass.config.units.is_metric or
+                self.car.force_miles):
             return "mi"
         return "km"
 
