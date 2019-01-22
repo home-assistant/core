@@ -2,7 +2,7 @@
 Support for the Foobot indoor air quality monitor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.foobot/
+https://home-assistant.io/components/air_quality.foobot/
 """
 import asyncio
 import logging
@@ -27,6 +27,13 @@ ATTR_FOOBOT_INDEX = 'foobot_index'
 ATTR_HUMIDITY = 'humidity'
 ATTR_VOC = 'volatile_organic_compound'
 
+PARALLEL_UPDATES = 1
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+})
+
 PROP_TO_ATTR = {
     'air_quality_index': ATTR_AQI,
     'attribution': ATTR_ATTRIBUTION,
@@ -43,22 +50,7 @@ REQUIREMENTS = ['foobot_async==0.3.1']
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-SENSOR_TYPES = {'time': 'update_time',
-                'pm': 'particulate_matter_2_5',
-                'tmp': 'temperature',
-                'hum': 'humidity',
-                'co2': 'carbon_dioxide',
-                'voc': 'volatile_organic_compound',
-                'allpollu': 'foobot_index'}
-
-PARALLEL_UPDATES = 1
-
 TIMEOUT = 10
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-})
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -95,7 +87,7 @@ class FoobotQuality(AirQualityEntity):
     """Implementation of a Foobot Air Quality Monitor."""
 
     def __init__(self, data, device):
-        """Initialize the sensor."""
+        """Initialize the air quality entity."""
         self._uuid = device['uuid']
         self._attribution = 'Foobot®—Airboxlab S.A.S.'
         self._icon = 'mdi:cloud'
@@ -135,7 +127,7 @@ class FoobotQuality(AirQualityEntity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the device."""
         return self._name
 
     @property
