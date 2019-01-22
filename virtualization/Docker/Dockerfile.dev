@@ -33,6 +33,11 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 
 # BEGIN: Development additions
 
+# Install git
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install nodejs
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
     apt-get install -y nodejs
