@@ -287,6 +287,9 @@ class XiaomiDevice(Entity):
         _LOGGER.debug("PUSH >> %s: %s", self, data)
         was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)
+        print("=========================================================")
+        print(raw_data)
+        print("=========================================================")
         is_voltage = self.parse_voltage(data)
         if is_data or is_voltage or was_unavailable:
             self.async_schedule_update_ha_state()

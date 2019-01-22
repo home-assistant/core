@@ -156,6 +156,7 @@ class XiaomiGateway(AlarmControlPanel):
         return self._state_attrs
 
     def update(self):
+        """Return the state of the device."""
         return self._state
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
