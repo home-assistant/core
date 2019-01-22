@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -18,20 +18,15 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_FIRST_NAME = 'first_name'
-ATTR_LAST_NAME = 'last_name'
 ATTR_SOURCE = 'source'
 ATTR_USER_ID = 'user_id'
 CONF_DEVICE_TRACKERS = 'device_trackers'
-CONF_FIRST_NAME = 'first_name'
-CONF_LAST_NAME = 'last_name'
 CONF_USER_ID = 'user_id'
 DOMAIN = 'person'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 PERSON_SCHEMA = vol.Schema({
-    vol.Required(CONF_FIRST_NAME): cv.string,
-    vol.Optional(CONF_LAST_NAME): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_USER_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
@@ -60,24 +55,13 @@ class Person(RestoreEntity):
 
     def __init__(self, config):
         """Set up person."""
-        self._first_name = config[CONF_FIRST_NAME]
-        self._last_name = config.get(CONF_LAST_NAME)
+        self._name = config[CONF_NAME]
         self._latitude = None
         self._longitude = None
         self._source = None
         self._state = None
         self._trackers = config.get(CONF_DEVICE_TRACKERS)
         self._user_id = config.get(CONF_USER_ID)
-
-    @property
-    def first_name(self):
-        """Return the first name of the person."""
-        return self._first_name
-
-    @property
-    def last_name(self):
-        """Return the last name of the person."""
-        return self._last_name
 
     @property
     def latitude(self):
@@ -92,10 +76,7 @@ class Person(RestoreEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        name = self.first_name
-        if self.last_name:
-            name = '{} {}'.format(self.first_name, self.last_name)
-        return name
+        return self._name
 
     @property
     def should_poll(self):
@@ -119,9 +100,6 @@ class Person(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes of the person."""
         data = {}
-        data[ATTR_FIRST_NAME] = self.first_name
-        if self.last_name is not None:
-            data[ATTR_LAST_NAME] = self.last_name
         if self.latitude is not None:
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
