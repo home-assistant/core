@@ -57,13 +57,12 @@ class HegelDevice(MediaPlayerDevice):
         self._host = host
         self._port = port
         self._timeout = timeout
-        self._pwrstate = 1
+        self._power_state = 1
         self._volume = 0
         self._muted = False
         self._selected_source = 1
         self._telnet_session = None
-        self._source_name_to_number = {} ###### TODO: check how to do
-        self._source_number_to_name = {} ###### TODO: check how to do
+        self._source_names = ["", "Balanced", "Analog1", "Analog2", "4", "5", "6", "7", "8", "9"] # Array index represents the input number as defined by Hegel
 
     def telnet_connect(self):
         """Establish a telnet connection or return an already opened one."""
@@ -82,13 +81,17 @@ class HegelDevice(MediaPlayerDevice):
         self.telnet_connect().close()
         self._telnet_session = None
 
-    def telnet_send(self, command):
+    def telnet_send(self, command, parameter):
         """Execute a telnet command and return the response."""
         try:
             telnet = self.telnet_connect()
-            telnet.write(command.encode("ASCII") + b"\r")
-            return telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII") \
-                .strip()
+            telnet.write(("-" + command + "?" + parameter).encode("ASCII") + b"\r")
+
+            # If the telnet command was succesful we receive an answer in the
+            # format: "-command.value" e.g. "-v.20"
+            response = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII").strip().split('.')
+
+            return response[1] if response[1] else response[0] ## TODO: catch error responses
         except telnetlib.socket.timeout:
             self.telnet_disconnect()
             _LOGGER.debug("Hegel command %s timed out", command)
@@ -96,53 +99,22 @@ class HegelDevice(MediaPlayerDevice):
 
         return None
 
-    # def telnet_command(self, command):
-    #     """Establish a telnet connection and sends command."""
-    #     try:
-    #         telnet = self.telnet_connect()
-    #         telnet.write(command.encode("ASCII") + b"\r")
-    #         telnet.read_very_eager()  # skip response
-    #         telnet.close()
-    #     except telnetlib.socket.timeout:
-    #         _LOGGER.debug("%s command %s timed out", self._name, command)
-
     def update(self):
         """Get the latest details from the device."""
         
-        pwrstate = self.telnet_send("-p.?")
-        if pwrstate:
-            self._pwrstate = pwrstate
+        power_value = self.telnet_send("p", "?")
+        self._power_state = 1 if power_value == "1" else 0
 
-        volume_str = self.telnet_send("-v.?")
-        self._volume = (volume_str.split('.')[1]) if volume_str else 0
+        volume_value = self.telnet_send("v", "?")
+        self._volume = volume_value if volume_value else 0
 
-        muted_value = self.telnet_send("-m.?")
-        self._muted = (muted_value == "MUT0") if muted_value else False
+        muted_value = self.telnet_send("m", "?")
+        self._muted = True if muted_value == "1" else False
 
-        _LOGGER.info("DATA HEGEL: %s, %s, %s", pwrstate, volume_str, muted_value)
+        source_value = self.telnet_send("i", "?")
+        self._selected_source = int(source_value) if source_value else 0
 
-        # # Build the source name dictionaries if necessary
-        # if not self._source_name_to_number:
-        #     for i in range(MAX_SOURCE_NUMBERS):
-        #         result = self.telnet_request(
-        #             telnet, "?RGB" + str(i).zfill(2), "RGB")
-
-        #         if not result:
-        #             continue
-
-        #         source_name = result[6:]
-        #         source_number = str(i).zfill(2)
-
-        #         self._source_name_to_number[source_name] = source_number
-        #         self._source_number_to_name[source_number] = source_name
-
-        # source_number = self.telnet_request(telnet, "?F")
-
-        # if source_number:
-        #     self._selected_source = self._source_number_to_name \
-        #         .get(source_number[2:])
-        # else:
-        #     self._selected_source = None
+        _LOGGER.info("DATA HEGEL: PWR: %s, VOL: %s, SRC: %s, MUT:%s", power_value, volume_value, source_value, muted_value)
 
         self.telnet_disconnect()
         return True
@@ -155,9 +127,9 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._pwrstate == 0:
+        if self._power_state == 0:
             return STATE_OFF
-        if self._pwrstate == 1:
+        if self._power_state == 1:
             return STATE_ON
 
         return STATE_UNKNOWN
@@ -185,39 +157,37 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._source_name_to_number.keys())
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._selected_source
-
-    def turn_off(self):
-        """Turn off media player."""
-        self.telnet_command("PF")
-
-    def volume_up(self):
-        """Volume up media player."""
-        self.telnet_command("VU")
-
-    def volume_down(self):
-        """Volume down media player."""
-        self.telnet_command("VD")
-
-    def set_volume_level(self, volume):
-        """Set volume level, range 0..100."""
-        
-        self.telnet_command("-v." + str(int(volume*100)))
-        _LOGGER.info("Volume Hegel changed: %s percent", volume)
-
-    def mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player."""
-        self.telnet_command("MO" if mute else "MF")
+        return list(self._source_names.keys())
 
     def turn_on(self):
-        """Turn the media player on."""
-        self.telnet_command("PO")
+        """Turn the Hegel on."""
+        self.telnet_send("p", "1")
+
+    def turn_off(self):
+        """Turn the Hegel off."""
+        self.telnet_send("p", "0")
+
+    def volume_up(self):
+        """Turn the volume up by 1."""
+        self.telnet_send("v", "u")
+
+    def volume_down(self):
+        """Turn the volume down by 1."""
+        self.telnet_send("v", "d")
+
+    def set_volume_level(self, volume):
+        """Set volume level as a percentage of the maximum volume, range 0..1."""
+        self.telnet_send("v", str(int(volume*100)))
+
+    def mute_volume(self, mute):
+        """Mute (true) or unmute (false) the Hegel."""
+        self.telnet_send("m", (1 if mute else 0))
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_name_to_number.get(source) + "FN")
+        input_number = self._source_names.index(source)
+
+        if input_number
+            self.telnet_send("i", input_number)
+        else
+            _LOGGER.warning("%s input source %s does not exist", self._name, source)
