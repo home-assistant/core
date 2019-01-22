@@ -329,6 +329,9 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
 
     def verify(value: Dict) -> Dict:
         """Validate all keys are slugs and then the value_schema."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('expected dictionary')
+
         for key in value.keys():
             slug(key)
         return schema(value)

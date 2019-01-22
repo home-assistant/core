@@ -53,14 +53,14 @@ SERVICE_SCHEMA_DURATION = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_DURATION, timedelta(DEFAULT_DURATION)):
                 cv.time_period,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

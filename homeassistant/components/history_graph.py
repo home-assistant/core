@@ -34,7 +34,7 @@ GRAPH_SCHEMA = vol.Schema({
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({cv.slug: GRAPH_SCHEMA})
+    DOMAIN: cv.schema_with_slug_keys(GRAPH_SCHEMA)
 }, extra=vol.ALLOW_EXTRA)
 
 
