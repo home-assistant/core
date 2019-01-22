@@ -18,7 +18,7 @@ DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
-tTITLE = "{{ states.sensor.test.entity_id }}"
+TITLE = "{{ states.sensor.test.entity_id }}"
 TEST_DATA = {
     'data': {
         'inline_keyboard': ['Close garage:/close_garage']
