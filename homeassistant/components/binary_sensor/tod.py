@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_SENSORS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.sun import (
     get_astral_event_date, get_astral_event_next)
@@ -55,15 +54,15 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     sensors = []
-    for name, device_config in config[CONF_SENSORS].items():
-        after = device_config[CONF_AFTER]
-        after_offset = device_config[CONF_AFTER_OFFSET]
-        before = device_config[CONF_BEFORE]
-        before_offset = device_config[CONF_BEFORE_OFFSET]
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, name)
+    for sensor_name, sensor_config in config[CONF_SENSORS].items():
+        after = sensor_config[CONF_AFTER]
+        after_offset = sensor_config[CONF_AFTER_OFFSET]
+        before = sensor_config[CONF_BEFORE]
+        before_offset = sensor_config[CONF_BEFORE_OFFSET]
+        friendly_name = sensor_config.get(CONF_FRIENDLY_NAME, sensor_name)
         sensors.append(
             TodSensor(
-                hass, name, friendly_name,
+                sensor_name, friendly_name,
                 after, after_offset, before, before_offset
             )
         )
@@ -79,24 +78,16 @@ def is_sun_event(event):
 class TodSensor(BinarySensorDevice):
     """Time of the Day Sensor."""
 
-    def __init__(self, hass, name, friendly_name, after, after_offset,
+    def __init__(self, sensor_name, friendly_name, after, after_offset,
                  before, before_offset):
         """Init the ToD Sensor..."""
-        self.hass = hass
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, hass=hass)
+        self.entity_id = ENTITY_ID_FORMAT.format(sensor_name)
         self._name = friendly_name
-
-        self._time_before = None
-        self._time_after = None
+        self._time_before = self._time_after = self._next_update = None
         self._after_offset = after_offset
         self._before_offset = before_offset
         self._before = before
         self._after = after
-        self._next_update = None
-
-        self._calculate_initial_boudary_time()
-        self._calculate_next_update()
 
     @property
     def should_poll(self):
@@ -224,8 +215,11 @@ class TodSensor(BinarySensorDevice):
             self._time_before += timedelta(days=1)
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
-        self.point_in_time_listener(dt_util.now())
+        """Call when entity about to be added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._calculate_initial_boudary_time()
+        self._calculate_next_update()
+        self._point_in_time_listener(dt_util.now())
 
     def _calculate_next_update(self):
         """Datetime when the next update to the state."""
@@ -240,11 +234,11 @@ class TodSensor(BinarySensorDevice):
         self._next_update = self.after
 
     @callback
-    def point_in_time_listener(self, now):
+    def _point_in_time_listener(self, now):
         """Run when the state of the sensor should be updated."""
         self._calculate_next_update()
         self.async_schedule_update_ha_state()
 
         async_track_point_in_utc_time(
-            self.hass, self.point_in_time_listener,
+            self.hass, self._point_in_time_listener,
             self.next_update)
