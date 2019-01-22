@@ -22,7 +22,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_HIDDEN, default=True): cv.boolean,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_COMMANDS, default={}):
-        vol.Schema({cv.slug: COMMAND_SCHEMA}),
+        cv.schema_with_slug_keys(COMMAND_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -128,14 +128,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         slot = service.data.get(CONF_SLOT, entity.slot)
 
-        await hass.async_add_job(device.learn, slot)
+        await hass.async_add_executor_job(device.learn, slot)
 
         timeout = service.data.get(CONF_TIMEOUT, entity.timeout)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            message = await hass.async_add_job(
+            message = await hass.async_add_executor_job(
                 device.read, slot)
             _LOGGER.debug("Message received from device: '%s'", message)
 
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
             if ('error' in message and
                     message['error']['message'] == "learn timeout"):
-                await hass.async_add_job(device.learn, slot)
+                await hass.async_add_executor_job(device.learn, slot)
 
             await asyncio.sleep(1, loop=hass.loop)
 

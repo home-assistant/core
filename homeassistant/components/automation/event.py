@@ -24,7 +24,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = vol.Schema(

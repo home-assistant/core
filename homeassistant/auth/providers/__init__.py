@@ -226,7 +226,11 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         if user_input is None and hasattr(auth_module,
                                           'async_initialize_login_mfa_step'):
-            await auth_module.async_initialize_login_mfa_step(self.user.id)
+            try:
+                await auth_module.async_initialize_login_mfa_step(self.user.id)
+            except HomeAssistantError:
+                _LOGGER.exception('Error initializing MFA step')
+                return self.async_abort(reason='unknown_error')
 
         if user_input is not None:
             expires = self.created_at + MFA_SESSION_EXPIRATION

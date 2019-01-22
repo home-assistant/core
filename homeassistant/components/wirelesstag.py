@@ -271,7 +271,7 @@ class WirelessTagBaseSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_BATTERY_LEVEL: self._tag.battery_remaining,
+            ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining*100),
             ATTR_VOLTAGE: '{:.2f}V'.format(self._tag.battery_volts),
             ATTR_TAG_SIGNAL_STRENGTH: '{}dBm'.format(
                 self._tag.signal_strength),

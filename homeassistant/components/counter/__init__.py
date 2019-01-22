@@ -10,9 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +33,12 @@ SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
@@ -47,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -86,7 +85,7 @@ async def async_setup(hass, config):
     return True
 
 
-class Counter(Entity):
+class Counter(RestoreEntity):
     """Representation of a counter."""
 
     def __init__(self, object_id, name, initial, restore, step, icon):
@@ -128,10 +127,11 @@ class Counter(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
+        await super().async_added_to_hass()
         # __init__ will set self._state to self._initial, only override
         # if needed.
         if self._restore:
-            state = await async_get_last_state(self.hass, self.entity_id)
+            state = await self.async_get_last_state()
             if state is not None:
                 self._state = int(state.state)
 

@@ -13,7 +13,6 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
-from homeassistant.core import HomeAssistant
 
 DEPENDENCIES = ['hdmi_cec']
 
@@ -26,20 +25,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return HDMI devices as +switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_entities(CecPlayerDevice(hass, hass.data.get(device),
-                                     hass.data.get(device).logical_address) for
-                     device in discovery_info[ATTR_NEW])
+        entities = []
+        for device in discovery_info[ATTR_NEW]:
+            hdmi_device = hass.data.get(device)
+            entities.append(CecPlayerDevice(
+                hdmi_device, hdmi_device.logical_address,
+            ))
+        add_entities(entities, True)
 
 
 class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     """Representation of a HDMI device as a Media player."""
 
-    def __init__(self, hass: HomeAssistant, device, logical) -> None:
+    def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
-        CecDevice.__init__(self, hass, device, logical)
+        CecDevice.__init__(self, device, logical)
         self.entity_id = "%s.%s_%s" % (
             DOMAIN, 'hdmi', hex(self._logical_address)[2:])
-        self.update()
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
@@ -137,25 +139,24 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
         """Cache state of device."""
         return self._state
 
-    def _update(self, device=None):
+    def update(self):
         """Update device status."""
-        if device:
-            from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
-                POWER_OFF, POWER_ON
-            if device.power_status == POWER_OFF:
-                self._state = STATE_OFF
-            elif not self.support_pause:
-                if device.power_status == POWER_ON:
-                    self._state = STATE_ON
-            elif device.status == STATUS_PLAY:
-                self._state = STATE_PLAYING
-            elif device.status == STATUS_STOP:
-                self._state = STATE_IDLE
-            elif device.status == STATUS_STILL:
-                self._state = STATE_PAUSED
-            else:
-                _LOGGER.warning("Unknown state: %s", device.status)
-        self.schedule_update_ha_state()
+        device = self._device
+        from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
+            POWER_OFF, POWER_ON
+        if device.power_status in [POWER_OFF, 3]:
+            self._state = STATE_OFF
+        elif not self.support_pause:
+            if device.power_status in [POWER_ON, 4]:
+                self._state = STATE_ON
+        elif device.status == STATUS_PLAY:
+            self._state = STATE_PLAYING
+        elif device.status == STATUS_STOP:
+            self._state = STATE_IDLE
+        elif device.status == STATUS_STILL:
+            self._state = STATE_PAUSED
+        else:
+            _LOGGER.warning("Unknown state: %s", device.status)
 
     @property
     def supported_features(self):

@@ -11,9 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +55,8 @@ def _cv_input_text(cfg):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
             vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
@@ -68,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_MODE, default=MODE_TEXT):
                 vol.In([MODE_TEXT, MODE_PASSWORD]),
         }, _cv_input_text)
-    })
+    )
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
@@ -104,7 +103,7 @@ async def async_setup(hass, config):
     return True
 
 
-class InputText(Entity):
+class InputText(RestoreEntity):
     """Represent a text box."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, icon,
@@ -157,10 +156,11 @@ class InputText(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         if self._current_value is not None:
             return
 
-        state = await async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         value = state and state.state
 
         # Check against None because value can be 0

@@ -56,6 +56,13 @@ CONF_SENSOR_CONDUCTIVITY = READING_CONDUCTIVITY
 CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
+DEFAULT_MIN_BATTERY_LEVEL = 20
+DEFAULT_MIN_MOISTURE = 20
+DEFAULT_MAX_MOISTURE = 60
+DEFAULT_MIN_CONDUCTIVITY = 500
+DEFAULT_MAX_CONDUCTIVITY = 3000
+DEFAULT_CHECK_DAYS = 3
+
 SCHEMA_SENSORS = vol.Schema({
     vol.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
     vol.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
@@ -66,16 +73,22 @@ SCHEMA_SENSORS = vol.Schema({
 
 PLANT_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
-    vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.positive_int,
+    vol.Optional(CONF_MIN_BATTERY_LEVEL,
+                 default=DEFAULT_MIN_BATTERY_LEVEL): cv.positive_int,
     vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_MIN_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MAX_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MIN_CONDUCTIVITY): cv.positive_int,
-    vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MIN_MOISTURE,
+                 default=DEFAULT_MIN_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MAX_MOISTURE,
+                 default=DEFAULT_MAX_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MIN_CONDUCTIVITY,
+                 default=DEFAULT_MIN_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MAX_CONDUCTIVITY,
+                 default=DEFAULT_MAX_CONDUCTIVITY): cv.positive_int,
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
-    vol.Optional(CONF_CHECK_DAYS): cv.positive_int,
+    vol.Optional(CONF_CHECK_DAYS,
+                 default=DEFAULT_CHECK_DAYS): cv.positive_int,
 })
 
 DOMAIN = 'plant'
@@ -105,9 +118,6 @@ async def async_setup(hass, config):
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
         entity = Plant(plant_name, plant_config)
-        sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
-        _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
-        async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
 
     await component.async_add_entities(entities)
@@ -249,6 +259,14 @@ class Plant(Entity):
         if ENABLE_LOAD_HISTORY and 'recorder' in self.hass.config.components:
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
+
+        async_track_state_change(self.hass, list(self._sensormap),
+                                 self.state_changed)
+
+        for entity_id in self._sensormap:
+            state = self.hass.states.get(entity_id)
+            if state is not None:
+                self.state_changed(entity_id, None, state)
 
     async def _load_history_from_db(self):
         """Load the history of the brightness values from the database.

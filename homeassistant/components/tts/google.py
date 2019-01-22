@@ -17,7 +17,7 @@ import yarl
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['gTTS-token==1.1.2']
+REQUIREMENTS = ['gTTS-token==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

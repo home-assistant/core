@@ -10,9 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,14 +64,15 @@ def _cv_input_select(cfg):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_OPTIONS):
                 vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
             vol.Optional(CONF_INITIAL): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
-        }, _cv_input_select)})
+        }, _cv_input_select)
+    )
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
@@ -116,7 +116,7 @@ async def async_setup(hass, config):
     return True
 
 
-class InputSelect(Entity):
+class InputSelect(RestoreEntity):
     """Representation of a select input."""
 
     def __init__(self, object_id, name, initial, options, icon):
@@ -129,10 +129,11 @@ class InputSelect(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
+        await super().async_added_to_hass()
         if self._current_option is not None:
             return
 
-        state = await async_get_last_state(self.hass, self.entity_id)
+        state = await self.async_get_last_state()
         if not state or state.state not in self._options:
             self._current_option = self._options[0]
         else:

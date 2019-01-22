@@ -28,7 +28,7 @@ from .const import (
     CHAR_HEATING_THRESHOLD_TEMPERATURE, CHAR_TARGET_TEMPERATURE,
     CHAR_TEMP_DISPLAY_UNITS,
     DEFAULT_MAX_TEMP_WATER_HEATER, DEFAULT_MIN_TEMP_WATER_HEATER,
-    PROP_MAX_VALUE, PROP_MIN_VALUE, SERV_THERMOSTAT)
+    PROP_MAX_VALUE, PROP_MIN_STEP, PROP_MIN_VALUE, SERV_THERMOSTAT)
 from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +83,8 @@ class Thermostat(HomeAccessory):
         self.char_target_temp = serv_thermostat.configure_char(
             CHAR_TARGET_TEMPERATURE, value=21.0,
             properties={PROP_MIN_VALUE: min_temp,
-                        PROP_MAX_VALUE: max_temp},
+                        PROP_MAX_VALUE: max_temp,
+                        PROP_MIN_STEP: 0.5},
             setter_callback=self.set_target_temperature)
 
         # Display units characteristic
@@ -97,13 +98,15 @@ class Thermostat(HomeAccessory):
             self.char_cooling_thresh_temp = serv_thermostat.configure_char(
                 CHAR_COOLING_THRESHOLD_TEMPERATURE, value=23.0,
                 properties={PROP_MIN_VALUE: min_temp,
-                            PROP_MAX_VALUE: max_temp},
+                            PROP_MAX_VALUE: max_temp,
+                            PROP_MIN_STEP: 0.5},
                 setter_callback=self.set_cooling_threshold)
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE, value=19.0,
                 properties={PROP_MIN_VALUE: min_temp,
-                            PROP_MAX_VALUE: max_temp},
+                            PROP_MAX_VALUE: max_temp,
+                            PROP_MIN_STEP: 0.5},
                 setter_callback=self.set_heating_threshold)
 
     def get_temperature_range(self):
@@ -112,11 +115,13 @@ class Thermostat(HomeAccessory):
             .attributes.get(ATTR_MAX_TEMP)
         max_temp = temperature_to_homekit(max_temp, self._unit) if max_temp \
             else DEFAULT_MAX_TEMP
+        max_temp = round(max_temp * 2) / 2
 
         min_temp = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_MIN_TEMP)
         min_temp = temperature_to_homekit(min_temp, self._unit) if min_temp \
             else DEFAULT_MIN_TEMP
+        min_temp = round(min_temp * 2) / 2
 
         return min_temp, max_temp
 
@@ -140,7 +145,7 @@ class Thermostat(HomeAccessory):
     @debounce
     def set_cooling_threshold(self, value):
         """Set cooling threshold temp to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set cooling threshold temperature to %.2f°C',
+        _LOGGER.debug('%s: Set cooling threshold temperature to %.1f°C',
                       self.entity_id, value)
         self._flag_coolingthresh = True
         low = self.char_heating_thresh_temp.value
@@ -156,7 +161,7 @@ class Thermostat(HomeAccessory):
     @debounce
     def set_heating_threshold(self, value):
         """Set heating threshold temp to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
+        _LOGGER.debug('%s: Set heating threshold temperature to %.1f°C',
                       self.entity_id, value)
         self._flag_heatingthresh = True
         high = self.char_cooling_thresh_temp.value
@@ -172,7 +177,7 @@ class Thermostat(HomeAccessory):
     @debounce
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set target temperature to %.2f°C',
+        _LOGGER.debug('%s: Set target temperature to %.1f°C',
                       self.entity_id, value)
         self._flag_temperature = True
         temperature = temperature_to_states(value, self._unit)
@@ -301,7 +306,8 @@ class WaterHeater(HomeAccessory):
         self.char_target_temp = serv_thermostat.configure_char(
             CHAR_TARGET_TEMPERATURE, value=50.0,
             properties={PROP_MIN_VALUE: min_temp,
-                        PROP_MAX_VALUE: max_temp},
+                        PROP_MAX_VALUE: max_temp,
+                        PROP_MIN_STEP: 0.5},
             setter_callback=self.set_target_temperature)
 
         self.char_display_units = serv_thermostat.configure_char(
@@ -313,11 +319,13 @@ class WaterHeater(HomeAccessory):
             .attributes.get(ATTR_MAX_TEMP)
         max_temp = temperature_to_homekit(max_temp, self._unit) if max_temp \
             else DEFAULT_MAX_TEMP_WATER_HEATER
+        max_temp = round(max_temp * 2) / 2
 
         min_temp = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_MIN_TEMP)
         min_temp = temperature_to_homekit(min_temp, self._unit) if min_temp \
             else DEFAULT_MIN_TEMP_WATER_HEATER
+        min_temp = round(min_temp * 2) / 2
 
         return min_temp, max_temp
 
@@ -332,7 +340,7 @@ class WaterHeater(HomeAccessory):
     @debounce
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set target temperature to %.2f°C',
+        _LOGGER.debug('%s: Set target temperature to %.1f°C',
                       self.entity_id, value)
         self._flag_temperature = True
         temperature = temperature_to_states(value, self._unit)

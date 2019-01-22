@@ -39,7 +39,7 @@ class TestDemoPlatform(unittest.TestCase):
             with assert_setup_component(1, geo_location.DOMAIN):
                 assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
 
-            # In this test, only entities of the geo location domain have been
+            # In this test, only entities of the geolocation domain have been
             # generated.
             all_states = self.hass.states.all()
             assert len(all_states) == NUMBER_OF_DEMO_DEVICES

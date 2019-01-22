@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.dlna_dmr/
 """
 import asyncio
 from datetime import datetime
+from datetime import timedelta
 import functools
 import logging
 
@@ -14,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_URL, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
@@ -25,7 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.13.0']
+REQUIREMENTS = ['async-upnp-client==0.14.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ async def async_setup_platform(
         raise PlatformNotReady()
 
     # wrap with DmrDevice
-    from async_upnp_client.dlna import DmrDevice
+    from async_upnp_client.profiles.dlna import DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)
 
     # create our own device
@@ -233,6 +234,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
             supported_features |= SUPPORT_NEXT_TRACK
         if self._device.has_play_media:
             supported_features |= SUPPORT_PLAY_MEDIA
+        if self._device.has_seek_rel_time:
+            supported_features |= SUPPORT_SEEK
 
         return supported_features
 
@@ -285,6 +288,16 @@ class DlnaDmrDevice(MediaPlayerDevice):
         await self._device.async_stop()
 
     @catch_request_errors()
+    async def async_media_seek(self, position):
+        """Send seek command."""
+        if not self._device.can_seek_rel_time:
+            _LOGGER.debug('Cannot do Seek/rel_time')
+            return
+
+        time = timedelta(seconds=position)
+        await self._device.async_seek_rel_time(time)
+
+    @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         title = "Home Assistant"
@@ -295,14 +308,14 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if self._device.can_stop:
             await self.async_media_stop()
 
-        # +ueue media
+        # Queue media
         await self._device.async_set_transport_uri(
             media_id, title, mime_type, upnp_class)
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        from async_upnp_client import dlna
-        if self._device.state == dlna.STATE_PLAYING:
+        from async_upnp_client.profiles.dlna import DeviceState
+        if self._device.state == DeviceState.PLAYING:
             return
 
         # Play it
@@ -342,12 +355,12 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not self._available:
             return STATE_OFF
 
-        from async_upnp_client import dlna
+        from async_upnp_client.profiles.dlna import DeviceState
         if self._device.state is None:
             return STATE_ON
-        if self._device.state == dlna.STATE_PLAYING:
+        if self._device.state == DeviceState.PLAYING:
             return STATE_PLAYING
-        if self._device.state == dlna.STATE_PAUSED:
+        if self._device.state == DeviceState.PAUSED:
             return STATE_PAUSED
 
         return STATE_IDLE

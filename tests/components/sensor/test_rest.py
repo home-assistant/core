@@ -135,13 +135,14 @@ class TestRestSensor(unittest.TestCase):
                                     '{ "key": "' + self.initial_state + '" }'))
         self.name = 'foo'
         self.unit_of_measurement = 'MB'
+        self.device_class = None
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
         self.force_update = False
 
         self.sensor = rest.RestSensor(
             self.hass, self.rest, self.name, self.unit_of_measurement,
-            self.value_template, [], self.force_update
+            self.device_class, self.value_template, [], self.force_update
         )
 
     def tearDown(self):
@@ -192,7 +193,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, [],
+                                      self.unit_of_measurement,
+                                      self.device_class, None, [],
                                       self.force_update)
         self.sensor.update()
         assert 'plain_state' == self.sensor.state
@@ -204,7 +206,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     '{ "key": "some_json_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'],
+                                      self.unit_of_measurement,
+                                      self.device_class, None, ['key'],
                                       self.force_update)
         self.sensor.update()
         assert 'some_json_value' == \
@@ -216,7 +219,8 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(None))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'],
+                                      self.unit_of_measurement,
+                                      self.device_class, None, ['key'],
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -229,7 +233,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     '["list", "of", "things"]'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'],
+                                      self.unit_of_measurement,
+                                      self.device_class, None, ['key'],
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -242,7 +247,8 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'This is text rather than JSON data.'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None, ['key'],
+                                      self.unit_of_measurement,
+                                      self.device_class, None, ['key'],
                                       self.force_update)
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -256,6 +262,7 @@ class TestRestSensor(unittest.TestCase):
                                     '{ "key": "json_state_updated_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
+                                      self.device_class,
                                       self.value_template, ['key'],
                                       self.force_update)
         self.sensor.update()

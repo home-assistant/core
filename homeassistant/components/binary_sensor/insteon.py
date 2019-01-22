@@ -14,6 +14,7 @@ DEPENDENCIES = ['insteon']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {'openClosedSensor': 'opening',
+                'ioLincSensor': 'opening',
                 'motionSensor': 'motion',
                 'doorSensor': 'door',
                 'wetLeakSensor': 'moisture',
@@ -57,7 +58,8 @@ class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
         """Return the boolean response if the node is on."""
         on_val = bool(self._insteon_device_state.value)
 
-        if self._insteon_device_state.name == 'lightSensor':
+        if self._insteon_device_state.name in ['lightSensor',
+                                               'ioLincSensor']:
             return not on_val
 
         return on_val

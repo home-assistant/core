@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     DOMAIN as DOMAIN_CLIMATE, STATE_AUTO, STATE_COOL, STATE_HEAT)
 from homeassistant.components.homekit.const import (
     ATTR_VALUE, DEFAULT_MAX_TEMP_WATER_HEATER, DEFAULT_MIN_TEMP_WATER_HEATER,
-    PROP_MAX_VALUE, PROP_MIN_VALUE)
+    PROP_MAX_VALUE, PROP_MIN_STEP, PROP_MIN_VALUE)
 from homeassistant.components.water_heater import (
     DOMAIN as DOMAIN_WATER_HEATER)
 from homeassistant.const import (
@@ -48,6 +48,7 @@ async def test_thermostat(hass, hk_driver, cls, events):
     assert acc.aid == 2
     assert acc.category == 9  # Thermostat
 
+    assert acc.get_temperature_range() == (7.0, 35.0)
     assert acc.char_current_heat_cool.value == 0
     assert acc.char_target_heat_cool.value == 0
     assert acc.char_current_temp.value == 21.0
@@ -58,11 +59,12 @@ async def test_thermostat(hass, hk_driver, cls, events):
 
     assert acc.char_target_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_target_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
 
     hass.states.async_set(entity_id, STATE_HEAT,
                           {ATTR_OPERATION_MODE: STATE_HEAT,
-                           ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 18.0})
+                           ATTR_TEMPERATURE: 22.2,
+                           ATTR_CURRENT_TEMPERATURE: 17.8})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 1
@@ -193,10 +195,12 @@ async def test_thermostat_auto(hass, hk_driver, cls, events):
         == DEFAULT_MAX_TEMP
     assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] \
         == DEFAULT_MIN_TEMP
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.5
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] \
         == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] \
         == DEFAULT_MIN_TEMP
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.5
 
     hass.states.async_set(entity_id, STATE_AUTO,
                           {ATTR_OPERATION_MODE: STATE_AUTO,
@@ -339,10 +343,11 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     hass.states.async_set(entity_id, STATE_AUTO,
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_TARGET_TEMP_HIGH: 75.2,
-                           ATTR_TARGET_TEMP_LOW: 68,
+                           ATTR_TARGET_TEMP_LOW: 68.1,
                            ATTR_TEMPERATURE: 71.6,
                            ATTR_CURRENT_TEMPERATURE: 73.4})
     await hass.async_block_till_done()
+    assert acc.get_temperature_range() == (7.0, 35.0)
     assert acc.char_heating_thresh_temp.value == 20.0
     assert acc.char_cooling_thresh_temp.value == 24.0
     assert acc.char_current_temp.value == 23.0
@@ -358,28 +363,28 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_set_temperature[0]
     assert call_set_temperature[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == 73.4
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == 73.5
     assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 68
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'cooling threshold 73.4°F'
+    assert events[-1].data[ATTR_VALUE] == 'cooling threshold 73.5°F'
 
     await hass.async_add_job(
         acc.char_heating_thresh_temp.client_update_value, 22)
     await hass.async_block_till_done()
     assert call_set_temperature[1]
     assert call_set_temperature[1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 73.4
-    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_LOW] == 71.6
+    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 73.5
+    assert call_set_temperature[1].data[ATTR_TARGET_TEMP_LOW] == 71.5
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == 'heating threshold 71.6°F'
+    assert events[-1].data[ATTR_VALUE] == 'heating threshold 71.5°F'
 
     await hass.async_add_job(acc.char_target_temp.client_update_value, 24.0)
     await hass.async_block_till_done()
     assert call_set_temperature[2]
     assert call_set_temperature[2].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.2
+    assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.0
     assert len(events) == 3
-    assert events[-1].data[ATTR_VALUE] == '75.2°F'
+    assert events[-1].data[ATTR_VALUE] == '75.0°F'
 
 
 async def test_thermostat_get_temperature_range(hass, hk_driver, cls):
@@ -399,7 +404,7 @@ async def test_thermostat_get_temperature_range(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_OFF,
                           {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70})
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (15.6, 21.1)
+    assert acc.get_temperature_range() == (15.5, 21.0)
 
 
 async def test_water_heater(hass, hk_driver, cls, events):
@@ -425,6 +430,7 @@ async def test_water_heater(hass, hk_driver, cls, events):
         DEFAULT_MAX_TEMP_WATER_HEATER
     assert acc.char_target_temp.properties[PROP_MIN_VALUE] == \
         DEFAULT_MIN_TEMP_WATER_HEATER
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
 
     hass.states.async_set(entity_id, STATE_HEAT,
                           {ATTR_OPERATION_MODE: STATE_HEAT,
@@ -508,7 +514,7 @@ async def test_water_heater_get_temperature_range(hass, hk_driver, cls):
 
     hass.states.async_set(entity_id, STATE_HEAT)
     await hass.async_block_till_done()
-    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    acc = cls.thermostat(hass, hk_driver, 'WaterHeater', entity_id, 2, None)
 
     hass.states.async_set(entity_id, STATE_HEAT,
                           {ATTR_MIN_TEMP: 20, ATTR_MAX_TEMP: 25})
@@ -519,4 +525,4 @@ async def test_water_heater_get_temperature_range(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_OFF,
                           {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70})
     await hass.async_block_till_done()
-    assert acc.get_temperature_range() == (15.6, 21.1)
+    assert acc.get_temperature_range() == (15.5, 21.0)

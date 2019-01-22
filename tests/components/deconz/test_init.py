@@ -1,6 +1,9 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
@@ -21,8 +24,7 @@ CONFIG = {
 async def test_config_with_host_passed_to_config_entry(hass):
     """Test that configured options for a host are loaded via config entry."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
-            patch.object(deconz, 'configured_hosts', return_value=[]), \
-            patch.object(deconz, 'load_json', return_value={}):
+            patch.object(deconz, 'configured_hosts', return_value=[]):
         assert await async_setup_component(hass, deconz.DOMAIN, {
             deconz.DOMAIN: {
                 deconz.CONF_HOST: '1.2.3.4',
@@ -33,24 +35,10 @@ async def test_config_with_host_passed_to_config_entry(hass):
     assert len(mock_config_entries.flow.mock_calls) == 2
 
 
-async def test_config_file_passed_to_config_entry(hass):
-    """Test that configuration file for a host are loaded via config entry."""
-    with patch.object(hass, 'config_entries') as mock_config_entries, \
-            patch.object(deconz, 'configured_hosts', return_value=[]), \
-            patch.object(deconz, 'load_json',
-                         return_value={'host': '1.2.3.4'}):
-        assert await async_setup_component(hass, deconz.DOMAIN, {
-            deconz.DOMAIN: {}
-        }) is True
-    # Import flow started
-    assert len(mock_config_entries.flow.mock_calls) == 2
-
-
 async def test_config_without_host_not_passed_to_config_entry(hass):
     """Test that a configuration without a host does not initiate an import."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
-            patch.object(deconz, 'configured_hosts', return_value=[]), \
-            patch.object(deconz, 'load_json', return_value={}):
+            patch.object(deconz, 'configured_hosts', return_value=[]):
         assert await async_setup_component(hass, deconz.DOMAIN, {
             deconz.DOMAIN: {}
         }) is True
@@ -62,8 +50,7 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
     """Test that an already registered host does not initiate an import."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(deconz, 'configured_hosts',
-                         return_value=['1.2.3.4']), \
-            patch.object(deconz, 'load_json', return_value={}):
+                         return_value=['1.2.3.4']):
         assert await async_setup_component(hass, deconz.DOMAIN, {
             deconz.DOMAIN: {
                 deconz.CONF_HOST: '1.2.3.4',
@@ -179,11 +166,13 @@ async def test_service_configure(hass):
         await hass.async_block_till_done()
 
     # field does not start with /
-    with patch('pydeconz.DeconzSession.async_put_state',
-               return_value=mock_coro(True)):
-        await hass.services.async_call('deconz', 'configure', service_data={
-            'entity': 'light.test', 'field': 'state', 'data': data})
-        await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid):
+        with patch('pydeconz.DeconzSession.async_put_state',
+                   return_value=mock_coro(True)):
+            await hass.services.async_call(
+                'deconz', 'configure', service_data={
+                    'entity': 'light.test', 'field': 'state', 'data': data})
+            await hass.async_block_till_done()
 
 
 async def test_service_refresh_devices(hass):

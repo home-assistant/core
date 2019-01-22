@@ -135,12 +135,12 @@ def convert_to_float(state):
 
 def temperature_to_homekit(temperature, unit):
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS) * 2) / 2
 
 
 def temperature_to_states(temperature, unit):
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit), 1)
+    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
 def density_to_air_quality(density):

@@ -14,10 +14,6 @@ STORAGE_VERSION = 1
 @callback
 def async_is_onboarded(hass):
     """Return if Home Assistant has been onboarded."""
-    # Temporarily: if auth not active, always set onboarded=True
-    if not hass.auth.active:
-        return True
-
     return hass.data.get(DOMAIN, True)
 
 

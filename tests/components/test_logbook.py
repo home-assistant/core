@@ -4,12 +4,16 @@ import logging
 from datetime import (timedelta, datetime)
 import unittest
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SERVICE,
+    ATTR_ENTITY_ID, ATTR_SERVICE, ATTR_NAME,
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED, ATTR_HIDDEN,
+    STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
@@ -62,6 +66,12 @@ class TestComponentLogbook(unittest.TestCase):
         # Our service call will unblock when the event listeners have been
         # scheduled. This means that they may not have been processed yet.
         self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+
+        events = list(logbook._get_events(
+            self.hass, {}, dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1)))
+        assert len(events) == 2
 
         assert 1 == len(calls)
         last_call = calls[-1]
@@ -83,7 +93,9 @@ class TestComponentLogbook(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
-        self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
+
+        with pytest.raises(vol.Invalid):
+            self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
 
         # Logbook entry service call results in firing an event.
         # Our service call will unblock when the event listeners have been
@@ -136,8 +148,10 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
         eventA.data['old_state'] = None
 
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP),
+             eventA, eventB),
+            logbook._generate_filter_from_config({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -158,8 +172,10 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
         eventA.data['new_state'] = None
 
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP),
+             eventA, eventB),
+            logbook._generate_filter_from_config({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -180,8 +196,10 @@ class TestComponentLogbook(unittest.TestCase):
                                                  {ATTR_HIDDEN: 'true'})
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP),
+             eventA, eventB),
+            logbook._generate_filter_from_config({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -207,7 +225,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -230,10 +248,12 @@ class TestComponentLogbook(unittest.TestCase):
         config = logbook.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
-                logbook.CONF_DOMAINS: ['switch', ]}}})
+                logbook.CONF_DOMAINS: ['switch', 'alexa', DOMAIN_HOMEKIT]}}})
         events = logbook._exclude_events(
-            (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
-            config[logbook.DOMAIN])
+            (ha.Event(EVENT_HOMEASSISTANT_START),
+             ha.Event(EVENT_ALEXA_SMART_HOME),
+             ha.Event(EVENT_HOMEKIT_CHANGED), eventA, eventB),
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -245,22 +265,17 @@ class TestComponentLogbook(unittest.TestCase):
     def test_exclude_automation_events(self):
         """Test if automation entries can be excluded by entity_id."""
         name = 'My Automation Rule'
-        message = 'has been triggered'
         domain = 'automation'
         entity_id = 'automation.my_automation_rule'
         entity_id2 = 'automation.my_automation_rule_2'
         entity_id2 = 'sensor.blu'
 
-        eventA = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
+        eventA = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id,
         })
-        eventB = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
+        eventB = ha.Event(logbook.EVENT_AUTOMATION_TRIGGERED, {
             logbook.ATTR_NAME: name,
-            logbook.ATTR_MESSAGE: message,
-            logbook.ATTR_DOMAIN: domain,
             logbook.ATTR_ENTITY_ID: entity_id2,
         })
 
@@ -270,7 +285,40 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
+        entries = list(logbook.humanify(self.hass, events))
+
+        assert 2 == len(entries)
+        self.assert_entry(
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], name=name, domain=domain, entity_id=entity_id2)
+
+    def test_exclude_script_events(self):
+        """Test if script start can be excluded by entity_id."""
+        name = 'My Script Rule'
+        domain = 'script'
+        entity_id = 'script.my_script'
+        entity_id2 = 'script.my_script_2'
+        entity_id2 = 'sensor.blu'
+
+        eventA = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
+            logbook.ATTR_NAME: name,
+            logbook.ATTR_ENTITY_ID: entity_id,
+        })
+        eventB = ha.Event(logbook.EVENT_SCRIPT_STARTED, {
+            logbook.ATTR_NAME: name,
+            logbook.ATTR_ENTITY_ID: entity_id2,
+        })
+
+        config = logbook.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
+                logbook.CONF_ENTITIES: [entity_id, ]}}})
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -296,7 +344,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id2, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -313,22 +361,35 @@ class TestComponentLogbook(unittest.TestCase):
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
+        event_alexa = ha.Event(EVENT_ALEXA_SMART_HOME, {'request': {
+            'namespace': 'Alexa.Discovery',
+            'name': 'Discover',
+        }})
+        event_homekit = ha.Event(EVENT_HOMEKIT_CHANGED, {
+            ATTR_ENTITY_ID: 'lock.front_door',
+            ATTR_DISPLAY_NAME: 'Front Door',
+            ATTR_SERVICE: 'lock',
+        })
+
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
         config = logbook.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_INCLUDE: {
-                logbook.CONF_DOMAINS: ['sensor', ]}}})
+                logbook.CONF_DOMAINS: ['sensor', 'alexa', DOMAIN_HOMEKIT]}}})
         events = logbook._exclude_events(
-            (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
-            config[logbook.DOMAIN])
+            (ha.Event(EVENT_HOMEASSISTANT_START),
+             event_alexa, event_homekit, eventA, eventB),
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
-        assert 2 == len(entries)
+        assert 4 == len(entries)
         self.assert_entry(entries[0], name='Home Assistant', message='started',
                           domain=ha.DOMAIN)
-        self.assert_entry(entries[1], pointB, 'blu', domain='sensor',
+        self.assert_entry(entries[1], name='Amazon Alexa', domain='alexa')
+        self.assert_entry(entries[2], name='HomeKit', domain=DOMAIN_HOMEKIT)
+        self.assert_entry(entries[3], pointB, 'blu', domain='sensor',
                           entity_id=entity_id2)
 
     def test_include_exclude_events(self):
@@ -356,15 +417,20 @@ class TestComponentLogbook(unittest.TestCase):
                     logbook.CONF_ENTITIES: ['sensor.bli', ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA1, eventA2, eventA3,
-             eventB1, eventB2), config[logbook.DOMAIN])
+             eventB1, eventB2),
+            logbook._generate_filter_from_config(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
-        assert 3 == len(entries)
+        assert 5 == len(entries)
         self.assert_entry(entries[0], name='Home Assistant', message='started',
                           domain=ha.DOMAIN)
-        self.assert_entry(entries[1], pointA, 'blu', domain='sensor',
+        self.assert_entry(entries[1], pointA, 'bla', domain='switch',
+                          entity_id=entity_id)
+        self.assert_entry(entries[2], pointA, 'blu', domain='sensor',
                           entity_id=entity_id2)
-        self.assert_entry(entries[2], pointB, 'blu', domain='sensor',
+        self.assert_entry(entries[3], pointB, 'bla', domain='switch',
+                          entity_id=entity_id)
+        self.assert_entry(entries[4], pointB, 'blu', domain='sensor',
                           entity_id=entity_id2)
 
     def test_exclude_auto_groups(self):
@@ -377,7 +443,9 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointA, entity_id2, 20,
                                                  {'auto': True})
 
-        events = logbook._exclude_events((eventA, eventB), {})
+        events = logbook._exclude_events(
+            (eventA, eventB),
+            logbook._generate_filter_from_config({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 1 == len(entries)
@@ -395,7 +463,9 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(
             pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB)
 
-        events = logbook._exclude_events((eventA, eventB), {})
+        events = logbook._exclude_events(
+            (eventA, eventB),
+            logbook._generate_filter_from_config({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 1 == len(entries)
@@ -550,23 +620,21 @@ class TestComponentLogbook(unittest.TestCase):
         }, time_fired=event_time_fired)
 
 
-async def test_logbook_view(hass, aiohttp_client):
+async def test_logbook_view(hass, hass_client):
     """Test the logbook view."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
-    await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     response = await client.get(
         '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
     assert response.status == 200
 
 
-async def test_logbook_view_period_entity(hass, aiohttp_client):
+async def test_logbook_view_period_entity(hass, hass_client):
     """Test the logbook view with period and entity."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
-    await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     entity_id_test = 'switch.test'
@@ -578,7 +646,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
@@ -712,7 +780,55 @@ async def test_humanify_homekit_changed_event(hass):
     assert event1['entity_id'] == 'lock.front_door'
 
     assert event2['name'] == 'HomeKit'
-    assert event1['domain'] == DOMAIN_HOMEKIT
+    assert event2['domain'] == DOMAIN_HOMEKIT
     assert event2['message'] == \
         'send command set_cover_position to 75 for Window'
     assert event2['entity_id'] == 'cover.window'
+
+
+async def test_humanify_automation_triggered_event(hass):
+    """Test humanifying Automation Trigger event."""
+    event1, event2 = list(logbook.humanify(hass, [
+        ha.Event(EVENT_AUTOMATION_TRIGGERED, {
+            ATTR_ENTITY_ID: 'automation.hello',
+            ATTR_NAME: 'Hello Automation',
+        }),
+        ha.Event(EVENT_AUTOMATION_TRIGGERED, {
+            ATTR_ENTITY_ID: 'automation.bye',
+            ATTR_NAME: 'Bye Automation',
+        }),
+    ]))
+
+    assert event1['name'] == 'Hello Automation'
+    assert event1['domain'] == 'automation'
+    assert event1['message'] == 'has been triggered'
+    assert event1['entity_id'] == 'automation.hello'
+
+    assert event2['name'] == 'Bye Automation'
+    assert event2['domain'] == 'automation'
+    assert event2['message'] == 'has been triggered'
+    assert event2['entity_id'] == 'automation.bye'
+
+
+async def test_humanify_script_started_event(hass):
+    """Test humanifying Script Run event."""
+    event1, event2 = list(logbook.humanify(hass, [
+        ha.Event(EVENT_SCRIPT_STARTED, {
+            ATTR_ENTITY_ID: 'script.hello',
+            ATTR_NAME: 'Hello Script'
+        }),
+        ha.Event(EVENT_SCRIPT_STARTED, {
+            ATTR_ENTITY_ID: 'script.bye',
+            ATTR_NAME: 'Bye Script'
+        }),
+    ]))
+
+    assert event1['name'] == 'Hello Script'
+    assert event1['domain'] == 'script'
+    assert event1['message'] == 'started'
+    assert event1['entity_id'] == 'script.hello'
+
+    assert event2['name'] == 'Bye Script'
+    assert event2['domain'] == 'script'
+    assert event2['message'] == 'started'
+    assert event2['entity_id'] == 'script.bye'

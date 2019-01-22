@@ -16,12 +16,12 @@ REQUEST_ID = "19ef7e78-fe15-4e94-99dd-0c0b1e8753c3"
 REQUEST_TIMESTAMP = "2017-01-21T17:54:18.952Z"
 CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
 
-calls = []
-
 
 @pytest.fixture
-async def fixture(hass, aiohttp_client):
-    """Initialize a Home Assistant server for testing this module."""
+async def calls(hass, fixture):
+    """Return a list of Dialogflow calls triggered."""
+    calls = []
+
     @callback
     def mock_service(call):
         """Mock action call."""
@@ -29,6 +29,12 @@ async def fixture(hass, aiohttp_client):
 
     hass.services.async_register('test', 'dialogflow', mock_service)
 
+    return calls
+
+
+@pytest.fixture
+async def fixture(hass, aiohttp_client):
+    """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {
         "dialogflow": {},
     })
@@ -371,7 +377,7 @@ async def test_intent_request_without_slots(hass, fixture):
     assert "You are both home, you silly" == text
 
 
-async def test_intent_request_calling_service(fixture):
+async def test_intent_request_calling_service(fixture, calls):
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action

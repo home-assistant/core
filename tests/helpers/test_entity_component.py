@@ -431,3 +431,58 @@ async def test_update_entity(hass):
 
     assert len(entity.async_update_ha_state.mock_calls) == 2
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
+
+
+async def test_set_service_race(hass):
+    """Test race condition on setting service."""
+    exception = False
+
+    def async_loop_exception_handler(_, _2) -> None:
+        """Handle all exception inside the core loop."""
+        nonlocal exception
+        exception = True
+
+    hass.loop.set_exception_handler(async_loop_exception_handler)
+
+    await async_setup_component(hass, 'group', {})
+    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name='yo')
+
+    for i in range(2):
+        hass.async_create_task(component.async_add_entities([MockEntity()]))
+
+    await hass.async_block_till_done()
+    assert not exception
+
+
+async def test_extract_all_omit_entity_id(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') in caplog.text
+
+
+async def test_extract_all_use_match_all(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service', {'entity_id': 'all'})
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') not in caplog.text

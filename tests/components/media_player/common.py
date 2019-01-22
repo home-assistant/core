@@ -11,9 +11,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP)
+    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_TOGGLE, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP)
 from homeassistant.loader import bind_hass
 
 
@@ -93,6 +93,13 @@ def media_pause(hass, entity_id=None):
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
+
+
+@bind_hass
+def media_stop(hass, entity_id=None):
+    """Send the media player the command for stop."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
 
 
 @bind_hass

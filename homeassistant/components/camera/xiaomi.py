@@ -107,7 +107,7 @@ class XiaomiCamera(Camera):
             _LOGGER.warning("There don't appear to be any folders")
             return False
 
-        first_dir = dirs[-1]
+        first_dir = latest_dir = dirs[-1]
         try:
             ftp.cwd(first_dir)
         except error_perm as exc:

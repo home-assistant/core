@@ -97,8 +97,8 @@ async def async_setup(hass, yaml_config):
     app._on_startup.freeze()
     await app.startup()
 
-    handler = None
-    server = None
+    runner = None
+    site = None
 
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
@@ -115,25 +115,24 @@ async def async_setup(hass, yaml_config):
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        if server:
-            server.close()
-            await server.wait_closed()
-        await app.shutdown()
-        if handler:
-            await handler.shutdown(10)
-        await app.cleanup()
+        if site:
+            await site.stop()
+        if runner:
+            await runner.cleanup()
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         upnp_listener.start()
-        nonlocal handler
-        nonlocal server
+        nonlocal site
+        nonlocal runner
 
-        handler = app.make_handler(loop=hass.loop)
+        runner = web.AppRunner(app)
+        await runner.setup()
+
+        site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)
 
         try:
-            server = await hass.loop.create_server(
-                handler, config.host_ip_addr, config.listen_port)
+            await site.start()
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           config.listen_port, error)

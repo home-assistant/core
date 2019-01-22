@@ -16,7 +16,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pygtfs-homeassistant==0.1.3.dev0']
+REQUIREMENTS = ['pygtfs==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,9 +169,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     import pygtfs
 
-    split_file_name = os.path.splitext(data)
+    (gtfs_root, _) = os.path.splitext(data)
 
-    sqlite_file = "{}.sqlite".format(split_file_name[0])
+    sqlite_file = "{}.sqlite?check_same_thread=False".format(gtfs_root)
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 

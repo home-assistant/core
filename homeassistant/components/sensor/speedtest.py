@@ -11,9 +11,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['speedtest-cli==2.0.2']
@@ -76,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(DOMAIN, 'update_speedtest', update)
 
 
-class SpeedtestSensor(Entity):
+class SpeedtestSensor(RestoreEntity):
     """Implementation of a speedtest.net sensor."""
 
     def __init__(self, speedtest_data, sensor_type):
@@ -137,7 +136,8 @@ class SpeedtestSensor(Entity):
 
     async def async_added_to_hass(self):
         """Handle all entity which are about to be added."""
-        state = await async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state

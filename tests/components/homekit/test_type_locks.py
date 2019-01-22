@@ -82,7 +82,6 @@ async def test_no_code(hass, hk_driver, config, events):
     # Set from HomeKit
     call_lock = async_mock_service(hass, DOMAIN, 'lock')
 
-    acc.char_target_state.value = 0
     await hass.async_add_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_lock

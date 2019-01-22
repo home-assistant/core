@@ -8,39 +8,27 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
-from tests.common import MockUser, CLIENT_ID
+from tests.common import mock_coro
+
+
+@pytest.fixture(autouse=True)
+def prevent_io():
+    """Fixture to prevent certain I/O from happening."""
+    with patch('homeassistant.components.http.ban.async_load_ip_bans_config',
+               side_effect=lambda *args: mock_coro([])):
+        yield
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client):
+def hass_ws_client(aiohttp_client, hass_access_token):
     """Websocket client fixture connected to websocket server."""
-    async def create_client(hass, access_token=None):
+    async def create_client(hass, access_token=hass_access_token):
         """Create a websocket client."""
         assert await async_setup_component(hass, 'websocket_api')
 
         client = await aiohttp_client(hass.http.app)
 
-        patches = []
-
-        if access_token is None:
-            patches.append(patch(
-                'homeassistant.auth.AuthManager.active', return_value=False))
-            patches.append(patch(
-                'homeassistant.auth.AuthManager.support_legacy',
-                return_value=True))
-            patches.append(patch(
-                'homeassistant.components.websocket_api.auth.'
-                'validate_password', return_value=True))
-        else:
-            patches.append(patch(
-                'homeassistant.auth.AuthManager.active', return_value=True))
-            patches.append(patch(
-                'homeassistant.components.http.auth.setup_auth'))
-
-        for p in patches:
-            p.start()
-
-        try:
+        with patch('homeassistant.components.http.auth.setup_auth'):
             websocket = await client.ws_connect(URL)
             auth_resp = await websocket.receive_json()
             assert auth_resp['type'] == TYPE_AUTH_REQUIRED
@@ -59,21 +47,8 @@ def hass_ws_client(aiohttp_client):
             auth_ok = await websocket.receive_json()
             assert auth_ok['type'] == TYPE_AUTH_OK
 
-        finally:
-            for p in patches:
-                p.stop()
-
         # wrap in client
         websocket.client = client
         return websocket
 
     return create_client
-
-
-@pytest.fixture
-def hass_access_token(hass):
-    """Return an access token to access Home Assistant."""
-    user = MockUser().add_to_hass(hass)
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(user, CLIENT_ID))
-    yield hass.auth.async_create_access_token(refresh_token)

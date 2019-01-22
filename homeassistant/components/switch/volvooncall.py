@@ -8,17 +8,18 @@ https://home-assistant.io/components/switch.volvooncall/
 """
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity, RESOURCES
+from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a Volvo switch."""
     if discovery_info is None:
         return
-    add_entities([VolvoSwitch(hass, *discovery_info)])
+    async_add_entities([VolvoSwitch(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSwitch(VolvoEntity, ToggleEntity):
@@ -27,17 +28,12 @@ class VolvoSwitch(VolvoEntity, ToggleEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.vehicle.is_heater_on
+        return self.instrument.state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.vehicle.start_heater()
+        await self.instrument.turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.vehicle.stop_heater()
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return RESOURCES[self._attribute][2]
+        await self.instrument.turn_off()

@@ -11,14 +11,14 @@ CONF_PROJECT_ID = 'project_id'
 CONF_ALIASES = 'aliases'
 CONF_API_KEY = 'api_key'
 CONF_ROOM_HINT = 'room'
+CONF_ALLOW_UNLOCK = 'allow_unlock'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
-    'media_player', 'scene', 'script', 'switch', 'vacuum',
+    'media_player', 'scene', 'script', 'switch', 'vacuum', 'lock',
 ]
-CLIMATE_MODE_HEATCOOL = 'heatcool'
-CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
+DEFAULT_ALLOW_UNLOCK = False
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
@@ -27,6 +27,7 @@ TYPE_VACUUM = PREFIX_TYPES + 'VACUUM'
 TYPE_SCENE = PREFIX_TYPES + 'SCENE'
 TYPE_FAN = PREFIX_TYPES + 'FAN'
 TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'
+TYPE_LOCK = PREFIX_TYPES + 'LOCK'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -40,3 +41,4 @@ ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
 ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = 'protocolError'
 ERR_UNKNOWN_ERROR = 'unknownError'
+ERR_FUNCTION_NOT_SUPPORTED = 'functionNotSupported'

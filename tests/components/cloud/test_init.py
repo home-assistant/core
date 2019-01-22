@@ -30,7 +30,8 @@ def test_constructor_loads_info_from_constant():
             'region': 'test-region',
             'relayer': 'test-relayer',
             'google_actions_sync_url': 'test-google_actions_sync_url',
-            'subscription_info_url': 'test-subscription-info-url'
+            'subscription_info_url': 'test-subscription-info-url',
+            'cloudhook_create_url': 'test-cloudhook_create_url',
         }
     }):
         result = yield from cloud.async_setup(hass, {
@@ -46,6 +47,7 @@ def test_constructor_loads_info_from_constant():
     assert cl.relayer == 'test-relayer'
     assert cl.google_actions_sync_url == 'test-google_actions_sync_url'
     assert cl.subscription_info_url == 'test-subscription-info-url'
+    assert cl.cloudhook_create_url == 'test-cloudhook_create_url'
 
 
 @asyncio.coroutine
