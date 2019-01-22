@@ -29,5 +29,11 @@
             "no_bridges": "No deCONZ bridges discovered",
             "one_instance_only": "Component only supports one deCONZ instance"
         }
+    },
+    "options": {
+        "title": "Options for deCONZ Zigbee gateway",
+        "step": {},
+        "error": {},
+        "abort": {}
     }
 }

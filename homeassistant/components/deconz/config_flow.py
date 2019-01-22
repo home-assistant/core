@@ -183,7 +183,7 @@ class DeconzOptionsFlowHandler(data_entry_flow.FlowHandler):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self, config, options):
         """"""
         pass
 

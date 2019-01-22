@@ -568,6 +568,7 @@ class ConfigEntries:
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
+            options=None,
             source=flow.context['source'],
             connection_class=flow.CONNECTION_CLASS,
         )
@@ -678,7 +679,7 @@ class Options:
     def _async_create_flow(self, handler, context, data: ConfigEntry):
         """"""
         handler = HANDLERS[handler].async_get_options_flow()
-        flow = handler(data['data'])
+        flow = handler(data['data'], data['options'])
         flow.init_step = context['source']
         self.active_options[flow.flow_id] = data
         return flow
