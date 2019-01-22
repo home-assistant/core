@@ -90,7 +90,7 @@ class LeafRangeSensor(LeafEntity):
         """Battery range in miles or kms."""
         ret = 0
 
-        if self.ac_on is True:
+        if self.ac_on:
             ret = self.car.data[DATA_RANGE_AC]
         else:
             ret = self.car.data[DATA_RANGE_AC_OFF]
