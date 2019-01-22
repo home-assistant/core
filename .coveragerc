@@ -458,6 +458,7 @@ omit =
     homeassistant/components/spider.py
     homeassistant/components/*/spider.py
 
+    homeassistant/components/air_quality/foobot.py
     homeassistant/components/air_quality/opensensemap.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
@@ -766,7 +767,6 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/flunearyou.py
     homeassistant/components/sensor/folder.py
-    homeassistant/components/sensor/foobot.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
