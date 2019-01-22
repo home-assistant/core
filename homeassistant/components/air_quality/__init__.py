@@ -132,11 +132,6 @@ class AirQualityEntity(Entity):
         return None
 
     @property
-    def volatile_organic_compound(self):
-        """Return the VOC (volatile organic compound) level."""
-        return None
-
-    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {}
