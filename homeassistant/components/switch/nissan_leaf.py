@@ -46,7 +46,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def is_on(self):
         """Return true if climate control is on."""
-        return self.car.data[DATA_CLIMATE] is True
+        return self.car.data[DATA_CLIMATE]
 
     async def async_turn_on(self, **kwargs):
         """Turn on climate control."""
