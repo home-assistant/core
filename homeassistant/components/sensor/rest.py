@@ -159,7 +159,7 @@ class RestSensor(Entity):
                     _LOGGER.debug("Erroneous JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
-        if value is None and self._value_template is not None:
+        if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
                 value, None)
 
