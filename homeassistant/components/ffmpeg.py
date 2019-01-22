@@ -125,9 +125,10 @@ class FFmpegManager:
     
     async def async_get_ffmpeg_stream_content_type(self):
         """Return HTTP content type for ffmpeg stream."""
+        major_version = 3
+
         version_string = await self.async_get_version()
         result = re.search(r"(\d+)\.", version_string)
-        major_version = 3
         if result is not None:
             major_version = int(result.group(0))
         
