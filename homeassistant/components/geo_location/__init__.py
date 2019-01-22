@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DISTANCE = 'distance'
 ATTR_SOURCE = 'source'
 
-DOMAIN = 'geo_location'
 DEPENDENCIES = ['group']
+DOMAIN = 'geo_location'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
