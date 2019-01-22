@@ -46,7 +46,6 @@ PROP_TO_ATTR = {
     'particulate_matter_10': ATTR_PM_10,
     'particulate_matter_2_5': ATTR_PM_2_5,
     'sulphur_dioxide': ATTR_SO2,
-    'volatile_organic_compound': ATTR_VOC,
 }
 
 
