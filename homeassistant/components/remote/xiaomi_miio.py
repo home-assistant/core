@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_HIDDEN, default=True): cv.boolean,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_COMMANDS, default={}):
-        vol.Schema({cv.slug: COMMAND_SCHEMA}),
+        cv.schema_with_slug_keys(COMMAND_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

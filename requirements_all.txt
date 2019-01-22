@@ -339,8 +339,14 @@ dsmr_parser==0.12
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
 
+# homeassistant.components.ecoal_boiler
+ecoaliface==0.4.0
+
 # homeassistant.components.edp_redy
 edp_redy==0.0.3
+
+# homeassistant.components.device_tracker.ee_brightbox
+eebrightbox==0.0.4
 
 # homeassistant.components.media_player.horizon
 einder==0.3.1
@@ -625,7 +631,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==3.0.9
+locationsharinglib==3.0.11
 
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
@@ -1007,7 +1013,7 @@ pyfttt==0.3
 
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # homeassistant.components.sensor.skybeacon
-pygatt==3.2.0
+pygatt[GATTTOOL]==3.2.0
 
 # homeassistant.components.cover.gogogate2
 pygogogate2==0.1.1
@@ -1294,7 +1300,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.4
 
 # homeassistant.components.nest
-python-nest==4.0.5
+python-nest==4.1.0
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
@@ -1733,7 +1739,7 @@ yeelight==0.4.3
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.01.10
+youtube_dl==2019.01.17
 
 # homeassistant.components.light.zengge
 zengge==0.2
