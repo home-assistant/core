@@ -5,6 +5,7 @@ Please refer to the main platform component for configuration details
 
 import logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.components.nissan_leaf import (
     DATA_BATTERY, DATA_CHARGING, DATA_LEAF, DATA_RANGE_AC, DATA_RANGE_AC_OFF,
@@ -106,8 +107,8 @@ class LeafRangeSensor(LeafEntity):
         """Battery range unit."""
         if (not self.car.hass.config.units.is_metric or
                 self.car.force_miles):
-            return "mi"
-        return "km"
+            return LENGTH_MILES
+        return LENGTH_KILOMETERS
 
     @property
     def icon(self):
