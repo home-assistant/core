@@ -221,7 +221,8 @@ class ONVIFHassCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                await self._manager.async_get_ffmpeg_stream_content_type())
+                await self.hass.data[DATA_FFMPEG]
+                    .async_get_ffmpeg_stream_content_type())
         finally:
             await stream.close()
 

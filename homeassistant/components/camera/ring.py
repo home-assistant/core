@@ -142,7 +142,7 @@ class RingCam(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                await self._manager.async_get_ffmpeg_stream_content_type())
+                await self._ffmpeg.async_get_ffmpeg_stream_content_type())
         finally:
             await stream.close()
 
