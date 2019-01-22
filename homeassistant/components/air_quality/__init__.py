@@ -25,7 +25,6 @@ ATTR_PM_0_1 = 'particulate_matter_0_1'
 ATTR_PM_10 = 'particulate_matter_10'
 ATTR_PM_2_5 = 'particulate_matter_2_5'
 ATTR_SO2 = 'sulphur_dioxide'
-ATTR_VOC = 'volatile_organic_compound'
 
 DOMAIN = 'air_quality'
 
@@ -46,7 +45,6 @@ PROP_TO_ATTR = {
     'particulate_matter_10': ATTR_PM_10,
     'particulate_matter_2_5': ATTR_PM_2_5,
     'sulphur_dioxide': ATTR_SO2,
-    'volatile_organic_compound': ATTR_VOC,
 }
 
 
@@ -129,11 +127,6 @@ class AirQualityEntity(Entity):
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return None
-
-    @property
-    def volatile_organic_compound(self):
-        """Return the VOC (volatile organic compound) level."""
         return None
 
     @property
