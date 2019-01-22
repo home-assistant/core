@@ -43,7 +43,14 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     entities = []
     for person_conf in conf:
-        entities.append(Person(person_conf))
+        user_id = person_conf.get(CONF_USER_ID)
+        if (user_id is not None
+                and await hass.auth.async_get_user(user_id) is None):
+            _LOGGER.error(
+                "Invalid user_id detected for person %s",
+                person_conf[CONF_NAME])
+            continue
+        entities.append(Person(person_conf, user_id))
 
     await component.async_add_entities(entities)
 
@@ -53,7 +60,7 @@ async def async_setup(hass, config):
 class Person(RestoreEntity):
     """Represent a tracked Person."""
 
-    def __init__(self, config):
+    def __init__(self, config, user_id):
         """Set up person."""
         self._name = config[CONF_NAME]
         self._latitude = None
@@ -61,7 +68,7 @@ class Person(RestoreEntity):
         self._source = None
         self._state = None
         self._trackers = config.get(CONF_DEVICE_TRACKERS)
-        self._user_id = config.get(CONF_USER_ID)
+        self._user_id = user_id
 
     @property
     def latitude(self):
