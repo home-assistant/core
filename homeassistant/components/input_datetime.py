@@ -46,14 +46,15 @@ def has_date_or_time(conf):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
             vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL): cv.string,
-        }, has_date_or_time)})
+        }, has_date_or_time)
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 
