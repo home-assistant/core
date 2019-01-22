@@ -30,7 +30,7 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA),
 })
 
 
