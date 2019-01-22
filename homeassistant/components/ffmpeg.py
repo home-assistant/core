@@ -104,7 +104,7 @@ class FFmpegManager:
     def binary(self):
         """Return ffmpeg binary from config."""
         return self._bin
-    
+
     async def async_get_version(self):
         """Return ffmpeg version."""
         if self._version is None:
@@ -113,16 +113,16 @@ class FFmpegManager:
                 loop=self.hass.loop,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE)
-            
+
             first_line = (await proc.stdout.readline()).decode()
             _LOGGER.debug(first_line)
 
             result = re.search(r"ffmpeg version (\S*)", first_line)
             if result is not None:
                 self._version = result.group(0)
-            
+
         return self._version
-    
+
     async def async_get_ffmpeg_stream_content_type(self):
         """Return HTTP content type for ffmpeg stream."""
         major_version = 3
@@ -131,10 +131,10 @@ class FFmpegManager:
         result = re.search(r"(\d+)\.", version_string)
         if result is not None:
             major_version = int(result.group(0))
-        
+
         if major_version > 3:
             return 'multipart/x-mixed-replace;boundary=ffmpeg'
-        
+
         return 'multipart/x-mixed-replace;boundary=ffserver'
 
 
