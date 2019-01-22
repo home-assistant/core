@@ -208,7 +208,3 @@ async def test_setup_with_custom_location(hass):
 
             assert mock_feed.call_args == call(
                 (15.1, 25.2), filter_categories=[], filter_radius=200.0)
-
-
-# async def test_group_updates(hass):
-#     """Test the behavior of the catch-all group."""
