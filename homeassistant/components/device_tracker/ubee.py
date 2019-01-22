@@ -71,23 +71,18 @@ class UbeeDeviceScanner(DeviceScanner):
         return None
 
     def _update_info(self):
-        """Retrieve latest information from the Ubee router.
-
-        Returns boolean if scanning successful.
-        """
+        """Retrieve latest information from the Ubee router."""
         if not self.success_init:
-            return False
+            return
 
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
         results = self.get_connected_devices()
 
         if results is None:
             _LOGGER.warning("Error scanning devices")
-            return False
+            return
 
         self.last_results = results or []
-
-        return True
 
     def get_connected_devices(self):
         """List connected devices with pyubee."""
