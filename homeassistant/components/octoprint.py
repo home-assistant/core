@@ -92,6 +92,10 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
 
+    if DOMAIN not in config:
+        # Skip the setup if there is no configuration present
+        return True
+
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
         ssl = 's' if printer[CONF_SSL] else ''
