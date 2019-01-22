@@ -16,7 +16,7 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
-    CONF_NAME)
+    CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -105,7 +105,7 @@ class OpenWeatherMapWeather(WeatherEntity):
             return [k for k, v in CONDITION_CLASSES.items() if
                     self.data.get_weather_code() in v][0]
         except IndexError:
-            return None
+            return STATE_UNKNOWN
 
     @property
     def temperature(self):

@@ -8,7 +8,6 @@ import requests_mock
 from homeassistant import core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor.google_wifi as google_wifi
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
 
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -169,7 +168,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
             sensor = self.sensor_dict[name]['sensor']
             self.fake_delay(2)
             sensor.update()
-            assert STATE_UNKNOWN == sensor.state
+            assert sensor.state is None
 
     @requests_mock.Mocker()
     def test_update_when_value_changed(self, mock_req):
@@ -190,7 +189,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 elif name == google_wifi.ATTR_NEW_VERSION:
                     assert 'Latest' == sensor.state
                 elif name == google_wifi.ATTR_LOCAL_IP:
-                    assert STATE_UNKNOWN == sensor.state
+                    assert sensor.state is None
                 else:
                     assert 'next' == sensor.state
 
@@ -204,7 +203,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 sensor = self.sensor_dict[name]['sensor']
                 self.fake_delay(2)
                 sensor.update()
-                assert STATE_UNKNOWN == sensor.state
+                assert sensor.state is None
 
     def test_update_when_unavailable(self):
         """Test state updates when Google Wifi unavailable."""
