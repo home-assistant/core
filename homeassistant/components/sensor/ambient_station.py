@@ -150,7 +150,7 @@ class AmbientWeatherSensor(Entity):
         try:
             self._state = latest_data[self._condition]
         except KeyError:
-            _LOGGER.warning('No data for condition: %s', self._condition)
+            return
 
 
 class AmbientStationData:
