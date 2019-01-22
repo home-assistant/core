@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.waze_travel_time/
 """
 from datetime import timedelta
+from homeassistant.util import Throttle
 import logging
 
 import voluptuous as vol
@@ -39,7 +40,7 @@ ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
-SCAN_INTERVAL = timedelta(minutes=5)
+CONF_UPDATE_INTERVAL = 'update_interval'
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
@@ -51,6 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
     vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(minutes=5)):
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -63,11 +66,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
+    update_interval = config.get(CONF_UPDATE_INTERVAL)
 
     sensor = WazeTravelTime(name, origin, destination, region,
-                            incl_filter, excl_filter, realtime)
+                            incl_filter, excl_filter, realtime,update_interval)
 
-    add_entities([sensor])
+    add_entities([sensor],True)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(
@@ -84,7 +88,7 @@ class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                 incl_filter, excl_filter, realtime):
+                 incl_filter, excl_filter, realtime, interval):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
@@ -94,6 +98,7 @@ class WazeTravelTime(Entity):
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
+        self.update = Throttle(interval)(self.update)
 
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
