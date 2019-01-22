@@ -89,7 +89,7 @@ class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                 incl_filter, excl_filter, realtime, interval):
+                incl_filter, excl_filter, realtime, interval):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
