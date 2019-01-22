@@ -73,7 +73,7 @@ SENSORS = {
     TYPE_ASTHMA_HISTORIC: (
         'HistoricalSensor', 'Asthma Index: Historical Average', 'mdi:flower'),
     TYPE_DISEASE_FORECAST: (
-        'ForecastSensor', 'Cold & Flu: Forecasted Average', 'mdi:snowflake')
+        'ForecastSensor', 'Cold Flu: Forecasted Average', 'mdi:snowflake')
 }
 
 RATING_MAPPING = [{
