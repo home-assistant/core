@@ -94,9 +94,9 @@ class EbusdData:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
                 self._address, self._circuit, name, CACHE_TTL)
-            if 'not found' in command_result:
-                _LOGGER.warning("Element not found: %s", name)
-                raise RuntimeError("Element not found")
+            if 'ERR:' in command_result:
+                _LOGGER.error(command_result)
+                raise RuntimeError("Error in reading ebus")
             else:
                 self.value[name] = command_result
         except socket.timeout:
