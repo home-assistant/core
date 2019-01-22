@@ -95,8 +95,8 @@ class LeafRangeSensor(LeafEntity):
         else:
             ret = self.car.data[DATA_RANGE_AC_OFF]
 
-        if (self.car.hass.config.units.is_metric is False or
-                self.car.force_miles is True):
+        if (not self.car.hass.config.units.is_metric or
+                self.car.force_miles):
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
         return round(ret, 0)
