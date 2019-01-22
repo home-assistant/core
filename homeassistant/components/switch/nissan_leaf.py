@@ -23,13 +23,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for key, value in hass.data[DATA_LEAF].items():
-        _LOGGER.debug("Adding switch for item key=%s, value=%s", key, value)
-        _LOGGER.debug("Adding LeafChargeSwitch(%s)", value)
         devices.append(LeafChargeSwitch(value))
-        _LOGGER.debug("Adding LeafClimateSwitch(%s)", value)
         devices.append(LeafClimateSwitch(value))
 
-    _LOGGER.debug("Calling add_devices for switches")
     add_devices(devices, True)
 
 
