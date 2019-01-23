@@ -54,14 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    def __init__(self, token, country_code, lat, lon,
-                 location_type):
+    def __init__(self, token, country_code, lat, lon):
         """Initialize the sensor."""
         self._token = token
         self._country_code = country_code
         self._latitude = lat
         self._longitude = lon
-        self._location_type = location_type
 
         if country_code is not None:
             self._device_name = country_code
