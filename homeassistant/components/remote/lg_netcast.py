@@ -62,8 +62,11 @@ class LGNetcastRemote(RemoteDevice):
         from pylgnetcast import LgNetCastError, LG_QUERY
         try:
             with self._client as client:
-                client.query_data(LG_QUERY.VOLUME_INFO)
-                self._state = STATE_ON
+                volume_info = client.query_data(LG_QUERY.VOLUME_INFO)
+                if volume_info:
+                    self._state = STATE_ON
+                else:
+                    self._state = STATE_OFF
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
@@ -104,8 +107,7 @@ class LGNetcastRemote(RemoteDevice):
             for cmdline in command:
                 try:
                     with self._client as client:
-                        if isinstance(cmdline, str):
-                            cmdline = getattr(LG_COMMAND, cmdline.upper())
+                        cmdline = getattr(LG_COMMAND, cmdline.upper())
                         client.send_command(cmdline)
                 except (LgNetCastError, RequestException):
                     self._state = STATE_OFF
