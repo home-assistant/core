@@ -306,7 +306,7 @@ class MpdDevice(MediaPlayerDevice):
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
-                _LOGGER.warning(str.format("Unknown playlist name %s.",
+                _LOGGER.warning(str.format("Unknown playlist name {0}.",
                                            media_id))
             self._client.clear()
             self._client.load(media_id)
