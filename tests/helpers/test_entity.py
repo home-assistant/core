@@ -2,14 +2,16 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-import homeassistant.helpers.entity as entity
-from homeassistant.core import Context
-from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import Context
+import homeassistant.helpers.entity as entity
 from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant
@@ -112,6 +114,64 @@ class TestHelpersEntity:
             self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
+
+    def test_temperature_conversion(self):
+        """Test celsius is converted to fahrenheit."""
+        with patch('homeassistant.helpers.entity.Entity.state', new=25), \
+            patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
+                  new=TEMP_CELSIUS), \
+            patch.object(self.hass.config.units, 'temperature_unit',
+                         new=TEMP_FAHRENHEIT):
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
+            state = self.hass.states.get(self.entity.entity_id)
+
+        assert state.state == '77'
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
+
+    def test_temperature_conversion_sets_unit_for_unknown(self):
+        """Test unit of measure is still set even if state unknown."""
+        with patch('homeassistant.helpers.entity.Entity.state',
+                   new=STATE_UNKNOWN), \
+            patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
+                  new=TEMP_CELSIUS), \
+            patch.object(self.hass.config.units, 'temperature_unit',
+                         new=TEMP_FAHRENHEIT):
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
+            state = self.hass.states.get(self.entity.entity_id)
+
+        assert state.state == STATE_UNKNOWN
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
+
+    def test_temperature_conversion_sets_unit_for_unavailable(self):
+        """Test unit of measure is still set even if state unavailable."""
+        with patch('homeassistant.helpers.entity.Entity.available',
+                   new=False), \
+            patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
+                  new=TEMP_CELSIUS), \
+            patch.object(self.hass.config.units, 'temperature_unit',
+                         new=TEMP_FAHRENHEIT):
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
+            state = self.hass.states.get(self.entity.entity_id)
+
+        assert state.state == STATE_UNAVAILABLE
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
+
+    def test_temperature_conversion_unit_not_set_on_failure(self):
+        """Test unit of measure is still set even if state unknown."""
+        with patch('homeassistant.helpers.entity.Entity.state', new='Test'), \
+            patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
+                  new=TEMP_CELSIUS):
+            patch.object(self.hass.config.units, 'temperature_unit',
+                         new=TEMP_FAHRENHEIT)
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
+            state = self.hass.states.get(self.entity.entity_id)
+
+        assert state.state == 'Test'
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
 
 @asyncio.coroutine

@@ -287,18 +287,22 @@ class Entity:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
         # Convert temperature if we detect one
-        try:
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
+
+        unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+        units = self.hass.config.units
+        if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                unit_of_measure != units.temperature_unit):
+            try:
+                if state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+                    prec = len(state) - state.index('.') - 1 \
+                        if '.' in state else 0
+                    temp = units.temperature(float(state), unit_of_measure)
+                    state = str(
+                        round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+            except ValueError:
+                # Could not convert state to float
+                pass
 
         if (self._context is not None and
                 dt_util.utcnow() - self._context_set >
