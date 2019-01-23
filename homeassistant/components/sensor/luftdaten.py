@@ -37,8 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(
             LuftdatenSensor(
                 luftdaten, sensor_type, name, icon, unit,
-                entry.data[CONF_SHOW_ON_MAP])
-        )
+                entry.data[CONF_SHOW_ON_MAP]))
 
     async_add_entities(sensors, True)
 
@@ -67,7 +66,8 @@ class LuftdatenSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._data[self.sensor_type]
+        if self._data is not None:
+            return self._data[self.sensor_type]
 
     @property
     def unit_of_measurement(self):
@@ -82,23 +82,26 @@ class LuftdatenSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._data['sensor_id'], self.sensor_type)
+        if self._data is not None:
+            return '{0}_{1}'.format(self._data['sensor_id'], self.sensor_type)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[ATTR_SENSOR_ID] = self._data['sensor_id']
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
-        on_map = ATTR_LATITUDE, ATTR_LONGITUDE
-        no_map = 'lat', 'long'
-        lat_format, lon_format = on_map if self._show_on_map else no_map
-        try:
-            self._attrs[lon_format] = self._data['longitude']
-            self._attrs[lat_format] = self._data['latitude']
-            return self._attrs
-        except KeyError:
-            return
+        if self._data is not None:
+            self._attrs[ATTR_SENSOR_ID] = self._data['sensor_id']
+
+            on_map = ATTR_LATITUDE, ATTR_LONGITUDE
+            no_map = 'lat', 'long'
+            lat_format, lon_format = on_map if self._show_on_map else no_map
+            try:
+                self._attrs[lon_format] = self._data['longitude']
+                self._attrs[lat_format] = self._data['latitude']
+                return self._attrs
+            except KeyError:
+                return
 
     async def async_added_to_hass(self):
         """Register callbacks."""

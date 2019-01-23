@@ -178,7 +178,7 @@ async def async_setup(hass, config):
                 _LOGGER.debug('device_id not known, adding new device')
                 # Add bogus event_id first to avoid race if we get another
                 # event before the device is created
-                # Any additional events recevied before the device has been
+                # Any additional events received before the device has been
                 # created will thus be ignored.
                 hass.data[DATA_ENTITY_LOOKUP][event_type][
                     event_id].append(TMP_ENTITY.format(event_id))
@@ -348,9 +348,9 @@ class RflinkDevice(Entity):
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id]:
+                EVENT_KEY_COMMAND][self._device_id]:
             self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id].remove(tmp_entity)
+                EVENT_KEY_COMMAND][self._device_id].remove(tmp_entity)
 
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][

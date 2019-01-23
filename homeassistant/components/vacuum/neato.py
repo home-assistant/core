@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
     STATE_PAUSED, STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR,
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
-    SUPPORT_LOCATE)
+    SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
@@ -24,7 +24,7 @@ DEPENDENCIES = ['neato']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
-                 SUPPORT_STOP | SUPPORT_START | \
+                 SUPPORT_STOP | SUPPORT_START | SUPPORT_CLEAN_SPOT | \
                  SUPPORT_STATE | SUPPORT_MAP | SUPPORT_LOCATE
 
 ATTR_CLEAN_START = 'clean_start'
@@ -82,6 +82,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
         _LOGGER.debug('self._state=%s', self._state)
+        if 'alert' in self._state:
+            robot_alert = ALERTS.get(self._state['alert'])
+        else:
+            robot_alert = None
         if self._state['state'] == 1:
             if self._state['details']['isCharging']:
                 self._clean_state = STATE_DOCKED
@@ -93,14 +97,17 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             else:
                 self._clean_state = STATE_IDLE
                 self._status_state = 'Stopped'
+
+            if robot_alert is not None:
+                self._status_state = robot_alert
         elif self._state['state'] == 2:
-            if ALERTS.get(self._state['error']) is None:
+            if robot_alert is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
                     MODE.get(self._state['cleaning']['mode'])
                     + ' ' + ACTION.get(self._state['action']))
             else:
-                self._status_state = ALERTS.get(self._state['error'])
+                self._status_state = robot_alert
         elif self._state['state'] == 3:
             self._clean_state = STATE_PAUSED
             self._status_state = 'Paused'
@@ -218,3 +225,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def locate(self, **kwargs):
         """Locate the robot by making it emit a sound."""
         self.robot.locate()
+
+    def clean_spot(self, **kwargs):
+        """Run a spot cleaning starting from the base."""
+        self.robot.start_spot_cleaning()
