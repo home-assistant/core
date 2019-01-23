@@ -19,7 +19,7 @@ from .const import (
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.9.8']
+REQUIREMENTS = ['homematicip==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 
