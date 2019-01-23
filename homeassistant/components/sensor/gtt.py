@@ -118,5 +118,4 @@ def get_datetime(bus):
     bustime = bustime.replace(year=now.year, month=now.month, day=now.day)
     if bustime < now:
         bustime = bustime + timedelta(days=1)
-    print(bustime)
     return bustime
