@@ -39,7 +39,7 @@ HAP-python==2.4.2
 Mastodon.py==1.3.1
 
 # homeassistant.components.isy994
-PyISY==1.1.0
+PyISY==1.1.1
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
