@@ -288,7 +288,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently active source."""
-        return self._active_source.title
+        return getattr(self._active_source, 'title', None)
 
     @property
     def volume_level(self):
