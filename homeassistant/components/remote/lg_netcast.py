@@ -109,7 +109,7 @@ class LGNetcastRemote(RemoteDevice):
                 try:
                     with self._client as client:
                         cmdline = getattr(LG_COMMAND, cmdline.upper())
-                        client.send_command(cmdline)
+                        await self.hass.async_add_executor_job(client.send_command, cmdline)
                 except (LgNetCastError, RequestException):
                     self._state = STATE_OFF
             await asyncio.sleep(delay)
