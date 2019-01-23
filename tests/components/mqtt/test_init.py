@@ -231,6 +231,19 @@ class TestMQTTComponent(unittest.TestCase):
             'model': 'Glass',
             'sw_version': '0.1-beta',
         })
+        # full device info with via_hub
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['helloworld', 'hello'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+                ["zigbee", "zigbee_id"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+            'via_hub': 'test-hub',
+        })
         # no identifiers
         with pytest.raises(vol.Invalid):
             mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
@@ -282,6 +295,23 @@ class TestMQTTCallbacks(unittest.TestCase):
             assert \
                 "WARNING:homeassistant.components.mqtt:Can't decode payload " \
                 "b'\\x9a' on test-topic with encoding utf-8" in \
+                test_handle.output[0]
+
+    def test_message_callback_exception_gets_logged(self):
+        """Test exception raised by message handler."""
+        @callback
+        def bad_handler(*args):
+            """Record calls."""
+            raise Exception('This is a bad message callback')
+        mqtt.subscribe(self.hass, 'test-topic', bad_handler)
+
+        with self.assertLogs(level='WARNING') as test_handle:
+            fire_mqtt_message(self.hass, 'test-topic', 'test')
+
+            self.hass.block_till_done()
+            assert \
+                "Exception in bad_handler when handling msg on 'test-topic':" \
+                " 'test'" in \
                 test_handle.output[0]
 
     def test_all_subscriptions_run_when_decode_fails(self):

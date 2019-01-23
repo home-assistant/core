@@ -24,6 +24,11 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'outlet': 'switch',
     'switch': 'switch',
     'thermostat': 'climate',
+    'security-system': 'alarm_control_panel',
+    'garage-door-opener': 'cover',
+    'window': 'cover',
+    'window-covering': 'cover',
+    'lock-mechanism': 'lock'
 }
 
 HOMEKIT_IGNORE = [
@@ -113,11 +118,13 @@ class HKDevice():
             self.hass.data[KNOWN_ACCESSORIES][serial] = self
             aid = accessory['aid']
             for service in accessory['services']:
-                service_info = {'serial': serial,
-                                'aid': aid,
-                                'iid': service['iid']}
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
+                service_info = {'serial': serial,
+                                'aid': aid,
+                                'iid': service['iid'],
+                                'model': self.model,
+                                'device-type': devtype}
                 component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,

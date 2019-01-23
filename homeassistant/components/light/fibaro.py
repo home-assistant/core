@@ -12,7 +12,7 @@ from functools import partial
 from homeassistant.const import (
     CONF_WHITE_VALUE)
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice,
+    FIBARO_DEVICES, FibaroDevice,
     CONF_DIMMING, CONF_COLOR, CONF_RESET_COLOR)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ENTITY_ID_FORMAT,
@@ -50,14 +50,14 @@ async def async_setup_platform(hass,
         return
 
     async_add_entities(
-        [FibaroLight(device, hass.data[FIBARO_CONTROLLER])
+        [FibaroLight(device)
          for device in hass.data[FIBARO_DEVICES]['light']], True)
 
 
 class FibaroLight(FibaroDevice, Light):
     """Representation of a Fibaro Light, including dimmable."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the light."""
         self._brightness = None
         self._color = (0, 0)
@@ -81,7 +81,7 @@ class FibaroLight(FibaroDevice, Light):
         if devconf.get(CONF_WHITE_VALUE, supports_white_v):
             self._supported_flags |= SUPPORT_WHITE_VALUE
 
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @property

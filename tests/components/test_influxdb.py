@@ -394,6 +394,77 @@ class TestInfluxDB(unittest.TestCase):
                 assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
+    def test_event_listener_whitelist_domain_and_entities(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'include': {
+                    'domains': ['fake'],
+                    'entities': ['other.one'],
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
+
+        for domain in ('fake', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+            if domain == 'fake':
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
+                    mock.call(body)
+            else:
+                assert not mock_client.return_value.write_points.called
+            mock_client.return_value.write_points.reset_mock()
+
+        for entity_id in ('one', 'two'):
+            state = mock.MagicMock(
+                state=1, domain='other',
+                entity_id='other.{}'.format(entity_id),
+                object_id=entity_id, attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': 'other.{}'.format(entity_id),
+                'tags': {
+                    'domain': 'other',
+                    'entity_id': entity_id,
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+            if entity_id == 'one':
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
+                    mock.call(body)
+            else:
+                assert not mock_client.return_value.write_points.called
+            mock_client.return_value.write_points.reset_mock()
+
     def test_event_listener_invalid_type(self, mock_client):
         """Test the event listener when an attribute has an invalid type."""
         self._setup(mock_client)

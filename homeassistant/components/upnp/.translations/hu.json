@@ -1,10 +1,17 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "Nincsenek UPnPIGD eszk\u00f6z\u00f6k a h\u00e1l\u00f3zaton."
+        },
         "error": {
             "one": "hiba",
             "other": ""
         },
         "step": {
+            "confirm": {
+                "description": "Be akarja \u00e1ll\u00edtani a UPnP/IGD-t?",
+                "title": "UPnP/IGD"
+            },
             "init": {
                 "title": "UPnP/IGD"
             },
