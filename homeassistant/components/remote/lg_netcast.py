@@ -114,4 +114,4 @@ class LGNetcastRemote(RemoteDevice):
                     self._state = STATE_OFF
             await asyncio.sleep(delay)
             self._last_command_sent = cmdline
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
