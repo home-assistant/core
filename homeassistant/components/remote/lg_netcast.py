@@ -95,7 +95,7 @@ class LGNetcastRemote(RemoteDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the remote off."""
-        await self.async_send_command(1)
+        await self.async_send_command('POWER')
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to a device."""
