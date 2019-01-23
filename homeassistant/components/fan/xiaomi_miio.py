@@ -111,7 +111,7 @@ ATTR_TRANS_LEVEL = 'trans_level'
 ATTR_HARDWARE_VERSION = 'hardware_version'
 
 # Air Humidifier CA
-ATTR_SPEED = 'speed'
+ATTR_MOTOR_SPEED = 'motor_speed'
 ATTR_DEPTH = 'depth'
 ATTR_DRY = 'dry'
 
@@ -232,7 +232,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
-    ATTR_SPEED: 'speed',
+    ATTR_MOTOR_SPEED: 'speed',
     ATTR_DEPTH: 'depth',
     ATTR_DRY: 'dry',
 }
