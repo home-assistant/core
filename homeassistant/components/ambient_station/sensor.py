@@ -4,124 +4,80 @@ Support for Ambient Weather Station Service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambient_station/
 """
-
-import asyncio
-from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.ambient_station import SENSOR_TYPES
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-REQUIREMENTS = ['ambient_api==1.5.2']
+from .const import (
+    ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TOPIC_UPDATE, UNITS_SI, UNITS_US)
 
-CONF_APP_KEY = 'app_key'
-
-SENSOR_NAME = 0
-SENSOR_UNITS = 1
-
-CONF_UNITS = 'units'
-UNITS_US = 'us'
-UNITS_SI = 'si'
-UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
-
-SCAN_INTERVAL = timedelta(seconds=300)
-
-SENSOR_TYPES = {
-    'winddir': ['Wind Dir', '°'],
-    'windspeedmph': ['Wind Speed', 'mph'],
-    'windgustmph': ['Wind Gust', 'mph'],
-    'maxdailygust': ['Max Gust', 'mph'],
-    'windgustdir': ['Gust Dir', '°'],
-    'windspdmph_avg2m': ['Wind Avg 2m', 'mph'],
-    'winddir_avg2m': ['Wind Dir Avg 2m', 'mph'],
-    'windspdmph_avg10m': ['Wind Avg 10m', 'mph'],
-    'winddir_avg10m': ['Wind Dir Avg 10m', '°'],
-    'humidity': ['Humidity', '%'],
-    'humidityin': ['Humidity In', '%'],
-    'tempf': ['Temp', ['°F', '°C']],
-    'tempinf': ['Inside Temp', ['°F', '°C']],
-    'battout': ['Battery', ''],
-    'hourlyrainin': ['Hourly Rain Rate', 'in/hr'],
-    'dailyrainin': ['Daily Rain', 'in'],
-    '24hourrainin': ['24 Hr Rain', 'in'],
-    'weeklyrainin': ['Weekly Rain', 'in'],
-    'monthlyrainin': ['Monthly Rain', 'in'],
-    'yearlyrainin': ['Yearly Rain', 'in'],
-    'eventrainin': ['Event Rain', 'in'],
-    'totalrainin': ['Lifetime Rain', 'in'],
-    'baromrelin': ['Rel Pressure', 'inHg'],
-    'baromabsin': ['Abs Pressure', 'inHg'],
-    'uv': ['uv', 'Index'],
-    'solarradiation': ['Solar Rad', 'W/m^2'],
-    'co2': ['co2', 'ppm'],
-    'lastRain': ['Last Rain', ''],
-    'dewPoint': ['Dew Point', ['°F', '°C']],
-    'feelsLike': ['Feels Like', ['°F', '°C']],
-}
-
+DEPENDENCIES = ['ambient_station']
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_APP_KEY): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UNITS): vol.In([UNITS_SI, UNITS_US]),
-})
+UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Initialze each sensor platform for each monitored condition."""
-    api_key = config[CONF_API_KEY]
-    app_key = config[CONF_APP_KEY]
-    station_data = AmbientStationData(hass, api_key, app_key)
-    if not station_data.connect_success:
-        _LOGGER.error("Could not connect to weather station API")
-        return
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up an Ambient PWS sensor based on existing config."""
+    pass
 
-    sensor_list = []
 
-    if CONF_UNITS in config:
-        sys_units = config[CONF_UNITS]
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up an Ambient PWS sensor based on a config entry."""
+    ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+
+    if ambient.unit_system:
+        sys_units = ambient.unit_system
     elif hass.config.units.is_metric:
         sys_units = UNITS_SI
     else:
         sys_units = UNITS_US
 
-    for condition in config[CONF_MONITORED_CONDITIONS]:
-        # create a sensor object for each monitored condition
-        sensor_params = SENSOR_TYPES[condition]
-        name = sensor_params[SENSOR_NAME]
-        units = sensor_params[SENSOR_UNITS]
-        if isinstance(units, list):
-            units = sensor_params[SENSOR_UNITS][UNIT_SYSTEM[sys_units]]
+    sensor_list = []
+    for mac_address, station in ambient.stations.items():
+        for condition in ambient.monitored_conditions:
+            name, unit = SENSOR_TYPES[condition]
+            if isinstance(unit, list):
+                unit = unit[UNIT_SYSTEM[sys_units]]
 
-        sensor_list.append(AmbientWeatherSensor(station_data, condition,
-                                                name, units))
+            sensor_list.append(
+                AmbientWeatherSensor(
+                    ambient, mac_address, station[ATTR_NAME], condition, name,
+                    unit))
 
-    add_entities(sensor_list)
+    async_add_entities(sensor_list, True)
 
 
 class AmbientWeatherSensor(Entity):
-    """Representation of a Sensor."""
+    """Define an Ambient sensor."""
 
-    def __init__(self, station_data, condition, name, units):
+    def __init__(
+            self, ambient, mac_address, station_name, sensor_type, sensor_name,
+            units):
         """Initialize the sensor."""
+        self._ambient = ambient
+        self._async_unsub_dispatcher_connect = None
+        self._mac_address = mac_address
+        self._sensor_name = sensor_name
+        self._sensor_type = sensor_type
         self._state = None
-        self.station_data = station_data
-        self._condition = condition
-        self._name = name
+        self._station_name = station_name
         self._units = units
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return '{0}_{1}'.format(self._station_name, self._sensor_name)
+
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
 
     @property
     def state(self):
@@ -133,80 +89,28 @@ class AmbientWeatherSensor(Entity):
         """Return the unit of measurement."""
         return self._units
 
-    async def async_update(self):
-        """Fetch new state data for the sensor.
+    @property
+    def unique_id(self):
+        """Return a unique, unchanging string that represents this sensor."""
+        return '{0}_{1}'.format(self._mac_address, self._sensor_name)
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        _LOGGER.debug("Getting data for sensor: %s", self._name)
-        data = await self.station_data.get_data()
-        if data is None:
-            # update likely got throttled and returned None, so use the cached
-            # data from the station_data object
-            self._state = self.station_data.data[self._condition]
-        else:
-            if self._condition in data:
-                self._state = data[self._condition]
-            else:
-                _LOGGER.warning("%s sensor data not available from the "
-                                "station", self._condition)
+    async def async_added_to_hass(self):
+        """Register callbacks."""
 
-        _LOGGER.debug("Sensor: %s | Data: %s", self._name, self._state)
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
 
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update)
 
-class AmbientStationData:
-    """Class to interface with ambient-api library."""
-
-    def __init__(self, hass, api_key, app_key):
-        """Initialize station data object."""
-        self.hass = hass
-        self._api_keys = {
-            'AMBIENT_ENDPOINT':
-            'https://api.ambientweather.net/v1',
-            'AMBIENT_API_KEY': api_key,
-            'AMBIENT_APPLICATION_KEY': app_key,
-            'log_level': 'DEBUG'
-        }
-
-        self.data = None
-        self._station = None
-        self._api = None
-        self._devices = None
-        self.connect_success = False
-
-        self.get_data = Throttle(SCAN_INTERVAL)(self.async_update)
-        self._connect_api()     # attempt to connect to API
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     async def async_update(self):
-        """Get new data."""
-        # refresh API connection since servers turn over nightly
-        _LOGGER.debug("Getting new data from server")
-        new_data = None
-        await self.hass.async_add_executor_job(self._connect_api)
-        await asyncio.sleep(2)   # need minimum 2 seconds between API calls
-        if self._station is not None:
-            data = await self.hass.async_add_executor_job(
-                self._station.get_data)
-            if data is not None:
-                new_data = data[0]
-                self.data = new_data
-            else:
-                _LOGGER.debug("data is None type")
-        else:
-            _LOGGER.debug("Station is None type")
-
-        return new_data
-
-    def _connect_api(self):
-        """Connect to the API and capture new data."""
-        from ambient_api.ambientapi import AmbientAPI
-
-        self._api = AmbientAPI(**self._api_keys)
-        self._devices = self._api.get_devices()
-
-        if self._devices:
-            self._station = self._devices[0]
-            if self._station is not None:
-                self.connect_success = True
-        else:
-            _LOGGER.debug("No station devices available")
+        """Fetch new state data for the sensor."""
+        self._state = self._ambient.stations[
+            self._mac_address][ATTR_LAST_DATA].get(self._sensor_type)
