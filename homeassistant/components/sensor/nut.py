@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE)
+    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -241,7 +241,7 @@ class NUTSensor(Entity):
                 STATE_TYPES[state]
                 for state in self._data.status[KEY_STATUS].split())
         except KeyError:
-            return None
+            return STATE_UNKNOWN
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
