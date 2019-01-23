@@ -11,8 +11,8 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.air_quality import(
-    PLATFORM_SCHEMA, AirQualityEntity, ATTR_AQI, ATTR_ATTRIBUTION, ATTR_NO2,
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA, AirQualityEntity, ATTR_ATTRIBUTION, ATTR_NO2,
     ATTR_OZONE, ATTR_PM_10, ATTR_PM_2_5, ATTR_SO2)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
