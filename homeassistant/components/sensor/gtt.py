@@ -98,7 +98,7 @@ class GttData:
     def get_data(self):
         """Get the data from the api."""
         self.bus_list = self._pygtt.get_by_stop(self._stop)
-        self.bus_list.sort(key=lambda b: get_datetime(b)) #pylint: disable=unnecessary-lambda
+        self.bus_list.sort(key=get_datetime)
 
         if self._bus_name is not None:
             self.state_bus = self.get_bus_by_name()
