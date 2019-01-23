@@ -286,7 +286,8 @@ class HomeData():
         """Get all the home names returned by NetAtmo API."""
         self.setup()
         for home in self.homedata.homes:
-            if 'therm_schedules' in self.homedata.homes[home]:
+            if 'therm_schedules' in self.homedata.homes[home] and 'modules' \
+               in self.homedata.homes[home]:
                 self.home_names.append(self.homedata.homes[home]['name'])
         return self.home_names
 
@@ -298,6 +299,8 @@ class HomeData():
             self.home_id = self.homedata.gethomeId(self.home)
         except TypeError:
             _LOGGER.error("Error when getting homedata.  ")
+        except pyatmo.NoDevice:
+            _LOGGER.error("Error when getting homestatus response.  ")
 
 
 class ThermostatData():
