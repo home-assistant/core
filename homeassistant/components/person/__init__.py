@@ -52,6 +52,10 @@ async def async_setup(hass, config):
             continue
         entities.append(Person(person_conf, user_id))
 
+    if not entities:
+        _LOGGER.error("No persons could be set up")
+        return False
+
     await component.async_add_entities(entities)
 
     return True
