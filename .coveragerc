@@ -80,6 +80,8 @@ omit =
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
+    homeassistant/components/danfoss_air/*
+
     homeassistant/components/dominos.py
 
     homeassistant/components/doorbird.py
