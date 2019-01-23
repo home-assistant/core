@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ambient_station/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -205,7 +204,6 @@ class AmbientStation:
 
             async_call_later(
                 self._hass, self._ws_reconnect_delay, self.ws_connect)
-
 
     async def ws_disconnect(self):
         """Disconnect from the websocket."""
