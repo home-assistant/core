@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
     CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
