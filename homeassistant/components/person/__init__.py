@@ -71,16 +71,6 @@ class Person(RestoreEntity):
         self._user_id = user_id
 
     @property
-    def latitude(self):
-        """Return latitude value of the person."""
-        return self._latitude
-
-    @property
-    def longitude(self):
-        """Return longitude value of the person."""
-        return self._longitude
-
-    @property
     def name(self):
         """Return the name of the entity."""
         return self._name
@@ -94,11 +84,6 @@ class Person(RestoreEntity):
         return False
 
     @property
-    def source(self):
-        """Return source entity_id that provides the state of the person."""
-        return self._source
-
-    @property
     def state(self):
         """Return the state of the person."""
         return self._state
@@ -107,24 +92,19 @@ class Person(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes of the person."""
         data = {}
-        if self.latitude is not None:
-            data[ATTR_LATITUDE] = round(self.latitude, 5)
-        if self.longitude is not None:
-            data[ATTR_LONGITUDE] = round(self.longitude, 5)
-        if self.source is not None:
-            data[ATTR_SOURCE] = self.source
-        if self.user_id is not None:
-            data[ATTR_USER_ID] = self.user_id
+        if self._latitude is not None:
+            data[ATTR_LATITUDE] = round(self._latitude, 5)
+        if self._longitude is not None:
+            data[ATTR_LONGITUDE] = round(self._longitude, 5)
+        if self._source is not None:
+            data[ATTR_SOURCE] = self._source
+        if self._user_id is not None:
+            data[ATTR_USER_ID] = self._user_id
         return data
 
     @property
     def unique_id(self):
         """Return a unique ID for the person."""
-        return self._user_id
-
-    @property
-    def user_id(self):
-        """Return the user id of the person."""
         return self._user_id
 
     async def async_added_to_hass(self):
