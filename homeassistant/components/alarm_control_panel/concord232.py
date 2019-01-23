@@ -6,7 +6,6 @@ https://home-assistant.io/components/alarm_control_panel.concord232/
 """
 import datetime
 import logging
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -27,7 +26,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
