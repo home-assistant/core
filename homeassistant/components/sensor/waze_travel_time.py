@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
@@ -40,7 +40,6 @@ ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
@@ -52,8 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
     vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(minutes=5)):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=300)):
+        cv.time_period,        
 })
 
 
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
-    update_interval = config.get(CONF_UPDATE_INTERVAL)
+    update_interval = config.get(CONF_SCAN_INTERVAL)
 
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter, realtime, 
