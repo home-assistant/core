@@ -2,7 +2,7 @@
 Support for the World Air Quality Index service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waqi/
+https://home-assistant.io/components/air_quality.waqi/
 """
 import asyncio
 import logging
@@ -11,13 +11,13 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.components.air_quality import(
+    PLATFORM_SCHEMA, AirQualityEntity, ATTR_AQI, ATTR_ATTRIBUTION, ATTR_NO2,
+    ATTR_OZONE, ATTR_PM_10, ATTR_PM_2_5, ATTR_SO2)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
+from homeassistant.const import (ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['waqiasync==1.0.0']
 
@@ -25,22 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
-ATTR_NITROGEN_DIOXIDE = 'nitrogen_dioxide'
-ATTR_OZONE = 'ozone'
-ATTR_PM10 = 'pm_10'
-ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
-ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
 
 KEY_TO_ATTR = {
-    'pm25': ATTR_PM2_5,
-    'pm10': ATTR_PM10,
+    'pm25': ATTR_PM_2_5,
+    'pm10': ATTR_PM_10,
     'h': ATTR_HUMIDITY,
     'p': ATTR_PRESSURE,
     't': ATTR_TEMPERATURE,
     'o3': ATTR_OZONE,
-    'no2': ATTR_NITROGEN_DIOXIDE,
-    'so2': ATTR_SULFUR_DIOXIDE,
+    'no2': ATTR_NO2,
+    'so2': ATTR_SO2,
 }
 
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
@@ -76,12 +71,12 @@ async def async_setup_platform(hass, config, async_add_entities,
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
+                waqi_entity = WaqiQuality(client, station)
                 if not station_filter or \
-                    {waqi_sensor.uid,
-                     waqi_sensor.url,
-                     waqi_sensor.station_name} & set(station_filter):
-                    dev.append(waqi_sensor)
+                    {waqi_entity.uid,
+                     waqi_entity.url,
+                     waqi_entity.station_name} & set(station_filter):
+                    dev.append(waqi_entity)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to WAQI servers.')
@@ -89,11 +84,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(dev, True)
 
 
-class WaqiSensor(Entity):
-    """Implementation of a WAQI sensor."""
+class WaqiQuality(AirQualityEntity):
+    """Implementation of a WAQI air quality entity."""
 
     def __init__(self, client, station):
-        """Initialize the sensor."""
+        """Initialize the entity."""
         self._client = client
         try:
             self.uid = station['uid']
@@ -114,7 +109,7 @@ class WaqiSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the entity."""
         if self.station_name:
             return 'WAQI {}'.format(self.station_name)
         return 'WAQI {}'.format(self.url if self.url else self.uid)
@@ -137,7 +132,7 @@ class WaqiSensor(Entity):
         return 'AQI'
 
     @property
-    def device_state_attributes(self):
+    def state_attributes(self):
         """Return the state attributes of the last update."""
         attrs = {}
 
