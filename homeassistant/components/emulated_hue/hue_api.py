@@ -350,8 +350,7 @@ def parse_hue_api_put_light_body(request_json, entity):
 
         elif entity.domain in [
                 script.DOMAIN, media_player.DOMAIN,
-                fan.DOMAIN, cover.DOMAIN
-            ]:
+                fan.DOMAIN, cover.DOMAIN]:
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
