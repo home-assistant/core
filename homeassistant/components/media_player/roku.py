@@ -1,28 +1,22 @@
 """
-Support for the roku media player.
+Support for the Roku media player.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
 import logging
-
-import voluptuous as vol
+import requests.exceptions
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-roku==3.1.5']
+DEPENDENCIES = ['roku']
 
-KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
-
-NOTIFICATION_ID = 'roku_notification'
-NOTIFICATION_TITLE = 'Roku Media Player Setup'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,50 +24,15 @@ SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-})
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Roku platform."""
-    hosts = []
+    if not discovery_info:
+        return
 
-    if discovery_info:
-        host = discovery_info.get('host')
-
-        if host in KNOWN_HOSTS:
-            return
-
-        _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get('host'))
-
-    elif CONF_HOST in config:
-        hosts.append(config.get(CONF_HOST))
-
-    rokus = []
-    for host in hosts:
-        new_roku = RokuDevice(host)
-
-        try:
-            if new_roku.name is not None:
-                rokus.append(RokuDevice(host))
-                KNOWN_HOSTS.append(host)
-            else:
-                _LOGGER.error("Unable to initialize roku at %s", host)
-
-        except AttributeError:
-            _LOGGER.error("Unable to initialize roku at %s", host)
-            hass.components.persistent_notification.create(
-                'Error: Unable to initialize roku at {}<br />'
-                'Check its network connection or consider '
-                'using auto discovery.<br />'
-                'You will need to restart hass after fixing.'
-                ''.format(config.get(CONF_HOST)),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-
-    add_entities(rokus)
+    host = discovery_info[CONF_HOST]
+    async_add_entities([RokuDevice(host)], True)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -89,12 +48,8 @@ class RokuDevice(MediaPlayerDevice):
         self.current_app = None
         self._device_info = {}
 
-        self.update()
-
     def update(self):
         """Retrieve latest state."""
-        import requests.exceptions
-
         try:
             self._device_info = self.roku.device_info
             self.ip_address = self.roku.host
@@ -106,7 +61,6 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
-
             pass
 
     def get_source_list(self):

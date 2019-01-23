@@ -8,10 +8,10 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
+import functools
 import logging
 import os
 import pathlib
-import re
 import sys
 import threading
 from time import monotonic
@@ -42,7 +42,7 @@ from homeassistant.util.async_ import (
     fire_coroutine_threadsafe)
 from homeassistant import util
 import homeassistant.util.dt as dt_util
-from homeassistant.util import location
+from homeassistant.util import location, slugify
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
@@ -61,9 +61,6 @@ DOMAIN = 'homeassistant'
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
@@ -76,8 +73,12 @@ def split_entity_id(entity_id: str) -> List[str]:
 
 
 def valid_entity_id(entity_id: str) -> bool:
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
+    """Test if an entity ID is a valid format.
+
+    Format: <domain>.<entity> where both are slugs.
+    """
+    return ('.' in entity_id and
+            slugify(entity_id) == entity_id.replace('.', '_', 1))
 
 
 def valid_state(state: str) -> bool:
@@ -258,11 +259,15 @@ class HomeAssistant:
         """
         task = None
 
-        if asyncio.iscoroutine(target):
+        check_target = target
+        if isinstance(target, functools.partial):
+            check_target = target.func
+
+        if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(target):
+        elif is_callback(check_target):
             self.loop.call_soon(target, *args)
-        elif asyncio.iscoroutinefunction(target):
+        elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
         else:
             task = self.loop.run_in_executor(  # type: ignore
