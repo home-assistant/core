@@ -80,7 +80,7 @@ evohomeclient==0.2.8
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
-# homeassistant.components.sensor.foobot
+# homeassistant.components.air_quality.foobot
 foobot_async==0.3.1
 
 # homeassistant.components.tts.google
