@@ -6,6 +6,7 @@ from typing import Any, List, Sequence, Callable
 
 import voluptuous as vol
 
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
@@ -18,6 +19,7 @@ from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
@@ -51,9 +53,12 @@ DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=12)
+SCAN_INTERVAL = timedelta(seconds=12)
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
+
+DEFAULT_GPS_ACCURACY = 0
 
 EVENT_NEW_DEVICE = 'device_tracker_new_device'
 
@@ -175,11 +180,21 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 setup = await hass.async_add_job(
                     platform.setup_scanner, hass, p_config, tracker.see,
                     disc_info)
-            elif hasattr(platform, 'async_setup_entry'):
-                setup = await platform.async_setup_entry(
-                    hass, p_config, tracker.async_see)
+            elif (hasattr(platform, 'setup_platform')
+                  or hasattr(platform, 'async_setup_platform')):
+                setup = True
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
+
+            if (not hasattr(platform, 'setup_platform')
+                    and not hasattr(platform, 'async_setup_platform')):
+                # This is needed during transition phase to EntityComponent.
+                # Remove when all device_tracker platforms have been converted
+                # to EntityPlatforms.
+                async def placeholder_setup_platform():
+                    """Define placeholder for async_setup_platform."""
+                    pass
+                platform.async_setup_platform = placeholder_setup_platform
 
             if scanner:
                 async_setup_scanner_platform(
@@ -193,14 +208,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
 
-    hass.data[DOMAIN] = async_setup_platform
-
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
     if setup_tasks:
         await asyncio.wait(setup_tasks, loop=hass.loop)
 
     tracker.async_setup_group()
+
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+
+    await component.async_setup(config)
 
     async def async_platform_discovered(platform, info):
         """Load a platform."""
@@ -230,8 +248,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    await hass.data[DOMAIN](entry.domain, entry)
-    return True
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class DeviceTracker:
@@ -586,6 +608,96 @@ class Device(RestoreEntity):
         if ATTR_LONGITUDE in state.attributes:
             self.gps = (state.attributes[ATTR_LATITUDE],
                         state.attributes[ATTR_LONGITUDE])
+
+
+class DeviceTrackerEntity(Entity):
+    """Represent a tracked device."""
+
+    @property
+    def battery(self):
+        """Return the battery level of the device."""
+        return None
+
+    @property
+    def gps_accuracy(self):
+        """Return the gps accuracy of the device."""
+        return DEFAULT_GPS_ACCURACY
+
+    @property
+    def is_connected(self):
+        """Return True if device is connected."""
+        return None
+
+    @property
+    def latitude(self):
+        """Return latitude value of the device."""
+        return None
+
+    @property
+    def location_name(self):
+        """Return a location name for the current location of the device."""
+        return None
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return None
+
+    @property
+    def mac_address(self):
+        """Return the mac address of the device."""
+        return None
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        raise NotImplementedError
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self.location_name:
+            return self.location_name
+
+        if self.latitude is not None and self.source_type == SOURCE_TYPE_GPS:
+            zone_state = async_active_zone(
+                self.hass, self.latitude, self.longitude, self.gps_accuracy)
+            if zone_state is None:
+                state = STATE_NOT_HOME
+            elif zone_state.entity_id == zone.ENTITY_ID_HOME:
+                state = STATE_HOME
+            else:
+                state = zone_state.name
+            return state
+
+        connected = self.is_connected
+        if connected is None:
+            return None
+        return STATE_HOME if connected else STATE_NOT_HOME
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
+
+        if self.latitude is not None:
+            attr[ATTR_LATITUDE] = self.latitude
+            attr[ATTR_LONGITUDE] = self.longitude
+        if self.latitude is not None and self.gps_accuracy is not None:
+            attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
+        if self.battery:
+            attr[ATTR_BATTERY] = self.battery
+
+        return attr
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for the device."""
+        if self.mac_address is not None:
+            return self.mac_address
+        return None
 
 
 class DeviceScanner:
