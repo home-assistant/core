@@ -35,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_NEW_FAN_SPEEDS, default=DEFAULT_NEW_FAN_SPEEDS): cv.boolean,
+    vol.Optional(CONF_NEW_FAN_SPEEDS, default=DEFAULT_NEW_FAN_SPEEDS):
+        cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
@@ -227,7 +228,8 @@ class MiroboVacuum(StateVacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(sorted(self._speed_map.keys(), key=lambda s: self._speed_map[s]))
+        return list(sorted(self._speed_map.keys(),
+                           key=lambda s: self._speed_map[s]))
 
     @property
     def device_state_attributes(self):
