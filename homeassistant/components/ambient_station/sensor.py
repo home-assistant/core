@@ -96,7 +96,6 @@ class AmbientWeatherSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         @callback
         def update():
             """Update the state."""
