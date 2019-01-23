@@ -6,7 +6,6 @@ https://home-assistant.io/components/ambient_station/
 """
 import logging
 from datetime import timedelta
-from threading import RLock
 
 import voluptuous as vol
 
@@ -17,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 
 from .config_flow import configured_instances
 from .const import (
@@ -113,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data.get(
                 CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)),
             config_entry.data.get(CONF_UNIT_SYSTEM))
-        hass.async_create_task(ambient.ws_connect())
+        hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketConnectionError as err:
         _LOGGER.error('Config entry failed: %s', err)
@@ -143,14 +142,10 @@ class AmbientStation:
         self._client = client
         self._config_entry = config_entry
         self._hass = hass
-        self._lock = RLock()
-        self._ws_reconnect_handle = None
+        self._ws_reconnect_delay = 15
         self.monitored_conditions = monitored_conditions
         self.stations = {}
         self.unit_system = unit_system
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, client.websocket.disconnect())
 
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""
@@ -162,9 +157,10 @@ class AmbientStation:
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
-            with self._lock:
+            mac_address = data['macAddress']
+            if data != self.stations[mac_address][ATTR_LAST_DATA]:
                 _LOGGER.debug('New data received: %s', data)
-                self.stations[data['macAddress']][ATTR_LAST_DATA] = data
+                self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(self._hass, TOPIC_UPDATE)
 
         def on_disconnect():
@@ -191,6 +187,9 @@ class AmbientStation:
                     self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, 'sensor'))
 
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._client.websocket.disconnect())
+
         self._client.websocket.on_connect(on_connect)
         self._client.websocket.on_data(on_data)
         self._client.websocket.on_disconnect(on_disconnect)
@@ -199,15 +198,14 @@ class AmbientStation:
         try:
             await self._client.websocket.connect()
         except WebsocketError as err:
-            if self._ws_reconnect_handle is None:
-                _LOGGER.error("Error with the websocket connection: %s", err)
-                self._ws_reconnect_handle = async_track_time_interval(
-                    self._hass, self.ws_connect, timedelta(minutes=2))
-            return
+            _LOGGER.error("Error with the websocket connection: %s", err)
 
-        if self._ws_reconnect_handle is not None:
-            self._ws_reconnect_handle()
-            self._ws_reconnect_handle = None
+            self._ws_reconnect_delay = min(
+                2 * self._ws_reconnect_delay, 480)
+
+            async_call_later(
+                self._hass, self._ws_reconnect_delay, self.ws_connect)
+
 
     async def ws_disconnect(self):
         """Disconnect from the websocket."""

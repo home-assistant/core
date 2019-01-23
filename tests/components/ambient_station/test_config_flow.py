@@ -54,7 +54,7 @@ async def test_invalid_api_key(hass, mock_aioambient):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result['errors'] == {CONF_APP_KEY: 'invalid_key'}
+    assert result['errors'] == {'base': 'invalid_key'}
 
 
 async def test_show_form(hass):

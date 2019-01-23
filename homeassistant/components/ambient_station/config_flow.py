@@ -25,10 +25,6 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    def __init__(self):
-        """Initialize the config flow."""
-        pass
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema({
@@ -64,7 +60,7 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
         try:
             await client.api.get_devices()
         except AmbientError:
-            return await self._show_form({CONF_APP_KEY: 'invalid_key'})
+            return await self._show_form({'base': 'invalid_key'})
 
         return self.async_create_entry(
             title=user_input[CONF_APP_KEY], data=user_input)
