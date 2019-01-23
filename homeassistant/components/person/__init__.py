@@ -118,6 +118,11 @@ class Person(RestoreEntity):
         return data
 
     @property
+    def unique_id(self):
+        """Return a unique ID for the person."""
+        return self._user_id
+
+    @property
     def user_id(self):
         """Return the user id of the person."""
         return self._user_id
