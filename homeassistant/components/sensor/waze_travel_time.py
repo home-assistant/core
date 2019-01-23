@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SCAN_INTERVAL)
+    ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
@@ -40,6 +40,8 @@ ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
+SCAN_INTERVAL = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
@@ -51,8 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
     vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-    vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=300)):
-        cv.time_period,        
 })
 
 
@@ -65,11 +65,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
-    update_interval = config.get(CONF_SCAN_INTERVAL)
 
     sensor = WazeTravelTime(name, origin, destination, region,
-                            incl_filter, excl_filter, realtime, 
-                            update_interval)
+                            incl_filter, excl_filter, realtime)
 
     add_entities([sensor], True)
 
@@ -88,7 +86,7 @@ class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                incl_filter, excl_filter, realtime, interval):
+                incl_filter, excl_filter, realtime):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
@@ -98,7 +96,6 @@ class WazeTravelTime(Entity):
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
-        self.update = Throttle(interval)(self.update)
 
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
@@ -187,6 +184,7 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
