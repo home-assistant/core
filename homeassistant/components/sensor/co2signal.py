@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CO2signal sensor."""
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     lat = config.get(CONF_LATITUDE, hass.config.latitude)
     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     country_code = config.get(CONF_COUNTRY_CODE)
