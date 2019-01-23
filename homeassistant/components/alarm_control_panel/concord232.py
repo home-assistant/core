@@ -86,9 +86,11 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
+            self._state = None
             return
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")
+            self._state = None
             return
 
         if part['arming_level'] == 'Off':
