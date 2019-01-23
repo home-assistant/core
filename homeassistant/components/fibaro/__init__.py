@@ -49,6 +49,8 @@ FIBARO_TYPEMAP = {
     'com.fibaro.colorController': 'light',
     'com.fibaro.securitySensor': 'binary_sensor',
     'com.fibaro.hvac': 'climate',
+    'com.fibaro.setpoint': 'climate',
+    'com.fibaro.FGT001': 'climate',
     'com.fibaro.thermostatDanfoss': 'climate'
 }
 
