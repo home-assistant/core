@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Set up the Person component."""
+    """Set up the person component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     conf = config[DOMAIN]
     entities = []
@@ -58,7 +58,7 @@ async def async_setup(hass, config):
 
 
 class Person(RestoreEntity):
-    """Represent a tracked Person."""
+    """Represent a tracked person."""
 
     def __init__(self, config, user_id):
         """Set up person."""
@@ -131,7 +131,7 @@ class Person(RestoreEntity):
                 self.hass, tracker, async_handle_tracker_update)
 
     def _parse_source_state(self, state):
-        """Parse source state and set Person attributes."""
+        """Parse source state and set person attributes."""
         self._state = state.state
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
