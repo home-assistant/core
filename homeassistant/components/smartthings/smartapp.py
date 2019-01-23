@@ -175,7 +175,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         signal_prefix=SIGNAL_SMARTAPP_PREFIX,
         connect=functools.partial(async_dispatcher_connect, hass),
         send=functools.partial(async_dispatcher_send, hass))
-    manager = SmartAppManager('/api/webhook/' + config[CONF_WEBHOOK_ID],
+    manager = SmartAppManager(webhook.async_generate_path(config[CONF_WEBHOOK_ID]),
                               dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
     manager.connect_uninstall(functools.partial(smartapp_uninstall, hass))
