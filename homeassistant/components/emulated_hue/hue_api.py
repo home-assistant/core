@@ -25,7 +25,8 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION
 )
 
-from homeassistant.components import cover, fan, media_player, light, script, scene
+from homeassistant.components import (cover, fan, media_player, light, 
+    script, scene)
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
@@ -346,7 +347,8 @@ def parse_hue_api_put_light_body(request_json, entity):
             report_brightness = False
             result = True
 
-        elif entity.domain in [script.DOMAIN, media_player.DOMAIN, fan.DOMAIN, cover.DOMAIN]:
+        elif entity.domain in [script.DOMAIN, media_player.DOMAIN,
+            fan.DOMAIN, cover.DOMAIN]:
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
