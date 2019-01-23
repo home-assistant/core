@@ -117,6 +117,9 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, ambient.client.websocket.disconnect())
+
     return True
 
 
@@ -138,10 +141,10 @@ class AmbientStation:
             self, hass, config_entry, client, monitored_conditions,
             unit_system):
         """Initialize."""
-        self._client = client
         self._config_entry = config_entry
         self._hass = hass
         self._ws_reconnect_delay = 15
+        self.client = client
         self.monitored_conditions = monitored_conditions
         self.stations = {}
         self.unit_system = unit_system
@@ -186,16 +189,13 @@ class AmbientStation:
                     self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, 'sensor'))
 
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._client.websocket.disconnect())
-
-        self._client.websocket.on_connect(on_connect)
-        self._client.websocket.on_data(on_data)
-        self._client.websocket.on_disconnect(on_disconnect)
-        self._client.websocket.on_subscribed(on_subscribed)
+        self.client.websocket.on_connect(on_connect)
+        self.client.websocket.on_data(on_data)
+        self.client.websocket.on_disconnect(on_disconnect)
+        self.client.websocket.on_subscribed(on_subscribed)
 
         try:
-            await self._client.websocket.connect()
+            await self.client.websocket.connect()
         except WebsocketError as err:
             _LOGGER.error("Error with the websocket connection: %s", err)
 
@@ -207,4 +207,4 @@ class AmbientStation:
 
     async def ws_disconnect(self):
         """Disconnect from the websocket."""
-        await self._client.websocket.disconnect()
+        await self.client.websocket.disconnect()
