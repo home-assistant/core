@@ -117,5 +117,5 @@ class XboxSensor(Entity):
     def update(self):
         """Update state data from Xbox API."""
         presence = self._api.get_user_presence(self._xuid)
-        self._state = presence.get('state', None)
+        self._state = presence.get('state')
         self._presence = presence.get('devices', {})

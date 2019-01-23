@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import DOMAIN, WinkDevice
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.const import (
+    ATTR_CODE, ATTR_ENTITY_ID, ATTR_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['wink']
@@ -205,4 +206,4 @@ def dict_value_to_key(dict_map, comp_value):
     for key, value in dict_map.items():
         if value == comp_value:
             return key
-    return None
+    return STATE_UNKNOWN
