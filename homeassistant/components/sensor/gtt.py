@@ -112,7 +112,9 @@ class GttData:
             if bus['bus_name'] == self._bus_name:
                 return bus
 
+
 def get_datetime(bus):
+    """Get the datetime from a bus."""
     bustime = datetime.strptime(bus['time'][0]['run'], "%H:%M")
     now = datetime.now()
     bustime = bustime.replace(year=now.year, month=now.month, day=now.day)
