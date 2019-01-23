@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.cover import (
     CoverDevice, ENTITY_ID_FORMAT, ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
+    FIBARO_DEVICES, FibaroDevice)
 
 DEPENDENCIES = ['fibaro']
 
@@ -22,16 +22,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroCover(device, hass.data[FIBARO_CONTROLLER]) for
+        [FibaroCover(device) for
          device in hass.data[FIBARO_DEVICES]['cover']], True)
 
 
 class FibaroCover(FibaroDevice, CoverDevice):
     """Representation a Fibaro Cover."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the Vera device."""
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @staticmethod

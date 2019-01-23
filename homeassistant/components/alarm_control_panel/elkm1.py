@@ -116,7 +116,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the alarm code format."""
-        return '^[0-9]{4}([0-9]{2})?$'
+        return alarm.FORMAT_NUMBER
 
     @property
     def state(self):

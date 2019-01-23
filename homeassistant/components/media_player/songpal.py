@@ -154,8 +154,8 @@ class SongpalDevice(MediaPlayerDevice):
                 _LOGGER.debug("New active source: %s", self._active_source)
                 await self.async_update_ha_state()
             else:
-                _LOGGER.warning("Got non-handled content change: %s",
-                                content)
+                _LOGGER.debug("Got non-handled content change: %s",
+                              content)
 
         async def _power_changed(power: PowerChange):
             _LOGGER.debug("Power changed: %s", power)

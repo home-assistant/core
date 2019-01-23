@@ -42,19 +42,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
     include_archived = config.get(CONF_INCLUDE_ARCHIVED)
 
-    zm_client = hass.data[ZONEMINDER_DOMAIN]
-    monitors = zm_client.get_monitors()
-    if not monitors:
-        _LOGGER.warning('Could not fetch any monitors from ZoneMinder')
-
     sensors = []
-    for monitor in monitors:
-        sensors.append(ZMSensorMonitors(monitor))
+    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
+        monitors = zm_client.get_monitors()
+        if not monitors:
+            _LOGGER.warning('Could not fetch any monitors from ZoneMinder')
 
-        for sensor in config[CONF_MONITORED_CONDITIONS]:
-            sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
+        for monitor in monitors:
+            sensors.append(ZMSensorMonitors(monitor))
 
-    sensors.append(ZMSensorRunState(zm_client))
+            for sensor in config[CONF_MONITORED_CONDITIONS]:
+                sensors.append(
+                    ZMSensorEvents(monitor, include_archived, sensor)
+                )
+
+        sensors.append(ZMSensorRunState(zm_client))
     add_entities(sensors)
 
 

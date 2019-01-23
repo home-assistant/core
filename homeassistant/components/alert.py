@@ -46,9 +46,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: ALERT_SCHEMA,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

@@ -47,9 +47,7 @@ COMMAND_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: COMMAND_SCHEMA,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

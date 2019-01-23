@@ -67,7 +67,7 @@ async def async_setup_platform(
         if types is not None and info['fuel'] not in types:
             continue
         dev.append(PrezziBenzinaSensor(
-            index, client, station, name, info['fuel']))
+            index, client, station, name, info['fuel'], info['service']))
 
     async_add_entities(dev, True)
 
@@ -75,13 +75,13 @@ async def async_setup_platform(
 class PrezziBenzinaSensor(Entity):
     """Implementation of a PrezziBenzina sensor."""
 
-    def __init__(self, index, client, station, name, ft):
+    def __init__(self, index, client, station, name, ft, srv):
         """Initialize the PrezziBenzina sensor."""
         self._client = client
         self._index = index
         self._data = None
         self._station = station
-        self._name = "{} {}".format(name, ft)
+        self._name = "{} {} {}".format(name, ft, srv)
 
     @property
     def name(self):
