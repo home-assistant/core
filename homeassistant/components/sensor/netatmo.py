@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    STATE_UNKNOWN)
+    DEVICE_CLASS_BATTERY, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +39,7 @@ SENSOR_TYPES = {
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy', None],
     'battery_vp': ['Battery', '', 'mdi:battery', None],
     'battery_lvl': ['Battery_lvl', '', 'mdi:battery', None],
-    'battery_percent': ['battery_percent', '%', 'mdi:battery', None],
+    'battery_percent': ['battery_percent', '%', None, DEVICE_CLASS_BATTERY],
     'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
     'windangle': ['Angle', '', 'mdi:compass', None],

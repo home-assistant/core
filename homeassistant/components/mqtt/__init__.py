@@ -34,6 +34,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa pylint: disable=unused-import
@@ -311,7 +312,11 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
     Call the return value to unsubscribe.
     """
     async_remove = await hass.data[DATA_MQTT].async_subscribe(
-        topic, msg_callback, qos, encoding)
+        topic, catch_log_exception(
+            msg_callback, lambda topic, msg, qos:
+            "Exception in {} when handling msg on '{}': '{}'".format(
+                msg_callback.__name__, topic, msg)),
+        qos, encoding)
     return async_remove
 
 
@@ -892,17 +897,12 @@ class MqttAttributes(Entity):
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, availability_topic: Optional[str], qos: Optional[int],
-                 payload_available: Optional[str],
-                 payload_not_available: Optional[str]) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
         self._available = False  # type: bool
 
-        self._availability_topic = availability_topic
-        self._availability_qos = qos
-        self._payload_available = payload_available
-        self._payload_not_available = payload_not_available
+        self._avail_config = config
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events.
@@ -914,15 +914,8 @@ class MqttAvailability(Entity):
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._availability_setup_from_config(config)
+        self._avail_config = config
         await self._availability_subscribe_topics()
-
-    def _availability_setup_from_config(self, config):
-        """(Re)Setup."""
-        self._availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        self._availability_qos = config.get(CONF_QOS)
-        self._payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        self._payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
 
     async def _availability_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -933,9 +926,9 @@ class MqttAvailability(Entity):
                                           payload: SubscribePayloadType,
                                           qos: int) -> None:
             """Handle a new received MQTT availability message."""
-            if payload == self._payload_available:
+            if payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
                 self._available = True
-            elif payload == self._payload_not_available:
+            elif payload == self._avail_config[CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available = False
 
             self.async_schedule_update_ha_state()
@@ -943,9 +936,9 @@ class MqttAvailability(Entity):
         self._availability_sub_state = await async_subscribe_topics(
             self.hass, self._availability_sub_state,
             {'availability_topic': {
-                'topic': self._availability_topic,
+                'topic': self._avail_config.get(CONF_AVAILABILITY_TOPIC),
                 'msg_callback': availability_message_received,
-                'qos': self._availability_qos}})
+                'qos': self._avail_config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -956,7 +949,8 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._availability_topic is None or self._available
+        availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
+        return availability_topic is None or self._available
 
 
 class MqttDiscoveryUpdate(Entity):
