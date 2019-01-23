@@ -19,6 +19,7 @@ NOTIFIER = 'test'
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
+TEST_TITLE = "sensor.test"
 TEST_DATA = {
     'data': {
         'inline_keyboard': ['Close garage:/close_garage']
@@ -306,7 +307,7 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(events))
         last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_TITLE], TITLE)
+        self.assertEqual(last_event.data[notify.ATTR_TITLE], TEST_TITLE)
 
     def test_sending_data_notification(self):
         """Test notifications."""
