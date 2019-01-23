@@ -4,9 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    PLATFORM_SCHEMA, SCAN_INTERVAL, SOURCE_TYPE_ROUTER, DeviceScanner,
+    DeviceTrackerEntity)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +26,64 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_scanner(hass, config):
-    """Return a router scanner instance."""
-    scanner = EEBrightBoxScanner(config[DOMAIN])
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up an EE Brightbox device tracker platform."""
+    scanner = EEBrightBoxScanner(config)
+    if not scanner.check_config():
+        return
+    entities = []
+    devices = scanner.scan_devices()
+    for mac in devices:
+        name = scanner.get_device_name(mac)
+        entities.append(EEBrightBoxEntity(mac, name, scanner))
 
-    return scanner if scanner.check_config() else None
+    add_entities(entities, True)
+
+
+class EEBrightBoxEntity(DeviceTrackerEntity):
+    """Represent an EE Brightbox router entity."""
+
+    def __init__(self, mac, name, scanner):
+        """Set up the entity."""
+        self._attrs = None
+        self._is_connected = None
+        self._mac = mac
+        self._name = name
+        self._scanner = scanner
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._attrs
+
+    @property
+    def is_connected(self):
+        """Return True if device is connected."""
+        return self._is_connected
+
+    @property
+    def mac_address(self):
+        """Return the mac address of the device."""
+        return self._mac
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_ROUTER
+
+    def update(self):
+        """Update state of entity."""
+        self._scanner.scan_devices()
+        macs = [
+            d['mac'] for d in self._scanner.devices.values()
+            if d['activity_ip']]
+        self._is_connected = self._mac in macs
+        self._attrs = self._scanner.get_extra_attributes(self._mac)
 
 
 class EEBrightBoxScanner(DeviceScanner):
@@ -50,6 +105,7 @@ class EEBrightBoxScanner(DeviceScanner):
             _LOGGER.exception("Failed to connect to the router")
             return False
 
+    @Throttle(SCAN_INTERVAL)
     def scan_devices(self):
         """Scan for devices."""
         from eebrightbox import EEBrightBox
