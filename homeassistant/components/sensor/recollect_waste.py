@@ -22,7 +22,7 @@ ATTR_PICKUP_TYPES = 'pickup_types'
 ATTR_AREA_NAME = 'area_name'
 CONF_PLACE_ID = 'place_id'
 CONF_SERVICE_ID = 'service_id'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=86400)
+DEFAULT_SCAN_INTERVAL = timedelta(days=1)
 DOMAIN = 'recollect_waste'
 ICON = 'mdi:trash-can-outline'
 
