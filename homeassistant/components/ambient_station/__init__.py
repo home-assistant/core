@@ -25,6 +25,8 @@ from .const import (
 REQUIREMENTS = ['aioambient==0.1.0']
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_SOCKET_MIN_RETRY = 15
+
 SENSOR_TYPES = {
     '24hourrainin': ['24 Hr Rain', 'in'],
     'baromabsin': ['Abs Pressure', 'inHg'],
@@ -143,7 +145,7 @@ class AmbientStation:
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
-        self._ws_reconnect_delay = 15
+        self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.monitored_conditions = monitored_conditions
         self.stations = {}
@@ -188,6 +190,8 @@ class AmbientStation:
                 self._hass.async_create_task(
                     self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, 'sensor'))
+
+                self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         self.client.websocket.on_connect(on_connect)
         self.client.websocket.on_data(on_data)
