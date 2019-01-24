@@ -101,6 +101,8 @@ class LovelaceStorage:
 
     async def async_save(self, config):
         """Save config."""
+        if self._data is None:
+            self._data = {'config': None}
         self._data['config'] = config
         await self._store.async_save(self._data)
 

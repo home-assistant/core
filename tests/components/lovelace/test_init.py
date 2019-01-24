@@ -50,6 +50,27 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     }
 
 
+async def test_lovelace_from_storage_save_before_load(hass, hass_ws_client,
+                                                      hass_storage):
+    """Test we can load lovelace config from storage."""
+    assert await async_setup_component(hass, 'lovelace', {})
+    client = await hass_ws_client(hass)
+
+    # Store new config
+    await client.send_json({
+        'id': 6,
+        'type': 'lovelace/config/save',
+        'config': {
+            'yo': 'hello'
+        }
+    })
+    response = await client.receive_json()
+    assert response['success']
+    assert hass_storage[lovelace.STORAGE_KEY]['data'] == {
+        'config': {'yo': 'hello'}
+    }
+
+
 async def test_lovelace_from_yaml(hass, hass_ws_client):
     """Test we load lovelace config from yaml."""
     assert await async_setup_component(hass, 'lovelace', {
