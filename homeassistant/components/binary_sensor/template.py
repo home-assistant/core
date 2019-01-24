@@ -84,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name[:-9])
+                invalid_templates.append(tpl_name.replace('_template',''))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 

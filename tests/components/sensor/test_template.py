@@ -162,6 +162,35 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.attributes['friendly_name'] == 'It Works.'
 
+    def test_attribute_templates(self):
+        """Test attribute_templates template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
+                            'attribute_templates': {
+                              'test_attribute': "It {{ states.sensor.test_state.state }}.",
+                            }
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes.get('test_attribute') == 'It .'
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['test_attribute'] == 'It Works.'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0):
@@ -341,9 +370,20 @@ async def test_no_template_match_all(hass, caplog):
                         '{{ states.sensor.test_sensor.state }}',
                     'friendly_name_template': '{{ 1 + 1 }}',
                 },
+                'invalid_attribute': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'attribute_templates': {
+                      'test_attribute': '{{ 1 + 1 }}',
+                    }
+                }
             }
         }
     })
+    
+    Template sensor invalid_template has no entity ids configured to track nor were we able to extract the entities to track from
+     the test_attribute template(s). This entity will only be able to be updated manually.
+    
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
     assert ('Template sensor invalid_state has no entity ids '
@@ -358,11 +398,15 @@ async def test_no_template_match_all(hass, caplog):
     assert ('Template sensor invalid_friendly_name has no entity ids '
             'configured to track nor were we able to extract the entities to '
             'track from the friendly_name template') in caplog.text
-
+    assert ('Template sensor invalid_attribute has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the test_attribute template') in caplog.text
+    
     assert hass.states.get('sensor.invalid_state').state == 'unknown'
     assert hass.states.get('sensor.invalid_icon').state == 'unknown'
     assert hass.states.get('sensor.invalid_entity_picture').state == 'unknown'
     assert hass.states.get('sensor.invalid_friendly_name').state == 'unknown'
+    assert hass.states.get('sensor.invalid_attribute').state == 'unknown'
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -371,6 +415,7 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get('sensor.invalid_icon').state == 'startup'
     assert hass.states.get('sensor.invalid_entity_picture').state == 'startup'
     assert hass.states.get('sensor.invalid_friendly_name').state == 'startup'
+    assert hass.states.get('sensor.invalid_attribute').state == 'startup'
 
     hass.states.async_set('sensor.test_sensor', 'hello')
     await hass.async_block_till_done()
@@ -379,6 +424,7 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get('sensor.invalid_icon').state == 'startup'
     assert hass.states.get('sensor.invalid_entity_picture').state == 'startup'
     assert hass.states.get('sensor.invalid_friendly_name').state == 'startup'
+    assert hass.states.get('sensor.invalid_attribute').state == 'startup'
 
     await hass.helpers.entity_component.async_update_entity(
         'sensor.invalid_state')
@@ -388,8 +434,11 @@ async def test_no_template_match_all(hass, caplog):
         'sensor.invalid_entity_picture')
     await hass.helpers.entity_component.async_update_entity(
         'sensor.invalid_friendly_name')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_attribute')
 
     assert hass.states.get('sensor.invalid_state').state == '2'
     assert hass.states.get('sensor.invalid_icon').state == 'hello'
     assert hass.states.get('sensor.invalid_entity_picture').state == 'hello'
     assert hass.states.get('sensor.invalid_friendly_name').state == 'hello'
+    assert hass.states.get('sensor.invalid_attribute').state == 'hello'
