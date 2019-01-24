@@ -6,6 +6,7 @@ https://home-assistant.io/components/remote.lg_netcast/
 """
 import asyncio
 from datetime import timedelta
+import logging
 
 from requests import RequestException
 import voluptuous as vol
@@ -18,6 +19,8 @@ from homeassistant.const import (CONF_HOST, CONF_NAME,
                                  CONF_ACCESS_TOKEN,
                                  STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
@@ -66,10 +69,10 @@ class LGNetcastRemote(RemoteDevice):
                 volume_info = client.query_data(LG_QUERY.VOLUME_INFO)
                 if volume_info:
                     self._state = STATE_ON
-                else:
-                    self._state = STATE_OFF
+            _LOGGER.debug('Update success')
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
+            _LOGGER.debug('Update Failed, probably offline')
 
     @property
     def name(self):
@@ -79,7 +82,7 @@ class LGNetcastRemote(RemoteDevice):
     @property
     def is_on(self):
         """Return true if remote is on."""
-        return self._state
+        return self._state == STATE_ON
 
     @property
     def device_state_attributes(self):
