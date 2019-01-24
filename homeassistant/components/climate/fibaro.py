@@ -93,15 +93,14 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             if device.type == 'com.fibaro.temperatureSensor':
                 self._tempsensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit
-            elif device.type == 'com.fibaro.setPoint' or\
-                    device.type == 'com.fibaro.thermostatDanfoss':
+            if 'setTargetLevel' in device.actions:
                 self._targettemp_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_TARGET_TEMPERATURE
                 tempunit = device.properties.unit
-            elif device.type == 'com.fibaro.operatingMode':
+            if 'setMode' in device.actions:
                 self._opmode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_OPERATION_MODE
-            elif device.type == 'com.fibaro.fanMode':
+            if 'setFanMode' in device.actions:
                 self._fanmode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_FAN_MODE
 
