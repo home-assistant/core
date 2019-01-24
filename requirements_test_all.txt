@@ -142,7 +142,7 @@ mficlient==0.3.0
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
-numpy==1.15.4
+numpy==1.16.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
