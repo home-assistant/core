@@ -80,6 +80,8 @@ omit =
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
+    homeassistant/components/danfoss_air/*
+
     homeassistant/components/dominos.py
 
     homeassistant/components/doorbird.py
@@ -90,6 +92,9 @@ omit =
 
     homeassistant/components/eight_sleep.py
     homeassistant/components/*/eight_sleep.py
+
+    homeassistant/components/ecoal_boiler.py
+    homeassistant/components/*/ecoal_boiler.py
 
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
@@ -169,7 +174,8 @@ omit =
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
-    homeassistant/components/homematicip_cloud.py
+    homeassistant/components/homematicip_cloud/hap.py
+    homeassistant/components/homematicip_cloud/device.py
     homeassistant/components/*/homematicip_cloud.py
 
     homeassistant/components/homeworks.py

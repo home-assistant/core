@@ -61,6 +61,9 @@ defusedxml==0.5.0
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.12
 
+# homeassistant.components.device_tracker.ee_brightbox
+eebrightbox==0.0.4
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.7
 
@@ -107,7 +110,7 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190120.0
+home-assistant-frontend==20190121.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.3
@@ -212,7 +215,7 @@ pyspcwebgw==0.4.0
 python-forecastio==1.4.0
 
 # homeassistant.components.nest
-python-nest==4.0.5
+python-nest==4.1.0
 
 # homeassistant.components.sensor.awair
 python_awair==0.0.3
