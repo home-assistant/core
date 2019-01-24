@@ -14,8 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,7 +156,7 @@ class PioneerDevice(MediaPlayerDevice):
         if self._pwstate == "PWR0":
             return STATE_ON
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def volume_level(self):

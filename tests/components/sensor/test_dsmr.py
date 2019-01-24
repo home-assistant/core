@@ -12,7 +12,6 @@ from unittest.mock import Mock
 import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
-from homeassistant.const import STATE_UNKNOWN
 import pytest
 from tests.common import assert_setup_component
 
@@ -99,7 +98,7 @@ def test_derivative():
     entity = DerivativeDSMREntity('test', '1.0.0')
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
+    assert entity.state is None, 'initial state not unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
@@ -109,7 +108,7 @@ def test_derivative():
     }
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, \
+    assert entity.state is None, \
         'state after first update should still be unknown'
 
     entity.telegram = {
