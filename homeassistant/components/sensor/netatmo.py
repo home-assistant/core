@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY, STATE_UNKNOWN)
+    DEVICE_CLASS_BATTERY)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -161,7 +161,7 @@ class NetAtmoSensor(Entity):
 
         if data is None:
             _LOGGER.warning("No data found for %s", self.module_name)
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
 
         if self.type == 'temperature':

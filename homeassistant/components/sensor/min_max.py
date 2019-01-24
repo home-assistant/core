@@ -70,20 +70,20 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 def calc_min(sensor_values):
     """Calculate min value, honoring unknown states."""
-    val = STATE_UNKNOWN
+    val = None
     for sval in sensor_values:
         if sval != STATE_UNKNOWN:
-            if val == STATE_UNKNOWN or val > sval:
+            if val is None or val > sval:
                 val = sval
     return val
 
 
 def calc_max(sensor_values):
     """Calculate max value, honoring unknown states."""
-    val = STATE_UNKNOWN
+    val = None
     for sval in sensor_values:
         if sval != STATE_UNKNOWN:
-            if val == STATE_UNKNOWN or val < sval:
+            if val is None or val < sval:
                 val = sval
     return val
 
@@ -97,7 +97,7 @@ def calc_mean(sensor_values, round_digits):
             val += sval
             count += 1
     if count == 0:
-        return STATE_UNKNOWN
+        return None
     return round(val/count, round_digits)
 
 
@@ -119,7 +119,7 @@ class MinMaxSensor(Entity):
                      if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = self.last = STATE_UNKNOWN
+        self.min_value = self.max_value = self.mean = self.last = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -164,7 +164,7 @@ class MinMaxSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
-            return STATE_UNKNOWN
+            return None
         return getattr(self, next(
             k for k, v in SENSOR_TYPES.items() if self._sensor_type == v))
 

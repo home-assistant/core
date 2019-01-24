@@ -11,8 +11,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, STATE_HOME, STATE_IDLE,
+                                 STATE_PLAYING)
 
 DEPENDENCIES = ['roku']
 
@@ -83,7 +83,7 @@ class RokuDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         if self.current_app is None:
-            return STATE_UNKNOWN
+            return None
 
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
@@ -93,7 +93,7 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app.name is not None:
             return STATE_PLAYING
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def supported_features(self):

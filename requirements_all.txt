@@ -39,7 +39,7 @@ HAP-python==2.4.2
 Mastodon.py==1.3.1
 
 # homeassistant.components.isy994
-PyISY==1.1.0
+PyISY==1.1.1
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
@@ -72,7 +72,7 @@ RtmAPI==0.7.0
 TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.5.8
+TwitterAPI==2.5.9
 
 # homeassistant.components.sensor.waze_travel_time
 WazeRouteCalculator==0.6
@@ -196,7 +196,7 @@ bellows==0.7.0
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
-blinkpy==0.11.1
+blinkpy==0.11.2
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -520,13 +520,13 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190121.0
+home-assistant-frontend==20190121.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
-# homekit==0.12.0
+# homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.3
@@ -953,6 +953,9 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.daikin
 pydaikin==0.9
+
+# homeassistant.components.danfoss_air
+pydanfossair==0.0.6
 
 # homeassistant.components.deconz
 pydeconz==47
