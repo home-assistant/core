@@ -17,13 +17,23 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
+    if discovery_info is None:
+        return
+
     api = hass.data[DATA_ASUSWRT]
-    add_entities([
-        AsuswrtRXSensor(api),
-        AsuswrtTXSensor(api),
-        AsuswrtTotalRXSensor(api),
-        AsuswrtTotalTXSensor(api)
-    ])
+
+    devices = []
+
+    if 'download' in discovery_info:
+        devices.append(AsuswrtTotalRXSensor(api))
+    if 'upload' in discovery_info:
+        devices.append(AsuswrtTotalTXSensor(api))
+    if 'download_speed' in discovery_info:
+        devices.append(AsuswrtRXSensor(api))
+    if 'upload_speed' in discovery_info:
+        devices.append(AsuswrtTXSensor(api))
+
+    add_entities(devices)
 
 
 class AsuswrtSensor(Entity):

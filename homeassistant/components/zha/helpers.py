@@ -14,7 +14,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False,
+                    manufacturer=None):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -25,7 +26,8 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
-            only_cache=only_cache
+            only_cache=only_cache,
+            manufacturer=manufacturer
         )
         return result
     except Exception:  # pylint: disable=broad-except
@@ -116,6 +118,10 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
         import zigpy_xbee.api
         from zigpy_xbee.zigbee.application import ControllerApplication
         radio = zigpy_xbee.api.XBee()
+    elif radio_type == RadioType.deconz.name:
+        import zigpy_deconz.api
+        from zigpy_deconz.zigbee.application import ControllerApplication
+        radio = zigpy_deconz.api.Deconz()
     try:
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
         controller = ControllerApplication(radio, database_path)
@@ -124,3 +130,9 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
     except Exception:  # pylint: disable=broad-except
         return False
     return True
+
+
+def convert_ieee(ieee_str):
+    """Convert given ieee string to EUI64."""
+    from zigpy.types import EUI64, uint8_t
+    return EUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])

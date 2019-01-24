@@ -35,7 +35,6 @@ class TestLoader(unittest.TestCase):
     def test_get_component(self):
         """Test if get_component works."""
         assert http == loader.get_component(self.hass, 'http')
-        assert loader.get_component(self.hass, 'light.hue') is not None
 
     def test_load_order_component(self):
         """Test if we can get the proper load order of components."""

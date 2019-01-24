@@ -155,10 +155,9 @@ def _async_get_connector(hass, verify_ssl=True):
     connector = aiohttp.TCPConnector(loop=hass.loop, ssl=ssl_context)
     hass.data[key] = connector
 
-    @callback
-    def _async_close_connector(event):
+    async def _async_close_connector(event):
         """Close connector pool."""
-        connector.close()
+        await connector.close()
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)

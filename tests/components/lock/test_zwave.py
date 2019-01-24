@@ -143,6 +143,47 @@ def test_v2btze_value_changed(mock_openzwave):
     assert device.is_locked
 
 
+def test_alarm_type_workaround(mock_openzwave):
+    """Test value changed for Z-Wave lock using alarm type."""
+    node = MockNode(manufacturer_id='0109', product_id='0000')
+    values = MockEntityValues(
+        primary=MockValue(data=True, node=node),
+        access_control=None,
+        alarm_type=MockValue(data=16, node=node),
+        alarm_level=None,
+    )
+    device = zwave.get_device(node=node, values=values)
+    assert not device.is_locked
+
+    values.alarm_type.data = 18
+    value_changed(values.alarm_type)
+    assert device.is_locked
+
+    values.alarm_type.data = 19
+    value_changed(values.alarm_type)
+    assert not device.is_locked
+
+    values.alarm_type.data = 21
+    value_changed(values.alarm_type)
+    assert device.is_locked
+
+    values.alarm_type.data = 22
+    value_changed(values.alarm_type)
+    assert not device.is_locked
+
+    values.alarm_type.data = 24
+    value_changed(values.alarm_type)
+    assert device.is_locked
+
+    values.alarm_type.data = 25
+    value_changed(values.alarm_type)
+    assert not device.is_locked
+
+    values.alarm_type.data = 27
+    value_changed(values.alarm_type)
+    assert device.is_locked
+
+
 def test_lock_access_control(mock_openzwave):
     """Test access control for Z-Wave lock."""
     node = MockNode()

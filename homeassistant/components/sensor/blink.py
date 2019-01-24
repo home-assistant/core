@@ -44,6 +44,9 @@ class BlinkSensor(Entity):
         self._unit_of_measurement = units
         self._icon = icon
         self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._sensor_key = self._type
+        if self._type == 'temperature':
+            self._sensor_key = 'temperature_calibrated'
 
     @property
     def name(self):
@@ -74,9 +77,9 @@ class BlinkSensor(Entity):
         """Retrieve sensor data from the camera."""
         self.data.refresh()
         try:
-            self._state = self._camera.attributes[self._type]
+            self._state = self._camera.attributes[self._sensor_key]
         except KeyError:
             self._state = None
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?",
-                self._type)
+                self._sensor_key)

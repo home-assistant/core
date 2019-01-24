@@ -21,9 +21,7 @@ DOMAIN = 'shell_command'
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: cv.string,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(cv.string),
 }, extra=vol.ALLOW_EXTRA)
 
 
