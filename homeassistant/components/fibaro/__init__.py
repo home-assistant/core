@@ -267,13 +267,13 @@ class FibaroController():
                     else:
                         # if a sibling of this has been added, skip this one
                         if last_climate_parent != device.parentId:
-                            device.visible = true
+                            device.visible = True
                             self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
-                _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
+                _LOGGER.debug("%s (%s, %s) -> %s %s",
                               device.ha_id, device.type,
                               device.baseType, dtype,
-                              str(device.properties), str(device.actions))
+                              str(device))
             except (KeyError, ValueError):
                 pass
 
