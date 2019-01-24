@@ -240,6 +240,10 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
                     'entity_id': 'test.invalid_end_',
                     'platform': 'super_platform',
                     'unique_id': 'id-invalid-end',
+                }, {
+                    'entity_id': 'test._invalid_start',
+                    'platform': 'super_platform',
+                    'unique_id': 'id-invalid-start',
                 }
             ]
         }
@@ -256,3 +260,8 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
         'test', 'super_platform', 'id-invalid-end')
 
     assert valid_entity_id(entity_invalid_end.entity_id)
+
+    entity_invalid_start = registry.async_get_or_create(
+        'test', 'super_platform', 'id-invalid-start')
+
+    assert valid_entity_id(entity_invalid_start.entity_id)
