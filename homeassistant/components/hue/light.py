@@ -228,9 +228,6 @@ class HueLight(Light):
             self.is_philips = light.manufacturername == 'Philips'
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
-            if not self.gamut:
-                err_msg = 'Can not get color gamut of light "%s"'
-                _LOGGER.warning(err_msg, self.name)
 
     @property
     def unique_id(self):
