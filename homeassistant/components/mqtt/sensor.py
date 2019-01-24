@@ -20,7 +20,7 @@ from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE,
     CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import mqtt
@@ -95,7 +95,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Initialize the sensor."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._sub_state = None
         self._expiration_trigger = None
         self._attributes = None
@@ -188,7 +188,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def value_is_expired(self, *_):
         """Triggered when value is expired."""
         self._expiration_trigger = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self.async_schedule_update_ha_state()
 
     @property

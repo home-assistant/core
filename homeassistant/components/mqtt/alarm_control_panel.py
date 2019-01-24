@@ -15,7 +15,7 @@ from homeassistant.components import mqtt
 from homeassistant.const import (
     CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+    STATE_ALARM_TRIGGERED)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
     CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
@@ -90,7 +90,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     def __init__(self, config, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None

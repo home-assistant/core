@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING, STATE_UNKNOWN)
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
@@ -68,7 +68,7 @@ class LgTVDevice(MediaPlayerDevice):
         self._volume = 0
         self._channel_name = ''
         self._program_name = ''
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._sources = {}
         self._source_names = []
 

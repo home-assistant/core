@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
-
 REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
