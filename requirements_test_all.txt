@@ -65,7 +65,7 @@ dsmr_parser==0.12
 eebrightbox==0.0.4
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.7
+emulated_roku==0.1.8
 
 # homeassistant.components.sensor.entur_public_transport
 enturclient==0.1.3
