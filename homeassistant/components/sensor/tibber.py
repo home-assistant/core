@@ -28,6 +28,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Tibber sensor."""
+    if discovery_info is None:
+        return
+
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
     dev = []
