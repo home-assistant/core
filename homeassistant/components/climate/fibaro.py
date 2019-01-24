@@ -12,8 +12,9 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE)
@@ -45,6 +46,7 @@ IFANMODE_MAP = {
 
 OPMODE_MAP = {
     "0,1": {0: STATE_OFF, 1: STATE_ON},
+    "0,1,31": {0: STATE_OFF, 1: STATE_ON, 31: STATE_OPEN},
     "0,1,2": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL},
     "0,1,2,6": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL,
                 6: STATE_FAN_ONLY},
@@ -52,6 +54,7 @@ OPMODE_MAP = {
 
 IOPMODE_MAP = {
     "0,1": {STATE_OFF: 0, STATE_ON: 1},
+    "0,1,31": {STATE_OFF: 0, STATE_ON: 1, STATE_OPEN: 31},
     "0,1,2": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2},
     "0,1,2,6": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2,
                 STATE_FAN_ONLY: 6},
@@ -71,10 +74,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class FibaroThermostat(FibaroDevice, ClimateDevice):
-    """Representation of a Vera Thermostat."""
+    """Representation of a Fibaro Thermostat."""
 
     def __init__(self, fibaro_device):
-        """Initialize the Vera device."""
+        """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
         self._tempsensor_device = None
         self._targettemp_device = None
