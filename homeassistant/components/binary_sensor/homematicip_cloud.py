@@ -95,7 +95,7 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if smoke is detected."""
-        return self._device.smokeDetectorAlarmType != STATE_SMOKE_OFF
+        return str(self._device.smokeDetectorAlarmType) != STATE_SMOKE_OFF
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
