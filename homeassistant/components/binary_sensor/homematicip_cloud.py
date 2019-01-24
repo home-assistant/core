@@ -65,7 +65,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
             return True
         if self._device.windowState is None:
             return None
-        return self._device.windowState == WindowState.OPEN
+        return self._device.windowState != WindowState.CLOSED
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
