@@ -267,6 +267,7 @@ class FibaroController():
                     else:
                         # if a sibling of this has been added, skip this one
                         if last_climate_parent != device.parentId:
+                            device.visible = true
                             self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
                 _LOGGER.debug("%s (%s, %s) -> %s. Prop: %s Actions: %s",
