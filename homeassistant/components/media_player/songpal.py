@@ -288,8 +288,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently active source."""
-        # Use getattr() to avoid a KeyError when _active_source is
-        # not (yet) populated.
+        # Avoid a KeyError when _active_source is not (yet) populated
         return getattr(self._active_source, 'title', None)
 
     @property
