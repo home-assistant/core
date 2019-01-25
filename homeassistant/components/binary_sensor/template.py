@@ -222,7 +222,8 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         if self._attribute_templates is not None:
             templates.update(dict(('_attributes.' + key, value)
-                             for key, value in self._attribute_templates.items()))
+                             for key, value
+                             in self._attribute_templates.items()))
 
         for property_name, template in templates.items():
             if template is None:
