@@ -85,13 +85,19 @@ class HegelDevice(MediaPlayerDevice):
         """Execute a telnet command and return the response."""
         try:
             telnet = self.telnet_connect()
-            telnet.write(("-" + command + "?" + parameter).encode("ASCII") + b"\r")
+            request = "-" + command + "." + parameter
+            telnet.write(request.encode("ASCII") + b"\r")
 
             # If the telnet command was succesful we receive an answer in the
             # format: "-command.value" e.g. "-v.20"
             response = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII").strip().split('.')
 
-            return response[1] if response[1] else response[0] ## TODO: catch error responses
+            _LOGGER.info("Hegel response: %s", response)
+
+            if (response[0] == "-e"):
+                return None
+            else:
+                return response[1] if response[1] else response[0]
         except telnetlib.socket.timeout:
             self.telnet_disconnect()
             _LOGGER.debug("Hegel command %s timed out", command)
@@ -101,7 +107,6 @@ class HegelDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        
         power_value = self.telnet_send("p", "?")
         self._power_state = 1 if power_value == "1" else 0
 
@@ -157,7 +162,7 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._source_names.keys())
+        return self._source_names
 
     def turn_on(self):
         """Turn the Hegel on."""
@@ -187,7 +192,7 @@ class HegelDevice(MediaPlayerDevice):
         """Select input source."""
         input_number = self._source_names.index(source)
 
-        if input_number
+        if input_number:
             self.telnet_send("i", input_number)
-        else
+        else:
             _LOGGER.warning("%s input source %s does not exist", self._name, source)
