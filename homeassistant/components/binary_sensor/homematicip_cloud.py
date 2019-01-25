@@ -15,9 +15,6 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_SMOKE_OFF = 'IDLE_OFF'
-
-
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud binary sensor devices."""
@@ -95,7 +92,8 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if smoke is detected."""
-        return str(self._device.smokeDetectorAlarmType) != STATE_SMOKE_OFF
+        from homematicip.base.enums import SmokeDetectorAlarmType
+        return self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
