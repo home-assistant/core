@@ -173,7 +173,8 @@ class TestTemplateSensor:
                             'value_template':
                                 "{{ states.sensor.test_state.state }}",
                             'attribute_templates': {
-                              'test_attribute': "It {{ states.sensor.test_state.state }}.",
+                              'test_attribute': 
+                                "It {{ states.sensor.test_state.state }}.",
                             }
                         }
                     }
@@ -380,7 +381,7 @@ async def test_no_template_match_all(hass, caplog):
             }
         }
     })
-    
+
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
     assert ('Template sensor invalid_state has no entity ids '
@@ -398,7 +399,7 @@ async def test_no_template_match_all(hass, caplog):
     assert ('Template sensor invalid_attribute has no entity ids '
             'configured to track nor were we able to extract the entities to '
             'track from the test_attribute template') in caplog.text
-    
+
     assert hass.states.get('sensor.invalid_state').state == 'unknown'
     assert hass.states.get('sensor.invalid_icon').state == 'unknown'
     assert hass.states.get('sensor.invalid_entity_picture').state == 'unknown'

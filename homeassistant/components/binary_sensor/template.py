@@ -68,10 +68,10 @@ async def async_setup_platform(hass, config, async_add_entities,
                 (CONF_ICON_TEMPLATE, icon_template),
                 (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
         ))
-        
-        if attribute_templates != None:
-          templates.update(attribute_templates)
-        
+
+        if attribute_templates is not None:
+            templates.update(attribute_templates)
+
         for tpl_name, template in templates.items():
             if template is None:
                 continue
@@ -84,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name.replace('_template',''))
+                invalid_templates.append(tpl_name.replace('_template', ''))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
@@ -193,7 +193,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
-    
+
     @property
     def should_poll(self):
         """No polling needed."""
@@ -213,24 +213,26 @@ class BinarySensorTemplate(BinarySensorDevice):
                                 "the state is unknown", self._name)
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
-        
+
         templates = dict((
                 ('_icon', self._icon_template),
                 ('_entity_picture', self._entity_picture_template),
         ))
-        
-        if self._attribute_templates != None:
-          templates.update(dict(('_attributes.' + key,value) for key, value in self._attribute_templates.items()))
-        
+
+        if self._attribute_templates is not None:
+            templates.update(dict(('_attributes.' + key,value) 
+            for key, value in self._attribute_templates.items()))
+
         for property_name, template in templates.items():
             if template is None:
                 continue
 
             try:
                 if property_name.startswith("_attributes."):
-                  self._attributes[property_name.replace("_attributes.","")] = template.async_render()
+                    attribute_name = property_name.replace("_attributes.", "")
+                    self._attributes[attribute_name] = template.async_render()
                 else:
-                  setattr(self, property_name, template.async_render())
+                    setattr(self, property_name, template.async_render())
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace('_', ' ')
                 if ex.args and ex.args[0].startswith(
