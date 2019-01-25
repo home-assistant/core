@@ -7,9 +7,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.const import (
-    CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -62,13 +61,13 @@ class CO2Sensor(Entity):
         self._longitude = lon
 
         if country_code is not None:
-            self._device_name = country_code
+            device_name = country_code
         else:
-            self._device_name = '{lat}/{lon}'\
+            device_name = '{lat}/{lon}'\
                 .format(lat=round(self._latitude, 2),
                         lon=round(self._longitude, 2))
 
-        self._friendly_name = 'CO2 intensity - {}'.format(self._device_name)
+        self._friendly_name = 'CO2 intensity - {}'.format(device_name)
 
     @property
     def name(self):
@@ -90,6 +89,11 @@ class CO2Sensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return CO2_INTENSITY_UNIT
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the last update."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def update(self):
         """Get the latest data and updates the states."""
         import CO2Signal
@@ -97,13 +101,11 @@ class CO2Sensor(Entity):
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._country_code is not None:
-            self._data = CO2Signal\
-                .get_latest_carbon_intensity(self._token,
-                                             country_code=self._country_code)
+            self._data = CO2Signal.get_latest_carbon_intensity(
+                self._token,country_code=self._country_code)
         else:
-            self._data = CO2Signal\
-                .get_latest_carbon_intensity(self._token,
-                                             latitude=self._latitude,
-                                             longitude=self._longitude)
+            self._data = CO2Signal.get_latest_carbon_intensity(
+                self._token,
+                latitude=self._latitude, longitude=self._longitude)
 
         self._data = round(self._data, 2)
