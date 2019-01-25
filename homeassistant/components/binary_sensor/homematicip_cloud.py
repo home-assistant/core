@@ -93,8 +93,8 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     def is_on(self):
         """Return true if smoke is detected."""
         from homematicip.base.enums import SmokeDetectorAlarmType
-        return self._device.smokeDetectorAlarmType 
-            != SmokeDetectorAlarmType.IDLE_OFF
+        return (self._device.smokeDetectorAlarmType 
+            != SmokeDetectorAlarmType.IDLE_OFF)
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
