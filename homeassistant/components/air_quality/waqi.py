@@ -2,7 +2,7 @@
 Support for the World Air Quality Index service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.waqi/
+https://home-assistant.io/components/air_quality/waqi/
 """
 import asyncio
 import logging
