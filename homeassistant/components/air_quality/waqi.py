@@ -12,8 +12,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
-    PLATFORM_SCHEMA, AirQualityEntity, ATTR_AQI, ATTR_ATTRIBUTION, ATTR_NO2,
-    ATTR_OZONE, ATTR_PM_10, ATTR_PM_2_5, ATTR_SO2, ATTR_CO)
+    PLATFORM_SCHEMA, AirQualityEntity, PROP_TO_ATTR)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
@@ -27,21 +26,11 @@ ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
 ATTR_PRESSURE = 'pressure'
 
-PROP_TO_ATTR = {
-    'air_quality_index': ATTR_AQI,
-    'attribution': ATTR_ATTRIBUTION,
-    'carbon_monoxide': ATTR_CO,
-    'nitrogen_dioxide': ATTR_NO2,
-    'ozone': ATTR_OZONE,
-    'particulate_matter_10': ATTR_PM_10,
-    'particulate_matter_2_5': ATTR_PM_2_5,
-    'sulphur_dioxide': ATTR_SO2,
-    'temperature': ATTR_TEMPERATURE,
-    'humidity': ATTR_HUMIDITY,
-    'dominent_polluant': ATTR_DOMINENTPOL,
-    'update_time': ATTR_TIME,
-    'pressure': ATTR_PRESSURE,
-}
+PROP_TO_ATTR.update({'temperature': ATTR_TEMPERATURE,
+                     'humidity': ATTR_HUMIDITY,
+                     'dominent_polluant': ATTR_DOMINENTPOL,
+                     'update_time': ATTR_TIME,
+                     'pressure': ATTR_PRESSURE})
 
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
