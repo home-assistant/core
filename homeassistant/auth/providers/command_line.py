@@ -75,14 +75,14 @@ class CommandLineAuthProvider(AuthProvider):
             stdout = (await process.communicate())[0]
         except OSError as err:
             # happens when command doesn't exist or permission is denied
-            _LOGGER.error("Error while authenticating %s: %s",
-                          repr(username), err)
+            _LOGGER.error("Error while authenticating %r: %s",
+                          username, err)
             raise InvalidAuthError
 
         if process.returncode != 0:
-            _LOGGER.error("User %s failed to authenticate, command exited "
+            _LOGGER.error("User %r failed to authenticate, command exited "
                           "with code %d.",
-                          repr(username), process.returncode)
+                          username, process.returncode)
             raise InvalidAuthError
 
         if self.config[CONF_META]:
