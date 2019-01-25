@@ -288,6 +288,10 @@ ATTR_TRIPPED = 'device_tripped'
 # time the device was tripped
 ATTR_LAST_TRIP_TIME = 'last_tripped_time'
 
+# For sensors that support 'tripping' this holds a friendly
+# version of the time since the device was tripped, eg. "12 seconds ago"
+ATTR_LAST_TRIPPED = 'last_tripped'
+
 # For all entity's, this hold whether or not it should be hidden
 ATTR_HIDDEN = 'hidden'
 

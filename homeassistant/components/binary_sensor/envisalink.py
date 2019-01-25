@@ -13,17 +13,19 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.envisalink import (
     DATA_EVL, ZONE_SCHEMA, CONF_ZONENAME, CONF_ZONETYPE, EnvisalinkDevice,
     SIGNAL_ZONE_UPDATE)
-from homeassistant.const import ATTR_LAST_TRIP_TIME
+from homeassistant.const import ATTR_LAST_TRIP_TIME, ATTR_LAST_TRIPPED
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['envisalink']
-
+REQUIREMENTS = ['humanize==0.5.1']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Envisalink binary sensor devices."""
+    import humanize
+
     configured_zones = discovery_info['zones']
 
     devices = []
@@ -78,10 +80,13 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
             now = dt_util.now().replace(microsecond=0)
             delta = datetime.timedelta(seconds=seconds_ago)
             last_trip_time = (now - delta).isoformat()
+            last_tripped = humanize.naturaltime(delta)
         else:
             last_trip_time = None
+            last_tripped = None
 
         attr[ATTR_LAST_TRIP_TIME] = last_trip_time
+        attr[ATTR_LAST_TRIPPED] = last_tripped
         return attr
 
     @property
