@@ -131,7 +131,7 @@ class FFmpegManager:
         if version_string is not None:
             result = re.search(r"(\d+)\.", version_string)
             if result is not None:
-                major_version = int(result.group(0))
+                major_version = int(result.group(1))
 
         if major_version > 3:
             return 'multipart/x-mixed-replace;boundary=ffmpeg'
