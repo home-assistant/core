@@ -529,7 +529,7 @@ homeassistant-pyozw==0.1.2
 # homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.3
+homematicip==0.10.4
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk

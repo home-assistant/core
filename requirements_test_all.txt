@@ -113,7 +113,7 @@ holidays==0.9.9
 home-assistant-frontend==20190121.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.3
+homematicip==0.10.4
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
