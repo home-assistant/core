@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.components.sensor.filter import (
     LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter,
-    RangeFilter)
+    RangeFilter, TimeThrottleFilter)
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
@@ -177,6 +177,18 @@ class TestFilterSensor(unittest.TestCase):
             if not filt.skip_processing:
                 filtered.append(new_state)
         assert [20, 21] == [f.state for f in filtered]
+
+    def test_time_throttle(self):
+        """Test if lowpass filter works."""
+        filt = TimeThrottleFilter(window_size=timedelta(minutes=2),
+                                  precision=2,
+                                  entity=None)
+        filtered = []
+        for state in self.values:
+            new_state = filt.filter_state(state)
+            if not filt.skip_processing:
+                filtered.append(new_state)
+        assert [20, 18, 22] == [f.state for f in filtered]
 
     def test_time_sma(self):
         """Test if time_sma filter works."""
