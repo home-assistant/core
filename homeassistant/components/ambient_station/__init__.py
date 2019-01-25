@@ -185,8 +185,6 @@ class AmbientStation:
                     ATTR_NAME: station['info']['name'],
                 }
 
-                async_dispatcher_send(self._hass, TOPIC_UPDATE)
-
                 self._hass.async_create_task(
                     self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, 'sensor'))
