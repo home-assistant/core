@@ -65,10 +65,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         invalid_templates = []
 
         templates = dict((
-                (CONF_VALUE_TEMPLATE, state_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-                (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
+            (CONF_VALUE_TEMPLATE, state_template),
+            (CONF_ICON_TEMPLATE, icon_template),
+            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+            (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
         ))
 
         if attribute_templates is not None:
@@ -225,15 +225,15 @@ class SensorTemplate(Entity):
                               ex)
 
         templates = dict((
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template),
-                ('_name', self._friendly_name_template),
+            ('_icon', self._icon_template),
+            ('_entity_picture', self._entity_picture_template),
+            ('_name', self._friendly_name_template),
         ))
 
         if self._attribute_templates is not None:
             templates.update(dict(('_attributes.' + key, value)
-                             for key, value
-                             in self._attribute_templates.items()))
+                                  for key, value
+                                  in self._attribute_templates.items()))
 
         for property_name, template in templates.items():
             if template is None:

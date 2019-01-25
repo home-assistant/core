@@ -65,9 +65,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         invalid_templates = []
 
         templates = dict((
-                (CONF_VALUE_TEMPLATE, value_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+            (CONF_VALUE_TEMPLATE, value_template),
+            (CONF_ICON_TEMPLATE, icon_template),
+            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
         ))
 
         if attribute_templates is not None:
@@ -216,14 +216,14 @@ class BinarySensorTemplate(BinarySensorDevice):
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
         templates = dict((
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template),
+            ('_icon', self._icon_template),
+            ('_entity_picture', self._entity_picture_template),
         ))
 
         if self._attribute_templates is not None:
             templates.update(dict(('_attributes.' + key, value)
-                             for key, value
-                             in self._attribute_templates.items()))
+                                  for key, value
+                                  in self._attribute_templates.items()))
 
         for property_name, template in templates.items():
             if template is None:
