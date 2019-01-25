@@ -71,7 +71,7 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
-async def async_setup_entity_template(hass, config, async_add_entities,
+async def async_setup_entity_template(config, async_add_entities,
                                       discovery_hash):
     """Set up a MQTT Template light."""
     async_add_entities([MqttTemplate(config, discovery_hash)])

@@ -65,7 +65,7 @@ dsmr_parser==0.12
 eebrightbox==0.0.4
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.7
+emulated_roku==0.1.8
 
 # homeassistant.components.sensor.entur_public_transport
 enturclient==0.1.3
@@ -142,7 +142,7 @@ mficlient==0.3.0
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
-numpy==1.15.4
+numpy==1.16.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -181,7 +181,7 @@ pydeconz==47
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.54
+pyhomematic==0.1.55
 
 # homeassistant.components.litejet
 pylitejet==0.1
