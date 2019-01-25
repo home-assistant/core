@@ -12,8 +12,8 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
-    PLATFORM_SCHEMA, AirQualityEntity, ATTR_ATTRIBUTION, ATTR_NO2,
-    ATTR_OZONE, ATTR_PM_10, ATTR_PM_2_5, ATTR_SO2)
+    PLATFORM_SCHEMA, AirQualityEntity, ATTR_AQI, ATTR_ATTRIBUTION, ATTR_NO2,
+    ATTR_OZONE, ATTR_PM_10, ATTR_PM_2_5, ATTR_SO2, ATTR_CO)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
@@ -27,15 +27,20 @@ ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
 ATTR_PRESSURE = 'pressure'
 
-KEY_TO_ATTR = {
-    'pm25': ATTR_PM_2_5,
-    'pm10': ATTR_PM_10,
-    'h': ATTR_HUMIDITY,
-    'p': ATTR_PRESSURE,
-    't': ATTR_TEMPERATURE,
-    'o3': ATTR_OZONE,
-    'no2': ATTR_NO2,
-    'so2': ATTR_SO2,
+PROP_TO_ATTR = {
+    'air_quality_index': ATTR_AQI,
+    'attribution': ATTR_ATTRIBUTION,
+    'carbon_monoxide': ATTR_CO,
+    'nitrogen_dioxide': ATTR_NO2,
+    'ozone': ATTR_OZONE,
+    'particulate_matter_10': ATTR_PM_10,
+    'particulate_matter_2_5': ATTR_PM_2_5,
+    'sulphur_dioxide': ATTR_SO2,
+    'temperature': ATTR_TEMPERATURE,
+    'humidity': ATTR_HUMIDITY,
+    'dominent_polluant': ATTR_DOMINENTPOL,
+    'update_time': ATTR_TIME,
+    'pressure': ATTR_PRESSURE,
 }
 
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
@@ -108,6 +113,72 @@ class WaqiQuality(AirQualityEntity):
         self._data = None
 
     @property
+    def attribution(self):
+        """Return the attribution."""
+        return [ATTRIBUTION] + [
+            v['name'] for v in self._data.get('attributions', [])]
+
+    @property
+    def particulate_matter_2_5(self):
+        """Return the particulate matter 2.5 level."""
+        return self.extract_data('pm25')
+
+    @property
+    def particulate_matter_10(self):
+        """Return the particulate matter 10 level."""
+        return self.extract_data('pm10')
+
+    @property
+    def air_quality_index(self):
+        """Return the Air Quality Index (AQI)."""
+        return self._data.get('aqi')
+
+    @property
+    def ozone(self):
+        """Return the O3 (ozone) level."""
+        return self.extract_data('o3')
+
+    @property
+    def humidity(self):
+        """Return the humidity level."""
+        return self.extract_data('h')
+
+    @property
+    def pressure(self):
+        """Return the atmospheric pressure."""
+        return self.extract_data('p')
+
+    @property
+    def temperature(self):
+        """Return the temperature."""
+        return self.extract_data('t')
+
+    @property
+    def carbon_monoxide(self):
+        """Return the CO (carbon monoxide) level."""
+        return self.extract_data('co')
+
+    @property
+    def sulphur_dioxide(self):
+        """Return the SO2 (sulphur dioxide) level."""
+        return self.extract_data('so2')
+
+    @property
+    def nitrogen_dioxide(self):
+        """Return the NO2 (nitrogen dioxide) level."""
+        return self.extract_data('no2')
+
+    @property
+    def dominent_polluant(self):
+        """Return the dominant polluant."""
+        return self._data.get('dominentpol')
+
+    @property
+    def update_time(self):
+        """Return the update time."""
+        return self._data['time']['s']
+
+    @property
     def name(self):
         """Return the name of the entity."""
         if self.station_name:
@@ -120,40 +191,27 @@ class WaqiQuality(AirQualityEntity):
         return 'mdi:cloud'
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        if self._data is not None:
-            return self._data.get('aqi')
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'µg/m3'
+
+    def extract_data(self, key):
+        """Extract the measurement value from API data."""
+        if key in self._data['iaqi']:
+            return self._data['iaqi'][key]['v']
         return None
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return 'AQI'
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        data = {}
 
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the last update."""
-        attrs = {}
+        for prop, attr in PROP_TO_ATTR.items():
+            value = getattr(self, prop)
+            if value is not None:
+                data[attr] = value
 
-        if self._data is not None:
-            try:
-                attrs[ATTR_ATTRIBUTION] = ' and '.join(
-                    [ATTRIBUTION] + [
-                        v['name'] for v in self._data.get('attributions', [])])
-
-                attrs[ATTR_TIME] = self._data['time']['s']
-                attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')
-
-                iaqi = self._data['iaqi']
-                for key in iaqi:
-                    if key in KEY_TO_ATTR:
-                        attrs[KEY_TO_ATTR[key]] = iaqi[key]['v']
-                    else:
-                        attrs[key] = iaqi[key]['v']
-                return attrs
-            except (IndexError, KeyError):
-                return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        return data
 
     async def async_update(self):
         """Get the latest data and updates the states."""
