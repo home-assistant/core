@@ -106,7 +106,6 @@ async def async_setup(hass, config):
                 ENTITY_ID, info, {
                     ATTR_FRIENDLY_NAME: 'Aktualizacja',
                     "icon": "mdi:update",
-                    "custom_ui_state_card": "state-card-text",
                     "reinstall_dom_app": True,
                     "reinstall_android_app": android,
                     "apt": apt
@@ -130,7 +129,6 @@ async def async_setup(hass, config):
                 ENTITY_ID, info, {
                     ATTR_FRIENDLY_NAME: 'Wersja',
                     "icon": "mdi:update",
-                    "custom_ui_state_card": "state-card-text",
                     "reinstall_dom_app": False,
                     "reinstall_android_app": False,
                     "apt": apt
@@ -210,7 +208,6 @@ async def get_newest_version(hass, huuid, include_components):
             ENTITY_ID, info, {
                 ATTR_FRIENDLY_NAME: 'Wersja',
                 "icon": "mdi:update",
-                "custom_ui_state_card": "state-card-text",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False
             }
@@ -226,7 +223,6 @@ async def get_newest_version(hass, huuid, include_components):
             ENTITY_ID, info, {
                 ATTR_FRIENDLY_NAME: 'Wersja',
                 "icon": "mdi:update",
-                "custom_ui_state_card": "state-card-text",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False
             }
@@ -247,7 +243,6 @@ async def get_newest_version(hass, huuid, include_components):
             ENTITY_ID, info, {
                 ATTR_FRIENDLY_NAME: 'Wersja',
                 "icon": "mdi:update",
-                "custom_ui_state_card": "state-card-text",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False
             }

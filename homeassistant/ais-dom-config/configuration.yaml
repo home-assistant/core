@@ -87,59 +87,10 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
-  extra_html_url:
-    - /static/ais_dom/custom_ui/state-card-ais-microphone.html
-    - /static/ais_dom/custom_ui/state-card-tiles.html
-    - /static/ais_dom/custom_ui/state-card-text.html
-    - /static/ais_dom/custom_ui/state-card-robot-disco.html
-    - /static/ais_dom/custom_ui/state-card-custom-fanspeed.html
-  extra_html_url_es5:
-    - /static/ais_dom/custom_ui/state-card-tiles_es5.html
-    - /static/ais_dom/custom_ui/state-card-ais-microphone.html
-    - /static/ais_dom/custom_ui/state-card-text.html
-    - /static/ais_dom/custom_ui/state-card-robot-disco.html
-    - /static/ais_dom/custom_ui/state-card-custom-fanspeed.html
-  themes:
-    ais:
-      primary-color: "#FF9800"
-      light-primary-color: "#ffc947"
-      dark-primary-color: "#c66900"
-      text-primary-color: "#ffffff"
-      primary-background-color: "#4c4c4c"
-      sidebar-text_-_background: "#727272"
-      paper-card-background-color: "#323232"
-      paper-card-header-color: "var(--text-primary-color)"
-      secondary-background-color: "var(--primary-background-color)"
-      primary-text-color: "var(--text-primary-color)"
-      secondary-text-color: "var(--primary-color)"
-      paper-listbox-background-color: "var(--sidebar-text_-_background)"
-      paper-toggle-button-checked-ink-color: "var(--dark-primary-color)"
-      paper-toggle-button-checked-button-color: "var(--dark-primary-color)"
-      paper-toggle-button-checked-bar-color: "var(--dark-primary-color)"
-      paper-slider-knob-color: "var(--primary-color)"
-      paper-slider-knob-start-color: "var(--primary-color)"
-      paper-slider-pin-color: "var(--primary-color)"
-      paper-slider-active-color: "var(--primary-color)"
-      paper-slider-secondary-color: "var(--light-primary-color)"
-      paper-slider-container-color: "var(--sidebar-text_-_background)"
-      paper-progress-secondary-color: "var(--sidebar-text_-_background)"
-      paper-item-selected_-_background-color: "var(--primary-color)"
-      paper-item-icon_-_color: "var(--text-primary-color)"
-      paper-item-icon-color: "var(--sidebar-text_-_background)"
-      paper-item-icon-active-color: "var(--primary-color)"
-      paper-grey-50: "var(--sidebar-text_-_background)"
-      paper-grey-200: "var(--primary-background-color)"
-      label-badge-background-color: "var(--sidebar-text_-_background)"
-      label-badge-text-color: "var(--text-primary-color)"
-      label-badge-red: "var(--primary-color)"
-      label-badge-blue: "var(--light-primary-color)"
-      label-badge-green: "var(--dark-primary-color)"
-      label-badge-yellow: "var(--text-primary-color)"
-      label-badge-grey: "var(--paper-grey-500)"
-      table-row-background-color: "var(--paper-card-background-color)"
-      table-row-alternative-background-color: "var(--sidebar-text_-_background)"
+  themes: !include_dir_merge_named themes
+
 
 # Enables configuration UI
 config:

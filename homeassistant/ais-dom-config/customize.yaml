@@ -9,7 +9,6 @@ weblink.upgrade_log:
 sensor.version_info:
   friendly_name: Wersja
   icon: mdi:update
-  custom_ui_state_card: state-card-text
 script.ais_update_system:
   icon: mdi:download
 script.ais_restart_system:
@@ -29,18 +28,6 @@ binary_sensor.ais_remote_button:
 binary_sensor.selected_entity:
   friendly_name: Aktualna Pozycja
   icon: mdi:magnify
-sensor.network_devices_info:
-  custom_ui_state_card: state-card-text
-sensor.network_devices_info_value:
-  custom_ui_state_card: state-card-robot-disco
-sensor.ssh_connection_info:
-  custom_ui_state_card: state-card-text
-sensor.ftp_connection_info:
-  custom_ui_state_card: state-card-text
-sensor.host_name_dev_info:
-  custom_ui_state_card: state-card-text
-sensor.https_connection_info:
-  custom_ui_state_card: state-card-text
 group.ais_devices_in_network:
   icon: mdi:help-network
 script.ais_scan_network_devices:
@@ -147,13 +134,12 @@ sensor.internal_ip_address:
   icon: mdi:access-point-network
 sensor.ais_android_wifi_current_network_info:
   friendly_name: Połączenie Wifi
-  custom_ui_state_card: state-card-text
 sensor.local_host_name:
   friendly_name: Lokalna nazwa hosta
   icon: mdi:dns
 sensor.ais_rss_help_text:
-  custom_ui_state_card: state-card-text
   friendly_name: Tekst strony
+  text: ""
 script.ais_scan_android_wifi_network:
   icon: mdi:router-wireless
 script.ais_scan_iot_devices_in_network:
@@ -163,18 +149,18 @@ script.ais_connect_android_wifi_network:
 script.ais_connect_iot_device_to_network:
   icon: mdi:send-secure
 sensor.ais_connect_iot_device_info:
-  custom_ui_state_card: state-card-text
   friendly_name: Instrukcja
 sensor.ais_knowledge_answer:
   friendly_name: Odpowiedz
-  custom_ui_state_card: state-card-text
+  text: ""
 sensor.rss_news_text:
-  custom_ui_state_card: state-card-text
   friendly_name: Tekst strony
+  text: ""
+sensor.network_devices_info_value:
+  text: ""
 media_player.wbudowany_glosnik:
   friendly_name: Podłączony głośnik
 sensor.ais_drives_info:
-  custom_ui_state_card: state-card-text
   friendly_name: "Stan dysków:"
 
 #

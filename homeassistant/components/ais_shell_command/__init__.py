@@ -117,7 +117,7 @@ def _change_host_name(hass, call):
 
 @asyncio.coroutine
 def _key_event(hass, call):
-    if ("key_code" not in call.data):
+    if "key_code" not in call.data:
         _LOGGER.error("No key_code")
         return
     key_code = call.data["key_code"]
@@ -129,7 +129,7 @@ def _key_event(hass, call):
 
 @asyncio.coroutine
 def _led(hass, call):
-    if ("brightness" not in call.data):
+    if "brightness" not in call.data:
         _LOGGER.error("No brightness provided")
         return
     brightness = call.data["brightness"]
@@ -158,20 +158,20 @@ def _execute_command(hass, call):
     friendly_name = None
     icon = None
 
-    if ("command" not in call.data):
+    if "command" not in call.data:
         _LOGGER.error("No command")
         return
     else:
         command = call.data["command"]
-    if ("entity_id" not in call.data):
+    if "entity_id" not in call.data:
         _LOGGER.debug("No entity_id to return the output")
     else:
         ret_entity = call.data["entity_id"]
-    if ("friendly_name" not in call.data):
+    if "friendly_name" not in call.data:
         _LOGGER.debug("No friendly_name to set in returning output")
     else:
         friendly_name = call.data["friendly_name"]
-    if ("icon" not in call.data):
+    if "icon" not in call.data:
         _LOGGER.debug("No icon to set in returning output")
     else:
         icon = call.data["icon"]
@@ -190,7 +190,7 @@ def _execute_command(hass, call):
 
 @asyncio.coroutine
 def _execute_script(hass, call):
-    if ("script" not in call.data):
+    if "script" not in call.data:
         _LOGGER.error("No script")
         return
     script = call.data["script"]
@@ -265,15 +265,14 @@ def _show_network_devices_info(hass, call):
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
     info = dsm.get_text()
     hass.states.async_set(
-        'sensor.network_devices_info_value', '', {
-            'custom_ui_state_card': 'state-card-robot-disco',
+        'sensor.network_devices_info_value', 'ok', {
             'text': info
         })
 
 
 @asyncio.coroutine
 def _scan_device(hass, call):
-    if ("url" not in call.data):
+    if "url" not in call.data:
         _LOGGER.error("No url")
         return
     url = call.data["url"]
@@ -281,26 +280,25 @@ def _scan_device(hass, call):
     from requests_futures.sessions import FuturesSession
     from urllib.parse import urlparse
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
-    session = FuturesSession()
+    session = FuturesSession(max_workers=1)
 
-    def bg_cb(sess, resp):
+    def bg_cb(resp, *args, **kwargs):
         try:
             # parse the json storing the result on the response object
             json_ws_resp = resp.json()
             hostname = urlparse(resp.url).hostname
             name = json_ws_resp["Status"]["FriendlyName"][0]
-            #ip = json_ws_resp["StatusNET"]["IPAddress"]
-            dsm.NET_DEVICES.append("#" + name + ", http://" + hostname + ':80')
+            # ip = json_ws_resp["StatusNET"]["IPAddress"]
+            dsm.NET_DEVICES.append("- " + name + ", http://" + hostname)
             info = dsm.get_text()
             hass.states.async_set(
                 'sensor.network_devices_info_value', '', {
-                    'custom_ui_state_card': 'state-card-robot-disco',
                     'text': info
                 })
         except Exception:
             pass
 
-    def bg_cb_a(sess, resp):
+    def bg_cb_a(resp, *args, **kwargs):
         try:
             # parse the json storing the result on the response object
             json_ws_resp = resp.json()
@@ -309,11 +307,10 @@ def _scan_device(hass, call):
             ip = json_ws_resp["IPAddressIPv4"]
             mac = json_ws_resp["MacWlan0"]
             dsm.DOM_DEVICES.append(
-                "#" + model + " " + manufacturer + ", https://" + ip + ':8123')
+                "- " + model + " " + manufacturer + ", http://" + ip + ':8180')
             info = dsm.get_text()
             hass.states.async_set(
                 'sensor.network_devices_info_value', '', {
-                    'custom_ui_state_card': 'state-card-robot-disco',
                     'text': info
                 })
             # add the device to the speakers lists
@@ -328,8 +325,8 @@ def _scan_device(hass, call):
         except Exception:
             pass
 
-    session.get(url, background_callback=bg_cb)
-    session.get(url_a, background_callback=bg_cb_a)
+    session.get(url, timeout=10, hooks={'response': bg_cb})
+    session.get(url_a, timeout=10, hooks={'response': bg_cb_a})
     hass.async_add_job(
         hass.services.async_call(
             'ais_shell_command', 'scan_network_for_devices'))
@@ -341,16 +338,14 @@ def _scan_network_for_devices(hass, call):
     global GLOBAL_X
     GLOBAL_MY_IP = ais_global.get_my_global_ip()
     info = ""
-    if (GLOBAL_X == 0):
+    if GLOBAL_X == 0:
         GLOBAL_X += 1
         # clear the value
         dsm.MQTT_DEVICES = []
         dsm.NET_DEVICES = []
         dsm.DOM_DEVICES = []
-        # dsm.NET_DEVICES.append("*Twoje IP, " + GLOBAL_MY_IP)
         hass.states.async_set('sensor.network_devices_info_value', '', {
-            'custom_ui_state_card': 'state-card-robot-disco',
-            'text': '*wykrywam, to może potrwać kilka minut...'
+            'text': 'wykrywam, to może potrwać kilka minut...'
         })
 
         # send the message to all robots in network
@@ -367,16 +362,15 @@ def _scan_network_for_devices(hass, call):
         yield from hass.services.async_call(
             'ais_shell_command', 'scan_network_for_devices')
     # 256
-    elif (GLOBAL_X > 0 and GLOBAL_X < 256):
+    elif 0 < GLOBAL_X < 256:
         GLOBAL_X += 1
         rest_url = "http://{}.{}/cm?cmnd=status"
         url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(GLOBAL_X))
-        info = "!sprawdzam " + GLOBAL_MY_IP.rsplit('.', 1)[0]
+        info = "Sprawdzam " + GLOBAL_MY_IP.rsplit('.', 1)[0]
         info += "." + str(GLOBAL_X) + "\n"
         info += dsm.get_text()
         hass.states.async_set(
             'sensor.network_devices_info_value', '', {
-                'custom_ui_state_card': 'state-card-robot-disco',
                 'text': info
             })
 
@@ -395,6 +389,5 @@ def _scan_network_for_devices(hass, call):
         GLOBAL_X = 0
         hass.states.async_set(
             'sensor.network_devices_info_value', '', {
-                'custom_ui_state_card': 'state-card-robot-disco',
                 'text': dsm.get_text()
                 })

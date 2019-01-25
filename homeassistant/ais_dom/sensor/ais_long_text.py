@@ -2,11 +2,13 @@
 Support for long text sensors in app.
 """
 import logging
+from datetime import timedelta
 from homeassistant.const import (CONF_NAME)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Long text Sensor'
+SCAN_INTERVAL = timedelta(seconds=600000000)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,16 +38,10 @@ class LongTextSensor(Entity):
         m = importlib.import_module(self._package_to_import)
         method_to_call = getattr(m, self._method_to_call_text)
         result = method_to_call()
-        attr = {}
-        attr['text'] = result
+        attr = {'text': result}
         return attr
 
     @property
     def state(self):
-        return ''
+        return
 
-    # def update(self):
-    #     """Fetch new state data for the sensor.
-    #     This is the only method that should fetch new data
-    #     """
-    #     self._state = 23

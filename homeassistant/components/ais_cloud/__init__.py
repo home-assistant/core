@@ -1164,7 +1164,6 @@ class AisColudData:
             GLOBAL_RSS_NEWS_TEXT = ''
             self.hass.states.async_set(
                 'sensor.rss_news_text', '-', {
-                    'custom_ui_state_card': 'state-card-text',
                     'text': "" + GLOBAL_RSS_NEWS_TEXT,
                     'friendly_name': 'Tekst strony'
                     })
@@ -1192,18 +1191,14 @@ class AisColudData:
         GLOBAL_RSS_NEWS_TEXT = BeautifulSoup(
             GLOBAL_RSS_NEWS_TEXT, "lxml").text
 
-        text = "Czytam artykuł, " + rss_news_item + ". " + GLOBAL_RSS_NEWS_TEXT
+        text = "Czytam artykuł. " + GLOBAL_RSS_NEWS_TEXT
         self.hass.services.call(
             'ais_ai_service',
             'say_it', {
                 "text": text
             })
-        text = "\n\n+" + "Czytam artykuł: \n"
-        text += '*' + rss_news_item + "\n" + GLOBAL_RSS_NEWS_TEXT
-        GLOBAL_RSS_NEWS_TEXT = text
         self.hass.states.async_set(
             'sensor.rss_news_text', GLOBAL_RSS_NEWS_TEXT[:200], {
-                'custom_ui_state_card': 'state-card-text',
                 'text': "" + GLOBAL_RSS_NEWS_TEXT,
                 'friendly_name': 'Tekst strony'
                 })
@@ -1219,7 +1214,6 @@ class AisColudData:
             # reset status for item below
             self.hass.states.async_set(
                 'sensor.ais_rss_help_text', "-", {
-                    'custom_ui_state_card': 'state-card-text',
                     'text': "" + GLOBAL_RSS_HELP_TEXT,
                     'friendly_name': "Tekst strony"
                 })
@@ -1230,26 +1224,29 @@ class AisColudData:
             "https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md")
         import requests
         from readability import Document
+
         response = requests.get(_url)
         doc = Document(response.text)
         GLOBAL_RSS_HELP_TEXT += doc.summary()
+
+        from markdown import markdown
+        GLOBAL_RSS_HELP_TEXT = markdown(GLOBAL_RSS_HELP_TEXT)
+        import re
+        GLOBAL_RSS_HELP_TEXT = re.sub(r'<code>(.*?)</code>', ' ', GLOBAL_RSS_HELP_TEXT)
+        GLOBAL_RSS_HELP_TEXT = re.sub('#', '', GLOBAL_RSS_HELP_TEXT)
 
         from bs4 import BeautifulSoup
         GLOBAL_RSS_HELP_TEXT = BeautifulSoup(
             GLOBAL_RSS_HELP_TEXT, "lxml").text
 
-        text = "Czytam stronę pomocy, " + rss_help_topic + ". " + GLOBAL_RSS_HELP_TEXT
+        text = "Czytam stronę pomocy. " + GLOBAL_RSS_HELP_TEXT
         self.hass.services.call(
             'ais_ai_service',
             'say_it', {
                 "text": text
             })
-        text = "\n\n+" + "Czytam stronę pomocy: \n"
-        text += '*' + rss_help_topic + "\n" + GLOBAL_RSS_HELP_TEXT
-        GLOBAL_RSS_HELP_TEXT = text
         self.hass.states.async_set(
             'sensor.ais_rss_help_text', GLOBAL_RSS_HELP_TEXT[:200], {
-                'custom_ui_state_card': 'state-card-text',
-                'text': "" + GLOBAL_RSS_HELP_TEXT,
+                'text': "" + response.text,
                 'friendly_name': "Tekst strony"
             })

@@ -7,38 +7,9 @@ binary_sensor:
     name: selected_entity
 
 sensor:
-  - platform: template
-    sensors:
-      network_devices_info:
-        value_template: "Po wykryciu urządzenia możesz kliknąć w jego link by przejść do ustawień urządzenia.\n#UWAGA: Zmieniaj ustawienia urządzenia tylko gdy jesteś pewny, że wiesz co robisz!"
   - platform: ais_device_search_mqtt
     name: network_devices_info_value
     state_topic: "+/stat/#"
-  - platform: template
-    sensors:
-      ssh_connection_info:
-        value_template: "@SERWER SSH:\n aby połączyć się do konsoli AIS dom należy:\n
-                        - pobrać autoryzowany klucz ssh (poniżej)\n
-                        - w swojej konsoli wpisać:\n
-                        $ssh ais-dom.local -p 8022 -i <ścieżka do klucza ssh>\n"
-  - platform: template
-    sensors:
-      ftp_connection_info:
-        value_template: "@SERWER FTP:\n
-                        na urządzeniu działa serwer ftp, umożliwiający wymianę plików (np. muzycznych), serwer dostępny jest pod adresem:"
-  - platform: template
-    sensors:
-      host_name_dev_info:
-        value_template: "ais-dom.local - z taką domyślną nazwą hosta komunikują się urządzenia w systemie AIS dom.\n
-                        Możesz zmienić nazwę hosta na inną ale pamiętaj, żeby zmienić też konfigurację urządzeń.\n
-                        # UWAGA: Żeby zmiana była widoczna wymagany będzie restart!"
-
-  - platform: template
-    sensors:
-      https_connection_info:
-        value_template: "Bramka udostępniana jest w sieci lokalnej pod adresem ais-dom.local za pomocą protokołu mDNS\n
-                        @SERWER HTTP:\n
-                        w przypadku protokołu https możesz zainstalować certyfikat(link poniżej) w swoim systemie/przeglądarce by dodać do zaufanych host ais-dom."
 
 input_text:
   new_host_name:
@@ -90,40 +61,9 @@ group:
       - input_number.assistant_rate
       - input_number.assistant_tone
       - input_select.tts_player
-  AIS Pilot:
-    name: Pilot
-    control: hidden
-    entities:
-      - input_text.buttons_ais_remote
-      - binary_sensor.ais_remote_button
-      - binary_sensor.selected_entity
-  ais_host_rename:
-    name: Zmiana nazwy hosta bramki
-    control: hidden
-    entities:
-      - sensor.host_name_dev_info
-      - input_text.new_host_name
-      - script.ais_change_host_name
+
 #  ais_android_certification:
 #    name: Certyfikacja urządzenia
 #    entities:
 #      - weblink.uncertified_android_registration
-  ais_dev_ssh:
-    name: Zdalny dostęp do bramki
-    entities:
-      - sensor.https_connection_info
-      - weblink.http_url
-      - weblink.https_url
-      - weblink.https_localhost_cert
-      - sensor.ssh_connection_info
-      - weblink.klucz_ssh
-      - sensor.ftp_connection_info
-      - weblink.ftp_url
 
-  ais_devices_in_network:
-    name: Urządzenia w Twojej sieci
-    control: hidden
-    entities:
-      - sensor.network_devices_info
-      - sensor.network_devices_info_value
-      - script.ais_scan_network_devices

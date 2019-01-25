@@ -51,8 +51,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    # Integrations should never expose unique_id through configuration.
-    # This is an exception because MQTT is a message transport, not a protocol.
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
@@ -66,20 +64,21 @@ def get_text():
     """Return the state of the entity."""
     info = ""
     if len(MQTT_DEVICES) > 0:
-        info = "+sterowalne urządzenia w brokerze mqtt (" + str(
+        info = "\n### Sterowalne urządzenia w brokerze mqtt (" + str(
             len(MQTT_DEVICES)) + "):\n"
         for d in MQTT_DEVICES:
-            info += "#" + d["FriendlyName"] + ", http://" + d["IPAddress"] + ":80" + "\n"
+            info += "- " + d["FriendlyName"] + ", http://" + d["IPAddress"] + "\n"
     if len(NET_DEVICES) > 0:
-        info += "+sterowalne urządzenia w sieci (" + str(
+        info += "\n### Sterowalne urządzenia w sieci (" + str(
             len(NET_DEVICES)) + "):\n"
         for d in NET_DEVICES:
             info += str(d) + "\n"
     if len(DOM_DEVICES) > 0:
-        info += "+głośniki AIS dom (" + str(len(DOM_DEVICES)) + "):\n"
+        info += "\n### Bramki AIS dom (" + str(len(DOM_DEVICES)) + "):\n"
         for d in DOM_DEVICES:
             info += str(d) + "\n"
     return info
+
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
@@ -195,13 +194,11 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 _LOGGER.info("Error: " + str(e))
             self.async_schedule_update_ha_state()
 
-
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
             {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
                              'msg_callback': message_received,
                              'qos': self._config.get(CONF_QOS)}})
-
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -240,7 +237,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def state(self):
         """Return the state of the entity."""
-        return get_text()
+        return ' '
 
     @property
     def device_state_attributes(self):

@@ -1726,9 +1726,7 @@ def _process_command_from_frame(hass, service):
                     info += "; " + _wifi_frequency_info(cci["frequency_mhz"])
 
         hass.states.async_set(
-            'sensor.ais_android_wifi_current_network_info',
-            info, {'custom_ui_state_card': "state-card-text"}
-            )
+            'sensor.ais_android_wifi_current_network_info', info)
         return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info
@@ -1855,7 +1853,6 @@ def _say_it(hass, message, caller_ip=None):
         GLOBAL_TTS_TEXT = message
     hass.states.async_set(
         'sensor.ais_knowledge_answer', 'ok', {
-            'custom_ui_state_card': 'state-card-text',
             'text': GLOBAL_TTS_TEXT
             })
 
