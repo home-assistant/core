@@ -169,8 +169,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
                         'test_template_sensor': {
                             'value_template': "{{ states.sensor.xyz.state }}",
                             'attribute_templates': {
-                              'test_attribute':
-                                  "It {{ states.sensor.test_state.state }}.",
+                                'test_attribute':
+                                    "It {{ states.sensor.test_state.state }}.",
                             }
                         }
                     }

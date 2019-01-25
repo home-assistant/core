@@ -31,7 +31,8 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES):
+        vol.Schema({cv.string: cv.template}),
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -58,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
-        
+
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
         invalid_templates = []
@@ -222,7 +223,7 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error('Could not render template %s: %s', self._name,
                               ex)
-        
+
         templates = dict((
                 ('_icon', self._icon_template),
                 ('_entity_picture', self._entity_picture_template),
@@ -230,8 +231,9 @@ class SensorTemplate(Entity):
         ))
 
         if self._attribute_templates is not None:
-            templates.update(dict(('_attributes.' + key,value) for key, value in self._attribute_templates.items()))
-        
+            templates.update(dict(('_attributes.' + key, value)
+                for key, value in self._attribute_templates.items()))
+
         for property_name, template in templates.items():
             if template is None:
                 continue

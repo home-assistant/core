@@ -173,8 +173,8 @@ class TestTemplateSensor:
                             'value_template':
                                 "{{ states.sensor.test_state.state }}",
                             'attribute_templates': {
-                              'test_attribute': 
-                                "It {{ states.sensor.test_state.state }}.",
+                                'test_attribute':
+                                    "It {{ states.sensor.test_state.state }}.",
                             }
                         }
                     }
