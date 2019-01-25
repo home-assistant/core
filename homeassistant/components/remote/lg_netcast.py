@@ -93,7 +93,7 @@ class LGNetcastRemote(RemoteDevice):
 
     def turn_on(self, **kwargs):
         """Turn the remote on."""
-        self._state = STATE_ON  # Turn on not support by LG Netcast TV
+        # Turn on not support by LG Netcast TV
         self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
