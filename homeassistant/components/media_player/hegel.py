@@ -62,7 +62,7 @@ class HegelDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = 1
         self._telnet_session = None
-        self._source_names = ["", "Balanced", "Analog1", "Analog2", "4", "5", "6", "7", "8", "9"] # Array index represents the input number as defined by Hegel
+        self._source_names = ["Balanced", "Analog1", "Analog2", "4", "5", "6", "7", "8", "9"] # Array "index plus 1" represents the input number as defined by Hegel
 
     def telnet_connect(self):
         """Establish a telnet connection or return an already opened one."""
@@ -85,7 +85,7 @@ class HegelDevice(MediaPlayerDevice):
         """Execute a telnet command and return the response."""
         try:
             telnet = self.telnet_connect()
-            request = "-" + command + "." + parameter
+            request = "-" + str(command) + "." + str(parameter)
             telnet.write(request.encode("ASCII") + b"\r")
 
             # If the telnet command was succesful we receive an answer in the
@@ -97,7 +97,10 @@ class HegelDevice(MediaPlayerDevice):
             if (response[0] == "-e"):
                 return None
             else:
-                return response[1] if response[1] else response[0]
+                if type(response) is list:
+                    return response[1]
+                else:
+                    return None
         except telnetlib.socket.timeout:
             self.telnet_disconnect()
             _LOGGER.debug("Hegel command %s timed out", command)
@@ -190,7 +193,7 @@ class HegelDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        input_number = self._source_names.index(source)
+        input_number = self._source_names.index(source) + 1 # Add 1 since a list starts with index 0
 
         if input_number:
             self.telnet_send("i", input_number)
