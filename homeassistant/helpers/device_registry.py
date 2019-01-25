@@ -36,6 +36,7 @@ class DeviceEntry:
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
     hub_device_id = attr.ib(type=str, default=None)
+    area_id = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
@@ -81,7 +82,7 @@ class DeviceRegistry:
     def async_get_or_create(self, *, config_entry_id, connections=None,
                             identifiers=None, manufacturer=_UNDEF,
                             model=_UNDEF, name=_UNDEF, sw_version=_UNDEF,
-                            via_hub=None):
+                            via_hub=None, area_id=None):
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
             return None
@@ -120,6 +121,7 @@ class DeviceRegistry:
             model=model,
             name=name,
             sw_version=sw_version,
+            area_id=area_id
         )
 
     @callback
@@ -131,7 +133,8 @@ class DeviceRegistry:
                              model=_UNDEF,
                              name=_UNDEF,
                              sw_version=_UNDEF,
-                             hub_device_id=_UNDEF):
+                             hub_device_id=_UNDEF,
+                             area_id=_UNDEF):
         """Update device attributes."""
         old = self.devices[device_id]
 
@@ -169,6 +172,9 @@ class DeviceRegistry:
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
+        if (area_id is not _UNDEF and area_id != old.area_id):
+            changes['area_id'] = area_id
+
         if not changes:
             return old
 
@@ -197,6 +203,8 @@ class DeviceRegistry:
                     id=device['id'],
                     # Introduced in 0.79
                     hub_device_id=device.get('hub_device_id'),
+                    # Introduced in 0.87
+                    area_id=device.get('area_id')
                 )
 
         self.devices = devices
@@ -222,6 +230,7 @@ class DeviceRegistry:
                 'sw_version': entry.sw_version,
                 'id': entry.id,
                 'hub_device_id': entry.hub_device_id,
+                'area_id': entry.area_id
             } for entry in self.devices.values()
         ]
 
