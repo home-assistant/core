@@ -514,9 +514,9 @@ class ThrottleFilter(Filter):
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
 class TimeThrottleFilter(Filter):
-    """Throttle Filter.
+    """Time Throttle Filter.
 
-    One sample per window.
+    One sample per time period.
     """
 
     def __init__(self, window_size, precision, entity):
