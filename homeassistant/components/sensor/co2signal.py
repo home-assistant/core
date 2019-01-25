@@ -102,7 +102,7 @@ class CO2Sensor(Entity):
 
         if self._country_code is not None:
             self._data = CO2Signal.get_latest_carbon_intensity(
-                self._token,country_code=self._country_code)
+                self._token, country_code=self._country_code)
         else:
             self._data = CO2Signal.get_latest_carbon_intensity(
                 self._token,
