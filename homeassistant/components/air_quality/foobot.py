@@ -12,8 +12,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
-    AirQualityEntity, ATTR_AQI, ATTR_PM_2_5, ATTR_CO2, ATTR_ATTRIBUTION,
-    PLATFORM_SCHEMA)
+    AirQualityEntity, PLATFORM_SCHEMA, PROP_TO_ATTR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
@@ -34,17 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
 })
 
-PROP_TO_ATTR = {
-    'air_quality_index': ATTR_AQI,
-    'attribution': ATTR_ATTRIBUTION,
-    'carbon_dioxide': ATTR_CO2,
-    'foobot_index': ATTR_FOOBOT_INDEX,
-    'humidity': ATTR_HUMIDITY,
-    'particulate_matter_2_5': ATTR_PM_2_5,
-    'temperature': ATTR_TEMPERATURE,
-    'update_time': ATTR_TIME,
-    'volatile_organic_compound': ATTR_VOC,
-}
+PROP_TO_ATTR.update({'foobot_index': ATTR_FOOBOT_INDEX,
+                     'humidity': ATTR_HUMIDITY,
+                     'temperature': ATTR_TEMPERATURE,
+                     'update_time': ATTR_TIME,
+                     'volatile_organic_compound': ATTR_VOC})
 
 REQUIREMENTS = ['foobot_async==0.3.1']
 
@@ -188,7 +181,7 @@ class FoobotQuality(AirQualityEntity):
                            * (pm_level - levels[0]))
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         data = {}
 
