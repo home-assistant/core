@@ -600,7 +600,7 @@ libnacl==1.6.1
 libpurecoollink==0.4.2
 
 # homeassistant.components.camera.foscam
-libpyfoscam==1.0
+pyfoscam==1.2
 
 # homeassistant.components.device_tracker.mikrotik
 librouteros==2.2.0
