@@ -6,6 +6,7 @@ import uuid
 
 import pytest
 
+from homeassistant import data_entry_flow
 from homeassistant.auth import auth_store, models as auth_models, AuthManager
 from homeassistant.auth.providers import command_line
 from homeassistant.const import CONF_TYPE
@@ -113,3 +114,24 @@ async def test_utf_8_username_password(provider):
         "password": "äöü",
     })
     assert credentials.is_new is True
+
+
+async def test_login_flow_validates(provider):
+    """Test login flow."""
+    flow = await provider.async_login_flow({})
+    result = await flow.async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await flow.async_step_init({
+        "username": "bad-user",
+        "password": "bad-pass",
+    })
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['errors']["base"] == "invalid_auth"
+
+    result = await flow.async_step_init({
+        "username": "good-user",
+        "password": "good-pass",
+    })
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["username"] == "good-user"
