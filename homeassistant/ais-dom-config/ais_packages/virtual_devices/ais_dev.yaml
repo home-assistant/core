@@ -102,7 +102,6 @@ group:
     control: hidden
     entities:
       - sensor.host_name_dev_info
-      - sensor.current_host_name
       - input_text.new_host_name
       - script.ais_change_host_name
 #  ais_android_certification:

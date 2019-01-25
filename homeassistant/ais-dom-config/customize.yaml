@@ -29,9 +29,6 @@ binary_sensor.ais_remote_button:
 binary_sensor.selected_entity:
   friendly_name: Aktualna Pozycja
   icon: mdi:magnify
-sensor.current_host_name:
-  friendly_name: Aktualna nazwa hosta
-  icon: mdi:information-variant
 sensor.network_devices_info:
   custom_ui_state_card: state-card-text
 sensor.network_devices_info_value:

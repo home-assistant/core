@@ -1,25 +1,62 @@
 """
-Support for MQTT sensors search in app.
+Support for MQTT sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.mqtt/
 """
-import asyncio
 import logging
 import json
+from typing import Optional
+
+import voluptuous as vol
+
 from homeassistant.core import callback
-from homeassistant.const import (CONF_NAME)
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.const import (
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.mqtt as mqtt
-from homeassistant.util import slugify
+from homeassistant.components import mqtt
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXPIRE_AFTER = 'expire_after'
+CONF_JSON_ATTRS = 'json_attributes'
+CONF_UNIQUE_ID = 'unique_id'
+
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
+
 MQTT_DEVICES = []
 NET_DEVICES = []
 DOM_DEVICES = []
+
+
+PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    # Integrations should never expose unique_id through configuration.
+    # This is an exception because MQTT is a message transport, not a protocol.
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 def get_text():
@@ -44,210 +81,85 @@ def get_text():
             info += str(d) + "\n"
     return info
 
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-
-    async_add_devices([MqttSensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        hass
-    )])
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_entities, discovery_info=None):
+    """Set up MQTT sensors through configuration.yaml."""
+    await _async_setup_entity(config, async_add_entities)
 
 
-class MqttSensor(MqttAvailability, Entity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT sensors dynamically through MQTT discovery."""
+    async def async_discover_sensor(discovery_payload):
+        """Discover and add a discovered MQTT sensor."""
+        try:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
+
+    async_dispatcher_connect(hass,
+                             MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
+                             async_discover_sensor)
+
+
+async def _async_setup_entity(config: ConfigType, async_add_entities,
+                              discovery_hash=None):
+    """Set up MQTT sensor."""
+    async_add_entities([MqttSensor(config, discovery_hash)])
+
+
+class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                 MqttEntityDeviceInfo, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, name, state_topic, hass):
+    def __init__(self, config, discovery_hash):
         """Initialize the sensor."""
-        super().__init__(None, None, None, None)
-        self._name = name
-        self._state_topic = state_topic
-        self.hass = hass
+        self._config = config
+        self._unique_id = config.get(CONF_UNIQUE_ID)
+        self._state = STATE_UNKNOWN
+        self._sub_state = None
+        self._expiration_trigger = None
+        self._attributes = None
 
-    # def discover_sensors(self, sensor, topic):
-    #     conf_state_topic = "tele/" + topic + "/SENSOR"
-    #     if sensor == "SI7021":
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_9/config"
-    #         name = 'Temperatura ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'temperature',
-    #             'icon': 'mdi:temperature-celsius',
-    #             'unit_of_measurement': '°C',
-    #             'value_template': "{{ value_json['SI7021'].Temperature | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_10/config"
-    #         name = 'Wilgotność ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'humidity',
-    #             'icon': 'mdi:water-percent',
-    #             'unit_of_measurement': '%',
-    #             'value_template': "{{ value_json['SI7021'].Humidity | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #     elif sensor == "AM2301":
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_9/config"
-    #         name = 'Temperatura ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'temperature',
-    #             'icon': 'mdi:temperature-celsius',
-    #             'unit_of_measurement': '°C',
-    #             'value_template': "{{ value_json['AM2301'].Temperature | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_10/config"
-    #         name = 'Wilgotność ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'humidity',
-    #             'icon': 'mdi:water-percent',
-    #             'unit_of_measurement': '%',
-    #             'value_template': "{{ value_json['AM2301'].Humidity | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #     elif sensor == "ENERGY":
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_9/config"
-    #         name = 'Energia bieżąca moc ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-red-eye',
-    #             'unit_of_measurement': 'W',
-    #             'value_template': "{{ value_json['ENERGY'].Power | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_10/config"
-    #         name = 'Energia całkowita ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-red-eye',
-    #             'unit_of_measurement': 'kWh',
-    #             'value_template': "{{ value_json['ENERGY'].Total | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_11/config"
-    #         name = 'Energia dzisiaj ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-red-eye',
-    #             'unit_of_measurement': 'kWh',
-    #             'value_template': "{{ value_json['ENERGY'].Today | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_12/config"
-    #         name = 'Energia wczoraj ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-red-eye',
-    #             'unit_of_measurement': 'kWh',
-    #             'value_template': "{{ value_json['ENERGY'].Yesterday | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_13/config"
-    #         name = 'Energia bieżące napięcie ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-red-eye',
-    #             'unit_of_measurement': 'V',
-    #             'value_template': "{{ value_json['ENERGY'].Voltage | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
-    #         configuration_topic = "core_homeassistant/sensor/" + topic + "_14/config"
-    #         name = 'Energia bieżące natężenie ' + topic[-6:]
-    #         j_payload = {
-    #             'name': name,
-    #             'unique_id': slugify(name),
-    #             'state_topic': conf_state_topic,
-    #             'device_class': 'battery',
-    #             'icon': 'mdi:flash-auto',
-    #             'unit_of_measurement': 'A',
-    #             'value_template': "{{ value_json['ENERGY'].Current | round(2)}}"
-    #         }
-    #         self.hass.async_create_task(
-    #             self.hass.services.async_call('mqtt', 'publish', {
-    #                 'topic': configuration_topic,
-    #                 'payload': json.dumps(j_payload)
-    #             })
-    #         )
+        device_config = config.get(CONF_DEVICE)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+        if config.get(CONF_JSON_ATTRS):
+            _LOGGER.warning('configuration variable "json_attributes" is '
+                            'deprecated, replace with "json_attributes_topic"')
+
+        MqttAttributes.__init__(self, config)
+        MqttAvailability.__init__(self, config)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
+
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._config = config
+        await self.attributes_discovery_update(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        template = self._config.get(CONF_VALUE_TEMPLATE)
+        if template is not None:
+            template.hass = self.hass
 
         @callback
         def message_received(topic, payload, qos):
+            """Handle new MQTT messages."""
             global MQTT_DEVICES
             """Handle new MQTT messages."""
             try:
@@ -275,12 +187,6 @@ class MqttSensor(MqttAvailability, Entity):
                             d["IPAddress"] = ip_address
                         if friendly_name != "":
                             d["FriendlyName"] = friendly_name
-                        # if sensors != "":
-                        #     d["Sensors"] = sensors
-                        #     # since we have message about sensors, we can try to discover this sensor in home assistant
-                        #     # for s, v in sensors.items():
-                        #     #     if s in ('SI7021', 'ENERGY', 'AM2301'):
-                        #     #         self.discover_sensors(s, topic)
                 if device_not_exist:
                     MQTT_DEVICES.append(
                         {"topic": topic, "FriendlyName": friendly_name, "IPAddress": ip_address, "Sensors": sensors})
@@ -289,73 +195,69 @@ class MqttSensor(MqttAvailability, Entity):
                 _LOGGER.info("Error: " + str(e))
             self.async_schedule_update_ha_state()
 
-        # @callback
-        # def async_disco_message_received(topic, payload, qos):
-        #     if payload != "":
-        #         _LOGGER.info('DISCO: ' + str(topic) + " p:" + str(payload))
-        #         try:
-        #             j_payload = json.loads(payload)
-        #             if 'state_topic' in j_payload:
-        #                 # we can add some more info about device
-        #                 # j_payload["icon"] = "mdi:power-plug"
-        #                 if 'unique_id' not in j_payload:
-        #                     uid = topic.replace("homeassistant/", "").replace("/config", "")
-        #                     j_payload["unique_id"] = uid
-        #                 # fix for the ifan
-        #                 if 'command_topic' in j_payload:
-        #                     t = j_payload["command_topic"]
-        #                     if 'dom_SONOFF_IFAN' in t and 'POWER2' in t:
-        #                         t = t.replace("POWER2", "FanSpeed")
-        #                         j_payload["command_topic"] = t
-        #                         j_payload["payload_on"] = 1
-        #                         j_payload["payload_off"] = 0
-        #                         j_payload["value_template"] = "{% if value_json.FanSpeed == 1 %}1{% else %}0{% endif %}"
-        #                     elif 'dom_SONOFF_IFAN' in t and 'POWER3' in t:
-        #                         t = t.replace("POWER3", "FanSpeed")
-        #                         j_payload["command_topic"] = t
-        #                         j_payload["payload_on"] = 2
-        #                         j_payload["payload_off"] = 0
-        #                         j_payload["value_template"] = "{% if value_json.FanSpeed == 2 %}2{% else %}0{% endif %}"
-        #                     elif 'dom_SONOFF_IFAN' in t and 'POWER4' in t:
-        #                         t = t.replace("POWER4", "FanSpeed")
-        #                         j_payload["command_topic"] = t
-        #                         j_payload["payload_on"] = 3
-        #                         j_payload["payload_off"] = 0
-        #                         j_payload["value_template"] = "{% if value_json.FanSpeed == 3 %}3{% else %}0{% endif %}"
-        #                 # to discover the device
-        #                 self.hass.async_create_task(
-        #                     self.hass.services.async_call('mqtt', 'publish', {
-        #                         'topic': "core_" + topic,
-        #                         'payload': json.dumps(j_payload)
-        #                     })
-        #                 )
-        #                 if 'command_topic' in j_payload:
-        #                     command_topic = j_payload["command_topic"].replace("/POWER", "/status")
-        #                     # to discover the sensors on device
-        #                     self.hass.bus.fire('search_for_sensors', {
-        #                         'topic': command_topic
-        #                     })
-        #         except Exception as e:
-        #             _LOGGER.error('async_disco_message_received: ' + str(e))
 
-        yield from mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, 2)
-        # subscribe to discovery, to add some more info about device
-        # yield from mqtt.async_subscribe(
-        #     self.hass, 'homeassistant/#', async_disco_message_received, 2)
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state,
+            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+                             'msg_callback': message_received,
+                             'qos': self._config.get(CONF_QOS)}})
+
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
+        await MqttAvailability.async_will_remove_from_hass(self)
+
+    @callback
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+        self._expiration_trigger = None
+        self._state = STATE_UNKNOWN
+        self.async_schedule_update_ha_state()
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attr = {}
-        attr['text'] = get_text()
-        return attr
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._config.get(CONF_FORCE_UPDATE)
 
     @property
     def state(self):
-        return ''
+        """Return the state of the entity."""
+        return get_text()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._config.get(CONF_ICON)
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)

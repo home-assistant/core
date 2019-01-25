@@ -87,7 +87,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-#development_repo: /home/andrzej/Projects/home-assistant-polymer
+  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   extra_html_url:
     - /static/ais_dom/custom_ui/state-card-ais-microphone.html
