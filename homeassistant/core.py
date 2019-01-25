@@ -664,11 +664,14 @@ class State:
                  attributes: Optional[Dict] = None,
                  last_changed: Optional[datetime.datetime] = None,
                  last_updated: Optional[datetime.datetime] = None,
-                 context: Optional[Context] = None) -> None:
+                 context: Optional[Context] = None,
+                 # Temp, because database can still store invalid entity IDs
+                 # Remove with 1.0 or in 2020.
+                 temp_invalid_id_bypass: Optional[bool] = False) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id):
+        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
