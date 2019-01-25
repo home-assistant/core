@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from .schema_basic import CONF_BRIGHTNESS_SCALE
@@ -85,7 +85,7 @@ PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
-async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,
+async def async_setup_entity_json(config: ConfigType,
                                   async_add_entities, discovery_hash):
     """Set up a MQTT JSON Light."""
     async_add_entities([MqttLightJson(config, discovery_hash)])

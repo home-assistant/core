@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
@@ -44,23 +45,29 @@ PLATFORM_SCHEMA = vol.All(vol.Schema({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT light through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT light dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, 'mqtt'),
         async_discover)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up a MQTT Light."""
     setup_entity = {
@@ -68,5 +75,5 @@ async def _async_setup_entity(hass, config, async_add_entities,
         'json': schema_json.async_setup_entity_json,
         'template': schema_template.async_setup_entity_template,
     }
-    await setup_entity[config['schema']](
-        hass, config, async_add_entities, discovery_hash)
+    await setup_entity[config[CONF_SCHEMA]](
+        config, async_add_entities, discovery_hash)
