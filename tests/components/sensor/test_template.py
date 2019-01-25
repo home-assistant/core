@@ -381,11 +381,8 @@ async def test_no_template_match_all(hass, caplog):
         }
     })
     
-    Template sensor invalid_template has no entity ids configured to track nor were we able to extract the entities to track from
-     the test_attribute template(s). This entity will only be able to be updated manually.
-    
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
     assert ('Template sensor invalid_state has no entity ids '
             'configured to track nor were we able to extract the entities to '
             'track from the value template') in caplog.text
