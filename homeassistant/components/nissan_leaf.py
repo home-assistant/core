@@ -381,8 +381,9 @@ class LeafDataStore:
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
                     _LOGGER.debug("Climate data not in yet. (%s) (%s). "
-                                  "Waiting 5 seconds", self.leaf.vin, attempt)
-                    await asyncio.sleep(5)
+                                  "Waiting %s seconds", self.leaf.vin,
+                                  attempt, PYCARWINGS2_SLEEP)
+                    await asyncio.sleep(PYCARWINGS2_SLEEP)
 
                 climate_result = await self.hass.async_add_job(
                     self.leaf.get_stop_climate_control_result, request
@@ -405,8 +406,9 @@ class LeafDataStore:
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
                 _LOGGER.debug("Location data not in yet. (%s) (%s). "
-                              "Waiting 5 seconds", self.leaf.vin, attempt)
-                await asyncio.sleep(5)
+                              "Waiting %s seconds", self.leaf.vin,
+                              attempt, PYCARWINGS2_SLEEP)
+                await asyncio.sleep(PYCARWINGS2_SLEEP)
 
             location_status = await self.hass.async_add_job(
                 self.leaf.get_status_from_location, request
