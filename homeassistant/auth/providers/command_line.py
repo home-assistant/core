@@ -1,6 +1,6 @@
 """Auth provider that validates credentials via an external command."""
 
-import typing as T
+from typing import Any, Dict, Optional, cast
 
 import asyncio.subprocess
 import collections
@@ -45,16 +45,16 @@ class CommandLineAuthProvider(AuthProvider):
     # which keys to accept from a program's stdout
     ALLOWED_META_KEYS = ("name",)
 
-    def __init__(self, *args: T.Any, **kwargs: T.Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__.
 
         Adds self._user_meta dictionary to hold the user-specific
         attributes provided by external programs.
         """
         super().__init__(*args, **kwargs)
-        self._user_meta = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
+        self._user_meta = {}  # type: Dict[str, Dict[str, Any]]
 
-    async def async_login_flow(self, context: T.Optional[T.Dict]) -> LoginFlow:
+    async def async_login_flow(self, context: Optional[dict]) -> LoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -86,7 +86,7 @@ class CommandLineAuthProvider(AuthProvider):
             raise InvalidAuthError
 
         if self.config[CONF_META]:
-            meta = {}  # type: T.Dict[str, str]
+            meta = {}  # type: Dict[str, str]
             for _line in stdout.splitlines():
                 try:
                     line = _line.decode().lstrip()
@@ -103,7 +103,7 @@ class CommandLineAuthProvider(AuthProvider):
             self._user_meta[username] = meta
 
     async def async_get_or_create_credentials(
-            self, flow_result: T.Dict[str, str]
+            self, flow_result: Dict[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result["username"]
@@ -134,14 +134,14 @@ class CommandLineLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     async def async_step_init(
-            self, user_input: T.Optional[T.Dict[str, str]] = None
-    ) -> T.Dict[str, T.Any]:
+            self, user_input: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
 
         if user_input is not None:
             try:
-                await T.cast(CommandLineAuthProvider, self._auth_provider) \
+                await cast(CommandLineAuthProvider, self._auth_provider) \
                         .async_validate_login(
                             user_input["username"], user_input["password"]
                         )
@@ -152,7 +152,7 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema = collections.OrderedDict()  # type: T.Dict[str, type]
+        schema = collections.OrderedDict()  # type: Dict[str, type]
         schema["username"] = str
         schema["password"] = str
 
