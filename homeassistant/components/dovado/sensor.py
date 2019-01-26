@@ -12,7 +12,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.dovado import DOMAIN as DOVADO_DOMAIN
-from homeassistant.components.sensor import (PLATFORM_SCHEMA)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SENSORS
 from homeassistant.helpers.entity import Entity
 
@@ -53,9 +53,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dovado = hass.data[DOVADO_DOMAIN]
 
     entities = []
-    for sensor in SENSORS:
-        if sensor in config.get[CONF_SENSORS]:
-            entities.append(DovadoSensor(dovado, sensor))
+    for sensor in config[CONF_SENSORS]:
+        entities.append(DovadoSensor(dovado, sensor))
 
     add_entities(entities)
     return True

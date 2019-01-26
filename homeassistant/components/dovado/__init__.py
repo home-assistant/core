@@ -83,7 +83,6 @@ class DovadoData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        _LOGGER.info("Updating")
         try:
             self.state = self._client.state or {}
             if not self.state:
