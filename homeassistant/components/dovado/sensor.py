@@ -57,7 +57,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities.append(DovadoSensor(dovado, sensor))
 
     add_entities(entities)
-    return True
 
 
 class DovadoSensor(Entity):
