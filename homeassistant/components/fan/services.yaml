@@ -88,7 +88,7 @@ dyson_set_angle:
       example: 255
 
 dyson_flow_direction_front:
-  description: Set the fan flow directio0n.
+  description: Set the fan flow direction.
   fields:
     entity_id:
       description: Name(s) of the entities to set frontal flow direction for
@@ -106,6 +106,16 @@ dyson_set_timer:
     timer:
       description: Timer status
       example: 30
+
+dyson_set_speed:
+  description: Set the exact speed of the fan.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set the speed for
+      example: 'fan.living_room'
+    timer:
+      description: Speed
+      example: 1
 
 xiaomi_miio_set_buzzer_on:
   description: Turn the buzzer on.
