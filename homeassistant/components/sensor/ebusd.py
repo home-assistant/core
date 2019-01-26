@@ -6,12 +6,19 @@ https://github.com/john30/ebusd
 """
 
 import logging
+import datetime
 
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ebusd']
 
 DATA_EBUSD = 'EBUSD'
+TIME_FRAME1_BEGIN = 'time_frame1_begin'
+TIME_FRAME1_END = 'time_frame1_end'
+TIME_FRAME2_BEGIN = 'time_frame2_begin'
+TIME_FRAME2_END = 'time_frame2_end'
+TIME_FRAME3_BEGIN = 'time_frame3_begin'
+TIME_FRAME3_END = 'time_frame3_end'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +43,6 @@ class Ebusd(Entity):
     def __init__(self, data, sensor, name):
         """Initialize the sensor."""
         self._state = None
-        self._attrs = {}
         self._client_name = name
         self._name = sensor[0]
         self._unit_of_measurement = sensor[1]
@@ -57,7 +63,26 @@ class Ebusd(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return self._attrs
+        if self._type == 1 and self._state is not None:
+            schedule = {
+                TIME_FRAME1_BEGIN: None,
+                TIME_FRAME1_END: None,
+                TIME_FRAME2_BEGIN: None,
+                TIME_FRAME2_END: None,
+                TIME_FRAME3_BEGIN: None,
+                TIME_FRAME3_END: None
+            }
+            time_frame = self._state.split(';')
+            for index, item in enumerate(sorted(schedule.items())):
+                if index < len(time_frame):
+                    parsed = datetime.datetime.strptime(time_frame[index], '%H:%M')
+                    parsed = parsed.replace(
+                        datetime.datetime.now().year,
+                        datetime.datetime.now().month,
+                        datetime.datetime.now().day)
+                    schedule[item[0]] = parsed.isoformat()
+            return schedule
+        return None
 
     @property
     def icon(self):
