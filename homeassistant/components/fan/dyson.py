@@ -486,7 +486,8 @@ class DysonPureCoolDevice(FanEntity):
                 return SPEED_MEDIUM
             elif self._device.state.speed in high_speeds:
                 return SPEED_HIGH
-        return None
+        else:
+            return None
 
     @property
     def dyson_speed(self):
