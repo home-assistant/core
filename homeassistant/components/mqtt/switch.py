@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.switch import SwitchDevice
@@ -33,7 +33,6 @@ DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
-CONF_UNIQUE_ID = 'unique_id'
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
 

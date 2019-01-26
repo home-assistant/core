@@ -76,6 +76,7 @@ CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
+CONF_UNIQUE_ID = 'unique_id'
 CONF_IDENTIFIERS = 'identifiers'
 CONF_CONNECTIONS = 'connections'
 CONF_MANUFACTURER = 'manufacturer'

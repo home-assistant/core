@@ -12,8 +12,8 @@ from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.components import mqtt, lock
@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PAYLOAD_LOCK = 'payload_lock'
 CONF_PAYLOAD_UNLOCK = 'payload_unlock'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Lock'
 DEFAULT_OPTIMISTIC = False

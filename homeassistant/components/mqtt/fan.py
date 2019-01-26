@@ -15,8 +15,8 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -44,7 +44,6 @@ CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
 CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
 CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
 CONF_SPEED_LIST = 'speeds'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Fan'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -203,8 +202,6 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                                      is not None and SUPPORT_OSCILLATE)
         self._supported_features |= (self._topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
-
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

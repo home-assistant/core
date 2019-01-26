@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
@@ -94,7 +94,6 @@ CONF_FAN_SPEED_TEMPLATE = 'fan_speed_template'
 CONF_SET_FAN_SPEED_TOPIC = 'set_fan_speed_topic'
 CONF_FAN_SPEED_LIST = 'fan_speed_list'
 CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Vacuum'
 DEFAULT_RETAIN = False

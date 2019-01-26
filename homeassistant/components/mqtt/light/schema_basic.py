@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
@@ -58,7 +58,6 @@ CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'

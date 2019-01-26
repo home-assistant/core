@@ -14,8 +14,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
@@ -34,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False

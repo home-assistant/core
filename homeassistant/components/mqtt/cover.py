@@ -21,8 +21,8 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_UNKNOWN, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
@@ -53,7 +53,6 @@ CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
-CONF_UNIQUE_ID = 'unique_id'
 
 TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"

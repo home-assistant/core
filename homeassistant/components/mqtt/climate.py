@@ -21,9 +21,9 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_ON,
     STATE_OFF)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, MQTT_BASE_PLATFORM_SCHEMA,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_UNIQUE_ID,
+    MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 import homeassistant.helpers.config_validation as cv
@@ -78,8 +78,6 @@ CONF_SEND_IF_OFF = 'send_if_off'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TEMP_STEP = 'temp_step'
-
-CONF_UNIQUE_ID = 'unique_id'
 
 TEMPLATE_KEYS = (
     CONF_POWER_STATE_TEMPLATE,

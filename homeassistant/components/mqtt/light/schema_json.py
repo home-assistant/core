@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_DEVICE, CONF_EFFECT, CONF_NAME,
@@ -54,7 +54,6 @@ CONF_EFFECT_LIST = 'effect_list'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_HS = 'hs'
-CONF_UNIQUE_ID = 'unique_id'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({

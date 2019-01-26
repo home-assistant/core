@@ -16,13 +16,14 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_NAME
 from homeassistant.components import mqtt, camera
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.mqtt import (
+    CONF_UNIQUE_ID)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
-CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_NAME = 'MQTT Camera'
 
 DEPENDENCIES = ['mqtt']
