@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     data = discovery_info['data']
 
     for sensor, options in SENSORS.items():
-        # Not all locations has all data available, only bring up sensors with
+        # Not all locations have all data available, only bring up sensors with
         # available data
         if data.get(options[0]):
             devs.append(WaqiSensor(data, sensor, options))
