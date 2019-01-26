@@ -14,7 +14,6 @@ from homeassistant import (
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
