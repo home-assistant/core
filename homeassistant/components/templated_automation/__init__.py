@@ -94,13 +94,10 @@ class TemplatedAutomation:
             self._hass, self._source, self.handle_state_change
         )
 
-    @callback
-    def handle_state_change(self, entity_id, from_s, to_s):
+    async def handle_state_change(self, entity_id, old_state, new_state):
         """Listen for state changes from source and apply to target."""
-        service = SERVICE_TURN_OFF if to_s == STATE_OFF \
+        service = SERVICE_TURN_OFF if new_state == STATE_OFF \
             and not self._inverse else SERVICE_TURN_ON
-        self._hass.async_run_job(
-            self._hass.services.async_call(
-                'homeassistant', service, {ATTR_ENTITY_ID: self._target}
-            )
+        await self._hass.services.async_call(
+            'homeassistant', service, {ATTR_ENTITY_ID: self._target}
         )
