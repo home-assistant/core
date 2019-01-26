@@ -9,12 +9,12 @@ import logging
 from homeassistant.components import light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
-from . import helpers
-from .const import (
+from .core import helpers
+from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
-from .entities import ZhaEntity
-from .entities.listeners import (
+from .entity import ZhaEntity
+from .core.listeners import (
     OnOffListener, LevelListener
 )
 

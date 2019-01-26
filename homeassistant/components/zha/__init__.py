@@ -22,8 +22,8 @@ from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import const as zha_const
 from .event import ZhaEvent, ZhaRelayEvent
 from . import api
-from .helpers import convert_ieee
-from .entities import ZhaDeviceEntity
+from .core.helpers import convert_ieee
+from .device_entity import ZhaDeviceEntity
 from .const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
