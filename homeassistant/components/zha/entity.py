@@ -13,11 +13,11 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
-from ..const import (
+from .core.const import (
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, ATTR_CLUSTER_ID, ATTR_ATTRIBUTE,
     ATTR_VALUE, ATTR_MANUFACTURER, ATTR_COMMAND, SERVER, ATTR_COMMAND_TYPE,
     ATTR_ARGS, IN, OUT, CLIENT_COMMANDS, SERVER_COMMANDS)
-from ..helpers import bind_configure_reporting
+from .core.helpers import bind_configure_reporting
 
 _LOGGER = logging.getLogger(__name__)
 
