@@ -1,8 +1,8 @@
 """
 Support for the CO2signal platform.
+
 For more details about this platform, please refer to the documentation
 """
-
 import logging
 
 import voluptuous as vol
