@@ -510,7 +510,7 @@ PLATFORM_SCHEMA_2 = vol.Schema({
     vol.Optional(CONF_SCAN_INTERVAL): time_period
 })
 
-COMPONENT_SCHEMA = PLATFORM_SCHEMA_2.extend({
+PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA_2.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

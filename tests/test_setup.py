@@ -15,7 +15,7 @@ import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
-    COMPONENT_SCHEMA, PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers import discovery
 
 from tests.common import \
@@ -95,13 +95,13 @@ class TestSetup:
         platform_schema = PLATFORM_SCHEMA.extend({
             'hello': str,
         })
-        component_schema = COMPONENT_SCHEMA.extend({
+        platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
         })
         loader.set_component(
             self.hass,
             'platform_conf',
             MockModule('platform_conf',
-                       component_schema=component_schema))
+                       platform_schema_base=platform_schema_base))
 
         loader.set_component(
             self.hass,
@@ -184,20 +184,20 @@ class TestSetup:
             assert not config['platform_conf']  # empty
 
     def test_validate_platform_config_2(self):
-        """Test component COMPONENT_SCHEMA prioritized over PLATFORM_SCHEMA."""
+        """Test component PLATFORM_SCHEMA_BASE prio over PLATFORM_SCHEMA."""
         platform_schema = PLATFORM_SCHEMA.extend({
             'cheers': str,
             'hello': str,
         })
-        component_schema = PLATFORM_SCHEMA.extend({
+        platform_schema_base = PLATFORM_SCHEMA.extend({
             'hello': str,
         })
         loader.set_component(
             self.hass,
             'platform_conf',
             MockModule('platform_conf',
-                       component_schema=component_schema,
-                       platform_schema=platform_schema))
+                       platform_schema=platform_schema,
+                       platform_schema_base=platform_schema_base))
 
         loader.set_component(
             self.hass,
