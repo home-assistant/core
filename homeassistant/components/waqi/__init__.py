@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_TOKEN): cv.string,
         vol.Required(CONF_LOCATIONS): cv.ensure_list
     })
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
