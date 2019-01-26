@@ -8,12 +8,12 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-from homeassistant.util import Throttle
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT,
     DEVICE_DEFAULT_NAME)
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
