@@ -26,28 +26,19 @@ DEFAULT_INVERTED = False
 
 DOMAIN = 'templated_automation'
 
-BINARY_ENTITY_DOMAINS = [
-    BINARY_SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-    LIGHT_DOMAIN,
-    INPUT_BOOLEAN_DOMAIN
-]
-
-
-def binary_entity_id(value: str) -> str:
-    """Validate that an Entity ID is from a binary domain."""
-    parts = value.split('.', 1)
-    if parts[0] not in BINARY_ENTITY_DOMAINS \
-            and parts[1] not in BINARY_ENTITY_DOMAINS:
-        raise vol.Invalid(
-            'Entity ID {} is not from a binary entity domain'.format(value)
-        )
-    return value
-
+binary_entity_id = vol.All(
+    cv.entity_id,
+    vol.Any(
+        cv.entity_domain(BINARY_SENSOR_DOMAIN),
+        cv.entity_domain(SWITCH_DOMAIN),
+        cv.entity_domain(LIGHT_DOMAIN),
+        cv.entity_domain(INPUT_BOOLEAN_DOMAIN)
+    )
+)
 
 AUTOMATION_TEMPLATE = vol.Schema({
-    vol.Required(CONF_SOURCE): vol.All(cv.entity_id, binary_entity_id),
-    vol.Required(CONF_TARGET): vol.All(cv.entity_id, binary_entity_id),
+    vol.Required(CONF_SOURCE): binary_entity_id,
+    vol.Required(CONF_TARGET): binary_entity_id,
     vol.Optional(
         CONF_BIDIRECTIONAL, default=DEFAULT_BIDIRECTIONAL
     ): cv.boolean,
