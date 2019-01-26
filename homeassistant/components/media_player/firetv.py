@@ -231,8 +231,7 @@ class FireTVDevice(MediaPlayerDevice):
                         self._running_apps = None
 
                 # Check if the launcher is active.
-                if self._current_app in [
-                    PACKAGE_LAUNCHER, PACKAGE_SETTINGS]:
+                if self._current_app in [PACKAGE_LAUNCHER, PACKAGE_SETTINGS]:
                     self._state = STATE_STANDBY
 
                 # Check for a wake lock (device is playing).
