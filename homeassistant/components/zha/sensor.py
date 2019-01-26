@@ -10,11 +10,11 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import convert as convert_temperature
-from . import helpers
-from .const import (
+from .core import helpers
+from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT, REPORT_CONFIG_RPT_CHANGE, ZHA_DISCOVERY_NEW)
-from .entities import ZhaEntity
+from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
