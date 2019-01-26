@@ -7,6 +7,8 @@ https://home-assistant.io/components/zha/
 import asyncio
 import logging
 
+from homeassistant.util import slugify
+
 from .const import (
     DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE, RadioType)
@@ -55,7 +57,7 @@ async def bind_cluster(entity_id, cluster):
         )
 
 
-async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
+async def configure_reporting(entity_id, cluster, attr,
                               min_report=REPORT_CONFIG_MIN_INT,
                               max_report=REPORT_CONFIG_MAX_INT,
                               reportable_change=REPORT_CONFIG_RPT_CHANGE,
@@ -68,12 +70,13 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
     from zigpy.exceptions import DeliveryError
 
     attr_name = cluster.attributes.get(attr, [attr])[0]
+    attr_id = get_attr_id_by_name(cluster, attr_name)
     cluster_name = cluster.ep_attribute
     kwargs = {}
     if manufacturer:
         kwargs['manufacturer'] = manufacturer
     try:
-        res = await cluster.configure_reporting(attr, min_report,
+        res = await cluster.configure_reporting(attr_id, min_report,
                                                 max_report, reportable_change,
                                                 **kwargs)
         _LOGGER.debug(
@@ -101,11 +104,11 @@ async def bind_configure_reporting(entity_id, cluster, attr, skip_bind=False,
     if not skip_bind:
         await bind_cluster(entity_id, cluster)
 
-    await configure_reporting(entity_id, cluster, attr, skip_bind=False,
-                              min_report=REPORT_CONFIG_MIN_INT,
-                              max_report=REPORT_CONFIG_MAX_INT,
-                              reportable_change=REPORT_CONFIG_RPT_CHANGE,
-                              manufacturer=None)
+    await configure_reporting(entity_id, cluster, attr,
+                              min_report=min_report,
+                              max_report=max_report,
+                              reportable_change=reportable_change,
+                              manufacturer=manufacturer)
 
 
 async def check_zigpy_connection(usb_path, radio_type, database_path):
@@ -136,3 +139,36 @@ def convert_ieee(ieee_str):
     """Convert given ieee string to EUI64."""
     from zigpy.types import EUI64, uint8_t
     return EUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])
+
+
+def construct_unique_id(cluster):
+    """Construct a unique id from a cluster."""
+    ieee = cluster.endpoint.device.ieee
+    ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+    manufacturer = cluster.endpoint.manufacturer
+    model = cluster.endpoint.model
+    unique_id = None
+    if manufacturer and model is not None:
+        unique_id = "{}_{}_{}_{}_{}".format(
+            slugify(manufacturer),
+            slugify(model),
+            ieeetail,
+            cluster.endpoint.endpoint_id,
+            cluster.cluster_id,
+        )
+    else:
+        unique_id = "zha_{}_{}_{}".format(
+            ieeetail,
+            cluster.endpoint.endpoint_id,
+            cluster.cluster_id,
+        )
+    return unique_id
+
+
+def get_attr_id_by_name(cluster, attr_name):
+    """Get the attribute id for a cluster attribute by its name."""
+    cluster_attributes = {}
+    # pylint: disable=W0612
+    for attrid, (attrname, datatype) in cluster.attributes.items():
+        cluster_attributes[attrname] = attrid
+    return cluster_attributes[attr_name]
