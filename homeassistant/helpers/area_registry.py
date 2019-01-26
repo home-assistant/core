@@ -3,6 +3,7 @@ import logging
 import uuid
 
 from collections import OrderedDict
+from typing import Optional
 
 import attr
 
@@ -29,58 +30,59 @@ class AreaEntry:
 class AreaRegistry:
     """Class to hold a registry of areas."""
 
-    def __init__(self, hass):
+    def __init__(self, hass) -> None:
         """Initialize the area registry."""
         self.hass = hass
         self.areas = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_get_by_name(self, name):
-        """Get AreaEntry by name."""
-        for area in self.areas.values():
-            if name == area.name:
-                return area
-        return None
+    def async_create(self, name: str):
+        """Create a new area."""
+        if self._async_is_registered(name):
+            raise ValueError('Name is already in use')
 
-    @callback
-    def async_get_by_id(self, area_id: str):
-        """Get AreaEntry by id."""
-        return self.areas[area_id]
-
-    @callback
-    def async_get_or_create(self, *, name):
-        """Get area. Create if it doesn't exist."""
-        area = self.async_get_by_name(name)
-
-        if area is None:
-            area = AreaEntry()
-
+        area = AreaEntry()
         self.areas[area.id] = area
 
-        return self._async_update_area(area.id, name=name)
+        return self.async_update(area.id, name=name)
 
     @callback
-    def async_update_area(self, area_id, *, new_name):
-        """Update area attributes."""
-        return self._async_update_area(area_id, name=new_name)
+    def async_delete(self, area_id: str) -> None:
+        """Delete area."""
+        del self.areas[area_id]
 
     @callback
-    def _async_update_area(self, area_id, *, name):
-        """Private facing update properties method."""
+    def async_read(self) -> AreaEntry:
+        """Get all areas."""
+        return self.areas
+
+    @callback
+    def async_update(self, area_id: str, name: str) -> Optional[AreaEntry]:
+        """Update name of area."""
         old = self.areas[area_id]
 
         changes = {}
 
-        if name != old.name:
-            changes['name'] = name
-
-        if not changes:
+        if name == old.name:
             return old
+
+        if self._async_is_registered(name):
+            raise ValueError('Name is already in use')
+        else:
+            changes['name'] = name
 
         new = self.areas[area_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
         return new
+
+    @callback
+    def _async_is_registered(self, name):
+        """Check if a name is currently registered."""
+        for area in self.areas.values():
+            if name == area.name:
+                return area
+        return False
 
     async def async_load(self):
         """Load the area registry."""

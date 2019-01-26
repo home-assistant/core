@@ -82,7 +82,7 @@ class DeviceRegistry:
     def async_get_or_create(self, *, config_entry_id, connections=None,
                             identifiers=None, manufacturer=_UNDEF,
                             model=_UNDEF, name=_UNDEF, sw_version=_UNDEF,
-                            via_hub=None, area_id=None):
+                            via_hub=None):
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
             return None
@@ -120,9 +120,13 @@ class DeviceRegistry:
             manufacturer=manufacturer,
             model=model,
             name=name,
-            sw_version=sw_version,
-            area_id=area_id
+            sw_version=sw_version
         )
+
+    @callback
+    def async_update_device(self, device_id, *, area_id=_UNDEF):
+        """Update properties of a device."""
+        return self._async_update_device(device_id, area_id=area_id)
 
     @callback
     def _async_update_device(self, device_id, *, add_config_entry_id=_UNDEF,
