@@ -28,15 +28,6 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_PORT): cv.port,
 })
 
-ATTR_PHONE_NUMBER = 'number'
-ATTR_MESSAGE = 'message'
-
-SERVICE_SEND_SMS = 'send_sms'
-SEND_SMS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_PHONE_NUMBER): cv.string,
-    vol.Required(ATTR_MESSAGE): cv.string
-})
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
