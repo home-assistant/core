@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -26,6 +27,7 @@ DOMAIN = 'person'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 PERSON_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_USER_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
@@ -66,9 +68,10 @@ class Person(RestoreEntity):
 
     def __init__(self, config, user_id):
         """Set up person."""
-        self._name = config[CONF_NAME]
+        self._id = config[CONF_ID]
         self._latitude = None
         self._longitude = None
+        self._name = config[CONF_NAME]
         self._source = None
         self._state = None
         self._trackers = config.get(CONF_DEVICE_TRACKERS)
@@ -96,6 +99,7 @@ class Person(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes of the person."""
         data = {}
+        data[ATTR_ID] = self._id
         if self._latitude is not None:
             data[ATTR_LATITUDE] = round(self._latitude, 5)
         if self._longitude is not None:
@@ -109,7 +113,7 @@ class Person(RestoreEntity):
     @property
     def unique_id(self):
         """Return a unique ID for the person."""
-        return self._user_id
+        return self._id
 
     async def async_added_to_hass(self):
         """Register device trackers."""
