@@ -60,6 +60,7 @@ class CO2Sensor(Entity):
         self._country_code = country_code
         self._latitude = lat
         self._longitude = lon
+        self._data = None
 
         if country_code is not None:
             device_name = country_code
