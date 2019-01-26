@@ -27,6 +27,7 @@ FEATURE_ON_OFF = 'on_off'
 FEATURE_PLAY_PAUSE = 'play_pause'
 FEATURE_PLAY_STOP = 'play_stop'
 FEATURE_TOGGLE_MUTE = 'toggle_mute'
+FEATURE_SPEAKER_VOLUME = 'speaker_volume'
 
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
