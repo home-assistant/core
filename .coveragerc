@@ -459,7 +459,6 @@ omit =
     homeassistant/components/*/spider.py
 
     homeassistant/components/air_quality/opensensemap.py
-    homeassistant/components/air_quality/waqi.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
@@ -930,6 +929,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/waqi/*
     homeassistant/components/water_heater/econet.py
     homeassistant/components/watson_iot.py
     homeassistant/components/weather/bom.py
