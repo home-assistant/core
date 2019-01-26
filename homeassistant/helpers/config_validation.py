@@ -1,5 +1,4 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 import os
