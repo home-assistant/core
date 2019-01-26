@@ -1,7 +1,7 @@
 """Class to hold all media player accessories."""
 import logging
 
-from pyhap.const import {CATEGORY_SWITCH, CATEGORY_SPEAKER}
+from pyhap.const import (CATEGORY_SWITCH, CATEGORY_SPEAKER)
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -70,10 +70,14 @@ class MediaPlayer(HomeAccessory):
 
         if FEATURE_SPEAKER_VOLUME in feature_list:
             name = self.generate_service_name(FEATURE_SPEAKER_VOLUME)
-            serv_speaker_volume = self.add_preload_service(SERV_SPEAKER, CHAR_NAME)
+            serv_speaker_volume =\
+                self.add_preload_service(SERV_SPEAKER, CHAR_NAME)
             serv_speaker_volume.configure_char(CHAR_NAME, value=name)
-            self.chars[FEATURE_SPEAKER_VOLUME] = serv_speaker_volume.configure_char(
-                CHAR_ON, value=False, setter_callback=self.set_speaker_volume)
+            self.chars[FEATURE_SPEAKER_VOLUME] = \
+                serv_speaker_volume.configure_char(
+                    CHAR_ON, value=False,
+                    setter_callback=self.set_speaker_volume
+                )
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -164,7 +168,9 @@ class MediaPlayer(HomeAccessory):
         if self.chars[FEATURE_SPEAKER_VOLUME]:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
             if not self._flag[FEATURE_SPEAKER_VOLUME]:
-                _LOGGER.debug('%s: Set current state for "speaker_volume" to %s',
-                              self.entity_id, current_state)
+                _LOGGER.debug(
+                    '%s: Set current state for "speaker_volume" to %s',
+                    self.entity_id, current_state
+                )
                 self.chars[FEATURE_SPEAKER_VOLUME].set_value(current_state)
             self._flag[FEATURE_SPEAKER_VOLUME] = False
