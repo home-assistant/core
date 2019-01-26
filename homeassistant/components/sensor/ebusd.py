@@ -75,7 +75,8 @@ class Ebusd(Entity):
             time_frame = self._state.split(';')
             for index, item in enumerate(sorted(schedule.items())):
                 if index < len(time_frame):
-                    parsed = datetime.datetime.strptime(time_frame[index], '%H:%M')
+                    parsed = datetime.datetime.strptime(
+                        time_frame[index], '%H:%M')
                     parsed = parsed.replace(
                         datetime.datetime.now().year,
                         datetime.datetime.now().month,
