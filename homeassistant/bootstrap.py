@@ -18,6 +18,7 @@ from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,6 +153,34 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
+
+    # TEMP: warn users for invalid slugs
+    # Remove after 0.94 or 1.0
+    if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:
+        msg = []
+
+        if cv.INVALID_ENTITY_IDS_FOUND:
+            msg.append(
+                "Your configuration contains invalid entity ID references. "
+                "Please find and update the following. "
+                "This will become a breaking change."
+            )
+            msg.append('\n'.join('- {} -> {}'.format(*item)
+                                 for item
+                                 in cv.INVALID_ENTITY_IDS_FOUND.items()))
+
+        if cv.INVALID_SLUGS_FOUND:
+            msg.append(
+                "Your configuration contains invalid slugs. "
+                "Please find and update the following. "
+                "This will become a breaking change."
+            )
+            msg.append('\n'.join('- {} -> {}'.format(*item)
+                                 for item in cv.INVALID_SLUGS_FOUND.items()))
+
+        hass.components.persistent_notification.async_create(
+            '\n\n'.join(msg), "Config Warning", "config_warning"
+        )
 
     return hass
 
