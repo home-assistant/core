@@ -156,6 +156,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
     # TEMP: warn users for invalid slugs
+    # Remove after 0.94 or 1.0
     if cv.INVALID_SLUGS_FOUND or cv.INVALID_ENTITY_IDS_FOUND:
         msg = []
 

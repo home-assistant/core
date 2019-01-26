@@ -158,6 +158,8 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(value):
         return value
     elif re.match(OLD_ENTITY_ID_VALIDATION, value):
+        # To ease the breaking change, we allow old slugs for now
+        # Remove after 0.94 or 1.0
         fixed = '.'.join(util_slugify(part) for part in value.split('.', 1))
         INVALID_ENTITY_IDS_FOUND[value] = fixed
         logging.getLogger(__name__).warning(
@@ -356,7 +358,8 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             except vol.Invalid:
                 # To ease the breaking change, we allow old slugs for now
                 # Remove after 0.94 or 1.0
-                if re.match(OLD_SLUG_VALIDATION, key.lower().replace(" ", "_")):
+                if re.match(OLD_SLUG_VALIDATION,
+                            key.lower().replace(" ", "_")):
                     fixed = util_slugify(key)
                     INVALID_SLUGS_FOUND[key] = fixed
                     logging.getLogger(__name__).warning(
