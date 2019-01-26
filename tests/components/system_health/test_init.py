@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.setup import async_setup_component
-# from homeassistant.components import system_health
 
 from tests.common import mock_coro
 
