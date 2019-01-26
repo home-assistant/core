@@ -2,34 +2,61 @@
 Support for Templated Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/templated_automation
+https://home-assistant.io/components/templated_automation/
 """
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_SOURCE, EVENT_STATE_CHANGED, STATE_OFF, \
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, ATTR_ENTITY_ID, ATTR_STATE
+from homeassistant.components.binary_sensor import \
+    DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_boolean import \
+    DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import CONF_SOURCE, STATE_OFF, \
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, ATTR_ENTITY_ID
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change
 
 CONF_BIDIRECTIONAL = 'bidirectional'
-CONF_INVERSE = 'inverse'
+CONF_INVERTED = 'inverted'
 CONF_TARGET = 'target'
 
 DEFAULT_BIDIRECTIONAL = False
-DEFAULT_INVERSE = False
+DEFAULT_INVERTED = False
 
 DOMAIN = 'templated_automation'
 
+BINARY_ENTITY_DOMAINS = [
+    BINARY_SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+    LIGHT_DOMAIN,
+    INPUT_BOOLEAN_DOMAIN
+]
+
+
+def binary_entity_id(value: str) -> str:
+    """Validate that an Entity ID is from a binary domain."""
+    parts = value.split('.', 1)
+    if parts[0] not in BINARY_ENTITY_DOMAINS \
+            and parts[1] not in BINARY_ENTITY_DOMAINS:
+        raise vol.Invalid(
+            'Entity ID {} is not from a binary entity domain'.format(value)
+        )
+    return value
+
+
 AUTOMATION_TEMPLATE = vol.Schema({
-    vol.Required(CONF_SOURCE): cv.entity_id,
-    vol.Required(CONF_TARGET): cv.entity_id,
+    vol.Required(CONF_SOURCE): vol.All(cv.entity_id, binary_entity_id),
+    vol.Required(CONF_TARGET): vol.All(cv.entity_id, binary_entity_id),
     vol.Optional(
         CONF_BIDIRECTIONAL, default=DEFAULT_BIDIRECTIONAL
     ): cv.boolean,
-    vol.Optional(CONF_INVERSE, default=DEFAULT_INVERSE): cv.boolean
+    vol.Optional(CONF_INVERTED, default=DEFAULT_INVERTED): cv.boolean
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN): vol.All(cv.ensure_list, [AUTOMATION_TEMPLATE])
+    DOMAIN: vol.All(cv.ensure_list, [AUTOMATION_TEMPLATE])
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_NEW_STATE = 'new_state'
@@ -41,41 +68,39 @@ async def async_setup(hass, config):
     for conf in config[DOMAIN]:
         source = conf[CONF_SOURCE]
         target = conf[CONF_TARGET]
-        inverse = conf.get(CONF_INVERSE)
-        automations[source] = TemplatedAutomation(source, target, inverse)
-        if conf.get(CONF_BIDIRECTIONAL):
-            automations[target] = TemplatedAutomation(target, source, inverse)
+        inverse = conf.get(CONF_INVERTED)
+        automation = TemplatedAutomation(hass, source, target, inverse)
+        await automation._init()
+        automations[source] = automation
 
     hass.data[DOMAIN] = automations
-
-    async def handle_event(event):
-        entity_id = event.data[ATTR_ENTITY_ID]
-        if entity_id not in hass.data[DOMAIN]:
-            return
-
-        automation = hass.data[DOMAIN][entity_id]
-        new_state = getattr(event.data.get(ATTR_NEW_STATE), ATTR_STATE, None)
-
-        if not new_state:
-            return
-
-        service = SERVICE_TURN_OFF if new_state == STATE_OFF \
-            and not automation.inverse else SERVICE_TURN_ON
-
-        await hass.services.async_call(
-            'homeassistant', service, {ATTR_ENTITY_ID: automation.target}
-        )
-
-    hass.bus.async_listen(EVENT_STATE_CHANGED, handle_event)
-
     return True
 
 
 class TemplatedAutomation:
     """Represents a Templated Automation."""
 
-    def __init__(self, source, target, inverse):
+    def __init__(self, hass, source, target, inverse):
         """Initialize a Templated Automation object."""
-        self.source = source
-        self.target = target
-        self.inverse = inverse
+        self._hass = hass
+        self._source = source
+        self._target = target
+        self._inverse = inverse
+        self._unsub = None
+
+    async def _init(self):
+        """Add the callback for state changes."""
+        self._unsub = await async_track_state_change(
+            self._hass, self._source, self.handle_state_change
+        )
+
+    @callback
+    def handle_state_change(self, entity_id, from_s, to_s):
+        """Listen for state changes from source and apply to target."""
+        service = SERVICE_TURN_OFF if to_s == STATE_OFF \
+            and not self._inverse else SERVICE_TURN_ON
+        self._hass.async_run_job(
+            self._hass.services.async_call(
+                'homeassistant', service, {ATTR_ENTITY_ID: self._target}
+            )
+        )
