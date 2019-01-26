@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+from collections import OrderedDict
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 import os
@@ -26,6 +27,13 @@ from homeassistant.helpers import template as template_helper
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+OLD_SLUG_VALIDATION = r'[a-z0-9_]+'
+OLD_ENTITY_ID_VALIDATION = r"^(\w+)\.(\w+)$"
+# Keep track of invalid slugs and entity ids found so we can create a
+# persistent notification. Rare temporary exception to use a global.
+INVALID_SLUGS_FOUND = {}
+INVALID_ENTITY_IDS_FOUND = {}
+
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -149,6 +157,16 @@ def entity_id(value: Any) -> str:
     value = string(value).lower()
     if valid_entity_id(value):
         return value
+    elif re.match(OLD_ENTITY_ID_VALIDATION, value):
+        fixed = '.'.join(util_slugify(part) for part in value.split('.', 1))
+        INVALID_ENTITY_IDS_FOUND[value] = fixed
+        logging.getLogger(__name__).warning(
+            "Found invalid entity_id %s, please update with %s. This "
+            "will become a breaking change.",
+            value, fixed
+        )
+        return value
+
     raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
@@ -333,7 +351,22 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             raise vol.Invalid('expected dictionary')
 
         for key in value.keys():
-            slug(key)
+            try:
+                slug(key)
+            except vol.Invalid:
+                # To ease the breaking change, we allow old slugs for now
+                # Remove after 0.94 or 1.0
+                if re.match(OLD_SLUG_VALIDATION, key.lower().replace(" ", "_")):
+                    fixed = util_slugify(key)
+                    INVALID_SLUGS_FOUND[key] = fixed
+                    logging.getLogger(__name__).warning(
+                        "Found invalid slug %s, please update with %s. This"
+                        "will be come a breaking change.",
+                        key, fixed
+                    )
+                else:
+                    raise
+
         return schema(value)
     return verify
 
