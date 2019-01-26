@@ -24,7 +24,6 @@ ATTR_USER_ID = 'user_id'
 CONF_DEVICE_TRACKERS = 'device_trackers'
 CONF_USER_ID = 'user_id'
 DOMAIN = 'person'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 PERSON_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.string,
