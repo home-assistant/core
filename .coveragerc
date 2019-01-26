@@ -453,6 +453,7 @@ omit =
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/const.py
     homeassistant/components/zha/core/listeners.py
+    homeassistant/components/zha/core/gateway.py
     homeassistant/components/*/zha.py
 
     homeassistant/components/zigbee.py
