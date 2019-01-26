@@ -2,12 +2,15 @@
 Sensor platform for the WAQI Component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor/waqi/
+https://home-assistant.io/components/sensor.waqi/
 """
 import logging
+
+from homeassistant.components.waqi import SCAN_INTERVAL
 from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE,
                                  TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 ATTR_HUMIDITY = 'humidity'
 ATTR_PRESSURE = 'pressure'
@@ -80,7 +83,7 @@ class WaqiSensor(Entity):
     @property
     def update_time(self):
         """Return the update time."""
-        return self._data['time']['s']
+        return self.waqi_data.update_time
 
     @property
     def unit_of_measurement(self):
@@ -93,6 +96,7 @@ class WaqiSensor(Entity):
         return {ATTR_ATTRIBUTION: self.attribution,
                 ATTR_TIME: self.update_time}
 
+    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the latest data and updates the states."""
         await self.waqi_data.async_update()

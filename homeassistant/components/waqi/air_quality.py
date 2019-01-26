@@ -2,16 +2,19 @@
 Air quality platform for the WAQI Component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality/waqi/
+https://home-assistant.io/components/air_quality.waqi/
 """
 import logging
-from homeassistant.const import ATTR_TIME
+
 from homeassistant.components.air_quality import (
     AirQualityEntity, PROP_TO_ATTR)
+from homeassistant.components.waqi import SCAN_INTERVAL
+from homeassistant.const import ATTR_TIME
+from homeassistant.util import Throttle
 
-ATTR_DOMINENTPOL = 'dominentpol'
+ATTR_DOMINANT_POLLUANT = 'dominant_polluant'
 
-PROP_TO_ATTR.update({'dominent_polluant': ATTR_DOMINENTPOL,
+PROP_TO_ATTR.update({'dominant_polluant': ATTR_DOMINANT_POLLUANT,
                      'update_time': ATTR_TIME})
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +79,7 @@ class WaqiQuality(AirQualityEntity):
         return self.waqi_data.get('no2')
 
     @property
-    def dominent_polluant(self):
+    def dominant_polluant(self):
         """Return the dominant polluant."""
         return self._data.get('dominentpol')
 
@@ -100,7 +103,7 @@ class WaqiQuality(AirQualityEntity):
     @property
     def update_time(self):
         """Return the update time."""
-        return self._data['time']['s']
+        return self.waqi_data.update_time
 
     @property
     def device_state_attributes(self):
@@ -114,6 +117,7 @@ class WaqiQuality(AirQualityEntity):
 
         return data
 
+    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the latest data and updates the states."""
         await self.waqi_data.async_update()

@@ -6,18 +6,16 @@ https://home-assistant.io/components/waqi/
 """
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
+from dateutil import parser as dt_parser
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import (CONF_TOKEN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['waqiasync==1.0.0']
 
@@ -36,9 +34,9 @@ TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_STATIONS): cv.ensure_list,
+        vol.Optional(CONF_STATIONS): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_LOCATIONS): cv.ensure_list
+        vol.Required(CONF_LOCATIONS): vol.All(cv.ensure_list, [cv.string]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -47,10 +45,10 @@ async def async_setup(hass, config):
     """Set up the WAQI component."""
     import waqiasync
 
-    conf = config.get(DOMAIN)
-    token = conf.get(CONF_TOKEN)
-    station_filter = conf.get(CONF_STATIONS)
-    locations = conf.get(CONF_LOCATIONS)
+    conf = config[DOMAIN]
+    token = conf[CONF_TOKEN]
+    station_filter = conf[CONF_STATIONS]
+    locations = conf[CONF_LOCATIONS]
 
     client = waqiasync.WaqiClient(
         token, async_get_clientsession(hass), timeout=TIMEOUT)
@@ -72,13 +70,13 @@ async def async_setup(hass, config):
                     hass.async_create_task(async_load_platform(
                         hass, 'sensor', DOMAIN, {'data': waqi_data}, config))
     except (aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError):
-        _LOGGER.exception('Failed to connect to WAQI servers.')
-        raise PlatformNotReady
+            asyncio.TimeoutError) as err:
+        _LOGGER.error("Failed to connect to WAQI servers: %s", err)
+        return False
     return True
 
 
-class WaqiData(Entity):
+class WaqiData:
     """Get data from WAQI API."""
 
     def __init__(self, client, station):
@@ -101,13 +99,14 @@ class WaqiData(Entity):
 
         self.data = {}
 
-    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the data from Waqi API."""
         if self.uid:
             result = await self._client.get_station_by_number(self.uid)
         elif self.url:
             result = await self._client.get_station_by_name(self.url)
+        else:
+            result = None
         self.data = result
 
     @property
@@ -115,6 +114,14 @@ class WaqiData(Entity):
         """Return the attribution."""
         return [ATTRIBUTION] + [
             v['name'] for v in self.data.get('attributions', [])]
+
+    @property
+    def update_time(self):
+        """Return the time of the data update."""
+        if 'debug' in self.data and 'sync' in self.data['debug']:
+            return dt_parser.parse(
+                self.data['debug']['sync']).astimezone(timezone.utc)
+        return None
 
     def get(self, key):
         """Extract the measurement value from API data."""
