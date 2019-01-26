@@ -27,7 +27,7 @@ MODE_HOMEKIT_TO_HASS = {
 # Map of hass operation modes to homekit modes
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
-DEFAULT_VALID_MODES = list(MODE_HASS_TO_HOMEKIT.keys())
+DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

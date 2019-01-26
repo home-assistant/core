@@ -1,10 +1,12 @@
 """Code to support homekit_controller tests."""
+from datetime import timedelta
 from unittest import mock
 
 from homeassistant.components.homekit_controller import (
     DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
 from homeassistant.setup import async_setup_component
-from tests.common import fire_service_discovered
+import homeassistant.util.dt as dt_util
+from tests.common import async_fire_time_changed, fire_service_discovered
 
 
 class FakePairing:
@@ -88,16 +90,19 @@ class Helper:
                 char_name = CharacteristicsTypes.get_short(char.type)
                 self.characteristics[(service_name, char_name)] = char
 
-    async def get_state(self):
-        """Trigger an entity update() and return the current entity state."""
-        await self.hass.helpers.entity_component.async_update_entity(
-            self.entity_id)
+    async def poll_and_get_state(self):
+        """Trigger a time based poll and return the current entity state."""
+        next_update = dt_util.utcnow() + timedelta(seconds=60)
+        async_fire_time_changed(self.hass, next_update)
+        await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done()
+
         state = self.hass.states.get(self.entity_id)
         assert state is not None
         return state
 
 
-async def add_fake_homekit_accessory(hass, services):
+async def setup_test_component(hass, services):
     """Load a fake homekit accessory based on a homekit accessory model."""
     from homekit.model import Accessory
     from homekit.model.services import ServicesTypes
