@@ -8,7 +8,6 @@ callbacks when device states change.
 import asyncio
 import functools
 import logging
-import os
 from uuid import uuid4
 
 from aiohttp import web
@@ -19,12 +18,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.json import load_json, save_json
 
 from .const import (
     APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
-    SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, SMARTTHINGS_CONFIG_FILE,
+    SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, STORAGE_KEY, STORAGE_VERSION,
     SUPPORTED_CAPABILITIES)
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,16 +156,15 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         return
 
     # Get/create config to store a unique id for this hass instance.
-    path = hass.config.path(SMARTTHINGS_CONFIG_FILE)
-    if not await hass.async_add_job(os.path.isfile, path):
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    config = await store.async_load()
+    if not config:
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
             CONF_WEBHOOK_ID: webhook.generate_secret()
         }
-        await hass.async_add_job(save_json, path, config)
-    else:
-        config = await hass.async_add_job(load_json, path)
+        await store.async_save(config)
 
     # SmartAppManager uses a dispatcher to invoke callbacks when push events
     # occur. Use hass' implementation instead of the built-in one.

@@ -76,13 +76,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     except ClientResponseError as ex:
         _LOGGER.exception(ex)
-        if ex.status in (400, 401, 403, 422):
+        if ex.status in (401, 403):
             remove_entry = True
         else:
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.exception(ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady
 
     if remove_entry:
         hass.async_create_task(
@@ -107,10 +107,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if broker and broker.event_handler_disconnect:
         broker.event_handler_disconnect()
 
-    for component in SUPPORTED_PLATFORMS:
-        hass.async_create_task(hass.config_entries.async_forward_entry_unload(
-            entry, component))
-    return True
+    tasks = [hass.config_entries.async_forward_entry_unload(entry, component)
+             for component in SUPPORTED_PLATFORMS]
+    return all(await asyncio.gather(*tasks))
 
 
 class DeviceBroker:
@@ -182,7 +181,7 @@ class SmartThingsEntity(Entity):
             },
             'name': self._device.label,
             'model': self._device.device_type_name,
-            'manufacturer': 'SmartThings'
+            'manufacturer': 'Unavailable'
         }
 
     @property

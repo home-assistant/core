@@ -12,7 +12,8 @@ import pytest
 from homeassistant.components import webhook
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID)
+    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
+    STORAGE_VERSION)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
@@ -22,13 +23,12 @@ from tests.common import mock_coro
 
 
 @pytest.fixture(autouse=True)
-async def setup_component(hass, config_file):
+async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
-    with patch("os.path.isfile", return_value=True), \
-        patch("homeassistant.components.smartthings.smartapp.load_json",
-              return_value=config_file):
-        await async_setup_component(hass, 'smartthings', {})
-        hass.config.api.base_url = 'https://test.local'
+    hass_storage[STORAGE_KEY] = {'data': config_file,
+                                 "version": STORAGE_VERSION}
+    await async_setup_component(hass, 'smartthings', {})
+    hass.config.api.base_url = 'https://test.local'
 
 
 def _create_location():

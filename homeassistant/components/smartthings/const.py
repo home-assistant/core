@@ -15,7 +15,8 @@ DOMAIN = 'smartthings'
 SIGNAL_SMARTTHINGS_UPDATE = 'smartthings_update'
 SIGNAL_SMARTAPP_PREFIX = 'smartthings_smartap_'
 SETTINGS_INSTANCE_ID = "hassInstanceId"
-SMARTTHINGS_CONFIG_FILE = 'smartthings.conf'
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
     'switch'
 ]

@@ -52,90 +52,84 @@ def test_is_switch(device_factory):
         assert not switch.is_switch(non_switch_device)
 
 
-class TestSmartThingsSwitch:
-    """Tests for the SmartThingsSwitch."""
+async def test_entity_and_device_attributes(hass, device_factory):
+    """Test the attributes of the entity are correct."""
+    # Arrange
+    device = device_factory('Switch_1', [Capability.switch],
+                            {Attribute.switch: 'on'})
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    # Act
+    await _setup_platform(hass, device)
+    # Assert
+    entity = entity_registry.async_get('switch.switch_1')
+    assert entity
+    assert entity.unique_id == device.device_id
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, device.device_id)}, [])
+    assert device_entry
+    assert device_entry.name == device.label
+    assert device_entry.model == device.device_type_name
+    assert device_entry.manufacturer == 'Unavailable'
 
-    @staticmethod
-    async def test_entity_attributes(hass, device_factory):
-        """Test the attributes of the entity are correct."""
-        # Arrange
-        device = device_factory('Switch_1', [Capability.switch],
-                                {Attribute.switch: 'on'})
-        # Act
-        await _setup_platform(hass, device)
-        # Assert
-        component = hass.data['switch']
-        entity = component.get_entity('switch.switch_1')
-        assert entity.unique_id == device.device_id
-        assert entity.name == device.label
-        assert not entity.should_poll
-        assert entity.device_info == {
-            'identifiers': {
-                (DOMAIN, device.device_id)
-            },
-            'name': device.label,
-            'model': device.device_type_name,
-            'manufacturer': 'SmartThings'
-        }
 
-    @staticmethod
-    async def test_turn_off(hass, device_factory):
-        """Test the switch turns of successfully."""
-        # Arrange
-        device = device_factory('Switch_1', [Capability.switch],
-                                {Attribute.switch: 'on'})
-        await _setup_platform(hass, device)
-        # Act
-        await hass.services.async_call(
-            'switch', 'turn_off', {'entity_id': 'switch.switch_1'},
-            blocking=True)
-        # Assert
-        entity = hass.states.get('switch.switch_1')
-        assert entity is not None
-        assert entity.state == 'off'
+async def test_turn_off(hass, device_factory):
+    """Test the switch turns of successfully."""
+    # Arrange
+    device = device_factory('Switch_1', [Capability.switch],
+                            {Attribute.switch: 'on'})
+    await _setup_platform(hass, device)
+    # Act
+    await hass.services.async_call(
+        'switch', 'turn_off', {'entity_id': 'switch.switch_1'},
+        blocking=True)
+    # Assert
+    state = hass.states.get('switch.switch_1')
+    assert state is not None
+    assert state.state == 'off'
 
-    @staticmethod
-    async def test_turn_on(hass, device_factory):
-        """Test the switch turns of successfully."""
-        # Arrange
-        device = device_factory('Switch_1', [Capability.switch],
-                                {Attribute.switch: 'off'})
-        await _setup_platform(hass, device)
-        # Act
-        await hass.services.async_call(
-            'switch', 'turn_on', {'entity_id': 'switch.switch_1'},
-            blocking=True)
-        # Assert
-        entity = hass.states.get('switch.switch_1')
-        assert entity is not None
-        assert entity.state == 'on'
 
-    @staticmethod
-    async def test_update_from_signal(hass, device_factory):
-        """Test the switch updates when receiving a signal."""
-        # Arrange
-        device = device_factory('Switch_1', [Capability.switch],
-                                {Attribute.switch: 'off'})
-        await _setup_platform(hass, device)
-        await device.switch_on(True)
-        # Act
-        async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
-                              [device.device_id])
-        # Assert
-        await hass.async_block_till_done()
-        entity = hass.states.get('switch.switch_1')
-        assert entity is not None
-        assert entity.state == 'on'
+async def test_turn_on(hass, device_factory):
+    """Test the switch turns of successfully."""
+    # Arrange
+    device = device_factory('Switch_1', [Capability.switch],
+                            {Attribute.switch: 'off'})
+    await _setup_platform(hass, device)
+    # Act
+    await hass.services.async_call(
+        'switch', 'turn_on', {'entity_id': 'switch.switch_1'},
+        blocking=True)
+    # Assert
+    state = hass.states.get('switch.switch_1')
+    assert state is not None
+    assert state.state == 'on'
 
-    @staticmethod
-    async def test_unload_config_entry(hass, device_factory):
-        """Test the switch is removed when the config entry is unloaded."""
-        # Arrange
-        device = device_factory('Switch', [Capability.switch],
-                                {Attribute.switch: 'on'})
-        config_entry = await _setup_platform(hass, device)
-        # Act
-        await hass.config_entries.async_forward_entry_unload(
-            config_entry, 'switch')
-        # Assert
-        assert not hass.states.get('switch.switch_1')
+
+async def test_update_from_signal(hass, device_factory):
+    """Test the switch updates when receiving a signal."""
+    # Arrange
+    device = device_factory('Switch_1', [Capability.switch],
+                            {Attribute.switch: 'off'})
+    await _setup_platform(hass, device)
+    await device.switch_on(True)
+    # Act
+    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
+                          [device.device_id])
+    # Assert
+    await hass.async_block_till_done()
+    state = hass.states.get('switch.switch_1')
+    assert state is not None
+    assert state.state == 'on'
+
+
+async def test_unload_config_entry(hass, device_factory):
+    """Test the switch is removed when the config entry is unloaded."""
+    # Arrange
+    device = device_factory('Switch', [Capability.switch],
+                            {Attribute.switch: 'on'})
+    config_entry = await _setup_platform(hass, device)
+    # Act
+    await hass.config_entries.async_forward_entry_unload(
+        config_entry, 'switch')
+    # Assert
+    assert not hass.states.get('switch.switch_1')
