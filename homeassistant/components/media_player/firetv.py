@@ -103,10 +103,10 @@ def adb_decorator(override_available=False):
             # Additional ADB commands will be prevented while trying this one
             try:
                 returns = func(self, *args, **kwargs)
-            except self.exceptions:
+            except self.exceptions as err:
                 _LOGGER.error('Failed to execute an ADB command; will attempt '
                               'to re-establish the ADB connection in the next '
-                              'update')
+                              'update; error was: %s', err)
                 returns = None
                 self._available = False  # pylint: disable=protected-access
             finally:
