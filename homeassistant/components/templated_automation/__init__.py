@@ -15,7 +15,6 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_SOURCE, STATE_OFF, \
     SERVICE_TURN_OFF, SERVICE_TURN_ON, ATTR_ENTITY_ID
-from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 
 CONF_BIDIRECTIONAL = 'bidirectional'
