@@ -3,7 +3,7 @@ from tests.components.homekit_controller.common import (
     setup_test_component)
 
 
-async def test_switch_change_outlet_state(hass):
+async def test_switch_change_outlet_state(hass, utcnow):
     """Test that we can turn a HomeKit outlet on and off again."""
     from homekit.model.services import OutletService
 
@@ -20,7 +20,7 @@ async def test_switch_change_outlet_state(hass):
     assert helper.characteristics[('outlet', 'on')].value == 0
 
 
-async def test_switch_read_outlet_state(hass):
+async def test_switch_read_outlet_state(hass, utcnow):
     """Test that we can read the state of a HomeKit outlet accessory."""
     from homekit.model.services import OutletService
 

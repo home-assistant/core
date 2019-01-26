@@ -3,7 +3,7 @@ from tests.components.homekit_controller.common import (
     setup_test_component)
 
 
-async def test_switch_change_light_state(hass):
+async def test_switch_change_light_state(hass, utcnow):
     """Test that we can turn a HomeKit light on and off again."""
     from homekit.model.services import BHSLightBulbService
 
@@ -25,7 +25,7 @@ async def test_switch_change_light_state(hass):
     assert helper.characteristics[('lightbulb', 'on')].value == 0
 
 
-async def test_switch_read_light_state(hass):
+async def test_switch_read_light_state(hass, utcnow):
     """Test that we can read the state of a HomeKit light accessory."""
     from homekit.model.services import BHSLightBulbService
 

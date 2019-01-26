@@ -95,7 +95,6 @@ class Helper:
         next_update = dt_util.utcnow() + timedelta(seconds=60)
         async_fire_time_changed(self.hass, next_update)
         await self.hass.async_block_till_done()
-        await self.hass.async_block_till_done()
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None

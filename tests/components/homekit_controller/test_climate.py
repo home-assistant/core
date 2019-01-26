@@ -11,7 +11,7 @@ TEMPERATURE_TARGET = ('thermostat', 'temperature.target')
 TEMPERATURE_CURRENT = ('thermostat', 'temperature.current')
 
 
-async def test_climate_change_thermostat_state(hass):
+async def test_climate_change_thermostat_state(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
     from homekit.model.services import ThermostatService
 
@@ -31,7 +31,7 @@ async def test_climate_change_thermostat_state(hass):
     assert helper.characteristics[HEATING_COOLING_TARGET].value == 2
 
 
-async def test_climate_change_thermostat_temperature(hass):
+async def test_climate_change_thermostat_temperature(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
     from homekit.model.services import ThermostatService
 
@@ -50,7 +50,7 @@ async def test_climate_change_thermostat_temperature(hass):
     assert helper.characteristics[TEMPERATURE_TARGET].value == 25
 
 
-async def test_climate_read_thermostat_state(hass):
+async def test_climate_read_thermostat_state(hass, utcnow):
     """Test that we can read the state of a HomeKit thermostat accessory."""
     from homekit.model.services import ThermostatService
 
