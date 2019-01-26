@@ -54,3 +54,4 @@ async def test_info_endpoint_register_callback(hass, hass_client,
     assert len(data) == 2
     data = data['lovelace']
     assert data == {'storage': 'YAML'}
+    assert False, data
