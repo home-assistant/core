@@ -143,7 +143,6 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
 
     route = sched.routes_by_id(item[1])[0]
 
-
     origin_stop_time_dict = {
         'Arrival Time': origin_stoptime_arrival_time,
         'Departure Time': origin_stoptime_departure_time,
