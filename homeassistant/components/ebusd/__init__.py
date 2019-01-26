@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 
 from .const import (DOMAIN, SENSOR_TYPES)
 
-REQUIREMENTS = ['ebusdpy==0.0.11']
+REQUIREMENTS = ['ebusdpy==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,14 +86,14 @@ class EbusdData:
         self.value = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, name):
+    def update(self, name, type):
         """Call the Ebusd API to update the data."""
         import ebusdpy
 
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
-                self._address, self._circuit, name, CACHE_TTL)
+                self._address, self._circuit, name, type, CACHE_TTL)
             if 'ERR:' in command_result:
                 _LOGGER.error(command_result)
                 raise RuntimeError("Error in reading ebus")

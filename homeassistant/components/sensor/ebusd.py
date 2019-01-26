@@ -36,6 +36,7 @@ class Ebusd(Entity):
     def __init__(self, data, sensor, name):
         """Initialize the sensor."""
         self._state = None
+        self._attrs = {}
         self._client_name = name
         self._name = sensor[0]
         self._unit_of_measurement = sensor[1]
@@ -54,6 +55,11 @@ class Ebusd(Entity):
         return self._state
 
     @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return self._attrs
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
@@ -66,7 +72,7 @@ class Ebusd(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self.data.update(self._name)
+            self.data.update(self._name, self._type)
             if self._name not in self.data.value:
                 return
 
