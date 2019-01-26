@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
@@ -211,10 +211,11 @@ class OwnTracksContext:
 
         if device_tracker_state is not None:
             acc = device_tracker_state.attributes.get("gps_accuracy")
-            lat = device_tracker_state.attributes.get("latitude")
-            lon = device_tracker_state.attributes.get("longitude")
+            lat = device_tracker_state.attributes.get(ATTR_LATITUDE)
+            lon = device_tracker_state.attributes.get(ATTR_LONGITUDE)
             kwargs['gps_accuracy'] = acc
-            kwargs['gps'] = (lat, lon)
+            kwargs[ATTR_LATITUDE] = lat
+            kwargs[ATTR_LONGITUDE] = lon
 
         # the battery state applies to the tracking device, not the beacon
         # kwargs location is the beacon's configured lat/lon

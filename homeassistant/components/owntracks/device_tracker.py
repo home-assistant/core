@@ -4,23 +4,133 @@ import logging
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS)
-from homeassistant.const import STATE_HOME
-from homeassistant.util import decorator, slugify
+    ATTR_ATTRIBUTES, ATTR_BATTERY, ATTR_GPS_ACCURACY, ATTR_HOST_NAME,
+    ATTR_LOCATION_NAME, ATTR_SOURCE_TYPE, ENTITY_ID_FORMAT,
+    SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS, DeviceTrackerEntity)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import decorator, ensure_unique_string, slugify
 
 from . import DOMAIN as OT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 HANDLERS = decorator.Registry()
+OWNTRACKS_ENTITIES = 'owntracks_entities'
 
 
-async def async_setup_entry(hass, entry, async_see):
-    """Set up OwnTracks based off an entry."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up OwnTracks from config entry."""
+    entities = hass.data.setdefault(OWNTRACKS_ENTITIES, {})
+
+    async def async_see(dev_id=None, **kwargs):
+        """Notify the device tracker entities that you see a device."""
+        dev_id = cv.slug(str(dev_id).lower())
+        entity = entities.get(dev_id)
+
+        if entity:
+            await entity.async_seen(**kwargs)
+            return
+
+        # If no device can be found, create it
+        dev_id = ensure_unique_string(dev_id, entities.keys())
+        entity = OwnTracksEntity(dev_id, **kwargs)
+        entities[dev_id] = entity
+        async_add_entities([entity])
+
     hass.data[OT_DOMAIN]['context'].async_see = async_see
     hass.helpers.dispatcher.async_dispatcher_connect(
         OT_DOMAIN, async_handle_message)
     return True
+
+
+class OwnTracksEntity(DeviceTrackerEntity):
+    """Represent a tracked device."""
+
+    def __init__(self, dev_id, **kwargs):
+        """Set up OwnTracks entity."""
+        self._source_type = kwargs.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
+        self._host_name = kwargs.get(ATTR_HOST_NAME)
+        self._location_name = kwargs.get(ATTR_LOCATION_NAME)
+        self._battery = kwargs.get(ATTR_BATTERY)
+        self._attributes = kwargs.get(ATTR_ATTRIBUTES, {})
+        self._gps_accuracy = kwargs.get(ATTR_GPS_ACCURACY, 0)
+        self._latitude = kwargs.get(ATTR_LATITUDE)
+        self._longitude = kwargs.get(ATTR_LONGITUDE)
+        self._connected_seen = None
+        self._dev_id = dev_id
+        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+
+    @property
+    def battery(self):
+        """Return the battery level of the device."""
+        return self._battery
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific attributes."""
+        return self._attributes
+
+    @property
+    def gps_accuracy(self):
+        """Return the gps accuracy of the device."""
+        return self._gps_accuracy
+
+    @property
+    def latitude(self):
+        """Return latitude value of the device."""
+        return self._latitude
+
+    @property
+    def location_name(self):
+        """Return a location name for the current location of the device."""
+        return self._location_name
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._longitude
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._host_name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        return self._source_type
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self._connected_seen = self._async_seen
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self.hass.data[OWNTRACKS_ENTITIES].pop(self._dev_id)
+
+    async def async_seen(self, **kwargs):
+        """Mark the device as seen."""
+        if self._connected_seen is None:
+            return
+        await self._connected_seen(**kwargs)
+
+    async def _async_seen(self, **kwargs):
+        """Mark the device as seen."""
+        self._attributes.update(kwargs.get(ATTR_ATTRIBUTES, {}))
+        self._battery = kwargs.get(ATTR_BATTERY)
+        self._location_name = kwargs.get(ATTR_LOCATION_NAME)
+        self._latitude = kwargs.get(ATTR_LATITUDE)
+        self._longitude = kwargs.get(ATTR_LONGITUDE)
+        self._source_type = kwargs.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
+        self._gps_accuracy = kwargs.get(ATTR_GPS_ACCURACY, 0)
+
+        await self.async_update_ha_state()
 
 
 def get_cipher():
@@ -69,7 +179,8 @@ def _parse_see_args(message, subscribe_topic):
     kwargs = {
         'dev_id': dev_id,
         'host_name': user,
-        'gps': (message['lat'], message['lon']),
+        ATTR_LATITUDE: message['lat'],
+        ATTR_LONGITUDE: message['lon'],
         'attributes': {}
     }
     if 'acc' in message:
@@ -99,9 +210,8 @@ def _set_gps_from_zone(kwargs, location, zone):
     Async friendly.
     """
     if zone is not None:
-        kwargs['gps'] = (
-            zone.attributes['latitude'],
-            zone.attributes['longitude'])
+        kwargs[ATTR_LATITUDE] = zone.attributes[ATTR_LATITUDE]
+        kwargs[ATTR_LONGITUDE] = zone.attributes[ATTR_LONGITUDE]
         kwargs['gps_accuracy'] = zone.attributes['radius']
         kwargs['location_name'] = location
     return kwargs
