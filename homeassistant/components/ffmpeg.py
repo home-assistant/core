@@ -119,7 +119,7 @@ class FFmpegManager:
 
             result = re.search(r"ffmpeg version (\S*)", first_line)
             if result is not None:
-                self._version = result.group(0)
+                self._version = result.group(1)
 
         return self._version
 
