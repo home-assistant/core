@@ -166,7 +166,7 @@ async def async_from_config_dict(config: Dict[str, Any],
                 "This will become a breaking change."
             )
             msg.append('\n'.join('- {} -> {}'.format(*item)
-                       for item in cv.INVALID_ENTITY_IDS_FOUND.items()))
+                                 for item in cv.INVALID_ENTITY_IDS_FOUND.items()))
 
         if cv.INVALID_SLUGS_FOUND:
             msg.append(
@@ -175,7 +175,7 @@ async def async_from_config_dict(config: Dict[str, Any],
                 "This will become a breaking change."
             )
             msg.append('\n'.join('- {} -> {}'.format(*item)
-                       for item in cv.INVALID_SLUGS_FOUND.items()))
+                                 for item in cv.INVALID_SLUGS_FOUND.items()))
 
         hass.components.persistent_notification.async_create(
             '\n\n'.join(msg), "Config Warning", "config_warning"

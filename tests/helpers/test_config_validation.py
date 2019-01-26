@@ -609,13 +609,13 @@ def test_schema_with_slug_keys_allows_old_slugs(caplog):
     schema = cv.schema_with_slug_keys(str)
 
     with patch.dict(cv.INVALID_SLUGS_FOUND, clear=True):
-        for value in ('_world', 'World', 'wow__yeah'):
+        for value in ('_world', 'wow__yeah'):
             caplog.clear()
             # Will raise if not allowing old slugs
             schema({value: 'yo'})
             assert "Found invalid slug {}".format(value) in caplog.text
 
-        assert len(cv.INVALID_SLUGS_FOUND) == 3
+        assert len(cv.INVALID_SLUGS_FOUND) == 2
 
 
 def test_entity_id_allow_old_validation(caplog):
