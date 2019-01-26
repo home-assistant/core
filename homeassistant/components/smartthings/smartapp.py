@@ -13,7 +13,7 @@ from uuid import uuid4
 from aiohttp import web
 
 from homeassistant.components import webhook
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -52,7 +52,7 @@ async def validate_installed_app(api, installed_app_id: str):
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning("Installed SmartApp instance '{}' ({}) is not "
-                             "AUTHORIZED but instead {}."
+                             "AUTHORIZED but instead {}"
                              .format(installed_app.display_name,
                                      installed_app.installed_app_id,
                                      installed_app.installed_app_status))
@@ -85,7 +85,7 @@ async def create_app(hass: HomeAssistantType, api):
     for key, value in template.items():
         setattr(app, key, value)
     app = (await api.create_app(app))[0]
-    _LOGGER.debug("Created SmartApp '%s' (%s).", app.app_name, app.app_id)
+    _LOGGER.debug("Created SmartApp '%s' (%s)", app.app_name, app.app_id)
 
     # Set unique hass id in settings
     settings = AppSettings(app.app_id)
@@ -93,7 +93,7 @@ async def create_app(hass: HomeAssistantType, api):
     settings.settings[SETTINGS_INSTANCE_ID] = \
         hass.data[DOMAIN][CONF_INSTANCE_ID]
     await api.update_app_settings(settings)
-    _LOGGER.debug("Updated App Settings for SmartApp '%s' (%s).",
+    _LOGGER.debug("Updated App Settings for SmartApp '%s' (%s)",
                   app.app_name, app.app_id)
 
     # Set oauth scopes
@@ -101,7 +101,7 @@ async def create_app(hass: HomeAssistantType, api):
     oauth.client_name = 'Home Assistant'
     oauth.scope.extend(APP_OAUTH_SCOPES)
     await api.update_app_oauth(oauth)
-    _LOGGER.debug("Updated App OAuth for SmartApp '%s' (%s).",
+    _LOGGER.debug("Updated App OAuth for SmartApp '%s' (%s)",
                   app.app_name, app.app_id)
     return app
 
@@ -117,7 +117,7 @@ async def update_app(hass: HomeAssistantType, app):
             setattr(app, key, value)
     if update_required:
         await app.save()
-        _LOGGER.debug("SmartApp '%s' (%s) updated with latest settings.",
+        _LOGGER.debug("SmartApp '%s' (%s) updated with latest settings",
                       app.app_name, app.app_id)
 
 
@@ -196,10 +196,13 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     Setup subscriptions using the access token SmartThings provided in the
     event. An explicit subscription is required for each 'capability' in order
     to receive the related attribute updates.  Finally, create a config entry
-    representing the installation.
+    representing the installation if this is not the first installation under
+    the account.
     """
     from pysmartthings import SmartThings, Subscription, SourceType
 
+    # This access token is a temporary 'SmartApp token' that expires in 5 min
+    # and is used to create subscriptions only.
     api = SmartThings(async_get_clientsession(hass), req.auth_token)
 
     async def create_subscription(target):
@@ -210,7 +213,7 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
         sub.capability = target
         try:
             await api.create_subscription(sub)
-            _LOGGER.debug("Created subscription for '%s' under app '%s'.",
+            _LOGGER.debug("Created subscription for '%s' under app '%s'",
                           target, req.installed_app_id)
         except Exception:  # pylint:disable=broad-except
             _LOGGER.exception("Failed to create subscription for '%s' under "
@@ -218,18 +221,27 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
 
     tasks = [create_subscription(c) for c in SUPPORTED_CAPABILITIES]
     await asyncio.gather(*tasks)
-    _LOGGER.debug("SmartApp '%s' under parent app '%s' was installed.",
+    _LOGGER.debug("SmartApp '%s' under parent app '%s' was installed",
                   req.installed_app_id, app.app_id)
 
-    # Add as job not needed because the current coroutine was invoked
-    # from the dispatcher and is not being awaited.
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={'source': 'install'},
-        data={
-            CONF_APP_ID: app.app_id,
-            CONF_INSTALLED_APP_ID: req.installed_app_id,
-            CONF_LOCATION_ID: req.location_id
-        })
+    # The permanent access token is copied from another config flow with the
+    # same parent app_id.  If one is not found, that means the user is within
+    # the initial config flow and the entry at the conclusion.
+    access_token = next((
+        entry.data.get(CONF_ACCESS_TOKEN) for entry
+        in hass.config_entries.async_entries(DOMAIN)
+        if entry.data[CONF_APP_ID] == app.app_id), None)
+    if access_token:
+        # Add as job not needed because the current coroutine was invoked
+        # from the dispatcher and is not being awaited.
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': 'install'},
+            data={
+                CONF_APP_ID: app.app_id,
+                CONF_INSTALLED_APP_ID: req.installed_app_id,
+                CONF_LOCATION_ID: req.location_id,
+                CONF_ACCESS_TOKEN: access_token
+            })
 
 
 async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
@@ -243,7 +255,7 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
                   req.installed_app_id),
                  None)
     if entry:
-        _LOGGER.debug("SmartApp '%s' under parent app '%s' was removed.",
+        _LOGGER.debug("SmartApp '%s' under parent app '%s' was removed",
                       req.installed_app_id, app.app_id)
         # Add as job not needed because the current coroutine was invoked
         # from the dispatcher and is not being awaited.

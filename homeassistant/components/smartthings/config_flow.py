@@ -97,7 +97,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             return self._show_step_user(errors)
         except Exception:  # pylint:disable=broad-except
             errors['base'] = "app_setup_error"
-            _LOGGER.exception("Unexpected error setting up the SmartApp.")
+            _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_user(errors)
 
         return await self.async_step_wait_install()
@@ -162,25 +162,18 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         )
 
     async def async_step_install(self, data=None):
-        """Create a config entry based on SmartApp install event."""
+        """
+        Create a config entry at completion of a flow.
+
+        Launched when the user completes the flow or when the SmartApp
+        is installed into an additional location.
+        """
         from pysmartthings import SmartThings
 
         if not self.api:
-            # Install was invoked because the SmartApp was installed in
-            # another location.  Find an existing entry with the same app_id
-            # and create the API instance.
-            access_token = data.get(CONF_ACCESS_TOKEN)
-            if not access_token:
-                # Try finding it from another config of same app_id.
-                access_token = next((
-                    entry.data.get(CONF_ACCESS_TOKEN) for entry
-                    in self.hass.config_entries.async_entries(DOMAIN)
-                    if entry.data[CONF_APP_ID] == data[CONF_APP_ID]), None)
-            if not access_token:
-                return self.async_abort(reason='no_access_token')
-            data[CONF_ACCESS_TOKEN] = access_token
+            # Launched from the SmartApp install event handler
             self.api = SmartThings(
-                async_get_clientsession(self.hass), access_token)
+                async_get_clientsession(self.hass), data[CONF_ACCESS_TOKEN])
 
         location = await self.api.location(data[CONF_LOCATION_ID])
         return self.async_create_entry(title=location.name, data=data)

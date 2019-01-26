@@ -4,7 +4,7 @@ Support for switches through the SmartThings cloud API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/smartthings.switch/
 """
-from homeassistant.components.switch import ToggleEntity
+from homeassistant.components.switch import SwitchDevice
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -47,7 +47,7 @@ def is_switch(device):
     return True
 
 
-class SmartThingsSwitch(SmartThingsEntity, ToggleEntity):
+class SmartThingsSwitch(SmartThingsEntity, SwitchDevice):
     """Define a SmartThings switch."""
 
     async def async_turn_off(self, **kwargs) -> None:

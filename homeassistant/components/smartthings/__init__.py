@@ -65,7 +65,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         # Get devices and their current status
         devices = await api.devices(
             location_ids=[installed_app.location_id])
-        await asyncio.gather(*[d.status.refresh() for d in devices])
+
+        async def retrieve_device_status(device):
+            try:
+                await device.status.refresh()
+            except ClientResponseError:
+                _LOGGER.debug("Unable to update status for device: %s (%s), "
+                              "the device will be ignored",
+                              device.label, device.device_id, exc_info=True)
+                devices.remove(device)
+
+        await asyncio.gather(*[retrieve_device_status(d)
+                               for d in devices.copy()])
 
         # Setup device broker
         broker = DeviceBroker(hass, devices,
@@ -75,13 +86,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
-        _LOGGER.exception(ex)
         if ex.status in (401, 403):
+            _LOGGER.exception("Unable to setup config entry '%s' - please "
+                              "reconfigure the integration", entry.title)
             remove_entry = True
         else:
+            _LOGGER.debug(ex, exc_info=True)
             raise ConfigEntryNotReady
     except (ClientConnectionError, RuntimeWarning) as ex:
-        _LOGGER.exception(ex)
+        _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady
 
     if remove_entry:
