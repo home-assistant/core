@@ -85,6 +85,10 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
 }))
+
+# track_new_devices will be legacy and deprecated in EntityPlatform platforms.
+# new_device_defaults will also be legacy and deprecated.
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW): cv.boolean,
@@ -363,6 +367,10 @@ class DeviceTracker:
                 self.hass.config.path(YAML_DEVICES), dev_id, device)
         )
 
+    # The config file, known_devices.yaml is legacy and deprecated.
+    # It will be removed when all platforms have been converted to
+    # EntityPlatform.
+
     async def async_update_config(self, path, dev_id, device):
         """Add device to YAML configuration file.
 
@@ -372,6 +380,10 @@ class DeviceTracker:
             await self.hass.async_add_executor_job(
                 update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
+
+    # The default group for device tracker entities is legacy and deprecated.
+    # It will be removed when all platforms have been converted to
+    # EntityPlatform.
 
     @callback
     def async_setup_group(self):
@@ -389,6 +401,9 @@ class DeviceTracker:
                     ATTR_VISIBLE: False,
                     ATTR_NAME: GROUP_NAME_ALL_DEVICES,
                     ATTR_ENTITIES: entity_ids}))
+
+    # Think about what to do to support update of stale device
+    # and consider home.
 
     @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
@@ -863,6 +878,8 @@ def update_config(path: str, dev_id: str, device: Device):
         out.write('\n')
         out.write(dump(device))
 
+# Gravatar option is legacy and deprecated and will be removed when all
+# platforms have been converted to EntityPlatform.
 
 def get_gravatar_for_email(email: str):
     """Return an 80px Gravatar for the given email address.
