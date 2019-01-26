@@ -1,27 +1,28 @@
 """Class to hold all media player accessories."""
 import logging
 
-from pyhap.const import CATEGORY_SWITCH
+from pyhap.const import {CATEGORY_SWITCH, CATEGORY_SPEAKER}
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE,
-    STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
+    SERVICE_VOLUME_SET, STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
     CHAR_NAME, CHAR_ON, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH, SERV_SPEAKER)
 
 _LOGGER = logging.getLogger(__name__)
 
 MODE_FRIENDLY_NAME = {FEATURE_ON_OFF: 'Power',
                       FEATURE_PLAY_PAUSE: 'Play/Pause',
                       FEATURE_PLAY_STOP: 'Play/Stop',
-                      FEATURE_TOGGLE_MUTE: 'Mute'}
+                      FEATURE_TOGGLE_MUTE: 'Mute',
+                      FEATURE_SPEAKER_VOLUME: 'Volume'}
 
 
 @TYPES.register('MediaPlayer')
@@ -32,9 +33,11 @@ class MediaPlayer(HomeAccessory):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._flag = {FEATURE_ON_OFF: False, FEATURE_PLAY_PAUSE: False,
-                      FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False}
+                      FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False,
+                      FEATURE_SPEAKER_VOLUME: False}
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
-                      FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None}
+                      FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None,
+                      FEATURE_SPEAKER_VOLUME: None}
         feature_list = self.config[CONF_FEATURE_LIST]
 
         if FEATURE_ON_OFF in feature_list:
@@ -64,6 +67,13 @@ class MediaPlayer(HomeAccessory):
             serv_toggle_mute.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute)
+
+        if FEATURE_SPEAKER_VOLUME in feature_list:
+            name = self.generate_service_name(FEATURE_SPEAKER_VOLUME)
+            serv_speaker_volume = self.add_preload_service(SERV_SPEAKER, CHAR_NAME)
+            serv_speaker_volume.configure_char(CHAR_NAME, value=name)
+            self.chars[FEATURE_SPEAKER_VOLUME] = serv_speaker_volume.configure_char(
+                CHAR_ON, value=False, setter_callback=self.set_speaker_volume)
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -105,6 +115,16 @@ class MediaPlayer(HomeAccessory):
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
+    def set_speaker_volume(self, value):
+        """Move speaker volume to value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set speaker volume for "speaker_volume" to %s',
+                      self.entity_id, value)
+        self._flag[FEATURE_SPEAKER_VOLUME] = True
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_MEDIA_VOLUME_MUTED: False,
+                  ATTR_MEDIA_VOLUME_LEVEL: value}
+        self.call_service(DOMAIN, SERVICE_VOLUME_SET, params)
+
     def update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state
@@ -140,3 +160,11 @@ class MediaPlayer(HomeAccessory):
                               self.entity_id, current_state)
                 self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
+
+        if self.chars[FEATURE_SPEAKER_VOLUME]:
+            current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
+            if not self._flag[FEATURE_SPEAKER_VOLUME]:
+                _LOGGER.debug('%s: Set current state for "speaker_volume" to %s',
+                              self.entity_id, current_state)
+                self.chars[FEATURE_SPEAKER_VOLUME].set_value(current_state)
+            self._flag[FEATURE_SPEAKER_VOLUME] = False
