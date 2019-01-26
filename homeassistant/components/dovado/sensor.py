@@ -1,5 +1,5 @@
 """
-Support for Dovado router.
+Support for sensors from the Dovado router.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dovado/
@@ -78,7 +78,7 @@ class DovadoSensor(Entity):
             try:
                 return int(state.split()[0])
             except ValueError:
-                return 0
+                return None
         if self._sensor == SENSOR_SMS_UNREAD:
             return int(state)
         if self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:

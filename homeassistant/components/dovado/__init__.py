@@ -44,26 +44,14 @@ def setup(hass, config):
     """Set up the Dovado component."""
     import dovado
 
-    client = dovado.Dovado(
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config.get(CONF_HOST),
-        config.get(CONF_PORT)
+    hass.data[DOMAIN] = DovadoData(
+        dovado.Dovado(
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config.get(CONF_HOST),
+            config.get(CONF_PORT)
+        )
     )
-
-    hass.data[DOMAIN] = DovadoData(client)
-
-    def send_sms(service):
-        """Send SMS through the router."""
-        number = service.data[ATTR_PHONE_NUMBER]
-        message = service.data[ATTR_MESSAGE]
-        _LOGGER.debug("message for %s: %s", number, message)
-        client.send_sms(number, message)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEND_SMS, send_sms, schema=SEND_SMS_SCHEMA
-    )
-
     return True
 
 
@@ -93,3 +81,8 @@ class DovadoData:
             return True
         except OSError as error:
             _LOGGER.warning("Could not contact the router: %s", error)
+
+    @property
+    def client(self):
+        """Dovado client instance."""
+        return self._client
