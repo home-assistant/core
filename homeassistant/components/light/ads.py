@@ -43,8 +43,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AdsLight(Light):
     """Representation of ADS light."""
 
-    def __init__(self, hass, ads_hub, ads_var_enable, 
-                ads_var_brightness, name, friendly_name):
+    def __init__(self, hass, ads_hub, ads_var_enable,
+                 ads_var_brightness, name, friendly_name):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
         self._on_state = False
