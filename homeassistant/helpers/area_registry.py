@@ -1,7 +1,6 @@
 """Provide a way to connect devices to one physical location."""
 import logging
 import uuid
-
 from collections import OrderedDict
 from typing import Optional
 
