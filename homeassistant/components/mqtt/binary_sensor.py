@@ -8,28 +8,28 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import mqtt, binary_sensor
+from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
+    DEVICE_CLASSES_SCHEMA, BinarySensorDevice)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.const import (
+    CONF_DEVICE, CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_NAME,
+    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_VALUE_TEMPLATE)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
 CONF_OFF_DELAY = 'off_delay'
-CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_FORCE_UPDATE = False
