@@ -16,7 +16,7 @@ from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['zm-py==0.3.0']
+REQUIREMENTS = ['zm-py==0.3.1']
 
 CONF_PATH_ZMS = 'path_zms'
 
