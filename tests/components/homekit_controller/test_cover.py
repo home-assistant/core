@@ -39,7 +39,7 @@ def create_window_covering_service():
     obstruction.value = False
 
     name = service.add_characteristic('name')
-    name.value = "Window Cover 1"
+    name.value = "testdevice"
 
     return service
 
@@ -166,7 +166,7 @@ def create_garage_door_opener_service():
     obstruction.value = False
 
     name = service.add_characteristic('name')
-    name.value = "Garage Door Opener 1"
+    name.value = "testdevice"
 
     return service
 
