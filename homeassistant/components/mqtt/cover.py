@@ -33,43 +33,42 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['mqtt']
 
 CONF_GET_POSITION_TOPIC = 'position_topic'
-
+CONF_SET_POSITION_TEMPLATE = 'set_position_template'
+CONF_SET_POSITION_TOPIC = 'set_position_topic'
 CONF_TILT_COMMAND_TOPIC = 'tilt_command_topic'
 CONF_TILT_STATUS_TOPIC = 'tilt_status_topic'
-CONF_SET_POSITION_TOPIC = 'set_position_topic'
-CONF_SET_POSITION_TEMPLATE = 'set_position_template'
 
-CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_CLOSE = 'payload_close'
+CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_STOP = 'payload_stop'
-CONF_STATE_OPEN = 'state_open'
-CONF_STATE_CLOSED = 'state_closed'
-CONF_POSITION_OPEN = 'position_open'
 CONF_POSITION_CLOSED = 'position_closed'
+CONF_POSITION_OPEN = 'position_open'
+CONF_STATE_CLOSED = 'state_closed'
+CONF_STATE_OPEN = 'state_open'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
-CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
-CONF_TILT_MIN = 'tilt_min'
-CONF_TILT_MAX = 'tilt_max'
-CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
+CONF_TILT_MAX = 'tilt_max'
+CONF_TILT_MIN = 'tilt_min'
+CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
+CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 
-TILT_PAYLOAD = "tilt"
-COVER_PAYLOAD = "cover"
+TILT_PAYLOAD = 'tilt'
+COVER_PAYLOAD = 'cover'
 
 DEFAULT_NAME = 'MQTT Cover'
-DEFAULT_PAYLOAD_OPEN = 'OPEN'
-DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
-DEFAULT_PAYLOAD_STOP = 'STOP'
-DEFAULT_POSITION_OPEN = 100
-DEFAULT_POSITION_CLOSED = 0
 DEFAULT_OPTIMISTIC = False
+DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
+DEFAULT_PAYLOAD_OPEN = 'OPEN'
+DEFAULT_PAYLOAD_STOP = 'STOP'
+DEFAULT_POSITION_CLOSED = 0
+DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
-DEFAULT_TILT_OPEN_POSITION = 100
-DEFAULT_TILT_MIN = 0
-DEFAULT_TILT_MAX = 100
-DEFAULT_TILT_OPTIMISTIC = False
 DEFAULT_TILT_INVERT_STATE = False
+DEFAULT_TILT_MAX = 100
+DEFAULT_TILT_MIN = 0
+DEFAULT_TILT_OPEN_POSITION = 100
+DEFAULT_TILT_OPTIMISTIC = False
 
 OPEN_CLOSE_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP)
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
@@ -177,8 +176,8 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash,
-                                     self.discovery_update)
+        MqttDiscoveryUpdate.__init__(
+            self, discovery_hash, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
