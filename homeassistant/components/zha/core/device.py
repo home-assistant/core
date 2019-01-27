@@ -273,9 +273,9 @@ class ZHADevice:
             SERVER_COMMANDS: cluster.server_commands,
         }
 
-    async def write_zigbe_attribute(self, endpooint_id, cluster_id,
-                                    attribute, value, cluster_type=IN,
-                                    manufacturer=None):
+    async def write_zigbee_attribute(self, endpooint_id, cluster_id,
+                                     attribute, value, cluster_type=IN,
+                                     manufacturer=None):
         """Write a value to a zigbee attribute for a cluster in this entity."""
         cluster = await self.get_cluster(
             endpooint_id, cluster_id, cluster_type)
