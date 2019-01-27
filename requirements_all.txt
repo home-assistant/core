@@ -1,6 +1,6 @@
 # Home Assistant core
 aiohttp==3.5.4
-astral==1.7.1
+astral==1.8
 async_timeout==3.0.1
 attrs==18.2.0
 bcrypt==3.1.5
@@ -87,7 +87,7 @@ abodepy==0.15.0
 afsapi==0.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.17
+aioasuswrt==1.1.18
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -164,7 +164,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.14.2
+async-upnp-client==0.14.3
 
 # homeassistant.components.light.avion
 # avion==0.10
@@ -255,6 +255,9 @@ caldav==0.5.0
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
+# homeassistant.components.sensor.co2signal
+co2signal==0.4.1
+
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
@@ -329,7 +332,7 @@ dlipower==0.7.165
 # homeassistant.components.doorbird
 doorbirdpy==2.0.6
 
-# homeassistant.components.sensor.dovado
+# homeassistant.components.dovado
 dovado==0.4.1
 
 # homeassistant.components.sensor.dsmr
@@ -526,10 +529,10 @@ home-assistant-frontend==20190121.1
 homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
-# homekit==0.12.2
+homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.3
+homematicip==0.10.4
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -835,7 +838,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.4.8
+psutil==5.5.0
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
@@ -885,7 +888,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.4
 
 # homeassistant.components.tibber
-pyTibber==0.9.3
+pyTibber==0.9.4
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -1559,7 +1562,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.15
+sqlalchemy==1.2.16
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
@@ -1769,4 +1772,4 @@ zigpy-xbee==0.1.1
 zigpy==0.2.0
 
 # homeassistant.components.zoneminder
-zm-py==0.3.0
+zm-py==0.3.1

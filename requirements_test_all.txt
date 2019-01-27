@@ -112,8 +112,11 @@ holidays==0.9.9
 # homeassistant.components.frontend
 home-assistant-frontend==20190121.1
 
+# homeassistant.components.homekit_controller
+homekit==0.12.2
+
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.3
+homematicip==0.10.4
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -261,7 +264,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.15
+sqlalchemy==1.2.16
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5

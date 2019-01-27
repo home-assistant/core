@@ -55,10 +55,7 @@ class DanfossAir:
 
     def get_value(self, item):
         """Get value for sensor."""
-        if item in self._data:
-            return self._data[item]
-
-        return None
+        return self._data.get(item)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

@@ -159,7 +159,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(hass, config, async_add_entities,
-                                      discovery_hash)
+                                      config_entry, discovery_hash)
         except Exception:
             if discovery_hash:
                 clear_discovery_hash(hass, discovery_hash)
@@ -171,21 +171,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(hass, config, async_add_entities,
-                              discovery_hash=None):
+                              config_entry=None, discovery_hash=None):
     """Set up the MQTT climate devices."""
-    async_add_entities([
-        MqttClimate(
-            hass,
-            config,
-            discovery_hash,
-        )])
+    async_add_entities([MqttClimate(hass, config, config_entry,
+                                    discovery_hash,)])
 
 
 class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                   MqttEntityDeviceInfo, ClimateDevice):
     """Representation of an MQTT climate device."""
 
-    def __init__(self, hass, config, discovery_hash):
+    def __init__(self, hass, config, config_entry, discovery_hash):
         """Initialize the climate device."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
@@ -212,7 +208,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Handle being added to home assistant."""
@@ -226,6 +222,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 

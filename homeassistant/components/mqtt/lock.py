@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
+            await _async_setup_entity(config, async_add_entities, config_entry,
                                       discovery_hash)
         except Exception:
             if discovery_hash:
@@ -72,17 +72,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
                               discovery_hash=None):
     """Set up the MQTT Lock platform."""
-    async_add_entities([MqttLock(config, discovery_hash)])
+    async_add_entities([MqttLock(config, config_entry, discovery_hash)])
 
 
 class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                MqttEntityDeviceInfo, LockDevice):
     """Representation of a lock that can be toggled using MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the lock."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
@@ -96,7 +96,7 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -109,6 +109,7 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
