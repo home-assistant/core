@@ -605,9 +605,9 @@ def check_point_in_lamps_reach(p: Tuple[float, float],
 def check_valid_gamut(Gamut: GamutType) -> bool:
     """Check if the supplied gamut is valid."""
 
-    # Chekc if gamut is None
+    # Check if gamut is None
     if not Gamut:
-        return true
+        return True
 
     # Check if the three points of the supplied gamut are not on the same line.
     v1 = XYPoint(Gamut.green.x - Gamut.red.x, Gamut.green.y - Gamut.red.y)
