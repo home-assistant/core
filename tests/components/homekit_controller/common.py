@@ -102,6 +102,41 @@ class Helper:
         return state
 
 
+def create_generic_service(service_name):
+    """Create a test HomeKit service model."""
+    from homekit.model.services import AbstractService, ServicesTypes
+    from homekit.model.characteristics import (
+        AbstractCharacteristic, CharacteristicPermissions)
+    from homekit.model import get_id
+
+    class Characteristic(AbstractCharacteristic):
+        """
+        A model of a generic HomeKit characteristic.
+
+        Base is abstract and can't be instanced directly so this subclass is
+        needed even though it doesn't add any methods.
+        """
+
+        pass
+
+    class Service(AbstractService):
+        """A model of a generic HomeKit service."""
+
+        def add_characteristic(self, name):
+            """Add a characteristic to this service by name."""
+            full_name = 'public.hap.characteristic.' + name
+            char = Characteristic(get_id(), full_name, None)
+            char.perms = [
+                CharacteristicPermissions.paired_read,
+                CharacteristicPermissions.paired_write
+            ]
+            self.characteristics.append(char)
+            return char
+
+    char_type = ServicesTypes.get_uuid(service_name)
+    return Service(char_type, get_id())
+
+
 async def setup_test_component(hass, services):
     """Load a fake homekit accessory based on a homekit accessory model."""
     from homekit.model import Accessory
