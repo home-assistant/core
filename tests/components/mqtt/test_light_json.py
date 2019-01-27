@@ -90,17 +90,17 @@ light:
 import json
 from unittest.mock import ANY, patch
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
-    ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON,
+    STATE_UNAVAILABLE)
 import homeassistant.core as ha
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    mock_coro, async_fire_mqtt_message, async_mock_mqtt_component,
-    MockConfigEntry, mock_registry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    mock_coro, mock_registry)
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
