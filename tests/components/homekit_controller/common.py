@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest import mock
 
 from homeassistant.components.homekit_controller import (
-    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
+    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT, HomeKitEntity)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, fire_service_discovered
@@ -173,7 +173,8 @@ async def setup_test_component(hass, services):
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
-    await hass.async_block_till_done()
+    with mock.patch.object(HomeKitEntity, 'name', 'testdevice'):
+        fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+        await hass.async_block_till_done()
 
     return Helper(hass, '.'.join((domain, 'testdevice')), pairing, accessory)
