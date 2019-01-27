@@ -156,7 +156,7 @@ def entity_id(value: Any) -> str:
     value = string(value).lower()
     if valid_entity_id(value):
         return value
-    elif re.match(OLD_ENTITY_ID_VALIDATION, value):
+    if re.match(OLD_ENTITY_ID_VALIDATION, value):
         # To ease the breaking change, we allow old slugs for now
         # Remove after 0.94 or 1.0
         fixed = '.'.join(util_slugify(part) for part in value.split('.', 1))
