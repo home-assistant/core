@@ -72,6 +72,17 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
         """Define this cover as a garage door."""
         return 'garage'
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.DOOR_STATE_CURRENT,
+            CharacteristicsTypes.DOOR_STATE_TARGET,
+            CharacteristicsTypes.OBSTRUCTION_DETECTED,
+            CharacteristicsTypes.NAME,
+        ]
+
     def update_characteristics(self, characteristics):
         """Synchronise the Cover state with Home Assistant."""
         # pylint: disable=import-error
@@ -163,6 +174,23 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def available(self):
         """Return True if entity is available."""
         return self._state is not None
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.POSITION_STATE,
+            CharacteristicsTypes.POSITION_CURRENT,
+            CharacteristicsTypes.POSITION_TARGET,
+            CharacteristicsTypes.POSITION_HOLD,
+            CharacteristicsTypes.VERTICAL_TILT_CURRENT,
+            CharacteristicsTypes.VERTICAL_TILT_TARGET,
+            CharacteristicsTypes.HORIZONTAL_TILT_CURRENT,
+            CharacteristicsTypes.HORIZONTAL_TILT_TARGET,
+            CharacteristicsTypes.OBSTRUCTION_DETECTED,
+            CharacteristicsTypes.NAME,
+        ]
 
     def update_characteristics(self, characteristics):
         """Synchronise the Cover state with Home Assistant."""

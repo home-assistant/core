@@ -54,6 +54,16 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
         self._state = None
         self._battery_level = None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT,
+            CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,
+            CharacteristicsTypes.BATTERY_LEVEL,
+        ]
+
     def update_characteristics(self, characteristics):
         """Synchronise the Alarm Control Panel state with Home Assistant."""
         # pylint: disable=import-error

@@ -36,6 +36,18 @@ class HomeKitLight(HomeKitEntity, Light):
         self._hue = None
         self._saturation = None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.ON,
+            CharacteristicsTypes.BRIGHTNESS,
+            CharacteristicsTypes.COLOR_TEMPERATURE,
+            CharacteristicsTypes.HUE,
+            CharacteristicsTypes.SATURATION,
+        ]
+
     def update_characteristics(self, characteristics):
         """Synchronise light state with Home Assistant."""
         # pylint: disable=import-error

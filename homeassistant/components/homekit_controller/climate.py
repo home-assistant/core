@@ -49,6 +49,17 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._current_temp = None
         self._target_temp = None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.HEATING_COOLING_CURRENT,
+            CharacteristicsTypes.HEATING_COOLING_TARGET,
+            CharacteristicsTypes.TEMPERATURE_CURRENT,
+            CharacteristicsTypes.TEMPERATURE_TARGET,
+        ]
+
     def update_characteristics(self, characteristics):
         """Synchronise device state with Home Assistant."""
         # pylint: disable=import-error

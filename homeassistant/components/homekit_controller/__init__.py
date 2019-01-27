@@ -228,6 +228,10 @@ class HomeKitEntity(Entity):
         """Return True if entity is available."""
         return self._accessory.pairing is not None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        raise NotImplementedError
+
     def update_characteristics(self, characteristics):
         """Synchronise a HomeKit device state with Home Assistant."""
         raise NotImplementedError
