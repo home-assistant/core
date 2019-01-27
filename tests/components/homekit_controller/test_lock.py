@@ -1,6 +1,6 @@
 """Basic checks for HomeKitLock."""
 from tests.components.homekit_controller.common import (
-    create_generic_service, setup_test_component)
+    FakeService, setup_test_component)
 
 LOCK_CURRENT_STATE = ('lock-mechanism', 'lock-mechanism.current-state')
 LOCK_TARGET_STATE = ('lock-mechanism', 'lock-mechanism.target-state')
@@ -8,7 +8,7 @@ LOCK_TARGET_STATE = ('lock-mechanism', 'lock-mechanism.target-state')
 
 def create_lock_service():
     """Define a lock characteristics as per page 219 of HAP spec."""
-    service = create_generic_service('public.hap.service.lock-mechanism')
+    service = FakeService('public.hap.service.lock-mechanism')
 
     cur_state = service.add_characteristic('lock-mechanism.current-state')
     cur_state.value = 0

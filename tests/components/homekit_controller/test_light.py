@@ -1,6 +1,6 @@
 """Basic checks for HomeKitSwitch."""
 from tests.components.homekit_controller.common import (
-    create_generic_service, setup_test_component)
+    FakeService, setup_test_component)
 
 
 LIGHT_ON = ('lightbulb', 'on')
@@ -12,7 +12,7 @@ LIGHT_COLOR_TEMP = ('lightbulb', 'color-temperature')
 
 def create_lightbulb_service():
     """Define lightbulb characteristics."""
-    service = create_generic_service('public.hap.service.lightbulb')
+    service = FakeService('public.hap.service.lightbulb')
 
     on_char = service.add_characteristic('on')
     on_char.value = 0

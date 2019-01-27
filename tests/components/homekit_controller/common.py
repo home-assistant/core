@@ -2,6 +2,11 @@
 from datetime import timedelta
 from unittest import mock
 
+from homekit.model.services import AbstractService, ServicesTypes
+from homekit.model.characteristics import (
+    AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
+from homekit.model import Accessory, get_id
+
 from homeassistant.components.homekit_controller import (
     DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT, HomeKitEntity)
 from homeassistant.setup import async_setup_component
@@ -75,9 +80,6 @@ class Helper:
 
     def __init__(self, hass, entity_id, pairing, accessory):
         """Create a helper for a given accessory/entity."""
-        from homekit.model.services import ServicesTypes
-        from homekit.model.characteristics import CharacteristicsTypes
-
         self.hass = hass
         self.entity_id = entity_id
         self.pairing = pairing
@@ -101,46 +103,39 @@ class Helper:
         return state
 
 
-def create_generic_service(service_name):
-    """Create a test HomeKit service model."""
-    from homekit.model.services import AbstractService, ServicesTypes
-    from homekit.model.characteristics import (
-        AbstractCharacteristic, CharacteristicPermissions)
-    from homekit.model import get_id
+class FakeCharacteristic(AbstractCharacteristic):
+    """
+    A model of a generic HomeKit characteristic.
 
-    class Characteristic(AbstractCharacteristic):
-        """
-        A model of a generic HomeKit characteristic.
+    Base is abstract and can't be instanced directly so this subclass is
+    needed even though it doesn't add any methods.
+    """
 
-        Base is abstract and can't be instanced directly so this subclass is
-        needed even though it doesn't add any methods.
-        """
+    pass
 
-        pass
 
-    class Service(AbstractService):
-        """A model of a generic HomeKit service."""
+class FakeService(AbstractService):
+    """A model of a generic HomeKit service."""
 
-        def add_characteristic(self, name):
-            """Add a characteristic to this service by name."""
-            full_name = 'public.hap.characteristic.' + name
-            char = Characteristic(get_id(), full_name, None)
-            char.perms = [
-                CharacteristicPermissions.paired_read,
-                CharacteristicPermissions.paired_write
-            ]
-            self.characteristics.append(char)
-            return char
+    def __init__(self, service_name):
+        """Create a fake service by its short form HAP spec name."""
+        char_type = ServicesTypes.get_uuid(service_name)
+        super().__init__(char_type, get_id())
 
-    char_type = ServicesTypes.get_uuid(service_name)
-    return Service(char_type, get_id())
+    def add_characteristic(self, name):
+        """Add a characteristic to this service by name."""
+        full_name = 'public.hap.characteristic.' + name
+        char = FakeCharacteristic(get_id(), full_name, None)
+        char.perms = [
+            CharacteristicPermissions.paired_read,
+            CharacteristicPermissions.paired_write
+        ]
+        self.characteristics.append(char)
+        return char
 
 
 async def setup_test_component(hass, services):
     """Load a fake homekit accessory based on a homekit accessory model."""
-    from homekit.model import Accessory
-    from homekit.model.services import ServicesTypes
-
     domain = None
     for service in services:
         service_name = ServicesTypes.get_short(service.type)

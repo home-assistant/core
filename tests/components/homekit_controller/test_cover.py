@@ -1,6 +1,6 @@
 """Basic checks for HomeKitalarm_control_panel."""
 from tests.components.homekit_controller.common import (
-    create_generic_service, setup_test_component)
+    FakeService, setup_test_component)
 
 POSITION_STATE = ('window-covering', 'position.state')
 POSITION_CURRENT = ('window-covering', 'position.current')
@@ -21,7 +21,7 @@ DOOR_OBSTRUCTION = ('garage-door-opener', 'obstruction-detected')
 
 def create_window_covering_service():
     """Define a window-covering characteristics as per page 219 of HAP spec."""
-    service = create_generic_service('public.hap.service.window-covering')
+    service = FakeService('public.hap.service.window-covering')
 
     cur_state = service.add_characteristic('position.current')
     cur_state.value = 0
@@ -154,7 +154,7 @@ async def test_write_window_cover_tilt_vertical(hass, utcnow):
 
 def create_garage_door_opener_service():
     """Define a garage-door-opener chars as per page 217 of HAP spec."""
-    service = create_generic_service('public.hap.service.garage-door-opener')
+    service = FakeService('public.hap.service.garage-door-opener')
 
     cur_state = service.add_characteristic('door-state.current')
     cur_state.value = 0

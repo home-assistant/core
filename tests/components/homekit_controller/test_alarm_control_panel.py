@@ -1,6 +1,6 @@
 """Basic checks for HomeKitalarm_control_panel."""
 from tests.components.homekit_controller.common import (
-    create_generic_service, setup_test_component)
+    FakeService, setup_test_component)
 
 CURRENT_STATE = ('security-system', 'security-system-state.current')
 TARGET_STATE = ('security-system', 'security-system-state.target')
@@ -8,7 +8,7 @@ TARGET_STATE = ('security-system', 'security-system-state.target')
 
 def create_security_system_service():
     """Define a security-system characteristics as per page 219 of HAP spec."""
-    service = create_generic_service('public.hap.service.security-system')
+    service = FakeService('public.hap.service.security-system')
 
     cur_state = service.add_characteristic('security-system-state.current')
     cur_state.value = 0
