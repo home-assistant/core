@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
 )
 
 
@@ -39,7 +39,7 @@ DEFAULT_TIMEOUT = 10
 SENSOR_TYPES = {
     'temperature': [DEVICE_CLASS_TEMPERATURE, 'Temperature', '°C'],
     'humidity': [DEVICE_CLASS_HUMIDITY, 'Humidity', '%'],
-    'battery': ['Battery', '%'],
+    'battery': [DEVICE_CLASS_BATTERY, 'Battery', '%'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
