@@ -186,11 +186,10 @@ class TestSetup:
     def test_validate_platform_config_2(self):
         """Test component PLATFORM_SCHEMA_BASE prio over PLATFORM_SCHEMA."""
         platform_schema = PLATFORM_SCHEMA.extend({
-            'cheers': str,
             'hello': str,
         })
-        platform_schema_base = PLATFORM_SCHEMA.extend({
-            'hello': str,
+        platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
+            'hello': 'world',
         })
         loader.set_component(
             self.hass,
@@ -207,7 +206,7 @@ class TestSetup:
 
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                # Should fail: no extra keys allowed
+                # fail: no extra keys allowed in platform schema
                 'platform_conf': {
                     'platform': 'whatever',
                     'hello': 'world',
@@ -220,16 +219,15 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                # Should pass
+                # pass
                 'platform_conf': {
                     'platform': 'whatever',
                     'hello': 'world',
                 },
-                # Should fail: key cheers not in component platform_schema_base
+                # fail: key hello violates component platform_schema_base
                 'platform_conf 2': {
                     'platform': 'whatever',
-                    'hello': 'world',
-                    'cheers': 'mate'
+                    'hello': 'there'
                 }
             })
 
@@ -238,12 +236,12 @@ class TestSetup:
 
     def test_validate_platform_config_3(self):
         """Test fallback to component PLATFORM_SCHEMA."""
-        component_schema = PLATFORM_SCHEMA.extend({
+        component_schema = PLATFORM_SCHEMA_BASE.extend({
             'hello': str,
         })
         platform_schema = PLATFORM_SCHEMA.extend({
             'cheers': str,
-            'hello': str,
+            'hello': 'world',
         })
         loader.set_component(
             self.hass,
@@ -260,7 +258,7 @@ class TestSetup:
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
-                    # Should fail: no extra keys allowed
+                    # fail: no extra keys allowed
                     'hello': 'world',
                     'invalid': 'extra',
                 }
@@ -271,16 +269,15 @@ class TestSetup:
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
-                # Should pass
+                # pass
                 'platform_conf': {
                     'platform': 'whatever',
                     'hello': 'world',
                 },
-                # Should fail: key cheers not in component platform_schema
+                # fail: key hello violates component platform_schema
                 'platform_conf 2': {
                     'platform': 'whatever',
-                    'hello': 'world',
-                    'cheers': 'mate'
+                    'hello': 'there'
                 }
             })
 
