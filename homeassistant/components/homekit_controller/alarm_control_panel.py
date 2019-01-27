@@ -73,14 +73,8 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "security-system-state.current":
-                self._chars['security-system-state.current'] = \
-                    characteristic['iid']
                 self._state = CURRENT_STATE_MAP[characteristic['value']]
-            elif ctype == "security-system-state.target":
-                self._chars['security-system-state.target'] = \
-                    characteristic['iid']
             elif ctype == "battery-level":
-                self._chars['battery-level'] = characteristic['iid']
                 self._battery_level = characteristic['value']
 
     @property
