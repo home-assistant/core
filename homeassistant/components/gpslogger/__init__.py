@@ -111,9 +111,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    )
+    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
 config_entry_flow.register_webhook_flow(
