@@ -10,7 +10,7 @@ from homeassistant import const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, \
     EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback, Event
+from homeassistant.core import callback, Event, State
 import homeassistant.helpers.device_registry as dr
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         ServiceCall
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.4.1']
+REQUIREMENTS = ['aioesphomeapi==1.4.2']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -208,11 +208,11 @@ async def async_setup_entry(hass: HomeAssistantType,
             domain, service_name, service_data, blocking=True))
 
     async def send_home_assistant_state(entity_id: str, _,
-                                        new_state: Optional[str]) -> None:
+                                        new_state: Optional[State]) -> None:
         """Forward Home Assistant states to ESPHome."""
         if new_state is None:
             return
-        await cli.send_home_assistant_state(entity_id, new_state)
+        await cli.send_home_assistant_state(entity_id, new_state.state)
 
     @callback
     def async_on_state_subscription(entity_id: str) -> None:
@@ -481,7 +481,7 @@ class EsphomeEntity(Entity):
         self._remove_callbacks.append(
             async_dispatcher_connect(self.hass,
                                      DISPATCHER_REMOVE_ENTITY.format(**kwargs),
-                                     self.async_schedule_update_ha_state)
+                                     self.async_remove)
         )
 
         self._remove_callbacks.append(

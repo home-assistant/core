@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'bme680',
-    'homekit',
     'py_noaa',
 )
 
@@ -46,6 +45,8 @@ TEST_REQUIREMENTS = (
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
+    'eebrightbox',
+    'emulated_roku',
     'enturclient',
     'ephem',
     'evohomeclient',
@@ -62,6 +63,7 @@ TEST_REQUIREMENTS = (
     'hdate',
     'holidays',
     'home-assistant-frontend',
+    'homekit',
     'homematicip',
     'influxdb',
     'jsonpath',

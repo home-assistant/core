@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_FILENAME, CONF_HOST, CONF_NAME, CONF_TIMEOUT,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
@@ -168,7 +168,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._source_list = {}
         self._app_list = {}
         self._channel = None
@@ -181,7 +181,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             current_input = self._client.get_input()
             if current_input is not None:
                 self._current_source_id = current_input
-                if self._state in (STATE_UNKNOWN, STATE_OFF):
+                if self._state in (None, STATE_OFF):
                     self._state = STATE_PLAYING
             else:
                 self._state = STATE_OFF

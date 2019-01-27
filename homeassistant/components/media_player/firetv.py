@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     device = FireTVDevice(ftv, name, get_source, get_sources)
     add_entities([device])
-    _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+    _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
 
 
 def adb_decorator(override_available=False):
@@ -96,17 +96,17 @@ def adb_decorator(override_available=False):
 
             # If an ADB command is already running, skip this command
             if not self.adb_lock.acquire(blocking=False):
-                _LOGGER.info('Skipping an ADB command because a previous '
-                             'command is still running')
+                _LOGGER.info("Skipping an ADB command because a previous "
+                             "command is still running")
                 return None
 
             # Additional ADB commands will be prevented while trying this one
             try:
                 returns = func(self, *args, **kwargs)
-            except self.exceptions:
-                _LOGGER.error('Failed to execute an ADB command; will attempt '
-                              'to re-establish the ADB connection in the next '
-                              'update')
+            except self.exceptions as err:
+                _LOGGER.error(
+                    "Failed to execute an ADB command. ADB connection re-"
+                    "establishing attempt in the next update. Error: %s", err)
                 returns = None
                 self._available = False  # pylint: disable=protected-access
             finally:
@@ -137,9 +137,9 @@ class FireTVDevice(MediaPlayerDevice):
         self.adb_lock = threading.Lock()
 
         # ADB exceptions to catch
-        self.exceptions = (AttributeError, BrokenPipeError, TypeError,
-                           ValueError, InvalidChecksumError,
-                           InvalidCommandError, InvalidResponseError)
+        self.exceptions = (
+            AttributeError, BrokenPipeError, TypeError, ValueError,
+            InvalidChecksumError, InvalidCommandError, InvalidResponseError)
 
         self._state = None
         self._available = self.firetv.available
@@ -231,8 +231,7 @@ class FireTVDevice(MediaPlayerDevice):
                         self._running_apps = None
 
                 # Check if the launcher is active.
-                if self._current_app in [PACKAGE_LAUNCHER,
-                                         PACKAGE_SETTINGS]:
+                if self._current_app in [PACKAGE_LAUNCHER, PACKAGE_SETTINGS]:
                     self._state = STATE_STANDBY
 
                 # Check for a wake lock (device is playing).
