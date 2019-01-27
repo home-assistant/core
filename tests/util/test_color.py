@@ -352,11 +352,11 @@ class TestColorUtil(unittest.TestCase):
 
     def test_gamut(self):
         """Test gamut functions."""
-        assert color_util.check_valid_gamut(GAMUT) == True
-        assert color_util.check_valid_gamut(GAMUT_INVALID_1) == False
-        assert color_util.check_valid_gamut(GAMUT_INVALID_2) == False
-        assert color_util.check_valid_gamut(GAMUT_INVALID_3) == False
-        assert color_util.check_valid_gamut(GAMUT_INVALID_4) == False
+        assert color_util.check_valid_gamut(GAMUT)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_1)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_2)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_3)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
 
 
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):
