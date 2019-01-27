@@ -65,7 +65,7 @@ class FbxWifiSwitch(FbxSwitch):
         return self._name
 
     async def _async_set_state(self, enabled):
-        """Turn the switch on or off"""
+        """Turn the switch on or off."""
         from aiofreepybox.exceptions import InsufficientPermissionsError
 
         wifi_config = {"enabled": enabled}
