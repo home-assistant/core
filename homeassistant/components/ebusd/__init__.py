@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 
 from .const import (DOMAIN, SENSOR_TYPES)
 
-REQUIREMENTS = ['ebusdpy==0.0.14']
+REQUIREMENTS = ['ebusdpy==0.0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
