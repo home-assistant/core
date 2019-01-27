@@ -29,16 +29,16 @@ If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 import json
 from unittest.mock import ANY, patch
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
 import homeassistant.core as ha
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    async_fire_mqtt_message, assert_setup_component, mock_coro,
-    async_mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, assert_setup_component, async_fire_mqtt_message,
+    async_mock_mqtt_component, mock_coro, mock_registry)
 
 
 async def test_setup_fails(hass, mqtt_mock):

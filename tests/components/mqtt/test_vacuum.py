@@ -1,20 +1,20 @@
 """The tests for the Mqtt vacuum platform."""
 import json
+
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, CONF_NAME)
-from homeassistant.components import vacuum, mqtt
-from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON, ATTR_STATUS,
-    ATTR_FAN_SPEED)
+from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, vacuum as mqttvacuum)
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.vacuum import (
+    ATTR_BATTERY_ICON, ATTR_BATTERY_LEVEL, ATTR_FAN_SPEED, ATTR_STATUS)
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
+from homeassistant.setup import async_setup_component
+
 from tests.common import (
-    async_mock_mqtt_component,
-    async_fire_mqtt_message, MockConfigEntry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component)
 from tests.components.vacuum import common
 
 default_config = {

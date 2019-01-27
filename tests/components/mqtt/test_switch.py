@@ -1,19 +1,20 @@
 """The tests for the MQTT switch platform."""
 import json
-from asynctest import patch
-import pytest
 from unittest.mock import ANY
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
-    ATTR_ASSUMED_STATE
-import homeassistant.core as ha
-from homeassistant.components import switch, mqtt
+from asynctest import patch
+import pytest
+
+from homeassistant.components import mqtt, switch
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    mock_coro, async_mock_mqtt_component, async_fire_mqtt_message,
-    MockConfigEntry, mock_registry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    mock_coro, mock_registry)
 from tests.components.switch import common
 
 
