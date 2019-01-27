@@ -62,7 +62,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
         super().__init__(accessory, discovery_info)
-        self._name = None
         self._state = None
         self._obstruction_detected = None
         self.lock_state = None
@@ -83,6 +82,9 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.NAME,
         ]
 
+    def _setup_name(self, char):
+        self._name = char['value']
+
     def update_characteristics(self, characteristics):
         """Synchronise the Cover state with Home Assistant."""
         # pylint: disable=import-error
@@ -92,18 +94,9 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "door-state.current":
-                self._chars['door-state.current'] = \
-                    characteristic['iid']
                 self._state = CURRENT_GARAGE_STATE_MAP[characteristic['value']]
-            elif ctype == "door-state.target":
-                self._chars['door-state.target'] = \
-                    characteristic['iid']
             elif ctype == "obstruction-detected":
-                self._chars['obstruction-detected'] = characteristic['iid']
                 self._obstruction_detected = characteristic['value']
-            elif ctype == "name":
-                self._chars['name'] = characteristic['iid']
-                self._name = characteristic['value']
 
     @property
     def available(self):
@@ -162,7 +155,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
         super().__init__(accessory, discovery_info)
-        self._name = None
         self._state = None
         self._position = None
         self._tilt_position = None
@@ -192,6 +184,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.NAME,
         ]
 
+    def _setup_name(self, char):
+        self._name = char['value']
+
     def update_characteristics(self, characteristics):
         """Synchronise the Cover state with Home Assistant."""
         # pylint: disable=import-error
@@ -201,43 +196,22 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "position.state":
-                self._chars['position.state'] = \
-                    characteristic['iid']
                 if 'value' in characteristic:
                     self._state = \
                         CURRENT_WINDOW_STATE_MAP[characteristic['value']]
             elif ctype == "position.current":
-                self._chars['position.current'] = \
-                    characteristic['iid']
                 self._position = characteristic['value']
-            elif ctype == "position.target":
-                self._chars['position.target'] = \
-                    characteristic['iid']
             elif ctype == "position.hold":
-                self._chars['position.hold'] = characteristic['iid']
                 if 'value' in characteristic:
                     self._hold = characteristic['value']
             elif ctype == "vertical-tilt.current":
-                self._chars['vertical-tilt.current'] = characteristic['iid']
                 if characteristic['value'] is not None:
                     self._tilt_position = characteristic['value']
             elif ctype == "horizontal-tilt.current":
-                self._chars['horizontal-tilt.current'] = characteristic['iid']
                 if characteristic['value'] is not None:
                     self._tilt_position = characteristic['value']
-            elif ctype == "vertical-tilt.target":
-                self._chars['vertical-tilt.target'] = \
-                    characteristic['iid']
-            elif ctype == "horizontal-tilt.target":
-                self._chars['horizontal-tilt.target'] = \
-                    characteristic['iid']
             elif ctype == "obstruction-detected":
-                self._chars['obstruction-detected'] = characteristic['iid']
                 self._obstruction_detected = characteristic['value']
-            elif ctype == "name":
-                self._chars['name'] = characteristic['iid']
-                if 'value' in characteristic:
-                    self._name = characteristic['value']
 
     @property
     def supported_features(self):
