@@ -18,9 +18,7 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    async_add_entities([
-        FbxWifiSwitch(fbx)
-    ], True)
+    async_add_entities([FbxWifiSwitch(fbx)], True)
 
 
 class FbxSwitch(SwitchDevice):
@@ -30,7 +28,6 @@ class FbxSwitch(SwitchDevice):
 
     def __init__(self, fbx):
         """Initilize the switch."""
-        super().__init__()
         self._state = None
         self._fbx = fbx
         self._permissions = None
@@ -89,7 +86,7 @@ class FbxWifiSwitch(FbxSwitch):
         """Get the state and update it."""
         from aiofreepybox.constants import PERMISSION_SETTINGS
 
-        await super()._async_update_perms()
+        await self._async_update_perms()
         self._available = self._permissions[PERMISSION_SETTINGS]
         datas = await self._fbx.wifi.get_global_config()
         active = datas['enabled']
