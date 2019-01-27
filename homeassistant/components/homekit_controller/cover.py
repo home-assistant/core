@@ -206,7 +206,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                 self._chars['vertical-tilt.target'] = \
                     characteristic['iid']
             elif ctype == "horizontal-tilt.target":
-                self._chars['vertical-tilt.target'] = \
+                self._chars['horizontal-tilt.target'] = \
                     characteristic['iid']
             elif ctype == "obstruction-detected":
                 self._chars['obstruction-detected'] = characteristic['iid']
