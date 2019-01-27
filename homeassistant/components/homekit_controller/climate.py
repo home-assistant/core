@@ -27,6 +27,8 @@ MODE_HOMEKIT_TO_HASS = {
 # Map of hass operation modes to homekit modes
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
+DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit climate."""
@@ -50,10 +52,10 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def update_characteristics(self, characteristics):
         """Synchronise device state with Home Assistant."""
         # pylint: disable=import-error
-        from homekit.models.characteristics import CharacteristicsTypes
+        from homekit.model.characteristics import CharacteristicsTypes
 
         for characteristic in characteristics:
-            ctype = characteristic['type']
+            ctype = CharacteristicsTypes.get_short_uuid(characteristic['type'])
             if ctype == CharacteristicsTypes.HEATING_COOLING_CURRENT:
                 self._state = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
@@ -62,8 +64,11 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
                 self._features |= SUPPORT_OPERATION_MODE
                 self._current_mode = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
+
+                valid_values = characteristic.get(
+                    'valid-values', DEFAULT_VALID_MODES)
                 self._valid_modes = [MODE_HOMEKIT_TO_HASS.get(
-                    mode) for mode in characteristic['valid-values']]
+                    mode) for mode in valid_values]
             elif ctype == CharacteristicsTypes.TEMPERATURE_CURRENT:
                 self._current_temp = characteristic['value']
             elif ctype == CharacteristicsTypes.TEMPERATURE_TARGET:
