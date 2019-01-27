@@ -494,3 +494,50 @@ async def test_entity_device_info_with_identifier(hass, mock_publish):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
