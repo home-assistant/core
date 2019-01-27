@@ -10,19 +10,19 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.core import callback
-from homeassistant.const import CONF_NAME
-from homeassistant.components import mqtt, camera
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components import camera, mqtt
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.mqtt import CONF_UNIQUE_ID
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
-CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_NAME = 'MQTT Camera'
 
 DEPENDENCIES = ['mqtt']

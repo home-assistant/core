@@ -3,11 +3,11 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start, \
-                                       ALREADY_DISCOVERED
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.mqtt.discovery import (
+    ALREADY_DISCOVERED, async_start)
+from homeassistant.const import STATE_OFF, STATE_ON
 
-from tests.common import async_fire_mqtt_message, mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
 
 @asyncio.coroutine

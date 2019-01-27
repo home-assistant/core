@@ -7,21 +7,20 @@ from unittest.mock import ANY
 import pytest
 import voluptuous as vol
 
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM
-)
-from homeassistant.setup import setup_component
 from homeassistant.components import climate, mqtt
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
+
 from tests.common import (
-    async_fire_mqtt_message, async_mock_mqtt_component, async_setup_component,
-    fire_mqtt_message, get_test_home_assistant, mock_component,
-    mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    async_setup_component, fire_mqtt_message, get_test_home_assistant,
+    mock_component, mock_mqtt_component, mock_registry)
 from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
