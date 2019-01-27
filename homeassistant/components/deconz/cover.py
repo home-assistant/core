@@ -48,7 +48,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
     """Representation of a deCONZ cover."""
 
     def __init__(self, device, gateway):
-        """Set up cover and add update callback to get data from websocket."""
+        """Set up cover device."""
         super().__init__(device, gateway)
 
         self._features = SUPPORT_OPEN
