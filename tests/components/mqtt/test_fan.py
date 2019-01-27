@@ -2,13 +2,14 @@
 import json
 from unittest.mock import ANY
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import fan, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
+from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_mqtt_message, MockConfigEntry, \
-    async_mock_mqtt_component, mock_registry
+from tests.common import (
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    mock_registry)
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):

@@ -2,14 +2,14 @@
 import json
 from unittest.mock import ANY
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 from homeassistant.components import lock, mqtt
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE, STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED)
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    async_fire_mqtt_message, async_mock_mqtt_component, MockConfigEntry,
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
     mock_registry)
 
 

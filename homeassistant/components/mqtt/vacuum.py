@@ -14,12 +14,11 @@ from homeassistant.components.mqtt import (
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice, DOMAIN)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_DEVICE)
+    VacuumDevice)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

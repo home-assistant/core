@@ -4,15 +4,14 @@ Support for MQTT sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
-import logging
-import json
 from datetime import timedelta
+import json
+import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import sensor
+from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
     MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
@@ -21,14 +20,14 @@ from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
-from homeassistant.helpers.entity import Entity
-from homeassistant.components import mqtt
+    CONF_DEVICE, CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_ICON, CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)

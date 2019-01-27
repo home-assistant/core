@@ -8,24 +8,23 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import fan, mqtt
-from homeassistant.const import (
-    CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
-    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_DEVICE)
+from homeassistant.components.fan import (
+    ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF,
+    SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
     CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH, FanEntity,
-                                          SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
-                                          SPEED_OFF, ATTR_SPEED)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.const import (
+    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
+    CONF_STATE, STATE_OFF, STATE_ON)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,18 +3,18 @@ import json
 import unittest
 from unittest.mock import ANY
 
-from homeassistant.setup import setup_component
-from homeassistant.const import (
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
-    STATE_UNKNOWN)
 from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
+from homeassistant.setup import setup_component
 
 from tests.common import (
-    assert_setup_component, async_fire_mqtt_message, async_mock_mqtt_component,
-    async_setup_component, fire_mqtt_message, get_test_home_assistant,
-    mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, assert_setup_component, async_fire_mqtt_message,
+    async_mock_mqtt_component, async_setup_component, fire_mqtt_message,
+    get_test_home_assistant, mock_mqtt_component, mock_registry)
 from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'

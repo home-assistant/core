@@ -3,8 +3,7 @@ import asyncio
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_mock_mqtt_component, async_fire_mqtt_message)
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 
 @asyncio.coroutine

@@ -1,23 +1,21 @@
 """The tests for the  MQTT binary sensor platform."""
+from datetime import timedelta
 import json
 import unittest
 from unittest.mock import ANY, Mock
-from datetime import timedelta
 
-import homeassistant.core as ha
-from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.mqtt.discovery import async_start
-
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
-
+from homeassistant.const import (
+    EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
-    fire_time_changed, mock_component, mock_mqtt_component, mock_registry,
-    async_mock_mqtt_component, MockConfigEntry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    fire_mqtt_message, fire_time_changed, get_test_home_assistant,
+    mock_component, mock_mqtt_component, mock_registry)
 
 
 class TestSensorMQTT(unittest.TestCase):

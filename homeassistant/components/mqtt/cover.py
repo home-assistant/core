@@ -8,26 +8,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import mqtt, cover
+from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (
-    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
-from homeassistant.exceptions import TemplateError
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, CONF_DEVICE)
+    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION, SUPPORT_STOP, SUPPORT_STOP_TILT, CoverDevice)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
     CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.const import (
+    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, STATE_CLOSED,
+    STATE_OPEN, STATE_UNKNOWN)
+from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 

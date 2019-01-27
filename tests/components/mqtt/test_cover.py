@@ -4,16 +4,16 @@ import unittest
 from unittest.mock import ANY
 
 from homeassistant.components import cover, mqtt
-from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION)
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.mqtt.cover import MqttCover
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE, ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
-    STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
-from homeassistant.setup import setup_component, async_setup_component
+    ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
