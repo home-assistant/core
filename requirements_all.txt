@@ -332,7 +332,7 @@ dlipower==0.7.165
 # homeassistant.components.doorbird
 doorbirdpy==2.0.6
 
-# homeassistant.components.sensor.dovado
+# homeassistant.components.dovado
 dovado==0.4.1
 
 # homeassistant.components.sensor.dsmr
