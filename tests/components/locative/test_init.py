@@ -4,11 +4,15 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant import data_entry_flow
+from homeassistant.components import locative
 from homeassistant.components.device_tracker import \
     DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.locative import DOMAIN
-from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
+from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
+from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, \
+    CONF_WEBHOOK_ID
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -234,3 +238,21 @@ async def test_exit_first(hass, locative_client, webhook_id):
     state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'not_home'
+
+
+@pytest.mark.xfail(
+    reason='The device_tracker component does not support unloading yet.'
+)
+async def test_load_unload_entry(hass):
+    """Test that the appropriate dispatch signals are added and removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={
+        CONF_WEBHOOK_ID: 'locative_test'
+    })
+
+    await locative.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    assert 1 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+
+    await locative.async_unload_entry(hass, entry)
+    await hass.async_block_till_done()
+    assert 0 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
