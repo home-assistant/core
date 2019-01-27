@@ -140,6 +140,19 @@ async def test_remove_older_logs(hass, hass_client):
     assert_log(log[1], '', 'error message 2', 'ERROR')
 
 
+async def test_dedup_logs(hass, hass_client):
+    """Test that duplicate log entries are dedup."""
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    _LOGGER.error('error message 1')
+    _LOGGER.error('error message 2')
+    _LOGGER.error('error message 2')
+    _LOGGER.error('error message 3')
+    log = await get_error_log(hass, hass_client, 2)
+    assert_log(log[0], '', 'error message 3', 'ERROR')
+    assert log[1]["count"] == 2
+    assert_log(log[1], '', 'error message 2', 'ERROR')
+
+
 async def test_clear_logs(hass, hass_client):
     """Test that the log can be cleared via a service call."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
