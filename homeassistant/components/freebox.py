@@ -55,7 +55,6 @@ async def async_setup(hass, config):
 async def async_setup_freebox(hass, config, host, port):
     """Start up the Freebox component platforms."""
     from aiofreepybox import Freepybox
-    from aiofreepybox.constants import PERMISSION_SETTINGS
     from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
@@ -84,18 +83,8 @@ async def async_setup_freebox(hass, config, host, port):
             hass, 'sensor', DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(
             hass, 'device_tracker', DOMAIN, {}, config))
-        permissions = await fbx.get_permissions()
-        if not permissions.get(PERMISSION_SETTINGS):
-            hass.async_create_task(async_load_platform(
-                hass, 'switch', DOMAIN, {'perms_settings': False}, config))
-            _LOGGER.warning('The switch.freebox platform will not be available'
-                            ' until you apply the correct permissions in your'
-                            ' router. Please refer to documentation : '
-                            ' https://home-assistant.io/components/'
-                            'switch.freebox/')
-        else:
-            hass.async_create_task(async_load_platform(
-                hass, 'switch', DOMAIN, {'perms_settings': True}, config))
+        hass.async_create_task(async_load_platform(
+                hass, 'switch', DOMAIN, {}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""
