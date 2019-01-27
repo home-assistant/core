@@ -51,10 +51,8 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "on":
-                self._chars['on'] = characteristic['iid']
                 self._on = characteristic['value']
             elif ctype == "outlet-in-use":
-                self._chars['outlet-in-use'] = characteristic['iid']
                 self._outlet_in_use = characteristic['value']
 
     @property
