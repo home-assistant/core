@@ -87,6 +87,8 @@ omit =
     homeassistant/components/doorbird.py
     homeassistant/components/*/doorbird.py
 
+    homeassistant/components/dovado/*
+
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
 
@@ -754,7 +756,6 @@ omit =
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/discogs.py
     homeassistant/components/sensor/dnsip.py
-    homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/domain_expiry.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/dublin_bus_transport.py
