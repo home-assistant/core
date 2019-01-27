@@ -73,14 +73,13 @@ class FakeController:
 class Helper:
     """Helper methods for interacting with HomeKit fakes."""
 
-    def __init__(self, hass, entity, pairing, accessory):
+    def __init__(self, hass, entity_id, pairing, accessory):
         """Create a helper for a given accessory/entity."""
         from homekit.model.services import ServicesTypes
         from homekit.model.characteristics import CharacteristicsTypes
 
         self.hass = hass
-        self.entity = entity
-        self.entity_id = entity.entity_id
+        self.entity_id = entity_id
         self.pairing = pairing
         self.accessory = accessory
 
@@ -177,16 +176,4 @@ async def setup_test_component(hass, services):
     fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
     await hass.async_block_till_done()
 
-    # We can't guarantee what our entity_id will be so we have to find it
-    # in hass after its been created. (The cover entity in particular unsets
-    # its name, meaning its unique_id is used and that isn't stable enough to
-    # rely on)
-    entities = list(hass.data[domain].entities)
-
-    # Right now we only support testing a single entity at a time
-    # This will need extending to find the new entity in the list if more
-    # entities are needed at once
-    assert len(entities) == 1
-    entity = entities[0]
-
-    return Helper(hass, entity, pairing, accessory)
+    return Helper(hass, '.'.join((domain, 'testdevice')), pairing, accessory)
