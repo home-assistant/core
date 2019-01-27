@@ -86,14 +86,14 @@ class EbusdData:
         self.value = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, name, type):
+    def update(self, name, stype):
         """Call the Ebusd API to update the data."""
         import ebusdpy
 
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
-                self._address, self._circuit, name, type, CACHE_TTL)
+                self._address, self._circuit, name, stype, CACHE_TTL)
             if 'ERR:' in command_result:
                 _LOGGER.error(command_result)
                 raise RuntimeError("Error in reading ebus")
