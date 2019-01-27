@@ -13,12 +13,22 @@ SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_LIST,
 })
 
+WS_TYPE_UPDATE = 'config/device_registry/update'
+SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_UPDATE,
+    vol.Required('device_id'): str,
+    vol.Required('area_id'): str,
+})
+
 
 async def async_setup(hass):
     """Enable the Device Registry views."""
     hass.components.websocket_api.async_register_command(
         WS_TYPE_LIST, websocket_list_devices,
         SCHEMA_WS_LIST
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_UPDATE, websocket_update_device, SCHEMA_WS_UPDATE
     )
     return True
 
@@ -47,7 +57,8 @@ async def websocket_update_device(hass, connection, msg):
     """Handle update area websocket command."""
     registry = await async_get_registry(hass)
 
-    entry = registry.async_update(msg['id'], msg['area_id'])
+    entry = registry.async_update_device(
+        msg['device_id'], area_id=msg['area_id'])
 
     connection.send_message(websocket_api.result_message(
         msg['id'], _entry_dict(entry)
@@ -58,6 +69,6 @@ async def websocket_update_device(hass, connection, msg):
 def _entry_dict(entry):
     """Convert entry to API format."""
     return {
-        'id': entry.id,
-        'name': entry.name
+        'device_id': entry.id,
+        'area_id': entry.area_id
     }

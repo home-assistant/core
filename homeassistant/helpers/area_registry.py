@@ -55,7 +55,7 @@ class AreaRegistry:
     @callback
     def async_read(self) -> AreaEntry:
         """Get all areas."""
-        return self.areas
+        return self.areas.values()
 
     @callback
     def async_update(self, area_id: str, name: str) -> Optional[AreaEntry]:
@@ -91,7 +91,7 @@ class AreaRegistry:
         areas = OrderedDict()
 
         if data is not None:
-            for area in data['area']:
+            for area in data['areas']:
                 areas[area['id']] = AreaEntry(
                     name=area['name'],
                     id=area['id']

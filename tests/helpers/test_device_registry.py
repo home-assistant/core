@@ -328,3 +328,19 @@ async def test_format_mac(registry):
             },
         )
         assert list(invalid_mac_entry.connections)[0][1] == invalid
+
+
+async def test_update(registry):
+    """Verify that we can update area_id of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        })
+
+    assert not entry.area_id
+
+    updated_entry = registry.async_update_device(entry.id, area_id='12345A')
+
+    assert updated_entry != entry
+    assert updated_entry.area_id == '12345A'
