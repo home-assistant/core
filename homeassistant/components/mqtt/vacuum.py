@@ -163,17 +163,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities, config_entry,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry,
                               discovery_hash=None):
     """Set up the MQTT vacuum."""
-    async_add_entities([MqttVacuum(config, discovery_hash)])
+    async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -181,7 +181,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
-    def __init__(self, config, discovery_info):
+    def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""
         self._cleaning = False
         self._charging = False
@@ -203,7 +203,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
@@ -257,6 +257,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
