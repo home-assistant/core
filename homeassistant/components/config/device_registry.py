@@ -17,7 +17,7 @@ WS_TYPE_UPDATE = 'config/device_registry/update'
 SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE,
     vol.Required('device_id'): str,
-    vol.Required('area_id'): str,
+    vol.Optional('area_id'): str,
 })
 
 
