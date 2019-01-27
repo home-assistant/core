@@ -6,6 +6,9 @@ https://home-assistant.io/components/device_tracker.locative/
 """
 import logging
 
+from homeassistant.components.device_tracker import \
+    DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.locative import DOMAIN as LOCATIVE_DOMAIN
 from homeassistant.components.locative import TRACKER_UPDATE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -13,9 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['locative']
 
+DATA_KEY = '{}.{}'.format(LOCATIVE_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Set up an endpoint for the Locative device tracker."""
+
+async def async_setup_entry(hass, entry, async_see):
+    """Configure a dispatcher connection based on a config entry."""
     async def _set_location(device, gps_location, location_name):
         """Fire HA event to set location."""
         await async_see(
@@ -24,5 +29,13 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             location_name=location_name
         )
 
-    async_dispatcher_connect(hass, TRACKER_UPDATE, _set_location)
+    hass.data[DATA_KEY] = async_dispatcher_connect(
+        hass, TRACKER_UPDATE, _set_location
+    )
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload the config entry and remove the dispatcher connection."""
+    hass.data[DATA_KEY]()
     return True
