@@ -7,6 +7,8 @@ import os
 import sys
 from typing import List
 
+from pkg_resources import Requirement
+
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant import requirements
@@ -48,6 +50,14 @@ def run(args: List) -> int:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     for req in getattr(script, 'REQUIREMENTS', []):
+        try:
+            # Only use the requirement's project_name to verify it exists
+            project_name = Requirement.parse(req).project_name
+            importlib.import_module(project_name)
+            continue
+        except ImportError:
+            pass
+
         returncode = install_package(req, **pip_kwargs)
 
         if not returncode:
