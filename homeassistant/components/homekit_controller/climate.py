@@ -60,6 +60,18 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
             CharacteristicsTypes.TEMPERATURE_TARGET,
         ]
 
+    def _setup_heating_cooling_target(self, characteristic):
+        self._features |= SUPPORT_OPERATION_MODE
+
+        valid_values = characteristic.get(
+            'valid-values', DEFAULT_VALID_MODES)
+        self._valid_modes = [
+            MODE_HOMEKIT_TO_HASS.get(mode) for mode in valid_values
+        ]
+
+    def _setup_temperature_target(self, characteristic):
+        self._features |= SUPPORT_TARGET_TEMPERATURE
+
     def update_characteristics(self, characteristics):
         """Synchronise device state with Home Assistant."""
         # pylint: disable=import-error
@@ -71,20 +83,11 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
                 self._state = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
             if ctype == CharacteristicsTypes.HEATING_COOLING_TARGET:
-                self._chars['target_mode'] = characteristic['iid']
-                self._features |= SUPPORT_OPERATION_MODE
                 self._current_mode = MODE_HOMEKIT_TO_HASS.get(
                     characteristic['value'])
-
-                valid_values = characteristic.get(
-                    'valid-values', DEFAULT_VALID_MODES)
-                self._valid_modes = [MODE_HOMEKIT_TO_HASS.get(
-                    mode) for mode in valid_values]
             elif ctype == CharacteristicsTypes.TEMPERATURE_CURRENT:
                 self._current_temp = characteristic['value']
             elif ctype == CharacteristicsTypes.TEMPERATURE_TARGET:
-                self._chars['target_temp'] = characteristic['iid']
-                self._features |= SUPPORT_TARGET_TEMPERATURE
                 self._target_temp = characteristic['value']
 
     def set_temperature(self, **kwargs):
@@ -92,14 +95,14 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         characteristics = [{'aid': self._aid,
-                            'iid': self._chars['target_temp'],
+                            'iid': self._chars['temperature.target'],
                             'value': temp}]
         self.put_characteristics(characteristics)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         characteristics = [{'aid': self._aid,
-                            'iid': self._chars['target_mode'],
+                            'iid': self._chars['heating-cooling.target'],
                             'value': MODE_HASS_TO_HOMEKIT[operation_mode]}]
         self.put_characteristics(characteristics)
 
