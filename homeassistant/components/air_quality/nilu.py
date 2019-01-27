@@ -1,8 +1,5 @@
-# coding=utf-8
 """
 Sensor for checking the air quality around Norway.
-
-Data delivered by luftkvalitet.info and nilu.no.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/air_quality.nilu/
@@ -23,55 +20,53 @@ REQUIREMENTS = ['niluclient==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=30)
-
-ICON = 'mdi:cloud-outline'
+ATTR_AREA = 'area'
+ATTR_POLLUTION_INDEX = 'nilu_pollution_index'
+ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
 
 CONF_AREA = 'area'
 CONF_STATION = 'stations'
+
 DEFAULT_NAME = 'NILU'
 
-CONF_ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
-
-ATTR_AREA = 'area'
-ATTR_POLLUTION_INDEX = 'nilu_pollution_index'
+SCAN_INTERVAL = timedelta(minutes=30)
 
 CONF_ALLOWED_AREAS = [
-    'Ålesund',
-    'Zeppelinfjellet',
-    'Tustervatn',
-    'Trondheim',
-    'Tromsø',
-    'Sør-Varanger',
-    'Stavanger',
-    'Sarpsborg',
-    'Sandve',
-    'Prestebakke',
-    'Oslo',
-    'Narvik',
-    'Moss',
-    'Mo i Rana',
-    'Lørenskog',
-    'Lillestrøm',
-    'Lillesand',
-    'Lillehammer',
-    'Kårvatn',
-    'Kristiansand',
-    'Karasjok',
-    'Hurdal',
-    'Harstad',
-    'Hamar',
-    'Halden',
-    'Grenland',
-    'Gjøvik',
-    'Fredrikstad',
-    'Elverum',
-    'Drammen',
-    'Bærum',
-    'Brumunddal',
-    'Bodø',
+    'Bergen',
     'Birkenes',
-    'Bergen'
+    'Bodø',
+    'Brumunddal',
+    'Bærum',
+    'Drammen',
+    'Elverum',
+    'Fredrikstad',
+    'Gjøvik',
+    'Grenland',
+    'Halden',
+    'Hamar',
+    'Harstad',
+    'Hurdal',
+    'Karasjok',
+    'Kristiansand',
+    'Kårvatn',
+    'Lillehammer',
+    'Lillesand',
+    'Lillestrøm',
+    'Lørenskog',
+    'Mo i Rana',
+    'Moss',
+    'Narvik',
+    'Oslo',
+    'Prestebakke',
+    'Sandve',
+    'Sarpsborg',
+    'Stavanger',
+    'Sør-Varanger',
+    'Tromsø',
+    'Trondheim',
+    'Tustervatn',
+    'Zeppelinfjellet',
+    'Ålesund',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -118,8 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if client.data.sensors:
             sensors.append(NiluSensor(client, name, show_on_map))
         else:
-            _LOGGER.warning("%s didn't give any sensors results. Is the "
-                            "sensor named correctly in the config?", station)
+            _LOGGER.warning("%s didn't give any sensors results", station)
 
     add_entities(sensors, True)
 
@@ -138,17 +132,14 @@ class NiluData:
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Get the latest data from nilu apis."""
+        """Get the latest data from nilu API."""
         self.api.update()
 
 
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
-    def __init__(self,
-                 api_data: NiluData,
-                 name: str,
-                 show_on_map: bool):
+    def __init__(self, api_data: NiluData, name: str, show_on_map: bool):
         """Initialize the sensor."""
         self._api = api_data
         self._name = "{} {}".format(name, api_data.data.name)
@@ -162,17 +153,12 @@ class NiluSensor(AirQualityEntity):
     @property
     def attribution(self) -> str:
         """Return the attribution."""
-        return CONF_ATTRIBUTION
+        return ATTRIBUTION
 
     @property
     def device_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return ICON
 
     @property
     def name(self) -> str:
@@ -248,9 +234,7 @@ class NiluSensor(AirQualityEntity):
         """Return formatted value of specified component."""
         if component_name in self._api.data.sensors:
             sensor = self._api.data.sensors[component_name]
-            return "{0:.2f} {1}".format(sensor.value,
-                                        sensor.unit_of_measurement)
-
+            return sensor.value
         return None
 
     def update(self) -> None:
