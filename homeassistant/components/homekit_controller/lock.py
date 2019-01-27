@@ -70,14 +70,8 @@ class HomeKitLock(HomeKitEntity, LockDevice):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "lock-mechanism.current-state":
-                self._chars['lock-mechanism.current-state'] = \
-                    characteristic['iid']
                 self._state = CURRENT_STATE_MAP[characteristic['value']]
-            elif ctype == "lock-mechanism.target-state":
-                self._chars['lock-mechanism.target-state'] = \
-                    characteristic['iid']
             elif ctype == "battery-level":
-                self._chars['battery-level'] = characteristic['iid']
                 self._battery_level = characteristic['value']
 
     @property
