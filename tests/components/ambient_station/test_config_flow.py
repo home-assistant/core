@@ -1,6 +1,5 @@
 """Define tests for the Ambient PWS config flow."""
 import json
-from unittest.mock import patch
 
 import aioambient
 import pytest
