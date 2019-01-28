@@ -12,7 +12,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
+    DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
 )
 
 
@@ -37,9 +38,9 @@ DEFAULT_TIMEOUT = 10
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
-    'temperature': ['Temperature', '°C'],
-    'humidity': ['Humidity', '%'],
-    'battery': ['Battery', '%'],
+    'temperature': ['Temperature', '°C', DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['Humidity', '%', DEVICE_CLASS_HUMIDITY],
+    'battery': ['Battery', '%', DEVICE_CLASS_BATTERY],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -82,13 +83,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
         unit = SENSOR_TYPES[parameter][1]
+        clas = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
         if prefix:
             name = "{} {}".format(prefix, name)
 
         devs.append(MiTempBtSensor(
-            poller, parameter, name, unit, force_update, median))
+            poller, parameter, name, unit, force_update, median, clas))
 
     add_entities(devs)
 
@@ -96,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MiTempBtSensor(Entity):
     """Implementing the MiTempBt sensor."""
 
-    def __init__(self, poller, parameter, name, unit, force_update, median):
+    def __init__(self, poller, parameter, name, unit, force_update, median, device_class):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -109,6 +111,7 @@ class MiTempBtSensor(Entity):
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
         self.median_count = median
+        self._device_class = device_class
 
     @property
     def name(self):
@@ -119,6 +122,11 @@ class MiTempBtSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self):
