@@ -604,7 +604,6 @@ def check_point_in_lamps_reach(p: Tuple[float, float],
 
 def check_valid_gamut(Gamut: GamutType) -> bool:
     """Check if the supplied gamut is valid."""
-
     # Check if gamut is None
     if not Gamut:
         return True
@@ -622,4 +621,4 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     blue_valid = Gamut.blue.x >= 0 and Gamut.blue.x <= 1 and \
         Gamut.blue.y >= 0 and Gamut.blue.y <= 1
 
-    return (not_on_line and red_valid and green_valid and blue_valid)
+    return not_on_line and red_valid and green_valid and blue_valid
