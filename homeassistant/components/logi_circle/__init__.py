@@ -32,8 +32,6 @@ from .const import (
 
 REQUIREMENTS = ['logi_circle==0.2.2']
 
-SIGNAL_LOGI_RESTART_SUBSCRIPTION = 'logi_restart_ws'
-
 NOTIFICATION_ID = 'logi_circle_notification'
 NOTIFICATION_TITLE = 'Logi Circle Setup'
 

@@ -2,7 +2,7 @@
 This component provides support to the Logi Circle camera.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.logi_circle/
+https://home-assistant.io/components/logi_circle.camera/
 """
 from datetime import timedelta
 import logging

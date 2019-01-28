@@ -2,7 +2,7 @@
 This component provides HA binary sensor support for Logi Circle cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.logi_circle/
+https://home-assistant.io/components/logi_circle.binary_sensor/
 """
 import logging
 
