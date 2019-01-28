@@ -140,6 +140,7 @@ class DeconzEvent:
         self._device.register_async_callback(self.async_update_callback)
         self._event = 'deconz_{}'.format(CONF_EVENT)
         self._id = slugify(self._device.name)
+        _LOGGER.info("deCONZ event created: %s", self._id)
 
     @callback
     def async_will_remove_from_hass(self) -> None:
