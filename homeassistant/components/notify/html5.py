@@ -158,17 +158,18 @@ def _load_config(filename):
 
 
 class HTML5ApplicationServerKeyView(HomeAssistantView):
-    """To fetch applicationServerKey from a browser."""
+    """To fetch application_server_key from a browser."""
 
     url = '/api/notify.html5/applicationServerKey'
     name = 'api:notify.html5:applicationServerKey'
 
-    def __init__(self, applicationServerKey):
+    def __init__(self, application_server_key):
         """Init HTMLApplicationServerKeyView."""
-        self.applicationServerKey = applicationServerKey
+        self.application_server_key = application_server_key
 
     async def get(self, request):
-        return self.json_message(self.applicationServerKey)
+        """Accept the GET request for application_server_key."""
+        return self.json_message(self.application_server_key)
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
