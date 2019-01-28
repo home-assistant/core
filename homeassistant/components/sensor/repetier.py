@@ -16,8 +16,7 @@ from homeassistant.const import (
     CONF_URL,
     STATE_IDLE,
     STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN)
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
