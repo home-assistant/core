@@ -9,13 +9,12 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-from homeassistant.helpers.event import async_track_time_interval
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_UPDATE_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util import Throttle
+from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['fastdotcom==0.0.3']
 
@@ -48,7 +47,7 @@ async def async_setup(hass, config):
 
     def update(call=None):
         """Service call to manually update the data."""
-        data.update(no_throttle=True)
+        data.update()
 
     hass.services.async_register(DOMAIN, 'speedtest', update)
 
@@ -67,12 +66,9 @@ class SpeedtestData:
         self.data = None
         self._hass = hass
         if not manual:
-            self.update = Throttle(interval)(self._update)
             async_track_time_interval(self._hass, self.update, interval)
-        else:
-            self.update = self._update
 
-    def _update(self):
+    def update(self):
         """Get the latest data from fast.com."""
         from fastdotcom import fast_com
         _LOGGER.debug("Executing fast.com speedtest")
