@@ -51,16 +51,15 @@ class SpeedtestSensor(RestoreEntity):
         """Return the unit of measurement of this entity, if any."""
         return UNIT_OF_MEASUREMENT
 
-    def update(self):
-        """Get the latest data and update the states."""
-        data = self.speedtest_client.data
-        if data is None:
-            return
-        self._state = data['download']
+    @property
+    def icon(self):
+        """Return icon."""
+        return ICON
 
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -74,7 +73,13 @@ class SpeedtestSensor(RestoreEntity):
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
 
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+    def update(self):
+        """Get the latest data and update the states."""
+        data = self.speedtest_client.data
+        if data is None:
+            return
+        self._state = data['download']
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
