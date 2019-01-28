@@ -44,7 +44,7 @@ async def test_delete_area(registry):
     """Make sure that we can delete an area."""
     area = registry.async_create('mock')
 
-    registry.async_delete(area.id)
+    await registry.async_delete(area.id)
 
     assert not registry.areas
 
@@ -54,7 +54,7 @@ async def test_delete_non_existing_area(registry):
     registry.async_create('mock')
 
     with pytest.raises(KeyError):
-        registry.async_delete('')
+        await registry.async_delete('')
 
     assert len(registry.areas) == 1
 
