@@ -230,11 +230,13 @@ class HueLight(Light):
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
-            if not color.check_valid_gamut(self.gamut):
-                err = "Color gamut of %s: %s, not valid, setting gamut to None"
-                _LOGGER.warning(err, self.name, str(self.gamut))
-                self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
-                self.gamut = None
+            if self.gamut:
+                if not color.check_valid_gamut(self.gamut):
+                    err = "Color gamut of %s: %s, not valid, " \
+                          "setting gamut to None"
+                    _LOGGER.warning(err, self.name, str(self.gamut))
+                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                    self.gamut = None
 
     @property
     def unique_id(self):
