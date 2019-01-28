@@ -52,7 +52,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Linky sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    timeout = config.getCONF_TIMEOUT)
+    timeout = config.get(CONF_TIMEOUT)
+    SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL)
     name = config.get(CONF_NAME)
     peak_hours = config.get(PEAK_HOURS)
     peak_hours_cost = config.get(PEAK_HOURS_COST)
@@ -106,7 +107,8 @@ class LinkySensor(Entity):
     def icon(self):
         """Return the icon of the sensor."""
         return self._icon
-
+    
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
@@ -177,7 +179,7 @@ class LinkyData:
         _LOGGER.warning("Unable to fetch Linky data (maybe due to night maintenance downtime schedule): %s", exp)
         return False
       return True
-
+    
     def update(self):
       """Return the latest collected data from Linky."""
       self._fetch_data()
