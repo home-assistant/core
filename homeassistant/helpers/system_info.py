@@ -31,11 +31,6 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict:
     elif platform.system() == 'FreeBSD':
         info_object['os_version'] = platform.release()
     elif platform.system() == 'Linux':
-        import distro
-        linux_dist = await hass.async_add_executor_job(
-            distro.linux_distribution, False)
-        info_object['distribution'] = linux_dist[0]
-        info_object['os_version'] = linux_dist[1]
         info_object['docker'] = os.path.isfile('/.dockerenv')
 
     return info_object
