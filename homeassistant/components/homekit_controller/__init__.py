@@ -272,6 +272,13 @@ class HomeKitEntity(Entity):
                 'type': ctype,
                 'value': result['value'],
             }])
+            # Callback to update the entity with this characteristic value
+            char_name = escape_characteristic_name(self._char_names[iid])
+            update_fn = getattr(self, '_update_{}'.format(char_name), None)
+            if not update_fn:
+                continue
+            # pylint: disable=E1102
+            update_fn(result['value'])
 
     @property
     def unique_id(self):
@@ -294,7 +301,7 @@ class HomeKitEntity(Entity):
 
     def update_characteristics(self, characteristics):
         """Synchronise a HomeKit device state with Home Assistant."""
-        raise NotImplementedError
+        pass
 
     def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
