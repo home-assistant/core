@@ -19,6 +19,9 @@ omit =
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
+    homeassistant/components/ambient_station/__init__.py
+    homeassistant/components/ambient_station/sensor.py
+
     homeassistant/components/amcrest.py
     homeassistant/components/*/amcrest.py
 
@@ -732,7 +735,6 @@ omit =
     homeassistant/components/sensor/aftership.py
     homeassistant/components/sensor/airvisual.py
     homeassistant/components/sensor/alpha_vantage.py
-    homeassistant/components/sensor/ambient_station.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py

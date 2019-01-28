@@ -36,6 +36,7 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
+    'aioambient',
     'aioautomatic',
     'aiohttp_cors',
     'aiohue',
