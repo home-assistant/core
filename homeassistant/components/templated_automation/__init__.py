@@ -94,6 +94,10 @@ class TemplatedAutomation:
         self._bidirectional = bidirectional
         self._inverted = inverted
         self._unsub = []
+        self._ignore_next_call = {
+            self._source: False,
+            self._target: False
+        }
 
         self._unsub.append(
             async_track_state_change(
@@ -124,6 +128,13 @@ class TemplatedAutomation:
             target = self._source
 
         if target:
+            if self._ignore_next_call.get(target):
+                _LOGGER.info('Ignoring this call on %s', target)
+                self._ignore_next_call[target] = False
+                return
+
+            _LOGGER.info('Ignoring next call on %s', entity_id)
+            self._ignore_next_call[entity_id] = True
             await self._hass.services.async_call(
                 'homeassistant', service, {ATTR_ENTITY_ID: target}
             )
