@@ -144,21 +144,24 @@ class LinkySensor(Entity):
             self._offpeak_hours_cost *
             self._attributes["offpeak_hours"]
         self._attributes["monthly_evolution"] = 
-            (1 - ((self._lk.monthly[0][CONSUMPTION]) / 
-                  (self._lk.compare_month))) * 100
+        (1 - ((self._lk.monthly[0][CONSUMPTION]) /
+              (self._lk.compare_month))) * 100
         _LOGGER.debug("Computed values: " +
                       str(self._attributes))
 
+
 def hour_to_min(hour):
-    return sum(map(lambda x,y:int(x)*y,hour.split(":"),[60,1]))
+    return sum(map(lambda x, y: int(x)*y,hour.split(":"),[60,1]))
+
 
 def between(start, end, hour):
     min_start = hour_to_min(start)
     min_end = hour_to_min(end)
     min_hour = hour_to_min(hour)
-    return min_start <= min_hour <= min_end 
-        if min_start < min_end 
+    return min_start <= min_hour <= min_end
+    if min_start < min_end
         else min_start >= min_hour >= min_end
+
 
 class LinkyData:
     """The class for handling the data retrieval."""
@@ -195,17 +198,18 @@ class LinkyData:
                  - relativedelta(days=1)).strftime("%d/%m/%Y"))[0]
             _LOGGER.info("Second request for bugfix")
             # Get partial CONSUMPTION of the same month last year
-            self.compare_month = sum([d[CONSUMPTION] 
-                          for d in self.client._get_data_per_month(
-                              (today.replace(day=1) - 
-                               relativedelta(months=12))
-                              .strftime("%d/%m/%Y")
-                             ,
-                              (today - relativedelta(months=12))
-                              .strftime("%d/%m/%Y"))]
-                        ) 
-            _LOGGER.info("Same month last year "+
-                         "(from 1st to same day): " + 
+            self.compare_month = sum([d[CONSUMPTION]
+                                      for d in self.client
+                                      ._get_data_per_month(
+                                          (today.replace(day=1) -
+                                           relativedelta(months=12))
+                                          .strftime("%d/%m/%Y"),
+                                          (today - relativedelta
+                                           (months=12))
+                                          .strftime("%d/%m/%Y"))]
+                                    )
+            _LOGGER.info("Same month last year " +
+                         "(from 1st to same day): " +
                          str(self.compare_month))
         except PyLinkyError as exp:
             _LOGGER.warning("Unable to fetch Linky data " +
