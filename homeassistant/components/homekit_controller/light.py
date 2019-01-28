@@ -36,6 +36,30 @@ class HomeKitLight(HomeKitEntity, Light):
         self._hue = None
         self._saturation = None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.ON,
+            CharacteristicsTypes.BRIGHTNESS,
+            CharacteristicsTypes.COLOR_TEMPERATURE,
+            CharacteristicsTypes.HUE,
+            CharacteristicsTypes.SATURATION,
+        ]
+
+    def _setup_brightness(self, char):
+        self._features |= SUPPORT_BRIGHTNESS
+
+    def _setup_color_temperature(self, char):
+        self._features |= SUPPORT_COLOR_TEMP
+
+    def _setup_hue(self, char):
+        self._features |= SUPPORT_COLOR
+
+    def _setup_saturation(self, char):
+        self._features |= SUPPORT_COLOR
+
     def update_characteristics(self, characteristics):
         """Synchronise light state with Home Assistant."""
         # pylint: disable=import-error
@@ -45,23 +69,14 @@ class HomeKitLight(HomeKitEntity, Light):
             ctype = characteristic['type']
             ctype = CharacteristicsTypes.get_short(ctype)
             if ctype == "on":
-                self._chars['on'] = characteristic['iid']
                 self._on = characteristic['value']
             elif ctype == 'brightness':
-                self._chars['brightness'] = characteristic['iid']
-                self._features |= SUPPORT_BRIGHTNESS
                 self._brightness = characteristic['value']
             elif ctype == 'color-temperature':
-                self._chars['color-temperature'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR_TEMP
                 self._color_temperature = characteristic['value']
             elif ctype == "hue":
-                self._chars['hue'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR
                 self._hue = characteristic['value']
             elif ctype == "saturation":
-                self._chars['saturation'] = characteristic['iid']
-                self._features |= SUPPORT_COLOR
                 self._saturation = characteristic['value']
 
     @property
