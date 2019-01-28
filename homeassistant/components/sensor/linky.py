@@ -134,8 +134,8 @@ class LinkySensor(Entity):
              for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
         self._attributes["peak_offpeak_percent"] = (self._attributes
-                                                    ["peak_hours"]
-                                                    * 100) /
+                                                    ["peak_hours"] *
+                                                    100) /
         (self._attributes["peak_hours"] +
          self._attributes["offpeak_hours"])
         self._attributes["daily_cost"] = self
