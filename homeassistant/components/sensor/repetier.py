@@ -1,8 +1,8 @@
 """
-Sensor for retrieving Repetier-Server device status.
+Support for Repetier-Server sensors.
 
-Creates one sensor for each device attached to Repetier-Server
-Created by Morten Trab (morten@trab.dk) - 2019
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.repetier/
 """
 from datetime import timedelta
 import logging
@@ -24,18 +24,25 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyrepetier==1.4.1']
 
-__version__ = '0.5.1'
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
+DEFAULT_PORT = '3344'
+DEFAULT_DECIMALS = 1
+DEFAULT_STATEPCT = False
+
+ICON = 'mdi:printer-3d'
+
+CONF_DECIMAL_PLACES = 'decimals'
+CONF_STATE_PERCENT = 'state_percent'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default='3344'): cv.string,
-    vol.Optional('decimals', default=1): int,
-    vol.Optional('state_percent', default=False): bool,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_DECIMAL_PLACES, default=DEFAULT_DECIMALS): int,
+    vol.Optional(CONF_STATE_PERCENT, default=DEFAULT_STATEPCT): bool,
 })
 
 
@@ -57,35 +64,35 @@ def parse_repetier_api_response(response):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Repetier sensors."""
     import pyrepetier
-    try:
-        data = pyrepetier.RepetierData(
-            parse_repetier_api_response,
-            url=config.get(CONF_URL),
-            port=config.get(CONF_PORT),
-            api_key=config.get(CONF_API_KEY))
-        data.update()
-        sensors = []
-        for key in data.data.keys():
-            sensors.append(RepetierSensor(config, key, data))
-        add_devices(sensors, True)
-    except (RuntimeError, TypeError, NameError):
-        _LOGGER.warning("Cannot setup Repetier sensors, check your config")
+    decimal_places = config.get(CONF_DECIMAL_PLACES)
+    state_pct = config.get(CONF_STATE_PERCENT)
+
+    data = pyrepetier.RepetierData(
+        parse_repetier_api_response,
+        url=config[CONF_URL],
+        port=config.get(CONF_PORT),
+        api_key=config[CONF_API_KEY])
+    data.update()
+    sensors = []
+    for key in data.data.keys():
+        sensors.append(RepetierSensor(state_pct, decimal_places, key, data))
+    add_devices(sensors, True)
 
 
 class RepetierSensor(Entity):
     """Class to hold Repetier Sensor basic info."""
 
-    def __init__(self, config, repetier_id, data):
+    def __init__(self, state_pct, decimal_places, repetier_id, data):
         """Initialize the sensor object."""
         self._repetier_id = repetier_id
         self._data = data
-        self._icon = 'mdi:printer-3d'
+        self._icon = ICON
         self._name = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._units = None
         self._attributes = None
-        self._decimals = config.get('decimals')
-        self._show_pct = config.get('state_percent')
+        self._decimals = decimal_places
+        self._show_pct = state_pct
         self.format_data()
 
     @property
