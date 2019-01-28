@@ -50,6 +50,7 @@ class AreaRegistry:
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
         del self.areas[area_id]
+        self.async_schedule_save()
 
     @callback
     def async_read(self) -> AreaEntry:
