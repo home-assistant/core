@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
-    STATE_UNKNOWN, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES
+STATE_UNKNOWN, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -126,15 +126,15 @@ class LinkySensor(Entity):
             if any([between(h[0], h[1], d[TIME])
                     for h in self._peak_hours])
             else 0
-            for d in self._lk.halfhourly
-        ]) / 2  # From kW for 30 minutes to kWh
+                    for d in self._lk.halfhourly]) / 2
+        # From kW for 30 minutes to kWh
         self._attributes["offpeak_hours"] = sum(
             [0
             if any([between(h[0], h[1], d[TIME])
-                    for h in self._peak_hours])
+                        for h in self._peak_hours])
             else d[CONSUMPTION]
-            for d in self._lk.halfhourly
-        ]) / 2  # From kW for 30 minutes to kWh
+            for d in self._lk.halfhourly]) / 2
+        # From kW for 30 minutes to kWh
         self._attributes["peak_offpeak_percent"] = (
             self._attributes["peak_hours"] * 100) /
             (self._attributes["peak_hours"] +
