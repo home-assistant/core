@@ -162,8 +162,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         })
 
         devices = list(self.hass.data[sonos.DATA_SONOS].devices)
-        self.assertEqual(len(devices), 1)
-        self.assertEqual(devices[0].name, 'Kitchen')
+        assert len(devices) == 1
+        assert devices[0].name == 'Kitchen'
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -181,8 +181,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         assert setup_component(self.hass, DOMAIN, config)
 
-        self.assertEqual(len(self.hass.data[sonos.DATA_SONOS].devices), 1)
-        self.assertEqual(discover_mock.call_count, 1)
+        assert len(self.hass.data[sonos.DATA_SONOS].devices) == 1
+        assert discover_mock.call_count == 1
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -198,8 +198,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         assert setup_component(self.hass, DOMAIN, config)
 
         devices = self.hass.data[sonos.DATA_SONOS].devices
-        self.assertEqual(len(devices), 1)
-        self.assertEqual(devices[0].name, 'Kitchen')
+        assert len(devices) == 1
+        assert devices[0].name == 'Kitchen'
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -215,8 +215,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         assert setup_component(self.hass, DOMAIN, config)
 
         devices = self.hass.data[sonos.DATA_SONOS].devices
-        self.assertEqual(len(devices), 2)
-        self.assertEqual(devices[0].name, 'Kitchen')
+        assert len(devices) == 2
+        assert devices[0].name == 'Kitchen'
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -232,8 +232,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         assert setup_component(self.hass, DOMAIN, config)
 
         devices = self.hass.data[sonos.DATA_SONOS].devices
-        self.assertEqual(len(devices), 2)
-        self.assertEqual(devices[0].name, 'Kitchen')
+        assert len(devices) == 2
+        assert devices[0].name == 'Kitchen'
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch.object(pysonos, 'discover', new=pysonosDiscoverMock.discover)
@@ -242,8 +242,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Test a single device using the autodiscovery provided by Sonos."""
         sonos.setup_platform(self.hass, {}, add_entities_factory(self.hass))
         devices = list(self.hass.data[sonos.DATA_SONOS].devices)
-        self.assertEqual(len(devices), 1)
-        self.assertEqual(devices[0].name, 'Kitchen')
+        assert len(devices) == 1
+        assert devices[0].name == 'Kitchen'
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -296,11 +296,11 @@ class TestSonosMediaPlayer(unittest.TestCase):
             device.set_alarm(alarm_id=2)
             alarm1.save.assert_not_called()
             device.set_alarm(alarm_id=1, **attrs)
-            self.assertEqual(alarm1.enabled, attrs['enabled'])
-            self.assertEqual(alarm1.start_time, attrs['time'])
-            self.assertEqual(alarm1.include_linked_zones,
-                             attrs['include_linked_zones'])
-            self.assertEqual(alarm1.volume, 30)
+            assert alarm1.enabled == attrs['enabled']
+            assert alarm1.start_time == attrs['time']
+            assert alarm1.include_linked_zones == \
+                attrs['include_linked_zones']
+            assert alarm1.volume == 30
             alarm1.save.assert_called_once_with()
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
@@ -316,8 +316,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         snapshotMock.return_value = True
         device.snapshot()
-        self.assertEqual(snapshotMock.call_count, 1)
-        self.assertEqual(snapshotMock.call_args, mock.call())
+        assert snapshotMock.call_count == 1
+        assert snapshotMock.call_args == mock.call()
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
@@ -337,5 +337,5 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device._snapshot_coordinator.soco_device = SoCoMock('192.0.2.17')
         device._soco_snapshot = Snapshot(device._player)
         device.restore()
-        self.assertEqual(restoreMock.call_count, 1)
-        self.assertEqual(restoreMock.call_args, mock.call(False))
+        assert restoreMock.call_count == 1
+        assert restoreMock.call_args == mock.call(False)

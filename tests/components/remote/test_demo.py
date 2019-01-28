@@ -19,9 +19,9 @@ class TestDemoRemote(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(setup_component(self.hass, remote.DOMAIN, {'remote': {
+        assert setup_component(self.hass, remote.DOMAIN, {'remote': {
             'platform': 'demo',
-        }}))
+        }})
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -33,21 +33,20 @@ class TestDemoRemote(unittest.TestCase):
         common.turn_on(self.hass, entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        self.assertEqual(state.state, STATE_ON)
+        assert state.state == STATE_ON
 
         common.turn_off(self.hass, entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        self.assertEqual(state.state, STATE_OFF)
+        assert state.state == STATE_OFF
 
         common.turn_on(self.hass, entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        self.assertEqual(state.state, STATE_ON)
+        assert state.state == STATE_ON
 
         common.send_command(self.hass, 'test', entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        self.assertEqual(
-            state.attributes,
-            {'friendly_name': 'Remote One', 'last_command_sent': 'test'})
+        assert state.attributes == \
+            {'friendly_name': 'Remote One', 'last_command_sent': 'test'}

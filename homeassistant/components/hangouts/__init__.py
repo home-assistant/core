@@ -22,7 +22,7 @@ from .const import (
     SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
     CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA,
     CONF_DEFAULT_CONVERSATIONS, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED,
-    INTENT_HELP)
+    INTENT_HELP, SERVICE_RECONNECT)
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HangoutsFlowHandler  # noqa: F401
@@ -128,6 +128,12 @@ async def async_setup_entry(hass, config):
                                  SERVICE_UPDATE,
                                  bot.
                                  async_handle_update_users_and_conversations,
+                                 schema=vol.Schema({}))
+
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_RECONNECT,
+                                 bot.
+                                 async_handle_reconnect,
                                  schema=vol.Schema({}))
 
     intent.async_register(hass, HelpIntent(hass))

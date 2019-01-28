@@ -21,9 +21,9 @@ def fake_log(log_key):
             'NOTICE [jail_one] Ban 111.111.111.111'
         ),
         'ipv6_ban': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]: '
-            'NOTICE [jail_one] Ban 2607:f0d0:1002:51::4'
-        ),
+             '2017-01-01 12:23:35 fail2ban.actions [111]: '
+             'NOTICE [jail_one] Ban 2607:f0d0:1002:51::4'
+         ),
         'multi_ban': (
             '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
@@ -105,7 +105,7 @@ class TestBanSensor(unittest.TestCase):
         """Test that log is parsed correctly for single ban."""
         log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
@@ -146,11 +146,12 @@ class TestBanSensor(unittest.TestCase):
             sensor.state_attributes[STATE_LAST_BAN], '2607:f0d0:1002:51::4'
         )
 
+
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""
         log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('multi_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
@@ -174,7 +175,7 @@ class TestBanSensor(unittest.TestCase):
         """Test that log is parsed correctly when unbanning."""
         log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_all'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
@@ -186,13 +187,12 @@ class TestBanSensor(unittest.TestCase):
         self.assertEqual(
             sensor.state_attributes[STATE_UNBANNED],
             ['111.111.111.111', '222.222.222.222']
-        )
 
     def test_unban_one(self):
         """Test that log is parsed correctly when unbanning one ip."""
         log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_one'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
@@ -214,8 +214,8 @@ class TestBanSensor(unittest.TestCase):
         log_parser = BanLogParser('/tmp')
         sensor1 = BanSensor('fail2ban', 'jail_one', log_parser)
         sensor2 = BanSensor('fail2ban', 'jail_two', log_parser)
-        self.assertEqual(sensor1.name, 'fail2ban jail_one')
-        self.assertEqual(sensor2.name, 'fail2ban jail_two')
+        assert sensor1.name == 'fail2ban jail_one'
+        assert sensor2.name == 'fail2ban jail_two'
         mock_fh = MockOpen(read_data=fake_log('multi_jail'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
@@ -248,7 +248,7 @@ class TestBanSensor(unittest.TestCase):
         """Test that ban persists after subsequent update."""
         log_parser = BanLogParser('/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):

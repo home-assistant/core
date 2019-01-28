@@ -15,8 +15,6 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_SMOKE_OFF = 'IDLE_OFF'
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -28,14 +26,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
         AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector,
-        AsyncWaterSensor, AsyncRotaryHandleSensor)
+        AsyncWaterSensor, AsyncRotaryHandleSensor,
+        AsyncMotionDetectorPushButton)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
         if isinstance(device, (AsyncShutterContact, AsyncRotaryHandleSensor)):
             devices.append(HomematicipShutterContact(home, device))
-        elif isinstance(device, AsyncMotionDetectorIndoor):
+        elif isinstance(device, (AsyncMotionDetectorIndoor,
+                                 AsyncMotionDetectorPushButton)):
             devices.append(HomematicipMotionDetector(home, device))
         elif isinstance(device, AsyncSmokeDetector):
             devices.append(HomematicipSmokeDetector(home, device))
@@ -63,7 +63,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
             return True
         if self._device.windowState is None:
             return None
-        return self._device.windowState == WindowState.OPEN
+        return self._device.windowState != WindowState.CLOSED
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
@@ -93,7 +93,9 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if smoke is detected."""
-        return self._device.smokeDetectorAlarmType != STATE_SMOKE_OFF
+        from homematicip.base.enums import SmokeDetectorAlarmType
+        return (self._device.smokeDetectorAlarmType
+                != SmokeDetectorAlarmType.IDLE_OFF)
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):

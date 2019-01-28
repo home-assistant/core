@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD, CONF_HEADERS)
+    CONF_METHOD, CONF_HEADERS, CONF_VERIFY_SSL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = 'get'
+DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = [
     'get',
@@ -43,22 +44,23 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-    vol.Optional(CONF_CONTENT_TYPE): cv.string
+    vol.Optional(CONF_CONTENT_TYPE): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: COMMAND_SCHEMA,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the REST command component."""
-    websession = async_get_clientsession(hass)
-
     def async_register_rest_command(name, command_config):
         """Create service for rest command."""
+        websession = async_get_clientsession(
+            hass,
+            command_config.get(CONF_VERIFY_SSL)
+        )
         timeout = command_config[CONF_TIMEOUT]
         method = command_config[CONF_METHOD]
 

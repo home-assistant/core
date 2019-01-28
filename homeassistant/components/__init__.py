@@ -31,7 +31,7 @@ SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
 SERVICE_UPDATE_ENTITY = 'update_entity'
 SCHEMA_UPDATE_ENTITY = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_id
+    ATTR_ENTITY_ID: cv.entity_ids
 })
 
 
@@ -142,8 +142,11 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
-        await hass.helpers.entity_component.async_update_entity(
-            call.data[ATTR_ENTITY_ID])
+        tasks = [hass.helpers.entity_component.async_update_entity(entity)
+                 for entity in call.data[ATTR_ENTITY_ID]]
+
+        if tasks:
+            await asyncio.wait(tasks)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)

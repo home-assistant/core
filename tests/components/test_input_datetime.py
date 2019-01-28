@@ -1,15 +1,17 @@
 """Tests for the Input slider component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 import datetime
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.core import CoreState, State, Context
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components.input_datetime import (
     DOMAIN, ATTR_ENTITY_ID, ATTR_DATE, ATTR_TIME, SERVICE_SET_DATETIME)
 
-from tests.common import get_test_home_assistant, mock_restore_cache
+from tests.common import mock_restore_cache
 
 
 async def async_set_datetime(hass, entity_id, dt_value):
@@ -21,33 +23,19 @@ async def async_set_datetime(hass, entity_id, dt_value):
     }, blocking=True)
 
 
-class TestInputDatetime(unittest.TestCase):
-    """Test the input datetime component."""
-
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_invalid_configs(self):
-        """Test config."""
-        invalid_configs = [
-            None,
-            {},
-            {'name with space': None},
-            {'test_no_value': {
-                'has_time': False,
-                'has_date': False
-            }},
-        ]
-        for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+async def test_invalid_configs(hass):
+    """Test config."""
+    invalid_configs = [
+        None,
+        {},
+        {'name with space': None},
+        {'test_no_value': {
+            'has_time': False,
+            'has_date': False
+        }},
+    ]
+    for cfg in invalid_configs:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
 @asyncio.coroutine
@@ -124,10 +112,11 @@ def test_set_invalid(hass):
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    yield from hass.services.async_call('input_datetime', 'set_datetime', {
-        'entity_id': 'test_date',
-        'time': time_portion
-    })
+    with pytest.raises(vol.Invalid):
+        yield from hass.services.async_call('input_datetime', 'set_datetime', {
+            'entity_id': 'test_date',
+            'time': time_portion
+        })
     yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -210,7 +199,7 @@ def test_restore_state(hass):
     assert state_bogus.state == str(initial)
 
 
-async def test_input_datetime_context(hass):
+async def test_input_datetime_context(hass, hass_admin_user):
     """Test that input_datetime context works."""
     assert await async_setup_component(hass, 'input_datetime', {
         'input_datetime': {
@@ -226,9 +215,9 @@ async def test_input_datetime_context(hass):
     await hass.services.async_call('input_datetime', 'set_datetime', {
         'entity_id': state.entity_id,
         'date': '2018-01-02'
-    }, True, Context(user_id='abcd'))
+    }, True, Context(user_id=hass_admin_user.id))
 
     state2 = hass.states.get('input_datetime.only_date')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == 'abcd'
+    assert state2.context.user_id == hass_admin_user.id

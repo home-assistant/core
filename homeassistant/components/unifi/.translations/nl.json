@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller site is al geconfigureerd",
+            "user_privilege": "Gebruiker moet beheerder zijn"
+        },
+        "error": {
+            "faulty_credentials": "Foutieve gebruikersgegevens",
+            "service_unavailable": "Geen service beschikbaar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "site": "Site ID",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "Controller gebruik van het juiste certificaat"
+                },
+                "title": "Stel de UniFi-controller in"
+            }
+        },
+        "title": "UniFi-controller"
+    }
+}

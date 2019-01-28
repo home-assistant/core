@@ -258,11 +258,12 @@ def test_icon():
     """Test icon validation."""
     schema = vol.Schema(cv.icon)
 
-    for value in (False, 'work', 'icon:work'):
+    for value in (False, 'work'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     schema('mdi:work')
+    schema('custom:prefix')
 
 
 def test_time_period():
@@ -330,6 +331,10 @@ def test_service_schema():
         {
             'service': 'homeassistant.turn_on',
             'entity_id': 'light.kitchen',
+        },
+        {
+            'service': 'light.turn_on',
+            'entity_id': 'all',
         },
         {
             'service': 'homeassistant.turn_on',
@@ -584,3 +589,44 @@ def test_is_regex():
 
     valid_re = ".*"
     schema(valid_re)
+
+
+def test_comp_entity_ids():
+    """Test config validation for component entity IDs."""
+    schema = vol.Schema(cv.comp_entity_ids)
+
+    for valid in ('ALL', 'all', 'AlL', 'light.kitchen', ['light.kitchen'],
+                  ['light.kitchen', 'light.ceiling'], []):
+        schema(valid)
+
+    for invalid in (['light.kitchen', 'not-entity-id'], '*', ''):
+        with pytest.raises(vol.Invalid):
+            schema(invalid)
+
+
+def test_schema_with_slug_keys_allows_old_slugs(caplog):
+    """Test schema with slug keys allowing old slugs."""
+    schema = cv.schema_with_slug_keys(str)
+
+    with patch.dict(cv.INVALID_SLUGS_FOUND, clear=True):
+        for value in ('_world', 'wow__yeah'):
+            caplog.clear()
+            # Will raise if not allowing old slugs
+            schema({value: 'yo'})
+            assert "Found invalid slug {}".format(value) in caplog.text
+
+        assert len(cv.INVALID_SLUGS_FOUND) == 2
+
+
+def test_entity_id_allow_old_validation(caplog):
+    """Test schema allowing old entity_ids."""
+    schema = vol.Schema(cv.entity_id)
+
+    with patch.dict(cv.INVALID_ENTITY_IDS_FOUND, clear=True):
+        for value in ('hello.__world', 'great.wow__yeah'):
+            caplog.clear()
+            # Will raise if not allowing old entity ID
+            schema(value)
+            assert "Found invalid entity_id {}".format(value) in caplog.text
+
+        assert len(cv.INVALID_ENTITY_IDS_FOUND) == 2

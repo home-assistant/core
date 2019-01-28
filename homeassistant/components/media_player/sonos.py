@@ -11,6 +11,7 @@ import socket
 import threading
 import urllib
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -29,6 +30,8 @@ from homeassistant.util.dt import utcnow
 DEPENDENCIES = ('sonos',)
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 # Quiet down pysonos logging to just actual problems.
 logging.getLogger('pysonos').setLevel(logging.WARNING)
@@ -334,6 +337,7 @@ class SonosDevice(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize the Sonos device."""
+        self._subscriptions = []
         self._receives_events = False
         self._volume_increment = 2
         self._unique_id = player.uid
@@ -481,17 +485,16 @@ class SonosDevice(MediaPlayerDevice):
 
         player = self.soco
 
-        queue = _ProcessSonosEventQueue(self.update_media)
-        player.avTransport.subscribe(auto_renew=True, event_queue=queue)
+        def subscribe(service, action):
+            """Add a subscription to a pysonos service."""
+            queue = _ProcessSonosEventQueue(action)
+            sub = service.subscribe(auto_renew=True, event_queue=queue)
+            self._subscriptions.append(sub)
 
-        queue = _ProcessSonosEventQueue(self.update_volume)
-        player.renderingControl.subscribe(auto_renew=True, event_queue=queue)
-
-        queue = _ProcessSonosEventQueue(self.update_groups)
-        player.zoneGroupTopology.subscribe(auto_renew=True, event_queue=queue)
-
-        queue = _ProcessSonosEventQueue(self.update_content)
-        player.contentDirectory.subscribe(auto_renew=True, event_queue=queue)
+        subscribe(player.avTransport, self.update_media)
+        subscribe(player.renderingControl, self.update_volume)
+        subscribe(player.zoneGroupTopology, self.update_groups)
+        subscribe(player.contentDirectory, self.update_content)
 
     def update(self):
         """Retrieve latest state."""
@@ -502,6 +505,10 @@ class SonosDevice(MediaPlayerDevice):
                 self._set_basic_information()
                 self._subscribe_to_player_events()
             else:
+                for subscription in self._subscriptions:
+                    self.hass.async_add_executor_job(subscription.unsubscribe)
+                self._subscriptions = []
+
                 self._player_volume = None
                 self._player_muted = None
                 self._status = 'OFF'
@@ -706,15 +713,18 @@ class SonosDevice(MediaPlayerDevice):
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
-            elif self.soco.group:
-                # Use SoCo cache for existing topology
-                coordinator_uid = self.soco.group.coordinator.uid
-                slave_uids = [p.uid for p in self.soco.group.members
-                              if p.uid != coordinator_uid]
             else:
-                # Not yet in the cache, this can happen when a speaker boots
                 coordinator_uid = self.unique_id
                 slave_uids = []
+
+                # Try SoCo cache for existing topology
+                try:
+                    if self.soco.group and self.soco.group.coordinator:
+                        coordinator_uid = self.soco.group.coordinator.uid
+                        slave_uids = [p.uid for p in self.soco.group.members
+                                      if p.uid != coordinator_uid]
+                except requests.exceptions.RequestException:
+                    pass
 
             if self.unique_id == coordinator_uid:
                 sonos_group = []

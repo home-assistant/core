@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START)
+    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -41,7 +41,7 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
 })
 
 
@@ -55,21 +55,48 @@ async def async_setup_platform(hass, config, async_add_entities,
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      value_template.extract_entities())
+        entity_ids = set()
+        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+
+        invalid_templates = []
+
+        for tpl_name, template in (
+                (CONF_VALUE_TEMPLATE, value_template),
+                (CONF_ICON_TEMPLATE, icon_template),
+                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+        ):
+            if template is None:
+                continue
+            template.hass = hass
+
+            if manual_entity_ids is not None:
+                continue
+
+            template_entity_ids = template.extract_entities()
+            if template_entity_ids == MATCH_ALL:
+                entity_ids = MATCH_ALL
+                # Cut off _template from name
+                invalid_templates.append(tpl_name[:-9])
+            elif entity_ids != MATCH_ALL:
+                entity_ids |= set(template_entity_ids)
+
+        if manual_entity_ids is not None:
+            entity_ids = manual_entity_ids
+        elif entity_ids != MATCH_ALL:
+            entity_ids = list(entity_ids)
+
+        if invalid_templates:
+            _LOGGER.warning(
+                'Template binary sensor %s has no entity ids configured to'
+                ' track nor were we able to extract the entities to track'
+                ' from the %s template(s). This entity will only be able'
+                ' to be updated manually.',
+                device, ', '.join(invalid_templates))
+
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         delay_on = device_config.get(CONF_DELAY_ON)
         delay_off = device_config.get(CONF_DELAY_OFF)
-
-        if value_template is not None:
-            value_template.hass = hass
-
-        if icon_template is not None:
-            icon_template.hass = hass
-
-        if entity_picture_template is not None:
-            entity_picture_template.hass = hass
 
         sensors.append(
             BinarySensorTemplate(
@@ -117,10 +144,12 @@ class BinarySensorTemplate(BinarySensorDevice):
         @callback
         def template_bsensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_bsensor_state_listener)
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change(
+                    self.hass, self._entities, template_bsensor_state_listener)
 
-            self.hass.async_add_job(self.async_check_state)
+            self.async_check_state()
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_bsensor_startup)
@@ -218,3 +247,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         async_track_same_state(
             self.hass, period, set_state, entity_ids=self._entities,
             async_check_same_func=lambda *args: self._async_render() == state)
+
+    async def async_update(self):
+        """Force update of the state from the template."""
+        self.async_check_state()

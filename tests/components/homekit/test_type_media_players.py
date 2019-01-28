@@ -29,32 +29,32 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert acc.aid == 2
     assert acc.category == 8  # Switch
 
-    assert acc.chars[FEATURE_ON_OFF].value == 0
-    assert acc.chars[FEATURE_PLAY_PAUSE].value == 0
-    assert acc.chars[FEATURE_PLAY_STOP].value == 0
-    assert acc.chars[FEATURE_TOGGLE_MUTE].value == 0
+    assert acc.chars[FEATURE_ON_OFF].value is False
+    assert acc.chars[FEATURE_PLAY_PAUSE].value is False
+    assert acc.chars[FEATURE_PLAY_STOP].value is False
+    assert acc.chars[FEATURE_TOGGLE_MUTE].value is False
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value == 1
-    assert acc.chars[FEATURE_TOGGLE_MUTE].value == 1
+    assert acc.chars[FEATURE_ON_OFF].value is True
+    assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value == 0
+    assert acc.chars[FEATURE_ON_OFF].value is False
 
     hass.states.async_set(entity_id, STATE_PLAYING)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_PLAY_PAUSE].value == 1
-    assert acc.chars[FEATURE_PLAY_STOP].value == 1
+    assert acc.chars[FEATURE_PLAY_PAUSE].value is True
+    assert acc.chars[FEATURE_PLAY_STOP].value is True
 
     hass.states.async_set(entity_id, STATE_PAUSED)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_PLAY_PAUSE].value == 0
+    assert acc.chars[FEATURE_PLAY_PAUSE].value is False
 
     hass.states.async_set(entity_id, STATE_IDLE)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_PLAY_STOP].value == 0
+    assert acc.chars[FEATURE_PLAY_STOP].value is False
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')

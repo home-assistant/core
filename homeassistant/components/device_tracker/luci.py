@@ -7,6 +7,7 @@ https://home-assistant.io/components/device_tracker.luci/
 import json
 import logging
 import re
+from collections import namedtuple
 
 import requests
 import voluptuous as vol
@@ -43,14 +44,17 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
+Device = namedtuple('Device', ['mac', 'ip', 'flags', 'device', 'host'])
+
+
 class LuciDeviceScanner(DeviceScanner):
     """This class queries a wireless router running OpenWrt firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
+        self.host = config[CONF_HOST]
         protocol = 'http' if not config[CONF_SSL] else 'https'
-        self.origin = '{}://{}'.format(protocol, host)
+        self.origin = '{}://{}'.format(protocol, self.host)
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
@@ -68,7 +72,7 @@ class LuciDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return self.last_results
+        return [device.mac for device in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
@@ -87,6 +91,18 @@ class LuciDeviceScanner(DeviceScanner):
                 # Error, handled in the _req_json_rpc
                 return
         return self.mac2name.get(device.upper(), None)
+
+    def get_extra_attributes(self, device):
+        """Return the IP of the given device."""
+        filter_att = next((
+            {
+                'ip':     result.ip,
+                'flags':  result.flags,
+                'device': result.device,
+                'host':   result.host
+            } for result in self.last_results
+            if result.mac == device), None)
+        return filter_att
 
     def _update_info(self):
         """Ensure the information from the Luci router is up to date.
@@ -114,7 +130,11 @@ class LuciDeviceScanner(DeviceScanner):
                 # Check if the Flags for each device contain
                 # NUD_REACHABLE and if so, add it to last_results
                 if int(device_entry['Flags'], 16) & 0x2:
-                    self.last_results.append(device_entry['HW address'])
+                    self.last_results.append(Device(device_entry['HW address'],
+                                                    device_entry['IP address'],
+                                                    device_entry['Flags'],
+                                                    device_entry['Device'],
+                                                    self.host))
 
             return True
 

@@ -32,6 +32,7 @@ FILTER_NAME_RANGE = 'range'
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
+FILTER_NAME_TIME_THROTTLE = 'time_throttle'
 FILTER_NAME_TIME_SMA = 'time_simple_moving_average'
 FILTERS = Registry()
 
@@ -79,7 +80,7 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
-FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend({
+FILTER_RANGE_SCHEMA = vol.Schema({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
     vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
     vol.Optional(CONF_FILTER_UPPER_BOUND): vol.Coerce(float),
@@ -101,6 +102,12 @@ FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
 })
 
+FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
+    vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
+    vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
+                                                   cv.positive_timedelta)
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
@@ -109,6 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                                                  FILTER_LOWPASS_SCHEMA,
                                                  FILTER_TIME_SMA_SCHEMA,
                                                  FILTER_THROTTLE_SCHEMA,
+                                                 FILTER_TIME_THROTTLE_SCHEMA,
                                                  FILTER_RANGE_SCHEMA)])
 })
 
@@ -444,7 +452,7 @@ class TimeSMAFilter(Filter):
     The window_size is determined by time, and SMA is time weighted.
 
     Args:
-        variant (enum): type of argorithm used to connect discrete values
+        type (enum): type of algorithm used to connect discrete values
     """
 
     def __init__(self, window_size, precision, entity,
@@ -497,6 +505,32 @@ class ThrottleFilter(Filter):
         """Implement the throttle filter."""
         if not self.states or len(self.states) == self.states.maxlen:
             self.states.clear()
+            self._skip_processing = False
+        else:
+            self._skip_processing = True
+
+        return new_state
+
+
+@FILTERS.register(FILTER_NAME_TIME_THROTTLE)
+class TimeThrottleFilter(Filter):
+    """Time Throttle Filter.
+
+    One sample per time period.
+    """
+
+    def __init__(self, window_size, precision, entity):
+        """Initialize Filter."""
+        super().__init__(FILTER_NAME_TIME_THROTTLE,
+                         window_size, precision, entity)
+        self._time_window = window_size
+        self._last_emitted_at = None
+
+    def _filter_state(self, new_state):
+        """Implement the filter."""
+        window_start = new_state.timestamp - self._time_window
+        if not self._last_emitted_at or self._last_emitted_at <= window_start:
+            self._last_emitted_at = new_state.timestamp
             self._skip_processing = False
         else:
             self._skip_processing = True

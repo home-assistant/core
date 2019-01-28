@@ -4,6 +4,7 @@ Receive signals from a keyboard and use it as a remote control.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/keyboard_remote/
 """
+# pylint: disable=import-error
 import threading
 import logging
 import os
@@ -89,7 +90,6 @@ class KeyboardRemoteThread(threading.Thread):
             id_folder = '/dev/input/by-id/'
 
             if os.path.isdir(id_folder):
-                # pylint: disable=import-error
                 from evdev import InputDevice, list_devices
                 device_names = [InputDevice(file_name).name
                                 for file_name in list_devices()]
@@ -104,7 +104,6 @@ class KeyboardRemoteThread(threading.Thread):
 
     def _get_keyboard_device(self):
         """Get the keyboard device."""
-        # pylint: disable=import-error
         from evdev import InputDevice, list_devices
         if self.device_name:
             devices = [InputDevice(file_name) for file_name in list_devices()]
@@ -122,7 +121,6 @@ class KeyboardRemoteThread(threading.Thread):
 
     def run(self):
         """Run the loop of the KeyboardRemote."""
-        # pylint: disable=import-error
         from evdev import categorize, ecodes
 
         if self.dev is not None:
@@ -137,7 +135,13 @@ class KeyboardRemoteThread(threading.Thread):
                 self.dev = self._get_keyboard_device()
                 if self.dev is not None:
                     self.dev.grab()
-                    self.hass.bus.fire(KEYBOARD_REMOTE_CONNECTED)
+                    self.hass.bus.fire(
+                        KEYBOARD_REMOTE_CONNECTED,
+                        {
+                            DEVICE_DESCRIPTOR: self.device_descriptor,
+                            DEVICE_NAME: self.device_name
+                        }
+                    )
                     _LOGGER.debug("Keyboard re-connected, %s", self.device_id)
                 else:
                     continue
@@ -146,7 +150,13 @@ class KeyboardRemoteThread(threading.Thread):
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
                 self.dev = None
-                self.hass.bus.fire(KEYBOARD_REMOTE_DISCONNECTED)
+                self.hass.bus.fire(
+                    KEYBOARD_REMOTE_DISCONNECTED,
+                    {
+                        DEVICE_DESCRIPTOR: self.device_descriptor,
+                        DEVICE_NAME: self.device_name
+                    }
+                )
                 _LOGGER.debug("Keyboard disconnected, %s", self.device_id)
                 continue
 

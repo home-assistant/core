@@ -14,7 +14,7 @@ from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN, CONF_NAME,
-    STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS)
+    STATE_CLOSED, STATE_OPEN, CONF_COVERS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ COVER_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
 })
 
 
@@ -83,7 +83,7 @@ class GaradgetCover(CoverDevice):
         self.obtained_token = False
         self._username = args['username']
         self._password = args['password']
-        self._state = STATE_UNKNOWN
+        self._state = None
         self.time_in_state = None
         self.signal = None
         self.sensor = None
@@ -106,7 +106,7 @@ class GaradgetCover(CoverDevice):
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
-        except KeyError as ex:
+        except KeyError:
             _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._name = DEFAULT_NAME
@@ -156,7 +156,7 @@ class GaradgetCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return None
         return self._state == STATE_CLOSED
 
@@ -226,7 +226,7 @@ class GaradgetCover(CoverDevice):
         try:
             status = self._get_variable('doorStatus')
             _LOGGER.debug("Current Status: %s", status['status'])
-            self._state = STATES_MAP.get(status['status'], STATE_UNKNOWN)
+            self._state = STATES_MAP.get(status['status'], None)
             self.time_in_state = status['time']
             self.signal = status['signal']
             self.sensor = status['sensor']
@@ -235,7 +235,7 @@ class GaradgetCover(CoverDevice):
             _LOGGER.error(
                 "Unable to connect to server: %(reason)s", dict(reason=ex))
             self._state = STATE_OFFLINE
-        except KeyError as ex:
+        except KeyError:
             _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._state = STATE_OFFLINE

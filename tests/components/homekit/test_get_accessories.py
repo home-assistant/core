@@ -69,6 +69,7 @@ def test_customize_options(config, name):
     ('Thermostat', 'climate.test', 'auto',
      {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_LOW |
       climate.SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
+    ('WaterHeater', 'water_heater.test', 'auto', {}, {}),
 ])
 def test_types(type_name, entity_id, state, attrs, config):
     """Test if types are associated correctly."""
@@ -138,6 +139,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     ('Switch', 'automation.test', 'on', {}, {}),
     ('Switch', 'input_boolean.test', 'on', {}, {}),
     ('Switch', 'remote.test', 'on', {}, {}),
+    ('Switch', 'scene.test', 'on', {}, {}),
     ('Switch', 'script.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SWITCH}),

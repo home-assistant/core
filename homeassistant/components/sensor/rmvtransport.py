@@ -4,16 +4,18 @@ Support for real-time departure information for Rhein-Main public transport.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rmvtransport/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['PyRMVtransport==0.1.3']
@@ -90,7 +92,14 @@ async def async_setup_platform(hass, config, async_add_entities,
                 next_departure.get(CONF_MAX_JOURNEYS),
                 next_departure.get(CONF_NAME),
                 timeout))
-    async_add_entities(sensors, True)
+
+    tasks = [sensor.async_update() for sensor in sensors]
+    if tasks:
+        await asyncio.wait(tasks)
+    if not all(sensor.data.departures for sensor in sensors):
+        raise PlatformNotReady
+
+    async_add_entities(sensors)
 
 
 class RMVDepartureSensor(Entity):
@@ -185,14 +194,16 @@ class RMVDepartureData:
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Update the connection data."""
+        from RMVtransport.rmvtransport import RMVtransportApiConnectionError
+
         try:
             _data = await self.rmv.get_departures(self._station_id,
                                                   products=self._products,
                                                   directionId=self._direction,
                                                   maxJourneys=50)
-        except ValueError:
+        except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Returned data not understood")
+            _LOGGER.warning("Could not retrive data from rmv.de")
             return
         self.station = _data.get('station')
         _deps = []

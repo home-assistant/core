@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Ke\u015ffetmeyi etkinle\u015ftir"
+                }
+            }
+        }
+    }
+}

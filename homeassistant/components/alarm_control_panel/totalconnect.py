@@ -14,11 +14,11 @@ from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_UNKNOWN, CONF_NAME,
+    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, CONF_NAME,
     STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
 
-REQUIREMENTS = ['total_connect_client==0.20']
+REQUIREMENTS = ['total_connect_client==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class TotalConnect(alarm.AlarmControlPanel):
         self._name = name
         self._username = username
         self._password = password
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._client = TotalConnectClient.TotalConnectClient(
             username, password)
 
@@ -85,7 +85,7 @@ class TotalConnect(alarm.AlarmControlPanel):
         elif status == self._client.DISARMING:
             state = STATE_ALARM_DISARMING
         else:
-            state = STATE_UNKNOWN
+            state = None
 
         self._state = state
 

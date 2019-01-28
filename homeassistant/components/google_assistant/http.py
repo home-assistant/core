@@ -11,9 +11,11 @@ from aiohttp.web import Request, Response
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
+    CONF_ALLOW_UNLOCK,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_ENTITY_CONFIG,
@@ -31,11 +33,15 @@ def async_register_http(hass, cfg):
     expose_by_default = cfg.get(CONF_EXPOSE_BY_DEFAULT)
     exposed_domains = cfg.get(CONF_EXPOSED_DOMAINS)
     entity_config = cfg.get(CONF_ENTITY_CONFIG) or {}
+    allow_unlock = cfg.get(CONF_ALLOW_UNLOCK, False)
 
     def is_exposed(entity) -> bool:
         """Determine if an entity should be exposed to Google Assistant."""
         if entity.attributes.get('view') is not None:
             # Ignore entities that are views
+            return False
+
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         explicit_expose = \
@@ -53,7 +59,7 @@ def async_register_http(hass, cfg):
         return is_default_exposed or explicit_expose
 
     hass.http.register_view(
-        GoogleAssistantView(is_exposed, entity_config))
+        GoogleAssistantView(is_exposed, entity_config, allow_unlock))
 
 
 class GoogleAssistantView(HomeAssistantView):
@@ -63,15 +69,17 @@ class GoogleAssistantView(HomeAssistantView):
     name = 'api:google_assistant'
     requires_auth = True
 
-    def __init__(self, is_exposed, entity_config):
+    def __init__(self, is_exposed, entity_config, allow_unlock):
         """Initialize the Google Assistant request handler."""
         self.is_exposed = is_exposed
         self.entity_config = entity_config
+        self.allow_unlock = allow_unlock
 
     async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
         message = await request.json()  # type: dict
         config = Config(self.is_exposed,
+                        self.allow_unlock,
                         request['hass_user'].id,
                         self.entity_config)
         result = await async_handle_message(

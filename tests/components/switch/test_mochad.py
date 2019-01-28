@@ -51,7 +51,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
                 ],
             }
         }
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, good_config))
+        assert setup_component(self.hass, switch.DOMAIN, good_config)
 
 
 class TestMochadSwitch(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestMochadSwitch(unittest.TestCase):
 
     def test_name(self):
         """Test the name."""
-        self.assertEqual('fake_switch', self.switch.name)
+        assert 'fake_switch' == self.switch.name
 
     def test_turn_on(self):
         """Test turn_on."""

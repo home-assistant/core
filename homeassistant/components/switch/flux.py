@@ -18,14 +18,14 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE,
-    SERVICE_TURN_ON)
-from homeassistant.helpers.event import track_time_interval
+    SERVICE_TURN_ON, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
-from homeassistant.util.dt import now as dt_now
+from homeassistant.util.dt import utcnow as dt_utcnow, as_local
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,8 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
+async def async_set_lights_xy(hass, lights, x_val, y_val, brightness,
+                              transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -79,11 +80,11 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
                 service_data[ATTR_WHITE_VALUE] = brightness
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
-            hass.services.call(
+            await hass.services.async_call(
                 LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def set_lights_temp(hass, lights, mired, brightness, transition):
+async def async_set_lights_temp(hass, lights, mired, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -94,11 +95,11 @@ def set_lights_temp(hass, lights, mired, brightness, transition):
                 service_data[ATTR_BRIGHTNESS] = brightness
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
-            hass.services.call(
+            await hass.services.async_call(
                 LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def set_lights_rgb(hass, lights, rgb, transition):
+async def async_set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -107,11 +108,12 @@ def set_lights_rgb(hass, lights, rgb, transition):
                 service_data[ATTR_RGB_COLOR] = rgb
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
-            hass.services.call(
+            await hass.services.async_call(
                 LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -129,14 +131,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
                       transition)
-    add_entities([flux])
+    async_add_entities([flux])
 
-    def update(call=None):
+    async def async_update(call=None):
         """Update lights."""
-        flux.flux_update()
+        await flux.async_flux_update()
 
     service_name = slugify("{} {}".format(name, 'update'))
-    hass.services.register(DOMAIN, service_name, update)
+    hass.services.async_register(DOMAIN, service_name, async_update)
 
 
 class FluxSwitch(SwitchDevice):
@@ -172,35 +174,37 @@ class FluxSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on flux."""
         if self.is_on:
             return
 
-        # Make initial update
-        self.flux_update()
-
-        self.unsub_tracker = track_time_interval(
+        self.unsub_tracker = async_track_time_interval(
             self.hass,
-            self.flux_update,
+            self.async_flux_update,
             datetime.timedelta(seconds=self._interval))
 
-        self.schedule_update_ha_state()
+        # Make initial update
+        await self.async_flux_update()
 
-    def turn_off(self, **kwargs):
+        self.async_schedule_update_ha_state()
+
+    async def async_turn_off(self, **kwargs):
         """Turn off flux."""
-        if self.unsub_tracker is not None:
+        if self.is_on:
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def flux_update(self, now=None):
+    async def async_flux_update(self, utcnow=None):
         """Update all the lights using flux."""
-        if now is None:
-            now = dt_now()
+        if utcnow is None:
+            utcnow = dt_utcnow()
 
-        sunset = get_astral_event_date(self.hass, 'sunset', now.date())
+        now = as_local(utcnow)
+
+        sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
@@ -256,22 +260,23 @@ class FluxSwitch(SwitchDevice):
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:
-            set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, brightness, self._transition)
+            await async_set_lights_xy(self.hass, self._lights, x_val,
+                                      y_val, brightness, self._transition)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
-            set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            await async_set_lights_rgb(self.hass, self._lights, rgb,
+                                       self._transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            set_lights_temp(self.hass, self._lights, mired, brightness,
-                            self._transition)
+            await async_set_lights_temp(self.hass, self._lights, mired,
+                                        brightness, self._transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
@@ -283,7 +288,8 @@ class FluxSwitch(SwitchDevice):
                 hour=self._start_time.hour, minute=self._start_time.minute,
                 second=0)
         else:
-            sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
+            sunrise = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE,
+                                            now.date())
         return sunrise
 
     def find_stop_time(self, now):

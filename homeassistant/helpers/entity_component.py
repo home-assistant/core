@@ -7,7 +7,8 @@ import logging
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE)
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
+    ENTITY_MATCH_ALL)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -161,7 +162,16 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
-        if ATTR_ENTITY_ID not in service.data:
+        data_ent_id = service.data.get(ATTR_ENTITY_ID)
+
+        if data_ent_id in (None, ENTITY_MATCH_ALL):
+            if data_ent_id is None:
+                self.logger.warning(
+                    'Not passing an entity ID to a service to target all '
+                    'entities is deprecated. Update your call to %s.%s to be '
+                    'instead: entity_id: %s', service.domain, service.service,
+                    ENTITY_MATCH_ALL)
+
             return [entity for entity in self.entities if entity.available]
 
         entity_ids = set(extract_entity_ids(self.hass, service, expand_group))
@@ -173,8 +183,9 @@ class EntityComponent:
         """Register an entity service."""
         async def handle_service(call):
             """Handle the service."""
+            service_name = "{}.{}".format(self.domain, name)
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call
+                self._platforms.values(), func, call, service_name
             )
 
         self.hass.services.async_register(

@@ -30,7 +30,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_setup(self):
         """Test the mold indicator sensor setup."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -38,7 +38,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 2.0
             }
-        }))
+        })
 
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
@@ -53,7 +53,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set('test.indoorhumidity', '0',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
 
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -61,7 +61,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 0
             }
-        }))
+        })
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get('sensor.mold_indicator')
@@ -79,7 +79,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set('test.indoorhumidity', '-1',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
 
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -87,7 +87,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 2.0
             }
-        }))
+        })
 
         self.hass.start()
         self.hass.block_till_done()
@@ -117,7 +117,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_calculation(self):
         """Test the mold indicator internal calculations."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -125,7 +125,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 2.0
             }
-        }))
+        })
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get('sensor.mold_indicator')
@@ -150,7 +150,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_unknown_sensor(self):
         """Test the sensor_changed function."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -158,7 +158,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 2.0
             }
-        }))
+        })
         self.hass.start()
 
         self.hass.states.set('test.indoortemp', STATE_UNKNOWN,
@@ -210,7 +210,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_sensor_changed(self):
         """Test the sensor_changed function."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
@@ -218,7 +218,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_humidity_sensor': 'test.indoorhumidity',
                 'calibration_factor': 2.0
             }
-        }))
+        })
         self.hass.start()
 
         self.hass.states.set('test.indoortemp', '30',

@@ -10,18 +10,21 @@ VALID_CONFIG = {'sensor': {
     'platform': 'transport_nsw',
     'stop_id': '209516',
     'route':  '199',
+    'destination': '',
     'api_key': 'YOUR_API_KEY'}
     }
 
 
-def get_departuresMock(_stop_id, route, api_key):
+def get_departuresMock(_stop_id, route, destination, api_key):
     """Mock TransportNSW departures loading."""
     data = {
         'stop_id': '209516',
         'route': '199',
         'due': 16,
         'delay': 6,
-        'real_time': 'y'
+        'real_time': 'y',
+        'destination': 'Palm Beach',
+        'mode': 'Bus'
         }
     return data
 
@@ -43,8 +46,10 @@ class TestRMVtransportSensor(unittest.TestCase):
         """Test minimal TransportNSW configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG)
         state = self.hass.states.get('sensor.next_bus')
-        self.assertEqual(state.state, '16')
-        self.assertEqual(state.attributes['stop_id'], '209516')
-        self.assertEqual(state.attributes['route'], '199')
-        self.assertEqual(state.attributes['delay'], 6)
-        self.assertEqual(state.attributes['real_time'], 'y')
+        assert state.state == '16'
+        assert state.attributes['stop_id'] == '209516'
+        assert state.attributes['route'] == '199'
+        assert state.attributes['delay'] == 6
+        assert state.attributes['real_time'] == 'y'
+        assert state.attributes['destination'] == 'Palm Beach'
+        assert state.attributes['mode'] == 'Bus'

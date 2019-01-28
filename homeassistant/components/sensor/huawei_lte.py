@@ -117,6 +117,7 @@ def setup_platform(
     data = hass.data[DATA_KEY].get_data(config)
     sensors = []
     for path in config.get(CONF_MONITORED_CONDITIONS):
+        data.subscribe(path)
         sensors.append(HuaweiLteSensor(
             data, path, SENSOR_META.get(path, {})))
     add_entities(sensors, True)

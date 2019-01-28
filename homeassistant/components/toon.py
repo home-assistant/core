@@ -4,17 +4,17 @@ Toon van Eneco Support.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/toon/
 """
-import logging
 from datetime import datetime, timedelta
+import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['toonlib==1.0.2']
+REQUIREMENTS = ['toonlib==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +62,8 @@ def setup(hass, config):
 class ToonDataStore:
     """An object to store the Toon data."""
 
-    def __init__(self, username, password, gas=DEFAULT_GAS,
-                 solar=DEFAULT_SOLAR):
+    def __init__(
+            self, username, password, gas=DEFAULT_GAS, solar=DEFAULT_SOLAR):
         """Initialize Toon."""
         from toonlib import Toon
 

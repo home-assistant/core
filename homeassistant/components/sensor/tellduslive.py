@@ -6,10 +6,12 @@ https://home-assistant.io/components/sensor.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components import sensor, tellduslive
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +29,8 @@ SENSOR_TYPE_DEW_POINT = 'dewp'
 SENSOR_TYPE_BAROMETRIC_PRESSURE = 'barpress'
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, None,
-                              DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TYPE_TEMPERATURE:
+    ['Temperature', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_HUMIDITY: ['Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
     SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm/h', 'mdi:water', None],
     SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', 'mdi:water', None],
@@ -39,16 +41,31 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WATT: ['Power', 'W', '', None],
     SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT:
-        ['Dew Point', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    ['Dew Point', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_BAROMETRIC_PRESSURE: ['Barometric Pressure', 'kPa', '', None],
 }
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tellstick sensors."""
-    if discovery_info is None:
-        return
-    add_entities(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)
+    """Old way of setting up TelldusLive.
+
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up tellduslive sensors dynamically."""
+    async def async_discover_sensor(device_id):
+        """Discover and add a discovered sensor."""
+        client = hass.data[tellduslive.DOMAIN]
+        async_add_entities([TelldusLiveSensor(client, device_id)])
+
+    async_dispatcher_connect(
+        hass,
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(
+            sensor.DOMAIN, tellduslive.DOMAIN), async_discover_sensor)
 
 
 class TelldusLiveSensor(TelldusLiveEntity):
@@ -87,9 +104,7 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(
-            super().name,
-            self.quantity_name or '')
+        return '{} {}'.format(super().name, self.quantity_name or '').strip()
 
     @property
     def state(self):
@@ -127,3 +142,8 @@ class TelldusLiveSensor(TelldusLiveEntity):
         """Return the device class."""
         return SENSOR_TYPES[self._type][3] \
             if self._type in SENSOR_TYPES else None
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return "{}-{}-{}".format(*self._id)

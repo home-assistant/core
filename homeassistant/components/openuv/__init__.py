@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/openuv/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -13,15 +12,14 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_BINARY_SENSORS, CONF_ELEVATION,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_SENSORS)
+    CONF_SENSORS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
@@ -93,8 +91,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_BINARY_SENSORS, default={}):
             BINARY_SENSOR_SCHEMA,
         vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -109,26 +105,29 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    latitude = conf.get(CONF_LATITUDE)
-    longitude = conf.get(CONF_LONGITUDE)
 
-    identifier = '{0}, {1}'.format(latitude, longitude)
+    identifier = '{0}, {1}'.format(
+        conf.get(CONF_LATITUDE, hass.config.latitude),
+        conf.get(CONF_LONGITUDE, hass.config.longitude))
     if identifier in configured_instances(hass):
         return True
 
+    data = {
+        CONF_API_KEY: conf[CONF_API_KEY],
+        CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
+        CONF_SENSORS: conf[CONF_SENSORS],
+    }
+
+    if CONF_LATITUDE in conf:
+        data[CONF_LATITUDE] = conf[CONF_LATITUDE]
+    if CONF_LONGITUDE in conf:
+        data[CONF_LONGITUDE] = conf[CONF_LONGITUDE]
+    if CONF_ELEVATION in conf:
+        data[CONF_ELEVATION] = conf[CONF_ELEVATION]
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data={
-                CONF_API_KEY: conf[CONF_API_KEY],
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_ELEVATION: conf.get(CONF_ELEVATION),
-                CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
-                CONF_SENSORS: conf[CONF_SENSORS],
-                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
-            }))
+            DOMAIN, context={'source': SOURCE_IMPORT}, data=data))
 
     return True
 
@@ -143,10 +142,11 @@ async def async_setup_entry(hass, config_entry):
         openuv = OpenUV(
             Client(
                 config_entry.data[CONF_API_KEY],
-                config_entry.data[CONF_LATITUDE],
-                config_entry.data[CONF_LONGITUDE],
+                config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+                config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
                 websession,
-                altitude=config_entry.data[CONF_ELEVATION]),
+                altitude=config_entry.data.get(
+                    CONF_ELEVATION, hass.config.elevation)),
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
@@ -158,20 +158,17 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady
 
     for component in ('binary_sensor', 'sensor'):
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-            config_entry, component))
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, component))
 
-    async def refresh(event_time):
+    async def update_data(service):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER][
-        config_entry.entry_id] = async_track_time_interval(
-            hass,
-            refresh,
-            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+    hass.services.async_register(DOMAIN, 'update_data', update_data)
 
     return True
 
@@ -179,10 +176,6 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
-
-    remove_listener = hass.data[DOMAIN][DATA_OPENUV_LISTENER].pop(
-        config_entry.entry_id)
-    remove_listener()
 
     for component in ('binary_sensor', 'sensor'):
         await hass.config_entries.async_forward_entry_unload(
@@ -210,7 +203,7 @@ class OpenUV:
             if data.get('from_time') and data.get('to_time'):
                 self.data[DATA_PROTECTION_WINDOW] = data
             else:
-                _LOGGER.error(
+                _LOGGER.debug(
                     'No valid protection window data for this location')
                 self.data[DATA_PROTECTION_WINDOW] = {}
 

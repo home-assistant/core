@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Kiszolg\u00e1l\u00f3"
+                },
+                "description": "\u00dcres"
+            }
+        }
+    }
+}

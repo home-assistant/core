@@ -42,8 +42,7 @@ class TestSigfoxSensor(unittest.TestCase):
         with requests_mock.Mocker() as mock_req:
             url = re.compile(API_URL + 'devicetypes')
             mock_req.get(url, text='{}', status_code=401)
-            self.assertTrue(
-                setup_component(self.hass, 'sensor', VALID_CONFIG))
+            assert setup_component(self.hass, 'sensor', VALID_CONFIG)
         assert len(self.hass.states.entity_ids()) == 0
 
     def test_valid_credentials(self):
@@ -59,8 +58,7 @@ class TestSigfoxSensor(unittest.TestCase):
             url3 = re.compile(API_URL + 'devices/fake_id/messages*')
             mock_req.get(url3, text=VALID_MESSAGE)
 
-            self.assertTrue(
-                setup_component(self.hass, 'sensor', VALID_CONFIG))
+            assert setup_component(self.hass, 'sensor', VALID_CONFIG)
 
             assert len(self.hass.states.entity_ids()) == 1
             state = self.hass.states.get('sensor.sigfox_fake_id')

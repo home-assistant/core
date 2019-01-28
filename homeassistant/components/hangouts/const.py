@@ -39,6 +39,7 @@ CONF_CONVERSATION_NAME = 'name'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_UPDATE = 'update'
+SERVICE_RECONNECT = 'reconnect'
 
 
 TARGETS_SCHEMA = vol.All(

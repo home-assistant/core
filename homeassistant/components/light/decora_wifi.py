@@ -40,6 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from decora_wifi import DecoraWiFiSession
     from decora_wifi.models.person import Person
     from decora_wifi.models.residential_account import ResidentialAccount
+    from decora_wifi.models.residence import Residence
 
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -60,8 +61,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         perms = session.user.get_residential_permissions()
         all_switches = []
         for permission in perms:
-            acct = ResidentialAccount(session, permission.residentialAccountId)
-            for residence in acct.get_residences():
+            if permission.residentialAccountId is not None:
+                acct = ResidentialAccount(
+                    session, permission.residentialAccountId)
+                for residence in acct.get_residences():
+                    for switch in residence.get_iot_switches():
+                        all_switches.append(switch)
+            elif permission.residenceId is not None:
+                residence = Residence(session, permission.residenceId)
                 for switch in residence.get_iot_switches():
                     all_switches.append(switch)
 

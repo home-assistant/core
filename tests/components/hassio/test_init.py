@@ -5,6 +5,7 @@ from unittest.mock import patch, Mock
 
 import pytest
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio import (
     STORAGE_KEY, async_check_config)
@@ -88,8 +89,7 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
 async def test_setup_api_push_api_data_default(hass, aioclient_mock,
                                                hass_storage):
     """Test setup with API push default data."""
-    with patch.dict(os.environ, MOCK_ENVIRON), \
-            patch('homeassistant.auth.AuthManager.active', return_value=True):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
             'hassio': {}
@@ -106,6 +106,8 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock,
     )
     assert hassio_user is not None
     assert hassio_user.system_generated
+    assert len(hassio_user.groups) == 1
+    assert hassio_user.groups[0].id == GROUP_ID_ADMIN
     for token in hassio_user.refresh_tokens.values():
         if token.token == refresh_token:
             break
@@ -113,9 +115,20 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock,
         assert False, 'refresh token not found'
 
 
-async def test_setup_api_push_api_data_no_auth(hass, aioclient_mock,
-                                               hass_storage):
+async def test_setup_adds_admin_group_to_user(hass, aioclient_mock,
+                                              hass_storage):
     """Test setup with API push default data."""
+    # Create user without admin
+    user = await hass.auth.async_create_system_user('Hass.io')
+    assert not user.is_admin
+    await hass.auth.async_create_refresh_token(user)
+
+    hass_storage[STORAGE_KEY] = {
+        'data': {'hassio_user': user.id},
+        'key': STORAGE_KEY,
+        'version': 1
+    }
+
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
@@ -123,11 +136,7 @@ async def test_setup_api_push_api_data_no_auth(hass, aioclient_mock,
         })
         assert result
 
-    assert aioclient_mock.call_count == 3
-    assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] is None
-    assert aioclient_mock.mock_calls[1][2]['port'] == 8123
-    assert aioclient_mock.mock_calls[1][2]['refresh_token'] is None
+    assert user.is_admin
 
 
 async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
@@ -141,8 +150,7 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
             'hassio_user': user.id
         }
     }
-    with patch.dict(os.environ, MOCK_ENVIRON), \
-            patch('homeassistant.auth.AuthManager.active', return_value=True):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
             'hassio': {}

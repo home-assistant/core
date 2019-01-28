@@ -39,8 +39,37 @@ CONF_MODEL = 'model'
 CONF_TRANSITION = 'transition'
 CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
+CONF_CUSTOM_EFFECTS = 'custom_effects'
+CONF_FLOW_PARAMS = 'flow_params'
 
 DATA_KEY = 'light.yeelight'
+
+ATTR_MODE = 'mode'
+ATTR_COUNT = 'count'
+ATTR_TRANSITIONS = 'transitions'
+
+YEELIGHT_RGB_TRANSITION = 'RGBTransition'
+YEELIGHT_HSV_TRANSACTION = 'HSVTransition'
+YEELIGHT_TEMPERATURE_TRANSACTION = 'TemperatureTransition'
+YEELIGHT_SLEEP_TRANSACTION = 'SleepTransition'
+
+YEELIGHT_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+YEELIGHT_FLOW_TRANSITION_SCHEMA = {
+    vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    vol.Required(ATTR_TRANSITIONS): [{
+        vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION):
+            vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION):
+            vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Exclusive(YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION):
+            vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Exclusive(YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION):
+            vol.All(cv.ensure_list, [cv.positive_int]),
+    }]
+}
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -48,6 +77,10 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
     vol.Optional(CONF_MODEL): cv.string,
+    vol.Optional(CONF_CUSTOM_EFFECTS): [{
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA
+    }]
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -76,6 +109,7 @@ EFFECT_CHRISTMAS = "Christmas"
 EFFECT_RGB = "RGB"
 EFFECT_RANDOM_LOOP = "Random Loop"
 EFFECT_FAST_RANDOM_LOOP = "Fast Random Loop"
+EFFECT_LSD = "LSD"
 EFFECT_SLOWDOWN = "Slowdown"
 EFFECT_WHATSAPP = "WhatsApp"
 EFFECT_FACEBOOK = "Facebook"
@@ -94,6 +128,7 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_RGB,
     EFFECT_RANDOM_LOOP,
     EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_LSD,
     EFFECT_SLOWDOWN,
     EFFECT_WHATSAPP,
     EFFECT_FACEBOOK,
@@ -101,11 +136,7 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_STOP]
 
 SERVICE_SET_MODE = 'yeelight_set_mode'
-ATTR_MODE = 'mode'
-
-YEELIGHT_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
+SERVICE_START_FLOW = 'yeelight_start_flow'
 
 
 def _cmd(func):
@@ -119,6 +150,19 @@ def _cmd(func):
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _wrap
+
+
+def _parse_custom_effects(effects_config):
+    effects = {}
+    for config in effects_config:
+        params = config[CONF_FLOW_PARAMS]
+        transitions = YeelightLight.transitions_config_parser(
+            params[ATTR_TRANSITIONS])
+
+        effects[config[CONF_NAME]] = \
+            {ATTR_COUNT: params[ATTR_COUNT], ATTR_TRANSITIONS: transitions}
+
+    return effects
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -149,8 +193,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = device_config[CONF_NAME]
             _LOGGER.debug("Adding configured %s", name)
 
+            custom_effects = _parse_custom_effects(config[CONF_CUSTOM_EFFECTS])
             device = {'name': name, 'ipaddr': ipaddr}
-            light = YeelightLight(device, device_config)
+            light = YeelightLight(device, device_config,
+                                  custom_effects=custom_effects)
             lights.append(light)
             hass.data[DATA_KEY][name] = light
 
@@ -161,15 +207,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            target_devices = [dev for dev in hass.data[DATA_KEY].values()
-                              if dev.entity_id in entity_ids]
-        else:
-            target_devices = hass.data[DATA_KEY].values()
+        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                          if dev.entity_id in entity_ids]
 
         for target_device in target_devices:
             if service.service == SERVICE_SET_MODE:
                 target_device.set_mode(**params)
+            elif service.service == SERVICE_START_FLOW:
+                target_device.start_flow(**params)
 
     service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
         vol.Required(ATTR_MODE):
@@ -179,11 +224,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         DOMAIN, SERVICE_SET_MODE, service_handler,
         schema=service_schema_set_mode)
 
+    service_schema_start_flow = YEELIGHT_SERVICE_SCHEMA.extend(
+        YEELIGHT_FLOW_TRANSITION_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, SERVICE_START_FLOW, service_handler,
+        schema=service_schema_start_flow)
+
 
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
-    def __init__(self, device, config):
+    def __init__(self, device, config, custom_effects=None):
         """Initialize the Yeelight light."""
         self.config = config
         self._name = device['name']
@@ -202,6 +254,11 @@ class YeelightLight(Light):
         self._min_mireds = None
         self._max_mireds = None
 
+        if custom_effects:
+            self._custom_effects = custom_effects
+        else:
+            self._custom_effects = {}
+
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
@@ -215,7 +272,7 @@ class YeelightLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return YEELIGHT_EFFECT_LIST
+        return YEELIGHT_EFFECT_LIST + self.custom_effects_names
 
     @property
     def color_temp(self) -> int:
@@ -247,6 +304,16 @@ class YeelightLight(Light):
         """Return maximum supported color temperature."""
         return self._max_mireds
 
+    @property
+    def custom_effects(self):
+        """Return dict with custom effects."""
+        return self._custom_effects
+
+    @property
+    def custom_effects_names(self):
+        """Return list with custom effects names."""
+        return list(self.custom_effects.keys())
+
     def _get_hs_from_properties(self):
         rgb = self._properties.get('rgb', None)
         color_mode = self._properties.get('color_mode', None)
@@ -276,10 +343,13 @@ class YeelightLight(Light):
 
     @property
     def _properties(self) -> dict:
-        return self._bulb.last_properties
+        if self._bulb_device is None:
+            return {}
+        return self._bulb_device.last_properties
 
+    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> 'yeelight.Bulb':
+    def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
         import yeelight
         if self._bulb_device is None:
             try:
@@ -410,39 +480,37 @@ class YeelightLight(Light):
             from yeelight.transitions import (disco, temp, strobe, pulse,
                                               strobe_color, alarm, police,
                                               police2, christmas, rgb,
-                                              randomloop, slowdown)
+                                              randomloop, lsd, slowdown)
             if effect == EFFECT_STOP:
                 self._bulb.stop_flow()
                 return
-            if effect == EFFECT_DISCO:
-                flow = Flow(count=0, transitions=disco())
-            if effect == EFFECT_TEMP:
-                flow = Flow(count=0, transitions=temp())
-            if effect == EFFECT_STROBE:
-                flow = Flow(count=0, transitions=strobe())
-            if effect == EFFECT_STROBE_COLOR:
-                flow = Flow(count=0, transitions=strobe_color())
-            if effect == EFFECT_ALARM:
-                flow = Flow(count=0, transitions=alarm())
-            if effect == EFFECT_POLICE:
-                flow = Flow(count=0, transitions=police())
-            if effect == EFFECT_POLICE2:
-                flow = Flow(count=0, transitions=police2())
-            if effect == EFFECT_CHRISTMAS:
-                flow = Flow(count=0, transitions=christmas())
-            if effect == EFFECT_RGB:
-                flow = Flow(count=0, transitions=rgb())
-            if effect == EFFECT_RANDOM_LOOP:
-                flow = Flow(count=0, transitions=randomloop())
-            if effect == EFFECT_FAST_RANDOM_LOOP:
+
+            effects_map = {
+                EFFECT_DISCO: disco,
+                EFFECT_TEMP: temp,
+                EFFECT_STROBE: strobe,
+                EFFECT_STROBE_COLOR: strobe_color,
+                EFFECT_ALARM: alarm,
+                EFFECT_POLICE: police,
+                EFFECT_POLICE2: police2,
+                EFFECT_CHRISTMAS: christmas,
+                EFFECT_RGB: rgb,
+                EFFECT_RANDOM_LOOP: randomloop,
+                EFFECT_LSD: lsd,
+                EFFECT_SLOWDOWN: slowdown,
+            }
+
+            if effect in self.custom_effects_names:
+                flow = Flow(**self.custom_effects[effect])
+            elif effect in effects_map:
+                flow = Flow(count=0, transitions=effects_map[effect]())
+            elif effect == EFFECT_FAST_RANDOM_LOOP:
                 flow = Flow(count=0, transitions=randomloop(duration=250))
-            if effect == EFFECT_SLOWDOWN:
-                flow = Flow(count=0, transitions=slowdown())
-            if effect == EFFECT_WHATSAPP:
+            elif effect == EFFECT_WHATSAPP:
                 flow = Flow(count=2, transitions=pulse(37, 211, 102))
-            if effect == EFFECT_FACEBOOK:
+            elif effect == EFFECT_FACEBOOK:
                 flow = Flow(count=2, transitions=pulse(59, 89, 152))
-            if effect == EFFECT_TWITTER:
+            elif effect == EFFECT_TWITTER:
                 flow = Flow(count=2, transitions=pulse(0, 172, 237))
 
             try:
@@ -517,3 +585,28 @@ class YeelightLight(Light):
             self.async_schedule_update_ha_state(True)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
+
+    @staticmethod
+    def transitions_config_parser(transitions):
+        """Parse transitions config into initialized objects."""
+        import yeelight
+
+        transition_objects = []
+        for transition_config in transitions:
+            transition, params = list(transition_config.items())[0]
+            transition_objects.append(getattr(yeelight, transition)(*params))
+
+        return transition_objects
+
+    def start_flow(self, transitions, count=0):
+        """Start flow."""
+        import yeelight
+
+        try:
+            flow = yeelight.Flow(
+                count=count,
+                transitions=self.transitions_config_parser(transitions))
+
+            self._bulb.start_flow(flow)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set effect: %s", ex)

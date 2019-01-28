@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.core import State
 from homeassistant.helpers import (intent, config_validation as cv)
+import pytest
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -33,12 +34,12 @@ class TestIntentHandler(unittest.TestCase):
             vol.Required('name'): cv.string,
             })
 
-        self.assertRaises(vol.error.MultipleInvalid,
-                          handler1.async_validate_slots, {})
-        self.assertRaises(vol.error.MultipleInvalid,
-                          handler1.async_validate_slots, {'name': 1})
-        self.assertRaises(vol.error.MultipleInvalid,
-                          handler1.async_validate_slots, {'name': 'kitchen'})
+        with pytest.raises(vol.error.MultipleInvalid):
+            handler1.async_validate_slots({})
+        with pytest.raises(vol.error.MultipleInvalid):
+            handler1.async_validate_slots({'name': 1})
+        with pytest.raises(vol.error.MultipleInvalid):
+            handler1.async_validate_slots({'name': 'kitchen'})
         handler1.async_validate_slots({'name': {'value': 'kitchen'}})
         handler1.async_validate_slots({
             'name': {'value': 'kitchen'},

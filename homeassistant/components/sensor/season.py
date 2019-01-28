@@ -34,6 +34,13 @@ HEMISPHERE_SEASON_SWAP = {STATE_WINTER: STATE_SUMMER,
                           STATE_AUTUMN: STATE_SPRING,
                           STATE_SUMMER: STATE_WINTER}
 
+SEASON_ICONS = {
+    STATE_SPRING: 'mdi:flower',
+    STATE_SUMMER: 'mdi:sunglasses',
+    STATE_AUTUMN: 'mdi:leaf',
+    STATE_WINTER: 'mdi:snowflake'
+}
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)
@@ -115,6 +122,11 @@ class Season(Entity):
     def state(self):
         """Return the current season."""
         return self.season
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SEASON_ICONS.get(self.season, 'mdi:cloud')
 
     def update(self):
         """Update season."""

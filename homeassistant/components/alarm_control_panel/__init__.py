@@ -21,11 +21,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
+FORMAT_TEXT = 'text'
+FORMAT_NUMBER = 'number'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ALARM_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
 

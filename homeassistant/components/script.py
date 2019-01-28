@@ -14,7 +14,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS)
+    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS,
+    EVENT_SCRIPT_STARTED, ATTR_NAME)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -44,7 +45,7 @@ SCRIPT_ENTRY_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({cv.slug: SCRIPT_ENTRY_SCHEMA})
+    DOMAIN: cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA)
 }, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
@@ -170,8 +171,14 @@ class ScriptEntity(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the script on."""
+        context = kwargs.get('context')
+        self.async_set_context(context)
+        self.hass.bus.async_fire(EVENT_SCRIPT_STARTED, {
+            ATTR_NAME: self.script.name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }, context=context)
         await self.script.async_run(
-            kwargs.get(ATTR_VARIABLES), kwargs.get('context'))
+            kwargs.get(ATTR_VARIABLES), context)
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

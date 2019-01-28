@@ -2,6 +2,9 @@
 import json
 import logging
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
 import homeassistant.components.snips as snips
@@ -452,12 +455,11 @@ async def test_snips_say_invalid_config(hass, caplog):
                                snips.SERVICE_SCHEMA_SAY)
 
     data = {'text': 'Hello', 'badKey': 'boo'}
-    await hass.services.async_call('snips', 'say', data)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call('snips', 'say', data)
     await hass.async_block_till_done()
 
     assert len(calls) == 0
-    assert 'ERROR' in caplog.text
-    assert 'Invalid service data' in caplog.text
 
 
 async def test_snips_say_action_invalid(hass, caplog):
@@ -466,12 +468,12 @@ async def test_snips_say_action_invalid(hass, caplog):
                                snips.SERVICE_SCHEMA_SAY_ACTION)
 
     data = {'text': 'Hello', 'can_be_enqueued': 'notabool'}
-    await hass.services.async_call('snips', 'say_action', data)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call('snips', 'say_action', data)
     await hass.async_block_till_done()
 
     assert len(calls) == 0
-    assert 'ERROR' in caplog.text
-    assert 'Invalid service data' in caplog.text
 
 
 async def test_snips_feedback_on(hass, caplog):
@@ -510,7 +512,8 @@ async def test_snips_feedback_config(hass, caplog):
                                snips.SERVICE_SCHEMA_FEEDBACK)
 
     data = {'site_id': 'remote', 'test': 'test'}
-    await hass.services.async_call('snips', 'feedback_on', data)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call('snips', 'feedback_on', data)
     await hass.async_block_till_done()
 
     assert len(calls) == 0

@@ -22,9 +22,10 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+# https://github.com/quandyfactory/dicttoxml/issues/60
 logging.getLogger('dicttoxml').setLevel(logging.WARNING)
 
-REQUIREMENTS = ['huawei-lte-api==1.0.16']
+REQUIREMENTS = ['huawei-lte-api==1.1.3']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -50,6 +51,14 @@ class RouterData:
     traffic_statistics = attr.ib(init=False, factory=dict)
     wlan_host_list = attr.ib(init=False, factory=dict)
 
+    _subscriptions = attr.ib(init=False, factory=set)
+
+    def __attrs_post_init__(self) -> None:
+        """Fetch device information once, for serial number in @unique_ids."""
+        self.subscribe("device_information")
+        self._update()
+        self.unsubscribe("device_information")
+
     def __getitem__(self, path: str):
         """
         Get value corresponding to a dotted path.
@@ -65,17 +74,34 @@ class RouterData:
             raise KeyError from err
         return reduce(operator.getitem, rest, data)
 
+    def subscribe(self, path: str) -> None:
+        """Subscribe to given router data entries."""
+        self._subscriptions.add(path.split(".")[0])
+
+    def unsubscribe(self, path: str) -> None:
+        """Unsubscribe from given router data entries."""
+        self._subscriptions.discard(path.split(".")[0])
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Call API to update data."""
-        self.device_information = self.client.device.information()
-        _LOGGER.debug("device_information=%s", self.device_information)
-        self.device_signal = self.client.device.signal()
-        _LOGGER.debug("device_signal=%s", self.device_signal)
-        self.traffic_statistics = self.client.monitoring.traffic_statistics()
-        _LOGGER.debug("traffic_statistics=%s", self.traffic_statistics)
-        self.wlan_host_list = self.client.wlan.host_list()
-        _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)
+        self._update()
+
+    def _update(self) -> None:
+        debugging = _LOGGER.isEnabledFor(logging.DEBUG)
+        if debugging or "device_information" in self._subscriptions:
+            self.device_information = self.client.device.information()
+            _LOGGER.debug("device_information=%s", self.device_information)
+        if debugging or "device_signal" in self._subscriptions:
+            self.device_signal = self.client.device.signal()
+            _LOGGER.debug("device_signal=%s", self.device_signal)
+        if debugging or "traffic_statistics" in self._subscriptions:
+            self.traffic_statistics = \
+                self.client.monitoring.traffic_statistics()
+            _LOGGER.debug("traffic_statistics=%s", self.traffic_statistics)
+        if debugging or "wlan_host_list" in self._subscriptions:
+            self.wlan_host_list = self.client.wlan.host_list()
+            _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)
 
 
 @attr.s
@@ -120,7 +146,6 @@ def _setup_lte(hass, lte_config) -> None:
     client = Client(connection)
 
     data = RouterData(client)
-    data.update()
     hass.data[DATA_KEY].data[url] = data
 
     def cleanup(event):

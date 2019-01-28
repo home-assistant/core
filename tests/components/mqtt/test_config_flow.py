@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -119,7 +119,7 @@ async def test_hassio_confirm(hass, mock_try_connection,
         'mqtt',
         data={
             'addon': 'Mock Addon',
-            'broker': 'mock-broker',
+            'host': 'mock-broker',
             'port': 1883,
             'username': 'mock-user',
             'password': 'mock-pass',

@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['aioftp==0.10.1']
+REQUIREMENTS = ['aioftp==0.12.0']
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +144,9 @@ class YiCamera(Camera):
         await stream.open_camera(
             self._last_url, extra_cmd=self._extra_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()

@@ -3,6 +3,9 @@ import unittest
 from unittest.mock import patch
 import asyncio
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.setup import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
@@ -43,7 +46,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 'dvd' == state.attributes.get('source')
 
-        common.select_source(self.hass, None, entity_id)
+        with pytest.raises(vol.Invalid):
+            common.select_source(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 'dvd' == state.attributes.get('source')
@@ -72,7 +76,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 1.0 == state.attributes.get('volume_level')
 
-        common.set_volume_level(self.hass, None, entity_id)
+        with pytest.raises(vol.Invalid):
+            common.set_volume_level(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 1.0 == state.attributes.get('volume_level')
@@ -201,7 +206,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
                     state.attributes.get('supported_features'))
         assert state.attributes.get('media_content_id') is not None
 
-        common.play_media(self.hass, None, 'some_id', ent_id)
+        with pytest.raises(vol.Invalid):
+            common.play_media(self.hass, None, 'some_id', ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
@@ -216,7 +222,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 'some_id' == state.attributes.get('media_content_id')
 
         assert not mock_seek.called
-        common.media_seek(self.hass, None, ent_id)
+        with pytest.raises(vol.Invalid):
+            common.media_seek(self.hass, None, ent_id)
         self.hass.block_till_done()
         assert not mock_seek.called
         common.media_seek(self.hass, 100, ent_id)

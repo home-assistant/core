@@ -29,12 +29,12 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
         mock_req.get('http://localhost:8085/data.json',
                      text=load_fixture('openhardwaremonitor.json'))
 
-        self.assertTrue(setup_component(self.hass, 'sensor', self.config))
+        assert setup_component(self.hass, 'sensor', self.config)
         entities = self.hass.states.async_entity_ids('sensor')
-        self.assertEqual(len(entities), 38)
+        assert len(entities) == 38
 
         state = self.hass.states.get(
-            'sensor.testpc_intel_core_i77700_clocks_bus_speed')
+            'sensor.test_pc_intel_core_i7_7700_clocks_bus_speed')
 
-        self.assertIsNot(state, None)
-        self.assertEqual(state.state, '100')
+        assert state is not None
+        assert state.state == '100'

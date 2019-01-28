@@ -3,6 +3,7 @@ Support for displaying IPs banned by fail2ban.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
+
 """
 import os
 import logging
@@ -25,6 +26,7 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
+
 SCAN_INTERVAL = timedelta(seconds=120)
 DEFAULT_UNITS = 'ip'
 
@@ -127,7 +129,6 @@ class BanLogParser:
         """Initialize the parser."""
         self.log_file = log_file
         self.data = dict()
-        self.ip_regex = dict()
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""

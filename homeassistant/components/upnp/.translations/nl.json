@@ -1,11 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP / IGD is al geconfigureerd",
-            "no_devices_discovered": "Geen UPnP / IGD's ontdekt",
-            "no_sensors_or_port_mapping": "Schakel ten minste sensoren of poorttoewijzing in"
+            "already_configured": "UPnP/IGD is al geconfigureerd",
+            "incomplete_device": "Onvolledig UPnP-apparaat negeren",
+            "no_devices_discovered": "Geen UPnP'/IGD's ontdekt",
+            "no_devices_found": "Geen UPnP/IGD apparaten gevonden op het netwerk.",
+            "no_sensors_or_port_mapping": "Schakel ten minste sensoren of poorttoewijzing in",
+            "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van UPnP/IGD nodig."
         },
         "step": {
+            "confirm": {
+                "description": "Wilt u UPnP/IGD instellen?",
+                "title": "UPnP/IGD"
+            },
             "init": {
                 "title": "UPnP/IGD"
             },
@@ -18,6 +25,6 @@
                 "title": "Configuratiemogelijkheden voor de UPnP/IGD"
             }
         },
-        "title": "UPnP / IGD"
+        "title": "UPnP/IGD"
     }
 }

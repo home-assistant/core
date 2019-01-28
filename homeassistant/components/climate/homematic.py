@@ -7,17 +7,16 @@ https://home-assistant.io/components/climate.homematic/
 import logging
 
 from homeassistant.components.climate import (
-    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
+    STATE_AUTO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.homematic import (
     ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice)
-from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['homematic']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_COMFORT = 'comfort'
 STATE_LOWERING = 'lowering'
@@ -41,7 +40,7 @@ HM_HUMI_MAP = [
 ]
 
 HM_CONTROL_MODE = 'CONTROL_MODE'
-HM_IP_CONTROL_MODE = 'SET_POINT_MODE'
+HMIP_CONTROL_MODE = 'SET_POINT_MODE'
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
@@ -78,21 +77,17 @@ class HMThermostat(HMDevice, ClimateDevice):
         if HM_CONTROL_MODE not in self._data:
             return None
 
-        set_point_mode = self._data.get('SET_POINT_MODE', -1)
-        control_mode = self._data.get('CONTROL_MODE', -1)
-        boost_mode = self._data.get('BOOST_MODE', False)
-
         # boost mode is active
-        if boost_mode:
+        if self._data.get('BOOST_MODE', False):
             return STATE_BOOST
 
-        # HM ip etrv 2 uses the set_point_mode to say if its
+        # HmIP uses the set_point_mode to say if its
         # auto or manual
-        if not set_point_mode == -1:
-            code = set_point_mode
+        if HMIP_CONTROL_MODE in self._data:
+            code = self._data[HMIP_CONTROL_MODE]
         # Other devices use the control_mode
         else:
-            code = control_mode
+            code = self._data['CONTROL_MODE']
 
         # get the name of the mode
         name = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][code]
@@ -101,12 +96,15 @@ class HMThermostat(HMDevice, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        op_list = []
+        # HMIP use set_point_mode for operation
+        if HMIP_CONTROL_MODE in self._data:
+            return [STATE_MANUAL, STATE_AUTO, STATE_BOOST]
 
+        # HM
+        op_list = []
         for mode in self._hmdevice.ACTIONNODE:
             if mode in HM_STATE_MAP:
                 op_list.append(HM_STATE_MAP.get(mode))
-
         return op_list
 
     @property
@@ -157,11 +155,11 @@ class HMThermostat(HMDevice, ClimateDevice):
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
         self._state = next(iter(self._hmdevice.WRITENODE.keys()))
-        self._data[self._state] = STATE_UNKNOWN
+        self._data[self._state] = None
 
         if HM_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE or \
-                HM_IP_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
-            self._data[HM_CONTROL_MODE] = STATE_UNKNOWN
+                HMIP_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
+            self._data[HM_CONTROL_MODE] = None
 
         for node in self._hmdevice.SENSORNODE.keys():
-            self._data[node] = STATE_UNKNOWN
+            self._data[node] = None

@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     data = hass.data[BLINK_DATA]
     devs = []
-    for camera in data.sync.cameras:
+    for camera in data.cameras:
         for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
             devs.append(BlinkSensor(data, camera, sensor_type))
 
@@ -39,11 +39,14 @@ class BlinkSensor(Entity):
         self._camera_name = name
         self._type = sensor_type
         self.data = data
-        self._camera = data.sync.cameras[camera]
+        self._camera = data.cameras[camera]
         self._state = None
         self._unit_of_measurement = units
         self._icon = icon
         self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._sensor_key = self._type
+        if self._type == 'temperature':
+            self._sensor_key = 'temperature_calibrated'
 
     @property
     def name(self):
@@ -74,9 +77,9 @@ class BlinkSensor(Entity):
         """Retrieve sensor data from the camera."""
         self.data.refresh()
         try:
-            self._state = self._camera.attributes[self._type]
+            self._state = self._camera.attributes[self._sensor_key]
         except KeyError:
             self._state = None
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?",
-                self._type)
+                self._sensor_key)
