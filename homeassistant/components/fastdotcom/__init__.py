@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from homeassistant.helpers.event import async_track_time_interval
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_UPDATE_INTERVAL
@@ -67,6 +68,7 @@ class SpeedtestData:
         self._hass = hass
         if not manual:
             self.update = Throttle(interval)(self._update)
+            async_track_time_interval(self._hass, self.update, interval)
         else:
             self.update = self._update
 
