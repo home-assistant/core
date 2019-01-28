@@ -7,8 +7,6 @@ https://home-assistant.io/components/zha/
 import asyncio
 import logging
 
-from homeassistant.util import slugify
-
 from .const import (
     DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE, RadioType)
@@ -143,32 +141,15 @@ def convert_ieee(ieee_str):
 
 def construct_unique_id(cluster):
     """Construct a unique id from a cluster."""
-    ieee = cluster.endpoint.device.ieee
-    ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
-    manufacturer = cluster.endpoint.manufacturer
-    model = cluster.endpoint.model
-    unique_id = None
-    if manufacturer and model is not None:
-        unique_id = "{}_{}_{}_{}_{}".format(
-            slugify(manufacturer),
-            slugify(model),
-            ieeetail,
-            cluster.endpoint.endpoint_id,
-            cluster.cluster_id,
-        )
-    else:
-        unique_id = "zha_{}_{}_{}".format(
-            ieeetail,
-            cluster.endpoint.endpoint_id,
-            cluster.cluster_id,
-        )
-    return unique_id
+    return "{}_0x{:04x}:{}:{}".format(
+        cluster.endpoint.device.ieee,
+        cluster.endpoint.device.nwk,
+        cluster.endpoint.endpoint_id,
+        cluster.cluster_id
+    )
 
 
 def get_attr_id_by_name(cluster, attr_name):
     """Get the attribute id for a cluster attribute by its name."""
-    cluster_attributes = {}
-    # pylint: disable=W0612
-    for attrid, (attrname, datatype) in cluster.attributes.items():
-        cluster_attributes[attrname] = attrid
-    return cluster_attributes[attr_name]
+    return next((attrid for attrid, (attrname, datatype) in
+                 cluster.attributes.items() if attr_name == attrname), None)
