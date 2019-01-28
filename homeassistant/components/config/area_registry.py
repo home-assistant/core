@@ -2,7 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import async_response
+from homeassistant.components.websocket_api.decorators import (
+    async_response, require_admin)
 from homeassistant.core import callback
 from homeassistant.helpers.area_registry import async_get_registry
 
@@ -51,6 +52,7 @@ async def async_setup(hass):
     return True
 
 
+@require_admin
 @async_response
 async def websocket_create_area(hass, connection, msg):
     """Create area command."""
@@ -67,6 +69,7 @@ async def websocket_create_area(hass, connection, msg):
         ))
 
 
+@require_admin
 @async_response
 async def websocket_delete_area(hass, connection, msg):
     """Delete area command."""
@@ -96,6 +99,7 @@ async def websocket_list_areas(hass, connection, msg):
     ))
 
 
+@require_admin
 @async_response
 async def websocket_update_area(hass, connection, msg):
     """Handle update area websocket command."""
