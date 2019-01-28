@@ -95,11 +95,14 @@ async def async_setup_platform(
         config_sensors = {s.name: [] for s in sensor_def}
 
     # Prepare all HASS sensor entities
+
+    smaid = ''.join(['{:02x}'.format(int(v))
+                     for v in config[CONF_HOST].split('.')])
     hass_sensors = []
     used_sensors = []
     for name, attr in config_sensors.items():
         sub_sensors = [sensor_def[s] for s in attr]
-        hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
+        hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors, smaid))
         used_sensors.append(name)
         used_sensors.extend(attr)
 
@@ -132,7 +135,10 @@ async def async_setup_platform(
             backoff -= 1
             return
 
-        values = await sma.read(used_sensors)
+        try:
+            values = await sma.read(used_sensors)
+        except TypeError:
+            values = None
         if not values:
             try:
                 backoff = [1, 1, 1, 6, 30][backoff_step]
@@ -157,10 +163,12 @@ async def async_setup_platform(
 class SMAsensor(Entity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, pysma_sensor, sub_sensors):
+    def __init__(self, pysma_sensor, sub_sensors, id_host):
         """Initialize the sensor."""
         self._sensor = pysma_sensor
         self._sub_sensors = sub_sensors
+        self._unique_id = "sma-{}-{}-{}".format(
+            id_host, pysma_sensor.key, pysma_sensor.name)
 
         self._attr = {s.name: "" for s in sub_sensors}
         self._state = self._sensor.value
@@ -209,4 +217,4 @@ class SMAsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "sma-{}-{}".format(self._sensor.key, self._sensor.name)
+        return self._unique_id
