@@ -130,19 +130,20 @@ class LinkySensor(Entity):
         self._attributes["offpeak_hours"] = sum(
             [0
             if any([between(h[0], h[1], d[TIME])
-            for h in self._peak_hours])
+                for h in self._peak_hours])
             else d[CONSUMPTION]
-            for d in self._lk.halfhourly]) / 2
+                for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
-        self._attributes["peak_offpeak_percent"] = (
-            self._attributes["peak_hours"] * 100) /
-            (self._attributes["peak_hours"] +
+        self._attributes["peak_offpeak_percent"] = (self._attributes
+                                                    ["peak_hours"]
+                                                    * 100) /
+        (self._attributes["peak_hours"] +
              self._attributes["offpeak_hours"])
         self._attributes["daily_cost"] = self
         ._peak_hours_cost *
-            self._attributes["peak_hours"] +
-            self._offpeak_hours_cost *
-            self._attributes["offpeak_hours"]
+        self._attributes["peak_hours"] +
+        self._offpeak_hours_cost *
+        self._attributes["offpeak_hours"]
         self._attributes["monthly_evolution"] =
         (1 - ((self._lk.monthly[0][CONSUMPTION]) /
               (self._lk.compare_month))) * 100
@@ -151,7 +152,7 @@ class LinkySensor(Entity):
 
 
 def hour_to_min(hour):
-    return sum(map(lambda x, y: int(x)*y, hour.split(":"),[60,1]))
+    return sum(map(lambda x, y: int(x)*y, hour.split(":"), [60,1]))
 
 
 def between(start, end, hour):
