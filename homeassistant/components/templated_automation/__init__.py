@@ -18,6 +18,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_SOURCE, STATE_OFF, \
     SERVICE_TURN_OFF, SERVICE_TURN_ON, ATTR_ENTITY_ID, STATE_ON
 from homeassistant.helpers.event import async_track_state_change
+from setup import PROJECT_PACKAGE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,5 +137,5 @@ class TemplatedAutomation:
             _LOGGER.info('Ignoring next call on %s', entity_id)
             self._ignore_next_call[entity_id] = True
             await self._hass.services.async_call(
-                'homeassistant', service, {ATTR_ENTITY_ID: target}
+                PROJECT_PACKAGE_NAME, service, {ATTR_ENTITY_ID: target}
             )
