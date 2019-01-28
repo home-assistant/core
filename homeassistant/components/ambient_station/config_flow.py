@@ -68,7 +68,7 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
         # Although the application key identifies the config entry, it's way
         # too long to show nicely in the UI. Even though an account may have
         # multiple Ambient devices, we use the first one as the config entry
-        # title.
+        # title:
         print(devices[0])
         name = devices[0]['info']['name']
         location = devices[0]['info']['location']
