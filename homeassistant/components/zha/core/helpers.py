@@ -141,8 +141,7 @@ def convert_ieee(ieee_str):
 
 def construct_unique_id(cluster):
     """Construct a unique id from a cluster."""
-    return "{}_0x{:04x}:{}:{}".format(
-        cluster.endpoint.device.ieee,
+    return "0x{:04x}:{}:{}".format(
         cluster.endpoint.device.nwk,
         cluster.endpoint.endpoint_id,
         cluster.cluster_id
