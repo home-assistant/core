@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # pylint: disable=no-member
     except recollect_waste.RecollectWasteException as ex:
         _LOGGER.error('Recollect Waste platform error. %s', ex)
-        return False
+        return
 
     add_entities([RecollectWasteSensor(
         config.get(CONF_NAME),
