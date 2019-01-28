@@ -72,7 +72,7 @@ class CommandLineAuthProvider(AuthProvider):
                 stdout=asyncio.subprocess.PIPE
                 if self.config[CONF_META] else None,
             )
-            stdout = (await process.communicate())[0]
+            stdout, _ = (await process.communicate())
         except OSError as err:
             # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating %r: %s",
