@@ -64,18 +64,11 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
             CharacteristicsTypes.BATTERY_LEVEL,
         ]
 
-    def update_characteristics(self, characteristics):
-        """Synchronise the Alarm Control Panel state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_security_system_state_current(self, value):
+        self._state = CURRENT_STATE_MAP[value]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "security-system-state.current":
-                self._state = CURRENT_STATE_MAP[characteristic['value']]
-            elif ctype == "battery-level":
-                self._battery_level = characteristic['value']
+    def _update_battery_level(self, value):
+        self._battery_level = value
 
     @property
     def icon(self):

@@ -85,18 +85,14 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     def _setup_name(self, char):
         self._name = char['value']
 
-    def update_characteristics(self, characteristics):
-        """Synchronise the Cover state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_door_state_current(self, value):
+        self._state = CURRENT_GARAGE_STATE_MAP[value]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "door-state.current":
-                self._state = CURRENT_GARAGE_STATE_MAP[characteristic['value']]
-            elif ctype == "obstruction-detected":
-                self._obstruction_detected = characteristic['value']
+    def _update_obstruction_detected(self, value):
+        self._obstruction_detected = value
+
+    def _update_name(self, value):
+        self._name = value
 
     @property
     def available(self):
@@ -187,31 +183,26 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def _setup_name(self, char):
         self._name = char['value']
 
-    def update_characteristics(self, characteristics):
-        """Synchronise the Cover state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_position_state(self, value):
+        self._state = CURRENT_WINDOW_STATE_MAP[value]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "position.state":
-                if 'value' in characteristic:
-                    self._state = \
-                        CURRENT_WINDOW_STATE_MAP[characteristic['value']]
-            elif ctype == "position.current":
-                self._position = characteristic['value']
-            elif ctype == "position.hold":
-                if 'value' in characteristic:
-                    self._hold = characteristic['value']
-            elif ctype == "vertical-tilt.current":
-                if characteristic['value'] is not None:
-                    self._tilt_position = characteristic['value']
-            elif ctype == "horizontal-tilt.current":
-                if characteristic['value'] is not None:
-                    self._tilt_position = characteristic['value']
-            elif ctype == "obstruction-detected":
-                self._obstruction_detected = characteristic['value']
+    def _update_position_current(self, value):
+        self._position = value
+
+    def _update_position_hold(self, value):
+        self._hold = value
+
+    def _update_vertical_tilt_current(self, value):
+        self._tilt_position = value
+
+    def _update_horizontal_tilt_current(self, value):
+        self._tilt_position = value
+
+    def _update_obstruction_detected(self, value):
+        self._obstruction_detected = value
+
+    def _update_name(self, value):
+        self._hold = value
 
     @property
     def supported_features(self):

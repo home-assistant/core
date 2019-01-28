@@ -247,7 +247,7 @@ class HomeKitEntity(Entity):
         setup_fn = getattr(self, '_setup_{}'.format(setup_fn_name), None)
         if not setup_fn:
             return
-        # pylint: disable=E1102
+        # pylint: disable=not-callable
         setup_fn(char)
 
     def update(self):
@@ -255,19 +255,23 @@ class HomeKitEntity(Entity):
         # pylint: disable=import-error
         from homekit.exceptions import AccessoryDisconnectedError
 
+        pairing = self._accessory.pairing
+
         try:
-            pairing = self._accessory.pairing
-            data = pairing.list_accessories_and_characteristics()
+            new_values_dict = pairing.get_characteristics(self._chars_to_poll)
         except AccessoryDisconnectedError:
             return
-        for accessory in data:
-            if accessory['aid'] != self._aid:
+
+        for (_, iid), result in new_values_dict.items():
+            if 'value' not in result:
                 continue
-            for service in accessory['services']:
-                if service['iid'] != self._iid:
-                    continue
-                self.update_characteristics(service['characteristics'])
-                break
+            # Callback to update the entity with this characteristic value
+            char_name = escape_characteristic_name(self._char_names[iid])
+            update_fn = getattr(self, '_update_{}'.format(char_name), None)
+            if not update_fn:
+                continue
+            # pylint: disable=not-callable
+            update_fn(result['value'])
 
     @property
     def unique_id(self):
@@ -290,7 +294,7 @@ class HomeKitEntity(Entity):
 
     def update_characteristics(self, characteristics):
         """Synchronise a HomeKit device state with Home Assistant."""
-        raise NotImplementedError
+        pass
 
     def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
