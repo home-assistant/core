@@ -52,7 +52,7 @@ class HomeKitLight(HomeKitEntity, Light):
                 self._features |= SUPPORT_BRIGHTNESS
                 self._brightness = characteristic['value']
             elif ctype == 'color-temperature':
-                self._chars['color_temperature'] = characteristic['iid']
+                self._chars['color-temperature'] = characteristic['iid']
                 self._features |= SUPPORT_COLOR_TEMP
                 self._color_temperature = characteristic['value']
             elif ctype == "hue":

@@ -95,11 +95,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
                 self._name = characteristic['value']
 
     @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._state is not None
@@ -206,7 +201,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                 self._chars['vertical-tilt.target'] = \
                     characteristic['iid']
             elif ctype == "horizontal-tilt.target":
-                self._chars['vertical-tilt.target'] = \
+                self._chars['horizontal-tilt.target'] = \
                     characteristic['iid']
             elif ctype == "obstruction-detected":
                 self._chars['obstruction-detected'] = characteristic['iid']
@@ -215,11 +210,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
                 self._chars['name'] = characteristic['iid']
                 if 'value' in characteristic:
                     self._name = characteristic['value']
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
 
     @property
     def supported_features(self):
