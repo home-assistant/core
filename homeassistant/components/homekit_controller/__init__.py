@@ -254,20 +254,24 @@ class HomeKitEntity(Entity):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
         from homekit.exceptions import AccessoryDisconnectedError
+        from homekit.model.characteristics import CharacteristicsTypes
+
+        pairing = self._accessory.pairing
 
         try:
-            pairing = self._accessory.pairing
-            data = pairing.list_accessories_and_characteristics()
+            new_values_dict = pairing.get_characteristics(self._chars_to_poll)
         except AccessoryDisconnectedError:
             return
-        for accessory in data:
-            if accessory['aid'] != self._aid:
+
+        for (_, iid), result in new_values_dict.items():
+            if 'value' not in result:
                 continue
-            for service in accessory['services']:
-                if service['iid'] != self._iid:
-                    continue
-                self.update_characteristics(service['characteristics'])
-                break
+            ctype = CharacteristicsTypes.get_uuid(
+                'public.hap.characteristic.' + self._char_names[iid])
+            self.update_characteristics([{
+                'type': ctype,
+                'value': result['value'],
+            }])
 
     @property
     def unique_id(self):
