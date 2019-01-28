@@ -1,0 +1,92 @@
+"""
+Support for testing internet speed via Speedtest.net.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/speedtestdotnet/
+"""
+import logging
+from datetime import timedelta
+
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.speedtestdotnet.const import DOMAIN, \
+    DATA_UPDATED, SENSOR_TYPES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, \
+    CONF_UPDATE_INTERVAL
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.util import Throttle
+
+REQUIREMENTS = ['speedtest-cli==2.0.2']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_SERVER_ID = 'server_id'
+CONF_MANUAL = 'manual'
+
+DEFAULT_INTERVAL = timedelta(hours=1)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_SERVER_ID): cv.positive_int,
+        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL):
+            vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+            vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))])
+    })
+}, extra=vol.ALLOW_EXTRA)
+
+
+async def async_setup(hass, config):
+    """Set up the Speedtest.net component."""
+    conf = config[DOMAIN]
+    data = hass.data[DOMAIN] = SpeedtestData(
+        hass,
+        conf[CONF_UPDATE_INTERVAL],
+        conf[CONF_MANUAL],
+        conf.get(CONF_SERVER_ID)
+    )
+
+    def update(call=None):
+        """Service call to manually update the data."""
+        data.update(no_throttle=True)
+
+    hass.services.async_register(DOMAIN, 'speedtest', update)
+
+    hass.async_create_task(
+        async_load_platform(
+            hass, 'sensor', DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+        )
+    )
+
+    return True
+
+
+class SpeedtestData:
+    """Get the latest data from speedtest.net."""
+
+    def __init__(self, hass, interval, manual, server_id):
+        """Initialize the data object."""
+        self.data = None
+        self._hass = hass
+        self._servers = [] if server_id is None else [server_id]
+        if not manual:
+            self.update = Throttle(interval)(self._update)
+        else:
+            self.update = self._update
+
+    def _update(self):
+        """Get the latest data from speedtest.net."""
+        import speedtest
+        _LOGGER.debug("Executing speedtest.net speedtest")
+        speed = speedtest.Speedtest()
+        speed.get_servers(self._servers)
+        speed.get_best_server()
+        speed.download()
+        speed.upload()
+        self.data = speed.results.dict()
+        dispatcher_send(self._hass, DATA_UPDATED)

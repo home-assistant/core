@@ -1,21 +1,19 @@
 """
-Support for Speedtest.net.
+Support for Speedtest.net internet speed testing sensor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.speedtest/
+https://home-assistant.io/components/sensor.speedtestdotnet/
 """
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_change
+from homeassistant.components.speedtestdotnet.const import \
+    DOMAIN as SPEEDTESTDOTNET_DOMAIN, DATA_UPDATED, SENSOR_TYPES
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['speedtest-cli==2.0.2']
+DEPENDENCIES = ['speedtestdotnet']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,52 +25,18 @@ ATTR_SERVER_ID = 'server_id'
 ATTR_SERVER_LATENCY = 'latency'
 ATTR_SERVER_NAME = 'server_name'
 
-CONF_ATTRIBUTION = "Data retrieved from Speedtest by Ookla"
-CONF_SECOND = 'second'
-CONF_MINUTE = 'minute'
-CONF_HOUR = 'hour'
-CONF_SERVER_ID = 'server_id'
-CONF_MANUAL = 'manual'
+ATTRIBUTION = 'Data retrieved from Speedtest.net by Ookla'
 
 ICON = 'mdi:speedometer'
 
-SENSOR_TYPES = {
-    'ping': ['Ping', 'ms'],
-    'download': ['Download', 'Mbit/s'],
-    'upload': ['Upload', 'Mbit/s'],
-}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_HOUR):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
-    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-    vol.Optional(CONF_MINUTE, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_SECOND, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_SERVER_ID): cv.positive_int,
-})
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Speedtest sensor."""
-    data = SpeedtestData(hass, config)
-
-    dev = []
-    for sensor in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(SpeedtestSensor(data, sensor))
-
-    add_entities(dev)
-
-    def update(call=None):
-        """Update service for manual updates."""
-        data.update(dt_util.now())
-        for sensor in dev:
-            sensor.update()
-
-    hass.services.register(DOMAIN, 'update_speedtest', update)
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info):
+    """Set up the Speedtest.net sensor."""
+    data = hass.data[SPEEDTESTDOTNET_DOMAIN]
+    async_add_entities(
+        [SpeedtestSensor(data, sensor) for sensor in discovery_info]
+    )
 
 
 class SpeedtestSensor(RestoreEntity):
@@ -110,16 +74,20 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION
+        }
         if self._data is not None:
-            return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            return attributes.update({
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_BYTES_RECEIVED: self._data['bytes_received'],
                 ATTR_BYTES_SENT: self._data['bytes_sent'],
                 ATTR_SERVER_COUNTRY: self._data['server']['country'],
                 ATTR_SERVER_ID: self._data['server']['id'],
                 ATTR_SERVER_LATENCY: self._data['server']['latency'],
                 ATTR_SERVER_NAME: self._data['server']['name'],
-            }
+            })
+        return attributes
 
     def update(self):
         """Get the latest data and update the states."""
@@ -134,6 +102,10 @@ class SpeedtestSensor(RestoreEntity):
         elif self.type == 'upload':
             self._state = round(self._data['upload'] / 10**6, 2)
 
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Handle all entity which are about to be added."""
         await super().async_added_to_hass()
@@ -142,30 +114,6 @@ class SpeedtestSensor(RestoreEntity):
             return
         self._state = state.state
 
-
-class SpeedtestData:
-    """Get the latest data from speedtest.net."""
-
-    def __init__(self, hass, config):
-        """Initialize the data object."""
-        self.data = None
-        self._server_id = config.get(CONF_SERVER_ID)
-        if not config.get(CONF_MANUAL):
-            track_time_change(
-                hass, self.update, second=config.get(CONF_SECOND),
-                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR))
-
-    def update(self, now):
-        """Get the latest data from speedtest.net."""
-        import speedtest
-        _LOGGER.debug("Executing speedtest...")
-
-        servers = [] if self._server_id is None else [self._server_id]
-
-        speed = speedtest.Speedtest()
-        speed.get_servers(servers)
-        speed.get_best_server()
-        speed.download()
-        speed.upload()
-
-        self.data = speed.results.dict()
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
