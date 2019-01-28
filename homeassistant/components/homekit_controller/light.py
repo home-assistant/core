@@ -60,24 +60,20 @@ class HomeKitLight(HomeKitEntity, Light):
     def _setup_saturation(self, char):
         self._features |= SUPPORT_COLOR
 
-    def update_characteristics(self, characteristics):
-        """Synchronise light state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_on(self, value):
+        self._on = value
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "on":
-                self._on = characteristic['value']
-            elif ctype == 'brightness':
-                self._brightness = characteristic['value']
-            elif ctype == 'color-temperature':
-                self._color_temperature = characteristic['value']
-            elif ctype == "hue":
-                self._hue = characteristic['value']
-            elif ctype == "saturation":
-                self._saturation = characteristic['value']
+    def _update_brightness(self, value):
+        self._brightness = value
+
+    def _update_color_temperature(self, value):
+        self._color_temperature = value
+
+    def _update_hue(self, value):
+        self._hue = value
+
+    def _update_saturation(self, value):
+        self._saturation = value
 
     @property
     def is_on(self):
