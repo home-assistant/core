@@ -6,13 +6,15 @@ https://home-assistant.io/components/fastdotcom/
 """
 
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_UPDATE_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_time_change
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['fastdotcom==0.0.3']
 
@@ -21,40 +23,33 @@ DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SECOND = 'second'
-CONF_MINUTE = 'minute'
-CONF_HOUR = 'hour'
 CONF_MANUAL = 'manual'
 
-# pylint: disable=invalid-name
-minutes_or_seconds = vol.All(vol.Coerce(int), vol.Range(0, 59))
-hours = vol.All(vol.Coerce(int), vol.Range(0, 23))
-# pylint: enable=invalid-name
-
+DEFAULT_INTERVAL = timedelta(hours=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_SECOND, default=[0]):
-            vol.All(cv.ensure_list, [minutes_or_seconds]),
-        vol.Optional(CONF_MINUTE, default=[0]):
-            vol.All(cv.ensure_list, [minutes_or_seconds]),
-        vol.Optional(CONF_HOUR):
-            vol.All(cv.ensure_list, [hours]),
+        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL):
+            vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
         vol.Optional(CONF_MANUAL, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Fast.com component."""
     conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(hass, conf)
+    data = hass.data[DOMAIN] = SpeedtestData(
+        hass, conf[CONF_UPDATE_INTERVAL], conf[CONF_MANUAL]
+    )
 
     def update(call=None):
         """Service call to manually update the data."""
-        data.update()
+        data.update(no_throttle=True)
 
-    hass.services.register(DOMAIN, 'speedtest', update)
+    hass.services.async_register(DOMAIN, 'speedtest', update)
 
     hass.async_create_task(
         async_load_platform(hass, 'sensor', DOMAIN, {}, config)
@@ -66,18 +61,18 @@ def setup(hass, config):
 class SpeedtestData:
     """Get the latest data from fast.com."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, interval, manual):
         """Initialize the data object."""
         self.data = None
         self._hass = hass
-        if not config.get(CONF_MANUAL):
-            track_time_change(
-                hass, self.update, second=config.get(CONF_SECOND),
-                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR))
+        if not manual:
+            self.update = Throttle(interval)(self._update)
+        else:
+            self.update = self._update
 
-    def update(self):
+    def _update(self):
         """Get the latest data from fast.com."""
         from fastdotcom import fast_com
-        _LOGGER.info("Executing fast.com speedtest")
+        _LOGGER.debug("Executing fast.com speedtest")
         self.data = {'download': fast_com()}
         dispatcher_send(self._hass, DATA_UPDATED)

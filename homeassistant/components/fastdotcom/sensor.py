@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.components.fastdotcom import DOMAIN as FASTDOTCOM_DOMAIN, \
     DATA_UPDATED
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -17,10 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:speedometer'
 
+UNIT_OF_MEASUREMENT = 'Mbit/s'
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Fast.com sensor."""
-    add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
+    async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
 
 class SpeedtestSensor(RestoreEntity):
@@ -31,7 +35,6 @@ class SpeedtestSensor(RestoreEntity):
         self._name = 'Fast.com Download'
         self.speedtest_client = speedtest_data
         self._state = None
-        self._unit_of_measurement = 'Mbit/s'
 
     @property
     def name(self):
@@ -46,7 +49,7 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return UNIT_OF_MEASUREMENT
 
     def update(self):
         """Get the latest data and update the states."""
@@ -54,6 +57,10 @@ class SpeedtestSensor(RestoreEntity):
         if data is None:
             return
         self._state = data['download']
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -63,7 +70,9 @@ class SpeedtestSensor(RestoreEntity):
             return
         self._state = state.state
 
-        async_dispatcher_connect(self.hass, DATA_UPDATED, self.update)
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
 
     @property
     def icon(self):
