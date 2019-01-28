@@ -121,29 +121,28 @@ class LinkySensor(Entity):
         self._attributes["daily"] = [d[CONSUMPTION] 
                          for d in self._lk.daily]
         self._attributes["peak_hours"] = sum([
-            d[CONSUMPTION] 
-            if any([between(h[0],h[1],d[TIME]) 
-                    for h in self._peak_hours]) 
-            else 0 
+            d[CONSUMPTION]
+            if any([between(h[0], h[1], d[TIME])
+                    for h in self._peak_hours])
+            else 0
             for d in self._lk.halfhourly
-        ]) /2 # From kW for 30 minutes to kWh
-        self._attributes["offpeak_hours"] = sum([
-            0 
-            if any([between(h[0],h[1],d[TIME]) 
-                    for h in self._peak_hours]) 
+        ]) / 2  # From kW for 30 minutes to kWh
+        self._attributes["offpeak_hours"] = sum([0
+            if any([between(h[0], h[1], d[TIME])
+                    for h in self._peak_hours])
             else d[CONSUMPTION]
             for d in self._lk.halfhourly
-        ]) /2 # From kW for 30 minutes to kWh
-        self._attributes["peak_offpeak_percent"] = 
-            (self._attributes["peak_hours"] * 100) /
+        ]) / 2  # From kW for 30 minutes to kWh
+        self._attributes["peak_offpeak_percent"] = (
+            self._attributes["peak_hours"] * 100) /
             (self._attributes["peak_hours"] +
              self._attributes["offpeak_hours"])
-        self._attributes["daily_cost"] = 
-            self._peak_hours_cost *
+        self._attributes["daily_cost"] = self
+        ._peak_hours_cost *
             self._attributes["peak_hours"] +
             self._offpeak_hours_cost *
             self._attributes["offpeak_hours"]
-        self._attributes["monthly_evolution"] = 
+        self._attributes["monthly_evolution"] =
         (1 - ((self._lk.monthly[0][CONSUMPTION]) /
               (self._lk.compare_month))) * 100
         _LOGGER.debug("Computed values: " +
@@ -151,7 +150,7 @@ class LinkySensor(Entity):
 
 
 def hour_to_min(hour):
-    return sum(map(lambda x, y: int(x)*y,hour.split(":"),[60,1]))
+    return sum(map(lambda x, y: int(x)*y, hour.split(":"),[60,1]))
 
 
 def between(start, end, hour):
@@ -160,7 +159,7 @@ def between(start, end, hour):
     min_hour = hour_to_min(hour)
     return min_start <= min_hour <= min_end
     if min_start < min_end
-        else min_start >= min_hour >= min_end
+    else min_start >= min_hour >= min_end
 
 
 class LinkyData:
@@ -206,8 +205,7 @@ class LinkyData:
                                           .strftime("%d/%m/%Y"),
                                           (today - relativedelta
                                            (months=12))
-                                          .strftime("%d/%m/%Y"))]
-                                    )
+                                          .strftime("%d/%m/%Y"))])
             _LOGGER.info("Same month last year " +
                          "(from 1st to same day): " +
                          str(self.compare_month))
