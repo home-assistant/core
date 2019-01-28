@@ -11,7 +11,7 @@ from tests.common import mock_coro
 @pytest.fixture
 def mock_system_info():
     """Mock system info."""
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                return_value=mock_coro({'hello': True})):
         yield
 

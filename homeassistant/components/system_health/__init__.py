@@ -39,10 +39,10 @@ class InfoView(HomeAssistantView):
         hass = request.app['hass']  # type: HomeAssistantType
         info_callbacks = hass.data.get(DOMAIN, {}).get('info', {})
         data = OrderedDict()
-        data['homeassistant'] = await hass.components.updater.get_system_info()
+        data['homeassistant'] = \
+            await hass.helpers.system_info.async_get_system_info(hass)
 
         for domain, info_callback in info_callbacks.items():
-            print(domain, info_callback)
             data[domain] = info_callback(hass)
 
         return json_response(data)
