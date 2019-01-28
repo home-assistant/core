@@ -18,15 +18,19 @@ DEPENDENCIES = ['netatmo']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOME = 'home'
+CONF_HOMES = 'homes'
 CONF_ROOMS = 'rooms'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOME): cv.string,
-    vol.Optional(CONF_ROOMS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
+                                                          [cv.string]),
+        }
+    ]),
 })
 
 STATE_AWAY = STATE_ECO
@@ -59,25 +63,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     _LOGGER.debug("Starting to setup platform climate.netatmo...")
     netatmo = hass.components.netatmo
-    home = config.get(CONF_HOME)
 
     import pyatmo
     try:
-        home_data = HomeData(netatmo.NETATMO_AUTH, home)
-        for home in home_data.get_home_names():
-            _LOGGER.debug("Setting up %s ...", home)
-            room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
-            for room_id in room_data.get_room_ids():
-                room_name = room_data.homedata.rooms[home][room_id]['name']
-                _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
-                if CONF_ROOMS in config:
-                    _LOGGER.debug(config[CONF_ROOMS])
-                    if config[CONF_ROOMS] != [] and \
-                       room_name not in config[CONF_ROOMS]:
-                        continue
-                _LOGGER.debug("Adding devices for room %s (%s) ...",
-                              room_name, room_id)
-                add_entities([NetatmoThermostat(room_data, room_id)], True)
+        for home_conf in config.get(CONF_HOMES):
+            home = home_conf.get(CONF_NAME)
+            home_data = HomeData(netatmo.NETATMO_AUTH, home)
+            for home in home_data.get_home_names():
+                _LOGGER.debug("Setting up %s ...", home)
+                room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
+                for room_id in room_data.get_room_ids():
+                    room_name = room_data.homedata.rooms[home][room_id]['name']
+                    _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
+                    if CONF_ROOMS in home_conf:
+                        _LOGGER.debug(home_conf[CONF_ROOMS])
+                        if home_conf[CONF_ROOMS] != [] and \
+                           room_name not in home_conf[CONF_ROOMS]:
+                            continue
+                    _LOGGER.debug("Adding devices for room %s (%s) ...",
+                                  room_name, room_id)
+                    add_entities([NetatmoThermostat(room_data, room_id)], True)
     except pyatmo.NoDevice:
         return
 
@@ -298,9 +303,9 @@ class HomeData():
             self.homedata = pyatmo.HomeData(self.auth)
             self.home_id = self.homedata.gethomeId(self.home)
         except TypeError:
-            _LOGGER.error("Error when getting homedata.  ")
+            _LOGGER.error("Error when getting homedata.")
         except pyatmo.NoDevice:
-            _LOGGER.error("Error when getting homestatus response.  ")
+            _LOGGER.error("Error when getting homestatus response.")
 
 
 class ThermostatData():
