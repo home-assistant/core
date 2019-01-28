@@ -61,18 +61,11 @@ class HomeKitLock(HomeKitEntity, LockDevice):
             CharacteristicsTypes.BATTERY_LEVEL,
         ]
 
-    def update_characteristics(self, characteristics):
-        """Synchronise the Lock state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_lock_mechanism_current_state(self, value):
+        self._state = CURRENT_STATE_MAP[value]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "lock-mechanism.current-state":
-                self._state = CURRENT_STATE_MAP[characteristic['value']]
-            elif ctype == "battery-level":
-                self._battery_level = characteristic['value']
+    def _update_battery_level(self, value):
+        self._battery_level = value
 
     @property
     def name(self):

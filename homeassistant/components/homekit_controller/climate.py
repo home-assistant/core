@@ -72,23 +72,17 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _setup_temperature_target(self, characteristic):
         self._features |= SUPPORT_TARGET_TEMPERATURE
 
-    def update_characteristics(self, characteristics):
-        """Synchronise device state with Home Assistant."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
+    def _update_heating_cooling_current(self, value):
+        self._state = MODE_HOMEKIT_TO_HASS.get(value)
 
-        for characteristic in characteristics:
-            ctype = CharacteristicsTypes.get_short_uuid(characteristic['type'])
-            if ctype == CharacteristicsTypes.HEATING_COOLING_CURRENT:
-                self._state = MODE_HOMEKIT_TO_HASS.get(
-                    characteristic['value'])
-            if ctype == CharacteristicsTypes.HEATING_COOLING_TARGET:
-                self._current_mode = MODE_HOMEKIT_TO_HASS.get(
-                    characteristic['value'])
-            elif ctype == CharacteristicsTypes.TEMPERATURE_CURRENT:
-                self._current_temp = characteristic['value']
-            elif ctype == CharacteristicsTypes.TEMPERATURE_TARGET:
-                self._target_temp = characteristic['value']
+    def _update_heating_cooling_target(self, value):
+        self._current_mode = MODE_HOMEKIT_TO_HASS.get(value)
+
+    def _update_temperature_current(self, value):
+        self._current_temp = value
+
+    def _update_temperature_target(self, value):
+        self._target_temp = value
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
