@@ -1,8 +1,8 @@
 """
-Component for the Swedish weather institute weather service.
+This component provides support for Logi Circle devices.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smhi/
+https://home-assistant.io/components/logi_circle/
 """
 import asyncio
 from datetime import datetime, timedelta
@@ -13,9 +13,11 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.camera import (
+    ATTR_FILENAME, CAMERA_SERVICE_SCHEMA)
 from homeassistant.const import (
-    CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_ENTITY_ID, CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS,
+    CONF_SENSORS, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -23,12 +25,12 @@ from homeassistant.util.dt import as_local
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY, CONF_CAMERAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+    ATTR_API, CONF_API_KEY, CONF_CAMERAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
     CONF_FFMPEG_ARGUMENTS, CONF_REDIRECT_URI, DATA_LOGI, DEFAULT_CACHEDB,
-    DOMAIN, LOGI_ACTIVITY_KEYS, LOGI_BINARY_SENSORS, LOGI_SENSORS,
-    SIGNAL_LOGI_CIRCLE_UPDATE)
+    DOMAIN, LED_MODE_KEY, LOGI_ACTIVITY_KEYS, LOGI_BINARY_SENSORS,
+    LOGI_SENSORS, RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_UPDATE)
 
-REQUIREMENTS = ['logi_circle==0.2.0']
+REQUIREMENTS = ['logi_circle==0.2.2']
 
 SIGNAL_LOGI_RESTART_SUBSCRIPTION = 'logi_restart_ws'
 
@@ -37,6 +39,14 @@ NOTIFICATION_TITLE = 'Logi Circle Setup'
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
+
+SERVICE_SET_CONFIG = 'set_config'
+SERVICE_LIVESTREAM_SNAPSHOT = 'livestream_snapshot'
+SERVICE_LIVESTREAM_RECORD = 'livestream_record'
+
+ATTR_MODE = 'mode'
+ATTR_VALUE = 'value'
+ATTR_DURATION = 'duration'
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_BINARY_SENSORS)):
@@ -68,6 +78,21 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+LOGI_CIRCLE_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_MODE): vol.In([LED_MODE_KEY,
+                                     RECORDING_MODE_KEY]),
+    vol.Required(ATTR_VALUE): cv.boolean
+})
+
+LOGI_CIRCLE_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_FILENAME): cv.template
+})
+
+LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_FILENAME): cv.template,
+    vol.Required(ATTR_DURATION): cv.positive_int
+})
 
 
 def logi_circle_update_event_broker(hass, logi_circle):
@@ -209,10 +234,49 @@ async def async_setup_entry(hass, entry):
             notification_id=NOTIFICATION_ID)
         return False
 
-    hass.data[DATA_LOGI] = logi_circle
+    hass.data[DATA_LOGI] = {
+        ATTR_API: logi_circle,
+        'entities': {
+            'camera': []
+        }
+    }
+
     for component in 'camera', 'sensor', 'binary_sensor':
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
+
+    async def service_handler(service):
+        """Dispatch service calls to target entities."""
+        cameras = hass.data[DATA_LOGI]['entities']['camera']
+
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            target_devices = [dev for dev in cameras
+                              if dev.entity_id in entity_ids]
+        else:
+            target_devices = cameras
+
+        for target_device in target_devices:
+            if service.service == SERVICE_SET_CONFIG:
+                await target_device.set_config(**params)
+            if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
+                await target_device.livestream_snapshot(**params)
+            if service.service == SERVICE_LIVESTREAM_RECORD:
+                await target_device.download_livestream(**params)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_CONFIG, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_SET_CONFIG)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_SNAPSHOT)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_RECORD)
 
     async def start_up(event=None):
         """Start Logi update event listener."""
@@ -246,6 +310,6 @@ async def async_unload_entry(hass, entry):
 
     # Tell API wrapper to close all aiohttp sessions, invalidate WS connections
     # and clear all locally cached tokens
-    await logi_circle.auth_provider.clear_authorization()
+    await logi_circle[ATTR_API].auth_provider.clear_authorization()
 
     return True

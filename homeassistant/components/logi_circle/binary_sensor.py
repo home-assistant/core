@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
-    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
+    ATTR_API, CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
     LOGI_BINARY_SENSORS as BINARY_SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS)
@@ -23,8 +23,8 @@ LOGI_ACTIVITY_PROP = 'activity'
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Logi Circle sensor based on a config entry."""
-    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
+    """Set up a Logi Circle binary sensor based on a config entry."""
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN][ATTR_API].cameras
 
     binary_sensors = []
     for sensor_type in (entry.data.get(CONF_BINARY_SENSORS)
@@ -41,7 +41,7 @@ class LogiBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Logi Circle device."""
 
     def __init__(self, camera, sensor_type):
-        """Initialize a sensor for Logi Circle device."""
+        """Initialize a binary sensor for Logi Circle device."""
         self._sensor_type = sensor_type
         self._camera = camera
         self._name = "{0} {1}".format(
@@ -56,7 +56,7 @@ class LogiBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the binary sensor."""
         return self._name
 
     @property
@@ -103,7 +103,7 @@ class LogiBinarySensor(BinarySensorDevice):
             'identifiers': {
                 (LOGI_CIRCLE_DOMAIN, self._camera.id)
             },
-            'model': '{} ({})'.format(self._camera.mount, self._camera.model),
+            'model': self._camera.model_name,
             'sw_version': self._camera.firmware,
             'manufacturer': DEVICE_BRAND
         }

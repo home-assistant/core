@@ -63,36 +63,3 @@ onvif_ptz:
     zoom:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
-
-logi_circle_set_recording_mode:
-  description: Enables or disables recording mode.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change recording mode for.
-      example: "camera.living_room_camera"
-    value:
-      description: "Recording mode value. Allowed values: true, false"
-      example: true
-
-logi_circle_livestream_snapshot:
-  description: Take a snapshot from the camera's livestream. Will wake the camera from sleep if required.
-  fields:
-    entity_id:
-      description: Name(s) of entities to create snapshots from.
-      example: "camera.living_room_camera"
-    filename:
-      description: Template of a Filename. Variable is entity_id.
-      example: "/tmp/snapshot_{{ entity_id }}.jpg"
-
-logi_circle_livestream_record:
-  description: Take a video recording from the camera's livestream.
-  fields:
-    entity_id:
-      description: Name(s) of entities to create recordings from.
-      example: "camera.living_room_camera"
-    filename:
-      description: Template of a Filename. Variable is entity_id.
-      example: "/tmp/snapshot_{{ entity_id }}.mp4"
-    duration:
-      description: Recording duration in seconds.
-      example: 60

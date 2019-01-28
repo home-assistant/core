@@ -25,7 +25,6 @@
     "abort": {
       "external_error": "Exception occurred from another flow.",
       "external_setup": "Logi Circle successfully configured from another flow.",
-      "no_code": "Authorization code missing from query string",
       "no_flows": "You need to configure Logi Circle before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/logi_circle/)."
     }
   }

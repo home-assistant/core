@@ -228,7 +228,6 @@ omit =
     homeassistant/components/*/lightwave.py
 
     homeassistant/components/logi_circle/*
-    homeassistant/components/*/logi_circle.py
 
     homeassistant/components/lupusec.py
     homeassistant/components/*/lupusec.py

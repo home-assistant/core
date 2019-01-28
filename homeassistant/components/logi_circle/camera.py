@@ -7,17 +7,14 @@ https://home-assistant.io/components/camera.logi_circle/
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.camera import (
-    ATTR_ENTITY_ID, ATTR_FILENAME, CAMERA_SERVICE_SCHEMA, DOMAIN,
-    SUPPORT_ON_OFF, Camera)
+    ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.components.logi_circle.const import (
-    CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS, DEVICE_BRAND,
-    DOMAIN as LOGI_CIRCLE_DOMAIN)
+    ATTR_API, CONF_ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS,
+    DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
+    RECORDING_MODE_KEY)
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
@@ -25,27 +22,6 @@ DEPENDENCIES = ['logi_circle', 'ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
-
-SERVICE_SET_RECORDING_MODE = 'logi_circle_set_recording_mode'
-SERVICE_LIVESTREAM_SNAPSHOT = 'logi_circle_livestream_snapshot'
-SERVICE_LIVESTREAM_RECORD = 'logi_circle_livestream_record'
-DATA_KEY = 'camera.logi_circle'
-
-ATTR_VALUE = 'value'
-ATTR_DURATION = 'duration'
-
-LOGI_CIRCLE_SERVICE_SET_RECORDING_MODE = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_VALUE): cv.boolean
-})
-
-LOGI_CIRCLE_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_FILENAME): cv.template
-})
-
-LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_FILENAME): cv.template,
-    vol.Required(ATTR_DURATION): cv.positive_int
-})
 
 
 async def async_setup_platform(
@@ -57,44 +33,13 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
-    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN][ATTR_API].cameras
     ffmpeg = hass.data[DATA_FFMPEG]
 
     cameras = [LogiCam(device, entry, ffmpeg)
                for device in devices]
 
     async_add_entities(cameras, True)
-
-    async def service_handler(service):
-        """Dispatch service calls to target entities."""
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            target_devices = [dev for dev in cameras
-                              if dev.entity_id in entity_ids]
-        else:
-            target_devices = cameras
-
-        for target_device in target_devices:
-            if service.service == SERVICE_SET_RECORDING_MODE:
-                await target_device.set_recording_mode(**params)
-            if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
-                await target_device.livestream_snapshot(**params)
-            if service.service == SERVICE_LIVESTREAM_RECORD:
-                await target_device.download_livestream(**params)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_RECORDING_MODE, service_handler,
-        schema=LOGI_CIRCLE_SERVICE_SET_RECORDING_MODE)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
-        schema=LOGI_CIRCLE_SERVICE_SNAPSHOT)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
-        schema=LOGI_CIRCLE_SERVICE_RECORD)
 
 
 class LogiCam(Camera):
@@ -109,6 +54,10 @@ class LogiCam(Camera):
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device_info.data.get(
             CONF_CAMERAS).get(CONF_FFMPEG_ARGUMENTS)
+
+    async def async_added_to_hass(self):
+        """Make entity globally accessible for use in service handler."""
+        self.hass.data[LOGI_CIRCLE_DOMAIN]['entities']['camera'].append(self)
 
     @property
     def unique_id(self):
@@ -133,7 +82,7 @@ class LogiCam(Camera):
             'identifiers': {
                 (LOGI_CIRCLE_DOMAIN, self._camera.id)
             },
-            'model': '{} ({})'.format(self._camera.mount, self._camera.model),
+            'model': self._camera.model_name,
             'sw_version': self._camera.firmware,
             'manufacturer': DEVICE_BRAND
         }
@@ -156,6 +105,7 @@ class LogiCam(Camera):
         live_stream = await self._camera.live_stream.get_rtsp_url()
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        # Extend the timeout if device is in deep sleep
         timeout = 60 if self._camera.pir_wake_up else 10
 
         await stream.open_camera(
@@ -186,9 +136,12 @@ class LogiCam(Camera):
         """Return true if on."""
         return self._camera.connected and self._camera.streaming
 
-    async def set_recording_mode(self, value):
-        """Set the recording mode for the target camera."""
-        await self._camera.set_config('recording_disabled', not value)
+    async def set_config(self, mode, value):
+        """Set an configuration property for the target camera."""
+        if mode == LED_MODE_KEY:
+            await self._camera.set_config('led', value)
+        if mode == RECORDING_MODE_KEY:
+            await self._camera.set_config('recording_disabled', not value)
 
     async def download_livestream(self, filename, duration):
         """Download a recording from the camera's livestream."""

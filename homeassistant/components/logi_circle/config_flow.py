@@ -143,9 +143,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        if code is None:
-            return self.async_abort(reason='no_code')
-
         return await self._async_create_session(code)
 
     async def _async_create_session(self, code):
@@ -202,8 +199,7 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
     url = AUTH_CALLBACK_PATH
     name = AUTH_CALLBACK_NAME
 
-    @staticmethod
-    async def get(request):
+    async def get(self, request):
         """Receive authorization code."""
         hass = request.app['hass']
         if 'code' in request.query:
@@ -213,3 +209,6 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
                     context={'source': 'code'},
                     data=request.query['code'],
                 ))
+            return self.json_message("Authorisation code saved")
+        return self.json_message("Authorisation code missing "
+                                 "from query string", status_code=400)

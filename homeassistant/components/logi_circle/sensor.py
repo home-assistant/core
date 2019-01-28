@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.logi_circle import parse_logi_activity
 from homeassistant.components.logi_circle.const import (
-    CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
+    ATTR_API, CONF_ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
     LOGI_SENSORS as SENSOR_TYPES, SIGNAL_LOGI_CIRCLE_UPDATE)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_SENSORS)
@@ -39,7 +39,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle sensor based on a config entry."""
-    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN][ATTR_API].cameras
     time_zone = str(hass.config.time_zone)
 
     sensors = []
@@ -109,7 +109,7 @@ class LogiSensor(Entity):
             'identifiers': {
                 (LOGI_CIRCLE_DOMAIN, self._camera.id)
             },
-            'model': '{} ({})'.format(self._camera.mount, self._camera.model),
+            'model': self._camera.model_name,
             'sw_version': self._camera.firmware,
             'manufacturer': DEVICE_BRAND
         }
