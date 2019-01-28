@@ -247,7 +247,7 @@ class HomeKitEntity(Entity):
         setup_fn = getattr(self, '_setup_{}'.format(setup_fn_name), None)
         if not setup_fn:
             return
-        # pylint: disable=E1102
+        # pylint: disable=not-callable
         setup_fn(char)
 
     def update(self):
@@ -270,7 +270,7 @@ class HomeKitEntity(Entity):
             update_fn = getattr(self, '_update_{}'.format(char_name), None)
             if not update_fn:
                 continue
-            # pylint: disable=E1102
+            # pylint: disable=not-callable
             update_fn(result['value'])
 
     @property
