@@ -10,7 +10,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, STATE_UNKNOWN, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
+    STATE_UNKNOWN, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -61,15 +62,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     linky_data = LinkyData(username, password, timeout)
 
-    add_entities([LinkySensor(name, linky_data, peak_hours, 
-        peak_hours_cost, offpeak_hours_cost)])
+    add_entities([LinkySensor(name, linky_data, peak_hours,
+                              peak_hours_cost, offpeak_hours_cost)])
     return True
 
 
 class LinkySensor(Entity):
     """Representation of a sensor entity for Linky."""
 
-    def __init__(self, name, linky_data, 
+    def __init__(self, name, linky_data,
                  peak_hours, peak_hours_cost,
                  offpeak_hours_cost):
         """Initialize the sensor."""
@@ -93,22 +94,22 @@ class LinkySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
-        
+
     @property
     def state_attributes(self):
-      """Return the state attributes."""
-      return self._attributes
+        """Return the state attributes."""
+        return self._attributes
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def icon(self):
         """Return the icon of the sensor."""
         return self._icon
-    
+
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor.
@@ -116,10 +117,10 @@ class LinkySensor(Entity):
         _LOGGER.debug("Start of update of linky data")
         self._lk.update()
         self._state = self._lk.daily[1][CONSUMPTION]
-        self._attributes["halfhourly"] = [d[CONSUMPTION] 
-                         for d in self._lk.halfhourly]
-        self._attributes["daily"] = [d[CONSUMPTION] 
-                         for d in self._lk.daily]
+        self._attributes["halfhourly"] = [d[CONSUMPTION]
+                                          for d in self._lk.halfhourly]
+        self._attributes["daily"] = [d[CONSUMPTION]
+                                     for d in self._lk.daily]
         self._attributes["peak_hours"] = sum([
             d[CONSUMPTION]
             if any([between(h[0], h[1], d[TIME])
@@ -127,7 +128,8 @@ class LinkySensor(Entity):
             else 0
             for d in self._lk.halfhourly
         ]) / 2  # From kW for 30 minutes to kWh
-        self._attributes["offpeak_hours"] = sum([0
+        self._attributes["offpeak_hours"] = sum(
+            [0
             if any([between(h[0], h[1], d[TIME])
                     for h in self._peak_hours])
             else d[CONSUMPTION]
