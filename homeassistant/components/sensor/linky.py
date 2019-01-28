@@ -125,13 +125,12 @@ class LinkySensor(Entity):
             d[CONSUMPTION]
             if any([between(h[0], h[1], d[TIME])
                     for h in self._peak_hours])
-            else 0
-                    for d in self._lk.halfhourly]) / 2
+            else 0 for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
         self._attributes["offpeak_hours"] = sum(
             [0
             if any([between(h[0], h[1], d[TIME])
-                        for h in self._peak_hours])
+            for h in self._peak_hours])
             else d[CONSUMPTION]
             for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
