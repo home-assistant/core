@@ -39,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG Netcast remotes."""
-
     from pylgnetcast import LgNetCastClient
     host = config[CONF_HOST]
     access_token = config.get(CONF_ACCESS_TOKEN)
@@ -94,7 +93,6 @@ class LGNetcastRemote(RemoteDevice):
     def turn_on(self, **kwargs):
         """Turn the remote on."""
         # Turn on not support by LG Netcast TV
-        self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the remote off."""
