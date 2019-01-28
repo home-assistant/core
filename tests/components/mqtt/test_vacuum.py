@@ -299,6 +299,39 @@ async def test_discovery_removal_vacuum(hass, mock_publish):
     assert state is None
 
 
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic#" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('vacuum.beer')
+    assert state is None
+
+    async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('vacuum.milk')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('vacuum.beer')
+    assert state is None
+
+
 async def test_discovery_update_vacuum(hass, mock_publish):
     """Test update of discovered vacuum."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
