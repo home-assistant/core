@@ -254,7 +254,6 @@ class HomeKitEntity(Entity):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
         from homekit.exceptions import AccessoryDisconnectedError
-        from homekit.model.characteristics import CharacteristicsTypes
 
         pairing = self._accessory.pairing
 
@@ -266,12 +265,6 @@ class HomeKitEntity(Entity):
         for (_, iid), result in new_values_dict.items():
             if 'value' not in result:
                 continue
-            ctype = CharacteristicsTypes.get_uuid(
-                'public.hap.characteristic.' + self._char_names[iid])
-            self.update_characteristics([{
-                'type': ctype,
-                'value': result['value'],
-            }])
             # Callback to update the entity with this characteristic value
             char_name = escape_characteristic_name(self._char_names[iid])
             update_fn = getattr(self, '_update_{}'.format(char_name), None)
