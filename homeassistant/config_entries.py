@@ -135,6 +135,7 @@ SOURCE_IMPORT = 'import'
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'ambient_station',
     'cast',
     'daikin',
     'deconz',
