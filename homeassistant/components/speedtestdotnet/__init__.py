@@ -16,7 +16,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, \
     CONF_UPDATE_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util import Throttle
+from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['speedtest-cli==2.0.2']
 
@@ -53,7 +53,7 @@ async def async_setup(hass, config):
 
     def update(call=None):
         """Service call to manually update the data."""
-        data.update(no_throttle=True)
+        data.update()
 
     hass.services.async_register(DOMAIN, 'speedtest', update)
 
@@ -75,11 +75,9 @@ class SpeedtestData:
         self._hass = hass
         self._servers = [] if server_id is None else [server_id]
         if not manual:
-            self.update = Throttle(interval)(self._update)
-        else:
-            self.update = self._update
+            async_track_time_interval(self._hass, self.update, interval)
 
-    def _update(self):
+    def update(self):
         """Get the latest data from speedtest.net."""
         import speedtest
         _LOGGER.debug("Executing speedtest.net speedtest")
