@@ -39,17 +39,7 @@ async def websocket_list_devices(hass, connection, msg):
     """Handle list devices command."""
     registry = await async_get_registry(hass)
     connection.send_message(websocket_api.result_message(
-        msg['id'], [{
-            'config_entries': list(entry.config_entries),
-            'connections': list(entry.connections),
-            'manufacturer': entry.manufacturer,
-            'model': entry.model,
-            'name': entry.name,
-            'sw_version': entry.sw_version,
-            'id': entry.id,
-            'hub_device_id': entry.hub_device_id,
-            'area_id': entry.area_id,
-        } for entry in registry.devices.values()]
+        msg['id'], [_entry_dict(entry) for entry in registry.devices.values()]
     ))
 
 
@@ -71,6 +61,13 @@ async def websocket_update_device(hass, connection, msg):
 def _entry_dict(entry):
     """Convert entry to API format."""
     return {
-        'device_id': entry.id,
-        'area_id': entry.area_id
+        'config_entries': list(entry.config_entries),
+        'connections': list(entry.connections),
+        'manufacturer': entry.manufacturer,
+        'model': entry.model,
+        'name': entry.name,
+        'sw_version': entry.sw_version,
+        'id': entry.id,
+        'hub_device_id': entry.hub_device_id,
+        'area_id': entry.area_id,
     }

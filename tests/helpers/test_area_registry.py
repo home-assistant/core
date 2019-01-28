@@ -11,6 +11,15 @@ def registry(hass):
     return mock_area_registry(hass)
 
 
+async def test_list_areas(registry):
+    """Make sure that we can read areas."""
+    registry.async_create('mock')
+
+    areas = registry.async_list_areas()
+
+    assert len(areas) == len(registry.areas)
+
+
 async def test_create_area(registry):
     """Make sure that we can create an area."""
     area = registry.async_create('mock')
@@ -48,15 +57,6 @@ async def test_delete_non_existing_area(registry):
         registry.async_delete('')
 
     assert len(registry.areas) == 1
-
-
-async def test_read_areas(registry):
-    """Make sure that we can read areas."""
-    registry.async_create('mock')
-
-    areas = registry.async_read()
-
-    assert len(areas) == len(registry.areas)
 
 
 async def test_update_area(registry):

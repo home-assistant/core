@@ -2,7 +2,7 @@
 import logging
 import uuid
 from collections import OrderedDict
-from typing import Optional
+from typing import List, Optional
 
 import attr
 
@@ -36,7 +36,12 @@ class AreaRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_create(self, name: str):
+    def async_list_areas(self) -> List[AreaEntry]:
+        """Get all areas."""
+        return self.areas.values()
+
+    @callback
+    def async_create(self, name: str) -> AreaEntry:
         """Create a new area."""
         if self._async_is_registered(name):
             raise ValueError('Name is already in use')
@@ -46,19 +51,18 @@ class AreaRegistry:
 
         return self.async_update(area.id, name=name)
 
-    @callback
-    def async_delete(self, area_id: str) -> None:
+    async def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        device_registry.async_clear_area_id(area_id)
+
         del self.areas[area_id]
+
         self.async_schedule_save()
 
     @callback
-    def async_read(self) -> AreaEntry:
-        """Get all areas."""
-        return self.areas.values()
-
-    @callback
-    def async_update(self, area_id: str, name: str) -> Optional[AreaEntry]:
+    def async_update(self, area_id: str, name: str) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
 
@@ -77,14 +81,14 @@ class AreaRegistry:
         return new
 
     @callback
-    def _async_is_registered(self, name):
+    def _async_is_registered(self, name) -> Optional[AreaEntry]:
         """Check if a name is currently registered."""
         for area in self.areas.values():
             if name == area.name:
                 return area
         return False
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load the area registry."""
         data = await self._store.async_load()
 
@@ -100,12 +104,12 @@ class AreaRegistry:
         self.areas = areas
 
     @callback
-    def async_schedule_save(self):
+    def async_schedule_save(self) -> None:
         """Schedule saving the area registry."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> dict:
         """Return data of area registry to store in a file."""
         data = {}
 

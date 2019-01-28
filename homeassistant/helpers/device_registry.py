@@ -248,6 +248,13 @@ class DeviceRegistry:
                 self._async_update_device(
                     dev_id, remove_config_entry_id=config_entry_id)
 
+    @callback
+    def async_clear_area_id(self, area_id: str) -> None:
+        """Clear area id from registry entries."""
+        for dev_id, device in self.devices.items():
+            if area_id == device.area_id:
+                self._async_update_device(dev_id, area_id=None)
+
 
 @bind_hass
 async def async_get_registry(hass) -> DeviceRegistry:

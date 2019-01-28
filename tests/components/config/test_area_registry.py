@@ -18,6 +18,21 @@ def registry(hass):
     return mock_area_registry(hass)
 
 
+async def test_list_areas(hass, client, registry):
+    """Test list entries."""
+    registry.async_create('mock 1')
+    registry.async_create('mock 2')
+
+    await client.send_json({
+        'id': 1,
+        'type': 'config/area_registry/list',
+    })
+
+    msg = await client.receive_json()
+
+    assert len(msg['result']) == len(registry.areas)
+
+
 async def test_create_area(hass, client, registry):
     """Test create entry."""
     await client.send_json({
@@ -82,21 +97,6 @@ async def test_delete_non_existing_area(hass, client, registry):
     assert msg['error']['code'] == 'invalid_info'
     assert msg['error']['message'] == "Area ID doesn't exist"
     assert len(registry.areas) == 1
-
-
-async def test_list_areas(hass, client, registry):
-    """Test list entries."""
-    registry.async_create('mock 1')
-    registry.async_create('mock 2')
-
-    await client.send_json({
-        'id': 1,
-        'type': 'config/area_registry/list',
-    })
-
-    msg = await client.receive_json()
-
-    assert len(msg['result']) == len(registry.areas)
 
 
 async def test_update_area(hass, client, registry):

@@ -82,6 +82,6 @@ async def test_update_device(hass, client, registry):
 
     msg = await client.receive_json()
 
-    assert msg['result']['device_id'] == device.id
+    assert msg['result']['id'] == device.id
     assert msg['result']['area_id'] == '12345A'
     assert len(registry.devices) == 1
