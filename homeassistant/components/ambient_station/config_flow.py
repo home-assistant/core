@@ -65,12 +65,8 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
         if not devices:
             return await self._show_form({'base': 'no_devices'})
 
-        # Although the application key identifies the config entry, it's way
-        # too long to show nicely in the UI. Even though an account may have
-        # multiple Ambient devices, we use the first one as the config entry
-        # title:
-        print(devices[0])
-        name = devices[0]['info']['name']
-        location = devices[0]['info']['location']
+        # The Application Key (which identifies each config entry) is too long
+        # to show nicely in the UI, so we take the first 12 characters (similar
+        # to how GitHub does it):
         return self.async_create_entry(
-            title='{0} ({1})'.format(name, location), data=user_input)
+            title=user_input[CONF_APP_KEY][:12], data=user_input)

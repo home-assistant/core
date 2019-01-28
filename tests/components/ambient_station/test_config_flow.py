@@ -31,8 +31,8 @@ def mock_aioambient(get_devices_response):
 async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
     conf = {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
     MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
@@ -49,8 +49,8 @@ async def test_duplicate_error(hass):
 async def test_invalid_api_key(hass, mock_aioambient):
     """Test that an invalid API/App Key throws an error."""
     conf = {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
     flow = config_flow.AmbientStationFlowHandler()
@@ -64,8 +64,8 @@ async def test_invalid_api_key(hass, mock_aioambient):
 async def test_no_devices(hass, mock_aioambient):
     """Test that an account with no associated devices throws an error."""
     conf = {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
     flow = config_flow.AmbientStationFlowHandler()
@@ -92,8 +92,8 @@ async def test_show_form(hass):
 async def test_step_import(hass, mock_aioambient):
     """Test that the import step works."""
     conf = {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
     flow = config_flow.AmbientStationFlowHandler()
@@ -101,10 +101,10 @@ async def test_step_import(hass, mock_aioambient):
 
     result = await flow.async_step_import(import_config=conf)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == 'Home (Home)'
+    assert result['title'] == '67890fghij67'
     assert result['data'] == {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
 
@@ -114,8 +114,8 @@ async def test_step_import(hass, mock_aioambient):
 async def test_step_user(hass, mock_aioambient):
     """Test that the user step works."""
     conf = {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
 
     flow = config_flow.AmbientStationFlowHandler()
@@ -123,8 +123,8 @@ async def test_step_user(hass, mock_aioambient):
 
     result = await flow.async_step_user(user_input=conf)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == 'Home (Home)'
+    assert result['title'] == '67890fghij67'
     assert result['data'] == {
-        CONF_API_KEY: '12345abcde',
-        CONF_APP_KEY: '67890fghij',
+        CONF_API_KEY: '12345abcde12345abcde',
+        CONF_APP_KEY: '67890fghij67890fghij',
     }
