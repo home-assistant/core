@@ -65,25 +65,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     netatmo = hass.components.netatmo
 
     import pyatmo
-    for home_conf in config.get(CONF_HOMES):
-        home = home_conf.get(CONF_NAME)
+    homes_conf = config.get(CONF_HOMES)
+    try:
+        home_data = HomeData(netatmo.NETATMO_AUTH)
+    except pyatmo.NoDevice:
+        return
+
+    homes = []
+    rooms = {}
+    if homes_conf is not None:
+        for home_conf in homes_conf:
+            home = home_conf.get(CONF_NAME)
+            if CONF_ROOMS in home_conf and home_conf[CONF_ROOMS] != []:
+                rooms[home] = home_conf.get(CONF_ROOMS)
+            homes.append(home)
+    else:
+        homes = home_data.get_home_names()
+
+    for home in homes:
+        _LOGGER.debug("Setting up %s ...", home)
         try:
-            home_data = HomeData(netatmo.NETATMO_AUTH, home)
-            for home in home_data.get_home_names():
-                _LOGGER.debug("Setting up %s ...", home)
-                room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
-                for room_id in room_data.get_room_ids():
-                    room_name = room_data.homedata.rooms[home][room_id]['name']
-                    _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
-                    if CONF_ROOMS in home_conf and \
-                       home_conf[CONF_ROOMS] != [] and \
-                       room_name not in home_conf[CONF_ROOMS]:
-                        continue
-                    _LOGGER.debug("Adding devices for room %s (%s) ...",
-                                  room_name, room_id)
-                    add_entities([NetatmoThermostat(room_data, room_id)], True)
+            room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
         except pyatmo.NoDevice:
             return
+        for room_id in room_data.get_room_ids():
+            room_name = room_data.homedata.rooms[home][room_id]['name']
+            _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
+            if home in rooms and room_name not in rooms[home]:
+                _LOGGER.debug("Excluding %s ...", room_name)
+                continue
+            _LOGGER.debug("Adding devices for room %s (%s) ...",
+                          room_name, room_id)
+            add_entities([NetatmoThermostat(room_data, room_id)], True)
 
 
 class NetatmoThermostat(ClimateDevice):
