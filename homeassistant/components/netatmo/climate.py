@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         try:
             room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
         except pyatmo.NoDevice:
-            return
+            continue
         for room_id in room_data.get_room_ids():
             room_name = room_data.homedata.rooms[home][room_id]['name']
             _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
