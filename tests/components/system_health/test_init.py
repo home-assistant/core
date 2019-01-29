@@ -10,11 +10,11 @@ from tests.common import mock_coro
 
 
 @pytest.fixture
-def mock_system_info():
+def mock_system_info(hass):
     """Mock system info."""
-    with patch('homeassistant.helpers.system_info.async_get_system_info',
-               Mock(return_value=mock_coro({'hello': True}))):
-        yield
+    hass.helpers.system_info.async_get_system_info = Mock(
+        return_value=mock_coro({'hello': True})
+    )
 
 
 async def test_info_endpoint_return_info(hass, hass_ws_client,
