@@ -174,11 +174,11 @@ def setup_plexserver(
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if config.get(CONF_INCLUDE_NON_CLIENTS):
-            for machine_identifier, session in plex_sessions.items():
+            for machine_identifier, (session, player) in plex_sessions.items():
                 if (machine_identifier not in plex_clients
                         and machine_identifier is not None):
                     new_client = PlexClient(
-                        config, None, session, plex_sessions, update_devices,
+                        config, player, session, plex_sessions, update_devices,
                         update_sessions)
                     plex_clients[machine_identifier] = new_client
                     new_plex_clients.append(new_client)
@@ -192,7 +192,9 @@ def setup_plexserver(
                 client.force_idle()
 
             client.set_availability(client.machine_identifier
-                                    in available_client_ids)
+                                    in available_client_ids
+                                    or client.machine_identifier
+                                    in plex_sessions)
 
             if not config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
                     or client.available:
@@ -225,7 +227,7 @@ def setup_plexserver(
         plex_sessions.clear()
         for session in sessions:
             for player in session.players:
-                plex_sessions[player.machineIdentifier] = session
+                plex_sessions[player.machineIdentifier] = session, player
 
     update_sessions()
     update_devices()
@@ -363,6 +365,8 @@ class PlexClient(MediaPlayerDevice):
 
     def refresh(self, device, session):
         """Refresh key device data."""
+        import plexapi.exceptions
+
         # new data refresh
         self._clear_media_details()
 
@@ -370,7 +374,11 @@ class PlexClient(MediaPlayerDevice):
             self._session = session
         if device:
             self._device = device
-            if "127.0.0.1" in self._device.url("/"):
+            try:
+                device_url = self._device.url("/")
+            except plexapi.exceptions.BadRequest:
+                device_url = '127.0.0.1'
+            if "127.0.0.1" in device_url:
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
@@ -379,12 +387,13 @@ class PlexClient(MediaPlayerDevice):
                 self._device.protocolCapabilities)
 
             # set valid session, preferring device session
-            if self.plex_sessions.get(self._device.machineIdentifier, None):
+            if self._device.machineIdentifier in self.plex_sessions:
                 self._session = self.plex_sessions.get(
-                    self._device.machineIdentifier, None)
+                    self._device.machineIdentifier, [None, None])[0]
 
         if self._session:
-            if self._device.machineIdentifier is not None and \
+            if self._device is not None and\
+                    self._device.machineIdentifier is not None and \
                     self._session.players:
                 self._is_player_available = True
                 self._player = [p for p in self._session.players
