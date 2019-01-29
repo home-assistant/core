@@ -344,12 +344,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
@@ -540,7 +540,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         'platform': 'mqtt',
         'name': 'Test 1',
         'state_topic': 'test-topic',
-        'command_topic': 'test-command-topic',
         'device': {
             'identifiers': ['helloworld'],
             'connections': [

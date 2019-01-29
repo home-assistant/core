@@ -649,14 +649,14 @@ async def test_unique_id(hass):
             'platform': 'mqtt',
             'name': 'Test 1',
             'schema': 'json',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }, {
             'platform': 'mqtt',
             'name': 'Test 2',
             'schema': 'json',
-            'status_topic': 'test-topic',
+            'state_topic': 'test-topic',
             'command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }]
@@ -714,13 +714,13 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     data1 = (
         '{ "name": "Beer",'
         '  "schema": "json",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
         '  "schema": "json",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -755,7 +755,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     data2 = (
         '{ "name": "Milk",'
         '  "schema": "json",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 

@@ -392,7 +392,7 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
 
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -421,12 +421,12 @@ async def test_discovery_update_switch(hass, mqtt_mock, caplog):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -460,7 +460,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
