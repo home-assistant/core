@@ -480,14 +480,13 @@ class DysonPureCoolDevice(FanEntity):
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return SPEED_MEDIUM
-            elif self._device.state.speed in low_speeds:
-                return SPEED_LOW
-            elif self._device.state.speed in medium_speeds:
+            if self._device.state.speed in low_speeds:
                 return SPEED_MEDIUM
-            elif self._device.state.speed in high_speeds:
+            if self._device.state.speed in medium_speeds:
+                return SPEED_MEDIUM
+            if self._device.state.speed in high_speeds:
                 return SPEED_HIGH
-        else:
-            return None
+        return None
 
     @property
     def dyson_speed(self):
