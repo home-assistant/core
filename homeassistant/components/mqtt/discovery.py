@@ -216,8 +216,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             key = ABBREVIATIONS.get(key, key)
             payload[key] = payload.pop(abbreviated_key)
 
-        if TOPIC_BASE in payload:
-            base = payload[TOPIC_BASE]
+        base = payload.pop(TOPIC_BASE, None)
+        if base:
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):
