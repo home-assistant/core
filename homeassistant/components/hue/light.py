@@ -230,12 +230,18 @@ class HueLight(Light):
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            if self.light.swupdatestate == "readytoinstall":
+                err = (
+                    "Please check for software updates of the bridge "
+                    "and/or the bulb: %s, in the Philips Hue App."
+                )
+                _LOGGER.warning(err, self.name)
             if self.gamut:
                 if not color.check_valid_gamut(self.gamut):
-                    err = "Please check for software updates of the bridge " \
-                          "and/or bulb in the Philips Hue App, " \
-                          "Color gamut of %s: %s, not valid, " \
-                          "setting gamut to None."
+                    err = (
+                        "Color gamut of %s: %s, not valid, "
+                        "setting gamut to None."
+                    )
                     _LOGGER.warning(err, self.name, str(self.gamut))
                     self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
                     self.gamut = None
