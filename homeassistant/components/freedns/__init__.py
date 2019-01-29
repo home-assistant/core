@@ -40,8 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
             replacement_key=CONF_SCAN_INTERVAL,
             invalidation_version='1.0.0',
             default=DEFAULT_INTERVAL
-        ),
-        cv.has_at_most_one_key(CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL)
+        )
     )
 }, extra=vol.ALLOW_EXTRA)
 

@@ -592,11 +592,13 @@ def deprecated(key, replacement_key=None, invalidation_version=None,
                 replacement_key=replacement_key,
                 invalidation_version=invalidation_version
             )
-            config.pop(key)
+            if replacement_key:
+                config.pop(key)
         else:
             value = default
-        config[replacement_key] = value
-
+        if replacement_key:
+            config[replacement_key] = value
+            return has_at_most_one_key(key, replacement_key)(config)
         return config
 
     # Adapted from: https://stackoverflow.com/a/24683360/2267718
