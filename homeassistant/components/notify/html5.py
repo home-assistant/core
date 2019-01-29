@@ -136,8 +136,7 @@ def get_service(hass, config, discovery_info=None):
     vapid_prv_key = config.get(ATTR_VAPID_PRV_KEY)
     vapid_email = config.get(ATTR_VAPID_EMAIL)
 
-    @websocket_api.async_response
-    async def websocket_appkey(hass, connection, msg):
+    def websocket_appkey(hass, connection, msg):
         connection.send_message(
             websocket_api.result_message(msg['id'], vapid_pub_key))
 
