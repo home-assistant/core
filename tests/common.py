@@ -450,8 +450,8 @@ class MockModule:
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None, async_setup_entry=None,
-                 async_unload_entry=None):
+                 platform_schema_base=None, async_setup=None,
+                 async_setup_entry=None, async_unload_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -462,6 +462,9 @@ class MockModule:
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if platform_schema_base is not None:
+            self.PLATFORM_SCHEMA_BASE = platform_schema_base
 
         if setup is not None:
             # We run this in executor, wrap it in function
