@@ -24,14 +24,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
 
+ATTR_BRANCHES = 'branches'
+ATTR_LAST_COMMIT = 'last_commit'
+ATTR_LATEST_RELEASE = 'latest_release'
+ATTR_OPEN_ISSUES = 'open_issues'
+ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
 ATTR_PATH = 'path'
 ATTR_STARGAZERS = 'stargazers'
 ATTR_TOPICS = 'topics'
-ATTR_BRANCHES = 'branches'
-ATTR_OPEN_ISSUES = 'open_issues'
-ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
-ATTR_LAST_COMMIT = 'last_commit'
-ATTR_LATEST_RELEASE = 'latest_release'
 
 DEFAULT_NAME = 'GitHub'
 
