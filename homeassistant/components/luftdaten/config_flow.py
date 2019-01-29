@@ -40,7 +40,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         """Show the form to the user."""
         data_schema = OrderedDict()
         data_schema[vol.Required(CONF_SENSOR_ID)] = cv.positive_int
-        data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=False)] = cv.boolean
+        data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=False)] = bool
 
         return self.async_show_form(
             step_id='user',
