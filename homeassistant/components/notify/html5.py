@@ -17,6 +17,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
@@ -69,6 +70,11 @@ ATTR_URL = 'url'
 ATTR_DISMISS = 'dismiss'
 
 ATTR_JWT = 'jwt'
+
+WS_TYPE_APPKEY = 'notify/html5/appkey'
+SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_APPKEY
+})
 
 # The number of days after the moment a notification is sent that a JWT
 # is valid.
@@ -130,7 +136,14 @@ def get_service(hass, config, discovery_info=None):
     vapid_prv_key = config.get(ATTR_VAPID_PRV_KEY)
     vapid_email = config.get(ATTR_VAPID_EMAIL)
 
-    hass.http.register_view(HTML5ApplicationServerKeyView(vapid_pub_key))
+    @websocket_api.async_response
+    async def websocket_appkey(hass, connection, msg):
+        connection.send_message(
+            websocket_api.result_message(msg['id'], vapid_pub_key))
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
+    )
 
     hass.http.register_view(
         HTML5PushRegistrationView(registrations, json_path))
@@ -155,21 +168,6 @@ def _load_config(filename):
     except HomeAssistantError:
         pass
     return {}
-
-
-class HTML5ApplicationServerKeyView(HomeAssistantView):
-    """To fetch application_server_key from a browser."""
-
-    url = '/api/notify.html5/applicationServerKey'
-    name = 'api:notify.html5:applicationServerKey'
-
-    def __init__(self, application_server_key):
-        """Init HTMLApplicationServerKeyView."""
-        self.application_server_key = application_server_key
-
-    async def get(self, request):
-        """Accept the GET request for application_server_key."""
-        return self.json_message(self.application_server_key)
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
