@@ -23,12 +23,12 @@ MOCK_CONFIG = {updater.DOMAIN: {
     'reporting': True
 }}
 
+
 @pytest.fixture(autouse=True)
 def mock_distro():
     """Mock distro dep."""
     with MockDependency('distro'):
         yield
-
 
 
 @pytest.fixture
