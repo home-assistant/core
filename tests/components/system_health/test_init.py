@@ -1,4 +1,5 @@
 """Tests for the system health component init."""
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -38,8 +39,10 @@ async def test_info_endpoint_return_info(hass, hass_ws_client,
 async def test_info_endpoint_register_callback(hass, hass_ws_client,
                                                mock_system_info):
     """Test that the info endpoint requires auth."""
-    hass.components.system_health.async_register_info(
-        'lovelace', lambda hass: {'storage': 'YAML'})
+    async def mock_info(hass):
+        return {'storage': 'YAML'}
+
+    hass.components.system_health.async_register_info('lovelace', mock_info)
     assert await async_setup_component(hass, 'system_health', {})
     client = await hass_ws_client(hass)
 
@@ -54,3 +57,26 @@ async def test_info_endpoint_register_callback(hass, hass_ws_client,
     assert len(data) == 2
     data = data['lovelace']
     assert data == {'storage': 'YAML'}
+
+
+async def test_info_endpoint_register_callback_timeout(hass, hass_ws_client,
+                                                       mock_system_info):
+    """Test that the info endpoint requires auth."""
+    async def mock_info(hass):
+        raise asyncio.TimeoutError
+
+    hass.components.system_health.async_register_info('lovelace', mock_info)
+    assert await async_setup_component(hass, 'system_health', {})
+    client = await hass_ws_client(hass)
+
+    resp = await client.send_json({
+        'id': 6,
+        'type': 'system_health/info',
+    })
+    resp = await client.receive_json()
+    assert resp['success']
+    data = resp['result']
+
+    assert len(data) == 2
+    data = data['lovelace']
+    assert data == {'error': 'Fetching info timed out'}

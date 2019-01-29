@@ -1,7 +1,9 @@
 """System health component."""
+import asyncio
 from collections import OrderedDict
 from typing import Callable, Dict
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -11,6 +13,7 @@ from homeassistant.components import websocket_api
 
 DEPENDENCIES = ['http']
 DOMAIN = 'system_health'
+INFO_CALLBACK_TIMEOUT = 5
 
 
 @bind_hass
@@ -29,6 +32,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
+async def _info_wrapper(hass, info_callback):
+    """Wrap info callback."""
+    try:
+        with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+            return await info_callback(hass)
+    except asyncio.TimeoutError:
+        return {
+            'error': 'Fetching info timed out'
+        }
+
+
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required('type'): 'system_health/info'
@@ -42,7 +56,10 @@ async def handle_info(hass: HomeAssistantType,
     data['homeassistant'] = \
         await hass.helpers.system_info.async_get_system_info()
 
-    for domain, info_callback in info_callbacks.items():
-        data[domain] = info_callback(hass)
+    for domain, domain_data in zip(info_callbacks, await asyncio.gather(*[
+            _info_wrapper(hass, info_callback) for info_callback
+            in info_callbacks.values()
+    ])):
+        data[domain] = domain_data
 
     connection.send_message(websocket_api.result_message(msg['id'], data))
