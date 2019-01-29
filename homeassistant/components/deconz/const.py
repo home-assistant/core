@@ -17,6 +17,7 @@ DECONZ_REACHABLE = 'deconz_reachable'
 
 ATTR_DARK = 'dark'
 ATTR_ON = 'on'
+ATTR_SCHEDULER = 'scheduler'
 
 DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]

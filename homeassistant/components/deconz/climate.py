@@ -1,19 +1,19 @@
 """
-Support for deCONZ thermostats.
+Support for deCONZ climate devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.deconz/
 """
 
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH)
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+    ClimateDevice, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+    ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
@@ -44,15 +44,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_climate(gateway.api.sensors.values())
 
 
-class DeconzThermostat(DeconzDevice, CoverDevice):
+class DeconzThermostat(DeconzDevice, ClimateDevice):
     """Representation of a deCONZ thermostat."""
 
     def __init__(self, device, gateway):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_TARGET_TEMPERATURE
-        self._features |= SUPPORT_ON_OFF
+        self._features = SUPPORT_ON_OFF
+        self._features |= SUPPORT_TARGET_TEMPERATURE
 
     @property
     def supported_features(self):
@@ -64,20 +64,15 @@ class DeconzThermostat(DeconzDevice, CoverDevice):
         """Return true if on."""
         return self._device.on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         """Turn on switch."""
         data = {'on': True}
         await self._device.async_set_config(data)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         """Turn off switch."""
         data = {'on': False}
         await self._device.async_set_config(data)
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -99,6 +94,22 @@ class DeconzThermostat(DeconzDevice, CoverDevice):
         await self._device.async_set_config(data)
 
     @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 1
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the thermostat."""
+        attr = {}
+
+        if self._device.offset:
+            attr[ATTR_BATTERY_LEVEL] = self._device.battery
+
+        if self._device.on is not None:
+            attr[ATTR_ON] = self._device.on
+
+        if self._device.scheduleron is not None:
+            attr[ATTR_SCHEDULER] = self._device.scheduleron
+
+        return attr
