@@ -41,6 +41,7 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+GAMUT_TYPE_UNAVAILABLE = 'None'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -221,7 +222,7 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
-            self.gamut_typ = 'None'
+            self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
@@ -229,6 +230,15 @@ class HueLight(Light):
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            if self.gamut:
+                if not color.check_valid_gamut(self.gamut):
+                    err = "Please check for software updates of the bridge " \
+                          "and/or bulb in the Philips Hue App, " \
+                          "Color gamut of %s: %s, not valid, " \
+                          "setting gamut to None."
+                    _LOGGER.warning(err, self.name, str(self.gamut))
+                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                    self.gamut = None
 
     @property
     def unique_id(self):
