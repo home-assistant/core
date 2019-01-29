@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
-STATE_UNAVAILABLE, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES)
+                                 STATE_UNAVAILABLE, CONF_NAME)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -40,8 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_SCAN_INTERVAL, default=MIN_TIME_BETWEEN_UPDATES):
-        vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(PEAK_HOURS): vol.All(cv.ensure_list),
     vol.Required(PEAK_HOURS_COST): vol.Coerce(float),
@@ -54,7 +52,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     timeout = config.get(CONF_TIMEOUT)
-    SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL)
     name = config.get(CONF_NAME)
     peak_hours = config.get(PEAK_HOURS)
     peak_hours_cost = config.get(PEAK_HOURS_COST)
@@ -135,28 +132,27 @@ class LinkySensor(Entity):
         self._attributes["offpeak_hours"] = sum(
             [0 if any([between(h[0], h[1], d[TIME])
                        for h in self._peak_hours])
-            else d[CONSUMPTION]
+             else d[CONSUMPTION]
              for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
         self._attributes["peak_offpeak_percent"] = ((self._attributes
                                                     ["peak_hours"] *
                                                     100) /
-        (self._attributes["peak_hours"] +
+                                                    (self._attributes["peak_hours"] +
          self._attributes["offpeak_hours"]))
-        self._attributes["daily_cost"] = (self
-        ._peak_hours_cost *
-        self._attributes["peak_hours"] +
-        self._offpeak_hours_cost *
-        self._attributes["offpeak_hours"])
+        self._attributes["daily_cost"] = (self._peak_hours_cost * 
+                                          self._attributes["peak_hours"] +
+                                          self._offpeak_hours_cost *
+                                          self._attributes["offpeak_hours"])
         self._attributes["monthly_evolution"] = (
-        1 - ((self._lk.monthly[0][CONSUMPTION]) /
-              (self._lk.compare_month))) * 100
+            1 - ((self._lk.monthly[0][CONSUMPTION]) /
+                 (self._lk.compare_month))) * 100
         _LOGGER.debug("Computed values: " +
                       str(self._attributes))
 
 
 def hour_to_min(hour):
-    return sum(map(lambda x, y: int(x)*y, hour.split(":"), [60,1]))
+    return sum(map(lambda x, y: int(x)*y, hour.split(":"), [60, 1]))
 
 
 def between(start, end, hour):
@@ -164,8 +160,8 @@ def between(start, end, hour):
     min_end = hour_to_min(end)
     min_hour = hour_to_min(hour)
     return (min_start <= min_hour <= min_end
-    if min_start < min_end
-    else min_start >= min_hour >= min_end)
+            if min_start < min_end
+            else min_start >= min_hour >= min_end)
 
 
 class LinkyData:
@@ -185,7 +181,6 @@ class LinkyData:
         """Fetch latest data from Linky."""
         from pylinky.client import PyLinkyError
         from pylinky import LinkyClient
-        from datetime import datetime
         from datetime import date
         from dateutil.relativedelta import relativedelta
         try:
@@ -196,8 +191,7 @@ class LinkyData:
             self.data = self.client.get_data()
             today = date.today()
             # Fixes a bug in PyLinky
-            self.data["monthly"][0] = (self.client
-            ._get_data_per_month(
+            self.data["monthly"][0] = (self.client._get_data_per_month(
                 (today.replace(day=1) - relativedelta(months=12))
                 .strftime("%d/%m/%Y"),
                 ((today - relativedelta(months=11)).replace(day=1)
@@ -226,7 +220,7 @@ class LinkyData:
     def update(self):
         """Return the latest collected data from Linky."""
         self._fetch_data()
-        if not self.data :
+        if not self.data:
             return
         _LOGGER.debug("Linky data retrieved: " + str(self.data))
         self.halfhourly = list(reversed(self.data["hourly"]))
