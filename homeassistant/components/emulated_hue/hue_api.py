@@ -56,6 +56,28 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
+class HueAllGroupsStateView(HomeAssistantView):
+    """Group handler."""
+
+    url = '/api/{username}/groups'
+    name = 'emulated_hue:all_groups:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to make the Brilliant Lightpad work."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
+        return self.json({
+        })
+
+
 class HueGroupView(HomeAssistantView):
     """Group handler to get Logitech Pop working."""
 
