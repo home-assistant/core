@@ -70,10 +70,10 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
-async def async_setup_entity_template(config, async_add_entities,
+async def async_setup_entity_template(config, async_add_entities, config_entry,
                                       discovery_hash):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, discovery_hash)])
+    async_add_entities([MqttTemplate(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -81,7 +81,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                    MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize a MQTT Template light."""
         self._state = False
         self._sub_state = None
@@ -107,7 +107,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -120,6 +120,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
