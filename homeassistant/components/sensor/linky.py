@@ -142,7 +142,7 @@ class LinkySensor(Entity):
                                                      ["peak_hours"] +
                                                      self._attributes
                                                      ["offpeak_hours"]))
-        self._attributes["daily_cost"] = (self._peak_hours_cost * 
+        self._attributes["daily_cost"] = (self._peak_hours_cost *
                                           self._attributes["peak_hours"] +
                                           self._offpeak_hours_cost *
                                           self._attributes["offpeak_hours"])
