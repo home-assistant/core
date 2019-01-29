@@ -186,6 +186,18 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return self._brightness
 
     @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
+        if self._brightness is not None:
+            attr[ATTR_BRIGHTNESS] = self._brightness
+        return attr
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
@@ -238,6 +250,18 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
+        if self._brightness is not None:
+            attr[ATTR_BRIGHTNESS] = self._brightness
+        return attr
 
     @property
     def supported_features(self):
