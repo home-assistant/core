@@ -60,7 +60,7 @@ class AsuswrtSensor(Entity):
 
     async def async_update(self):
         """Fetch status from asuswrt."""
-        self._rates = await self._api.async_get_packets_total()
+        self._rates = await self._api.async_get_bytes_total()
         self._speed = await self._api.async_get_current_transfer_rates()
 
 
