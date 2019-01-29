@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PASSWORD, CONF_PATH, 
+    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PASSWORD, CONF_PATH,
     CONF_SCAN_INTERVAL, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_URL): cv.url,
-    vol.Required(CONF_REPOS): 
+    vol.Required(CONF_REPOS):
         vol.All(cv.ensure_list, [REPO_SCHEMA]),
 })
 
