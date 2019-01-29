@@ -183,6 +183,7 @@ class GitHubData():
         self.available = False
 
     def _update(self):
+        """Update GitHub Sensor."""
         try:
             repo = self._github_obj.get_repo(self.repository_path)
 
