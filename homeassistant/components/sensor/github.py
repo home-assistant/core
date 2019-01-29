@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['PyGithub==1.43.4']
+REQUIREMENTS = ['PyGithub==1.43.5']
 
 _LOGGER = logging.getLogger(__name__)
 
