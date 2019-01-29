@@ -65,9 +65,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     netatmo = hass.components.netatmo
 
     import pyatmo
-    try:
-        for home_conf in config.get(CONF_HOMES):
-            home = home_conf.get(CONF_NAME)
+    for home_conf in config.get(CONF_HOMES):
+        home = home_conf.get(CONF_NAME)
+        try:
             home_data = HomeData(netatmo.NETATMO_AUTH, home)
             for home in home_data.get_home_names():
                 _LOGGER.debug("Setting up %s ...", home)
@@ -75,16 +75,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for room_id in room_data.get_room_ids():
                     room_name = room_data.homedata.rooms[home][room_id]['name']
                     _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
-                    if CONF_ROOMS in home_conf:
-                        _LOGGER.debug(home_conf[CONF_ROOMS])
-                        if home_conf[CONF_ROOMS] != [] and \
-                           room_name not in home_conf[CONF_ROOMS]:
-                            continue
+                    if CONF_ROOMS in home_conf and \
+                       home_conf[CONF_ROOMS] != [] and \
+                       room_name not in home_conf[CONF_ROOMS]:
+                        continue
                     _LOGGER.debug("Adding devices for room %s (%s) ...",
                                   room_name, room_id)
                     add_entities([NetatmoThermostat(room_data, room_id)], True)
-    except pyatmo.NoDevice:
-        return
+        except pyatmo.NoDevice:
+            return
 
 
 class NetatmoThermostat(ClimateDevice):
