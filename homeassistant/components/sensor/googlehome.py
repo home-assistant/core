@@ -56,6 +56,7 @@ class GoogleHomeAlarm(Entity):
         self._available = True
 
     async def async_init(self):
+        await self._client.update_info(self._host)
         data = self._hass.data[GOOGLEHOME_DOMAIN][self._host]
         info = data.get('info', {})
         if info is None:
@@ -63,7 +64,7 @@ class GoogleHomeAlarm(Entity):
         self._name = "{} {}".format(info.get('name', NAME), SENSOR_TYPES[self._condition])
 
     async def async_update(self):
-        await self._client.update_data(self._host)
+        await self._client.update_alarms(self._host)
         data = self._hass.data[GOOGLEHOME_DOMAIN][self._host]
 
         alarms = data.get('alarms')[self._condition]
