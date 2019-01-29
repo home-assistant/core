@@ -48,13 +48,8 @@ class Fan(HomeAccessory):
         if features & SUPPORT_SET_SPEED:
             speed_list = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_SPEED_LIST)
-            if speed_list:
-                self.speed_mapping = HomeKitSpeedMapping(speed_list)
-                chars.append(CHAR_ROTATION_SPEED)
-            else:
-                _LOGGER.warning(
-                    '%s: claims to support %s but does not contain a %s',
-                    self.entity_id, SERVICE_SET_SPEED, ATTR_SPEED_LIST)
+            self.speed_mapping = HomeKitSpeedMapping(speed_list)
+            chars.append(CHAR_ROTATION_SPEED)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.char_active = serv_fan.configure_char(
@@ -136,12 +131,9 @@ class Fan(HomeAccessory):
         if self.char_speed is not None:
             speed = new_state.attributes.get(ATTR_SPEED)
             hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
-            # update the speed even if it had been set via HomeKit
-            # so that it snaps to the correct percentage
             if hk_speed_value is not None and \
                     self.char_speed.value != hk_speed_value:
                 self.char_speed.set_value(hk_speed_value)
-            self._flag[CHAR_ROTATION_SPEED] = False
 
         # Handle Oscillating
         if self.char_swing is not None:

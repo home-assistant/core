@@ -1,7 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 import logging
-from math import inf
 
 import voluptuous as vol
 
@@ -113,13 +112,13 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-SpeedRange = namedtuple('SpeedRange', 'start target stop')
-SpeedRange.__doc__ += """: a mapping of descrete Home Assistant speed \
-values to percentage based HomeKit speeds."""
-SpeedRange.start.__doc__ += """Start of the range (inclusive)."""
-SpeedRange.target.__doc__ += """Percentage to use to determine HomeKit \
-percentages from HomeAssistant speed."""
-SpeedRange.stop.__doc__ += """Stop of the range (exclusive)."""
+SpeedRange = namedtuple('SpeedRange', ('start', 'target'))
+SpeedRange.__doc__ += """: Maps Home Assistant speed \
+values to percentage based HomeKit speeds.
+start: Start of the range (inclusive).
+target: Percentage to use to determine HomeKit percentages \
+from HomeAssistant speed.
+"""
 
 
 class HomeKitSpeedMapping:
@@ -132,7 +131,7 @@ class HomeKitSpeedMapping:
                             "%s as its first element. "
                             "Assuming that %s is equivalent to 'off'.",
                             speed_list, fan.SPEED_OFF, speed_list[0])
-        speed_ranges = {}
+        speed_ranges = OrderedDict()
         list_size = len(speed_list)
         for index, speed in enumerate(speed_list):
             # By dividing by list_size -1 the following
@@ -142,28 +141,20 @@ class HomeKitSpeedMapping:
             # * all other indices are equally distributed
             target = index * 100 / (list_size - 1)
             start = index * 100 / list_size
-            stop = (index + 1) * 100 / list_size
-            # the first and last element should go until -+ infinity
-            if index == 0:
-                start = -inf
-            if index == list_size - 1:
-                stop = inf
-            speed_ranges[speed] = SpeedRange(start, target, stop)
+            speed_ranges[speed] = SpeedRange(start, target)
         self.speed_ranges = speed_ranges
 
     def speed_to_homekit(self, speed):
         """Map Home Assistant speed state to HomeKit speed."""
-        speed_range = self.speed_ranges.get(speed, None)
-        return speed_range.target if speed_range else 0
+        speed_range = self.speed_ranges[speed]
+        return speed_range.target
 
     def speed_to_states(self, speed):
         """Map HomeKit speed to Home Assistant speed state."""
-        for state, speed_range in self.speed_ranges.items():
-            if speed_range.start <= speed < speed_range.stop:
+        for state, speed_range in reversed(self.speed_ranges.items()):
+            if speed_range.start <= speed:
                 return state
-        # if nobody tampered with self.speed_ranges
-        # this happens only for +/-inf
-        raise KeyError(speed)
+        return list(self.speed_ranges.keys())[0]
 
 
 def show_setup_message(hass, pincode):

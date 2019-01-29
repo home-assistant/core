@@ -42,6 +42,9 @@ async def test_fan_basic(hass, hk_driver, cls, events):
     assert acc.category == 3  # Fan
     assert acc.char_active.value == 0
 
+    # If there are no speed_list values, then HomeKit speed is unsupported
+    assert acc.char_speed is None
+
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
@@ -165,34 +168,23 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     entity_id = 'fan.demo'
     speed_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
 
-    # If there are no speed_list values, then HomeKit speed is unsupported
-    hass.states.async_set(entity_id, STATE_ON, {
-        ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED, ATTR_SPEED: SPEED_OFF})
-    await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
-
-    assert acc.char_speed is None
-
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED, ATTR_SPEED: SPEED_OFF,
         ATTR_SPEED_LIST: speed_list})
     await hass.async_block_till_done()
     acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
-
     assert acc.char_speed.value == 0
 
     await hass.async_add_job(acc.run)
-
-    speed_mapping = acc.speed_mapping
-    assert speed_mapping.speed_ranges == \
+    assert acc.speed_mapping.speed_ranges == \
         HomeKitSpeedMapping(speed_list).speed_ranges
 
-    speed_mapping.speed_to_homekit = Mock(return_value=42)
-    speed_mapping.speed_to_states = Mock(return_value='ludicrous')
+    acc.speed_mapping.speed_to_homekit = Mock(return_value=42)
+    acc.speed_mapping.speed_to_states = Mock(return_value='ludicrous')
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH})
     await hass.async_block_till_done()
-    speed_mapping.speed_to_homekit.assert_called_with(SPEED_HIGH)
+    acc.speed_mapping.speed_to_homekit.assert_called_with(SPEED_HIGH)
     assert acc.char_speed.value == 42
 
     # Set from HomeKit
@@ -200,7 +192,7 @@ async def test_fan_speed(hass, hk_driver, cls, events):
 
     await hass.async_add_job(acc.char_speed.client_update_value, 42)
     await hass.async_block_till_done()
-    speed_mapping.speed_to_states.assert_called_with(42)
+    acc.speed_mapping.speed_to_states.assert_called_with(42)
     assert call_set_speed[0]
     assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0].data[ATTR_SPEED] == 'ludicrous'
