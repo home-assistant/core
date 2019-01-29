@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_URL): cv.url,
     vol.Required(CONF_REPOS):
-        vol.All(cv.ensure_list, [REPO_SCHEMA]),
+        vol.All(cv.ensure_list, [REPO_SCHEMA])
 })
 
 
@@ -63,14 +63,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     sensors = []
     for repository in config[CONF_REPOS]:
-        sensors.append(GitHubSensor(GitHubData(
+        data = GitHubData(
             interval=interval,
             repository=repository,
             access_token=config.get(CONF_ACCESS_TOKEN),
             username=config.get(CONF_USERNAME),
             password=config.get(CONF_PASSWORD),
             server_url=config.get(CONF_URL)
-        )))
+        )
+        if data.setup_error is True:
+            _LOGGER.error("Error setting up GitHub platform. Check previous " +
+                          "errors for details")
+            return
+        sensors.append(GitHubSensor(data))
     add_entities(sensors, True)
 
 
@@ -153,24 +158,54 @@ class GitHubData():
         import github
 
         self._github = github
+        
+        self.setup_error = False
+        
+        try:
+            if server_url is not None:
+                server_url += "/api/v3"
+                if access_token is not None:
+                    self._github_obj = github.Github(
+                        access_token, base_url=server_url)
+                elif username is not None and password is not None:
+                    self._github_obj = github.Github(
+                        username, password, base_url=server_url)
+            else:
+                if access_token is not None:
+                    self._github_obj = github.Github(access_token)
+                elif username is not None and password is not None:
+                    self._github_obj = github.Github(username, password)
 
-        if server_url is not None:
-            server_url += "/api/v3"
-            if access_token is not None:
-                self._github_obj = github.Github(
-                    access_token, base_url=server_url)
-            elif username is not None and password is not None:
-                self._github_obj = github.Github(
-                    username, password, base_url=server_url)
-        else:
-            if access_token is not None:
-                self._github_obj = github.Github(access_token)
-            elif username is not None and password is not None:
-                self._github_obj = github.Github(username, password)
+            self.repository_path = repository[CONF_PATH]
 
-        self.repository_path = repository[CONF_PATH]
+            repo = self._github_obj.get_repo(self.repository_path)
+        except self._github.BadCredentialsException as err:
+            _LOGGER.error("Bad Credentials for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
+        except self._github.UnknownObjectException as err:
+            _LOGGER.error("UnknownObjectException for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
+        except self._github.RateLimitExceededException as err:
+            _LOGGER.error("RateLimitExceededException for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
+        except self._github.BadAttributeException as err:
+            _LOGGER.error("BadAttributeException for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
+        except self._github.TwoFactorException as err:
+            _LOGGER.error("TwoFactorException for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
+        except self._github.GithubException as err:
+            _LOGGER.error("GithubException for %s: %s",
+                          self.repository_path, err)
+            self.setup_error = True
 
-        repo = self._github_obj.get_repo(self.repository_path)
+        if self.setup_error is True:
+            return
 
         if CONF_NAME in repository:
             self.name = repository[CONF_NAME]
