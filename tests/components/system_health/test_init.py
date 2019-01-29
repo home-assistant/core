@@ -1,6 +1,6 @@
 """Tests for the system health component init."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -13,7 +13,7 @@ from tests.common import mock_coro
 def mock_system_info():
     """Mock system info."""
     with patch('homeassistant.helpers.system_info.async_get_system_info',
-               return_value=mock_coro({'hello': True})):
+               Mock(return_value=mock_coro({'hello': True}))):
         yield
 
 
