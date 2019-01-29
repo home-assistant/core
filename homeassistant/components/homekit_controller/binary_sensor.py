@@ -50,6 +50,4 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Has motion been detected."""
-        if not self.available:
-            return False
         return self._on
