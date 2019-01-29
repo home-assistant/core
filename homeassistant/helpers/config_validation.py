@@ -16,7 +16,8 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE)
+    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, MAJOR_VERSION, MINOR_VERSION,
+    PATCH_VERSION)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -63,6 +64,26 @@ def has_at_least_one_key(*keys: str) -> Callable:
             if k in keys:
                 return obj
         raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
+
+
+def has_at_most_one_key(*keys: str) -> Callable:
+    """Validate that only one key exists."""
+    def validate(obj: Dict) -> Dict:
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        count = 0
+        for k in obj.keys():
+            if k in keys:
+                count += 1
+
+        if count > 1:
+            raise vol.Invalid(
+                'must contain at most one of {}.'.format(', '.join(keys))
+            )
+        return obj
 
     return validate
 
@@ -520,18 +541,104 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
-def deprecated(key):
-    """Log key as deprecated."""
+def deprecated(key, replacement_key=None, invalidation_version=None,
+               default=None):
+    """Log key as deprecated and provide a replacement (if exists)."""
     module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+
+    if replacement_key and invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is deprecated,"
+                   " please replace it with '{replacement_key}'. This option"
+                   " will become invalid in version {invalidation_version}.")
+    elif replacement_key:
+        warning = ("The '{key}' option (with value '{value}') is deprecated,"
+                   " please replace it with '{replacement_key}'.")
+    elif invalidation_version:
+        warning = ("The '{key}' option (with value '{value}') is deprecated,"
+                   " please remove it from your configuration. This option"
+                   " will become invalid in version {invalidation_version}.")
+    else:
+        warning = ("The '{key}' option (with value '{value}') is deprecated,"
+                   " please remove it from your configuration.")
+
+    def check_for_invalid_version(value):
+        """Raise error if current version has reach invalidation."""
+        if not invalidation_version:
+            return
+
+        major_version, minor_version, patch_version = \
+            map(int, invalidation_version.split('.', 2))
+        if (MAJOR_VERSION >= major_version
+                and MINOR_VERSION >= minor_version
+                and PATCH_VERSION >= patch_version):
+            raise vol.Invalid(
+                warning.format(
+                    key=key,
+                    value=value,
+                    replacement_key=replacement_key,
+                    invalidation_version=invalidation_version
+                )
+            )
 
     def validator(config):
         """Check if key is in config and log warning."""
         if key in config:
-            logging.getLogger(module_name).warning(
-                "The '%s' option (with value '%s') is deprecated, please "
-                "remove it from your configuration.", key, config[key])
+            value = config[key]
+            check_for_invalid_version(value)
+            StyleAdapter(logging.getLogger(module_name)).warning(
+                warning,
+                key=key,
+                value=value,
+                replacement_key=replacement_key,
+                invalidation_version=invalidation_version
+            )
+            config.pop(key)
+        else:
+            value = default
+        config[replacement_key] = value
 
         return config
+
+    # Adapted from: https://stackoverflow.com/a/24683360/2267718
+    class BraceMessage:
+        """Represents a logging message with brace style arguments."""
+
+        def __init__(self, fmt, args, kwargs):
+            """Initialize a new BraceMessage object."""
+            self._fmt = fmt
+            self._args = args
+            self._kwargs = kwargs
+
+        def __str__(self):
+            """Convert the object to a string for logging."""
+            return str(self._fmt).format(*self._args, **self._kwargs)
+
+    class StyleAdapter(logging.LoggerAdapter):
+        """Represents an adapter wrapping the logger allowing BraceMessages."""
+
+        def __init__(self, logger, extra=None):
+            """Initialize a new StyleAdapter for the provided logger."""
+            super(StyleAdapter, self).__init__(logger, extra or {})
+
+        def log(self, level, msg, *args, **kwargs):
+            """Log the message provided at the appropriate level."""
+            if self.isEnabledFor(level):
+                msg, log_kwargs = self.process(msg, kwargs)
+                self.logger._log(  # pylint: disable=protected-access
+                    level, BraceMessage(msg, args, kwargs), (), **log_kwargs
+                )
+
+        def process(self, msg, kwargs):
+            """Process the keyward args in preparation for logging."""
+            return (
+                msg,
+                {
+                    key: kwargs[key]
+                    for k in inspect.getfullargspec(
+                        self.logger._log  # pylint: disable=protected-access
+                    ).args[1:] if k in kwargs
+                }
+            )
 
     return validator
 

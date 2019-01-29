@@ -511,6 +511,11 @@ def test_deprecated(caplog):
             "please remove it from your configuration.") in caplog.text
 
 
+def test_deprecated_with_replacement_invalidation_version(caplog):
+    """Test deprecation log when a replacement is provided."""
+    pass
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))

@@ -13,7 +13,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (CONF_URL, CONF_ACCESS_TOKEN,
-                                 CONF_UPDATE_INTERVAL)
+                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,21 +26,32 @@ TIMEOUT = 10
 UPDATE_URL = 'https://freedns.afraid.org/dynamic/update.php'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Exclusive(CONF_URL, DOMAIN): cv.string,
-        vol.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-            cv.time_period, cv.positive_timedelta),
-
-    })
+    DOMAIN: vol.All(
+        vol.Schema({
+            vol.Exclusive(CONF_URL, DOMAIN): cv.string,
+            vol.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
+            vol.Optional(CONF_UPDATE_INTERVAL):
+                vol.All(cv.time_period, cv.positive_timedelta),
+            vol.Optional(CONF_SCAN_INTERVAL):
+                vol.All(cv.time_period, cv.positive_timedelta),
+        }),
+        cv.deprecated(
+            CONF_UPDATE_INTERVAL,
+            replacement_key=CONF_SCAN_INTERVAL,
+            invalidation_version='1.0.0',
+            default=DEFAULT_INTERVAL
+        ),
+        cv.has_at_most_one_key(CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL)
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Initialize the FreeDNS component."""
-    url = config[DOMAIN].get(CONF_URL)
-    auth_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
-    update_interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
+    conf = config[DOMAIN]
+    url = conf.get(CONF_URL)
+    auth_token = conf.get(CONF_ACCESS_TOKEN)
+    update_interval = conf[CONF_SCAN_INTERVAL]
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
