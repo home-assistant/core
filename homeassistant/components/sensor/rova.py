@@ -86,7 +86,6 @@ class RovaSensor(Entity):
         self.platform_name = platform_name
         self.data_service = data_service
 
-        self._device_class = DEVICE_CLASS_TIMESTAMP
         self._state = None
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
@@ -104,7 +103,7 @@ class RovaSensor(Entity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._device_class
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def state(self):
