@@ -233,7 +233,7 @@ class HueLight(Light):
             if self.gamut:
                 if not color.check_valid_gamut(self.gamut):
                     err = "Please check for software updates of the bridge " \
-                          "and\or bulb in the Philips Hue App, " \
+                          "and/or bulb in the Philips Hue App, " \
                           "Color gamut of %s: %s, not valid, " \
                           "setting gamut to None."
                     _LOGGER.warning(err, self.name, str(self.gamut))
