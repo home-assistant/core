@@ -489,19 +489,37 @@ def test_datetime():
     schema('2016-11-23T18:59:08')
 
 
-def test_deprecated(caplog):
-    """Test deprecation log."""
+def test_deprecated_logging(caplog):
+    """Test deprecation logs the correct message in each situation."""
     schema = vol.Schema({
         'venus': cv.boolean,
-        'mars': cv.boolean
+        'mars': cv.boolean,
+        'jupiter': cv.boolean
     })
+
     deprecated_schema = vol.All(
         cv.deprecated('mars'),
         schema
     )
 
+    deprecated_schema_with_invalidation_version = vol.All(
+        cv.deprecated('mars', invalidation_version='1.0.0'),
+        schema
+    )
+
+    deprecated_schema_with_replacement_key = vol.All(
+        cv.deprecated('mars', replacement_key='jupiter'),
+        schema
+    )
+
+    deprecated_schema_with_invalidation_version_and_replacement_key = vol.All(
+        cv.deprecated(
+            'mars', replacement_key='jupiter', invalidation_version='1.0.0'
+        ),
+        schema
+    )
+
     deprecated_schema({'venus': True})
-    # pylint: disable=len-as-condition
     assert len(caplog.records) == 0
 
     deprecated_schema({'mars': True})
@@ -509,11 +527,33 @@ def test_deprecated(caplog):
     assert caplog.records[0].name == __name__
     assert ("The 'mars' option (with value 'True') is deprecated, "
             "please remove it from your configuration.") in caplog.text
+    caplog.clear()
+    assert len(caplog.records) == 0
 
+    deprecated_schema_with_invalidation_version({'mars': True})
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration. "
+            "This option will become invalid in version 1.0.0.") in caplog.text
+    caplog.clear()
+    assert len(caplog.records) == 0
 
-def test_deprecated_with_replacement_invalidation_version(caplog):
-    """Test deprecation log when a replacement is provided."""
-    pass
+    deprecated_schema_with_replacement_key({'mars': True})
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'.") in caplog.text
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    deprecated_schema_with_invalidation_version_and_replacement_key(
+        {'mars': True}
+    )
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'. This option will become "
+            "invalid in version 1.0.0.") in caplog.text
+    caplog.clear()
+    assert len(caplog.records) == 0
 
 
 def test_key_dependency():
@@ -532,6 +572,18 @@ def test_key_dependency():
         {'soda': None}, {}
     )
     for value in options:
+        schema(value)
+
+
+def test_has_at_most_one_key():
+    """Test has_at_most_one_key validator."""
+    schema = vol.Schema(cv.has_at_most_one_key('beer', 'soda'))
+
+    for value in (None, [], {'beer': None, 'soda': None}):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ({}, {'beer': None}, {'soda': None}):
         schema(value)
 
 

@@ -69,8 +69,9 @@ def has_at_least_one_key(*keys: str) -> Callable:
 
 
 def has_at_most_one_key(*keys: str) -> Callable:
-    """Validate that only one key exists."""
+    """Validate that zero keys exist or one key exists."""
     def validate(obj: Dict) -> Dict:
+        """Test zero keys exist or one key exists in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid('expected dictionary')
 
