@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['ha-ffmpeg==1.9']
+REQUIREMENTS = ['ha-ffmpeg==1.11']
 
 DOMAIN = 'ffmpeg'
 
@@ -107,19 +107,11 @@ class FFmpegManager:
 
     async def async_get_version(self):
         """Return ffmpeg version."""
+        from haffmpeg.tools import FFVersion
+
         if self._version is None:
-            proc = await asyncio.create_subprocess_exec(
-                self._bin, "-version",
-                loop=self.hass.loop,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE)
-
-            first_line = (await proc.stdout.readline()).decode()
-            _LOGGER.debug(first_line)
-
-            result = re.search(r"ffmpeg version (\S*)", first_line)
-            if result is not None:
-                self._version = result.group(1)
+            ffversion = FFVersion(self._bin, self.hass.loop)
+            self._version = await ffversion.get_version()
 
         return self._version
 
