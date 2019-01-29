@@ -20,7 +20,7 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict:
         'python_version': platform.python_version(),
         'docker': False,
         'arch': platform.machine(),
-        'timezone': hass.config.time_zone,
+        'timezone': str(hass.config.time_zone),
         'os_name': platform.system(),
     }
 

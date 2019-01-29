@@ -8,7 +8,8 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, mock_coro, mock_component
+from tests.common import (
+    async_fire_time_changed, mock_coro, mock_component, MockDependency)
 
 NEW_VERSION = '10000.0'
 MOCK_VERSION = '10.0'
@@ -21,6 +22,13 @@ MOCK_RESPONSE = {
 MOCK_CONFIG = {updater.DOMAIN: {
     'reporting': True
 }}
+
+@pytest.fixture(autouse=True)
+def mock_distro():
+    """Mock distro dep."""
+    with MockDependency('distro'):
+        yield
+
 
 
 @pytest.fixture

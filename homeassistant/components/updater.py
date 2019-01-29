@@ -125,7 +125,7 @@ async def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
         info_object = \
-            await hass.helpers.system_info.async_get_system_info(hass)
+            await hass.helpers.system_info.async_get_system_info()
 
         if include_components:
             info_object['components'] = list(hass.config.components)
