@@ -39,7 +39,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 
 REPO_SCHEMA = vol.Schema({
     vol.Required(CONF_PATH): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_URL): cv.url,
     vol.Required(CONF_REPOS): 
-        vol.All(cv.ensure_list, [vol.In(REPO_SCHEMA)]),
+        vol.All(cv.ensure_list, [REPO_SCHEMA]),
 })
 
 
