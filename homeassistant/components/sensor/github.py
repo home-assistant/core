@@ -158,9 +158,9 @@ class GitHubData():
         import github
 
         self._github = github
-        
+
         self.setup_error = False
-        
+
         try:
             if server_url is not None:
                 server_url += "/api/v3"
