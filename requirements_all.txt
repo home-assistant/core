@@ -1,6 +1,6 @@
 # Home Assistant core
 aiohttp==3.5.4
-astral==1.8
+astral==1.7.1
 async_timeout==3.0.1
 attrs==18.2.0
 bcrypt==3.1.5
@@ -114,9 +114,6 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.8.0
 
-# homeassistant.components.sensor.iliad_italy
-aioiliad==0.1.1
-
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
 
@@ -167,7 +164,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.14.3
+async-upnp-client==0.14.2
 
 # homeassistant.components.light.avion
 # avion==0.10
@@ -258,9 +255,6 @@ caldav==0.5.0
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
-# homeassistant.components.sensor.co2signal
-co2signal==0.4.1
-
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
@@ -335,7 +329,7 @@ dlipower==0.7.165
 # homeassistant.components.doorbird
 doorbirdpy==2.0.6
 
-# homeassistant.components.dovado
+# homeassistant.components.sensor.dovado
 dovado==0.4.1
 
 # homeassistant.components.sensor.dsmr
@@ -532,7 +526,7 @@ home-assistant-frontend==20190121.1
 homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
-homekit==0.12.2
+# homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.4
@@ -604,6 +598,9 @@ libnacl==1.6.1
 
 # homeassistant.components.dyson
 libpurecool==0.5.0
+
+# homeassistant.components.camera.foscam
+libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
 librouteros==2.2.0
@@ -680,7 +677,7 @@ mficlient==0.3.0
 miflora==0.4.0
 
 # homeassistant.components.climate.mill
-millheater==0.3.4
+millheater==0.3.3
 
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
@@ -723,9 +720,6 @@ neurio==0.3.1
 
 # homeassistant.components.light.niko_home_control
 niko-home-control==0.1.8
-
-# homeassistant.components.air_quality.nilu
-niluclient==0.1.2
 
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
@@ -841,7 +835,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.5.0
+psutil==5.4.8
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
@@ -891,7 +885,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.4
 
 # homeassistant.components.tibber
-pyTibber==0.9.4
+pyTibber==0.9.3
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -1013,9 +1007,6 @@ pyflunearyou==1.0.1
 
 # homeassistant.components.light.futurenow
 pyfnip==0.2
-
-# homeassistant.components.camera.foscam
-pyfoscam==1.2
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
@@ -1568,7 +1559,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.16
+sqlalchemy==1.2.15
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
@@ -1778,4 +1769,4 @@ zigpy-xbee==0.1.1
 zigpy==0.2.0
 
 # homeassistant.components.zoneminder
-zm-py==0.3.1
+zm-py==0.3.0
