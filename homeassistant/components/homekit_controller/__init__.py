@@ -28,7 +28,8 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'garage-door-opener': 'cover',
     'window': 'cover',
     'window-covering': 'cover',
-    'lock-mechanism': 'lock'
+    'lock-mechanism': 'lock',
+    'motion': 'binary_sensor',
 }
 
 HOMEKIT_IGNORE = [
