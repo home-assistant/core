@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, DEVICE_CLASS_PRESSURE)

@@ -110,7 +110,7 @@ def test_platform_config():
         {'platform': 'mqtt', 'beer': 'yes'},
     )
     for value in options:
-        cv.PLATFORM_SCHEMA(value)
+        cv.PLATFORM_SCHEMA_BASE(value)
 
 
 def test_ensure_list():

@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import (ToggleEntity, Entity)
 from homeassistant.helpers.icon import icon_for_battery_level

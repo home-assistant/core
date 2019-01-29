@@ -87,7 +87,7 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
 }))
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA_2.extend({
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,

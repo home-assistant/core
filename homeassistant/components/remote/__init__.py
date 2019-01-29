@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 
 _LOGGER = logging.getLogger(__name__)
 

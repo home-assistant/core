@@ -14,7 +14,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.helpers import intent

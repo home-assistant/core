@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
