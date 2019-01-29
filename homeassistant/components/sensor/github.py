@@ -37,12 +37,18 @@ DEFAULT_NAME = 'GitHub'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
+REPO_SCHEMA = vol.Schema({
+    vol.Required(CONF_PATH): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Exclusive(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
     vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_URL): cv.url,
-    vol.Required(CONF_REPOS): cv.ensure_list
+    vol.Required(CONF_REPOS): 
+        vol.All(cv.ensure_list, [vol.In(REPO_SCHEMA)]),
 })
 
 
