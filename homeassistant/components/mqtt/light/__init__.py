@@ -55,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
+            await _async_setup_entity(config, async_add_entities, config_entry,
                                       discovery_hash)
         except Exception:
             if discovery_hash:
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
                               discovery_hash=None):
     """Set up a MQTT Light."""
     setup_entity = {
@@ -76,4 +76,4 @@ async def _async_setup_entity(config, async_add_entities,
         'template': schema_template.async_setup_entity_template,
     }
     await setup_entity[config[CONF_SCHEMA]](
-        config, async_add_entities, discovery_hash)
+        config, async_add_entities, config_entry, discovery_hash)
