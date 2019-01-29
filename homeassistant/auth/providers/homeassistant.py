@@ -2,7 +2,8 @@
 import base64
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, Set, cast
+
+from typing import Any, Dict, List, Optional, Set, cast  # noqa: F401
 
 import bcrypt
 import voluptuous as vol
