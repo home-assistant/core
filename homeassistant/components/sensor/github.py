@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_PASSWORD, CONF_PATH, CONF_NAME,
-    CONF_SCAN_INTERVAL, ATTR_NAME)
+    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PASSWORD, CONF_PATH, 
+    CONF_SCAN_INTERVAL, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
-CONF_SERVER_URL = 'server_url'
 
 ATTR_PATH = 'path'
 ATTR_STARGAZERS = 'stargazers'
@@ -42,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Exclusive(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
     vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SERVER_URL): cv.url,
+    vol.Optional(CONF_URL): cv.url,
     vol.Required(CONF_REPOS): cv.ensure_list
 })
 
@@ -64,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             access_token=config.get(CONF_ACCESS_TOKEN),
             username=config.get(CONF_USERNAME),
             password=config.get(CONF_PASSWORD),
-            server_url=config.get(CONF_SERVER_URL)
+            server_url=config.get(CONF_URL)
         )))
     add_entities(sensors, True)
 
