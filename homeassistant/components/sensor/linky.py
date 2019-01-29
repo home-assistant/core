@@ -10,8 +10,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
-STATE_UNKNOWN, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
+STATE_UNAVAILABLE, CONF_NAME, CONF_SCAN_INTERVAL, CONF_MONITORED_VARIABLES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -116,6 +116,11 @@ class LinkySensor(Entity):
         """
         _LOGGER.debug("Start of update of linky data")
         self._lk.update()
+        if not self._lk.success:
+            self._state = STATE_UNAVAILABLE
+            self._attributes = []
+            return
+
         self._state = self._lk.daily[1][CONSUMPTION]
         self._attributes["halfhourly"] = [d[CONSUMPTION]
                                           for d in self._lk.halfhourly]
@@ -133,18 +138,18 @@ class LinkySensor(Entity):
             else d[CONSUMPTION]
              for d in self._lk.halfhourly]) / 2
         # From kW for 30 minutes to kWh
-        self._attributes["peak_offpeak_percent"] = (self._attributes
+        self._attributes["peak_offpeak_percent"] = ((self._attributes
                                                     ["peak_hours"] *
                                                     100) /
         (self._attributes["peak_hours"] +
-         self._attributes["offpeak_hours"])
-        self._attributes["daily_cost"] = self
+         self._attributes["offpeak_hours"]))
+        self._attributes["daily_cost"] = (self
         ._peak_hours_cost *
         self._attributes["peak_hours"] +
         self._offpeak_hours_cost *
-        self._attributes["offpeak_hours"]
-        self._attributes["monthly_evolution"] =
-        (1 - ((self._lk.monthly[0][CONSUMPTION]) /
+        self._attributes["offpeak_hours"])
+        self._attributes["monthly_evolution"] = (
+        1 - ((self._lk.monthly[0][CONSUMPTION]) /
               (self._lk.compare_month))) * 100
         _LOGGER.debug("Computed values: " +
                       str(self._attributes))
@@ -158,9 +163,9 @@ def between(start, end, hour):
     min_start = hour_to_min(start)
     min_end = hour_to_min(end)
     min_hour = hour_to_min(hour)
-    return min_start <= min_hour <= min_end
+    return (min_start <= min_hour <= min_end
     if min_start < min_end
-    else min_start >= min_hour >= min_end
+    else min_start >= min_hour >= min_end)
 
 
 class LinkyData:
@@ -173,6 +178,7 @@ class LinkyData:
         self._timeout = timeout
         self.client = {}
         self.data = {}
+        self.success = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _fetch_data(self):
@@ -190,12 +196,12 @@ class LinkyData:
             self.data = self.client.get_data()
             today = date.today()
             # Fixes a bug in PyLinky
-            self.data["monthly"][0] = self.client
+            self.data["monthly"][0] = (self.client
             ._get_data_per_month(
                 (today.replace(day=1) - relativedelta(months=12))
                 .strftime("%d/%m/%Y"),
                 ((today - relativedelta(months=11)).replace(day=1)
-                 - relativedelta(days=1)).strftime("%d/%m/%Y"))[0]
+                 - relativedelta(days=1)).strftime("%d/%m/%Y"))[0])
             _LOGGER.info("Second request for bugfix")
             # Get partial CONSUMPTION of the same month last year
             self.compare_month = sum([d[CONSUMPTION]
@@ -220,8 +226,11 @@ class LinkyData:
     def update(self):
         """Return the latest collected data from Linky."""
         self._fetch_data()
+        if not self.data :
+            return
         _LOGGER.debug("Linky data retrieved: " + str(self.data))
         self.halfhourly = list(reversed(self.data["hourly"]))
         self.daily = list(reversed(self.data["daily"]))
         self.monthly = list(reversed(self.data["monthly"]))
         self.yearly = list(reversed(self.data["yearly"]))
+        self.success = True
