@@ -2,7 +2,7 @@
 import base64
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Set, cast
 
 import bcrypt
 import voluptuous as vol
@@ -74,7 +74,7 @@ class Data:
                 'users': []
             }
 
-        seen = set()
+        seen = set()  # type: Set[str]
 
         for user in data['users']:
             username = user['username']
