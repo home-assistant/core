@@ -115,7 +115,7 @@ class RovaSensor(Entity):
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
         pickup_date = self.data_service.data.get(self._json_key)
-        if isinstance(pickup_date, datetime):
+        if pickup_date is not None:
             self._state = pickup_date.isoformat()
 
 
