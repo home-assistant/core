@@ -72,8 +72,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             server_url=config.get(CONF_URL)
         )
         if data.setup_error is True:
-            _LOGGER.error("Error setting up GitHub platform. Check previous " +
-                          "errors for details")
+            _LOGGER.error("{0} {1}".format(
+                "Error setting up GitHub platform.",
+                "Check previous errors for details"
+            )
             return
         sensors.append(GitHubSensor(data))
     add_entities(sensors, True)
