@@ -9,19 +9,20 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_UPDATE_INTERVAL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
-    CONF_HOST, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
-    KEY_SESSION, MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY,
-    SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
+    CONF_HOST, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, KEY_SESSION,
+    MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
+    SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
 
 APPLICATION_NAME = 'Home Assistant'
 
@@ -72,15 +73,12 @@ async def async_setup_entry(hass, entry):
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    client = TelldusLiveClient(hass, entry, session)
+    interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
+    _LOGGER.debug('Update interval %s', interval)
+    client = TelldusLiveClient(hass, entry, session, interval)
     hass.data[DOMAIN] = client
     await async_add_hubs(hass, client, entry.entry_id)
     hass.async_create_task(client.update())
-
-    interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
-    _LOGGER.debug('Update interval %s', interval)
-    hass.data[INTERVAL_TRACKER] = async_track_time_interval(
-        hass, client.update, interval)
 
     return True
 
@@ -132,7 +130,7 @@ async def async_unload_entry(hass, config_entry):
 class TelldusLiveClient:
     """Get the latest data and update the states."""
 
-    def __init__(self, hass, config_entry, session):
+    def __init__(self, hass, config_entry, session, interval):
         """Initialize the Tellus data object."""
         self._known_devices = set()
         self._device_infos = {}
@@ -140,6 +138,7 @@ class TelldusLiveClient:
         self._hass = hass
         self._config_entry = config_entry
         self._client = session
+        self._interval = interval
 
     async def async_get_hubs(self):
         """Return hubs registered for the user."""
@@ -195,16 +194,26 @@ class TelldusLiveClient:
 
     async def update(self, *args):
         """Periodically poll the servers for current state."""
-        if not await self._hass.async_add_executor_job(self._client.update):
-            _LOGGER.warning('Failed request')
-
-        dev_ids = {dev.device_id for dev in self._client.devices}
-        new_devices = dev_ids - self._known_devices
-        # just await each discover as `gather` use up all HTTPAdapter pools
-        for d_id in new_devices:
-            await self._discover(d_id)
-        self._known_devices |= new_devices
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+        try:
+            with async_timeout.timeout(self._interval):
+                if not await self._hass.async_add_executor_job(
+                        self._client.update):
+                    _LOGGER.warning('Failed request')
+                    return
+            dev_ids = {dev.device_id for dev in self._client.devices}
+            new_devices = dev_ids - self._known_devices
+            # just await each discover as `gather` use up all HTTPAdapter pools
+            for d_id in new_devices:
+                await self._discover(d_id)
+            self._known_devices |= new_devices
+            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                'Update took longer than %d seconds,'
+                ' try increasing the update interval', self._interval)
+        finally:
+            self._hass[INTERVAL_TRACKER] = async_call_later(
+                self._hass, self._interval, self.update)
 
     def device(self, device_id):
         """Return device representation."""
