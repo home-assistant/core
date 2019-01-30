@@ -103,10 +103,20 @@ class PjLinkDevice(MediaPlayerDevice):
                 self._muted = projector.get_mute()[1]
                 self._current_source = \
                     format_input_source(*projector.get_input())
-            except:
-                self._pwstate = STATE_OFF
-                self._muted = False
-                self._current_source = None
+            except KeyError as err:
+                if str(err) == "'OK'":
+                    self._pwstate = STATE_OFF
+                    self._muted = False
+                    self._current_source = None
+                else:
+                    raise
+            except Exception as err:
+                if type(err).__name__ == 'ProjectorError' and str(err) == 'unavailable time':
+                    self._pwstate = STATE_OFF
+                    self._muted = False
+                    self._current_source = None
+                else:
+                    raise
 
     @property
     def name(self):
