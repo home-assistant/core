@@ -41,7 +41,7 @@ aioautomatic==0.6.5
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.8.0
+aiohue==1.9.0
 
 # homeassistant.components.unifi
 aiounifi==4
