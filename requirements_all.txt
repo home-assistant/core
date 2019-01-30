@@ -893,7 +893,7 @@ py17track==2.1.1
 pyCEC==0.4.13
 
 # homeassistant.components.tplink
-pyHS100==0.3.3
+pyHS100==0.3.4
 
 # homeassistant.components.air_quality.norway_air
 # homeassistant.components.weather.met

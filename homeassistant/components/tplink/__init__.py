@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['pyHS100==0.3.3']
+REQUIREMENTS = ['pyHS100==0.3.4']
 
 
 async def _async_has_devices(hass):
