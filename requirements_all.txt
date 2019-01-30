@@ -468,6 +468,9 @@ greeneye_monitor==0.1
 # homeassistant.components.light.greenwave
 greenwavereality==0.5.1
 
+# homeassistant.components.sensor.growatt
+growatt_api_client==0.0.1
+
 # homeassistant.components.media_player.gstreamer
 gstreamer-player==1.1.2
 
