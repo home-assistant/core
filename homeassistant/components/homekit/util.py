@@ -113,7 +113,7 @@ def validate_media_player_features(state, feature_list):
 
 
 SpeedRange = namedtuple('SpeedRange', ('start', 'target'))
-SpeedRange.__doc__ += """: Maps Home Assistant speed \
+SpeedRange.__doc__ += """ Maps Home Assistant speed \
 values to percentage based HomeKit speeds.
 start: Start of the range (inclusive).
 target: Percentage to use to determine HomeKit percentages \

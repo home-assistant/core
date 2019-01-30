@@ -34,7 +34,6 @@ class Fan(HomeAccessory):
         super().__init__(*args, category=CATEGORY_FAN)
         self._flag = {CHAR_ACTIVE: False,
                       CHAR_ROTATION_DIRECTION: False,
-                      CHAR_ROTATION_SPEED: False,
                       CHAR_SWING_MODE: False}
         self._state = 0
 
@@ -100,7 +99,6 @@ class Fan(HomeAccessory):
     def set_speed(self, value):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
-        self._flag[CHAR_ROTATION_SPEED] = True
         speed = self.speed_mapping.speed_to_states(value)
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_SPEED: speed}
