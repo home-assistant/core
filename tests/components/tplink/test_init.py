@@ -138,12 +138,12 @@ async def test_no_config_creates_no_entry(hass):
 
     assert len(mock_setup.mock_calls) == 0
 
+
 async def test_unload(hass):
     """Test that the async_unload_entry works."""
-    # As we have currently no configuration, we need just to pass the domain here.
+    # As we have currently no configuration, we just to pass the domain here.
     entry = MockConfigEntry(domain=tplink.DOMAIN)
     entry.add_to_hass(hass)
-
 
     with patch('pyHS100.SmartDevice._query_helper'), \
         patch('homeassistant.components.tplink.light.async_setup_entry',
