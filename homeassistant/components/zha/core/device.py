@@ -172,21 +172,21 @@ class ZHADevice:
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)
-        await self._gather_and_execute_listener_tasks('async_configure')
+        await self._execute_listener_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
 
     async def async_initialize(self, from_cache):
         """Initialize listeners."""
         _LOGGER.debug('%s: started initialization', self.name)
-        await self._gather_and_execute_listener_tasks(
+        await self._execute_listener_tasks(
             'async_initialize', from_cache)
         _LOGGER.debug('%s: completed initialization', self.name)
 
     async def async_accept_messages(self):
         """Start accepting messages from the zigbee network."""
-        await self._gather_and_execute_listener_tasks('accept_messages')
+        await self._execute_listener_tasks('accept_messages')
 
-    async def _gather_and_execute_listener_tasks(self, task_name, *args):
+    async def _execute_listener_tasks(self, task_name, *args):
         """Gather and execute a set of listener tasks."""
         listener_tasks = []
         for listener in self.all_listeners:
