@@ -9,7 +9,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -195,11 +194,10 @@ class TelldusLiveClient:
     async def update(self, *args):
         """Periodically poll the servers for current state."""
         try:
-            with async_timeout.timeout(self._interval):
-                if not await self._hass.async_add_executor_job(
-                        self._client.update):
-                    _LOGGER.warning('Failed request')
-                    return
+            if not await self._hass.async_add_executor_job(
+                    self._client.update):
+                _LOGGER.warning('Failed request')
+                return
             dev_ids = {dev.device_id for dev in self._client.devices}
             new_devices = dev_ids - self._known_devices
             # just await each discover as `gather` use up all HTTPAdapter pools
