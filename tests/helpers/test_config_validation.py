@@ -489,71 +489,303 @@ def test_datetime():
     schema('2016-11-23T18:59:08')
 
 
-def test_deprecated_logging(caplog):
-    """Test deprecation logs the correct message in each situation."""
-    schema = vol.Schema({
+@pytest.fixture
+def schema():
+    """Create a schema used for testing deprecation."""
+    return vol.Schema({
         'venus': cv.boolean,
         'mars': cv.boolean,
         'jupiter': cv.boolean
     })
 
+
+def test_deprecated_with_no_optionals(caplog, schema):
+    """
+    Test deprecation behaves correctly when optional params are None.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema without changing any values
+        - No warning or difference in output if key is not provided
+    """
     deprecated_schema = vol.All(
         cv.deprecated('mars'),
         schema
     )
 
-    deprecated_schema_with_invalidation_version = vol.All(
-        cv.deprecated('mars', invalidation_version='1.0.0'),
-        schema
-    )
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name == __name__
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration.") in caplog.text
+    assert test_data == output
 
-    deprecated_schema_with_replacement_key = vol.All(
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+
+def test_deprecated_with_replacement_key(caplog, schema):
+    """
+    Test deprecation behaves correctly when only a replacement key is provided.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning or difference in output if neither key nor
+            replacement_key are provided
+    """
+    deprecated_schema = vol.All(
         cv.deprecated('mars', replacement_key='jupiter'),
         schema
     )
 
-    deprecated_schema_with_invalidation_version_and_replacement_key = vol.All(
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'.") in caplog.text
+    assert {'jupiter': True} == output
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'jupiter': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+
+def test_deprecated_with_invalidation_version(caplog, schema):
+    """
+    Test deprecation behaves correctly with only an invalidation_version.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema without changing any values
+        - No warning or difference in output if key is not provided
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+            is detected
+    """
+    deprecated_schema = vol.All(
+        cv.deprecated('mars', invalidation_version='1.0.0'),
+        schema
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration. "
+            "This option will become invalid in version 1.0.0.") in caplog.text
+    assert test_data == output
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'venus': False}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    invalidated_schema = vol.All(
+        cv.deprecated('mars', invalidation_version='0.1.0'),
+        schema
+    )
+    test_data = {'mars': True}
+    with pytest.raises(vol.MultipleInvalid):
+        invalidated_schema(test_data)
+
+
+def test_deprecated_with_replacement_key_and_invalidation_version(caplog,
+                                                                  schema):
+    """
+    Test deprecation behaves with a replacement key & invalidation_version.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning or difference in output if neither key nor
+            replacement_key are provided
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+        is detected
+    """
+    deprecated_schema = vol.All(
         cv.deprecated(
             'mars', replacement_key='jupiter', invalidation_version='1.0.0'
         ),
         schema
     )
 
-    deprecated_schema({'venus': True})
-    assert len(caplog.records) == 0
-
-    deprecated_schema({'mars': True})
-    assert len(caplog.records) == 1
-    assert caplog.records[0].name == __name__
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please remove it from your configuration.") in caplog.text
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    deprecated_schema_with_invalidation_version({'mars': True})
-    assert len(caplog.records) == 1
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please remove it from your configuration. "
-            "This option will become invalid in version 1.0.0.") in caplog.text
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    deprecated_schema_with_replacement_key({'mars': True})
-    assert len(caplog.records) == 1
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please replace it with 'jupiter'.") in caplog.text
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    deprecated_schema_with_invalidation_version_and_replacement_key(
-        {'mars': True}
-    )
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert ("The 'mars' option (with value 'True') is deprecated, "
             "please replace it with 'jupiter'. This option will become "
             "invalid in version 1.0.0.") in caplog.text
+    assert {'jupiter': True} == output
+
     caplog.clear()
     assert len(caplog.records) == 0
+
+    test_data = {'jupiter': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    invalidated_schema = vol.All(
+        cv.deprecated(
+            'mars', replacement_key='jupiter', invalidation_version='0.1.0'
+        ),
+        schema
+    )
+    test_data = {'mars': True}
+    with pytest.raises(vol.MultipleInvalid):
+        invalidated_schema(test_data)
+
+
+def test_deprecated_with_default(caplog, schema):
+    """
+    Test deprecation behaves correctly with a default value.
+
+    This is likely a scenario that would never occur.
+
+    Expected behavior:
+        - Behaves identically as when the default value was not present
+    """
+    deprecated_schema = vol.All(
+        cv.deprecated('mars', default=False),
+        schema
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name == __name__
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration.") in caplog.text
+    assert test_data == output
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+
+def test_deprecated_with_replacement_key_and_default(caplog, schema):
+    """
+    Test deprecation behaves correctly when only a replacement key is provided.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    deprecated_schema = vol.All(
+        cv.deprecated('mars', replacement_key='jupiter', default=False),
+        schema
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'.") in caplog.text
+    assert {'jupiter': True} == output
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'jupiter': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert {'venus': True, 'jupiter': False} == output
+
+
+def test_deprecated_with_replacement_key_invalidation_version_default(
+        caplog, schema
+):
+    """
+    Test deprecation with a replacement key, invalidation_version & default.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+        is detected
+    """
+    deprecated_schema = vol.All(
+        cv.deprecated(
+            'mars', replacement_key='jupiter', invalidation_version='1.0.0',
+            default=False
+        ),
+        schema
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'. This option will become "
+            "invalid in version 1.0.0.") in caplog.text
+    assert {'jupiter': True} == output
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {'jupiter': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+    test_data = {'venus': True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert {'venus': True, 'jupiter': False} == output
+
+    invalidated_schema = vol.All(
+        cv.deprecated(
+            'mars', replacement_key='jupiter', invalidation_version='0.1.0'
+        ),
+        schema
+    )
+    test_data = {'mars': True}
+    with pytest.raises(vol.MultipleInvalid):
+        invalidated_schema(test_data)
 
 
 def test_key_dependency():

@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
 
 import voluptuous as vol
 
@@ -542,9 +542,23 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
-def deprecated(key, replacement_key=None, invalidation_version=None,
-               default=None):
-    """Log key as deprecated and provide a replacement (if exists)."""
+def deprecated(key: str,
+               replacement_key: Optional[str] = None,
+               invalidation_version: Optional[str] = None,
+               default: Optional[Any] = None):
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+        - Once the invalidation_version is crossed, raises vol.Invalid if key
+        is detected
+    """
     module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
 
     if replacement_key and invalidation_version:
@@ -562,16 +576,20 @@ def deprecated(key, replacement_key=None, invalidation_version=None,
         warning = ("The '{key}' option (with value '{value}') is deprecated,"
                    " please remove it from your configuration.")
 
-    def check_for_invalid_version(value):
-        """Raise error if current version has reach invalidation."""
+    def check_for_invalid_version(value: Optional[str]):
+        """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
 
         major_version, minor_version, patch_version = \
             map(int, invalidation_version.split('.', 2))
+        # PATCH_VERSION can be a string when running dev/betas, int otherwise
+        running_patch_version = (int(PATCH_VERSION.split('.', 1)[0])
+                                 if isinstance(PATCH_VERSION, str)
+                                 else PATCH_VERSION)
         if (MAJOR_VERSION >= major_version
                 and MINOR_VERSION >= minor_version
-                and PATCH_VERSION >= patch_version):
+                and running_patch_version >= patch_version):
             raise vol.Invalid(
                 warning.format(
                     key=key,
@@ -581,7 +599,7 @@ def deprecated(key, replacement_key=None, invalidation_version=None,
                 )
             )
 
-    def validator(config):
+    def validator(config: {}):
         """Check if key is in config and log warning."""
         if key in config:
             value = config[key]
@@ -597,7 +615,9 @@ def deprecated(key, replacement_key=None, invalidation_version=None,
                 config.pop(key)
         else:
             value = default
-        if replacement_key:
+        if (replacement_key
+                and replacement_key not in config
+                and value is not None):
             config[replacement_key] = value
             return has_at_most_one_key(key, replacement_key)(config)
         return config
