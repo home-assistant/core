@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellduslive/
 """
 import asyncio
-from datetime import timedelta
 from functools import partial
 import logging
 
@@ -72,8 +71,8 @@ async def async_setup_entry(hass, entry):
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
-    _LOGGER.debug('Update interval %s', interval)
+    interval = entry.data[KEY_SCAN_INTERVAL]
+    _LOGGER.debug('Update interval %s seconds.', interval)
     client = TelldusLiveClient(hass, entry, session, interval)
     hass.data[DOMAIN] = client
     await async_add_hubs(hass, client, entry.entry_id)
@@ -210,7 +209,7 @@ class TelldusLiveClient:
                 'Update took longer than %d seconds,'
                 ' try increasing the update interval', self._interval)
         finally:
-            self._hass[INTERVAL_TRACKER] = async_call_later(
+            self._hass.data[INTERVAL_TRACKER] = async_call_later(
                 self._hass, self._interval, self.update)
 
     def device(self, device_id):
