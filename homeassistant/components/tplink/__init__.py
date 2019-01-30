@@ -133,12 +133,19 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = await forward_unload(entry, 'light')
-    remove_switches = await forward_unload(entry, 'switch')
+    remove_lights = remove_switches = False
+    if hass.data[DOMAIN][CONF_LIGHT]:
+        remove_lights = await forward_unload(entry, 'light')
+    if remove_switches:
+        remove_switches = await forward_unload(entry, 'switch')
 
-    hass.data.pop(DOMAIN, None)
+    if remove_lights or remove_switches:
+        hass.data.pop(DOMAIN, None)
+        return True
 
-    return remove_lights and remove_switches
+    # We were not able to unload the platforms, either because there
+    # were none or one of the forward_unloads failed.
+    return False
 
 
 config_entry_flow.register_discovery_flow(DOMAIN,

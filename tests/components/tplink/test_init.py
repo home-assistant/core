@@ -7,7 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
 from homeassistant.setup import async_setup_component
 from pyHS100 import SmartPlug, SmartBulb
-from tests.common import MockDependency, mock_coro
+from tests.common import MockDependency, MockConfigEntry, mock_coro
 
 mock_pyhs110 = MockDependency("pyHS100")
 
@@ -137,3 +137,28 @@ async def test_no_config_creates_no_entry(hass):
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
+
+async def test_unload(hass):
+    """Test that the async_unload_entry works."""
+    # As we have currently no configuration, we need just to pass the domain here.
+    entry = MockConfigEntry(domain=tplink.DOMAIN)
+    entry.add_to_hass(hass)
+
+
+    with patch('pyHS100.SmartDevice._query_helper'), \
+        patch('homeassistant.components.tplink.light.async_setup_entry',
+              return_value=mock_coro(True)) as light_setup:
+        config = {
+            'tplink': {
+                'light': [{"host": "123.123.123.123"}],
+                'discovery': False,
+            }
+        }
+        assert await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert len(light_setup.mock_calls) == 1
+        assert tplink.DOMAIN in hass.data
+
+    assert await tplink.async_unload_entry(hass, entry)
+    assert tplink.DOMAIN not in hass.data
