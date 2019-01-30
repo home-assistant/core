@@ -1,0 +1,19 @@
+{
+  "config": {
+    "title": "AirVisual",
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "api_key": "AirVisual API Key",
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Coordinates already registered",
+      "invalid_api_key": "Invalid API key"
+    }
+  }
+}
