@@ -227,6 +227,7 @@ class ZHADevice:
                 IN: endpoint.in_clusters,
                 OUT: endpoint.out_clusters
             } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+            if ep_id != 0
         }
 
     async def get_cluster(self, endpooint_id, cluster_id, cluster_type=IN):
