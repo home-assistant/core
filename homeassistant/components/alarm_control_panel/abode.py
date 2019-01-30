@@ -6,9 +6,9 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 """
 import logging
 
+import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.abode import CONF_ATTRIBUTION, AbodeDevice
 from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(alarm_devices)
 
 
-class AbodeAlarm(AbodeDevice, AlarmControlPanel):
+class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
     def __init__(self, data, device, name):
@@ -56,6 +56,11 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
         else:
             state = None
         return state
+
+    @property
+    def code_format(self):
+        """Return one or more digits/characters."""
+        return alarm.FORMAT_NUMBER
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
