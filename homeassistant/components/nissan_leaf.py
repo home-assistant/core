@@ -125,7 +125,7 @@ def async_setup(hass, config):
             return False
 
         _LOGGER.info("Successfully logged in and fetched Leaf info")
-        _LOGGER.info(
+        _LOGGER.warning(
             "WARNING: This may poll your Leaf too often, and drain the 12V"
             " battery.  If you drain your cars 12V battery it WILL NOT START"
             " as the drive train battery won't connect."
