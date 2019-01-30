@@ -10,17 +10,19 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
-from homeassistant.helpers import discovery
+from homeassistant import config_entries
+from homeassistant.components.somfy import config_flow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 API = 'api'
 
 DEVICES = 'devices'
 
-REQUIREMENTS = ['pymfy==0.4.4']
+REQUIREMENTS = ['pymfy==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,81 +54,51 @@ CONFIG_SCHEMA = vol.Schema({
 SOMFY_COMPONENTS = ['cover']
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Somfy component."""
-    from pymfy.api.somfy_api import SomfyApi
+    if DOMAIN not in config:
+        return True
 
     hass.data[DOMAIN] = {}
-    is_ready = False
 
-    # This is called to create the redirect so the user can Authorize Home .
-    redirect_uri = '{}{}'.format(
-        hass.config.api.base_url, SOMFY_AUTH_CALLBACK_PATH)
-    conf = config[DOMAIN]
-    api = SomfyApi(conf.get(CONF_CLIENT_ID),
-                   conf.get(CONF_CLIENT_SECRET),
-                   redirect_uri, hass.config.path(DEFAULT_CACHE_PATH))
-    hass.data[DOMAIN][API] = api
+    config_flow.register_flow_implementation(
+        hass, DOMAIN, config[DOMAIN][CONF_CLIENT_ID],
+        config[DOMAIN][CONF_CLIENT_SECRET])
 
-    if not api.token:
-        authorization_url, _ = api.get_authorization_url()
-        hass.components.persistent_notification.create(
-            'In order to authorize Home Assistant to view your Somfy devices'
-            ' you must visit this <a href="{}" target="_blank">link</a>.'
-            .format(authorization_url),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID
-        )
-        hass.http.register_view(SomfyAuthCallbackView(config))
-        is_ready = True
-    else:
-        if update_all_devices(hass):
-            is_ready = True
-            for component in SOMFY_COMPONENTS:
-                discovery.load_platform(hass, component, DOMAIN, {}, config)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={'source': config_entries.SOURCE_IMPORT},
+        ))
 
-    return is_ready
+    return True
 
 
-class SomfyAuthCallbackView(HomeAssistantView):
-    """Handle OAuth finish callback requests."""
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Set up Somfy from a config entry."""
+    def token_saver(token):
+        _LOGGER.debug('Saving updated token')
+        entry.data[CONF_TOKEN] = token
+        hass.config_entries.async_update_entry(entry, data={**entry.data})
 
-    url = SOMFY_AUTH_CALLBACK_PATH
-    name = 'auth:somfy:callback'
-    requires_auth = False
+    # Force token update.
+    entry.data[CONF_TOKEN]['expires_in'] = -1
+    from pymfy.api.somfy_api import SomfyApi
+    hass.data[DOMAIN][API] = SomfyApi(
+        entry.data['refresh_args']['client_id'],
+        entry.data['refresh_args']['client_secret'],
+        token=entry.data[CONF_TOKEN],
+        token_updater=token_saver
+    )
 
-    def __init__(self, config):
-        """Initialize the OAuth callback view."""
-        self.config = config
+    await update_all_devices(hass)
 
-    @callback
-    def get(self, request):
-        """Finish OAuth callback request."""
-        from aiohttp import web
-        from oauthlib.oauth2 import MismatchingStateError
-        from oauthlib.oauth2 import InsecureTransportError
+    for component in SOMFY_COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                entry, component))
 
-        hass = request.app['hass']
-        response = web.HTTPFound('/')
-
-        try:
-            code = request.query.get('code')
-            hass.data[DOMAIN][API].request_token(code=code)
-            hass.async_add_job(setup, hass, self.config)
-            hass.components.persistent_notification.dismiss(NOTIFICATION_ID)
-            hass.components.persistent_notification.create(
-                "Somfy has been successfully authorized!",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID
-            )
-        except MismatchingStateError:
-            _LOGGER.error("OAuth state not equal in request and response",
-                          exc_info=True)
-        except InsecureTransportError:
-            _LOGGER.error("Somfy redirect URI %s is insecure", request.url,
-                          exc_info=True)
-
-        return response
+    return True
 
 
 class SomfyEntity(Entity):
@@ -160,9 +132,9 @@ class SomfyEntity(Entity):
             'via_hub': (DOMAIN, self.device.site_id),
         }
 
-    def update(self):
+    async def async_update(self):
         """Update the device with the latest data."""
-        update_all_devices(self.hass)
+        await update_all_devices(self.hass)
         devices = self.hass.data[DOMAIN][DEVICES]
         self.device = next((d for d in devices if d.id == self.device.id),
                            self.device)
@@ -174,7 +146,7 @@ class SomfyEntity(Entity):
 
 
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
-def update_all_devices(hass):
+async def update_all_devices(hass):
     """Update all the devices."""
     from requests import HTTPError
     try:

@@ -12,16 +12,23 @@ from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
 DEPENDENCIES = ['somfy']
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
-    from pymfy.api.devices.category import Category
-    categories = {Category.ROLLER_SHUTTER.value, Category.INTERIOR_BLIND.value,
-                  Category.EXTERIOR_BLIND.value}
+    def get_covers():
+        """Retrieve covers."""
+        from pymfy.api.devices.category import Category
 
-    devices = hass.data[DOMAIN][DEVICES]
-    covers = [SomfyCover(cover, hass.data[DOMAIN][API]) for cover in devices if
-              categories & set(cover.categories)]
-    add_entities(covers)
+        categories = {Category.ROLLER_SHUTTER.value,
+                      Category.INTERIOR_BLIND.value,
+                      Category.EXTERIOR_BLIND.value}
+
+        devices = hass.data[DOMAIN][DEVICES]
+
+        return [SomfyCover(cover, hass.data[DOMAIN][API]) for cover in
+                devices if
+                categories & set(cover.categories)]
+
+    async_add_entities(await hass.async_add_job(get_covers), True)
 
 
 class SomfyCover(SomfyEntity, CoverDevice):
@@ -31,6 +38,12 @@ class SomfyCover(SomfyEntity, CoverDevice):
         """Initialize the Somfy device."""
         from pymfy.api.devices.blind import Blind
         super().__init__(device, api)
+        self.cover = Blind(self.device, self.api)
+
+    async def async_update(self):
+        """Update the device with the latest data."""
+        from pymfy.api.devices.blind import Blind
+        await super().async_update()
         self.cover = Blind(self.device, self.api)
 
     def close_cover(self, **kwargs):
