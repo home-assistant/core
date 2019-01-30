@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry):
 
     devices = {}
 
-    config_data = hass.data[DOMAIN][ATTR_CONFIG]
+    config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -136,11 +136,11 @@ async def async_unload_entry(hass, entry):
     remove_lights = remove_switches = False
     if hass.data[DOMAIN][CONF_LIGHT]:
         remove_lights = await forward_unload(entry, 'light')
-    if remove_switches:
+    if hass.data[DOMAIN][CONF_SWITCH]:
         remove_switches = await forward_unload(entry, 'switch')
 
     if remove_lights or remove_switches:
-        hass.data.pop(DOMAIN, None)
+        hass.data[DOMAIN].clear()
         return True
 
     # We were not able to unload the platforms, either because there
