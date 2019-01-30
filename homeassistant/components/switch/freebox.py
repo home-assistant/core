@@ -13,43 +13,24 @@ DEPENDENCIES = ['freebox']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    async_add_entities([FbxWifiSwitch(fbx)], True)
+    fbxPerms = FbxPerms(fbx, hass)
+    async_add_entities([FbxWifiSwitch(fbx, fbxPerms)], True)
 
 
-class FbxSwitch(SwitchDevice):
-    """Representation of a Freebox switch."""
-
-    _name = 'generic'
-
-    def __init__(self, fbx):
-        """Initilize the switch."""
-        self._state = None
-        self._fbx = fbx
-        self._permissions = None
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    async def _async_update_perms(self):
-        """Get permissions from Freebox."""
-        self._permissions = await self._fbx.get_permissions()
-
-
-class FbxWifiSwitch(FbxSwitch):
+class FbxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, fbx):
+    def __init__(self, fbx, fbxPerms):
         """Initilize the Wifi switch."""
-        super().__init__(fbx)
         self._name = 'Freebox WiFi'
         self._available = None
+        self._state = None
+        self._fbx = fbx
+        self._permissions = fbxPerms
 
     @property
     def available(self):
@@ -60,6 +41,11 @@ class FbxWifiSwitch(FbxSwitch):
     def name(self):
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     async def _async_set_state(self, enabled):
         """Turn the switch on or off."""
@@ -86,8 +72,21 @@ class FbxWifiSwitch(FbxSwitch):
         """Get the state and update it."""
         from aiofreepybox.constants import PERMISSION_SETTINGS
 
-        await self._async_update_perms()
-        self._available = self._permissions[PERMISSION_SETTINGS]
+        await self._permissions.async_update_permissions()
+        self._available = bool(self._permissions._fbxPermsDatas[PERMISSION_SETTINGS])
         datas = await self._fbx.wifi.get_global_config()
         active = datas['enabled']
         self._state = bool(active)
+
+
+class FbxPerms:
+    """Get permissions from Freebox."""
+
+    def __init__(self, fbx, hass):
+        """Initialize the permission object."""
+        self._fbx = fbx
+        self._fbxPermsDatas = None
+
+    async def async_update_permissions(self):
+        """Update permissions object."""
+        self._fbxPermsDatas = await self._fbx.get_permissions()
