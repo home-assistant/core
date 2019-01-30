@@ -7,6 +7,9 @@ https://home-assistant.io/components/zha/
 
 import logging
 
+from homeassistant.core import callback
+from .const import SIGNAL_ATTR_UPDATED
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -108,3 +111,35 @@ class LevelListener(ClusterListener):
         """Handle attribute updates on this cluster."""
         if attrid == self.CURRENT_LEVEL:
             self._entity.set_level(value)
+
+
+class EventRelayListener(ClusterListener):
+    """Event relay that can be attached to zigbee clusters."""
+
+    name = 'event_relay'
+
+    @callback
+    def attribute_updated(self, attrid, value):
+        """Handle an attribute updated on this cluster."""
+        self.zha_send_event(
+            self._cluster,
+            SIGNAL_ATTR_UPDATED,
+            {
+                'attribute_id': attrid,
+                'attribute_name': self._cluster.attributes.get(
+                    attrid,
+                    ['Unknown'])[0],
+                'value': value
+            }
+        )
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+        if self._cluster.server_commands is not None and \
+                self._cluster.server_commands.get(command_id) is not None:
+            self.zha_send_event(
+                self._cluster,
+                self._cluster.server_commands.get(command_id)[0],
+                args
+            )
