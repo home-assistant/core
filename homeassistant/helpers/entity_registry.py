@@ -150,6 +150,12 @@ class EntityRegistry:
         return entity
 
     @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.async_schedule_save()
+
+    @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
                             new_entity_id=_UNDEF):
         """Update properties of an entity."""
