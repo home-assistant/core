@@ -1,6 +1,7 @@
 """System health component."""
 import asyncio
 from collections import OrderedDict
+import logging
 from typing import Callable, Dict
 
 import async_timeout
@@ -14,6 +15,7 @@ from homeassistant.components import websocket_api
 DEPENDENCIES = ['http']
 DOMAIN = 'system_health'
 INFO_CALLBACK_TIMEOUT = 5
+_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -40,6 +42,11 @@ async def _info_wrapper(hass, info_callback):
     except asyncio.TimeoutError:
         return {
             'error': 'Fetching info timed out'
+        }
+    except Exception as err:  # pylint: disable=W0703
+        _LOGGER.exception("Error fetching info")
+        return {
+            'error': str(err)
         }
 
 
