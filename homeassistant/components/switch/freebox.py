@@ -74,7 +74,7 @@ class FbxWifiSwitch(SwitchDevice):
 
         await self._permissions.async_update_permissions()
         self._available = bool(self._permissions.
-                              _fbxPermsDatas[PERMISSION_SETTINGS])
+                               _fbxPermsDatas[PERMISSION_SETTINGS])
         datas = await self._fbx.wifi.get_global_config()
         active = datas['enabled']
         self._state = bool(active)
