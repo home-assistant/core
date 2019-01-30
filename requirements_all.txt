@@ -115,7 +115,7 @@ aioharmony==0.1.5
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.8.0
+aiohue==1.9.0
 
 # homeassistant.components.sensor.iliad_italy
 aioiliad==0.1.1
