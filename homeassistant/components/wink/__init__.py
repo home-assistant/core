@@ -358,10 +358,9 @@ def setup(hass, config):
         time.sleep(1)
         pywink.set_user_agent(USER_AGENT)
         _temp_response = pywink.wink_api_fetch()
-        _LOGGER.debug(str(json.dumps(_temp_response)))
+        _LOGGER.debug("%s", _temp_response)
         _temp_response = pywink.post_session()
-        _LOGGER.debug(str(json.dumps(_temp_response)))
-
+        _LOGGER.debug("%s", _temp_response)
 
     # Call the Wink API every hour to keep PubNub updates flowing
     track_time_interval(hass, keep_alive_call, timedelta(minutes=60))
