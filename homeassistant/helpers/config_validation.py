@@ -619,8 +619,8 @@ def deprecated(key: str,
                 and replacement_key not in config
                 and value is not None):
             config[replacement_key] = value
-            return has_at_most_one_key(key, replacement_key)(config)
-        return config
+
+        return has_at_most_one_key(key, replacement_key)(config)
 
     # Adapted from: https://stackoverflow.com/a/24683360/2267718
     class BraceMessage:
