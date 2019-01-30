@@ -54,8 +54,7 @@ class VeluxModule:
         password = config[DOMAIN].get(CONF_PASSWORD)
         self.pyvlx = PyVLX(
             host=host,
-            password=password,
-            log_frames=True)
+            password=password)
 
     async def async_start(self):
         """Start velux component."""
