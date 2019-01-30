@@ -18,20 +18,20 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    fbxPerms = FbxPerms(fbx, hass)
-    async_add_entities([FbxWifiSwitch(fbx, fbxPerms)], True)
+    fbx_perms = FbxPerms(fbx, hass)
+    async_add_entities([FbxWifiSwitch(fbx, fbx_perms)], True)
 
 
 class FbxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, fbx, fbxPerms):
+    def __init__(self, fbx, fbx_perms):
         """Initilize the Wifi switch."""
         self._name = 'Freebox WiFi'
         self._available = None
         self._state = None
         self._fbx = fbx
-        self._permissions = fbxPerms
+        self._permissions = fbx_perms
 
     @property
     def available(self):
@@ -75,7 +75,7 @@ class FbxWifiSwitch(SwitchDevice):
 
         await self._permissions.async_update_permissions()
         self._available = bool(self._permissions.
-                               _fbxPermsDatas[PERMISSION_SETTINGS])
+                               fbx_perms_datas[PERMISSION_SETTINGS])
         datas = await self._fbx.wifi.get_global_config()
         active = datas['enabled']
         self._state = bool(active)
@@ -87,8 +87,8 @@ class FbxPerms:
     def __init__(self, fbx, hass):
         """Initialize the permission object."""
         self._fbx = fbx
-        self._fbxPermsDatas = None
+        self.fbx_perms_datas = None
 
     async def async_update_permissions(self):
         """Update permissions object."""
-        self._fbxPermsDatas = await self._fbx.get_permissions()
+        self.fbx_perms_datas = await self._fbx.get_permissions()
