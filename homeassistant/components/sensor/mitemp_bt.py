@@ -12,7 +12,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
 )
 
 
@@ -97,7 +98,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MiTempBtSensor(Entity):
     """Implementing the MiTempBt sensor."""
 
-    def __init__(self, poller, parameter, device, name, unit, force_update, median):
+    def __init__(self, poller, parameter, device, name, unit,
+                 force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
