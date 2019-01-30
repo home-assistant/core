@@ -131,7 +131,7 @@ class HomeKitSpeedMapping:
                             "%s as its first element. "
                             "Assuming that %s is equivalent to 'off'.",
                             speed_list, fan.SPEED_OFF, speed_list[0])
-        speed_ranges = OrderedDict()
+        self.speed_ranges = OrderedDict()
         list_size = len(speed_list)
         for index, speed in enumerate(speed_list):
             # By dividing by list_size -1 the following
@@ -141,8 +141,7 @@ class HomeKitSpeedMapping:
             # * all other indices are equally distributed
             target = index * 100 / (list_size - 1)
             start = index * 100 / list_size
-            speed_ranges[speed] = SpeedRange(start, target)
-        self.speed_ranges = speed_ranges
+            self.speed_ranges[speed] = SpeedRange(start, target)
 
     def speed_to_homekit(self, speed):
         """Map Home Assistant speed state to HomeKit speed."""
