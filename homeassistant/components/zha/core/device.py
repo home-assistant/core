@@ -4,6 +4,7 @@ Device for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
+import asyncio
 import logging
 
 from homeassistant.helpers.dispatcher import (
@@ -171,49 +172,45 @@ class ZHADevice:
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)
-        for listener in self.all_listeners:
-            try:
-                await listener.async_configure()
-                _LOGGER.debug('%s: listener: %s has been configured',
-                              self.name,
-                              "{}-{}".format(
-                                  listener.name, listener.unique_id))
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.warning(
-                    '%s errored while configuring listener: %s ex: %s',
-                    self.name,
-                    "{}-{}".format(listener.name, listener.unique_id),
-                    ex
-                )
+        await self._gather_and_execute_listener_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
 
     async def async_initialize(self, from_cache):
         """Initialize listeners."""
         _LOGGER.debug('%s: started initialization', self.name)
-        for listener in self.all_listeners:
-            try:
-                await listener.async_initialize(from_cache)
-                _LOGGER.debug('%s: listener: %s initialized - from cache: %s.',
-                              self.name,
-                              "{}-{}".format(
-                                  listener.name, listener.unique_id),
-                              from_cache)
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.warning(
-                    '%s errored while initializing listener: %s ex: %s',
-                    self.name,
-                    "{}-{}".format(listener.name, listener.unique_id),
-                    ex
-                )
+        await self._gather_and_execute_listener_tasks(
+            'async_initialize', from_cache)
         _LOGGER.debug('%s: completed initialization', self.name)
 
     async def async_accept_messages(self):
         """Start accepting messages from the zigbee network."""
+        await self._gather_and_execute_listener_tasks('accept_messages')
+
+    async def _gather_and_execute_listener_tasks(self, task_name, *args):
+        """Gather and execute a set of listener tasks."""
+        listener_tasks = []
         for listener in self.all_listeners:
-            await listener.accept_messages()
-            _LOGGER.debug('%s: listener: %s is now accepting messages',
-                          self.name, "{}-{}".format(
-                              listener.name, listener.unique_id))
+            listener_tasks.append(
+                self._async_create_task(listener, task_name, *args))
+        await asyncio.gather(*listener_tasks)
+
+    async def _async_create_task(self, listener, func_name, *args):
+        """Configure a single listener on this device."""
+        try:
+            await getattr(listener, func_name)(*args)
+            _LOGGER.debug('%s: listener: %s %s stage succeeded',
+                          self.name,
+                          "{}-{}".format(
+                              listener.name, listener.unique_id),
+                          func_name)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                '%s listener: %s %s stage failed ex: %s',
+                self.name,
+                "{}-{}".format(listener.name, listener.unique_id),
+                func_name,
+                ex
+            )
 
     async def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
