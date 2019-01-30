@@ -105,6 +105,9 @@ map:
 # Track the sun
 sun:
 
+# Allow diagnosing system problems
+system_health:
+
 # Sensors
 sensor:
   # Weather prediction
