@@ -576,7 +576,7 @@ def deprecated(key: str,
         warning = ("The '{key}' option (with value '{value}') is deprecated,"
                    " please remove it from your configuration.")
 
-    def check_for_invalid_version(value: Optional[str]):
+    def check_for_invalid_version(value: Optional[Any]):
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -599,7 +599,7 @@ def deprecated(key: str,
                 )
             )
 
-    def validator(config: {}):
+    def validator(config: Dict):
         """Check if key is in config and log warning."""
         if key in config:
             value = config[key]
