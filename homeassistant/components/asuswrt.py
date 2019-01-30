@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
     CONF_PROTOCOL)
+from homeassistant.components import device_tracker
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -28,6 +29,7 @@ DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
 CONF_SENSORS = 'sensors'
 SENSOR_TYPES = ['upload_speed', 'download_speed', 'download', 'upload']
+CONF_DEVICE_TRACKER = 'device_tracker'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -42,6 +44,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.Optional(CONF_DEVICE_TRACKER):
+            device_tracker.DEVICE_TRACKER_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -67,7 +71,11 @@ async def async_setup(hass, config):
 
     hass.async_create_task(async_load_platform(
         hass, 'sensor', DOMAIN, config[DOMAIN].get(CONF_SENSORS), config))
+    disc_info = {}
+    device_tracker_config = config[DOMAIN].get(CONF_DEVICE_TRACKER)
+    if device_tracker_config:
+        disc_info = {CONF_DEVICE_TRACKER: device_tracker_config}
     hass.async_create_task(async_load_platform(
-        hass, 'device_tracker', DOMAIN, {}, config))
+        hass, 'device_tracker', DOMAIN, disc_info, config))
 
     return True

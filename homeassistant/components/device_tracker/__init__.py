@@ -87,7 +87,7 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
 }))
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+DEVICE_TRACKER_SCHEMA = vol.Schema({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
@@ -96,6 +96,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(DEVICE_TRACKER_SCHEMA.schema)
 SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
         ATTR_MAC: cv.string,
@@ -163,6 +164,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             hass, config, DOMAIN, p_type)
         if platform is None:
             return
+
+        if disc_info:
+            p_config.update(disc_info.get(DOMAIN, {}))
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
