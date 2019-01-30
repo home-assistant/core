@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.growatt/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,8 +17,6 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['growatt_api_client==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 UNIT = 'kWh'
 
