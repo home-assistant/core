@@ -135,8 +135,7 @@ def async_setup(hass, config):
         hass.data[DATA_LEAF][leaf.vin] = data_store
 
         for component in LEAF_COMPONENTS:
-            if (component != 'device_tracker' or
-                    car_config[CONF_NCONNECT] is True):
+            if component != 'device_tracker' or car_config[CONF_NCONNECT]:
                 load_platform(hass, component, DOMAIN, {}, car_config)
 
         async_track_point_in_utc_time(hass, data_store.async_update_data,
