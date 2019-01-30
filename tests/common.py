@@ -890,3 +890,8 @@ async def flush_store(store):
         return
 
     await store._async_handle_write_data()
+
+
+async def get_system_health_info(hass, domain):
+    """Get system health info."""
+    return await hass.data['system_health']['info'][domain](hass)
