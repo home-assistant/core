@@ -714,3 +714,7 @@ class LIFXStrip(LIFXColor):
             if resp:
                 zone += 8
                 top = resp.count
+
+                # We only await multizone responses so don't ask for just one
+                if zone == top-1:
+                    zone -= 1
