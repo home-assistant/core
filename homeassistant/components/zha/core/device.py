@@ -4,18 +4,16 @@ Device for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-
 import logging
 
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send
 )
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from .const import (
-    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, ATTR_MANUFACTURER, LISTENER_BATTERY,
-    SIGNAL_AVAILABLE, IN, OUT, ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE,
-    ATTR_COMMAND, SERVER, ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS,
-    SERVER_COMMANDS, ATTR_ENDPOINT_ID
+    ATTR_MANUFACTURER, LISTENER_BATTERY, SIGNAL_AVAILABLE, IN, OUT,
+    ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
+    ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME
 )
 from .listeners import EventRelayListener
 
@@ -27,7 +25,7 @@ class ZHADevice:
 
     def __init__(self, hass, zigpy_device, zha_gateway):
         """Initialize the gateway."""
-        self._hass = hass
+        self.hass = hass
         self._zigpy_device = zigpy_device
         # Get first non ZDO endpoint id to use to get manufacturer and model
         endpoint_ids = zigpy_device.endpoints.keys()
@@ -118,12 +116,6 @@ class ZHADevice:
         return self._cluster_listeners.keys()
 
     @property
-    def hass(self):
-        """Return hass."""
-        # Make hass available to use in later processing
-        return self._hass
-
-    @property
     def available_signal(self):
         """Signal to use to subscribe to device availability changes."""
         return self._available_signal
@@ -133,18 +125,17 @@ class ZHADevice:
         """Return True if sensor is available."""
         return self._available
 
-    @available.setter
-    def available(self, available):
+    def update_available(self, available):
         """Set sensor availability."""
         if self._available != available and available:
             # Update the state the first time the device comes online
             async_dispatcher_send(
-                self._hass,
+                self.hass,
                 self._available_signal,
                 False
             )
             async_dispatcher_send(
-                self._hass,
+                self.hass,
                 "{}_{}".format(self._available_signal, 'entity'),
                 True
             )
@@ -155,12 +146,10 @@ class ZHADevice:
         """Return a device description for device."""
         ieee = str(self.ieee)
         return {
-            'connections': {(CONNECTION_ZIGBEE, ieee)},
-            'identifiers': {(DOMAIN, ieee)},
+            IEEE: ieee,
             ATTR_MANUFACTURER: self.manufacturer,
-            'model': self.model,
-            'name': self.name or ieee,
-            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            MODEL: self.model,
+            NAME: self.name or ieee
         }
 
     def add_cluster_listener(self, cluster_listener):
@@ -181,11 +170,11 @@ class ZHADevice:
 
     async def async_configure(self):
         """Configure the device."""
-        _LOGGER.debug('%s: started configuration.', self.name)
+        _LOGGER.debug('%s: started configuration', self.name)
         for listener in self.all_listeners:
             try:
                 await listener.async_configure()
-                _LOGGER.debug('%s: listener: %s has been configured.',
+                _LOGGER.debug('%s: listener: %s has been configured',
                               self.name,
                               "{}-{}".format(
                                   listener.name, listener.unique_id))
@@ -196,11 +185,11 @@ class ZHADevice:
                     "{}-{}".format(listener.name, listener.unique_id),
                     ex
                 )
-        _LOGGER.debug('%s: completed configuration.', self.name)
+        _LOGGER.debug('%s: completed configuration', self.name)
 
     async def async_initialize(self, from_cache):
         """Initialize listeners."""
-        _LOGGER.debug('%s: started initialization.', self.name)
+        _LOGGER.debug('%s: started initialization', self.name)
         for listener in self.all_listeners:
             try:
                 await listener.async_initialize(from_cache)
@@ -216,13 +205,13 @@ class ZHADevice:
                     "{}-{}".format(listener.name, listener.unique_id),
                     ex
                 )
-        _LOGGER.debug('%s: completed initialization.', self.name)
+        _LOGGER.debug('%s: completed initialization', self.name)
 
     async def async_accept_messages(self):
         """Start accepting messages from the zigbee network."""
         for listener in self.all_listeners:
             await listener.accept_messages()
-            _LOGGER.debug('%s: listener: %s is now accepting messages.',
+            _LOGGER.debug('%s: listener: %s is now accepting messages',
                           self.name, "{}-{}".format(
                               listener.name, listener.unique_id))
 
@@ -233,24 +222,17 @@ class ZHADevice:
 
     async def get_clusters(self):
         """Get all clusters for this device."""
-        clusters = {}
-        for ep_id, endpoint in self._zigpy_device.endpoints.items():
-            if ep_id == 0:
-                continue
-            clusters[ep_id] = {
+        return {
+            ep_id: {
                 IN: endpoint.in_clusters,
                 OUT: endpoint.out_clusters
-            }
-        return clusters
+            } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+        }
 
     async def get_cluster(self, endpooint_id, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
         clusters = await self.get_clusters()
-        if cluster_type == IN:
-            cluster = clusters[endpooint_id][IN][cluster_id]
-        else:
-            cluster = clusters[endpooint_id][OUT][cluster_id]
-        return cluster
+        return clusters[endpooint_id][cluster_type][cluster_id]
 
     async def get_cluster_attributes(self, endpooint_id, cluster_id,
                                      cluster_type=IN):
@@ -258,7 +240,7 @@ class ZHADevice:
         cluster = await self.get_cluster(endpooint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
-            return
+            return None
         return cluster.attributes
 
     async def get_cluster_commands(self, endpooint_id, cluster_id,
@@ -267,7 +249,7 @@ class ZHADevice:
         cluster = await self.get_cluster(endpooint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
-            return
+            return None
         return {
             CLIENT_COMMANDS: cluster.client_commands,
             SERVER_COMMANDS: cluster.server_commands,
@@ -280,7 +262,7 @@ class ZHADevice:
         cluster = await self.get_cluster(
             endpooint_id, cluster_id, cluster_type)
         if cluster is None:
-            return
+            return None
 
         from zigpy.exceptions import DeliveryError
         try:
@@ -306,6 +288,7 @@ class ZHADevice:
                 '{}: {}'.format(ATTR_ENDPOINT_ID, endpooint_id),
                 exc
             )
+            return None
 
     async def issue_cluster_command(self, endpooint_id, cluster_id, command,
                                     command_type, args, cluster_type=IN,
@@ -314,7 +297,7 @@ class ZHADevice:
         cluster = await self.get_cluster(
             endpooint_id, cluster_id, cluster_type)
         if cluster is None:
-            return
+            return None
         response = None
         if command_type == SERVER:
             response = await cluster.command(command, *args,

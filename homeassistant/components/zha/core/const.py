@@ -51,6 +51,9 @@ OUT = 'out'
 CLIENT_COMMANDS = 'client_commands'
 SERVER_COMMANDS = 'server_commands'
 SERVER = 'server'
+IEEE = 'ieee'
+MODEL = 'model'
+NAME = 'name'
 
 LISTENER_BATTERY = 'battery'
 
