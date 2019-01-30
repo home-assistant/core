@@ -28,6 +28,7 @@ NEW_DEVICE = {
 }
 
 ATTR_DARK = 'dark'
+ATTR_OFFSET = 'offset'
 ATTR_ON = 'on'
 ATTR_SCHEDULER = 'scheduler'
 

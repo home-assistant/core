@@ -13,8 +13,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN,
-    NEW_SENSOR)
+    ATTR_OFFSET, ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR,
+    DOMAIN as DECONZ_DOMAIN, NEW_SENSOR)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
@@ -90,7 +90,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         data = {}
 
         if ATTR_TEMPERATURE in kwargs:
-            data['heatsetpoint'] = kwargs[ATTR_TEMPERATURE]
+            data['heatsetpoint'] = kwargs[ATTR_TEMPERATURE] * 100
 
         await self._device.async_set_config(data)
 
@@ -104,8 +104,11 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         """Return the state attributes of the thermostat."""
         attr = {}
 
-        if self._device.offset:
+        if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
+
+        if self._device.offset:
+            attr[ATTR_OFFSET] = self._device.offset
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on

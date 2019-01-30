@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
-from .const import DEFAULT_PORT, DOMAIN, _LOGGER, SUPPORTED_PLATFORMS
+from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==48']
