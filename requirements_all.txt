@@ -1354,7 +1354,7 @@ python-velbus==2.0.21
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.10.1
+python-wink==1.10.3
 
 # homeassistant.components.sensor.awair
 python_awair==0.0.3
