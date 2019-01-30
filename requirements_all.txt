@@ -340,7 +340,7 @@ dsmr_parser==0.12
 dweepy==0.3.0
 
 # homeassistant.components.ebusd
-ebusdpy==0.0.14
+ebusdpy==0.0.15
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
