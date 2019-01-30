@@ -84,7 +84,7 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
     @property
     def is_on(self):
         """Return true if charging."""
-        return self.car.data[DATA_CHARGING] is True
+        return self.car.data[DATA_CHARGING]
 
     async def async_turn_on(self, **kwargs):
         """Start car charging."""
