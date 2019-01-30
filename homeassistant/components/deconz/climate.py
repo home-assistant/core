@@ -13,7 +13,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+    ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN,
+    NEW_SENSOR)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
@@ -39,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_climate))
+        async_dispatcher_connect(hass, NEW_SENSOR, async_add_climate))
 
     async_add_climate(gateway.api.sensors.values())
 
