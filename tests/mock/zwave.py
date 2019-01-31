@@ -1,11 +1,11 @@
 """Mock helpers for Z-Wave component."""
 from unittest.mock import MagicMock
 
-from pydispatch import dispatcher
-
 
 def value_changed(value):
     """Fire a value changed."""
+    from pydispatch import dispatcher
+
     dispatcher.send(
         MockNetwork.SIGNAL_VALUE_CHANGED,
         value=value,
@@ -16,6 +16,8 @@ def value_changed(value):
 
 def node_changed(node):
     """Fire a node changed."""
+    from pydispatch import dispatcher
+
     dispatcher.send(
         MockNetwork.SIGNAL_NODE,
         node=node,
@@ -25,6 +27,8 @@ def node_changed(node):
 
 def notification(node_id, network=None):
     """Fire a notification."""
+    from pydispatch import dispatcher
+
     dispatcher.send(
         MockNetwork.SIGNAL_NOTIFICATION,
         args={'nodeId': node_id},
