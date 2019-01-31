@@ -8,7 +8,8 @@ from datetime import timedelta
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
+from homeassistant.components.unifi import device_tracker as unifi
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL,
                                  CONF_MONITORED_CONDITIONS)
@@ -25,8 +26,8 @@ def mock_ctrl():
 @pytest.fixture
 def mock_scanner():
     """Mock UnifyScanner."""
-    with mock.patch('homeassistant.components.device_tracker'
-                    '.unifi.UnifiScanner') as scanner:
+    with mock.patch('homeassistant.components.unifi.device_tracker'
+                    '.UnifiScanner') as scanner:
         yield scanner
 
 

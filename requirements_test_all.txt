@@ -238,7 +238,7 @@ pythonwhois==2.4.3
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
 
-# homeassistant.components.device_tracker.unifi
+# homeassistant.components.unifi.device_tracker
 pyunifi==2.16
 
 # homeassistant.components.notify.html5

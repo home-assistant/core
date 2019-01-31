@@ -126,7 +126,7 @@ aioimaplib==0.7.13
 # homeassistant.components.lifx
 aiolifx==0.6.7
 
-# homeassistant.components.light.lifx
+# homeassistant.components.lifx.light
 aiolifx_effects==0.2.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
@@ -1392,7 +1392,7 @@ pytradfri[async]==6.0.1
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
 
-# homeassistant.components.device_tracker.unifi
+# homeassistant.components.unifi.device_tracker
 pyunifi==2.16
 
 # homeassistant.components.binary_sensor.uptimerobot
