@@ -162,7 +162,9 @@ class AirVisualSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return '{0} {1}'.format(SENSOR_LOCALES[self._locale], self._name)
+        return '{0} {1} {2}'.format(
+            self._airvisual.identifier, SENSOR_LOCALES[self._locale],
+            self._name)
 
     @property
     def state(self):
@@ -172,15 +174,8 @@ class AirVisualSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        if self._airvisual.city:
-            location_id = '{0}, {1}, {2}'.format(
-                self._airvisual.city, self._airvisual.state,
-                self._airvisual.country)
-        else:
-            location_id = '{0}, {1}'.format(
-                self._airvisual.latitude, self._airvisual.longitude)
-
-        return '{0}_{1}_{2}'.format(location_id, self._locale, self._type)
+        return '{0}_{1}_{2}'.format(
+            self._airvisual.identifier, self._locale, self._type)
 
     @property
     def unit_of_measurement(self):
@@ -189,6 +184,7 @@ class AirVisualSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def update():
             """Update the state."""

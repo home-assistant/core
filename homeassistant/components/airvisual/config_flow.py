@@ -1,44 +1,49 @@
-"""Config flow to configure the OpenUV component."""
+"""Config flow to configure the AirVisual component."""
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_SCAN_INTERVAL)
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_SCAN_INTERVAL,
+    CONF_STATE)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import (
-    CONF_CITY, CONF_COORDINATES, CONF_COUNTRY, CONF_LOCATION, CONF_STATE,
+    CONF_CITY, CONF_COORDINATES, CONF_COUNTRY, CONF_LOCATION,
     DEFAULT_SCAN_INTERVAL, DOMAIN)
 
-
-# def _get_identifier_from_input(hass, user_input):
-#     """Return a unique location identifier from the config entry input."""
-#     if CONF_LOCATION in user_input:
-#         return '{0}, {1}, {2}'.format(
-#             user_input[CONF_CITY], user_input[CONF_STATE],
-#             user_input[CONF_COUNTRY])
-
-#     if CONF_COORDINATES in user_input:
-#         return '{0}, {1}'.format(
-#             user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
-
-#     return '{0}, {1}'.format(hass.config.latitude, hass.config.longitude)
+CONF_IDENTIFIER = 'identifier'
 
 
 @callback
 def configured_instances(hass):
     """Return a set of configured OpenUV instances."""
     return set(
-        '{0}, {1}'.format(
-            entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            entry.data.get(CONF_LONGITUDE, hass.config.longitude))
-        for entry in hass.config_entries.async_entries(DOMAIN))
+        entry.title for entry in hass.config_entries.async_entries(DOMAIN))
+
+
+def identifier_from_config(hass, config):
+    """Return a unique location identifier based on the user's config."""
+    if CONF_LOCATION in config:
+        return '{0}, {1}, {2}'.format(
+            config[CONF_LOCATION][CONF_CITY],
+            config[CONF_LOCATION][CONF_STATE],
+            config[CONF_LOCATION][CONF_COUNTRY])
+
+    if CONF_COORDINATES in config:
+        return '{0}, {1}'.format(
+            config[CONF_COORDINATES][CONF_LATITUDE],
+            config[CONF_COORDINATES][CONF_LONGITUDE])
+
+    if CONF_LATITUDE in config:
+        return '{0}, {1}'.format(config[CONF_LATITUDE], config[CONF_LONGITUDE])
+
+    return '{0}, {1}'.format(hass.config.latitude, hass.config.longitude)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class OpenUvFlowHandler(config_entries.ConfigFlow):
+class AirVisualFlowHandler(config_entries.ConfigFlow):
     """Handle an OpenUV config flow."""
 
     VERSION = 1
@@ -67,9 +72,12 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         from pyairvisual import Client
         from pyairvisual.errors import AirVisualError
 
-        # identifier = _get_identifier_from_input(self.hass, user_input)
-        # if identifier in configured_instances(self.hass):
-        #     return await self._show_form({'base': 'identifier_exists'})
+        if not user_input:
+            return await self._show_form()
+
+        identifier = identifier_from_config(self.hass, user_input)
+        if identifier in configured_instances(self.hass):
+            return await self._show_form({'base': 'identifier_exists'})
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(user_input[CONF_API_KEY], websession)
@@ -83,8 +91,4 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
-        return self.async_create_entry(
-            title='{0}, {1}'.format(
-                user_input.get(CONF_LATITUDE, self.hass.config.latitude),
-                user_input.get(CONF_LONGITUDE, self.hass.config.longitude)),
-            data=user_input)
+        return self.async_create_entry(title=identifier, data=user_input)

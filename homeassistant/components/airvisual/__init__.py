@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import configured_instances
+from .config_flow import configured_instances, identifier_from_config
 from .const import (
     CONF_CITY, CONF_COORDINATES, CONF_COUNTRY, CONF_LOCATION, DATA_CLIENT,
     DATA_LISTENER, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE)
@@ -40,12 +40,16 @@ LOCATION_NAME_SCHEMA = vol.Schema({
 })
 
 API_SCHEMA = vol.Schema({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Exclusive(CONF_COORDINATES, 'location'): LOCATION_COORDINATE_SCHEMA,
-    vol.Exclusive(CONF_LOCATION, 'location'): LOCATION_NAME_SCHEMA,
+    vol.Required(CONF_API_KEY):
+        cv.string,
+    vol.Exclusive(CONF_COORDINATES, 'location'):
+        LOCATION_COORDINATE_SCHEMA,
+    vol.Exclusive(CONF_LOCATION, 'location'):
+        LOCATION_NAME_SCHEMA,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_LOCALES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
-    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
+    vol.Optional(CONF_SHOW_ON_MAP, default=True):
+        cv.boolean,
     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
         cv.time_period
 })
@@ -66,9 +70,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    identifier = '{0}, {1}'.format(
-        conf.get(CONF_LATITUDE, hass.config.latitude),
-        conf.get(CONF_LONGITUDE, hass.config.longitude))
+    identifier = identifier_from_config(hass, conf)
     if identifier in configured_instances(hass):
         return True
 
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, config_entry):
             'Using location by coordinates: %s, %s', latitude, longitude)
         airvisual = AirVisual(
             Client(config_entry.data[CONF_API_KEY], websession),
-            monitored_conditions=config_entry.data.get(
+            config_entry.data.get(
                 CONF_MONITORED_CONDITIONS, list(SENSOR_LOCALES)),
             latitude=latitude,
             longitude=longitude,
@@ -171,6 +173,12 @@ class AirVisual:
         self.show_on_map = kwargs[CONF_SHOW_ON_MAP]
         self.state = kwargs.get(CONF_STATE)
 
+        if self.city:
+            self.identifier = '{0}, {1}, {2}'.format(
+                self.city, self.state, self.country)
+        else:
+            self.identifier = '{0}, {1}'.format(self.latitude, self.longitude)
+
     async def async_update(self):
         """Update sensor data."""
         from pyairvisual.errors import AirVisualError
@@ -194,7 +202,6 @@ class AirVisual:
                 location = (self.latitude, self.longitude)
 
             _LOGGER.error(
-                "Can't retrieve data for location: %s (%s)", location,
-                err)
+                "Can't retrieve data for location: %s (%s)", location, err)
 
             self.pollution_info = {}
