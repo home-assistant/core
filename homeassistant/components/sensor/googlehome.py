@@ -11,7 +11,6 @@ from homeassistant.components.googlehome import (
     CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 
@@ -61,7 +60,8 @@ class GoogleHomeAlarm(Entity):
         info = data.get('info', {})
         if info is None:
             return
-        self._name = "{} {}".format(info.get('name', NAME), SENSOR_TYPES[self._condition])
+        self._name = "{} {}".format(info.get('name', NAME),
+                                    SENSOR_TYPES[self._condition])
 
     async def async_update(self):
         await self._client.update_alarms(self._host)
