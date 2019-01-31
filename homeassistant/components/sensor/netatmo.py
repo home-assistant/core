@@ -334,7 +334,7 @@ class NetAtmoData:
                 station_data = data_class(self.auth)
                 _LOGGER.debug("%s detected!", str(data_class.__name__))
                 return station_data
-            except TypeError:
+            except Exception:
                 continue
 
     def update(self):
