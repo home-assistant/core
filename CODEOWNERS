@@ -236,6 +236,7 @@ homeassistant/components/*/rfxtrx.py @danielhiversen
 
 # S
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/smartthings/* @andrewsayre
 
 # T
 homeassistant/components/tahoma.py @philklei
