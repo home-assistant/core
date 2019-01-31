@@ -7,7 +7,7 @@ https://home-assistant.io/components/fan.wink/
 import logging
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, STATE_UNKNOWN, SUPPORT_DIRECTION,
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.components.wink import DOMAIN, WinkDevice
 
@@ -71,7 +71,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
             return SPEED_MEDIUM
         if SPEED_HIGH == current_wink_speed:
             return SPEED_HIGH
-        return STATE_UNKNOWN
+        return None
 
     @property
     def current_direction(self):
