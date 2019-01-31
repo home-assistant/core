@@ -90,6 +90,8 @@ TEST_REQUIREMENTS = (
     'pynx584',
     'pyopenuv',
     'pyotp',
+    'pysmartapp',
+    'pysmartthings',
     'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',

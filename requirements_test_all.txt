@@ -210,6 +210,12 @@ pyotp==2.2.6
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
+# homeassistant.components.smartthings
+pysmartapp==0.3.0
+
+# homeassistant.components.smartthings
+pysmartthings==0.4.2
+
 # homeassistant.components.sonos
 pysonos==0.0.6
 
