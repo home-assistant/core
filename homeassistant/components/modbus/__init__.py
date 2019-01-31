@@ -51,9 +51,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN:
-        vol.All(cv.ensure_list,
-                vol.Schema([vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)]))
+    DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])
 }, extra=vol.ALLOW_EXTRA,)
 
 _LOGGER = logging.getLogger(__name__)
