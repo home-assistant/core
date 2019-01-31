@@ -160,6 +160,7 @@ FLOWS = [
     'point',
     'rainmachine',
     'simplisafe',
+    'smartthings',
     'smhi',
     'sonos',
     'tellduslive',
