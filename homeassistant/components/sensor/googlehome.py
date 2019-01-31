@@ -10,7 +10,6 @@ from datetime import timedelta
 from homeassistant.components.googlehome import (
     CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 
@@ -30,6 +29,7 @@ SENSOR_TYPES = {
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
+        """Setup the googlehome sensor platform."""
         if discovery_info is None:
             _LOGGER.warning(
                 "To use this you need to configure the 'googlehome' component")
@@ -37,15 +37,18 @@ async def async_setup_platform(
 
         devices = []
         for condition in SENSOR_TYPES:
-            device = GoogleHomeAlarm(hass, hass.data[CLIENT], condition, discovery_info)
+            device = GoogleHomeAlarm(hass, hass.data[CLIENT], condition,
+                                     discovery_info)
             await device.async_init()
             devices.append(device)
 
         async_add_entities(devices, True)
 
 class GoogleHomeAlarm(Entity):
+    """Representation of a GoogleHomeAlarm."""
 
     def __init__(self, hass, client, condition, config):
+        """Initialize the GoogleHomeAlarm sensor."""
         self._hass = hass
         self._host = config['host']
         self._client = client
@@ -55,6 +58,7 @@ class GoogleHomeAlarm(Entity):
         self._available = True
 
     async def async_init(self):
+        """Initialize async."""
         await self._client.update_info(self._host)
         data = self._hass.data[GOOGLEHOME_DOMAIN][self._host]
         info = data.get('info', {})
@@ -64,6 +68,7 @@ class GoogleHomeAlarm(Entity):
                                     SENSOR_TYPES[self._condition])
 
     async def async_update(self):
+        """Update the data."""
         await self._client.update_alarms(self._host)
         data = self._hass.data[GOOGLEHOME_DOMAIN][self._host]
 
