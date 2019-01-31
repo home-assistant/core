@@ -43,7 +43,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNETION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""

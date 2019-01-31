@@ -30,7 +30,7 @@ At a minimum, each config flow will have to define a version number and the
     class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
-        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
