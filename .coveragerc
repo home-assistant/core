@@ -151,6 +151,9 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
+    homeassistant/components/googlehome.py
+    homeassistant/components/*/googlehome.py
+
     homeassistant/components/greeneye_monitor.py
     homeassistant/components/sensor/greeneye_monitor.py
 
@@ -586,7 +589,6 @@ omit =
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
-    homeassistant/components/googlehome.py
     homeassistant/components/idteck_prox.py
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
