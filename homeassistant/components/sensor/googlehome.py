@@ -29,7 +29,7 @@ SENSOR_TYPES = {
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-        """Setup the googlehome sensor platform."""
+        """Set up the googlehome sensor platform."""
         if discovery_info is None:
             _LOGGER.warning(
                 "To use this you need to configure the 'googlehome' component")
@@ -43,6 +43,7 @@ async def async_setup_platform(
             devices.append(device)
 
         async_add_entities(devices, True)
+
 
 class GoogleHomeAlarm(Entity):
     """Representation of a GoogleHomeAlarm."""
