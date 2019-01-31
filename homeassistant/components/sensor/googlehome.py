@@ -78,7 +78,7 @@ class GoogleHomeAlarm(Entity):
             self._available = False
             return
         self._available = True
-        time_date = dt_util.utc_from_timestamp(min(element['fire_time'] 
+        time_date = dt_util.utc_from_timestamp(min(element['fire_time']
                                                for element in alarms) / 1000)
         self._state = time_date.isoformat()
 
