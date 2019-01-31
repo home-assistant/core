@@ -19,14 +19,17 @@ DOMAIN = 'modbus'
 
 REQUIREMENTS = ['pymodbus==1.5.2']
 
+CONF_HUB = 'hub'
 # Type of network
 CONF_BAUDRATE = 'baudrate'
 CONF_BYTESIZE = 'bytesize'
 CONF_STOPBITS = 'stopbits'
 CONF_PARITY = 'parity'
 
+DEFAULT_HUB = 'default'
+
 BASE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default='default'): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string
 })
 
 SERIAL_SCHEMA = BASE_SCHEMA.extend({
@@ -59,19 +62,19 @@ SERVICE_WRITE_REGISTER = 'write_register'
 SERVICE_WRITE_COIL = 'write_coil'
 
 ATTR_ADDRESS = 'address'
+ATTR_HUB = 'hub'
 ATTR_UNIT = 'unit'
 ATTR_VALUE = 'value'
-ATTR_HUB = 'hub'
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_HUB, default='default'): cv.string,
+    vol.Optional(ATTR_HUB, DEFAULT_HUB): cv.string,
     vol.Required(ATTR_UNIT): cv.positive_int,
     vol.Required(ATTR_ADDRESS): cv.positive_int,
     vol.Required(ATTR_VALUE): vol.All(cv.ensure_list, [cv.positive_int])
 })
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_HUB, default='default'): cv.string,
+    vol.Optional(ATTR_HUB, DEFAULT_HUB): cv.string,
     vol.Required(ATTR_UNIT): cv.positive_int,
     vol.Required(ATTR_ADDRESS): cv.positive_int,
     vol.Required(ATTR_STATE): cv.boolean
@@ -136,14 +139,10 @@ def setup(hass, config):
 
         # Register services for modbus
         hass.services.register(
-            DOMAIN,
-            SERVICE_WRITE_REGISTER,
-            write_register,
+            DOMAIN, SERVICE_WRITE_REGISTER, write_register,
             schema=SERVICE_WRITE_REGISTER_SCHEMA)
         hass.services.register(
-            DOMAIN,
-            SERVICE_WRITE_COIL,
-            write_coil,
+            DOMAIN, SERVICE_WRITE_COIL, write_coil,
             schema=SERVICE_WRITE_COIL_SCHEMA)
 
     def write_register(service):

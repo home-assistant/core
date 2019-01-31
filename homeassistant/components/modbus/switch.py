@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-from homeassistant.components.modbus import DOMAIN
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
@@ -18,7 +19,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_HUB = "hub"
 CONF_COIL = "coil"
 CONF_COILS = "coils"
 CONF_REGISTER = "register"
@@ -33,7 +33,7 @@ REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 REGISTERS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB, default='default'): cv.string,
+    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_REGISTER): cv.positive_int,
@@ -49,7 +49,7 @@ REGISTERS_SCHEMA = vol.Schema({
 })
 
 COILS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB, default='default'): cv.string,
+    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
