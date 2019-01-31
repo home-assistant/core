@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if CONF_COILS in config:
         for coil in config.get(CONF_COILS):
             hub_name = coil.get(CONF_HUB)
-            hub = hass.data[DOMAIN][hub_name]
+            hub = hass.data[MODBUS_DOMAIN][hub_name]
             switches.append(ModbusCoilSwitch(
                 hub,
                 coil.get(CONF_NAME),
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if CONF_REGISTERS in config:
         for register in config.get(CONF_REGISTERS):
             hub_name = register.get(CONF_HUB)
-            hub = hass.data[DOMAIN][hub_name]
+            hub = hass.data[MODBUS_DOMAIN][hub_name]
 
             switches.append(ModbusRegisterSwitch(
                 hub,

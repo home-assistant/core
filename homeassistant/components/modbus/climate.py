@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     count = config.get(CONF_COUNT)
     precision = config.get(CONF_PRECISION)
     hub_name = config.get(CONF_HUB)
-    hub = hass.data[DOMAIN][hub_name]
+    hub = hass.data[MODBUS_DOMAIN][hub_name]
 
     add_entities([ModbusThermostat(hub, name, modbus_slave,
                                    target_temp_register, current_temp_register,
