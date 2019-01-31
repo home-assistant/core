@@ -40,16 +40,12 @@ LOCATION_NAME_SCHEMA = vol.Schema({
 })
 
 API_SCHEMA = vol.Schema({
-    vol.Required(CONF_API_KEY):
-        cv.string,
-    vol.Exclusive(CONF_COORDINATES, 'location'):
-        LOCATION_COORDINATE_SCHEMA,
-    vol.Exclusive(CONF_LOCATION, 'location'):
-        LOCATION_NAME_SCHEMA,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Exclusive(CONF_COORDINATES, 'location'): LOCATION_COORDINATE_SCHEMA,
+    vol.Exclusive(CONF_LOCATION, 'location'): LOCATION_NAME_SCHEMA,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_LOCALES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
-    vol.Optional(CONF_SHOW_ON_MAP, default=True):
-        cv.boolean,
+    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
         cv.time_period
 })

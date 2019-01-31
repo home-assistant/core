@@ -24,7 +24,7 @@ def configured_instances(hass):
 
 
 def identifier_from_config(hass, config):
-    """Return a unique location identifier based on the user's config."""
+    """Return a location identifier from YAML config or config entry data."""
     if CONF_LOCATION in config:
         return '{0}, {1}, {2}'.format(
             config[CONF_LOCATION][CONF_CITY],
