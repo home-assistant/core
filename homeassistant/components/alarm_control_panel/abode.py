@@ -57,11 +57,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
             state = None
         return state
 
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
-
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._device.set_standby()
