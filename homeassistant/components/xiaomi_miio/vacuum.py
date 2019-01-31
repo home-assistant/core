@@ -227,31 +227,27 @@ class MiroboVacuum(StateVacuumDevice):
                 ATTR_DO_NOT_DISTURB_END: str(self.dnd_state.end),
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                ATTR_CLEANING_TIME: (int(
+                ATTR_CLEANING_TIME: int(
                     self.vacuum_state.clean_time.total_seconds()
-                    / 60) if self.vacuum_state.clean_time else 0),
-                ATTR_CLEANED_AREA: (int(self.vacuum_state.clean_area) if
-                                    self.vacuum_state.clean_area else 0),
-                ATTR_CLEANING_COUNT: (int(self.clean_history.count) if
-                                      self.clean_history.count else 0),
-                ATTR_CLEANED_TOTAL_AREA: (int(self.clean_history.total_area) if
-                                          self.clean_history.total_area
-                                          else 0),
-                ATTR_CLEANING_TOTAL_TIME: (int(
+                    / 60),
+                ATTR_CLEANED_AREA: int(self.vacuum_state.clean_area),
+                ATTR_CLEANING_COUNT: int(self.clean_history.count),
+                ATTR_CLEANED_TOTAL_AREA: int(self.clean_history.total_area),
+                ATTR_CLEANING_TOTAL_TIME: int(
                     self.clean_history.total_duration.total_seconds()
-                    / 60) if self.clean_history.total_duration else 0),
-                ATTR_MAIN_BRUSH_LEFT: (int(
+                    / 60),
+                ATTR_MAIN_BRUSH_LEFT: int(
                     self.consumable_state.main_brush_left.total_seconds()
-                    / 3600) if self.consumable_state.main_brush_left else 0),
-                ATTR_SIDE_BRUSH_LEFT: (int(
+                    / 3600),
+                ATTR_SIDE_BRUSH_LEFT: int(
                     self.consumable_state.side_brush_left.total_seconds()
-                    / 3600) if self.consumable_state.side_brush_left else 0),
-                ATTR_FILTER_LEFT: (int(
+                    / 3600),
+                ATTR_FILTER_LEFT: int(
                     self.consumable_state.filter_left.total_seconds()
-                    / 3600) if self.consumable_state.filter_left else 0),
-                ATTR_SENSOR_DIRTY_LEFT: (int(
+                    / 3600),
+                ATTR_SENSOR_DIRTY_LEFT: int(
                     self.consumable_state.sensor_dirty_left.total_seconds()
-                    / 3600) if self.consumable_state.sensor_dirty_left else 0),
+                    / 3600),
                 ATTR_STATUS: str(self.vacuum_state.state)
                 })
 
