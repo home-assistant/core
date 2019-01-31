@@ -70,6 +70,7 @@ async def test_show_form(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
+
 async def test_step_import(hass, mock_pyairvisual):
     """Test that the import step works."""
     conf = {
@@ -90,6 +91,7 @@ async def test_step_import(hass, mock_pyairvisual):
         CONF_LONGITUDE: -104.9812612,
         CONF_SCAN_INTERVAL: 600
     }
+
 
 async def test_step_user(hass, mock_pyairvisual):
     """Test that the user step works."""

@@ -7,8 +7,6 @@ https://home-assistant.io/components/sensor.airvisual/
 from logging import getLogger
 from datetime import timedelta
 
-import voluptuous as vol
-
 from homeassistant.components.airvisual import (
     DATA_CLIENT, DOMAIN, SENSOR_LOCALES, TOPIC_UPDATE)
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE
@@ -46,36 +44,36 @@ POLLUTANT_LEVEL_MAPPING = [{
     'minimum': 0,
     'maximum': 50
 },
-                           {
-                               'label': 'Moderate',
-                               'icon': 'mdi:emoticon-happy',
-                               'minimum': 51,
-                               'maximum': 100
-                           },
-                           {
-                               'label': 'Unhealthy for sensitive groups',
-                               'icon': 'mdi:emoticon-neutral',
-                               'minimum': 101,
-                               'maximum': 150
-                           },
-                           {
-                               'label': 'Unhealthy',
-                               'icon': 'mdi:emoticon-sad',
-                               'minimum': 151,
-                               'maximum': 200
-                           },
-                           {
-                               'label': 'Very Unhealthy',
-                               'icon': 'mdi:emoticon-dead',
-                               'minimum': 201,
-                               'maximum': 300
-                           },
-                           {
-                               'label': 'Hazardous',
-                               'icon': 'mdi:biohazard',
-                               'minimum': 301,
-                               'maximum': 10000
-                           }]
+{
+   'label': 'Moderate',
+   'icon': 'mdi:emoticon-happy',
+   'minimum': 51,
+   'maximum': 100
+},
+{
+   'label': 'Unhealthy for sensitive groups',
+   'icon': 'mdi:emoticon-neutral',
+   'minimum': 101,
+   'maximum': 150
+},
+{
+   'label': 'Unhealthy',
+   'icon': 'mdi:emoticon-sad',
+   'minimum': 151,
+   'maximum': 200
+},
+{
+   'label': 'Very Unhealthy',
+   'icon': 'mdi:emoticon-dead',
+   'minimum': 201,
+   'maximum': 300
+},
+{
+   'label': 'Hazardous',
+   'icon': 'mdi:biohazard',
+   'minimum': 301,
+   'maximum': 10000
+}]
 
 POLLUTANT_MAPPING = {
     'co': {
