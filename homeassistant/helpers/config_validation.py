@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.logging import BraceStyleAdapter
 from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
 
@@ -604,7 +605,7 @@ def deprecated(key: str,
         if key in config:
             value = config[key]
             check_for_invalid_version(value)
-            StyleAdapter(logging.getLogger(module_name)).warning(
+            BraceStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
                 value=value,
@@ -621,47 +622,6 @@ def deprecated(key: str,
             config[replacement_key] = value
 
         return has_at_most_one_key(key, replacement_key)(config)
-
-    # Adapted from: https://stackoverflow.com/a/24683360/2267718
-    class BraceMessage:
-        """Represents a logging message with brace style arguments."""
-
-        def __init__(self, fmt, args, kwargs):
-            """Initialize a new BraceMessage object."""
-            self._fmt = fmt
-            self._args = args
-            self._kwargs = kwargs
-
-        def __str__(self):
-            """Convert the object to a string for logging."""
-            return str(self._fmt).format(*self._args, **self._kwargs)
-
-    class StyleAdapter(logging.LoggerAdapter):
-        """Represents an adapter wrapping the logger allowing BraceMessages."""
-
-        def __init__(self, logger, extra=None):
-            """Initialize a new StyleAdapter for the provided logger."""
-            super(StyleAdapter, self).__init__(logger, extra or {})
-
-        def log(self, level, msg, *args, **kwargs):
-            """Log the message provided at the appropriate level."""
-            if self.isEnabledFor(level):
-                msg, log_kwargs = self.process(msg, kwargs)
-                self.logger._log(  # pylint: disable=protected-access
-                    level, BraceMessage(msg, args, kwargs), (), **log_kwargs
-                )
-
-        def process(self, msg, kwargs):
-            """Process the keyward args in preparation for logging."""
-            return (
-                msg,
-                {
-                    key: kwargs[key]
-                    for k in inspect.getfullargspec(
-                        self.logger._log  # pylint: disable=protected-access
-                    ).args[1:] if k in kwargs
-                }
-            )
 
     return validator
 
