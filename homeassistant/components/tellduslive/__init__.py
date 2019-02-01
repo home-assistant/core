@@ -75,8 +75,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug('Update interval %s seconds.', interval)
     client = TelldusLiveClient(hass, entry, session, interval)
     hass.data[DOMAIN] = client
-    await async_add_hubs(hass, client, entry.entry_id)
-    hass.async_create_task(client.update())
+    hass.loop.create_task(async_add_hubs(hass, client, entry.entry_id))
 
     return True
 
@@ -94,6 +93,7 @@ async def async_add_hubs(hass, client, entry_id):
             model=hub['type'],
             sw_version=hub['version'],
         )
+    hass.loop.create_task(client.update())
 
 
 async def async_setup(hass, config):
