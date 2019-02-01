@@ -206,13 +206,6 @@ class GitHubData():
 
             self.stargazers = repo.stargazers_count
 
-            self.topics = json.dumps(repo.get_topics())
-
-            branches = []
-            for branch in repo.get_branches():
-                branches.append(branch.name)
-            self.branches = json.dumps(branches)
-
             open_issues = []
             for issue in repo.get_issues(state='open', sort='created'):
                 if issue.pull_request is None:
