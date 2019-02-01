@@ -19,6 +19,7 @@ DEPENDENCIES = ['nissan_leaf']
 
 ICON_RANGE = 'mdi:speedometer'
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensors setup."""
     _LOGGER.debug("setup_platform nissan_leaf sensors, discovery_info=%s",
