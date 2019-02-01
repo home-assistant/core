@@ -12,10 +12,9 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PASSWORD, CONF_PATH,
-    CONF_SCAN_INTERVAL, CONF_URL, CONF_USERNAME)
+    CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['PyGithub==1.43.5']
 
