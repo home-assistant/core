@@ -8,8 +8,9 @@ import pysonos
 from pysonos import alarms
 
 from homeassistant.setup import setup_component
-from homeassistant.components.media_player import sonos, DOMAIN
-from homeassistant.components.media_player.sonos import CONF_INTERFACE_ADDR
+from homeassistant.components.sonos import media_player as sonos
+from homeassistant.components.media_player import DOMAIN
+from homeassistant.components.sonos.media_player import CONF_INTERFACE_ADDR
 from homeassistant.const import CONF_HOSTS, CONF_PLATFORM
 
 from tests.common import get_test_home_assistant
