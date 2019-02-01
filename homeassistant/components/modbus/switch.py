@@ -33,7 +33,7 @@ REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 REGISTERS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_REGISTER): cv.positive_int,
@@ -49,7 +49,7 @@ REGISTERS_SCHEMA = vol.Schema({
 })
 
 COILS_SCHEMA = vol.Schema({
-    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,

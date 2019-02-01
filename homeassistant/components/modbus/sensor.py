@@ -41,7 +41,7 @@ DATA_TYPE_CUSTOM = 'custom'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
-        vol.Required(CONF_HUB, DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):

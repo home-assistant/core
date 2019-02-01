@@ -28,7 +28,7 @@ REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })

@@ -22,7 +22,7 @@ CONF_COILS = 'coils'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
-        vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_SLAVE): cv.positive_int

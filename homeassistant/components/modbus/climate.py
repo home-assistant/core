@@ -35,7 +35,7 @@ DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_TARGET_TEMP): cv.positive_int,
