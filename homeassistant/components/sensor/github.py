@@ -60,11 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("You have not set an access_token or a username")
         return
 
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     sensors = []
     for repository in config[CONF_REPOS]:
         data = GitHubData(
-            interval=interval,
             repository=repository,
             access_token=config.get(CONF_ACCESS_TOKEN),
             username=config.get(CONF_USERNAME),
@@ -152,7 +150,7 @@ class GitHubSensor(Entity):
 class GitHubData():
     """GitHub Data object."""
 
-    def __init__(self, interval, repository, access_token=None, username=None,
+    def __init__(self, repository, access_token=None, username=None,
                  password=None, server_url=None):
         """Set up GitHub."""
         import github
@@ -190,7 +188,7 @@ class GitHubData():
         else:
             self.name = repo.name
 
-        self.update = Throttle(interval)(self._update)
+        self.update = self._update
 
         self.stargazers = None
         self.topics = None
