@@ -21,14 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
 
-ATTR_BRANCHES = 'branches'
-ATTR_LAST_COMMIT = 'last_commit'
-ATTR_LATEST_RELEASE = 'latest_release'
+ATTR_LAST_COMMIT_MESSAGE = 'last_commit_message'
+ATTR_LAST_COMMIT_SHA = 'last_commit_sha'
+ATTR_LATEST_RELEASE_URL = 'latest_release_url'
+ATTR_OPEN_ISSUE_LATEST = 'open_issue_latest'
 ATTR_OPEN_ISSUES = 'open_issues'
+ATTR_OPEN_PULL_REQUEST_LATEST = 'open_pull_request_latest'
 ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
 ATTR_PATH = 'path'
 ATTR_STARGAZERS = 'stargazers'
-ATTR_TOPICS = 'topics'
 
 DEFAULT_NAME = 'GitHub'
 
@@ -73,13 +74,14 @@ class GitHubSensor(Entity):
         self._state = None
         self._repository_path = None
         self._name = None
+        self._last_commit_message = None
+        self._last_commit_sha = None
+        self._latest_release_url = None
+        self._open_issue_count = None
+        self._open_issue_latest = None
+        self._pull_request_count = None
+        self._pull_request_latest = None
         self._stargazers = None
-        self._topics = None
-        self._branches = None
-        self._open_issues = None
-        self._open_pull_requests = None
-        self._last_commit = None
-        self._latest_release = None
         self._github_data = github_data
 
     @property
@@ -103,13 +105,14 @@ class GitHubSensor(Entity):
         return {
             ATTR_PATH: self._repository_path,
             ATTR_NAME: self._name,
-            ATTR_STARGAZERS: self._stargazers,
-            ATTR_TOPICS: self._topics,
-            ATTR_BRANCHES: self._branches,
-            ATTR_OPEN_ISSUES: self._open_issues,
-            ATTR_OPEN_PULL_REQUESTS: self._open_pull_requests,
-            ATTR_LAST_COMMIT: self._last_commit,
-            ATTR_LATEST_RELEASE: self._latest_release
+            ATTR_LAST_COMMIT_MESSAGE: self._last_commit_message,
+            ATTR_LAST_COMMIT_SHA: self._last_commit_sha,
+            ATTR_LATEST_RELEASE_URL: self._latest_release_url,
+            ATTR_OPEN_ISSUE_LATEST: self._open_issue_latest,
+            ATTR_OPEN_ISSUES: self._open_issue_count,
+            ATTR_OPEN_PULL_REQUEST_LATEST: self._pull_request_latest,
+            ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
+            ATTR_STARGAZERS: self._stargazers
         }
 
     @property
@@ -124,14 +127,15 @@ class GitHubSensor(Entity):
         self._state = self._github_data.last_commit_sha
         self._repository_path = self._github_data.repository_path
         self._name = self._github_data.name
-        self._stargazers = self._github_data.stargazers
-        self._topics = self._github_data.topics
-        self._branches = self._github_data.branches
-        self._open_issues = self._github_data.open_issues
-        self._open_pull_requests = self._github_data.open_pull_requests
-        self._last_commit = self._github_data.last_commit
-        self._latest_release = self._github_data.latest_release
         self._available = self._github_data.available
+        self._last_commit_message = self._github_data.last_commit_message
+        self._last_commit_sha = self._github_data.last_commit_sha
+        self._latest_release_url = self._github_data.latest_release_url
+        self._open_issue_count = self._github_data.open_issue_count
+        self._open_issue_latest = self._github_data.open_issue_latest
+        self._pull_request_count = self._github_data.pull_request_count
+        self._pull_request_latest = self._github_data.pull_request_latest
+        self._stargazers = self._github_data.stargazers
 
 
 class GitHubData():
@@ -159,8 +163,7 @@ class GitHubData():
 
             repo = self._github_obj.get_repo(self.repository_path)
         except self._github.GithubException as err:
-            _LOGGER.error("GitHub error for %s: %s",
-                          self.repository_path, err)
+            _LOGGER.error("GitHub error for %s: %s", self.repository_path, err)
             self.setup_error = True
             return
 
@@ -171,14 +174,15 @@ class GitHubData():
 
         self.update = self._update
 
-        self.stargazers = None
-        self.topics = None
-        self.branches = None
-        self.open_issues = None
-        self.open_pull_requests = None
-        self.last_commit = None
-        self.latest_release = None
         self.available = False
+        self.last_commit_message = None
+        self.last_commit_sha = None
+        self.latest_release_url = None
+        self.open_issue_count = None
+        self.open_issue_latest = None
+        self.pull_request_count = None
+        self.pull_request_latest = None
+        self.stargazers = None
 
     def _update(self):
         """Update GitHub Sensor."""
@@ -201,7 +205,7 @@ class GitHubData():
 
             last_commit = repo.get_commits()[0]
             self.last_commit_sha = last_commit.sha
-            self.last_commit_message: last_commit.commit.message
+            self.last_commit_message = last_commit.commit.message
 
             releases = repo.get_releases()
             if releases and releases.totalCount > 0:
@@ -209,6 +213,5 @@ class GitHubData():
 
             self.available = True
         except self._github.GithubException as err:
-            _LOGGER.error("GitHub error for %s: %s",
-                          self.repository_path, err)
+            _LOGGER.error("GitHub error for %s: %s", self.repository_path, err)
             self.available = False
