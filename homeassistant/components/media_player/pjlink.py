@@ -97,7 +97,7 @@ class PjLinkDevice(MediaPlayerDevice):
         with self.projector() as projector:
             try:
                 pwstate = projector.get_power()
-                if pwstate == 'on' or pwstate == 'warm-up':
+                if pwstate in ('on', 'warm-up'):
                     self._pwstate = STATE_ON
                 else:
                     self._pwstate = STATE_OFF
