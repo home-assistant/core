@@ -179,32 +179,10 @@ class GitHubData():
             self.repository_path = repository[CONF_PATH]
 
             repo = self._github_obj.get_repo(self.repository_path)
-        except self._github.BadCredentialsException as err:
-            _LOGGER.error("Bad Credentials for %s: %s",
-                          self.repository_path, err)
-            self.setup_error = True
-        except self._github.UnknownObjectException as err:
-            _LOGGER.error("UnknownObjectException for %s: %s",
-                          self.repository_path, err)
-            self.setup_error = True
-        except self._github.RateLimitExceededException as err:
-            _LOGGER.error("RateLimitExceededException for %s: %s",
-                          self.repository_path, err)
-            self.setup_error = True
-        except self._github.BadAttributeException as err:
-            _LOGGER.error("BadAttributeException for %s: %s",
-                          self.repository_path, err)
-            self.setup_error = True
-        except self._github.TwoFactorException as err:
-            _LOGGER.error("TwoFactorException for %s: %s",
-                          self.repository_path, err)
-            self.setup_error = True
         except self._github.GithubException as err:
-            _LOGGER.error("GithubException for %s: %s",
+            _LOGGER.error("GitHub error for %s: %s",
                           self.repository_path, err)
             self.setup_error = True
-
-        if self.setup_error is True:
             return
 
         if CONF_NAME in repository:
@@ -309,27 +287,7 @@ class GitHubData():
                 })
 
             self.available = True
-        except self._github.BadCredentialsException as err:
-            _LOGGER.error("Bad Credentials for %s: %s",
-                          self.repository_path, err)
-            self.available = False
-        except self._github.UnknownObjectException as err:
-            _LOGGER.error("UnknownObjectException for %s: %s",
-                          self.repository_path, err)
-            self.available = False
-        except self._github.RateLimitExceededException as err:
-            _LOGGER.error("RateLimitExceededException for %s: %s",
-                          self.repository_path, err)
-            self.available = False
-        except self._github.BadAttributeException as err:
-            _LOGGER.error("BadAttributeException for %s: %s",
-                          self.repository_path, err)
-            self.available = False
-        except self._github.TwoFactorException as err:
-            _LOGGER.error("TwoFactorException for %s: %s",
-                          self.repository_path, err)
-            self.available = False
         except self._github.GithubException as err:
-            _LOGGER.error("GithubException for %s: %s",
+            _LOGGER.error("GitHub error for %s: %s",
                           self.repository_path, err)
             self.available = False
