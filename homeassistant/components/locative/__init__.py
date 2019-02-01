@@ -28,7 +28,6 @@ TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 ATTR_DEVICE_ID = 'device'
 ATTR_TRIGGER = 'trigger'
-ATTR_DEVICE_TYPE = 'device_type'
 
 
 def _id(value: str) -> str:
