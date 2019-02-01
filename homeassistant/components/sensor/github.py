@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.github/
 """
 from datetime import timedelta
 import logging
-import uuid
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -71,7 +70,7 @@ class GitHubSensor(Entity):
 
     def __init__(self, github_data):
         """Initialize the GitHub sensor."""
-        self._unique_id = str(uuid.uuid4())
+        self._unique_id = github_data.repository_path
         self._name = None
         self._state = None
         self._available = False
