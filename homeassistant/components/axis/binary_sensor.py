@@ -1,13 +1,14 @@
 """Support for Axis binary sensors."""
 from datetime import timedelta
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN, LOGGER
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_MAC, CONF_TRIGGER_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+
+from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
 DEPENDENCIES = [AXIS_DOMAIN]
 
