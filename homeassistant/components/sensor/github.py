@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.github/
 """
 from datetime import timedelta
-import json
 import logging
 import voluptuous as vol
 
