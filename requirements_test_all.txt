@@ -257,7 +257,7 @@ rflink==0.0.37
 ring_doorbell==0.2.2
 
 # homeassistant.components.media_player.yamaha
-rxv==0.5.1
+rxv==0.6.0
 
 # homeassistant.components.simplisafe
 simplisafe-python==3.1.14
