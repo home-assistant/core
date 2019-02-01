@@ -160,10 +160,10 @@ class JewishCalSensor(Entity):
         # Not all sensors should advance immediately when the Hebrew date
         # officially changes (i.e. after sunset), hence lagging_date.
         if now > sunset:
-          date = date.next_day
+            date = date.next_day
         today_times = make_zmanim(today)
         if today_times.havdalah and now > today_times.havdalah:
-          lagging_date = lagging_date.next_day
+            lagging_date = lagging_date.next_day
 
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
