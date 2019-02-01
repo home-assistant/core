@@ -71,7 +71,7 @@ class GitHubSensor(Entity):
 
     def __init__(self, github_data):
         """Initialize the GitHub sensor."""
-        self._unique_id = uuid.uuid4()
+        self._unique_id = str(uuid.uuid4())
         self._name = None
         self._state = None
         self._available = False
