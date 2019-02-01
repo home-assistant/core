@@ -10,6 +10,7 @@ import threading
 from typing import Optional, Tuple
 
 import attr
+import pychromecast
 import voluptuous as vol
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
