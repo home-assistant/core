@@ -10,7 +10,6 @@ import threading
 from typing import Optional, Tuple
 
 import attr
-import pychromecast
 import voluptuous as vol
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
@@ -324,6 +323,8 @@ class CastDevice(MediaPlayerDevice):
 
     def __init__(self, cast_info):
         """Initialize the cast device."""
+        import pychromecast
+
         self._cast_info = cast_info  # type: ChromecastInfo
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
