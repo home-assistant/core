@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nissan_leaf']
 
+ICON_RANGE = 'mdi:speedometer'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensors setup."""
@@ -114,4 +115,4 @@ class LeafRangeSensor(LeafEntity):
     @property
     def icon(self):
         """Nice icon for range."""
-        return 'mdi:speedometer'
+        return ICON_RANGE

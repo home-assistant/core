@@ -15,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nissan_leaf']
 
+ICON_CAR = "mdi:car"
+
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Nissan Leaf tracker."""
@@ -37,7 +39,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                     value.data[DATA_LOCATION].latitude,
                     value.data[DATA_LOCATION].longitude
                 ),
-                icon='mdi:car')
+                icon=ICON_CAR)
 
     dispatcher_connect(hass, SIGNAL_UPDATE_LEAF, see_vehicle)
 
