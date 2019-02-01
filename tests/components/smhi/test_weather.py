@@ -9,8 +9,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE,
     ATTR_FORECAST_TEMP_LOW, ATTR_WEATHER_VISIBILITY, ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION, smhi as weather_smhi,
-    DOMAIN as WEATHER_DOMAIN)
+    ATTR_FORECAST_PRECIPITATION, DOMAIN as WEATHER_DOMAIN)
+from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 

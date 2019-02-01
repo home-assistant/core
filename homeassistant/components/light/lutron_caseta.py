@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, DOMAIN)
-from homeassistant.components.light.lutron import (
+from homeassistant.components.lutron.light import (
     to_hass_level, to_lutron_level)
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
