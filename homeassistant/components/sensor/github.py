@@ -10,8 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PASSWORD, CONF_PATH,
-    CONF_URL, CONF_USERNAME)
+    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PATH, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -41,9 +40,7 @@ REPO_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Exclusive(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
-    vol.Exclusive(CONF_USERNAME, CONF_GROUP_AUTH): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
     vol.Optional(CONF_URL): cv.url,
     vol.Required(CONF_REPOS):
         vol.All(cv.ensure_list, [REPO_SCHEMA])
@@ -52,19 +49,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GitHub sensor platform."""
-    if config.get(CONF_ACCESS_TOKEN) is None \
-            and config.get(CONF_USERNAME) is None:
-        # Error if there is no authentication set
-        _LOGGER.error("You have not set an access_token or a username")
-        return
-
     sensors = []
     for repository in config[CONF_REPOS]:
         data = GitHubData(
             repository=repository,
             access_token=config.get(CONF_ACCESS_TOKEN),
-            username=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD),
             server_url=config.get(CONF_URL)
         )
         if data.setup_error is True:
@@ -148,8 +137,7 @@ class GitHubSensor(Entity):
 class GitHubData():
     """GitHub Data object."""
 
-    def __init__(self, repository, access_token=None, username=None,
-                 password=None, server_url=None):
+    def __init__(self, repository, access_token=None, server_url=None):
         """Set up GitHub."""
         import github
 
@@ -163,14 +151,9 @@ class GitHubData():
                 if access_token is not None:
                     self._github_obj = github.Github(
                         access_token, base_url=server_url)
-                elif username is not None and password is not None:
-                    self._github_obj = github.Github(
-                        username, password, base_url=server_url)
             else:
                 if access_token is not None:
                     self._github_obj = github.Github(access_token)
-                elif username is not None and password is not None:
-                    self._github_obj = github.Github(username, password)
 
             self.repository_path = repository[CONF_PATH]
 
