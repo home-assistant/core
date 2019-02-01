@@ -448,15 +448,6 @@ class LeafEntity(Entity):
             "Registered %s component for VIN %s",
             self.__class__.__name__, self.car.leaf.vin)
 
-    @property
-    def device_state_attributes(self):
-        """Return default attributes for Nissan Leaf entities."""
-        return {
-            'homebridge_serial': self.car.leaf.vin,
-            'homebridge_mfg': 'Nissan',
-            'homebridge_model': 'Leaf'
-        }
-
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
