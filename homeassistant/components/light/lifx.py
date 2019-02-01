@@ -22,7 +22,8 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_BROADCAST)
+    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_PORT,
+    CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -230,6 +231,9 @@ class LIFXManager:
         listen_ip = interface.get(CONF_SERVER)
         if listen_ip:
             kwargs['listen_ip'] = listen_ip
+        listen_port = interface.get(CONF_PORT)
+        if listen_port:
+            kwargs['listen_port'] = listen_port
         lifx_discovery.start(**kwargs)
 
         self.discoveries.append(lifx_discovery)
@@ -710,3 +714,7 @@ class LIFXStrip(LIFXColor):
             if resp:
                 zone += 8
                 top = resp.count
+
+                # We only await multizone responses so don't ask for just one
+                if zone == top-1:
+                    zone -= 1

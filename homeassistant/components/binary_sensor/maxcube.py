@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.maxcube import DATA_KEY
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class MaxCubeShutter(BinarySensorDevice):
         self._sensor_type = 'window'
         self._rf_address = rf_address
         self._cubehandle = handler
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def should_poll(self):

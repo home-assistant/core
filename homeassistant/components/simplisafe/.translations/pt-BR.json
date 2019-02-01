@@ -7,11 +7,13 @@
         "step": {
             "user": {
                 "data": {
+                    "code": "C\u00f3digo (para o Home Assistant)",
                     "password": "Senha",
                     "username": "Endere\u00e7o de e-mail"
                 },
                 "title": "Preencha suas informa\u00e7\u00f5es"
             }
-        }
+        },
+        "title": "SimpliSafe"
     }
 }

@@ -5,7 +5,7 @@ import unittest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
+    STATE_OFF, STATE_ON, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
@@ -119,7 +119,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 
     def turn_on(self):
         """Mock turn_on function."""
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     def turn_off(self):
         """Mock turn_off function."""

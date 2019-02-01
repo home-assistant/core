@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT)
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
+    FIBARO_DEVICES, FibaroDevice)
 from homeassistant.const import (CONF_DEVICE_CLASS, CONF_ICON)
 
 DEPENDENCIES = ['fibaro']
@@ -33,17 +33,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroBinarySensor(device, hass.data[FIBARO_CONTROLLER])
+        [FibaroBinarySensor(device)
          for device in hass.data[FIBARO_DEVICES]['binary_sensor']], True)
 
 
 class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the binary_sensor."""
         self._state = None
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
         devconf = fibaro_device.device_config

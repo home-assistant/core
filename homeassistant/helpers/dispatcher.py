@@ -5,6 +5,7 @@ from typing import Any, Callable
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.logging import catch_log_exception
 from .typing import HomeAssistantType
 
 
@@ -40,13 +41,18 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
     if signal not in hass.data[DATA_DISPATCHER]:
         hass.data[DATA_DISPATCHER][signal] = []
 
-    hass.data[DATA_DISPATCHER][signal].append(target)
+    wrapped_target = catch_log_exception(
+        target, lambda *args:
+        "Exception in {} when dispatching '{}': {}".format(
+            target.__name__, signal, args))
+
+    hass.data[DATA_DISPATCHER][signal].append(wrapped_target)
 
     @callback
     def async_remove_dispatcher() -> None:
         """Remove signal listener."""
         try:
-            hass.data[DATA_DISPATCHER][signal].remove(target)
+            hass.data[DATA_DISPATCHER][signal].remove(wrapped_target)
         except (KeyError, ValueError):
             # KeyError is key target listener did not exist
             # ValueError if listener did not exist within signal

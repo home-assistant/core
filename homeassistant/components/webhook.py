@@ -19,6 +19,7 @@ DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 
 
+URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 WS_TYPE_LIST = 'webhook/list'
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_LIST,
@@ -58,8 +59,15 @@ def async_generate_id():
 @callback
 @bind_hass
 def async_generate_url(hass, webhook_id):
-    """Generate a webhook_id."""
-    return "{}/api/webhook/{}".format(hass.config.api.base_url, webhook_id)
+    """Generate the full URL for a webhook_id."""
+    return "{}{}".format(hass.config.api.base_url,
+                         async_generate_path(webhook_id))
+
+
+@callback
+def async_generate_path(webhook_id):
+    """Generate the path component for a webhook_id."""
+    return URL_WEBHOOK_PATH.format(webhook_id=webhook_id)
 
 
 @bind_hass
@@ -97,7 +105,7 @@ async def async_setup(hass, config):
 class WebhookView(HomeAssistantView):
     """Handle incoming webhook requests."""
 
-    url = "/api/webhook/{webhook_id}"
+    url = URL_WEBHOOK_PATH
     name = "api:webhook"
     requires_auth = False
 
