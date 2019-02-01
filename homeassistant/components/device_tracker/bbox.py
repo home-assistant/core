@@ -7,6 +7,7 @@ https://home-assistant.io/components/device_tracker.bbox/
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import List
 
 import voluptuous as vol
 
