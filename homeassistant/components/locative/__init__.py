@@ -28,6 +28,7 @@ TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 ATTR_DEVICE_ID = 'device'
 ATTR_TRIGGER = 'trigger'
+ATTR_DEVICE_TYPE = 'device_type'
 
 
 def _id(value: str) -> str:
@@ -48,8 +49,8 @@ WEBHOOK_SCHEMA = vol.All(
         vol.Required(ATTR_LONGITUDE): cv.longitude,
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_TRIGGER): cv.string,
-        vol.Optional(ATTR_ID): vol.All(cv.string, _id)
-    }),
+        vol.Optional(ATTR_ID): vol.All(cv.string, _id),
+    }, extra=vol.ALLOW_EXTRA),
     _validate_test_mode
 )
 
