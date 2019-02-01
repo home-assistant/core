@@ -1489,7 +1489,7 @@ russound==0.1.9
 russound_rio==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.5.1
+rxv==0.6.0
 
 # homeassistant.components.media_player.samsungtv
 samsungctl[websocket]==0.7.1
