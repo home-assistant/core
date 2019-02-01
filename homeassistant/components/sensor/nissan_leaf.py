@@ -72,13 +72,13 @@ class LeafRangeSensor(LeafEntity):
 
     def __init__(self, car, ac_on):
         """Set-up range sensor. Store if AC on."""
-        self.ac_on = ac_on
+        self._ac_on = ac_on
         super().__init__(car)
 
     @property
     def name(self):
         """Update sensor name depending on AC."""
-        if self.ac_on is True:
+        if self._ac_on is True:
             return self.car.leaf.nickname + " Range (AC)"
         return self.car.leaf.nickname + " Range"
 
@@ -93,7 +93,7 @@ class LeafRangeSensor(LeafEntity):
         """Battery range in miles or kms."""
         ret = 0
 
-        if self.ac_on:
+        if self._ac_on:
             ret = self.car.data[DATA_RANGE_AC]
         else:
             ret = self.car.data[DATA_RANGE_AC_OFF]
