@@ -133,7 +133,7 @@ class GitHubSensor(Entity):
         """Collect updated data from GitHub API."""
         self._github_data.update()
 
-        self._state = self._github_data.stargazers
+        self._state = self._github_data.last_commit_sha
         self._repository_path = self._github_data.repository_path
         self._name = self._github_data.name
         self._stargazers = self._github_data.stargazers
@@ -205,76 +205,23 @@ class GitHubData():
 
             self.stargazers = repo.stargazers_count
 
-            open_issues = []
-            for issue in repo.get_issues(state='open', sort='created'):
-                if issue.pull_request is None:
-                    labels = []
-                    for label in issue.labels:
-                        labels.append(label.name)
-                    open_issues.append({
-                        "number": issue.number,
-                        "title": issue.title,
-                        "url": issue.html_url,
-                        "body": issue.body,
-                        "labels": labels,
-                        "assignee": issue.assignee,
-                        "milestone": issue.milestone,
-                        "comments": issue.comments,
-                        "user": {
-                            "login": issue.user.login,
-                            "name": issue.user.name,
-                            "avatar_url": issue.user.avatar_url,
-                            "url": issue.user.html_url
-                        }
-                    })
-            self.open_issues = json.dumps(open_issues)
+            open_issues = repo.get_issues(state='open', sort='created')
+            if open_issues is not None and len(open_issues) > 0:
+                self.open_issue_count = len(open_issues)
+                self.open_issue_latest = open_issues[0].html_url
 
-            open_pull_requests = []
-            for _pr in repo.get_pulls(state='open', sort='created'):
-                labels = []
-                for label in _pr.labels:
-                    labels.append(label.name)
-                open_pull_requests.append({
-                    "number": _pr.number,
-                    "title": _pr.title,
-                    "url": _pr.html_url,
-                    "body": _pr.body,
-                    "labels": labels,
-                    "assignee": _pr.assignee,
-                    "milestone": _pr.milestone,
-                    "comments": _pr.comments,
-                    "user": {
-                        "login": _pr.user.login,
-                        "name": _pr.user.name,
-                        "avatar_url": _pr.user.avatar_url,
-                        "url": _pr.user.html_url
-                    }
-                })
-            self.open_pull_requests = json.dumps(open_pull_requests)
+            open_pull_requests = repo.get_pulls(state='open', sort='created')
+            if open_pull_requests is not None and len(open_pull_requests) > 0:
+                self.pull_request_count = len(open_pull_requests)
+                self.pull_request_latest = open_pull_requests[0].html_url
 
             last_commit = repo.get_commits()[0]
-            self.last_commit = json.dumps({
-                "sha": last_commit.sha,
-                "message": last_commit.commit.message,
-                "url": last_commit.html_url,
-                "author": {
-                    "login": last_commit.author.login,
-                    "name": last_commit.author.name,
-                    "avatar_url": last_commit.author.avatar_url,
-                    "url": last_commit.author.html_url
-                }
-            })
+            self.last_commit_sha = last_commit.sha
+            self.last_commit_message: last_commit.commit.message
 
             releases = repo.get_releases()
             if releases and releases.totalCount > 0:
-                self.latest_release = json.dumps({
-                    "title": releases[0].title,
-                    "tag": releases[0].tag_name,
-                    "url": releases[0].html_url,
-                    "created_at": str(releases[0].created_at),
-                    "published_at": str(releases[0].published_at),
-                    "body": releases[0].body
-                })
+                self.latest_release_url = releases[0].html_url
 
             self.available = True
         except self._github.GithubException as err:
