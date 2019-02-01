@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['TravisPy==0.3.5']
@@ -107,7 +107,7 @@ class TravisCISensor(Entity):
         self._repo_name = repo_name
         self._user = user
         self._branch = branch
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = "{0} {1}".format(self._repo_name,
                                       SENSOR_TYPES[self._sensor_type][0])
 
@@ -132,7 +132,7 @@ class TravisCISensor(Entity):
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
 
-        if self._build and self._state is not STATE_UNKNOWN:
+        if self._build and self._state is not None:
             if self._user and self._sensor_type == 'state':
                 attrs['Owner Name'] = self._user.name
                 attrs['Owner Email'] = self._user.email

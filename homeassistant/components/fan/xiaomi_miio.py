@@ -38,7 +38,7 @@ MODEL_AIRPURIFIER_MA1 = 'zhimi.airpurifier.ma1'
 MODEL_AIRPURIFIER_MA2 = 'zhimi.airpurifier.ma2'
 MODEL_AIRPURIFIER_SA1 = 'zhimi.airpurifier.sa1'
 MODEL_AIRPURIFIER_SA2 = 'zhimi.airpurifier.sa2'
-MODEL_AIRPURIFIER_MC1 = 'zhimi.airpurifier.mc1'
+MODEL_AIRPURIFIER_2S = 'zhimi.airpurifier.mc1'
 
 MODEL_AIRHUMIDIFIER_V1 = 'zhimi.humidifier.v1'
 MODEL_AIRHUMIDIFIER_CA = 'zhimi.humidifier.ca1'
@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          MODEL_AIRPURIFIER_MA2,
          MODEL_AIRPURIFIER_SA1,
          MODEL_AIRPURIFIER_SA2,
-         MODEL_AIRPURIFIER_MC1,
+         MODEL_AIRPURIFIER_2S,
          MODEL_AIRHUMIDIFIER_V1,
          MODEL_AIRHUMIDIFIER_CA,
          MODEL_AIRFRESH_VA2,
@@ -111,7 +111,7 @@ ATTR_TRANS_LEVEL = 'trans_level'
 ATTR_HARDWARE_VERSION = 'hardware_version'
 
 # Air Humidifier CA
-ATTR_SPEED = 'speed'
+ATTR_MOTOR_SPEED = 'motor_speed'
 ATTR_DEPTH = 'depth'
 ATTR_DRY = 'dry'
 
@@ -175,6 +175,15 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     ATTR_VOLUME: 'volume',
 }
 
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = {
+    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
+    ATTR_BUZZER: 'buzzer',
+    ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
+    ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
+    ATTR_FILTER_TYPE: 'filter_type',
+    ATTR_ILLUMINANCE: 'illuminance',
+}
+
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_AIR_QUALITY_INDEX: 'aqi',
@@ -223,7 +232,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
-    ATTR_SPEED: 'speed',
+    ATTR_MOTOR_SPEED: 'speed',
     ATTR_DEPTH: 'depth',
     ATTR_DRY: 'dry',
 }
@@ -249,6 +258,7 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 OPERATION_MODES_AIRPURIFIER = ['Auto', 'Silent', 'Favorite', 'Idle']
 OPERATION_MODES_AIRPURIFIER_PRO = ['Auto', 'Silent', 'Favorite']
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
+OPERATION_MODES_AIRPURIFIER_2S = ['Auto', 'Silent', 'Favorite']
 OPERATION_MODES_AIRPURIFIER_V3 = ['Auto', 'Silent', 'Favorite', 'Idle',
                                   'Medium', 'High', 'Strong']
 OPERATION_MODES_AIRFRESH = ['Auto', 'Silent', 'Interval', 'Low',
@@ -288,6 +298,11 @@ FEATURE_FLAGS_AIRPURIFIER_PRO_V7 = (FEATURE_SET_CHILD_LOCK |
                                     FEATURE_SET_LED |
                                     FEATURE_SET_FAVORITE_LEVEL |
                                     FEATURE_SET_VOLUME)
+
+FEATURE_FLAGS_AIRPURIFIER_2S = (FEATURE_SET_BUZZER |
+                                FEATURE_SET_CHILD_LOCK |
+                                FEATURE_SET_LED |
+                                FEATURE_SET_FAVORITE_LEVEL)
 
 FEATURE_FLAGS_AIRPURIFIER_V3 = (FEATURE_SET_BUZZER |
                                 FEATURE_SET_CHILD_LOCK |
@@ -619,6 +634,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._available_attributes = \
                 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO_V7
+        elif self._model == MODEL_AIRPURIFIER_2S:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3

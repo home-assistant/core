@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD)
+    CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import pilight
@@ -46,7 +46,7 @@ class PilightSensor(Entity):
 
     def __init__(self, hass, name, variable, payload, unit_of_measurement):
         """Initialize the sensor."""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._hass = hass
         self._name = name
         self._variable = variable

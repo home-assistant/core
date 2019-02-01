@@ -4,76 +4,38 @@ Support for monitoring the Transmission BitTorrent client API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.transmission/
 """
-from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_MONITORED_VARIABLES, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME, STATE_IDLE)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.transmission import (
+    DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
+from homeassistant.const import STATE_IDLE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['transmissionrpc==0.11']
+DEPENDENCIES = ['transmission']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
-DEFAULT_PORT = 9091
-
-SENSOR_TYPES = {
-    'active_torrents': ['Active Torrents', None],
-    'current_status': ['Status', None],
-    'download_speed': ['Down Speed', 'MB/s'],
-    'paused_torrents': ['Paused Torrents', None],
-    'total_torrents': ['Total Torrents', None],
-    'upload_speed': ['Up Speed', 'MB/s'],
-}
-
-SCAN_INTERVAL = timedelta(minutes=2)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['torrents']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
-    import transmissionrpc
-    from transmissionrpc.error import TransmissionError
+    if discovery_info is None:
+        return
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
-
-    try:
-        transmission = transmissionrpc.Client(
-            host, port=port, user=username, password=password)
-        transmission_api = TransmissionData(transmission)
-    except TransmissionError as error:
-        if str(error).find("401: Unauthorized"):
-            _LOGGER.error("Credentials for Transmission client are not valid")
-            return
-
-        _LOGGER.warning(
-            "Unable to connect to Transmission client: %s:%s", host, port)
-        raise PlatformNotReady
+    transmission_api = hass.data[DATA_TRANSMISSION]
+    monitored_variables = discovery_info['sensors']
+    name = discovery_info['client_name']
 
     dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(TransmissionSensor(variable, transmission_api, name))
+    for sensor_type in monitored_variables:
+        dev.append(TransmissionSensor(
+            sensor_type,
+            transmission_api,
+            name,
+            SENSOR_TYPES[sensor_type][0],
+            SENSOR_TYPES[sensor_type][1]))
 
     add_entities(dev, True)
 
@@ -81,12 +43,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
-    def __init__(self, sensor_type, transmission_api, client_name):
+    def __init__(
+            self,
+            sensor_type,
+            transmission_api,
+            client_name,
+            sensor_name,
+            unit_of_measurement):
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._name = sensor_name
         self._state = None
         self._transmission_api = transmission_api
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = unit_of_measurement
         self._data = None
         self.client_name = client_name
         self.type = sensor_type
@@ -111,10 +79,16 @@ class TransmissionSensor(Entity):
         """Could the device be accessed during the last update call."""
         return self._transmission_api.available
 
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Transmission and updates the state."""
         self._transmission_api.update()
         self._data = self._transmission_api.data
+
+        if self.type == 'completed_torrents':
+            self._state = self._transmission_api.get_completed_torrent_count()
+        elif self.type == 'started_torrents':
+            self._state = self._transmission_api.get_started_torrent_count()
 
         if self.type == 'current_status':
             if self._data:
@@ -146,25 +120,3 @@ class TransmissionSensor(Entity):
                 self._state = self._data.pausedTorrentCount
             elif self.type == 'total_torrents':
                 self._state = self._data.torrentCount
-
-
-class TransmissionData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, api):
-        """Initialize the Transmission data object."""
-        self.data = None
-        self.available = True
-        self._api = api
-
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from Transmission instance."""
-        from transmissionrpc.error import TransmissionError
-
-        try:
-            self.data = self._api.session_stats()
-            self.available = True
-        except TransmissionError:
-            self.available = False
-            _LOGGER.error("Unable to connect to Transmission client")

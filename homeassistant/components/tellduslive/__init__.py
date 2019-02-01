@@ -13,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_UPDATE_INTERVAL
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
-    CONF_HOST, CONF_UPDATE_INTERVAL, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
+    CONF_HOST, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
     KEY_SESSION, MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
 
