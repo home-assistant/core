@@ -11,7 +11,7 @@ import attr
 
 from homeassistant.components.notify import (
     BaseNotificationService, ATTR_TARGET, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 from ..huawei_lte import DATA_KEY
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_URL): cv.url,
-    vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -43,7 +43,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
         """Send message to target numbers."""
         from huawei_lte_api.exceptions import ResponseErrorException
 
-        targets = kwargs.get(ATTR_TARGET, self.config.get(ATTR_TARGET))
+        targets = kwargs.get(ATTR_TARGET, self.config.get(CONF_RECIPIENT))
         if not targets or not message:
             return
 
