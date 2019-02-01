@@ -60,7 +60,7 @@ def convert_scale(value, value_scale, target_scale, round_digits=4):
 
 
 class SmartThingsLight(SmartThingsEntity, Light):
-    """Representation of an Awesome Light."""
+    """Define a SmartThings Light."""
 
     def __init__(self, device):
         """Initialize an SmartThingsLight."""
@@ -155,7 +155,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
     async def set_level(self, brightness: int, transition: int):
         """Set the brightness of the light over transition."""
         level = int(convert_scale(brightness, 255, 100, 0))
-        # Due to rounding, set level to minimum so we don't inadvertently
+        # Due to rounding, set level to 1 (one) so we don't inadvertently
         # turn off the light when a low brightness is set.
         level = 1 if level == 0 and brightness > 0 else level
         level = max(min(level, 100), 0)
@@ -187,7 +187,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
         """Return the warmest color_temp that this light supports."""
         # SmartThings does not expose this attribute, instead it's
         # implemented within each device-type handler.  This value is the
-        # lowest kelvin we could find supported across 20+ handlers.
+        # lowest kelvin found supported across 20+ handlers.
         return 500  # 2000K
 
     @property
@@ -195,7 +195,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
         """Return the coldest color_temp that this light supports."""
         # SmartThings does not expose this attribute, instead it's
         # implemented within each device-type handler.  This value is the
-        # highest kelvin we could find supported across 20+ handlers.
+        # highest kelvin found supported across 20+ handlers.
         return 111  # 9000K
 
     @property

@@ -232,7 +232,6 @@ async def test_turn_on_with_color(hass, light_devices):
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
     assert state.state == 'on'
-    # round-trip rounding error (expected)
     assert state.attributes[ATTR_HS_COLOR] == (180, 50)
 
 
@@ -250,7 +249,6 @@ async def test_turn_on_with_color_temp(hass, light_devices):
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
     assert state.state == 'on'
-    # round-trip rounding error (expected)
     assert state.attributes[ATTR_COLOR_TEMP] == 300
 
 
