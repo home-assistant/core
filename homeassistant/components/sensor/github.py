@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.github/
 """
 from datetime import timedelta
 import logging
+import uuid
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -70,10 +71,11 @@ class GitHubSensor(Entity):
 
     def __init__(self, github_data):
         """Initialize the GitHub sensor."""
-        self._available = False
-        self._state = None
-        self._repository_path = None
+        self._unique_id = uuid.uuid4()
         self._name = None
+        self._state = None
+        self._available = False
+        self._repository_path = None
         self._last_commit_message = None
         self._last_commit_sha = None
         self._latest_release_url = None
@@ -88,6 +90,11 @@ class GitHubSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -124,9 +131,9 @@ class GitHubSensor(Entity):
         """Collect updated data from GitHub API."""
         self._github_data.update()
 
+        self._name = self._github_data.name
         self._state = self._github_data.last_commit_sha
         self._repository_path = self._github_data.repository_path
-        self._name = self._github_data.name
         self._available = self._github_data.available
         self._last_commit_message = self._github_data.last_commit_message
         self._last_commit_sha = self._github_data.last_commit_sha
