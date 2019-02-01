@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info)
 
     devices = []
-    for key, value in hass.data[DATA_LEAF].items():
+    for value in hass.data[DATA_LEAF].values():
         devices.append(LeafChargeSwitch(value))
         devices.append(LeafClimateSwitch(value))
 
