@@ -90,7 +90,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    def __init__(self, poller, parameter, name, unit, icon, force_update, median):
+    def __init__(
+            self, poller, parameter, name, unit, icon, force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -127,7 +128,7 @@ class MiFloraSensor(Entity):
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
-        
+
     @property
     def icon(self):
         """Return the icon of the sensor."""
