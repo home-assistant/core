@@ -561,6 +561,7 @@ PLATFORM_SCHEMA = vol.Schema({
 # This will replace PLATFORM_SCHEMA once all base components are updated
 PLATFORM_SCHEMA_2 = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_ENTITY_NAMESPACE): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
 })
 
