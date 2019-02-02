@@ -65,10 +65,10 @@ class SmartThingsLight(SmartThingsEntity, Light):
     def __init__(self, device):
         """Initialize a SmartThingsLight."""
         super().__init__(device)
-        self._brightness = 0
-        self._hs_color = (0.0, 0.0)
+        self._brightness = None
+        self._color_temp = None
+        self._hs_color = None
         self._supported_features = self._determine_features()
-        self._color_temp = 0
 
     def _determine_features(self):
         """Get features supported by the device."""
@@ -94,12 +94,12 @@ class SmartThingsLight(SmartThingsEntity, Light):
         # Color temperature
         if self._supported_features & SUPPORT_COLOR_TEMP \
            and ATTR_COLOR_TEMP in kwargs:
-            tasks.append(self.set_color_temp(
+            tasks.append(self.async_set_color_temp(
                 kwargs[ATTR_COLOR_TEMP]))
         # Color
         if self._supported_features & SUPPORT_COLOR \
            and ATTR_HS_COLOR in kwargs:
-            tasks.append(self.set_color(
+            tasks.append(self.async_set_color(
                 kwargs[ATTR_HS_COLOR]))
         if tasks:
             # Set temp/color first
@@ -108,7 +108,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
         # Switch/brightness/transition
         if self._supported_features & SUPPORT_BRIGHTNESS \
            and ATTR_BRIGHTNESS in kwargs:
-            await self.set_level(
+            await self.async_set_level(
                 kwargs[ATTR_BRIGHTNESS],
                 kwargs.get(ATTR_TRANSITION, 0))
         else:
@@ -123,7 +123,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
         # Switch/transition
         if self._supported_features & SUPPORT_TRANSITION \
                 and ATTR_TRANSITION in kwargs:
-            await self.set_level(0, int(kwargs[ATTR_TRANSITION]))
+            await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
         else:
             await self._device.switch_off(set_status=True)
 
@@ -148,7 +148,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
                 self._device.status.saturation
             )
 
-    async def set_color(self, hs_color):
+    async def async_set_color(self, hs_color):
         """Set the color of the device."""
         hue = convert_scale(float(hs_color[0]), 360, 100)
         hue = max(min(hue, 100.0), 0.0)
@@ -156,14 +156,14 @@ class SmartThingsLight(SmartThingsEntity, Light):
         await self._device.set_color(
             hue, saturation, set_status=True)
 
-    async def set_color_temp(self, value: float):
+    async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
         kelvin = max(min(kelvin, 30000.0), 1.0)
         await self._device.set_color_temperature(
             kelvin, set_status=True)
 
-    async def set_level(self, brightness: int, transition: int):
+    async def async_set_level(self, brightness: int, transition: int):
         """Set the brightness of the light over transition."""
         level = int(convert_scale(brightness, 255, 100, 0))
         # Due to rounding, set level to 1 (one) so we don't inadvertently
