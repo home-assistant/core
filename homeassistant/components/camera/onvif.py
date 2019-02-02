@@ -154,8 +154,8 @@ class ONVIFHassCamera(Camera):
         
         if dt_diff_seconds > 5:
             _LOGGER.warning("The date/time on the camera is '%s', which is different from the system '%s', this could lead to authentication issues", 
-                cam_date,
-                system_date)
+                            cam_date,
+                            system_date)
 
         _LOGGER.debug("Setting up the ONVIF media service")
 
@@ -175,11 +175,11 @@ class ONVIFHassCamera(Camera):
 
         try:
             _LOGGER.debug("Retrieving profiles")
-        
+
             profiles = self._media_service.GetProfiles()
 
             _LOGGER.debug("Retrieved '%d' profiles", 
-                len(profiles))
+                          len(profiles))
             
             if self._profile_index >= len(profiles):
                 _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
@@ -189,24 +189,25 @@ class ONVIFHassCamera(Camera):
 
             _LOGGER.debug("Using profile index '%d'", 
                 self._profile_index)
-                
+
             _LOGGER.debug("Retrieving stream uri")
                 
             req = self._media_service.create_type('GetStreamUri')
             req.ProfileToken = profiles[self._profile_index].token
-            req.StreamSetup = {'Stream': 'RTP-Unicast', 'Transport': {'Protocol': 'RTSP'}}
-            
+            req.StreamSetup = {'Stream': 'RTP-Unicast', 
+                               'Transport': {'Protocol': 'RTSP'}}
+
             uri_no_auth = self._media_service.GetStreamUri(req).Uri
             uri_for_log = uri_no_auth.replace(
                 'rtsp://', 'rtsp://<user>:<password>@', 1)
             self._input = uri_no_auth.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(self._username,
                                                   self._password), 1)
-                                                  
+
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s: %s",
                 self._name, uri_for_log)
-                
+
             # we won't need the media service anymore
             self._media_service = None
         except exceptions.ONVIFError as err:
