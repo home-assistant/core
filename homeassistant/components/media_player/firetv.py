@@ -12,10 +12,10 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, )
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, DOMAIN)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING, STATE_STANDBY)
+    STATE_PLAYING, STATE_STANDBY, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['firetv==1.0.7']
@@ -36,6 +36,28 @@ DEFAULT_PORT = 5555
 DEFAULT_GET_SOURCE = True
 DEFAULT_GET_SOURCES = True
 
+FIRETV_KEY_POWER = 'POWER'
+FIRETV_KEY_SLEEP = 'SLEEP'
+FIRETV_KEY_HOME = 'HOME'
+FIRETV_KEY_UP = 'UP'
+FIRETV_KEY_DOWN = 'DOWN'
+FIRETV_KEY_LEFT = 'LEFT'
+FIRETV_KEY_RIGHT = 'RIGHT'
+FIRETV_KEY_ENTER = 'ENTER'
+FIRETV_KEY_BACK = 'BACK'
+FIRETV_KEY_SPACE = 'SPACE'
+FIRETV_KEY_MENU = 'MENU'
+
+KEY_SERVICE = 'firetv_key'
+
+ATTR_KEY = 'key'
+
+SERVICE_KEY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_KEY): cv.string,
+})
+
+DATA_KEY = '{}.firetv'.format(DOMAIN)
 
 def has_adb_files(value):
     """Check that ADB key files exist."""
@@ -62,6 +84,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     from firetv import FireTV
 
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
+
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
     if CONF_ADBKEY in config:
@@ -79,9 +104,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     get_source = config[CONF_GET_SOURCE]
     get_sources = config[CONF_GET_SOURCES]
 
-    device = FireTVDevice(ftv, name, get_source, get_sources)
-    add_entities([device])
-    _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+    if host in hass.data[DATA_KEY]:
+        _LOGGER.warning("Platform already setup on %s, skipping.", host)
+    else:
+        device = FireTVDevice(ftv, name, get_source, get_sources)
+        add_entities([device])
+        _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+        hass.data[DATA_KEY][host] = device
+
+    def service_key(service):
+        """Dispatch service calls to target entities."""
+        key = service.data.get(ATTR_KEY)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                          if dev.entity_id in entity_id]
+
+        for target_device in target_devices:
+            if key == FIRETV_KEY_POWER:
+                target_device.firetv.power()
+            elif key == FIRETV_KEY_SLEEP:
+                target_device.firetv.sleep()
+            elif key == FIRETV_KEY_HOME:
+                target_device.firetv.home()
+            elif key == FIRETV_KEY_UP:
+                target_device.firetv.up()
+            elif key == FIRETV_KEY_DOWN:
+                target_device.firetv.down()
+            elif key == FIRETV_KEY_LEFT:
+                target_device.firetv.left()
+            elif key == FIRETV_KEY_RIGHT:
+                target_device.firetv.right()
+            elif key == FIRETV_KEY_ENTER:
+                target_device.firetv.enter()
+            elif key == FIRETV_KEY_BACK:
+                target_device.firetv.back()
+            elif key == FIRETV_KEY_SPACE:
+                target_device.firetv.space()
+            elif key == FIRETV_KEY_MENU:
+                target_device.firetv.menu()
+
+    hass.services.register(
+        DOMAIN, KEY_SERVICE, service_key, schema=SERVICE_KEY_SCHEMA)
 
 
 def adb_decorator(override_available=False):
