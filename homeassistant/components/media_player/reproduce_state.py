@@ -70,9 +70,6 @@ async def _async_reproduce_states(hass: HomeAssistantType,
     if ATTR_SOUND_MODE in state.attributes:
         await call_service(SERVICE_SELECT_SOUND_MODE, [ATTR_SOUND_MODE])
 
-    if ATTR_MEDIA_VOLUME_MUTED in state.attributes:
-        await call_service(SERVICE_VOLUME_MUTE, [ATTR_MEDIA_VOLUME_MUTED])
-
     if (ATTR_MEDIA_CONTENT_TYPE in state.attributes) and \
        (ATTR_MEDIA_CONTENT_ID in state.attributes):
         await call_service(SERVICE_PLAY_MEDIA,
