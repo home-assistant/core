@@ -373,9 +373,6 @@ class FireTVDevice(MediaPlayerDevice):
         """
         if isinstance(source, str):
             if not source.startswith('!'):
-                if source == 'HOME':
-                    self.firetv.home()
-                else:
-                    self.firetv.launch_app(source)
+                self.firetv.launch_app(source)
             else:
                 self.firetv.stop_app(source[1:].lstrip())
