@@ -9,6 +9,7 @@ import logging
 import os
 
 import voluptuous as vol
+import datetime as dt
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
@@ -20,12 +21,19 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
 from homeassistant.helpers.service import extract_entity_ids
+from onvif import ONVIFCamera
+
+import zeep
+
+def zeep_pythonvalue(self, xmlvalue):
+    return xmlvalue
+
+zeep.xsd.simple.AnySimpleType.pythonvalue = zeep_pythonvalue
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['onvif-py3==0.1.3',
-                'suds-py3==1.3.3.0',
-                'suds-passworddigest-homeassistant==0.1.2a0.dev0']
+REQUIREMENTS = ['onvif-zeep==0.2.12',
+                'zeep==3.0.0']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
@@ -103,6 +111,8 @@ class ONVIFHassCamera(Camera):
         super().__init__()
         import onvif
 
+        _LOGGER.debug("Setting up the ONVIF camera component")
+
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
         self._host = config.get(CONF_HOST)
@@ -111,19 +121,51 @@ class ONVIFHassCamera(Camera):
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._profile_index = config.get(CONF_PROFILE)
         self._input = None
-        self._media_service = \
-            onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
-                self._host, self._port),
-                               self._username, self._password,
-                               '{}/wsdl/media.wsdl'.format(os.path.dirname(
-                                   onvif.__file__)))
 
-        self._ptz_service = \
-            onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
-                self._host, self._port),
-                               self._username, self._password,
-                               '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
-                                   onvif.__file__)))
+        _LOGGER.debug("Setting up the ONVIF camera device @ '%s:%s'", 
+            self._host, 
+            self._port)
+
+        self._camera = ONVIFCamera(self._host, 
+            self._port, 
+            self._username, 
+            self._password,
+            '{}/wsdl/'.format(os.path.dirname(onvif.__file__)),
+            )
+
+        _LOGGER.debug("Setting up the ONVIF device management service")
+
+        self._devicemgmt = self._camera.create_devicemgmt_service()
+        
+        _LOGGER.debug("Retrieving current camera date/time")
+        
+        system_date = dt.datetime.utcnow()
+        cdate = self._devicemgmt.GetSystemDateAndTime().UTCDateTime
+        cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month, cdate.Date.Day, cdate.Time.Hour, cdate.Time.Minute, cdate.Time.Second)
+        
+        _LOGGER.debug("Camera date/time: %s",
+            cam_date)
+
+        _LOGGER.debug("System date/time: %s",
+            system_date)
+        
+        dt_diff = cam_date - system_date
+        dt_diff_seconds = dt_diff.total_seconds()
+        
+        if dt_diff_seconds > 5:
+            _LOGGER.warning("The date/time on the camera is '%s', which is different from the system '%s', this could lead to authentication issues", 
+                cam_date,
+                system_date)
+
+        _LOGGER.debug("Setting up the ONVIF media service")
+
+        self._media_service = self._camera.create_media_service()
+
+        _LOGGER.debug("Setting up the ONVIF PTZ service")
+
+        self._ptz_service = self._camera.create_ptz_service()
+
+        _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     def obtain_input_uri(self):
         """Set the input uri for the camera."""
@@ -132,27 +174,39 @@ class ONVIFHassCamera(Camera):
                       self._host, self._port)
 
         try:
+            _LOGGER.debug("Retrieving profiles")
+        
             profiles = self._media_service.GetProfiles()
 
+            _LOGGER.debug("Retrieved '%d' profiles", 
+                len(profiles))
+            
             if self._profile_index >= len(profiles):
                 _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
                                 " Using the last profile.",
                                 self._name, self._profile_index)
                 self._profile_index = -1
 
+            _LOGGER.debug("Using profile index '%d'", 
+                self._profile_index)
+                
+            _LOGGER.debug("Retrieving stream uri")
+                
             req = self._media_service.create_type('GetStreamUri')
-
-            # pylint: disable=protected-access
-            req.ProfileToken = profiles[self._profile_index]._token
+            req.ProfileToken = profiles[self._profile_index].token
+            req.StreamSetup = {'Stream': 'RTP-Unicast', 'Transport': {'Protocol': 'RTSP'}}
+            
             uri_no_auth = self._media_service.GetStreamUri(req).Uri
             uri_for_log = uri_no_auth.replace(
                 'rtsp://', 'rtsp://<user>:<password>@', 1)
             self._input = uri_no_auth.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(self._username,
                                                   self._password), 1)
+                                                  
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s: %s",
                 self._name, uri_for_log)
+                
             # we won't need the media service anymore
             self._media_service = None
         except exceptions.ONVIFError as err:
