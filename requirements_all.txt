@@ -1552,7 +1552,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.6
+smhi-pkg==1.0.7
 
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.9
