@@ -33,14 +33,6 @@ async def _async_reproduce_states(hass: HomeAssistantType,
                                   state: State,
                                   context: Optional[Context] = None) -> None:
     """Reproduce component states."""
-
-    from homeassistant.components.ecobee.climate import (
-        ATTR_FAN_MIN_ON_TIME,
-        ATTR_RESUME_ALL,
-        SERVICE_SET_FAN_MIN_ON_TIME,
-        SERVICE_RESUME_PROGRAM
-    )
-
     async def call_service(service: str, keys: Iterable):
         """Call service with set of attributes given"""
         data = {}
@@ -87,14 +79,6 @@ async def _async_reproduce_states(hass: HomeAssistantType,
     if ATTR_HUMIDITY in state.attributes:
         await call_service(SERVICE_SET_HUMIDITY,
                            [ATTR_HUMIDITY])
-
-    if ATTR_RESUME_ALL in state.attributes:
-        await call_service(SERVICE_RESUME_PROGRAM,
-                           (ATTR_RESUME_ALL))
-
-    if ATTR_FAN_MIN_ON_TIME in state.attributes:
-        await call_service(SERVICE_SET_FAN_MIN_ON_TIME,
-                           (ATTR_FAN_MIN_ON_TIME))
 
 
 @bind_hass
