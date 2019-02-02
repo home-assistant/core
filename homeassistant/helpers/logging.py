@@ -3,9 +3,9 @@ import inspect
 import logging
 
 
-class BraceMessage:
+class KeywordMessage:
     """
-    Represents a logging message with brace style arguments.
+    Represents a logging message with keyword arguments.
 
     Adapted from: https://stackoverflow.com/a/24683360/2267718
     """
@@ -21,19 +21,19 @@ class BraceMessage:
         return str(self._fmt).format(*self._args, **self._kwargs)
 
 
-class BraceStyleAdapter(logging.LoggerAdapter):
-    """Represents an adapter wrapping the logger allowing BraceMessages."""
+class KeywordStyleAdapter(logging.LoggerAdapter):
+    """Represents an adapter wrapping the logger allowing KeywordMessages."""
 
     def __init__(self, logger, extra=None):
         """Initialize a new StyleAdapter for the provided logger."""
-        super(BraceStyleAdapter, self).__init__(logger, extra or {})
+        super(KeywordStyleAdapter, self).__init__(logger, extra or {})
 
     def log(self, level, msg, *args, **kwargs):
         """Log the message provided at the appropriate level."""
         if self.isEnabledFor(level):
             msg, log_kwargs = self.process(msg, kwargs)
             self.logger._log(  # pylint: disable=protected-access
-                level, BraceMessage(msg, args, kwargs), (), **log_kwargs
+                level, KeywordMessage(msg, args, kwargs), (), **log_kwargs
             )
 
     def process(self, msg, kwargs):

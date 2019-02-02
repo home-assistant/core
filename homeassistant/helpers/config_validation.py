@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.logging import BraceStyleAdapter
+from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
 
@@ -605,7 +605,7 @@ def deprecated(key: str,
         if key in config:
             value = config[key]
             check_for_invalid_version(value)
-            BraceStyleAdapter(logging.getLogger(module_name)).warning(
+            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
                 value=value,
