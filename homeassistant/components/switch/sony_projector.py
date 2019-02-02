@@ -26,22 +26,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Connect to Sony projector using network"""
+    """Connect to Sony projector using network."""
+
+    import pysdcp
     host = config[CONF_HOST]
     name = config.get(CONF_NAME)
+    sdcp_connection = pysdcp.Projector(host)
 
-    add_entities([SonyProjector(host, name)], True)
+    # Sanity check the connection
+    try:
+        sdcp_connection.get_power()
+    except ConnectionError:
+        _LOGGER.error("Failed to connect to projector '%s'", host)
+        return False
+    _LOGGER.debug("Validated projector '%s' OK", host)
+    add_entities([SonyProjector(sdcp_connection, name)], True)
+    return True
 
 
 class SonyProjector(SwitchDevice):
     """Represents a Sony Projector as a switch."""
 
-    def __init__(self, host, name):
+    def __init__(self, sdcp_connection, name):
         """Init of the Sony projector."""
-        import pysdcp
-        self._sdcp = pysdcp.Projector(host)
+        self._sdcp = sdcp_connection
         self._name = name
-        self._host = host
         self._state = None
         self._available = False
         self._attributes = {}
@@ -77,7 +86,7 @@ class SonyProjector(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the projector on."""
-        _LOGGER.debug("Powering on projector at %s...", self._host)
+        _LOGGER.debug("Powering on projector '%s'...", self.name)
         if self._sdcp.set_power(True):
             _LOGGER.debug("Powered on successfully.")
             self._state = STATE_ON
@@ -86,7 +95,7 @@ class SonyProjector(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the projector off."""
-        _LOGGER.debug("Powering off projector at %s...", self._host)
+        _LOGGER.debug("Powering off projector '%s'...", self.name)
         if self._sdcp.set_power(False):
             _LOGGER.debug("Powered off successfully.")
             self._state = STATE_OFF
