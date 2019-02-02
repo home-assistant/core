@@ -143,7 +143,8 @@ class ONVIFHassCamera(Camera):
 
         system_date = dt.datetime.utcnow()
         cdate = self._devicemgmt.GetSystemDateAndTime().UTCDateTime
-        cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month, cdate.Date.Day, cdate.Time.Hour, cdate.Time.Minute, cdate.Time.Second)
+        cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month, cdate.Date.Day,
+                               cdate.Time.Hour, cdate.Time.Minute, cdate.Time.Second)
 
         _LOGGER.debug("Camera date/time: %s",
                       cam_date)
@@ -182,17 +183,17 @@ class ONVIFHassCamera(Camera):
 
             profiles = self._media_service.GetProfiles()
 
-            _LOGGER.debug("Retrieved '%d' profiles", 
+            _LOGGER.debug("Retrieved '%d' profiles",
                           len(profiles))
-            
+
             if self._profile_index >= len(profiles):
                 _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
                                 " Using the last profile.",
                                 self._name, self._profile_index)
                 self._profile_index = -1
 
-            _LOGGER.debug("Using profile index '%d'", 
-                self._profile_index)
+            _LOGGER.debug("Using profile index '%d'",
+                          self._profile_index)
 
             _LOGGER.debug("Retrieving stream uri")
 
