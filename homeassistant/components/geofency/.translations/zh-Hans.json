@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u60a8\u7684 Home Assistant \u5b9e\u4f8b\u9700\u8981\u63a5\u5165\u4e92\u8054\u7f51\u4ee5\u63a5\u6536 Geofency \u6d88\u606f\u3002",
+            "one_instance_allowed": "\u4ec5\u9700\u4e00\u4e2a\u5b9e\u4f8b"
+        },
+        "step": {
+            "user": {
+                "description": "\u60a8\u786e\u5b9a\u8981\u8bbe\u7f6e Geofency Webhook \u5417?",
+                "title": "\u8bbe\u7f6e Geofency Webhook"
+            }
+        },
+        "title": "Geofency Webhook"
+    }
+}
