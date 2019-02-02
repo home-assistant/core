@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON,
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Hegel Integrated Amplifier'
 DEFAULT_PORT = 50001   # telnet default port for Hegel devices
-DEFAULT_TIMEOUT = None
 
 SUPPORT_HEGEL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
@@ -30,16 +29,14 @@ SUPPORT_HEGEL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Hegel platform."""
     hegel = HegelDevice(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT))
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
 
     if hegel.update():
         add_entities([hegel])
@@ -48,12 +45,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HegelDevice(MediaPlayerDevice):
     """Representation of a Hegel device."""
 
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port):
         """Initialize the Hegel device."""
         self._name = name
         self._host = host
         self._port = port
-        self._timeout = timeout
         self._power_state = 1
         self._volume = 0
         self._muted = False
@@ -75,9 +71,7 @@ class HegelDevice(MediaPlayerDevice):
         """Establish a telnet connection or return an already opened one."""
         if self._telnet_session is None:
             try:
-                self._telnet_session = telnetlib.Telnet(
-                    self._host, self._port, self._timeout
-                )
+                self._telnet_session = telnetlib.Telnet(self._host, self._port)
                 _LOGGER.debug("Telnet connection established")
             except (ConnectionRefusedError, OSError):
                 _LOGGER.warning("Connection refused by %s on port %s",
@@ -89,7 +83,7 @@ class HegelDevice(MediaPlayerDevice):
     def telnet_disconnect(self):
         """Close the telnet connection."""
         telnet = self.telnet_connect()
-        
+
         if telnet:
             telnet.close()
             self._telnet_session = None
