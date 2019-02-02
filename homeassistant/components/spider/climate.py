@@ -9,11 +9,22 @@ import logging
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE, ClimateDevice)
 from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 
 DEPENDENCIES = ['spider']
+
+FAN_LIST = [
+    'Auto',
+    'Low',
+    'Medium',
+    'High',
+    'Boost 10',
+    'Boost 20',
+    'Boost 30'
+]
 
 OPERATION_LIST = [
     STATE_HEAT,
@@ -31,14 +42,14 @@ SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Spider thermostat."""
     if discovery_info is None:
         return
 
     devices = [SpiderThermostat(hass.data[SPIDER_DOMAIN]['controller'], device)
                for device in hass.data[SPIDER_DOMAIN]['thermostats']]
-    add_entities(devices, True)
+    add_devices(devices, True)
 
 
 class SpiderThermostat(ClimateDevice):
@@ -56,6 +67,9 @@ class SpiderThermostat(ClimateDevice):
 
         if self.thermostat.has_operation_mode:
             supports = supports | SUPPORT_OPERATION_MODE
+
+        if self.thermostat.has_fan_mode:
+            supports = supports | SUPPORT_FAN_MODE
 
         return supports
 
@@ -121,6 +135,20 @@ class SpiderThermostat(ClimateDevice):
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(
             HA_STATE_TO_SPIDER.get(operation_mode))
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        return self.thermostat.current_fan_speed
+
+    def set_fan_mode(self, fan_mode):
+        """Set fan mode."""
+        self.thermostat.set_fan_speed(fan_mode)
+
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return FAN_LIST
 
     def update(self):
         """Get the latest data."""
