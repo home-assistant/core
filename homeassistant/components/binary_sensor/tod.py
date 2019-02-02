@@ -12,10 +12,10 @@ import pytz
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA)
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_AFTER, CONF_BEFORE,
-    CONF_SENSORS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+    CONF_NAME, CONF_AFTER, CONF_BEFORE,
+    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -32,17 +32,17 @@ ATTR_NEXT_UPDATE = 'next_update'
 
 
 SENSOR_SCHEMA = vol.Schema({
+
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(
         vol.Lower, cv.sun_event)),
     vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
     vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(
         vol.Lower, cv.sun_event)),
     vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_NAME): cv.string
 })
 
 
@@ -52,22 +52,13 @@ async def async_setup_platform(hass, config, async_add_entities,
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return
-
-    sensors = []
-    for sensor_name, sensor_config in config[CONF_SENSORS].items():
-        after = sensor_config[CONF_AFTER]
-        after_offset = sensor_config[CONF_AFTER_OFFSET]
-        before = sensor_config[CONF_BEFORE]
-        before_offset = sensor_config[CONF_BEFORE_OFFSET]
-        friendly_name = sensor_config.get(CONF_FRIENDLY_NAME, sensor_name)
-        sensors.append(
-            TodSensor(
-                sensor_name, friendly_name,
-                after, after_offset, before, before_offset
-            )
-        )
-
-    async_add_entities(sensors)
+    after = config[CONF_AFTER]
+    after_offset = config[CONF_AFTER_OFFSET]
+    before = config[CONF_BEFORE]
+    before_offset = config[CONF_BEFORE_OFFSET]
+    name = config[CONF_NAME]
+    sensor = TodSensor(name, after, after_offset, before, before_offset)
+    async_add_entities([sensor])
 
 
 def is_sun_event(event):
@@ -78,11 +69,10 @@ def is_sun_event(event):
 class TodSensor(BinarySensorDevice):
     """Time of the Day Sensor."""
 
-    def __init__(self, sensor_name, friendly_name, after, after_offset,
+    def __init__(self, name, after, after_offset,
                  before, before_offset):
         """Init the ToD Sensor..."""
-        self.entity_id = ENTITY_ID_FORMAT.format(sensor_name)
-        self._name = friendly_name
+        self._name = name
         self._time_before = self._time_after = self._next_update = None
         self._after_offset = after_offset
         self._before_offset = before_offset

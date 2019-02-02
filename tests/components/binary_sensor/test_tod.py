@@ -34,25 +34,24 @@ class TestBinarySensorTod(unittest.TestCase):
     def test_setup(self):
         """Test the setup."""
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'early_morning': {
-                        'friendly_name': 'Early Morning',
-                        'after': 'sunrise',
-                        'after_offset': '-02:00',
-                        'before': '7:00',
-                        'before_offset': '1:00'
-                    },
-                    'morning': {
-                        'friendly_name': 'Morning',
-                        'after': 'sunrise',
-                        'before': '12:00'
-                    },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Early Morning',
+                    'after': 'sunrise',
+                    'after_offset': '-02:00',
+                    'before': '7:00',
+                    'before_offset': '1:00'
                 },
-            },
+                {
+                    'platform': 'tod',
+                    'name': 'Morning',
+                    'after': 'sunrise',
+                    'before': '12:00'
+                }
+            ],
         }
-        with assert_setup_component(1):
+        with assert_setup_component(2):
             assert setup.setup_component(
                 self.hass, 'binary_sensor', config)
 
@@ -70,16 +69,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 1, 10, 18, 43, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'evening': {
-                        'friendly_name': 'Evening',
-                        'after': '18:00',
-                        'before': '22:00'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Evening',
+                    'after': '18:00',
+                    'before': '22:00'
+                }
+            ]
         }
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=test_time):
@@ -94,16 +91,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 1, 10, 22, 30, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'night': {
-                        'friendly_name': 'Night',
-                        'after': '22:00',
-                        'before': '5:00'
-                    },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Night',
+                    'after': '22:00',
+                    'before': '5:00'
                 },
-            },
+            ]
         }
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=test_time):
@@ -118,16 +113,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 1, 10, 21, 00, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'night': {
-                        'friendly_name': 'Night',
-                        'after': '22:00',
-                        'before': '5:00'
-                    },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Night',
+                    'after': '22:00',
+                    'before': '5:00'
                 },
-            },
+            ]
         }
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=test_time):
@@ -153,16 +146,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 1, 10, 20, 30, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'night': {
-                        'friendly_name': 'Night',
-                        'after': '22:00',
-                        'before': '5:00'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Night',
+                    'after': '22:00',
+                    'before': '5:00'
+                }
+            ]
         }
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=test_time):
@@ -177,16 +168,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 1, 10, 20, 0, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'night': {
-                        'friendly_name': 'Night',
-                        'after': '22:00',
-                        'before': '5:00'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Night',
+                    'after': '22:00',
+                    'before': '5:00'
+                }
+            ]
         }
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=test_time):
@@ -228,16 +217,14 @@ class TestBinarySensorTod(unittest.TestCase):
         sunset = dt_util.as_local(get_astral_event_date(
             self.hass, 'sunset', dt_util.as_utc(test_time)))
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'day': {
-                        'friendly_name': 'Day',
-                        'after': 'sunrise',
-                        'before': 'sunset'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Day',
+                    'after': 'sunrise',
+                    'before': 'sunset'
+                }
+            ]
         }
         entity_id = 'binary_sensor.day'
         testtime = sunrise + timedelta(seconds=-1)
@@ -320,16 +307,14 @@ class TestBinarySensorTod(unittest.TestCase):
             self.hass, 'sunrise', sunset))
         # assert sunset == sunrise
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'night': {
-                        'friendly_name': 'Night',
-                        'after': 'sunset',
-                        'before': 'sunrise'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Night',
+                    'after': 'sunset',
+                    'before': 'sunrise'
+                }
+            ]
         }
         entity_id = 'binary_sensor.night'
         testtime = sunset + timedelta(minutes=-1)
@@ -410,18 +395,16 @@ class TestBinarySensorTod(unittest.TestCase):
             timedelta(hours=1, minutes=45)
         entity_id = 'binary_sensor.evening'
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'evening': {
-                        'friendly_name': 'Evening',
-                        'after': '18:00',
-                        'after_offset': '1:34',
-                        'before': '22:00',
-                        'before_offset': '1:45',
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Evening',
+                    'after': '18:00',
+                    'after_offset': '1:34',
+                    'before': '22:00',
+                    'before_offset': '1:45'
+                }
+            ]
         }
         testtime = after + timedelta(seconds=-1)
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
@@ -480,18 +463,16 @@ class TestBinarySensorTod(unittest.TestCase):
             timedelta(hours=1, minutes=34)
         entity_id = 'binary_sensor.evening'
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'evening': {
-                        'friendly_name': 'Evening',
-                        'after': '18:00',
-                        'after_offset': '1:34',
-                        'before': '22:00',
-                        'before_offset': '3:00',
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Evening',
+                    'after': '18:00',
+                    'after_offset': '1:34',
+                    'before': '22:00',
+                    'before_offset': '3:00'
+                }
+            ]
         }
         testtime = after + timedelta(seconds=-1)
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
@@ -523,16 +504,14 @@ class TestBinarySensorTod(unittest.TestCase):
         sunset = dt_util.as_local(get_astral_event_next(
             self.hass, 'sunset', dt_util.as_utc(test_time)))
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'day': {
-                        'friendly_name': 'Day',
-                        'after': 'sunrise',
-                        'before': 'sunset'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Day',
+                    'after': 'sunrise',
+                    'before': 'sunset'
+                }
+            ]
         }
         entity_id = 'binary_sensor.day'
         testtime = test_time
@@ -629,16 +608,14 @@ class TestBinarySensorTod(unittest.TestCase):
         print(sunrise)
         print(sunset)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'day': {
-                        'friendly_name': 'Day',
-                        'after': 'sunrise',
-                        'before': 'sunset'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Day',
+                    'after': 'sunrise',
+                    'before': 'sunset'
+                }
+            ]
         }
         entity_id = 'binary_sensor.day'
         testtime = test_time
@@ -733,18 +710,16 @@ class TestBinarySensorTod(unittest.TestCase):
             self.hass, 'sunset', dt_util.as_utc(test_time)) +
             timedelta(hours=1, minutes=30))
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'day': {
-                        'friendly_name': 'Day',
-                        'after': 'sunrise',
-                        'after_offset': '-1:30',
-                        'before': 'sunset',
-                        'before_offset': '1:30',
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Day',
+                    'after': 'sunrise',
+                    'after_offset': '-1:30',
+                    'before': 'sunset',
+                    'before_offset': '1:30'
+                }
+            ]
         }
         entity_id = 'binary_sensor.day'
         testtime = sunrise + timedelta(seconds=-1)
@@ -838,15 +813,14 @@ class TestBinarySensorTod(unittest.TestCase):
         test_time = datetime(
             2019, 3, 30, 3, 0, 0, tzinfo=self.hass.config.time_zone)
         config = {
-            'binary_sensor': {
-                'platform': 'tod',
-                'sensors': {
-                    'day': {
-                        'after': '2:30',
-                        'before': '2:40'
-                    },
-                },
-            },
+            'binary_sensor': [
+                {
+                    'platform': 'tod',
+                    'name': 'Day',
+                    'after': '2:30',
+                    'before': '2:40'
+                }
+            ]
         }
         # after 2019-03-30 03:00 CET the next update should ge scheduled
         # at 3:30 not 2:30 local time
