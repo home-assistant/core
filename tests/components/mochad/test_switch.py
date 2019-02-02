@@ -36,7 +36,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('homeassistant.components.switch.mochad.MochadSwitch')
+    @mock.patch('homeassistant.components.mochad.switch.MochadSwitch')
     def test_setup_adds_proper_devices(self, mock_switch):
         """Test if setup adds devices."""
         good_config = {

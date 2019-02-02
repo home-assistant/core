@@ -40,7 +40,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
 
         self.hass.stop()
 
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_all_day_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         week_from_today = dt_util.dt.date.today() \
@@ -103,7 +103,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': event['description'],
         }
 
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_future_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         one_hour_from_now = dt_util.now() \
@@ -164,7 +164,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': '',
         }
 
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         middle_of_event = dt_util.now() \
@@ -226,7 +226,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': '',
         }
 
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_offset_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         middle_of_event = dt_util.now() \
@@ -290,7 +290,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         }
 
     @pytest.mark.skip
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_all_day_offset_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         tomorrow = dt_util.dt.date.today() \
@@ -356,7 +356,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': event['description'],
         }
 
-    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    @patch('homeassistant.components.google.calendar.GoogleCalendarData')
     def test_all_day_offset_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
         tomorrow = dt_util.dt.date.today() \
