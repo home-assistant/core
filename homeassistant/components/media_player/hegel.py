@@ -23,10 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Hegel Integrated Amplifier'
 DEFAULT_PORT = 50001   # telnet default port for Hegel devices
 DEFAULT_TIMEOUT = None
-DEFAULT_PWR = 0
-DEFAULT_VOLUME = 0
-DEFAULT_MUTED = False
-DEFAULT_SOURCE = 1 ########## TODO: set to Network source
 
 SUPPORT_HEGEL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
@@ -62,7 +58,7 @@ class HegelDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = 1
         self._telnet_session = None
-        self._source_names = ["Balanced", "Analog1", "Analog2", "4", "5", "6", "7", "8", "9"] # Array "index plus 1" represents the input number as defined by Hegel
+        self._source_names = ["Balanced", "Analog1", "Analog2", "Coaxial", "Optical1", "Optical2", "Optical3", "USB", "Network"] # "List index plus 1" = the input number as defined by Hegel
 
     def telnet_connect(self):
         """Establish a telnet connection or return an already opened one."""
@@ -90,20 +86,36 @@ class HegelDevice(MediaPlayerDevice):
 
             # If the telnet command was succesful we receive an answer in the
             # format: "-command.value" e.g. "-v.20"
-            response = telnet.read_until(b"\r\n", timeout=0.2).decode("ASCII").strip().split('.')
+            response = telnet.read_until(b"\r", timeout=0.2).decode("ASCII").strip().split('.')
 
-            _LOGGER.info("Hegel response: %s", response)
-
-            if (response[0] == "-e"):
+            if (not isinstance(response, list) or response[0] == "-e" or len(response) < 2):
+                _LOGGER.debug("%s command %s returned invalid response %s", self._name, command, response)
                 return None
             else:
-                if type(response) is list:
-                    return response[1]
-                else:
+                _LOGGER.debug("%s response %s on command %s", self._name, response, command)
+                
+                # Verify if response is an integer, since all Hegel's responses are an integer
+                try:
+                    response_value = int(response[1])
+                except:
+                    _LOGGER.debug("%s response %s could not be converted to integer", self._name, response)
                     return None
+
+                # Only return value if the data format adheres to what we expect based on the Hegel documentation (to prevent incorrect or reordered telnet responses)
+                if (command == "i" and (response_value < 1 or response_value > 9)):
+                    return None
+
+                if (command == "p" and (response_value < 0 or response_value > 1)):
+                    return None
+
+                if (command == "v" and (response_value < 0 or response_value > 100)):
+                    return None
+                
+                return response_value
+
         except telnetlib.socket.timeout:
             self.telnet_disconnect()
-            _LOGGER.debug("Hegel command %s timed out", command)
+            _LOGGER.debug("%s command %s timed out", self._name, command)
             return None
 
         return None
@@ -111,18 +123,16 @@ class HegelDevice(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the device."""
         power_value = self.telnet_send("p", "?")
-        self._power_state = 1 if power_value == "1" else 0
+        self._power_state = power_value if power_value else 0
 
         volume_value = self.telnet_send("v", "?")
-        self._volume = volume_value if volume_value else 0
+        self._volume = volume_value / 100 if volume_value else 0
 
         muted_value = self.telnet_send("m", "?")
-        self._muted = True if muted_value == "1" else False
+        self._muted = True if muted_value == 1 else False
 
         source_value = self.telnet_send("i", "?")
-        self._selected_source = int(source_value) if source_value else 0
-
-        _LOGGER.info("DATA HEGEL: PWR: %s, VOL: %s, SRC: %s, MUT:%s", power_value, volume_value, source_value, muted_value)
+        self._selected_source = source_value if source_value else 0
 
         self.telnet_disconnect()
         return True
@@ -160,7 +170,7 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source."""
-        return self._selected_source
+        return self._source_names[int(self._selected_source) - 1] # Subtract 1 since a list starts with index 0
 
     @property
     def source_list(self):
@@ -174,6 +184,10 @@ class HegelDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn the Hegel off."""
         self.telnet_send("p", "0")
+    
+    def toggle(self):
+        """Toggle the Hegel on/off."""
+        self.telnet_send("p", "t")
 
     def volume_up(self):
         """Turn the volume up by 1."""
