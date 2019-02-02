@@ -19,6 +19,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
     'binary_sensor',
+    'fan',
     'light',
     'switch'
 ]
@@ -27,6 +28,7 @@ SUPPORTED_CAPABILITIES = [
     'colorControl',
     'colorTemperature',
     'contactSensor',
+    'fanSpeed',
     'filterStatus',
     'motionSensor',
     'presenceSensor',
