@@ -80,20 +80,30 @@ class HegelDevice(MediaPlayerDevice):
                 )
                 _LOGGER.debug("Telnet connection established")
             except (ConnectionRefusedError, OSError):
-                _LOGGER.warning("Connection refused by Hegel amplifier")
+                _LOGGER.warning("Connection refused by %s on port %s",
+                                self._host, self._port)
                 return False
 
         return self._telnet_session
 
     def telnet_disconnect(self):
         """Close the telnet connection."""
-        self.telnet_connect().close()
-        self._telnet_session = None
+        telnet = self.telnet_connect()
+        
+        if telnet:
+            telnet.close()
+            self._telnet_session = None
+        else:
+            return None
 
     def telnet_send(self, command, parameter):
         """Execute a telnet command and return the response."""
         try:
             telnet = self.telnet_connect()
+
+            if not telnet:
+                return None
+
             request = "-" + str(command) + "." + str(parameter)
             telnet.write(request.encode("ASCII") + b"\r")
 
