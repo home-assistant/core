@@ -122,16 +122,15 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._input = None
 
-        _LOGGER.debug("Setting up the ONVIF camera device @ '%s:%s'", 
-            self._host, 
-            self._port)
+        _LOGGER.debug("Setting up the ONVIF camera device @ '%s:%s'",
+                      self._host,
+                      self._port)
 
         self._camera = ONVIFCamera(self._host, 
-            self._port, 
-            self._username, 
-            self._password,
-            '{}/wsdl/'.format(os.path.dirname(onvif.__file__)),
-            )
+                                   self._port, 
+                                   self._username, 
+                                   self._password,
+                                   '{}/wsdl/'.format(os.path.dirname(onvif.__file__)))
 
         _LOGGER.debug("Setting up the ONVIF device management service")
 
@@ -144,10 +143,10 @@ class ONVIFHassCamera(Camera):
         cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month, cdate.Date.Day, cdate.Time.Hour, cdate.Time.Minute, cdate.Time.Second)
 
         _LOGGER.debug("Camera date/time: %s",
-            cam_date)
+                      cam_date)
 
         _LOGGER.debug("System date/time: %s",
-            system_date)
+                      system_date)
 
         dt_diff = cam_date - system_date
         dt_diff_seconds = dt_diff.total_seconds()
@@ -196,7 +195,7 @@ class ONVIFHassCamera(Camera):
 
             req = self._media_service.create_type('GetStreamUri')
             req.ProfileToken = profiles[self._profile_index].token
-            req.StreamSetup = {'Stream': 'RTP-Unicast', 
+            req.StreamSetup = {'Stream': 'RTP-Unicast',
                                'Transport': {'Protocol': 'RTSP'}}
 
             uri_no_auth = self._media_service.GetStreamUri(req).Uri
