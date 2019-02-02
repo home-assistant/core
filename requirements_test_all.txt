@@ -184,7 +184,7 @@ py-canary==0.5.0
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==48
+pydeconz==49
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

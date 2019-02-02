@@ -31,11 +31,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
         from pydeconz.sensor import (
-            DECONZ_SENSOR, SWITCH as DECONZ_REMOTE, THERMOSTAT)
+            DECONZ_SENSOR, SWITCH as DECONZ_REMOTE)
         entities = []
         allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
-            if sensor.type in set(DECONZ_SENSOR) - set(THERMOSTAT) and \
+            if sensor.type in DECONZ_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 if sensor.type in DECONZ_REMOTE:
                     if sensor.battery:

@@ -12,7 +12,7 @@ from .config_flow import configured_hosts
 from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==48']
+REQUIREMENTS = ['pydeconz==49']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
