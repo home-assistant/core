@@ -1,0 +1,18 @@
+{
+    "config": {
+        "title": "Portuguese weather service (IPMA)",
+        "step": {
+            "user": {
+                "title": "Location",
+                "data": {
+                    "name": "Name",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Name already exists"
+        }
+    }
+}
