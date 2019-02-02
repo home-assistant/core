@@ -68,8 +68,8 @@ WEBHOOK_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Set up the Geofency component."""
-    config = hass_config[DOMAIN]
-    mobile_beacons = config[CONF_MOBILE_BEACONS]
+    config = hass_config.get(DOMAIN, {})
+    mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
     hass.data[DOMAIN] = [slugify(beacon) for beacon in mobile_beacons]
     return True
 

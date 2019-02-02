@@ -126,7 +126,7 @@ aioimaplib==0.7.13
 # homeassistant.components.lifx
 aiolifx==0.6.7
 
-# homeassistant.components.light.lifx
+# homeassistant.components.lifx.light
 aiolifx_effects==0.2.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
@@ -398,7 +398,7 @@ evohomeclient==0.2.8
 # homeassistant.components.image_processing.dlib_face_identify
 # face_recognition==1.0.0
 
-# homeassistant.components.sensor.fastdotcom
+# homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
 # homeassistant.components.sensor.fedex
@@ -526,7 +526,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190130.1
+home-assistant-frontend==20190201.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -1489,7 +1489,7 @@ russound==0.1.9
 russound_rio==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.5.1
+rxv==0.6.0
 
 # homeassistant.components.media_player.samsungtv
 samsungctl[websocket]==0.7.1
