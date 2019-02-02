@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "TelldusLive ya est\u00e1 configurado"
+        },
+        "error": {
+            "auth_error": "Error de autenticaci\u00f3n, por favor int\u00e9ntalo de nuevo"
+        }
+    }
+}
