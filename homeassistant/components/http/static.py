@@ -1,9 +1,6 @@
 """Static file handling for HTTP component."""
-
-import re
-
 from aiohttp import hdrs
-from aiohttp.web import FileResponse, middleware
+from aiohttp.web import FileResponse
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from yarl import URL
