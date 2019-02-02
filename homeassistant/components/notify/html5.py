@@ -17,6 +17,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
@@ -39,10 +40,16 @@ SERVICE_DISMISS = 'html5_dismiss'
 
 ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
+ATTR_VAPID_PUB_KEY = 'vapid_pub_key'
+ATTR_VAPID_PRV_KEY = 'vapid_prv_key'
+ATTR_VAPID_EMAIL = 'vapid_email'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_GCM_SENDER_ID): cv.string,
     vol.Optional(ATTR_GCM_API_KEY): cv.string,
+    vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
+    vol.Optional(ATTR_VAPID_PRV_KEY): cv.string,
+    vol.Optional(ATTR_VAPID_EMAIL): cv.string,
 })
 
 ATTR_SUBSCRIPTION = 'subscription'
@@ -63,6 +70,11 @@ ATTR_URL = 'url'
 ATTR_DISMISS = 'dismiss'
 
 ATTR_JWT = 'jwt'
+
+WS_TYPE_APPKEY = 'notify/html5/appkey'
+SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_APPKEY
+})
 
 # The number of days after the moment a notification is sent that a JWT
 # is valid.
@@ -120,6 +132,18 @@ def get_service(hass, config, discovery_info=None):
     if registrations is None:
         return None
 
+    vapid_pub_key = config.get(ATTR_VAPID_PUB_KEY)
+    vapid_prv_key = config.get(ATTR_VAPID_PRV_KEY)
+    vapid_email = config.get(ATTR_VAPID_EMAIL)
+
+    def websocket_appkey(hass, connection, msg):
+        connection.send_message(
+            websocket_api.result_message(msg['id'], vapid_pub_key))
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
+    )
+
     hass.http.register_view(
         HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
@@ -132,7 +156,8 @@ def get_service(hass, config, discovery_info=None):
             ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(
-        hass, gcm_api_key, registrations, json_path)
+        hass, gcm_api_key, vapid_prv_key, vapid_email, registrations,
+        json_path)
 
 
 def _load_config(filename):
@@ -336,9 +361,12 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, hass, gcm_key, registrations, json_path):
+    def __init__(self, hass, gcm_key, vapid_prv, vapid_email, registrations,
+                 json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
+        self._vapid_prv = vapid_prv
+        self._vapid_claims = {"sub": "mailto:{}".format(vapid_email)}
         self.registrations = registrations
         self.registrations_json_path = json_path
 
@@ -425,7 +453,7 @@ class HTML5NotificationService(BaseNotificationService):
     def _push_message(self, payload, **kwargs):
         """Send the message."""
         import jwt
-        from pywebpush import WebPusher
+        from pywebpush import WebPusher, webpush
 
         timestamp = int(time.time())
 
@@ -452,14 +480,23 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            # Only pass the gcm key if we're actually using GCM
-            # If we don't, notifications break on FireFox
-            gcm_key = self._gcm_key \
-                if 'googleapis.com' in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
-                else None
-            response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=gcm_key, ttl='86400'
-            )
+            if self._vapid_prv and self._vapid_claims:
+                response = webpush(
+                    info[ATTR_SUBSCRIPTION],
+                    json.dumps(payload),
+                    vapid_private_key=self._vapid_prv,
+                    vapid_claims=self._vapid_claims
+                )
+            else:
+                # Only pass the gcm key if we're actually using GCM
+                # If we don't, notifications break on FireFox
+                gcm_key = self._gcm_key \
+                    if 'googleapis.com' \
+                    in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
+                    else None
+                response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
+                    json.dumps(payload), gcm_key=gcm_key, ttl='86400'
+                )
 
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")

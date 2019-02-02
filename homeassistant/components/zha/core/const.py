@@ -44,12 +44,21 @@ ATTR_MANUFACTURER = 'manufacturer'
 ATTR_COMMAND = 'command'
 ATTR_COMMAND_TYPE = 'command_type'
 ATTR_ARGS = 'args'
+ATTR_ENDPOINT_ID = 'endpoint_id'
 
 IN = 'in'
 OUT = 'out'
 CLIENT_COMMANDS = 'client_commands'
 SERVER_COMMANDS = 'server_commands'
 SERVER = 'server'
+IEEE = 'ieee'
+MODEL = 'model'
+NAME = 'name'
+
+LISTENER_BATTERY = 'battery'
+
+SIGNAL_ATTR_UPDATED = 'attribute_updated'
+SIGNAL_AVAILABLE = 'available'
 
 
 class RadioType(enum.Enum):

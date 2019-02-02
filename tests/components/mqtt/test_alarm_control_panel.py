@@ -3,18 +3,18 @@ import json
 import unittest
 from unittest.mock import ANY
 
-from homeassistant.setup import setup_component
-from homeassistant.const import (
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
-    STATE_UNKNOWN)
 from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
+from homeassistant.setup import setup_component
 
 from tests.common import (
-    assert_setup_component, async_fire_mqtt_message, async_mock_mqtt_component,
-    async_setup_component, fire_mqtt_message, get_test_home_assistant,
-    mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, assert_setup_component, async_fire_mqtt_message,
+    async_mock_mqtt_component, async_setup_component, fire_mqtt_message,
+    get_test_home_assistant, mock_mqtt_component, mock_registry)
 from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'
@@ -379,7 +379,7 @@ async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
 
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -409,12 +409,12 @@ async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -451,7 +451,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -513,6 +513,53 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/config', data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/config', data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
 
 
 async def test_entity_id_update(hass, mqtt_mock):
