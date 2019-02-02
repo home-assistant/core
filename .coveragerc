@@ -138,6 +138,8 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
+    homeassistant/components/fastdotcom/*
+
     homeassistant/components/fibaro/__init__.py
     homeassistant/components/*/fibaro.py
 
@@ -767,7 +769,6 @@ omit =
     homeassistant/components/sensor/enphase_envoy.py
     homeassistant/components/sensor/envirophat.py
     homeassistant/components/sensor/etherscan.py
-    homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/filesize.py
     homeassistant/components/sensor/fints.py
