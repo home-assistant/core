@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT)
+    CONF_TIMEOUT, CONF_UPDATE_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +23,6 @@ REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 DEVICE_DEFAULT_NAME = 'Broadlink sensor'
 DEFAULT_TIMEOUT = 10
 

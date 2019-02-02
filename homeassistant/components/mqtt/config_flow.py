@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_PROTOCOL, CONF_HOST)
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME)
 
 from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 

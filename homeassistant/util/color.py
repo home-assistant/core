@@ -2,7 +2,8 @@
 import math
 import colorsys
 
-from typing import Tuple, List
+from typing import Tuple, List, Optional
+import attr
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
@@ -162,6 +163,24 @@ COLORS = {
 }
 
 
+@attr.s()
+class XYPoint:
+    """Represents a CIE 1931 XY coordinate pair."""
+
+    x = attr.ib(type=float)
+    y = attr.ib(type=float)
+
+
+@attr.s()
+class GamutType:
+    """Represents the Gamut of a light."""
+
+    # ColorGamut = gamut(xypoint(xR,yR),xypoint(xG,yG),xypoint(xB,yB))
+    red = attr.ib(type=XYPoint)
+    green = attr.ib(type=XYPoint)
+    blue = attr.ib(type=XYPoint)
+
+
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
@@ -174,9 +193,10 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-name
-def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
+def color_RGB_to_xy(iR: int, iG: int, iB: int,
+                    Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert from RGB color to XY color."""
-    return color_RGB_to_xy_brightness(iR, iG, iB)[:2]
+    return color_RGB_to_xy_brightness(iR, iG, iB, Gamut)[:2]
 
 
 # Taken from:
@@ -184,7 +204,8 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
-        iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
+        iR: int, iG: int, iB: int,
+        Gamut: Optional[GamutType] = None) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
@@ -214,19 +235,36 @@ def color_RGB_to_xy_brightness(
     Y = 1 if Y > 1 else Y
     brightness = round(Y * 255)
 
+    # Check if the given xy value is within the color-reach of the lamp.
+    if Gamut:
+        in_reach = check_point_in_lamps_reach((x, y), Gamut)
+        if not in_reach:
+            xy_closest = get_closest_point_to_point((x, y), Gamut)
+            x = xy_closest[0]
+            y = xy_closest[1]
+
     return round(x, 3), round(y, 3), brightness
 
 
-def color_xy_to_RGB(vX: float, vY: float) -> Tuple[int, int, int]:
+def color_xy_to_RGB(
+        vX: float, vY: float,
+        Gamut: Optional[GamutType] = None) -> Tuple[int, int, int]:
     """Convert from XY to a normalized RGB."""
-    return color_xy_brightness_to_RGB(vX, vY, 255)
+    return color_xy_brightness_to_RGB(vX, vY, 255, Gamut)
 
 
 # Converted to Python from Obj-C, original source from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
-def color_xy_brightness_to_RGB(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
+def color_xy_brightness_to_RGB(
+        vX: float, vY: float, ibrightness: int,
+        Gamut: Optional[GamutType] = None) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
+    if Gamut:
+        if not check_point_in_lamps_reach((vX, vY), Gamut):
+            xy_closest = get_closest_point_to_point((vX, vY), Gamut)
+            vX = xy_closest[0]
+            vY = xy_closest[1]
+
     brightness = ibrightness / 255.
     if brightness == 0:
         return (0, 0, 0)
@@ -338,15 +376,17 @@ def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
     return color_hsv_to_RGB(iH, iS, 100)
 
 
-def color_xy_to_hs(vX: float, vY: float) -> Tuple[float, float]:
+def color_xy_to_hs(vX: float, vY: float,
+                   Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert an xy color to its hs representation."""
-    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
+    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY, Gamut))
     return h, s
 
 
-def color_hs_to_xy(iH: float, iS: float) -> Tuple[float, float]:
+def color_hs_to_xy(iH: float, iS: float,
+                   Gamut: Optional[GamutType] = None) -> Tuple[float, float]:
     """Convert an hs color to its xy representation."""
-    return color_RGB_to_xy(*color_hs_to_RGB(iH, iS))
+    return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
 def _match_max_scale(input_colors: Tuple, output_colors: Tuple) -> Tuple:
@@ -474,3 +514,107 @@ def color_temperature_mired_to_kelvin(mired_temperature: float) -> float:
 def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
     """Convert degrees kelvin to mired shift."""
     return math.floor(1000000 / kelvin_temperature)
+
+
+# The following 5 functions are adapted from rgbxy provided by Benjamin Knight
+# License: The MIT License (MIT), 2014.
+# https://github.com/benknight/hue-python-rgb-converter
+def cross_product(p1: XYPoint, p2: XYPoint) -> float:
+    """Calculate the cross product of two XYPoints."""
+    return float(p1.x * p2.y - p1.y * p2.x)
+
+
+def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
+    """Calculate the distance between two XYPoints."""
+    dx = one.x - two.x
+    dy = one.y - two.y
+    return math.sqrt(dx * dx + dy * dy)
+
+
+def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
+    """
+    Find the closest point from P to a line defined by A and B.
+
+    This point will be reproducible by the lamp
+    as it is on the edge of the gamut.
+    """
+    AP = XYPoint(P.x - A.x, P.y - A.y)
+    AB = XYPoint(B.x - A.x, B.y - A.y)
+    ab2 = AB.x * AB.x + AB.y * AB.y
+    ap_ab = AP.x * AB.x + AP.y * AB.y
+    t = ap_ab / ab2
+
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+
+    return XYPoint(A.x + AB.x * t, A.y + AB.y * t)
+
+
+def get_closest_point_to_point(xy_tuple: Tuple[float, float],
+                               Gamut: GamutType) -> Tuple[float, float]:
+    """
+    Get the closest matching color within the gamut of the light.
+
+    Should only be used if the supplied color is outside of the color gamut.
+    """
+    xy_point = XYPoint(xy_tuple[0], xy_tuple[1])
+
+    # find the closest point on each line in the CIE 1931 'triangle'.
+    pAB = get_closest_point_to_line(Gamut.red, Gamut.green, xy_point)
+    pAC = get_closest_point_to_line(Gamut.blue, Gamut.red, xy_point)
+    pBC = get_closest_point_to_line(Gamut.green, Gamut.blue, xy_point)
+
+    # Get the distances per point and see which point is closer to our Point.
+    dAB = get_distance_between_two_points(xy_point, pAB)
+    dAC = get_distance_between_two_points(xy_point, pAC)
+    dBC = get_distance_between_two_points(xy_point, pBC)
+
+    lowest = dAB
+    closest_point = pAB
+
+    if dAC < lowest:
+        lowest = dAC
+        closest_point = pAC
+
+    if dBC < lowest:
+        lowest = dBC
+        closest_point = pBC
+
+    # Change the xy value to a value which is within the reach of the lamp.
+    cx = closest_point.x
+    cy = closest_point.y
+
+    return (cx, cy)
+
+
+def check_point_in_lamps_reach(p: Tuple[float, float],
+                               Gamut: GamutType) -> bool:
+    """Check if the provided XYPoint can be recreated by a Hue lamp."""
+    v1 = XYPoint(Gamut.green.x - Gamut.red.x, Gamut.green.y - Gamut.red.y)
+    v2 = XYPoint(Gamut.blue.x - Gamut.red.x, Gamut.blue.y - Gamut.red.y)
+
+    q = XYPoint(p[0] - Gamut.red.x, p[1] - Gamut.red.y)
+    s = cross_product(q, v2) / cross_product(v1, v2)
+    t = cross_product(v1, q) / cross_product(v1, v2)
+
+    return (s >= 0.0) and (t >= 0.0) and (s + t <= 1.0)
+
+
+def check_valid_gamut(Gamut: GamutType) -> bool:
+    """Check if the supplied gamut is valid."""
+    # Check if the three points of the supplied gamut are not on the same line.
+    v1 = XYPoint(Gamut.green.x - Gamut.red.x, Gamut.green.y - Gamut.red.y)
+    v2 = XYPoint(Gamut.blue.x - Gamut.red.x, Gamut.blue.y - Gamut.red.y)
+    not_on_line = cross_product(v1, v2) > 0.0001
+
+    # Check if all six coordinates of the gamut lie between 0 and 1.
+    red_valid = Gamut.red.x >= 0 and Gamut.red.x <= 1 and \
+        Gamut.red.y >= 0 and Gamut.red.y <= 1
+    green_valid = Gamut.green.x >= 0 and Gamut.green.x <= 1 and \
+        Gamut.green.y >= 0 and Gamut.green.y <= 1
+    blue_valid = Gamut.blue.x >= 0 and Gamut.blue.x <= 1 and \
+        Gamut.blue.y >= 0 and Gamut.blue.y <= 1
+
+    return not_on_line and red_valid and green_valid and blue_valid

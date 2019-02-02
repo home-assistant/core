@@ -300,14 +300,13 @@ class MpdDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        _LOGGER.debug(str.format("Playing playlist: {0}", media_id))
+        _LOGGER.debug("Playing playlist: %s", media_id)
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
-                _LOGGER.warning(str.format("Unknown playlist name %s.",
-                                           media_id))
+                _LOGGER.warning("Unknown playlist name %s", media_id)
             self._client.clear()
             self._client.load(media_id)
             self._client.play()

@@ -131,6 +131,9 @@ class States(Base):   # type: ignore
                 _process_timestamp(self.last_changed),
                 _process_timestamp(self.last_updated),
                 context=context,
+                # Temp, because database can still store invalid entity IDs
+                # Remove with 1.0 or in 2020.
+                temp_invalid_id_bypass=True
             )
         except ValueError:
             # When json.loads fails

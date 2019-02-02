@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION)
+                                 ATTR_ATTRIBUTION, CONF_UPDATE_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util import Throttle
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ups'
 COOKIE = 'upsmychoice_cookies.pickle'
-CONF_UPDATE_INTERVAL = 'update_interval'
 ICON = 'mdi:package-variant-closed'
 STATUS_DELIVERED = 'delivered'
 
