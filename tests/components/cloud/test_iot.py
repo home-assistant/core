@@ -10,8 +10,9 @@ from homeassistant.components.cloud import (
     Cloud, iot, auth_api, MODE_DEV)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
+from homeassistant.util import dt as dt_util
 from tests.components.alexa import test_smart_home as test_alexa
-from tests.common import mock_coro
+from tests.common import mock_coro, async_fire_time_changed
 
 from . import mock_cloud_prefs
 
@@ -147,15 +148,34 @@ def test_handler_forwarding():
     assert payload == 'payload'
 
 
-@asyncio.coroutine
-def test_handling_core_messages(hass, mock_cloud):
+async def test_handling_core_messages_logout(hass, mock_cloud):
     """Test handling core messages."""
     mock_cloud.logout.return_value = mock_coro()
-    yield from iot.async_handle_cloud(hass, mock_cloud, {
+    await iot.async_handle_cloud(hass, mock_cloud, {
         'action': 'logout',
         'reason': 'Logged in at two places.'
     })
     assert len(mock_cloud.logout.mock_calls) == 1
+
+
+async def test_handling_core_messages_refresh_auth(hass, mock_cloud):
+    """Test handling core messages."""
+    mock_cloud.hass = hass
+    with patch('random.randint', return_value=0) as mock_rand, patch(
+        'homeassistant.components.cloud.auth_api.check_token'
+    ) as mock_check:
+        await iot.async_handle_cloud(hass, mock_cloud, {
+            'action': 'refresh_auth',
+            'seconds': 230,
+        })
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert len(mock_rand.mock_calls) == 1
+    assert mock_rand.mock_calls[0][1] == (0, 230)
+
+    assert len(mock_check.mock_calls) == 1
+    assert mock_check.mock_calls[0][1][0] is mock_cloud
 
 
 @asyncio.coroutine

@@ -25,8 +25,8 @@ def mock_ctrl():
 @pytest.fixture
 def mock_scanner():
     """Mock UnifyScanner."""
-    with mock.patch('homeassistant.components.device_tracker'
-                    '.unifi.UnifiScanner') as scanner:
+    with mock.patch('homeassistant.components.device_tracker.unifi'
+                    '.UnifiScanner') as scanner:
         yield scanner
 
 

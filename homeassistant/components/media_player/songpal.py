@@ -154,8 +154,8 @@ class SongpalDevice(MediaPlayerDevice):
                 _LOGGER.debug("New active source: %s", self._active_source)
                 await self.async_update_ha_state()
             else:
-                _LOGGER.warning("Got non-handled content change: %s",
-                                content)
+                _LOGGER.debug("Got non-handled content change: %s",
+                              content)
 
         async def _power_changed(power: PowerChange):
             _LOGGER.debug("Power changed: %s", power)
@@ -179,6 +179,8 @@ class SongpalDevice(MediaPlayerDevice):
                 # back from a disconnected state.
                 await self.async_update_ha_state(force_refresh=True)
                 delay = min(2*delay, 300)
+
+            _LOGGER.info("Reconnected to %s", self.name)
 
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
@@ -286,7 +288,8 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently active source."""
-        return self._active_source.title
+        # Avoid a KeyError when _active_source is not (yet) populated
+        return getattr(self._active_source, 'title', None)
 
     @property
     def volume_level(self):

@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN, CONF_HOST, CONF_PORT,
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_HOST, CONF_PORT,
     CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -93,7 +93,7 @@ class GpsdSensor(Entity):
             return "3D Fix"
         if self.agps_thread.data_stream.mode == 2:
             return "2D Fix"
-        return STATE_UNKNOWN
+        return None
 
     @property
     def device_state_attributes(self):

@@ -82,6 +82,40 @@ class TestHtml5Notify:
         assert service is not None
 
     @patch('pywebpush.WebPusher')
+    def test_dismissing_message(self, mock_wp):
+        """Test dismissing message."""
+        hass = MagicMock()
+
+        data = {
+            'device': SUBSCRIPTION_1
+        }
+
+        m = mock_open(read_data=json.dumps(data))
+        with patch(
+            'homeassistant.util.json.open',
+            m, create=True
+        ):
+            service = html5.get_service(hass, {'gcm_sender_id': '100'})
+
+        assert service is not None
+
+        service.dismiss(target=['device', 'non_existing'],
+                        data={'tag': 'test'})
+
+        assert len(mock_wp.mock_calls) == 3
+
+        # WebPusher constructor
+        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
+        # Third mock_call checks the status_code of the response.
+        assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
+
+        # Call to send
+        payload = json.loads(mock_wp.mock_calls[1][1][0])
+
+        assert payload['dismiss'] is True
+        assert payload['tag'] == 'test'
+
+    @patch('pywebpush.WebPusher')
     def test_sending_message(self, mock_wp):
         """Test sending message."""
         hass = MagicMock()

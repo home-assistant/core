@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -132,7 +132,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._artist = None
         self._uri = None
         self._image_url = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._current_device = None
         self._devices = {}
         self._volume = None

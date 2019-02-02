@@ -41,6 +41,7 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+GAMUT_TYPE_UNAVAILABLE = 'None'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -221,9 +222,29 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
+            self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+            self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
             self.is_philips = light.manufacturername == 'Philips'
+            self.gamut_typ = self.light.colorgamuttype
+            self.gamut = self.light.colorgamut
+            _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            if self.light.swupdatestate == "readytoinstall":
+                err = (
+                    "Please check for software updates of the bridge "
+                    "and/or the bulb: %s, in the Philips Hue App."
+                )
+                _LOGGER.warning(err, self.name)
+            if self.gamut:
+                if not color.check_valid_gamut(self.gamut):
+                    err = (
+                        "Color gamut of %s: %s, not valid, "
+                        "setting gamut to None."
+                    )
+                    _LOGGER.warning(err, self.name, str(self.gamut))
+                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                    self.gamut = None
 
     @property
     def unique_id(self):
@@ -256,7 +277,7 @@ class HueLight(Light):
         source = self.light.action if self.is_group else self.light.state
 
         if mode in ('xy', 'hs') and 'xy' in source:
-            return color.color_xy_to_hs(*source['xy'])
+            return color.color_xy_to_hs(*source['xy'], self.gamut)
 
         return None
 
@@ -289,6 +310,11 @@ class HueLight(Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
+
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self.light.state.get('effect', None)
 
     @property
     def effect_list(self):
@@ -331,7 +357,9 @@ class HueLight(Light):
                 # Philips hue bulb models respond differently to hue/sat
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
-                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                xy_color = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR],
+                                                self.gamut)
+                command['xy'] = xy_color
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
