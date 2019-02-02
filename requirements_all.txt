@@ -275,14 +275,14 @@ colorlog==4.0.2
 concord232==0.15
 
 # homeassistant.components.climate.eq3btsmart
-# homeassistant.components.device_tracker.xiaomi_miio
-# homeassistant.components.fan.xiaomi_miio
-# homeassistant.components.light.xiaomi_miio
-# homeassistant.components.remote.xiaomi_miio
 # homeassistant.components.sensor.eddystone_temperature
-# homeassistant.components.sensor.xiaomi_miio
-# homeassistant.components.switch.xiaomi_miio
-# homeassistant.components.vacuum.xiaomi_miio
+# homeassistant.components.xiaomi_miio.device_tracker
+# homeassistant.components.xiaomi_miio.fan
+# homeassistant.components.xiaomi_miio.light
+# homeassistant.components.xiaomi_miio.remote
+# homeassistant.components.xiaomi_miio.sensor
+# homeassistant.components.xiaomi_miio.switch
+# homeassistant.components.xiaomi_miio.vacuum
 construct==2.9.45
 
 # homeassistant.scripts.credstash
@@ -342,7 +342,7 @@ dovado==0.4.1
 dsmr_parser==0.12
 
 # homeassistant.components.dweet
-# homeassistant.components.sensor.dweet
+# homeassistant.components.dweet.sensor
 dweepy==0.3.0
 
 # homeassistant.components.ecoal_boiler
@@ -439,7 +439,7 @@ freesms==0.1.2
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.4
 
-# homeassistant.components.tts.google
+# homeassistant.components.google.tts
 gTTS-token==1.1.3
 
 # homeassistant.components.sensor.gearbest
@@ -630,7 +630,7 @@ linode-api==4.1.9b1
 liveboxplaytv==2.0.2
 
 # homeassistant.components.lametric
-# homeassistant.components.notify.lametric
+# homeassistant.components.lametric.notify
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
@@ -1090,8 +1090,8 @@ pylaunches==0.2.0
 # homeassistant.components.media_player.lg_netcast
 pylgnetcast-homeassistant==0.2.0.dev0
 
-# homeassistant.components.media_player.webostv
-# homeassistant.components.notify.webostv
+# homeassistant.components.webostv.media_player
+# homeassistant.components.webostv.notify
 pylgtv==0.1.9
 
 # homeassistant.components.sensor.linky
@@ -1253,8 +1253,8 @@ pytautulli==0.5.0
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.4
 
-# homeassistant.components.sensor.thinkingcleaner
-# homeassistant.components.switch.thinkingcleaner
+# homeassistant.components.thinkingcleaner.sensor
+# homeassistant.components.thinkingcleaner.switch
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.sensor.blockchain
@@ -1292,7 +1292,7 @@ python-gitlab==1.6.0
 python-hpilo==3.9
 
 # homeassistant.components.joaoapps_join
-# homeassistant.components.notify.joaoapps_join
+# homeassistant.components.joaoapps_join.notify
 python-join-api==0.0.2
 
 # homeassistant.components.juicenet
@@ -1301,13 +1301,13 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.device_tracker.xiaomi_miio
-# homeassistant.components.fan.xiaomi_miio
-# homeassistant.components.light.xiaomi_miio
-# homeassistant.components.remote.xiaomi_miio
-# homeassistant.components.sensor.xiaomi_miio
-# homeassistant.components.switch.xiaomi_miio
-# homeassistant.components.vacuum.xiaomi_miio
+# homeassistant.components.xiaomi_miio.device_tracker
+# homeassistant.components.xiaomi_miio.fan
+# homeassistant.components.xiaomi_miio.light
+# homeassistant.components.xiaomi_miio.remote
+# homeassistant.components.xiaomi_miio.sensor
+# homeassistant.components.xiaomi_miio.switch
+# homeassistant.components.xiaomi_miio.vacuum
 python-miio==0.4.4
 
 # homeassistant.components.media_player.mpd
@@ -1726,7 +1726,7 @@ waterfurnace==1.1.0
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.54.0
 
-# homeassistant.components.media_player.webostv
+# homeassistant.components.webostv.media_player
 websockets==6.0
 
 # homeassistant.components.wirelesstag
