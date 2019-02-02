@@ -33,20 +33,20 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         self._on = None
         self._outlet_in_use = None
 
-    def update_characteristics(self, characteristics):
-        """Synchronise the switch state with Home Assistant."""
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
+        return [
+            CharacteristicsTypes.ON,
+            CharacteristicsTypes.OUTLET_IN_USE,
+        ]
 
-        for characteristic in characteristics:
-            ctype = characteristic['type']
-            ctype = CharacteristicsTypes.get_short(ctype)
-            if ctype == "on":
-                self._chars['on'] = characteristic['iid']
-                self._on = characteristic['value']
-            elif ctype == "outlet-in-use":
-                self._chars['outlet-in-use'] = characteristic['iid']
-                self._outlet_in_use = characteristic['value']
+    def _update_on(self, value):
+        self._on = value
+
+    def _update_outlet_in_use(self, value):
+        self._outlet_in_use = value
 
     @property
     def is_on(self):

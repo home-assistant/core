@@ -1,17 +1,17 @@
 """The tests for the MQTT component."""
 import asyncio
+import ssl
 import unittest
 from unittest import mock
-import ssl
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import mqtt
+from homeassistant.const import (
+    ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-from homeassistant.components import mqtt
-from homeassistant.const import (EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE,
-                                 EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,

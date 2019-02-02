@@ -193,8 +193,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = device_config[CONF_NAME]
             _LOGGER.debug("Adding configured %s", name)
 
-            custom_effects = _parse_custom_effects(config[CONF_CUSTOM_EFFECTS])
             device = {'name': name, 'ipaddr': ipaddr}
+
+            if CONF_CUSTOM_EFFECTS in config:
+                custom_effects = \
+                    _parse_custom_effects(config[CONF_CUSTOM_EFFECTS])
+            else:
+                custom_effects = None
+
             light = YeelightLight(device, device_config,
                                   custom_effects=custom_effects)
             lights.append(light)

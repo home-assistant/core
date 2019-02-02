@@ -324,7 +324,7 @@ def _add_gateway_to_schema(xiaomi, schema):
 
     # If the user has only 1 gateway, make it the default for services.
     if len(gateways) == 1:
-        kwargs['default'] = gateways[0]
+        kwargs['default'] = gateways[0].sid
 
     return schema.extend({
         vol.Required(ATTR_GW_MAC, **kwargs): gateway

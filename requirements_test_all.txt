@@ -30,6 +30,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.notify.yessssms
 YesssSMS==0.2.3
 
+# homeassistant.components.ambient_station
+aioambient==0.1.0
+
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
@@ -38,7 +41,7 @@ aioautomatic==0.6.5
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.8.0
+aiohue==1.9.0
 
 # homeassistant.components.unifi
 aiounifi==4
@@ -110,7 +113,10 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190121.1
+home-assistant-frontend==20190201.0
+
+# homeassistant.components.homekit_controller
+homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.4
@@ -204,6 +210,12 @@ pyotp==2.2.6
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
+# homeassistant.components.smartthings
+pysmartapp==0.3.0
+
+# homeassistant.components.smartthings
+pysmartthings==0.4.2
+
 # homeassistant.components.sonos
 pysonos==0.0.6
 
@@ -245,7 +257,7 @@ rflink==0.0.37
 ring_doorbell==0.2.2
 
 # homeassistant.components.media_player.yamaha
-rxv==0.5.1
+rxv==0.6.0
 
 # homeassistant.components.simplisafe
 simplisafe-python==3.1.14
@@ -261,7 +273,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.15
+sqlalchemy==1.2.16
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
