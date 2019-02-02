@@ -62,7 +62,7 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):
 
     @property
     def name(self) -> str:
-        """Return the name of the light if any."""
+        """Return the name of the binary sensor."""
         return '{} {}'.format(self._device.label, self._attribute)
 
     @property
