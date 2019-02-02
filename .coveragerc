@@ -165,6 +165,7 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/evohome/*
     homeassistant/components/fan/wemo.py
+    homeassistant/components/fastdotcom/*
     homeassistant/components/fibaro/*
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
