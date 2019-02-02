@@ -94,7 +94,7 @@ def sensor_with_hass_data(default_sensor, hass):
 @pytest.fixture()
 def mock_dispatch():
     """Mock the dispatcher connect method."""
-    target = 'homeassistant.components.sensor.arlo.async_dispatcher_connect'
+    target = 'homeassistant.components.arlo.sensor.async_dispatcher_connect'
     with patch(target, MagicMock()) as _mock:
         yield _mock
 
