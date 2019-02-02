@@ -14,8 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
@@ -81,7 +80,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._uuid = uuid
         self._muted = False
         self._playing = True
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._remote = remote
         self._volume = 0
 

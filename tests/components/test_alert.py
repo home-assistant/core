@@ -1,17 +1,16 @@
 """The tests for the Alert component."""
+import unittest
 # pylint: disable=protected-access
 from copy import deepcopy
-import unittest
 
-from homeassistant.setup import setup_component
-from homeassistant.core import callback
-from homeassistant.components.alert import DOMAIN
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
+from homeassistant.components.alert import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
-
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"
@@ -19,6 +18,13 @@ DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
+TITLE = "{{ states.sensor.test.entity_id }}"
+TEST_TITLE = "sensor.test"
+TEST_DATA = {
+    'data': {
+        'inline_keyboard': ['Close garage:/close_garage']
+    }
+}
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
@@ -28,10 +34,13 @@ TEST_CONFIG = \
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
-            alert.CONF_NOTIFIERS: [NOTIFIER]}
-        }}
+            alert.CONF_NOTIFIERS: [NOTIFIER],
+            alert.CONF_TITLE: TITLE,
+            alert.CONF_DATA: {}
+        }
+    }}
 TEST_NOACK = [NAME, NAME, "sensor.test",
-              STATE_ON, [30], False, None, None, NOTIFIER, False]
+              STATE_ON, [30], False, None, None, NOTIFIER, False, None, None]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -200,7 +209,7 @@ class TestAlert(unittest.TestCase):
         """Test notifications."""
         events = []
         config = deepcopy(TEST_CONFIG)
-        del(config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
+        del (config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
 
         @callback
         def record_event(event):
@@ -285,6 +294,34 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(2, len(events))
         last_event = events[-1]
         self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
+
+    def test_sending_titled_notification(self):
+        """Test notifications."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_TITLE] = TITLE
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_TITLE], TEST_TITLE)
+
+    def test_sending_data_notification(self):
+        """Test notifications."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_DATA], TEST_DATA)
 
     def test_skipfirst(self):
         """Test skipping first notification."""
