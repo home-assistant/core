@@ -4,25 +4,30 @@ Support to interface with the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
 """
+import asyncio
 from datetime import timedelta
 import json
 import logging
+from urllib.parse import urlparse
 
+from aiohttp.hdrs import CONTENT_TYPE
+import async_timeout
 import requests
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
+    CACHE_CONTENT, CACHE_IMAGES, CACHE_LOCK, CACHE_MAXSIZE, ENTITY_IMAGE_CACHE,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice, _async_fetch_image)
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_VERIFY_SSL, DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF,
     STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
@@ -875,3 +880,45 @@ class PlexClient(MediaPlayerDevice):
         }
 
         return attr
+
+
+# This is almost a direct copy of the function from the parent package, except
+# it allows us to skip SSL verification. #20073
+async def _async_fetch_image(hass, url, verify_ssl=True):
+    """Fetch image.
+
+    Images are cached in memory (the images are typically 10-100kB in size).
+    """
+    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+
+    if urlparse(url).hostname is None:
+        url = hass.config.api.base_url + url
+
+    if url not in cache_images:
+        cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
+
+    async with cache_images[url][CACHE_LOCK]:
+        if CACHE_CONTENT in cache_images[url]:
+            return cache_images[url][CACHE_CONTENT]
+
+        content, content_type = (None, None)
+        websession = async_get_clientsession(hass, verify_ssl)
+        try:
+            with async_timeout.timeout(10, loop=hass.loop):
+                response = await websession.get(url)
+
+                if response.status == 200:
+                    content = await response.read()
+                    content_type = response.headers.get(CONTENT_TYPE)
+                    if content_type:
+                        content_type = content_type.split(';')[0]
+                    cache_images[url][CACHE_CONTENT] = content, content_type
+
+        except asyncio.TimeoutError:
+            pass
+
+        while len(cache_images) > cache_maxsize:
+            cache_images.popitem(last=False)
+
+        return content, content_type

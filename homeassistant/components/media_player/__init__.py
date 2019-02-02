@@ -779,7 +779,10 @@ class MediaPlayerDevice(Entity):
         return state_attr
 
 
-async def _async_fetch_image(hass, url, verify_ssl=True):
+# This method has been copied into components.media_player.plex, to support
+# skipping SSL verification. If you need to do this again, please consider
+# changing the base class to support this instead.
+async def _async_fetch_image(hass, url):
     """Fetch image.
 
     Images are cached in memory (the images are typically 10-100kB in size).
@@ -798,7 +801,7 @@ async def _async_fetch_image(hass, url, verify_ssl=True):
             return cache_images[url][CACHE_CONTENT]
 
         content, content_type = (None, None)
-        websession = async_get_clientsession(hass, verify_ssl)
+        websession = async_get_clientsession(hass)
         try:
             with async_timeout.timeout(10, loop=hass.loop):
                 response = await websession.get(url)
