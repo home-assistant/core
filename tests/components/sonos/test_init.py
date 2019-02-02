@@ -10,7 +10,7 @@ from tests.common import mock_coro
 
 async def test_creating_entry_sets_up_media_player(hass):
     """Test setting up Sonos loads the media player."""
-    with patch('homeassistant.components.media_player.sonos.async_setup_entry',
+    with patch('homeassistant.components.sonos.media_player.async_setup_entry',
                return_value=mock_coro(True)) as mock_setup, \
             patch('pysonos.discover', return_value=True):
         result = await hass.config_entries.flow.async_init(

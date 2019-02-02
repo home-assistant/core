@@ -4,37 +4,36 @@ Support for MQTT sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
-import logging
-import json
 from datetime import timedelta
+import json
+import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import sensor
+from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
-from homeassistant.helpers.entity import Entity
-from homeassistant.components import mqtt
+    CONF_DEVICE, CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_ICON, CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
@@ -67,9 +66,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
         try:
-            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
+            await _async_setup_entity(config, async_add_entities, config_entry,
                                       discovery_hash)
         except Exception:
             if discovery_hash:
@@ -82,20 +81,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(config: ConfigType, async_add_entities,
-                              discovery_hash=None):
+                              config_entry=None, discovery_hash=None):
     """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(config, discovery_hash)])
+    async_add_entities([MqttSensor(config, config_entry, discovery_hash)])
 
 
 class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the sensor."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._sub_state = None
         self._expiration_trigger = None
         self._attributes = None
@@ -110,7 +109,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -123,6 +122,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
@@ -188,7 +188,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def value_is_expired(self, *_):
         """Triggered when value is expired."""
         self._expiration_trigger = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self.async_schedule_update_ha_state()
 
     @property

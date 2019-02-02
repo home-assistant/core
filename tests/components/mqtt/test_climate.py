@@ -7,21 +7,20 @@ from unittest.mock import ANY
 import pytest
 import voluptuous as vol
 
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM
-)
-from homeassistant.setup import setup_component
 from homeassistant.components import climate, mqtt
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
+
 from tests.common import (
-    async_fire_mqtt_message, async_mock_mqtt_component, async_setup_component,
-    fire_mqtt_message, get_test_home_assistant, mock_component,
-    mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    async_setup_component, fire_mqtt_message, get_test_home_assistant,
+    mock_component, mock_mqtt_component, mock_registry)
 from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
@@ -919,6 +918,53 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
 
 
 async def test_entity_id_update(hass, mqtt_mock):

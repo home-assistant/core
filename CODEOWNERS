@@ -62,7 +62,6 @@ homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/asuswrt.py @kennedyshead
 homeassistant/components/device_tracker/automatic.py @armills
-homeassistant/components/device_tracker/googlehome.py @ludeeus
 homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
 homeassistant/components/device_tracker/tile.py @bachya
@@ -153,6 +152,7 @@ homeassistant/components/weather/openweathermap.py @fabaff
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 # A
+homeassistant/components/ambient_station/* @bachya
 homeassistant/components/arduino.py @fabaff
 homeassistant/components/*/arduino.py @fabaff
 homeassistant/components/*/arest.py @fabaff
@@ -186,6 +186,10 @@ homeassistant/components/edp_redy.py @abmantis
 homeassistant/components/eight_sleep.py @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/esphome/*.py @OttoWinter
+
+# G
+homeassistant/components/googlehome.py @ludeeus
+homeassistant/components/*/googlehome.py @ludeeus
 
 # H
 homeassistant/components/hive.py @Rendili @KJonline
@@ -235,6 +239,8 @@ homeassistant/components/*/rfxtrx.py @danielhiversen
 
 # S
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/smartthings/* @andrewsayre
+homeassistant/components/spider/* @peternijssen
 
 # T
 homeassistant/components/tahoma.py @philklei

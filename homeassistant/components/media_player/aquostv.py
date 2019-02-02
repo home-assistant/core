@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_USERNAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_USERNAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['sharp_aquos_rc==0.3.2']
@@ -113,7 +113,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
         self._name = name
         # Assume that the TV is not muted
         self._muted = False
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._remote = remote
         self._volume = 0
         self._source = None

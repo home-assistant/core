@@ -20,11 +20,13 @@ from homeassistant.const import (
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+
+from . import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +60,6 @@ CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -109,16 +110,16 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
         vol.In(VALUES_ON_COMMAND_TYPE),
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 
 
-async def async_setup_entity_basic(hass, config, async_add_entities,
+async def async_setup_entity_basic(config, async_add_entities, config_entry,
                                    discovery_hash=None):
     """Set up a MQTT Light."""
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_entities([MqttLight(config, discovery_hash)])
+    async_add_entities([MqttLight(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -126,7 +127,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT light."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize MQTT light."""
         self._state = False
         self._sub_state = None
@@ -158,7 +159,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -171,6 +172,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 

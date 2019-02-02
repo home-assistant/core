@@ -5,14 +5,16 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components import zone
+from homeassistant.components import zone, geofency
 from homeassistant.components.geofency import (
-    CONF_MOBILE_BEACONS, DOMAIN)
+    CONF_MOBILE_BEACONS, DOMAIN, TRACKER_UPDATE)
 from homeassistant.const import (
     HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME,
-    STATE_NOT_HOME)
+    STATE_NOT_HOME, CONF_WEBHOOK_ID)
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+from tests.common import MockConfigEntry
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -281,3 +283,21 @@ async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
     state_name = hass.states.get('{}.{}'.format(
         'device_tracker', device_name)).state
     assert STATE_HOME == state_name
+
+
+@pytest.mark.xfail(
+    reason='The device_tracker component does not support unloading yet.'
+)
+async def test_load_unload_entry(hass, geofency_client):
+    """Test that the appropriate dispatch signals are added and removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={
+        CONF_WEBHOOK_ID: 'geofency_test'
+    })
+
+    await geofency.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+    assert 1 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+
+    await geofency.async_unload_entry(hass, entry)
+    await hass.async_block_till_done()
+    assert 0 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])

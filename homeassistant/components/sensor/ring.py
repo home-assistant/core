@@ -15,7 +15,7 @@ from homeassistant.components.ring import (
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -98,7 +98,7 @@ class RingSensor(Entity):
         self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
         self._name = "{0} {1}".format(
             self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._tz = str(hass.config.time_zone)
         self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
 
@@ -141,7 +141,7 @@ class RingSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._sensor_type == 'battery' and self._state is not STATE_UNKNOWN:
+        if self._sensor_type == 'battery' and self._state is not None:
             return icon_for_battery_level(battery_level=int(self._state),
                                           charging=False)
         return self._icon

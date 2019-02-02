@@ -169,7 +169,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
             sensor = self.sensor_dict[name]['sensor']
             self.fake_delay(2)
             sensor.update()
-            assert STATE_UNKNOWN == sensor.state
+            assert sensor.state is None
 
     @requests_mock.Mocker()
     def test_update_when_value_changed(self, mock_req):
@@ -213,7 +213,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
             sensor.update()
-            assert STATE_UNKNOWN == sensor.state
+            assert sensor.state is None
 
     def update_side_effect(self):
         """Mock representation of update function."""
