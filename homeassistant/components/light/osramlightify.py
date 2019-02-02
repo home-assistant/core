@@ -35,8 +35,8 @@ CONF_INTERVAL_LIGHTIFY_CONF = 'interval_lightify_conf'
 
 DEFAULT_ALLOW_LIGHTIFY_NODES = True
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
-DEFAULT_ALLOW_LIGHTIFY_SENSORS = False
-DEFAULT_ALLOW_LIGHTIFY_SWITCHES = False
+DEFAULT_ALLOW_LIGHTIFY_SENSORS = True
+DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
@@ -73,7 +73,6 @@ def setup_platform(_hass, config, add_entities, _discovery_info=None):
         _LOGGER.exception(msg)
         return
 
-    bridge.DeviceType = lightify.DeviceType
     setup_bridge(bridge, add_entities, config)
 
 
@@ -99,9 +98,9 @@ def setup_bridge(bridge, add_entities, config):
         if new_lights and config.get(CONF_ALLOW_LIGHTIFY_NODES):
             new_entities = []
             for addr, light in new_lights.items():
-                if ((light.devicetype() == bridge.DeviceType.SENSOR
+                if ((light.devicetype().name == 'SENSOR'
                      and not config.get(CONF_ALLOW_LIGHTIFY_SENSORS)) or
-                        (light.devicetype() == bridge.DeviceType.SWITCH
+                        (light.devicetype().name == 'SWITCH'
                          and not config.get(CONF_ALLOW_LIGHTIFY_SWITCHES))):
                     continue
 
@@ -181,6 +180,7 @@ class Luminary(Light):
         self._hs_color = (0, 0)
         self._rgb_color = (0, 0, 0)
         self._xy_color = (0, 0)
+        self._device_attributes = None
 
         self.update_static_attributes()
         self.update_dynamic_attributes()
@@ -286,6 +286,11 @@ class Luminary(Light):
                 data[ATTR_XY_COLOR] = self._xy_color
 
         return data
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._device_attributes
 
     @property
     def available(self):
@@ -415,42 +420,30 @@ class Luminary(Light):
 class OsramLightifyLight(Luminary):
     """Representation of an Osram Lightify Light."""
 
-    def __init__(self, luminary, update_func, changed):
-        """Initialize a Luminary Light."""
-        self._device_type = ''
-        super().__init__(luminary, update_func, changed)
-
     def _get_unique_id(self):
         """Get a unique ID."""
         return self._luminary.addr()
 
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        data = {'device type': self._device_type,
-                'firmware version': self._luminary.version()}
-        return data
-
     def update_static_attributes(self):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
-        self._device_type = '{} ({})'.format(self._luminary.type_id(),
-                                             self._luminary.devicename())
+        attrs = {'device_type': '{} ({})'.format(self._luminary.type_id(),
+                                                 self._luminary.devicename()),
+                 'firmware_version': self._luminary.version()}
+        if self._luminary.devicetype().name == 'SENSOR':
+            attrs['sensor_values'] = self._luminary.raw_values()
+
+        self._device_attributes = attrs
 
 
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
 
-    def __init__(self, luminary, update_func, changed):
-        """Initialize a Luminary Group."""
-        self._light_names = ''
-        super().__init__(luminary, update_func, changed)
-
     def _get_unique_id(self):
         """Get a unique ID for the group."""
 #       Actually, it's a wrong choice for a unique ID, because a combination of
 #       lights is NOT unique (Osram Lightify allows to create different groups
-#       with the same lights).  Also a combination of lights may easily change,
+#       with the same lights). Also a combination of lights may easily change,
 #       but the group remains the same from the user's perspective.
 #       It should be something like "<gateway host>-<group.idx()>"
 #       For now keeping it as is for backward compatibility with existing
@@ -471,12 +464,6 @@ class OsramLightifyGroup(Luminary):
         effects.extend(self._luminary.scenes())
         return sorted(effects)
 
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        data = {'lights': self._light_names}
-        return data
-
     def play_effect(self, effect, transition):
         """Play selected effect."""
         if super().play_effect(effect, transition):
@@ -491,4 +478,4 @@ class OsramLightifyGroup(Luminary):
     def update_static_attributes(self):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
-        self._light_names = ', '.join(self._luminary.light_names())
+        self._device_attributes = {'lights': self._luminary.light_names()}
