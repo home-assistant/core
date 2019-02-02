@@ -44,6 +44,12 @@ async def test_generate_webhook_url(hass):
     assert url == 'https://example.com/api/webhook/some_id'
 
 
+async def test_async_generate_path(hass):
+    """Test generating just the path component of the url correctly."""
+    path = hass.components.webhook.async_generate_path('some_id')
+    assert path == '/api/webhook/some_id'
+
+
 async def test_posting_webhook_nonexisting(hass, mock_client):
     """Test posting to a nonexisting webhook."""
     resp = await mock_client.post('/api/webhook/non-existing')

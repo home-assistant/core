@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
-REQUIREMENTS = ['homekit==0.12.0']
+REQUIREMENTS = ['homekit==0.12.2']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
@@ -25,6 +25,9 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'switch': 'switch',
     'thermostat': 'climate',
     'security-system': 'alarm_control_panel',
+    'garage-door-opener': 'cover',
+    'window': 'cover',
+    'window-covering': 'cover',
     'lock-mechanism': 'lock'
 }
 
@@ -44,10 +47,6 @@ REQUEST_TIMEOUT = 5  # seconds
 RETRY_INTERVAL = 60  # seconds
 
 PAIRING_FILE = "pairing.json"
-
-
-class HomeKitConnectionError(ConnectionError):
-    """Raised when unable to connect to target device."""
 
 
 def get_serial(accessory):
@@ -98,13 +97,14 @@ class HKDevice():
         """Handle setup of a HomeKit accessory."""
         # pylint: disable=import-error
         from homekit.model.services import ServicesTypes
+        from homekit.exceptions import AccessoryDisconnectedError
 
         self.pairing.pairing_data['AccessoryIP'] = self.host
         self.pairing.pairing_data['AccessoryPort'] = self.port
 
         try:
             data = self.pairing.list_accessories_and_characteristics()
-        except HomeKitConnectionError:
+        except AccessoryDisconnectedError:
             call_later(
                 self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
             return
@@ -115,12 +115,13 @@ class HKDevice():
             self.hass.data[KNOWN_ACCESSORIES][serial] = self
             aid = accessory['aid']
             for service in accessory['services']:
-                service_info = {'serial': serial,
-                                'aid': aid,
-                                'model': self.model,
-                                'iid': service['iid']}
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
+                service_info = {'serial': serial,
+                                'aid': aid,
+                                'iid': service['iid'],
+                                'model': self.model,
+                                'device-type': devtype}
                 component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
@@ -195,10 +196,13 @@ class HomeKitEntity(Entity):
 
     def update(self):
         """Obtain a HomeKit device's state."""
+        # pylint: disable=import-error
+        from homekit.exceptions import AccessoryDisconnectedError
+
         try:
             pairing = self._accessory.pairing
             data = pairing.list_accessories_and_characteristics()
-        except HomeKitConnectionError:
+        except AccessoryDisconnectedError:
             return
         for accessory in data:
             if accessory['aid'] != self._aid:

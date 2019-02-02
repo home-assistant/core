@@ -139,11 +139,11 @@ class TestWOLSwitch(unittest.TestCase):
                 'mac_address': '00-01-02-03-04-05',
                 'host': 'validhostname',
                 'turn_off': {
-                    'service': 'shell_command.turn_off_TARGET',
+                    'service': 'shell_command.turn_off_target',
                 },
             }
         })
-        calls = mock_service(self.hass, 'shell_command', 'turn_off_TARGET')
+        calls = mock_service(self.hass, 'shell_command', 'turn_off_target')
 
         state = self.hass.states.get('switch.wake_on_lan')
         assert STATE_OFF == state.state

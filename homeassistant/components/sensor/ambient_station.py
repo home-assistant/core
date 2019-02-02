@@ -32,19 +32,19 @@ UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'winddir': ['Wind Dir', 'º'],
+    'winddir': ['Wind Dir', '°'],
     'windspeedmph': ['Wind Speed', 'mph'],
     'windgustmph': ['Wind Gust', 'mph'],
     'maxdailygust': ['Max Gust', 'mph'],
-    'windgustdir': ['Gust Dir', 'º'],
+    'windgustdir': ['Gust Dir', '°'],
     'windspdmph_avg2m': ['Wind Avg 2m', 'mph'],
     'winddir_avg2m': ['Wind Dir Avg 2m', 'mph'],
     'windspdmph_avg10m': ['Wind Avg 10m', 'mph'],
-    'winddir_avg10m': ['Wind Dir Avg 10m', 'º'],
+    'winddir_avg10m': ['Wind Dir Avg 10m', '°'],
     'humidity': ['Humidity', '%'],
     'humidityin': ['Humidity In', '%'],
-    'tempf': ['Temp', ['ºF', 'ºC']],
-    'tempinf': ['Inside Temp', ['ºF', 'ºC']],
+    'tempf': ['Temp', ['°F', '°C']],
+    'tempinf': ['Inside Temp', ['°F', '°C']],
     'battout': ['Battery', ''],
     'hourlyrainin': ['Hourly Rain Rate', 'in/hr'],
     'dailyrainin': ['Daily Rain', 'in'],
@@ -60,8 +60,8 @@ SENSOR_TYPES = {
     'solarradiation': ['Solar Rad', 'W/m^2'],
     'co2': ['co2', 'ppm'],
     'lastRain': ['Last Rain', ''],
-    'dewPoint': ['Dew Point', ['ºF', 'ºC']],
-    'feelsLike': ['Feels Like', ['ºF', 'ºC']],
+    'dewPoint': ['Dew Point', ['°F', '°C']],
+    'feelsLike': ['Feels Like', ['°F', '°C']],
 }
 
 _LOGGER = logging.getLogger(__name__)

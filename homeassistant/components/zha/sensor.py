@@ -7,14 +7,14 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.zha import helpers
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT, REPORT_CONFIG_RPT_CHANGE, ZHA_DISCOVERY_NEW)
-from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import convert as convert_temperature
+from .core import helpers
+from .core.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT, REPORT_CONFIG_RPT_CHANGE, ZHA_DISCOVERY_NEW)
+from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 

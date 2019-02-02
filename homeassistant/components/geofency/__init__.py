@@ -11,7 +11,7 @@ from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME, \
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, HTTP_OK
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, HTTP_OK, ATTR_NAME
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -33,8 +33,12 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+ATTR_ADDRESS = 'address'
+ATTR_BEACON_ID = 'beaconUUID'
 ATTR_CURRENT_LATITUDE = 'currentLatitude'
 ATTR_CURRENT_LONGITUDE = 'currentLongitude'
+ATTR_DEVICE = 'device'
+ATTR_ENTRY = 'entry'
 
 BEACON_DEV_PREFIX = 'beacon'
 
@@ -42,6 +46,24 @@ LOCATION_ENTRY = '1'
 LOCATION_EXIT = '0'
 
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
+
+
+def _address(value: str) -> str:
+    r"""Coerce address by replacing '\n' with ' '."""
+    return value.replace('\n', ' ')
+
+
+WEBHOOK_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, _address),
+    vol.Required(ATTR_DEVICE): vol.All(cv.string, slugify),
+    vol.Required(ATTR_ENTRY): vol.Any(LOCATION_ENTRY, LOCATION_EXIT),
+    vol.Required(ATTR_LATITUDE): cv.latitude,
+    vol.Required(ATTR_LONGITUDE): cv.longitude,
+    vol.Required(ATTR_NAME): vol.All(cv.string, slugify),
+    vol.Optional(ATTR_CURRENT_LATITUDE): cv.latitude,
+    vol.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude,
+    vol.Optional(ATTR_BEACON_ID): cv.string
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, hass_config):
@@ -57,12 +79,12 @@ async def async_setup(hass, hass_config):
 
 
 async def handle_webhook(hass, webhook_id, request):
-    """Handle incoming webhook with Mailgun inbound messages."""
-    data = _validate_data(await request.post())
-
-    if not data:
+    """Handle incoming webhook from Geofency."""
+    try:
+        data = WEBHOOK_SCHEMA(dict(await request.post()))
+    except vol.MultipleInvalid as error:
         return web.Response(
-            body="Invalid data",
+            body=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
@@ -79,44 +101,14 @@ async def handle_webhook(hass, webhook_id, request):
     return _set_location(hass, data, location_name)
 
 
-def _validate_data(data):
-    """Validate POST payload."""
-    data = data.copy()
-
-    required_attributes = ['address', 'device', 'entry',
-                           'latitude', 'longitude', 'name']
-
-    valid = True
-    for attribute in required_attributes:
-        if attribute not in data:
-            valid = False
-            _LOGGER.error("'%s' not specified in message", attribute)
-
-    if not valid:
-        return {}
-
-    data['address'] = data['address'].replace('\n', ' ')
-    data['device'] = slugify(data['device'])
-    data['name'] = slugify(data['name'])
-
-    gps_attributes = [ATTR_LATITUDE, ATTR_LONGITUDE,
-                      ATTR_CURRENT_LATITUDE, ATTR_CURRENT_LONGITUDE]
-
-    for attribute in gps_attributes:
-        if attribute in data:
-            data[attribute] = float(data[attribute])
-
-    return data
-
-
 def _is_mobile_beacon(data, mobile_beacons):
     """Check if we have a mobile beacon."""
-    return 'beaconUUID' in data and data['name'] in mobile_beacons
+    return ATTR_BEACON_ID in data and data['name'] in mobile_beacons
 
 
 def _device_name(data):
     """Return name of device tracker."""
-    if 'beaconUUID' in data:
+    if ATTR_BEACON_ID in data:
         return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
     return data['device']
 

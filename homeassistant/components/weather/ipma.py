@@ -116,6 +116,9 @@ class IPMAWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
+        if not self._forecast:
+            return
+
         return next((k for k, v in CONDITION_CLASSES.items()
                      if self._forecast[0].idWeatherType in v), None)
 

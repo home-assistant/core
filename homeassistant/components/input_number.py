@@ -63,8 +63,8 @@ def _cv_input_number(cfg):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_MIN): vol.Coerce(float),
             vol.Required(CONF_MAX): vol.Coerce(float),
@@ -76,7 +76,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_MODE, default=MODE_SLIDER):
                 vol.In([MODE_BOX, MODE_SLIDER]),
         }, _cv_input_number)
-    })
+    )
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
