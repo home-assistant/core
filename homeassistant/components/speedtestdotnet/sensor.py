@@ -72,6 +72,11 @@ class SpeedtestSensor(RestoreEntity):
         return ICON
 
     @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {
@@ -89,6 +94,18 @@ class SpeedtestSensor(RestoreEntity):
             })
         return attributes
 
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state
+
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
     def update(self):
         """Get the latest data and update the states."""
         self._data = self.speedtest_client.data
@@ -105,15 +122,3 @@ class SpeedtestSensor(RestoreEntity):
     @callback
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Handle all entity which are about to be added."""
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
-            return
-        self._state = state.state
-
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )

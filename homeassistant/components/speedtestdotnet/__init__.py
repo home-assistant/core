@@ -17,6 +17,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, \
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 REQUIREMENTS = ['speedtest-cli==2.0.2']
 
@@ -59,7 +60,11 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(
-            hass, 'sensor', DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+            hass,
+            SENSOR_DOMAIN,
+            DOMAIN,
+            conf[CONF_MONITORED_CONDITIONS],
+            config
         )
     )
 
