@@ -2,7 +2,7 @@
 Support for lights through the SmartThings cloud API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smnartthings.light/
+https://home-assistant.io/components/smartthings.light/
 """
 import asyncio
 
@@ -63,12 +63,30 @@ class SmartThingsLight(SmartThingsEntity, Light):
     """Define a SmartThings Light."""
 
     def __init__(self, device):
-        """Initialize an SmartThingsLight."""
+        """Initialize a SmartThingsLight."""
         SmartThingsEntity.__init__(self, device)
         self._brightness = 0
         self._hs_color = (0.0, 0.0)
-        self._supported_features = 0
+        self._supported_features = self._determine_features()
         self._color_temp = 0
+
+    def _determine_features(self):
+        """Get features supported by the device."""
+        from pysmartthings.device import Capability
+
+        features = 0
+        # Brightness and transition
+        if Capability.switch_level in self._device.capabilities:
+            features |= \
+                SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        # Color Temperature
+        if Capability.color_temperature in self._device.capabilities:
+            features |= SUPPORT_COLOR_TEMP
+        # Color
+        if Capability.color_control in self._device.capabilities:
+            features |= SUPPORT_COLOR
+
+        return features
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
@@ -114,24 +132,17 @@ class SmartThingsLight(SmartThingsEntity, Light):
         self.async_schedule_update_ha_state(True)
 
     async def async_update(self):
-        """Call when the device is refreshed."""
-        from pysmartthings.device import Capability
-
-        self._supported_features = 0
+        """Update entity attributes when the device status has changed."""
         # Brightness and transition
-        if Capability.switch_level in self._device.capabilities:
-            self._supported_features |= \
-                SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        if self._supported_features & SUPPORT_BRIGHTNESS:
             self._brightness = convert_scale(
                 self._device.status.level, 100, 255)
         # Color Temperature
-        if Capability.color_temperature in self._device.capabilities:
-            self._supported_features |= SUPPORT_COLOR_TEMP
+        if self._supported_features & SUPPORT_COLOR_TEMP:
             self._color_temp = color_util.color_temperature_kelvin_to_mired(
                 self._device.status.color_temperature)
         # Color
-        if Capability.color_control in self._device.capabilities:
-            self._supported_features |= SUPPORT_COLOR
+        if self._supported_features & SUPPORT_COLOR:
             self._hs_color = (
                 convert_scale(self._device.status.hue, 100, 360),
                 self._device.status.saturation
@@ -159,7 +170,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
         # turn off the light when a low brightness is set.
         level = 1 if level == 0 and brightness > 0 else level
         level = max(min(level, 100), 0)
-        duration = max(int(transition), 0)
+        duration = int(transition)
         await self._device.set_level(level, duration, set_status=True)
 
     @property
