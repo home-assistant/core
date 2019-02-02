@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 
-REQUIREMENTS = ['pyMetno==0.4.2']
+REQUIREMENTS = ['pyMetno==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
