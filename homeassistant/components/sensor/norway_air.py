@@ -11,7 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE,
+                                 ATTR_ATTRIBUTION, CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -57,7 +58,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         'lon': str(longitude),
     }
 
-    async_add_entities([AirSensor(name, coordinates, forecast, async_get_clientsession(hass))], True)
+    async_add_entities([AirSensor(name, coordinates,
+                                  forecast, async_get_clientsession(hass))],
+                       True)
 
 
 class AirSensor(Entity):
