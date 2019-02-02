@@ -18,11 +18,13 @@ SETTINGS_INSTANCE_ID = "hassInstanceId"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
+    'fan',
     'switch'
 ]
 SUPPORTED_CAPABILITIES = [
     'colorControl',
     'colorTemperature',
+    'fanSpeed',
     'switch',
     'switchLevel'
 ]
