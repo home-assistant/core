@@ -136,24 +136,26 @@ class ONVIFHassCamera(Camera):
         _LOGGER.debug("Setting up the ONVIF device management service")
 
         self._devicemgmt = self._camera.create_devicemgmt_service()
-        
+
         _LOGGER.debug("Retrieving current camera date/time")
-        
+
         system_date = dt.datetime.utcnow()
         cdate = self._devicemgmt.GetSystemDateAndTime().UTCDateTime
         cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month, cdate.Date.Day, cdate.Time.Hour, cdate.Time.Minute, cdate.Time.Second)
-        
+
         _LOGGER.debug("Camera date/time: %s",
             cam_date)
 
         _LOGGER.debug("System date/time: %s",
             system_date)
-        
+
         dt_diff = cam_date - system_date
         dt_diff_seconds = dt_diff.total_seconds()
-        
+
         if dt_diff_seconds > 5:
-            _LOGGER.warning("The date/time on the camera is '%s', which is different from the system '%s', this could lead to authentication issues", 
+            _LOGGER.warning("The date/time on the camera is '%s', "
+                            "which is different from the system '%s', "
+                            "this could lead to authentication issues",
                             cam_date,
                             system_date)
 
@@ -191,7 +193,7 @@ class ONVIFHassCamera(Camera):
                 self._profile_index)
 
             _LOGGER.debug("Retrieving stream uri")
-                
+
             req = self._media_service.create_type('GetStreamUri')
             req.ProfileToken = profiles[self._profile_index].token
             req.StreamSetup = {'Stream': 'RTP-Unicast', 
