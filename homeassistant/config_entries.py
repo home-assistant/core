@@ -676,9 +676,9 @@ class Options:
         return False
 
     @callback
-    def _async_create_flow(self, handler, context, data: ConfigEntry):
+    def _async_create_flow(self, handler_key, *, context, data: ConfigEntry):
         """"""
-        handler = HANDLERS[handler].async_get_options_flow()
+        handler = HANDLERS[handler_key].async_get_options_flow()
         flow = handler(data['data'], data['options'])
         flow.init_step = context['source']
         self.active_options[flow.flow_id] = data

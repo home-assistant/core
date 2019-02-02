@@ -170,7 +170,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_options(user_input=user_input)
 
     @staticmethod
-    def async_get_options_flow(self):
+    def async_get_options_flow():
         """"""
         return DeconzOptionsFlowHandler
 
