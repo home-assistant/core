@@ -1,6 +1,5 @@
 """
-Support for Hegel IP Controlable Integrated Amplifiers (currently Rost
-and H190).
+Support for Hegel IP Controlable Integrated Amplifiers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.hegel/
@@ -223,8 +222,7 @@ class HegelDevice(MediaPlayerDevice):
         self.telnet_send("v", "d")
 
     def set_volume_level(self, volume):
-        """Set volume level as a percentage of the maximum
-        volume, range 0..1."""
+        """Set volume level as % of the max vol."""
         self.telnet_send("v", str(int(volume*100)))
 
     def mute_volume(self, mute):
