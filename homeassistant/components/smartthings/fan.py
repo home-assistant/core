@@ -20,13 +20,8 @@ VALUE_TO_SPEED = {
     2: SPEED_MEDIUM,
     3: SPEED_HIGH,
 }
-
 SPEED_TO_VALUE = {
-    SPEED_OFF: 0,
-    SPEED_LOW: 1,
-    SPEED_MEDIUM: 2,
-    SPEED_HIGH: 3,
-}
+    v: k for k, v in VALUE_TO_SPEED.items()}
 
 
 async def async_setup_platform(
@@ -53,11 +48,6 @@ def is_fan(device):
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
-
-    def __init__(self, device):
-        """Initialize a SmartThingsFan."""
-        super().__init__(device)
-        self._supported_features = SUPPORT_SET_SPEED
 
     async def async_set_speed(self, speed: str):
         """Set the speed of the fan."""
@@ -103,4 +93,4 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return self._supported_features
+        return SUPPORT_SET_SPEED
