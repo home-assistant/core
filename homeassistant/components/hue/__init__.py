@@ -88,7 +88,6 @@ async def async_setup(hass, config):
     configured = configured_hosts(hass)
 
     # Register a local handler for scene activation
-    _LOGGER.debug("Registering global service handler...")
     hass.services.async_register(
         DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
         schema=SCENE_SCHEMA)
@@ -166,4 +165,5 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     bridge = hass.data[DOMAIN].pop(entry.data['host'])
+    hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
     return await bridge.async_reset()

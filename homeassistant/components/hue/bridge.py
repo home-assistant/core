@@ -105,8 +105,6 @@ class HueBridge:
         if self.api is None:
             return True
 
-        self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
-
         # If setup was successful, we set api variable, forwarded entry and
         # register service
         return await self.hass.config_entries.async_forward_entry_unload(
