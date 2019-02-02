@@ -398,7 +398,7 @@ evohomeclient==0.2.8
 # homeassistant.components.image_processing.dlib_face_identify
 # face_recognition==1.0.0
 
-# homeassistant.components.sensor.fastdotcom
+# homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
 # homeassistant.components.sensor.fedex
