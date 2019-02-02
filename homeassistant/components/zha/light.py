@@ -7,16 +7,16 @@ at https://home-assistant.io/components/light.zha/
 import logging
 
 from homeassistant.components import light
-from homeassistant.components.zha import helpers
-from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
-    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
-from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha.entities.listeners import (
-    OnOffListener, LevelListener
-)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
+from .core import helpers
+from .core.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
+from .entity import ZhaEntity
+from .core.listeners import (
+    OnOffListener, LevelListener
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +155,8 @@ class Light(ZhaEntity, light.Light):
 
         duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
         duration = duration * 10  # tenths of s
-        if light.ATTR_COLOR_TEMP in kwargs:
+        if light.ATTR_COLOR_TEMP in kwargs and \
+                self.supported_features & light.SUPPORT_COLOR_TEMP:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             try:
                 res = await self._endpoint.light_color.move_to_color_temp(
@@ -168,7 +169,8 @@ class Light(ZhaEntity, light.Light):
                 return
             self._color_temp = temperature
 
-        if light.ATTR_HS_COLOR in kwargs:
+        if light.ATTR_HS_COLOR in kwargs and \
+                self.supported_features & light.SUPPORT_COLOR:
             self._hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*self._hs_color)
             try:
@@ -187,7 +189,6 @@ class Light(ZhaEntity, light.Light):
         if self._brightness is not None:
             brightness = kwargs.get(
                 light.ATTR_BRIGHTNESS, self._brightness or 255)
-            self._brightness = brightness
             # Move to level with on/off:
             try:
                 res = await self._endpoint.level.move_to_level_with_on_off(
@@ -201,6 +202,7 @@ class Light(ZhaEntity, light.Light):
                               self.entity_id, ex)
                 return
             self._state = 1
+            self._brightness = brightness
             self.async_schedule_update_ha_state()
             return
 

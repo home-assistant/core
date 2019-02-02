@@ -99,6 +99,7 @@ class ApiConfig:
         self.port = port
         self.api_password = api_password
 
+        host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
             self.base_url = host
         elif use_ssl:

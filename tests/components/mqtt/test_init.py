@@ -13,10 +13,10 @@ from homeassistant.components import mqtt
 from homeassistant.const import (EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE,
                                  EVENT_HOMEASSISTANT_STOP)
 
-from tests.common import (get_test_home_assistant, mock_coro,
-                          mock_mqtt_component,
-                          threadsafe_coroutine_factory, fire_mqtt_message,
-                          async_fire_mqtt_message, MockConfigEntry)
+from tests.common import (
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    fire_mqtt_message, get_test_home_assistant, mock_coro, mock_mqtt_component,
+    threadsafe_coroutine_factory)
 
 
 @pytest.fixture
@@ -749,3 +749,21 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 async def test_setup_fails_without_config(hass):
     """Test if the MQTT component fails to load with no config."""
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
+
+
+async def test_message_callback_exception_gets_logged(hass, caplog):
+    """Test exception raised by message handler."""
+    await async_mock_mqtt_component(hass)
+
+    @callback
+    def bad_handler(*args):
+        """Record calls."""
+        raise Exception('This is a bad message callback')
+
+    await mqtt.async_subscribe(hass, 'test-topic', bad_handler)
+    async_fire_mqtt_message(hass, 'test-topic', 'test')
+    await hass.async_block_till_done()
+
+    assert \
+        "Exception in bad_handler when handling msg on 'test-topic':" \
+        " 'test'" in caplog.text

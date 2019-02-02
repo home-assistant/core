@@ -319,7 +319,26 @@ def service(value):
                       .format(value))
 
 
-def slug(value):
+def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+    """Ensure dicts have slugs as keys.
+
+    Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
+    "Extra keys" errors from voluptuous.
+    """
+    schema = vol.Schema({str: value_schema})
+
+    def verify(value: Dict) -> Dict:
+        """Validate all keys are slugs and then the value_schema."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for key in value.keys():
+            slug(key)
+        return schema(value)
+    return verify
+
+
+def slug(value: Any) -> str:
     """Validate value is a valid slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -330,7 +349,7 @@ def slug(value):
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
 
 
-def slugify(value):
+def slugify(value: Any) -> str:
     """Coerce a value to a slug."""
     if value is None:
         raise vol.Invalid('Slug should not be None')
@@ -517,7 +536,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
     vol.Optional('data_template'): {match_all: template_complex},
-    vol.Optional(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({

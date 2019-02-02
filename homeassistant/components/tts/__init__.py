@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
     vol.Optional(ATTR_CACHE): cv.boolean,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_LANGUAGE): cv.string,
     vol.Optional(ATTR_OPTIONS): dict,
 })

@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -101,7 +101,7 @@ class PanasonicBluRay(MediaPlayerDevice):
         state = self._device.get_play_status()
 
         if state[0] == 'error':
-            self._state = STATE_UNKNOWN
+            self._state = None
         elif state[0] in ['off', 'standby']:
             # We map both of these to off. If it's really off we can't
             # turn it on, but from standby we can go to idle by pressing
