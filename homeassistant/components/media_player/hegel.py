@@ -1,5 +1,6 @@
 """
-Support for Hegel IP Controlable Integrated Amplifiers (currently Rost and H190).
+Support for Hegel IP Controlable Integrated Amplifiers (currently Rost
+and H190).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.hegel/
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Hegel platform."""
     hegel = HegelDevice(
@@ -58,18 +60,30 @@ class HegelDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = 1
         self._telnet_session = None
-        self._source_names = ["Balanced", "Analog1", "Analog2", "Coaxial", "Optical1", "Optical2", "Optical3", "USB", "Network"] # "List index plus 1" = the input number as defined by Hegel
+        self._source_names = [
+            "Balanced",
+            "Analog1",
+            "Analog2",
+            "Coaxial",
+            "Optical1",
+            "Optical2",
+            "Optical3",
+            "USB",
+            "Network"
+        ]
 
     def telnet_connect(self):
         """Establish a telnet connection or return an already opened one."""
         if self._telnet_session is None:
             try:
-                self._telnet_session = telnetlib.Telnet(self._host, self._port, self._timeout)
+                self._telnet_session = telnetlib.Telnet(
+                    self._host, self._port, self._timeout
+                )
                 _LOGGER.debug("Telnet connection established")
             except (ConnectionRefusedError, OSError):
                 _LOGGER.warning("Connection refused by Hegel amplifier")
                 return False
-        
+
         return self._telnet_session
 
     def telnet_disconnect(self):
@@ -86,31 +100,41 @@ class HegelDevice(MediaPlayerDevice):
 
             # If the telnet command was succesful we receive an answer in the
             # format: "-command.value" e.g. "-v.20"
-            response = telnet.read_until(b"\r", timeout=0.2).decode("ASCII").strip().split('.')
+            response = telnet.read_until(b"\r", timeout=0.2) \
+                .decode("ASCII").strip().split('.')
 
-            if (not isinstance(response, list) or response[0] == "-e" or len(response) < 2):
-                _LOGGER.debug("Command %s returned invalid response %s", command, response)
+            if (not isinstance(response, list) or response[0] == "-e" or
+                    len(response) < 2):
+                _LOGGER.debug("Command %s returned invalid response %s",
+                              command, response)
                 return None
             else:
                 _LOGGER.debug("Response %s on command %s", response, command)
-                
-                # Verify if response is an integer, since all Hegel's responses are an integer
+
+                # Verify if response is an integer, since all Hegel's
+                # responses are an integer
                 try:
                     response_value = int(response[1])
                 except:
-                    _LOGGER.debug("Response %s could not be converted to integer", response)
+                    _LOGGER.debug("Response %s could not be converted \
+                                  to integer", response)
                     return None
 
-                # Only return value if the data format adheres to what we expect based on the Hegel documentation (to prevent incorrect or reordered telnet responses)
-                if (command == "i" and (response_value < 1 or response_value > 9)):
+                # Only return value if the data format adheres to what we
+                # expect based on the Hegel documentation (to prevent
+                # incorrect or reordered telnet responses)
+                if (command == "i" and
+                        (response_value < 1 or response_value > 9)):
                     return None
 
-                if (command == "p" and (response_value < 0 or response_value > 1)):
+                if (command == "p" and
+                        (response_value < 0 or response_value > 1)):
                     return None
 
-                if (command == "v" and (response_value < 0 or response_value > 100)):
+                if (command == "v" and
+                        (response_value < 0 or response_value > 100)):
                     return None
-                
+
                 return response_value
 
         except telnetlib.socket.timeout:
@@ -170,7 +194,8 @@ class HegelDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source."""
-        return self._source_names[int(self._selected_source) - 1] # Subtract 1 since a list starts with index 0
+        # Subtract 1 since a list starts with index 0
+        return self._source_names[int(self._selected_source) - 1]
 
     @property
     def source_list(self):
@@ -184,7 +209,7 @@ class HegelDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn the Hegel off."""
         self.telnet_send("p", "0")
-    
+
     def toggle(self):
         """Toggle the Hegel on/off."""
         self.telnet_send("p", "t")
@@ -198,7 +223,8 @@ class HegelDevice(MediaPlayerDevice):
         self.telnet_send("v", "d")
 
     def set_volume_level(self, volume):
-        """Set volume level as a percentage of the maximum volume, range 0..1."""
+        """Set volume level as a percentage of the maximum
+        volume, range 0..1."""
         self.telnet_send("v", str(int(volume*100)))
 
     def mute_volume(self, mute):
@@ -207,7 +233,8 @@ class HegelDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        input_number = self._source_names.index(source) + 1 # Add 1 since a list starts with index 0
+        # Add 1 since a list starts with index 0
+        input_number = self._source_names.index(source) + 1
 
         if input_number:
             self.telnet_send("i", input_number)
