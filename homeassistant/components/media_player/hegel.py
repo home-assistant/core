@@ -65,9 +65,9 @@ class HegelDevice(MediaPlayerDevice):
         if self._telnet_session is None:
             try:
                 self._telnet_session = telnetlib.Telnet(self._host, self._port, self._timeout)
-                _LOGGER.debug("%s telnet connection established", self._name)
+                _LOGGER.debug("Telnet connection established")
             except (ConnectionRefusedError, OSError):
-                _LOGGER.warning("%s refused connection", self._name)
+                _LOGGER.warning("Connection refused by Hegel amplifier")
                 return False
         
         return self._telnet_session
@@ -89,16 +89,16 @@ class HegelDevice(MediaPlayerDevice):
             response = telnet.read_until(b"\r", timeout=0.2).decode("ASCII").strip().split('.')
 
             if (not isinstance(response, list) or response[0] == "-e" or len(response) < 2):
-                _LOGGER.debug("%s command %s returned invalid response %s", self._name, command, response)
+                _LOGGER.debug("Command %s returned invalid response %s", command, response)
                 return None
             else:
-                _LOGGER.debug("%s response %s on command %s", self._name, response, command)
+                _LOGGER.debug("Response %s on command %s", response, command)
                 
                 # Verify if response is an integer, since all Hegel's responses are an integer
                 try:
                     response_value = int(response[1])
                 except:
-                    _LOGGER.debug("%s response %s could not be converted to integer", self._name, response)
+                    _LOGGER.debug("Response %s could not be converted to integer", response)
                     return None
 
                 # Only return value if the data format adheres to what we expect based on the Hegel documentation (to prevent incorrect or reordered telnet responses)
@@ -115,7 +115,7 @@ class HegelDevice(MediaPlayerDevice):
 
         except telnetlib.socket.timeout:
             self.telnet_disconnect()
-            _LOGGER.debug("%s command %s timed out", self._name, command)
+            _LOGGER.debug("Command %s timed out", command)
             return None
 
         return None
@@ -212,4 +212,4 @@ class HegelDevice(MediaPlayerDevice):
         if input_number:
             self.telnet_send("i", input_number)
         else:
-            _LOGGER.warning("%s input source %s does not exist", self._name, source)
+            _LOGGER.warning("Input source %s does not exist", source)
