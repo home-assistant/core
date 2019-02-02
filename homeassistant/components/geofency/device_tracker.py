@@ -6,16 +6,21 @@ https://home-assistant.io/components/device_tracker.geofency/
 """
 import logging
 
-from homeassistant.components.geofency import TRACKER_UPDATE
+from homeassistant.components.device_tracker import DOMAIN as \
+    DEVICE_TRACKER_DOMAIN
+from homeassistant.components.geofency import TRACKER_UPDATE, \
+    DOMAIN as GEOFENCY_DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['geofency']
 
+DATA_KEY = '{}.{}'.format(GEOFENCY_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Set up the Geofency device tracker."""
+
+async def async_setup_entry(hass, entry, async_see):
+    """Configure a dispatcher connection based on a config entry."""
     async def _set_location(device, gps, location_name, attributes):
         """Fire HA event to set location."""
         await async_see(
@@ -25,5 +30,13 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             attributes=attributes
         )
 
-    async_dispatcher_connect(hass, TRACKER_UPDATE, _set_location)
+    hass.data[DATA_KEY] = async_dispatcher_connect(
+        hass, TRACKER_UPDATE, _set_location
+    )
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload the config entry and remove the dispatcher connection."""
+    hass.data[DATA_KEY]()
     return True
