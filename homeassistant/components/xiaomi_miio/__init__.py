@@ -1,0 +1,1 @@
+"""Xiaomi Miio integration."""
