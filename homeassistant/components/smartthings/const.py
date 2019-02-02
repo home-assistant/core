@@ -18,16 +18,26 @@ SETTINGS_INSTANCE_ID = "hassInstanceId"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
+    'binary_sensor',
     'fan',
     'light',
     'switch'
 ]
 SUPPORTED_CAPABILITIES = [
+    'accelerationSensor',
     'colorControl',
     'colorTemperature',
+    'contactSensor',
     'fanSpeed',
+    'filterStatus',
+    'motionSensor',
+    'presenceSensor',
+    'soundSensor',
     'switch',
-    'switchLevel'
+    'switchLevel',
+    'tamperAlert',
+    'valve',
+    'waterSensor'
 ]
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
