@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, ATTR_ATTRIBUTION)
-from homeassistant.components.sensor import arlo
+from homeassistant.components.arlo import sensor as arlo
 from homeassistant.components.arlo import DATA_ARLO
 
 

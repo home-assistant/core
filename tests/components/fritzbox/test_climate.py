@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from homeassistant.components.climate.fritzbox import FritzboxThermostat
+from homeassistant.components.fritzbox.climate import FritzboxThermostat
 
 
 class TestFritzboxClimate(unittest.TestCase):

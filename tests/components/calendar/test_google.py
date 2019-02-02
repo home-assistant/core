@@ -7,7 +7,7 @@ from unittest.mock import patch, Mock
 import pytest
 
 import homeassistant.components.calendar as calendar_base
-import homeassistant.components.calendar.google as calendar
+from homeassistant.components.google import calendar
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT

@@ -2,12 +2,14 @@
 import unittest
 from unittest.mock import MagicMock
 
-from homeassistant.components.sensor import kira as kira
+from homeassistant.components.kira import remote as kira
 
 from tests.common import get_test_home_assistant
 
+SERVICE_SEND_COMMAND = 'send_command'
+
 TEST_CONFIG = {kira.DOMAIN: {
-    'sensors': [{'host': '127.0.0.1',
+    'devices': [{'host': '127.0.0.1',
                  'port': 17324}]}}
 
 DISCOVERY_INFO = {
@@ -30,30 +32,26 @@ class TestKiraSensor(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        mock_kira = MagicMock()
-        self.hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}
-        self.hass.data[kira.DOMAIN][kira.CONF_SENSOR]['kira'] = mock_kira
+        self.mock_kira = MagicMock()
+        self.hass.data[kira.DOMAIN] = {kira.CONF_REMOTE: {}}
+        self.hass.data[kira.DOMAIN][kira.CONF_REMOTE]['kira'] = self.mock_kira
 
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    # pylint: disable=protected-access
-    def test_kira_sensor_callback(self):
-        """Ensure Kira sensor properly updates its attributes from callback."""
+    def test_service_call(self):
+        """Test Kira's ability to send commands."""
         kira.setup_platform(self.hass, TEST_CONFIG, self.add_entities,
                             DISCOVERY_INFO)
         assert len(self.DEVICES) == 1
-        sensor = self.DEVICES[0]
+        remote = self.DEVICES[0]
 
-        assert sensor.name == 'kira'
+        assert remote.name == 'kira'
 
-        sensor.hass = self.hass
+        command = ["FAKE_COMMAND"]
+        device = "FAKE_DEVICE"
+        commandTuple = (command[0], device)
+        remote.send_command(device=device, command=command)
 
-        codeName = 'FAKE_CODE'
-        deviceName = 'FAKE_DEVICE'
-        codeTuple = (codeName, deviceName)
-        sensor._update_callback(codeTuple)
-
-        assert sensor.state == codeName
-        assert sensor.device_state_attributes == {kira.CONF_DEVICE: deviceName}
+        self.mock_kira.sendCode.assert_called_with(commandTuple)

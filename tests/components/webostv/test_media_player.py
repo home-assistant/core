@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-from homeassistant.components.media_player import webostv
+from homeassistant.components.webostv import media_player as webostv
 
 
 class FakeLgWebOSDevice(webostv.LgWebOSDevice):

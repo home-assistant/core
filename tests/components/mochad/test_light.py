@@ -5,7 +5,7 @@ import unittest.mock as mock
 import pytest
 
 from homeassistant.components import light
-from homeassistant.components.light import mochad
+from homeassistant.components.mochad import light as mochad
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
