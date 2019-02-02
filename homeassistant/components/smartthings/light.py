@@ -64,7 +64,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
 
     def __init__(self, device):
         """Initialize a SmartThingsLight."""
-        SmartThingsEntity.__init__(self, device)
+        super().__init__(device)
         self._brightness = 0
         self._hs_color = (0.0, 0.0)
         self._supported_features = self._determine_features()
