@@ -28,6 +28,7 @@ import zeep
 def zeep_pythonvalue(self, xmlvalue):
     return xmlvalue
 
+
 zeep.xsd.simple.AnySimpleType.pythonvalue = zeep_pythonvalue
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,11 +127,12 @@ class ONVIFHassCamera(Camera):
                       self._host,
                       self._port)
 
-        self._camera = ONVIFCamera(self._host, 
-                                   self._port, 
-                                   self._username, 
+        self._camera = ONVIFCamera(self._host,
+                                   self._port,
+                                   self._username,
                                    self._password,
-                                   '{}/wsdl/'.format(os.path.dirname(onvif.__file__)))
+                                   '{}/wsdl/'
+                                   .format(os.path.dirname(onvif.__file__)))
 
         _LOGGER.debug("Setting up the ONVIF device management service")
 
