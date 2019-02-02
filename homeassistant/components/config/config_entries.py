@@ -17,6 +17,8 @@ async def async_setup(hass):
     hass.http.register_view(
         ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
+    hass.http.register_view(
+        OptionsManagerFlowResourceView(hass.config_entries.options.flow))
     return True
 
 
@@ -47,6 +49,14 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
     async def get(self, request):
         """List flows in progress."""
         hass = request.app['hass']
+
+        def supports_options(domain):
+            """"""
+            if domain == 'axis':
+                return None
+            handler = config_entries.HANDLERS[domain]
+            return handler.async_get_options_flow() is not None
+
         return self.json([{
             'entry_id': entry.entry_id,
             'domain': entry.domain,
@@ -54,6 +64,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'source': entry.source,
             'state': entry.state,
             'connection_class': entry.connection_class,
+            'supports_options': supports_options(entry.domain),
         } for entry in hass.config_entries.async_entries()])
 
 
@@ -145,3 +156,28 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
     async def get(self, request):
         """List available flow handlers."""
         return self.json(config_entries.FLOWS)
+
+
+class OptionsManagerFlowResourceView(FlowManagerResourceView):
+    """View to interact with the options flow manager."""
+
+    url = '/api/config/config_entries/options/flow/{flow_id}'
+    name = 'api:config:config_entries:options:flow:resource'
+
+    async def get(self, request, flow_id):
+        """Get the current state of a data_entry_flow."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
+        return await super().get(request, flow_id)
+
+    # pylint: disable=arguments-differ
+    async def post(self, request, flow_id):
+        """Handle a POST request."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)
