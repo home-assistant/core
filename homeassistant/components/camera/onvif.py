@@ -25,6 +25,7 @@ from onvif import ONVIFCamera
 
 import zeep
 
+
 def zeep_pythonvalue(self, xmlvalue):
     return xmlvalue
 
