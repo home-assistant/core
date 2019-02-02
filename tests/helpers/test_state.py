@@ -183,7 +183,7 @@ class TestStateHelpers(unittest.TestCase):
         last_call = calls[-1]
         assert 'media_player' == last_call.domain
         assert SERVICE_MEDIA_PLAY == last_call.service
-        assert ['media_player.test'] == \
+        assert 'media_player.test' == \
             last_call.data.get('entity_id')
 
     def test_reproduce_media_pause(self):
@@ -201,7 +201,7 @@ class TestStateHelpers(unittest.TestCase):
         last_call = calls[-1]
         assert 'media_player' == last_call.domain
         assert SERVICE_MEDIA_PAUSE == last_call.service
-        assert ['media_player.test'] == \
+        assert 'media_player.test' == \
             last_call.data.get('entity_id')
 
     def test_reproduce_bad_state(self):

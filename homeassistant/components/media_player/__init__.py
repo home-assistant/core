@@ -36,6 +36,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 
 from .const import *
+from .reproduce_state import async_reproduce_states  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
