@@ -1,8 +1,11 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
-from datetime import timedelta
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch
+import pytest
+import pytz
+from homeassistant.helpers import template
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
@@ -12,7 +15,6 @@ from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
 
 from tests.common import init_recorder_component, get_test_home_assistant
-import pytest
 
 
 class TestHistoryStatsSensor(unittest.TestCase):
@@ -50,19 +52,21 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
     def test_period_parsing(self):
         """Test the conversion from templates to period."""
-        today = Template('{{ now().replace(hour=0).replace(minute=0)'
-                         '.replace(second=0) }}', self.hass)
-        duration = timedelta(hours=2, minutes=1)
+        now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
+        with patch.dict(template.ENV.globals, {'now': lambda: now}):
+            today = Template('{{ now().replace(hour=0).replace(minute=0)'
+                             '.replace(second=0) }}', self.hass)
+            duration = timedelta(hours=2, minutes=1)
 
-        sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', today, None, duration, 'time', 'test')
-        sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, today, duration, 'time', 'test')
+            sensor1 = HistoryStatsSensor(
+                self.hass, 'test', 'on', today, None, duration, 'time', 'test')
+            sensor2 = HistoryStatsSensor(
+                self.hass, 'test', 'on', None, today, duration, 'time', 'test')
 
-        sensor1.update_period()
-        sensor1_start, sensor1_end = sensor1._period
-        sensor2.update_period()
-        sensor2_start, sensor2_end = sensor2._period
+            sensor1.update_period()
+            sensor1_start, sensor1_end = sensor1._period
+            sensor2.update_period()
+            sensor2_start, sensor2_end = sensor2._period
 
         # Start = 00:00:00
         assert sensor1_start.hour == 0

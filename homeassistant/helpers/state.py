@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE, SERVICE_NOTIFY)
 from homeassistant.components.sun import (
     STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
-from homeassistant.components.switch.mysensors import (
+from homeassistant.components.mysensors.switch import (
     ATTR_IR_CODE, SERVICE_SEND_IR_CODE)
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE, STATE_HEAT, STATE_COOL,
     STATE_IDLE)
-from homeassistant.components.climate.ecobee import (
+from homeassistant.components.ecobee.climate import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
 from homeassistant.components.cover import (

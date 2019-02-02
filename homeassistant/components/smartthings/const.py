@@ -19,6 +19,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
     'fan',
+    'light',
     'switch'
 ]
 SUPPORTED_CAPABILITIES = [
