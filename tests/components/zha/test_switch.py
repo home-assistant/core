@@ -4,7 +4,8 @@ from homeassistant.components.switch import DOMAIN
 from homeassistant.const import STATE_ON, STATE_OFF
 from tests.common import mock_coro
 from .common import (
-    async_init_zigpy_device, make_attribute, make_entity_id
+    async_init_zigpy_device, make_attribute, make_entity_id,
+    async_test_device_join
 )
 
 ON = 1
@@ -64,3 +65,5 @@ async def test_switch(hass, config_entry, zha_gateway):
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
             False, OFF, (), expect_reply=True, manufacturer=None)
+
+    await async_test_device_join(hass, zha_gateway, OnOff.cluster_id, DOMAIN)
