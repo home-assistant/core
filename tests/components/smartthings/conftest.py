@@ -254,14 +254,16 @@ def device_factory_fixture():
 @pytest.fixture(name="event_factory")
 def event_factory_fixture():
     """Fixture for creating mock devices."""
-    def _factory(device_id, event_type="DEVICE_EVENT"):
+    def _factory(device_id, event_type="DEVICE_EVENT", capability='',
+                 attribute='Updated', value='Value'):
         event = Mock()
         event.event_type = event_type
         event.device_id = device_id
         event.component_id = 'main'
-        event.capability = ''
-        event.attribute = 'Updated'
-        event.value = 'Value'
+        event.capability = capability
+        event.attribute = attribute
+        event.value = value
+        event.location_id = str(uuid4())
         return event
     return _factory
 
@@ -269,11 +271,15 @@ def event_factory_fixture():
 @pytest.fixture(name="event_request_factory")
 def event_request_factory_fixture(event_factory):
     """Fixture for creating mock smartapp event requests."""
-    def _factory(device_ids):
+    def _factory(device_ids=None, events=None):
         request = Mock()
         request.installed_app_id = uuid4()
-        request.events = [event_factory(id) for id in device_ids]
-        request.events.append(event_factory(uuid4()))
-        request.events.append(event_factory(device_ids[0], event_type="OTHER"))
+        if events is None:
+            events = []
+        if device_ids:
+            events.extend([event_factory(id) for id in device_ids])
+            events.append(event_factory(uuid4()))
+            events.append(event_factory(device_ids[0], event_type="OTHER"))
+        request.events = events
         return request
     return _factory
