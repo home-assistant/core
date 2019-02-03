@@ -70,15 +70,18 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
                                       remote_on_off_cluster,
                                       use_suffix=False)
 
-    # test that the state has changed from unavailable to off
+    # test that the sensors exist and are in the off state
     assert hass.states.get(zone_entity_id).state == STATE_OFF
     assert hass.states.get(remote_entity_id).state == STATE_OFF
     assert hass.states.get(occupancy_entity_id).state == STATE_OFF
 
+    # test getting messages that trigger and reset the sensors
     await async_test_binary_sensor_on_off(hass, occupancy_cluster,
                                           occupancy_entity_id)
     await async_test_binary_sensor_on_off(hass, remote_on_off_cluster,
                                           remote_entity_id)
+
+    # test changing the level attribute for dimming remotes
     await async_test_remote_level(
         hass, remote_level_cluster, remote_entity_id, 150, STATE_ON)
     await async_test_remote_level(
@@ -89,8 +92,10 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
     await async_test_remote_move_level(
         hass, remote_level_cluster, remote_entity_id, 20, STATE_ON)
 
+    # test IASZone binary sensors
     await async_test_iaszone_on_off(hass, zone_cluster, zone_entity_id)
 
+    # test new sensor join
     await async_test_device_join(
         hass, zha_gateway, OccupancySensing.cluster_id, DOMAIN,
         expected_state=STATE_OFF)
