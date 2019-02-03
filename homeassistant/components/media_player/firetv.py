@@ -112,6 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
         hass.data[DATA_KEY][host] = device
 
+
     def service_key(service):
         """Dispatch service calls to target entities."""
         key = service.data.get(ATTR_KEY)
