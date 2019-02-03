@@ -613,8 +613,11 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid, match=message):
+    with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration. This option will "
+            "become invalid in version 0.1.0") == str(exc_info.value)
 
 
 def test_deprecated_with_replacement_key_and_invalidation_version(
@@ -670,8 +673,11 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid, match=warning):
+    with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'. This option will become "
+            "invalid in version 0.1.0") == str(exc_info.value)
 
 
 def test_deprecated_with_default(caplog, schema):
@@ -767,14 +773,12 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         schema
     )
 
-    message = ("The 'mars' option (with value 'True') is deprecated, "
-               "please replace it with 'jupiter'. This option will become "
-               "invalid in version 1.0.0")
-
     test_data = {'mars': True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert message in caplog.text
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'. This option will become "
+            "invalid in version 1.0.0") in caplog.text
     assert {'jupiter': True} == output
 
     caplog.clear()
@@ -797,8 +801,11 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid, match=message):
+    with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'. This option will become "
+            "invalid in version 0.1.0") == str(exc_info.value)
 
 
 def test_key_dependency():

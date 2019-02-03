@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
+from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
 # pylint: disable=invalid-name
@@ -557,20 +558,20 @@ def deprecated(key: str,
     module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
 
     if replacement_key and invalidation_version:
-        warning = ("The '%(key)s' option (with value '%(value)s') is"
-                   " deprecated, please replace it with '%(replacement_key)s'."
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'."
                    " This option will become invalid in version"
-                   " %(invalidation_version)s")
+                   " {invalidation_version}")
     elif replacement_key:
-        warning = ("The '%(key)s' option (with value '%(value)s') is"
-                   " deprecated, please replace it with '%(replacement_key)s'")
+        warning = ("The '{key}' option (with value '{value}') is"
+                   " deprecated, please replace it with '{replacement_key}'")
     elif invalidation_version:
-        warning = ("The '%(key)s' option (with value '%(value)s') is"
+        warning = ("The '{key}' option (with value '{value}') is"
                    " deprecated, please remove it from your configuration."
                    " This option will become invalid in version"
-                   " %(invalidation_version)s")
+                   " {invalidation_version}")
     else:
-        warning = ("The '%(key)s' option (with value '%(value)s') is"
+        warning = ("The '{key}' option (with value '{value}') is"
                    " deprecated, please remove it from your configuration")
 
     def check_for_invalid_version(value: Optional[Any]):
@@ -593,14 +594,12 @@ def deprecated(key: str,
         if key in config:
             value = config[key]
             check_for_invalid_version(value)
-            logging.getLogger(module_name).warning(
+            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
-                {
-                    'key': key,
-                    'value': value,
-                    'replacement_key': replacement_key,
-                    'invalidation_version': invalidation_version
-                }
+                key=key,
+                value=value,
+                replacement_key=replacement_key,
+                invalidation_version=invalidation_version
             )
             if replacement_key:
                 config.pop(key)
