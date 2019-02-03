@@ -648,6 +648,71 @@ OR_CONDITION_SCHEMA = vol.Schema({
     )
 })
 
+NOR_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'nor',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+NAND_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'nand',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+XNOR_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'xnor',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+NOR_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'nor',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+EXOR_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'exor',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+NOT_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'not',
+    vol.Required('invert_condition'): vol.Any(
+        NUMERIC_STATE_CONDITION_SCHEMA,
+        STATE_CONDITION_SCHEMA,
+        SUN_CONDITION_SCHEMA,
+        TEMPLATE_CONDITION_SCHEMA,
+        TIME_CONDITION_SCHEMA,
+        ZONE_CONDITION_SCHEMA,
+        AND_CONDITION_SCHEMA,
+        OR_CONDITION_SCHEMA,
+        NOR_CONDITION_SCHEMA,
+        NAND_CONDITION_SCHEMA,
+        XNOR_CONDITION_SCHEMA,
+        NOR_CONDITION_SCHEMA,
+        EXOR_CONDITION_SCHEMA
+    )
+})
+
+
 CONDITION_SCHEMA = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
     STATE_CONDITION_SCHEMA,
@@ -657,6 +722,12 @@ CONDITION_SCHEMA = vol.Any(
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
     OR_CONDITION_SCHEMA,
+    NOR_CONDITION_SCHEMA,
+    NAND_CONDITION_SCHEMA,
+    XNOR_CONDITION_SCHEMA,
+    NOR_CONDITION_SCHEMA,
+    EXOR_CONDITION_SCHEMA,
+    NOT_CONDITION_SCHEMA
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({

@@ -122,6 +122,371 @@ class TestConditionHelper:
         self.hass.states.set('sensor.temperature', 100)
         assert test(self.hass)
 
+    def test_exor_condition(self):
+        """Test the 'exor' condition."""
+        test = condition.from_config({
+            'condition': 'exor',
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '110',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 110)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_exor_many_conditions(self):
+        """Test the 'exor' condition with more than two conditions."""
+        test = condition.from_config({
+            'condition': 'exor',
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '110',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 120,
+                }, {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '130',
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 110)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 130)
+        assert test(self.hass)
+
+    def test_exor_condition_with_template(self):
+        """Test the 'exor' condition."""
+        test = condition.from_config({
+            'condition': 'exor',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "110" }}',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 110)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_nand_condition(self):
+        """Test the 'nand' condition."""
+        test = condition.from_config({
+            'condition': 'nand',
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_nand_many_conditions(self):
+        """Test the 'nand' condition with more than two conditions."""
+        test = condition.from_config({
+            'condition': 'nand',
+            'conditions': [
+                {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 120,
+                }, {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 110)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 130)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_nand_condition_with_template(self):
+        """Test the 'nand' condition."""
+        test = condition.from_config({
+            'condition': 'nand',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_nor_condition(self):
+        """Test the 'nor' condition."""
+        test = condition.from_config({
+            'condition': 'nor',
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_nor_many_conditions(self):
+        """Test the 'nor' condition with more than two conditions."""
+        test = condition.from_config({
+            'condition': 'nor',
+            'conditions': [
+                {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 120,
+                }, {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 110)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 130)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 105)
+        assert not test(self.hass)
+
+    def test_nor_condition_with_template(self):
+        """Test the 'nor' condition."""
+        test = condition.from_config({
+            'condition': 'nor',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_xnor_condition(self):
+        """Test the 'xnor' condition."""
+        test = condition.from_config({
+            'condition': 'xnor',
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_xnor_many_conditions(self):
+        """Test the 'xnor' condition with more than two conditions."""
+        test = condition.from_config({
+            'condition': 'xnor',
+            'conditions': [
+                {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 120,
+                }, {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 109)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 119)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 130)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_xnor_condition_with_template(self):
+        """Test the 'xnor' condition."""
+        test = condition.from_config({
+            'condition': 'xnor',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 105,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 101)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_not_condition(self):
+        """Test the 'not' condition."""
+        test = condition.from_config({
+            'condition': 'not',
+            'invert_condition': {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
+    def test_not_condition_with_template(self):
+        """Test the 'not' condition."""
+        test = condition.from_config({
+            'condition': 'not',
+            'invert_condition': {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
+                }
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
     def test_time_window(self):
         """Test time condition windows."""
         sixam = dt.parse_time("06:00:00")

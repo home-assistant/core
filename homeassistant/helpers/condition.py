@@ -80,7 +80,7 @@ from_config = _threaded_factory(async_from_config)
 def async_and_from_config(config: ConfigType,
                           config_validation: bool = True) \
                           -> Callable[..., bool]:
-    """Create multi condition matcher using 'AND'."""
+    """Create multi condition matcher using 'AND' all conditions true."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
     checks = None
@@ -113,14 +113,14 @@ and_from_config = _threaded_factory(async_and_from_config)
 def async_or_from_config(config: ConfigType,
                          config_validation: bool = True) \
                          -> Callable[..., bool]:
-    """Create multi condition matcher using 'OR'."""
+    """Create multi condition using 'OR' at least one condition true."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
     checks = None
 
     def if_or_condition(hass: HomeAssistant,
                         variables: TemplateVarsType = None) -> bool:
-        """Test and condition."""
+        """Test or condition."""
         nonlocal checks
 
         if checks is None:
@@ -140,6 +140,167 @@ def async_or_from_config(config: ConfigType,
 
 
 or_from_config = _threaded_factory(async_or_from_config)
+
+
+def async_nand_from_config(config: ConfigType,
+                           config_validation: bool = True) \
+                           -> Callable[..., bool]:
+    """Create multi condition using 'nand' at least one condition is false."""
+    if config_validation:
+        config = cv.NAND_CONDITION_SCHEMA(config)
+    checks = None
+
+    def if_nand_condition(hass: HomeAssistant,
+                          variables: TemplateVarsType = None) -> bool:
+        """Test nand condition."""
+        nonlocal checks
+
+        if checks is None:
+            checks = [async_from_config(entry, False) for entry
+                      in config['conditions']]
+
+        try:
+            for check in checks:
+                if not check(hass, variables):
+                    return True
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during nand-condition: %s", ex)
+
+        return False
+
+    return if_nand_condition
+
+
+nand_from_config = _threaded_factory(async_nand_from_config)
+
+
+def async_nor_from_config(config: ConfigType,
+                          config_validation: bool = True) \
+                          -> Callable[..., bool]:
+    """Create multi condition matcher using 'NOR' no conditions are false."""
+    if config_validation:
+        config = cv.NOR_CONDITION_SCHEMA(config)
+    checks = None
+
+    def if_nor_condition(hass: HomeAssistant,
+                         variables: TemplateVarsType = None) -> bool:
+        """Test nor condition."""
+        nonlocal checks
+
+        if checks is None:
+            checks = [async_from_config(entry, False) for entry
+                      in config['conditions']]
+
+        try:
+            for check in checks:
+                if check(hass, variables):
+                    return False
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during nor-condition: %s", ex)
+
+        return True
+
+    return if_nor_condition
+
+
+nor_from_config = _threaded_factory(async_nor_from_config)
+
+
+def async_exor_from_config(config: ConfigType,
+                           config_validation: bool = True) \
+                           -> Callable[..., bool]:
+    """Create multi condition using 'EXOR' exactly one condition is true."""
+    if config_validation:
+        config = cv.EXOR_CONDITION_SCHEMA(config)
+    checks = None
+
+    def if_exor_condition(hass: HomeAssistant,
+                          variables: TemplateVarsType = None) -> bool:
+        """Test exor condition."""
+        nonlocal checks
+
+        if checks is None:
+            checks = [async_from_config(entry, False) for entry
+                      in config['conditions']]
+
+        try:
+            truecond = False
+            for check in checks:
+                if check(hass, variables):
+                    if truecond:
+                        return False
+                    truecond = True
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during exor-condition: %s", ex)
+
+        return truecond
+
+    return if_exor_condition
+
+
+exor_from_config = _threaded_factory(async_exor_from_config)
+
+
+def async_xnor_from_config(config: ConfigType,
+                           config_validation: bool = True) \
+                           -> Callable[..., bool]:
+    """'XNOR' all conditions are false or all conditions are true."""
+    if config_validation:
+        config = cv.XNOR_CONDITION_SCHEMA(config)
+    checks = None
+
+    def if_xnor_condition(hass: HomeAssistant,
+                          variables: TemplateVarsType = None) -> bool:
+        """Test xnor condition."""
+        nonlocal checks
+
+        if checks is None:
+            checks = [async_from_config(entry, False) for entry
+                      in config['conditions']]
+
+        try:
+            t = True
+            f = False
+            for check in checks:
+                c = check(hass, variables)
+                t = c and t
+                f = c or f
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during xnor-condition: %s", ex)
+
+        return t or (not f)
+
+    return if_xnor_condition
+
+
+xnor_from_config = _threaded_factory(async_xnor_from_config)
+
+
+def async_not_from_config(config: ConfigType,
+                          config_validation: bool = True) \
+                          -> Callable[..., bool]:
+    """Create multi condition matcher using 'not' invert condition."""
+    if config_validation:
+        config = cv.NOT_CONDITION_SCHEMA(config)
+    check = None
+
+    def if_not_condition(hass: HomeAssistant,
+                         variables: TemplateVarsType = None) -> bool:
+        """Test not condition."""
+        nonlocal check
+
+        if check is None:
+            check = async_from_config(config['invert_condition'], False)
+
+        try:
+            return not check(hass, variables)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during not-condition: %s", ex)
+
+    return if_not_condition
+
+
+not_from_config = _threaded_factory(async_not_from_config)
 
 
 def numeric_state(hass: HomeAssistant, entity: Union[None, str, State],
