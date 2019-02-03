@@ -47,7 +47,13 @@ class MockStation():
         """Mock location."""
         return "HomeTown"
 
+    @property
+    def latitude(self):
+        return 0
 
+    @property
+    def longitude(self):
+        return 0
 class TestIPMA(unittest.TestCase):
     """Test the IPMA weather component."""
 
