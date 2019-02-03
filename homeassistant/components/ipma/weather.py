@@ -129,6 +129,7 @@ class IPMAWeather(WeatherEntity):
 
     @property
     def device_info(self):
+        """Return device information."""
         from pyipma import __version__
 
         return {
@@ -140,7 +141,6 @@ class IPMAWeather(WeatherEntity):
             'model': "{} weather station".format(self._station.local),
             'sw_version': __version__,
         }
-
 
     @property
     def attribution(self):
