@@ -8,7 +8,8 @@ import pytest
 
 from homeassistant.components import smartthings
 from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    DATA_BROKERS, DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE,
+    SUPPORTED_PLATFORMS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -181,3 +182,31 @@ async def test_event_handler_ignores_other_installed_app(
     await hass.async_block_till_done()
 
     assert not called
+
+
+async def test_event_handler_fires_button_events(
+        hass, device_factory, event_factory, event_request_factory):
+    """Test the event handler fires button events."""
+    device = device_factory('Button 1', ['button'])
+    event = event_factory(device.device_id, capability='button',
+                          attribute='button', value='pushed')
+    request = event_request_factory(events=[event])
+    called = False
+
+    def handler(evt):
+        nonlocal called
+        called = True
+        assert evt.data == {
+            'component_id': 'main',
+            'device_id': device.device_id,
+            'location_id': event.location_id,
+            'value': 'pushed',
+            'name': device.label
+        }
+    hass.bus.async_listen(EVENT_BUTTON, handler)
+    broker = smartthings.DeviceBroker(
+        hass, [device], request.installed_app_id)
+    await broker.event_handler(request, None, None)
+    await hass.async_block_till_done()
+
+    assert called
