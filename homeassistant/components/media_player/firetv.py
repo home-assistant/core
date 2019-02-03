@@ -172,6 +172,11 @@ class FireTVDevice(MediaPlayerDevice):
         return self._available
 
     @property
+    def app_id(self):
+        """Return the current app."""
+        return self._current_app
+
+    @property
     def source(self):
         """Return the current app."""
         return self._current_app
