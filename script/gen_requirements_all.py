@@ -124,6 +124,8 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
+    'zigpy',
+    'bellows',
 )
 
 IGNORE_PACKAGES = (
