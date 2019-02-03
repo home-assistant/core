@@ -8,9 +8,11 @@ import asyncio
 import logging
 import os
 
-import voluptuous as vol
 import datetime as dt
+import voluptuous as vol
+import zeep
 
+from onvif import ONVIFCamera
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
     ATTR_ENTITY_ID)
@@ -21,9 +23,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
 from homeassistant.helpers.service import extract_entity_ids
-from onvif import ONVIFCamera
-
-import zeep
 
 
 def zeep_pythonvalue(self, xmlvalue):
