@@ -5,6 +5,7 @@ import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
 
+import homeassistant
 import pytest
 import voluptuous as vol
 
@@ -76,7 +77,7 @@ def test_isfile():
     # patching methods that allow us to fake a file existing
     # with write access
     with patch('os.path.isfile', Mock(return_value=True)), \
-            patch('os.access', Mock(return_value=True)):
+         patch('os.access', Mock(return_value=True)):
         schema('test.txt')
 
 
@@ -275,7 +276,6 @@ def test_time_period():
         {}, {'wrong_key': -10}
     )
     for value in options:
-
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -499,6 +499,12 @@ def schema():
     })
 
 
+@pytest.fixture
+def version(monkeypatch):
+    """Patch the version used for testing to 0.5.0."""
+    monkeypatch.setattr(homeassistant.const, '__version__', '0.5.0')
+
+
 def test_deprecated_with_no_optionals(caplog, schema):
     """
     Test deprecation behaves correctly when optional params are None.
@@ -518,7 +524,7 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please remove it from your configuration.") in caplog.text
+            "please remove it from your configuration") in caplog.text
     assert test_data == output
 
     caplog.clear()
@@ -551,7 +557,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please replace it with 'jupiter'.") in caplog.text
+            "please replace it with 'jupiter'") in caplog.text
     assert {'jupiter': True} == output
 
     caplog.clear()
@@ -568,7 +574,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_invalidation_version(caplog, schema):
+def test_deprecated_with_invalidation_version(caplog, schema, version):
     """
     Test deprecation behaves correctly with only an invalidation_version.
 
@@ -584,12 +590,14 @@ def test_deprecated_with_invalidation_version(caplog, schema):
         schema
     )
 
+    message = ("The 'mars' option (with value 'True') is deprecated, "
+               "please remove it from your configuration. "
+               "This option will become invalid in version 1.0.0")
+
     test_data = {'mars': True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please remove it from your configuration. "
-            "This option will become invalid in version 1.0.0.") in caplog.text
+    assert message in caplog.text
     assert test_data == output
 
     caplog.clear()
@@ -605,12 +613,13 @@ def test_deprecated_with_invalidation_version(caplog, schema):
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.MultipleInvalid, match=message):
         invalidated_schema(test_data)
 
 
-def test_deprecated_with_replacement_key_and_invalidation_version(caplog,
-                                                                  schema):
+def test_deprecated_with_replacement_key_and_invalidation_version(
+        caplog, schema, version
+):
     """
     Test deprecation behaves with a replacement key & invalidation_version.
 
@@ -631,12 +640,14 @@ def test_deprecated_with_replacement_key_and_invalidation_version(caplog,
         schema
     )
 
+    warning = ("The 'mars' option (with value 'True') is deprecated, "
+               "please replace it with 'jupiter'. This option will become "
+               "invalid in version 1.0.0")
+
     test_data = {'mars': True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please replace it with 'jupiter'. This option will become "
-            "invalid in version 1.0.0.") in caplog.text
+    assert warning in caplog.text
     assert {'jupiter': True} == output
 
     caplog.clear()
@@ -659,7 +670,7 @@ def test_deprecated_with_replacement_key_and_invalidation_version(caplog,
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.MultipleInvalid, match=warning):
         invalidated_schema(test_data)
 
 
@@ -682,7 +693,7 @@ def test_deprecated_with_default(caplog, schema):
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please remove it from your configuration.") in caplog.text
+            "please remove it from your configuration") in caplog.text
     assert test_data == output
 
     caplog.clear()
@@ -715,7 +726,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please replace it with 'jupiter'.") in caplog.text
+            "please replace it with 'jupiter'") in caplog.text
     assert {'jupiter': True} == output
 
     caplog.clear()
@@ -733,7 +744,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
 
 
 def test_deprecated_with_replacement_key_invalidation_version_default(
-        caplog, schema
+        caplog, schema, version
 ):
     """
     Test deprecation with a replacement key, invalidation_version & default.
@@ -756,12 +767,14 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         schema
     )
 
+    message = ("The 'mars' option (with value 'True') is deprecated, "
+               "please replace it with 'jupiter'. This option will become "
+               "invalid in version 1.0.0")
+
     test_data = {'mars': True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert ("The 'mars' option (with value 'True') is deprecated, "
-            "please replace it with 'jupiter'. This option will become "
-            "invalid in version 1.0.0.") in caplog.text
+    assert message in caplog.text
     assert {'jupiter': True} == output
 
     caplog.clear()
@@ -784,7 +797,7 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         schema
     )
     test_data = {'mars': True}
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.MultipleInvalid, match=message):
         invalidated_schema(test_data)
 
 
@@ -833,6 +846,7 @@ def test_has_at_least_one_key():
 
 def test_enum():
     """Test enum validator."""
+
     class TestEnum(enum.Enum):
         """Test enum."""
 
@@ -871,7 +885,7 @@ def test_matches_regex():
         schema("  nrtd   ")
 
     test_str = "This is a test including uiae."
-    assert(schema(test_str) == test_str)
+    assert (schema(test_str) == test_str)
 
 
 def test_is_regex():

@@ -10,6 +10,7 @@ from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
 from urllib.parse import urlparse
 
 import voluptuous as vol
+from pkg_resources import parse_version
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
@@ -17,8 +18,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, MAJOR_VERSION, MINOR_VERSION,
-    PATCH_VERSION)
+    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
@@ -560,34 +560,25 @@ def deprecated(key: str,
         warning = ("The '%(key)s' option (with value '%(value)s') is"
                    " deprecated, please replace it with '%(replacement_key)s'."
                    " This option will become invalid in version"
-                   " %(invalidation_version)s.")
+                   " %(invalidation_version)s")
     elif replacement_key:
         warning = ("The '%(key)s' option (with value '%(value)s') is"
-                   " deprecated, please replace it with '%(replacement_key)s'."
-                   )
+                   " deprecated, please replace it with '%(replacement_key)s'")
     elif invalidation_version:
         warning = ("The '%(key)s' option (with value '%(value)s') is"
                    " deprecated, please remove it from your configuration."
                    " This option will become invalid in version"
-                   " %(invalidation_version)s.")
+                   " %(invalidation_version)s")
     else:
         warning = ("The '%(key)s' option (with value '%(value)s') is"
-                   " deprecated, please remove it from your configuration.")
+                   " deprecated, please remove it from your configuration")
 
     def check_for_invalid_version(value: Optional[Any]):
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
 
-        major_version, minor_version, patch_version = \
-            map(int, invalidation_version.split('.', 2))
-        # PATCH_VERSION can be a string when running dev/betas, int otherwise
-        running_patch_version = (int(PATCH_VERSION.split('.', 1)[0])
-                                 if isinstance(PATCH_VERSION, str)
-                                 else PATCH_VERSION)
-        if (MAJOR_VERSION >= major_version
-                and MINOR_VERSION >= minor_version
-                and running_patch_version >= patch_version):
+        if parse_version(__version__) >= parse_version(invalidation_version):
             raise vol.Invalid(
                 warning.format(
                     key=key,
