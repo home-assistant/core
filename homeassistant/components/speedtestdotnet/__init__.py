@@ -80,7 +80,7 @@ class SpeedtestData:
         self._hass = hass
         self._servers = [] if server_id is None else [server_id]
 
-    def update(self):
+    def update(self, now=None):
         """Get the latest data from speedtest.net."""
         import speedtest
         _LOGGER.debug("Executing speedtest.net speedtest")
