@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Connect to Sony projector using network."""
     import pysdcp
     host = config[CONF_HOST]
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     sdcp_connection = pysdcp.Projector(host)
 
     # Sanity check the connection
