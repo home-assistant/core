@@ -59,10 +59,6 @@ class GoogleHomeAlarm(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe GoogleHome events."""
-        await self.async_init()
-
-    async def async_init(self):
-        """Initialize async."""
         await self._client.update_info(self._host)
         data = self.hass.data[GOOGLEHOME_DOMAIN][self._host]
         info = data.get('info', {})
