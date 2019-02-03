@@ -77,7 +77,7 @@ def test_isfile():
     # patching methods that allow us to fake a file existing
     # with write access
     with patch('os.path.isfile', Mock(return_value=True)), \
-         patch('os.access', Mock(return_value=True)):
+            patch('os.access', Mock(return_value=True)):
         schema('test.txt')
 
 
