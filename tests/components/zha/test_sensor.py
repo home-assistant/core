@@ -15,7 +15,6 @@ async def test_sensor(hass, config_entry, zha_gateway):
     )
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
-    # from zigpy.zcl.clusters.general import PowerConfiguration
 
     cluster_ids = [
         RelativeHumidity.cluster_id,
@@ -23,8 +22,7 @@ async def test_sensor(hass, config_entry, zha_gateway):
         PressureMeasurement.cluster_id,
         IlluminanceMeasurement.cluster_id,
         Metering.cluster_id,
-        ElectricalMeasurement.cluster_id,
-        # PowerConfiguration.cluster_id
+        ElectricalMeasurement.cluster_id
     ]
 
     zigpy_device_infos = await async_build_devices(
