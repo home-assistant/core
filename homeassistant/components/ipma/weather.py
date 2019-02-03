@@ -133,7 +133,6 @@ class IPMAWeather(WeatherEntity):
 
         return {
             'identifiers': {
-                # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
             'name': self.name,
