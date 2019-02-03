@@ -31,7 +31,7 @@ async def test_fan(hass, config_entry, zha_gateway):
     cluster = zigpy_device.endpoints.get(1).fan
     entity_id = make_entity_id(DOMAIN, zigpy_device, cluster)
 
-    # test that the state has changed from unavailable to off
+    # test that the fan was created and that it is off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at fan
@@ -46,6 +46,7 @@ async def test_fan(hass, config_entry, zha_gateway):
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    # turn on from HA
     with patch(
             'zigpy.zcl.Cluster.write_attributes',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
@@ -55,6 +56,7 @@ async def test_fan(hass, config_entry, zha_gateway):
         assert cluster.write_attributes.call_args == call(
             {'fan_mode': 2})
 
+    # turn off from HA
     with patch(
             'zigpy.zcl.Cluster.write_attributes',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
@@ -64,6 +66,7 @@ async def test_fan(hass, config_entry, zha_gateway):
         assert cluster.write_attributes.call_args == call(
             {'fan_mode': 0})
 
+    # change speed from HA
     with patch(
             'zigpy.zcl.Cluster.write_attributes',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
@@ -73,6 +76,7 @@ async def test_fan(hass, config_entry, zha_gateway):
         assert cluster.write_attributes.call_args == call(
             {'fan_mode': 3})
 
+    # test adding new fan to the network and HA
     await async_test_device_join(hass, zha_gateway, Fan.cluster_id, DOMAIN,
                                  expected_state=STATE_OFF)
 
