@@ -62,15 +62,16 @@ async def test_entity_and_device_attributes(hass, device_factory):
     # Act
     await _setup_platform(hass, device)
     # Assert
-    entity = entity_registry.async_get('switch.switch_1')
-    assert entity
-    assert entity.unique_id == device.device_id
-    device_entry = device_registry.async_get_device(
+    entry = entity_registry.async_get('switch.switch_1')
+    assert entry
+    assert entry.unique_id == device.device_id
+
+    entry = device_registry.async_get_device(
         {(DOMAIN, device.device_id)}, [])
-    assert device_entry
-    assert device_entry.name == device.label
-    assert device_entry.model == device.device_type_name
-    assert device_entry.manufacturer == 'Unavailable'
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == 'Unavailable'
 
 
 async def test_turn_off(hass, device_factory):

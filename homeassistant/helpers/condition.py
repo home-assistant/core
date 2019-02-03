@@ -297,6 +297,8 @@ def async_not_from_config(config: ConfigType,
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.warning("Error during not-condition: %s", ex)
 
+        return False
+
     return if_not_condition
 
 
