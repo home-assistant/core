@@ -55,28 +55,33 @@ async def test_light(hass, config_entry, zha_gateway):
                                      level_device_on_off_cluster,
                                      use_suffix=False)
 
-    # test that the state has changed from unavailable to off
+    # test that the lights were created and are off
     assert hass.states.get(on_off_entity_id).state == STATE_OFF
     assert hass.states.get(level_entity_id).state == STATE_OFF
 
+    # test turning the lights on and off from the light
     await async_test_on_off_from_light(
         hass, on_off_device_on_off_cluster, on_off_entity_id)
 
     await async_test_on_off_from_light(
         hass, level_device_on_off_cluster, level_entity_id)
 
+    # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(
         hass, on_off_device_on_off_cluster, on_off_entity_id)
 
     await async_test_level_on_off_from_hass(
         hass, level_device_on_off_cluster, level_entity_id)
 
+    # test turning the lights on and off from the light
     await async_test_on_from_light(
         hass, level_device_on_off_cluster, level_entity_id)
 
+    # test getting a brightness change from the network
     await async_test_dimmer_from_light(
         hass, level_device_level_cluster, level_entity_id, 150, STATE_ON)
 
+    # test adding a new light to the network and HA
     await async_test_device_join(
         hass, zha_gateway, OnOff.cluster_id,
         DOMAIN, device_type=DeviceType.ON_OFF_LIGHT, expected_state=STATE_OFF)
