@@ -20,7 +20,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.1.6']
+from .const import DOMAIN
+
+REQUIREMENTS = ['pyipma==1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +123,27 @@ class IPMAWeather(WeatherEntity):
             self._description = self._forecast[0].description
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique id."""
+        return '{}, {}'.format(self._station.latitude, self._station.longitude)
+
+    @property
+    def device_info(self):
+        from pyipma import __version__
+
+        return {
+            'identifiers': {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'manufacturer': "Instituto Português do Mar e Atmosfera",
+            'model': "{} weather station".format(self._station.local),
+            'sw_version': __version__,
+        }
+
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -142,27 +165,32 @@ class IPMAWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature."""
-        return self._condition.temperature
+        if self._condition:
+            return self._condition.temperature
 
     @property
     def pressure(self):
         """Return the current pressure."""
-        return self._condition.pressure
+        if self._condition:
+            return self._condition.pressure
 
     @property
     def humidity(self):
         """Return the name of the sensor."""
-        return self._condition.humidity
+        if self._condition:
+            return self._condition.humidity
 
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        return self._condition.windspeed
+        if self._condition:
+            return self._condition.windspeed
 
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
-        return self._condition.winddirection
+        if self._condition:
+            return self._condition.winddirection
 
     @property
     def temperature_unit(self):
