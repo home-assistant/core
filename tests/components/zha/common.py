@@ -107,7 +107,14 @@ async def async_init_zigpy_device(
         hass, in_cluster_ids, out_cluster_ids, device_type, gateway,
         ieee="00:0d:6f:00:0a:90:69:e7", manufacturer="FakeManufacturer",
         model="FakeModel", is_new_join=False):
-    """Create and initialize a device."""
+    """Create and initialize a device.
+
+    This creates a fake device and adds it to the "network". It can be used to
+    test existing device functionality and new device pairing functionality.
+    The is_new_join parameter influences whether or not the device will go
+    through cluster binding and zigbee cluster configure reporting. That only
+    happens when the device is paired to the network for the first time.
+    """
     device = make_device(in_cluster_ids, out_cluster_ids, device_type, ieee,
                          manufacturer, model)
     await gateway.async_device_initialized(device, is_new_join)
@@ -134,7 +141,11 @@ async def async_setup_entry(hass, config_entry):
 
 
 def make_entity_id(domain, device, cluster, use_suffix=True):
-    """Make the entity id for the entity under testing."""
+    """Make the entity id for the entity under testing.
+
+    This is used to get the entity id in order to get the state from the state
+    machine so that we can test state changes.
+    """
     ieee = device.ieee
     ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
     entity_id = "{}.{}_{}_{}_{}{}".format(
@@ -159,9 +170,14 @@ async def async_enable_traffic(hass, zha_gateway, zha_devices):
 async def async_test_device_join(
         hass, zha_gateway, cluster_id, domain, device_type=None,
         expected_state=STATE_UNKNOWN):
-    """Test a newly joining device."""
+    """Test a newly joining device.
+
+    This creates a new fake device and adds it to the network. It is meant to
+    simulate pairing a new device to the network so that code pathways that
+    only trigger during device joins can be tested.
+    """
     from zigpy.zcl.foundation import Status
-    # create zigpy device
+    # create zigpy device mocking out the zigbee network operations
     with patch(
             'zigpy.zcl.Cluster.configure_reporting',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
