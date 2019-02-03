@@ -84,7 +84,6 @@ class SpeedtestSensor(RestoreEntity):
         }
         if self._data is not None:
             return attributes.update({
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_BYTES_RECEIVED: self._data['bytes_received'],
                 ATTR_BYTES_SENT: self._data['bytes_sent'],
                 ATTR_SERVER_COUNTRY: self._data['server']['country'],

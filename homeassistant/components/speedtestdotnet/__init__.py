@@ -45,12 +45,12 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the Speedtest.net component."""
     conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(
-        hass,
-        conf[CONF_UPDATE_INTERVAL],
-        conf[CONF_MANUAL],
-        conf.get(CONF_SERVER_ID)
-    )
+    data = hass.data[DOMAIN] = SpeedtestData(hass, conf.get(CONF_SERVER_ID))
+
+    if not conf[CONF_MANUAL]:
+        async_track_time_interval(
+            hass, data.update, conf[CONF_UPDATE_INTERVAL]
+        )
 
     def update(call=None):
         """Service call to manually update the data."""
@@ -74,13 +74,11 @@ async def async_setup(hass, config):
 class SpeedtestData:
     """Get the latest data from speedtest.net."""
 
-    def __init__(self, hass, interval, manual, server_id):
+    def __init__(self, hass, server_id):
         """Initialize the data object."""
         self.data = None
         self._hass = hass
         self._servers = [] if server_id is None else [server_id]
-        if not manual:
-            async_track_time_interval(self._hass, self.update, interval)
 
     def update(self):
         """Get the latest data from speedtest.net."""
