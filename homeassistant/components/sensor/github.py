@@ -157,12 +157,10 @@ class GitHubData():
         try:
             if server_url is not None:
                 server_url += "/api/v3"
-                if access_token is not None:
-                    self._github_obj = github.Github(
-                        access_token, base_url=server_url)
+                self._github_obj = github.Github(
+                    access_token, base_url=server_url)
             else:
-                if access_token is not None:
-                    self._github_obj = github.Github(access_token)
+                self._github_obj = github.Github(access_token)
 
             self.repository_path = repository[CONF_PATH]
 
