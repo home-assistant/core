@@ -90,7 +90,7 @@ class SonyProjector(SwitchDevice):
             _LOGGER.debug("Powered on successfully.")
             self._state = STATE_ON
         else:
-            _LOGGER.warning("Power on command was not successful")
+            _LOGGER.error("Power on command was not successful")
 
     def turn_off(self, **kwargs):
         """Turn the projector off."""
@@ -99,4 +99,4 @@ class SonyProjector(SwitchDevice):
             _LOGGER.debug("Powered off successfully.")
             self._state = STATE_OFF
         else:
-            _LOGGER.warning("Power off command was not successful")
+            _LOGGER.error("Power off command was not successful")
