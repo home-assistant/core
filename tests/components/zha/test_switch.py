@@ -66,4 +66,5 @@ async def test_switch(hass, config_entry, zha_gateway):
         assert cluster.request.call_args == call(
             False, OFF, (), expect_reply=True, manufacturer=None)
 
-    await async_test_device_join(hass, zha_gateway, OnOff.cluster_id, DOMAIN)
+    await async_test_device_join(
+        hass, zha_gateway, OnOff.cluster_id, DOMAIN, expected_state=STATE_OFF)

@@ -157,7 +157,8 @@ async def async_enable_traffic(hass, zha_gateway, zha_devices):
 
 
 async def async_test_device_join(
-        hass, zha_gateway, cluster_id, domain, device_type=None):
+        hass, zha_gateway, cluster_id, domain, device_type=None,
+        expected_state=STATE_UNKNOWN):
     """Test a newly joining device."""
     from zigpy.zcl.foundation import Status
     # create zigpy device
@@ -176,4 +177,4 @@ async def async_test_device_join(
             cluster = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
             entity_id = make_entity_id(
                 domain, zigpy_device, cluster, use_suffix=device_type is None)
-            assert hass.states.get(entity_id).state == STATE_UNKNOWN
+            assert hass.states.get(entity_id).state == expected_state
