@@ -57,7 +57,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             discovery.async_load_platform(
                 hass, 'device_tracker', DOMAIN, device, config))
-     
+
         if device.get(CONF_TRACK_ALARMS):
             hass.async_create_task(
                 discovery.async_load_platform(
