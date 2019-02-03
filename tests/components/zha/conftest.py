@@ -20,13 +20,22 @@ def config_entry_fixture(hass):
 
 @pytest.fixture(name='zha_gateway')
 def zha_gateway_fixture(hass):
-    """Fixture representing a zha gateway."""
+    """Fixture representing a zha gateway.
+
+    Create a ZHAGateway object that can be used to interact with as if we
+    had a real zigbee network running.
+    """
     return ZHAGateway(hass, {})
 
 
 @pytest.fixture(autouse=True)
 async def setup_zha(hass, config_entry):
-    """Load the ZHA component."""
+    """Load the ZHA component.
+
+    This will init the ZHA component. It loads the component in HA so that
+    we can test the domains that ZHA supports without actually having a zigbee
+    network running.
+    """
     # this prevents needing an actual radio and zigbee network available
     with patch('homeassistant.components.zha.async_setup_entry',
                async_setup_entry):
