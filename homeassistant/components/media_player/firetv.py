@@ -120,7 +120,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
                           if dev.entity_id in entity_id]
 
-        """send keystroke."""
         for target_device in target_devices:
             if key == FIRETV_KEY_POWER:
                 target_device.firetv.power()
