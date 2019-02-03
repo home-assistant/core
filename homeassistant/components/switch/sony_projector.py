@@ -45,6 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class SonyProjector(SwitchDevice):
     """Represents a Sony Projector as a switch."""
+
     def __init__(self, sdcp_connection, name):
         """Init of the Sony projector."""
         self._sdcp = sdcp_connection
