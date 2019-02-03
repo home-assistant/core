@@ -4,6 +4,7 @@
         "step": {
             "user": {
                 "title": "Location",
+				"description": "Instituto Português do Mar e Atmosfera",
                 "data": {
                     "name": "Name",
                     "latitude": "Latitude",

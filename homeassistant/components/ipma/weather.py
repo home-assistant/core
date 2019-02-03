@@ -64,17 +64,34 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
 
+    station = await async_get_station(hass, latitude, longitude)
+
+    async_add_entities([IPMAWeather(station, config)], True)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
+
+    station = await async_get_station(hass, latitude, longitude)
+
+    async_add_entities([IPMAWeather(station, config_entry.data)], True)
+
+
+async def async_get_station(hass, latitude, longitude):
+    """Retrieve weather station, station name to be used as the entity name."""
     from pyipma import Station
 
     websession = async_get_clientsession(hass)
     with async_timeout.timeout(10, loop=hass.loop):
         station = await Station.get(websession, float(latitude),
                                     float(longitude))
-
+    
     _LOGGER.debug("Initializing for coordinates %s, %s -> station %s",
                   latitude, longitude, station.local)
 
-    async_add_entities([IPMAWeather(station, config)], True)
+    return station
 
 
 class IPMAWeather(WeatherEntity):

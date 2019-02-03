@@ -6,13 +6,15 @@ https://home-assistant.io/components/ipma/
 """
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
+from .config_flow import IpmaFlowHandler  # noqa
+from .const import DOMAIN
 
 DEFAULT_NAME = 'ipma'
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured IPMA."""
-    # We allow setup only through config flow type of config
+    # No support for component configuration
     return True
 
 
