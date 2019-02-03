@@ -563,7 +563,8 @@ def deprecated(key: str,
                    " %(invalidation_version)s.")
     elif replacement_key:
         warning = ("The '%(key)s' option (with value '%(value)s') is"
-                   " deprecated, please replace it with '%(replacement_key)s'.")
+                   " deprecated, please replace it with '%(replacement_key)s'."
+                   )
     elif invalidation_version:
         warning = ("The '%(key)s' option (with value '%(value)s') is"
                    " deprecated, please remove it from your configuration."
