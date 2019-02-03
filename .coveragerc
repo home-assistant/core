@@ -671,6 +671,7 @@ omit =
     homeassistant/components/zha/fan.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
+    homeassistant/components/zha/switch.py
     homeassistant/components/zigbee/*
     homeassistant/components/zoneminder/*
     homeassistant/components/zwave/util.py
