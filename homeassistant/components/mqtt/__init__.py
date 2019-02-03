@@ -21,12 +21,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL,
-    CONF_USERNAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_NAME)
+    CONF_DEVICE, CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT,
+    CONF_PROTOCOL, CONF_USERNAME, CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import template
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType, HomeAssistantType, ServiceDataType)
@@ -76,6 +76,7 @@ CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
+CONF_UNIQUE_ID = 'unique_id'
 CONF_IDENTIFIERS = 'identifiers'
 CONF_CONNECTIONS = 'connections'
 CONF_MANUFACTURER = 'manufacturer'
@@ -233,7 +234,7 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
     vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
 })
 
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
+MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA_2.extend(SCHEMA_BASE)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
@@ -984,6 +985,7 @@ class MqttDiscoveryUpdate(Entity):
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
+                payload.pop(ATTR_DISCOVERY_HASH)
                 self.hass.async_create_task(self._discovery_update(payload))
 
         if self._discovery_hash:

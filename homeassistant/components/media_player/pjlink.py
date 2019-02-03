@@ -93,15 +93,31 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest state from the device."""
+        from pypjlink.projector import ProjectorError
         with self.projector() as projector:
-            pwstate = projector.get_power()
-            if pwstate == 'off':
-                self._pwstate = STATE_OFF
-            else:
-                self._pwstate = STATE_ON
-            self._muted = projector.get_mute()[1]
-            self._current_source = \
-                format_input_source(*projector.get_input())
+            try:
+                pwstate = projector.get_power()
+                if pwstate in ('on', 'warm-up'):
+                    self._pwstate = STATE_ON
+                else:
+                    self._pwstate = STATE_OFF
+                self._muted = projector.get_mute()[1]
+                self._current_source = \
+                    format_input_source(*projector.get_input())
+            except KeyError as err:
+                if str(err) == "'OK'":
+                    self._pwstate = STATE_OFF
+                    self._muted = False
+                    self._current_source = None
+                else:
+                    raise
+            except ProjectorError as err:
+                if str(err) == 'unavailable time':
+                    self._pwstate = STATE_OFF
+                    self._muted = False
+                    self._current_source = None
+                else:
+                    raise
 
     @property
     def name(self):

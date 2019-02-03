@@ -4,6 +4,8 @@ from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 from homeassistant.components import frontend, lovelace
 
+from tests.common import get_system_health_info
+
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     """Test we load lovelace config from storage."""
@@ -117,3 +119,67 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
 
     assert response['success']
     assert response['result'] == {'hello': 'yo'}
+
+
+async def test_system_health_info_autogen(hass):
+    """Test system health info endpoint."""
+    assert await async_setup_component(hass, 'lovelace', {})
+    info = await get_system_health_info(hass, 'lovelace')
+    assert info == {'mode': 'auto-gen'}
+
+
+async def test_system_health_info_storage(hass, hass_storage):
+    """Test system health info endpoint."""
+    hass_storage[lovelace.STORAGE_KEY] = {
+        'key': 'lovelace',
+        'version': 1,
+        'data': {
+            'config': {
+                'resources': [],
+                'views': []
+            }
+        }
+    }
+    assert await async_setup_component(hass, 'lovelace', {})
+    info = await get_system_health_info(hass, 'lovelace')
+    assert info == {
+        'mode': 'storage',
+        'resources': 0,
+        'views': 0,
+    }
+
+
+async def test_system_health_info_yaml(hass):
+    """Test system health info endpoint."""
+    assert await async_setup_component(hass, 'lovelace', {
+        'lovelace': {
+            'mode': 'YAML'
+        }
+    })
+    with patch('homeassistant.components.lovelace.load_yaml', return_value={
+        'views': [
+            {
+                'cards': []
+            }
+        ]
+    }):
+        info = await get_system_health_info(hass, 'lovelace')
+    assert info == {
+        'mode': 'yaml',
+        'resources': 0,
+        'views': 1,
+    }
+
+
+async def test_system_health_info_yaml_not_found(hass):
+    """Test system health info endpoint."""
+    assert await async_setup_component(hass, 'lovelace', {
+        'lovelace': {
+            'mode': 'YAML'
+        }
+    })
+    info = await get_system_health_info(hass, 'lovelace')
+    assert info == {
+        'mode': 'yaml',
+        'error': "{} not found".format(hass.config.path('ui-lovelace.yaml'))
+    }

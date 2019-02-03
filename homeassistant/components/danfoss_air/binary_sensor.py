@@ -9,7 +9,7 @@ from homeassistant.components.danfoss_air import DOMAIN \
      as DANFOSS_AIR_DOMAIN
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand
     data = hass.data[DANFOSS_AIR_DOMAIN]
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in sensors:
         dev.append(DanfossAirBinarySensor(data, sensor[0], sensor[1]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class DanfossAirBinarySensor(BinarySensorDevice):

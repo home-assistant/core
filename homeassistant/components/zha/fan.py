@@ -10,10 +10,10 @@ from homeassistant.components.fan import (
     DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from . import helpers
-from .const import (
+from .core import helpers
+from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
-from .entities import ZhaEntity
+from .entity import ZhaEntity
 
 DEPENDENCIES = ['zha']
 

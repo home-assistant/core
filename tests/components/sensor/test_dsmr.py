@@ -95,7 +95,9 @@ def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
 
-    entity = DerivativeDSMREntity('test', '1.0.0')
+    config = {'platform': 'dsmr'}
+
+    entity = DerivativeDSMREntity('test', '1.0.0', config)
     yield from entity.async_update()
 
     assert entity.state is None, 'initial state not unknown'
