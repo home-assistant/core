@@ -4,10 +4,9 @@ Component for the Portuguese weather service - IPMA.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ipma/
 """
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from .config_flow import IpmaFlowHandler  # noqa
-from .const import DOMAIN
+from .const import DOMAIN # noqa
 
 DEFAULT_NAME = 'ipma'
 
