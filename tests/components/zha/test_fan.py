@@ -10,7 +10,7 @@ from homeassistant.const import (
 from tests.common import mock_coro
 from .common import (
     async_init_zigpy_device, make_attribute, make_entity_id,
-    async_enable_traffic, async_test_device_join
+    async_test_device_join
 )
 
 
