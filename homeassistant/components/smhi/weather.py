@@ -221,7 +221,7 @@ class SmhiWeather(WeatherEntity):
 
             if not first_cast:
                 data.append({
-                    ATTR_FORECAST_TIME: dt.as_local(forecast.valid_time),
+                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
                     ATTR_FORECAST_TEMP: forecast.temperature_max,
                     ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_PRECIPITATION:
