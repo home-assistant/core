@@ -12,6 +12,7 @@ CONF_LOCATION_ID = 'location_id'
 DATA_MANAGER = 'manager'
 DATA_BROKERS = 'brokers'
 DOMAIN = 'smartthings'
+EVENT_BUTTON = "smartthings.button"
 SIGNAL_SMARTTHINGS_UPDATE = 'smartthings_update'
 SIGNAL_SMARTAPP_PREFIX = 'smartthings_smartap_'
 SETTINGS_INSTANCE_ID = "hassInstanceId"
@@ -25,6 +26,7 @@ SUPPORTED_PLATFORMS = [
 ]
 SUPPORTED_CAPABILITIES = [
     'accelerationSensor',
+    'button',
     'colorControl',
     'colorTemperature',
     'contactSensor',
