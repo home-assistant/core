@@ -59,6 +59,7 @@ SERVICE_KEY_SCHEMA = vol.Schema({
 
 DATA_KEY = '{}.firetv'.format(DOMAIN)
 
+
 def has_adb_files(value):
     """Check that ADB key files exist."""
     priv_key = value
@@ -111,7 +112,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
         hass.data[DATA_KEY][host] = device
-
 
     def service_key(service):
         """Dispatch service calls to target entities."""
