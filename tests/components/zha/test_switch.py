@@ -18,7 +18,7 @@ async def test_switch(hass, config_entry, zha_gateway):
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        [OnOff.cluster_id], [], None, zha_gateway, hass)
+        hass, [OnOff.cluster_id], [], None, zha_gateway)
 
     # load up switch domain
     await hass.config_entries.async_forward_entry_setup(

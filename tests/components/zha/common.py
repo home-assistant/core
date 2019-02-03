@@ -104,7 +104,7 @@ def make_device(in_cluster_ids, out_cluster_ids, device_type):
 
 
 async def async_init_zigpy_device(
-        in_cluster_ids, out_cluster_ids, device_type, gateway, hass):
+        hass, in_cluster_ids, out_cluster_ids, device_type, gateway):
     """Create and initialize a device."""
     device = make_device(in_cluster_ids, out_cluster_ids, device_type)
     await gateway.async_device_initialized(device, False)
