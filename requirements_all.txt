@@ -605,6 +605,9 @@ libnacl==1.6.1
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
 
+# homeassistant.components.camera.foscam
+libpyfoscam==1.0
+
 # homeassistant.components.device_tracker.mikrotik
 librouteros==2.2.0
 
@@ -1013,9 +1016,6 @@ pyflunearyou==1.0.1
 
 # homeassistant.components.light.futurenow
 pyfnip==0.2
-
-# homeassistant.components.camera.foscam
-pyfoscam==1.2
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
