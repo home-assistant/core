@@ -18,7 +18,6 @@ REQUIREMENTS = ['PyGithub==1.43.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GROUP_AUTH = 'authentication'
 CONF_REPOS = 'repositories'
 
 ATTR_LAST_COMMIT_MESSAGE = 'last_commit_message'
@@ -92,7 +91,7 @@ class GitHubSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return unique ID for light."""
+        """Return unique ID for the sensor."""
         return self._unique_id
 
     @property
@@ -173,10 +172,7 @@ class GitHubData():
             self.setup_error = True
             return
 
-        if CONF_NAME in repository:
-            self.name = repository[CONF_NAME]
-        else:
-            self.name = repo.name
+        self.name = repository.get(CONF_NAME, repo.name)
 
         self.update = self._update
 
