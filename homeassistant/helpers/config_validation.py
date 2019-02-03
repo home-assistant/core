@@ -1,16 +1,17 @@
 """Helpers for config validation using voluptuous."""
-from datetime import (timedelta, datetime as datetime_sys,
-                      time as time_sys, date as date_sys)
+import inspect
+import logging
 import os
 import re
-from urllib.parse import urlparse
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 from socket import _GLOBAL_DEFAULT_TIMEOUT
-import logging
-import inspect
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
@@ -20,10 +21,8 @@ from homeassistant.const import (
     PATCH_VERSION)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
+from homeassistant.util import slugify as util_slugify
 
 # pylint: disable=invalid-name
 
@@ -76,12 +75,7 @@ def has_at_most_one_key(*keys: str) -> Callable:
         if not isinstance(obj, dict):
             raise vol.Invalid('expected dictionary')
 
-        count = 0
-        for k in obj.keys():
-            if k in keys:
-                count += 1
-
-        if count > 1:
+        if len(set(keys) & set(obj.keys())) > 1:
             raise vol.Invalid(
                 'must contain at most one of {}.'.format(', '.join(keys))
             )
@@ -563,19 +557,21 @@ def deprecated(key: str,
     module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
 
     if replacement_key and invalidation_version:
-        warning = ("The '{key}' option (with value '{value}') is deprecated,"
-                   " please replace it with '{replacement_key}'. This option"
-                   " will become invalid in version {invalidation_version}.")
+        warning = ("The '%(key)s' option (with value '%(value)s') is"
+                   " deprecated, please replace it with '%(replacement_key)s'."
+                   " This option will become invalid in version"
+                   " %(invalidation_version)s.")
     elif replacement_key:
-        warning = ("The '{key}' option (with value '{value}') is deprecated,"
-                   " please replace it with '{replacement_key}'.")
+        warning = ("The '%(key)s' option (with value '%(value)s') is"
+                   " deprecated, please replace it with '%(replacement_key)s'.")
     elif invalidation_version:
-        warning = ("The '{key}' option (with value '{value}') is deprecated,"
-                   " please remove it from your configuration. This option"
-                   " will become invalid in version {invalidation_version}.")
+        warning = ("The '%(key)s' option (with value '%(value)s') is"
+                   " deprecated, please remove it from your configuration."
+                   " This option will become invalid in version"
+                   " %(invalidation_version)s.")
     else:
-        warning = ("The '{key}' option (with value '{value}') is deprecated,"
-                   " please remove it from your configuration.")
+        warning = ("The '%(key)s' option (with value '%(value)s') is"
+                   " deprecated, please remove it from your configuration.")
 
     def check_for_invalid_version(value: Optional[Any]):
         """Raise error if current version has reached invalidation."""
@@ -605,12 +601,14 @@ def deprecated(key: str,
         if key in config:
             value = config[key]
             check_for_invalid_version(value)
-            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+            logging.getLogger(module_name).warning(
                 warning,
-                key=key,
-                value=value,
-                replacement_key=replacement_key,
-                invalidation_version=invalidation_version
+                {
+                    'key': key,
+                    'value': value,
+                    'replacement_key': replacement_key,
+                    'invalidation_version': invalidation_version
+                }
             )
             if replacement_key:
                 config.pop(key)
