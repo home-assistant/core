@@ -87,7 +87,7 @@ async def async_get_station(hass, latitude, longitude):
     with async_timeout.timeout(10, loop=hass.loop):
         station = await Station.get(websession, float(latitude),
                                     float(longitude))
-    
+
     _LOGGER.debug("Initializing for coordinates %s, %s -> station %s",
                   latitude, longitude, station.local)
 
