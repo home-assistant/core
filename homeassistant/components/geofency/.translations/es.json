@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Tu Home Assistant debe ser accesible desde Internet para recibir mensajes de GPSLogger.",
+            "one_instance_allowed": "Solo se necesita una instancia."
+        }
+    }
+}
