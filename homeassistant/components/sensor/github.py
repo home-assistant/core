@@ -40,7 +40,7 @@ REPO_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN, CONF_GROUP_AUTH): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_URL): cv.url,
     vol.Required(CONF_REPOS):
         vol.All(cv.ensure_list, [REPO_SCHEMA])
