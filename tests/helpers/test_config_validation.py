@@ -853,7 +853,6 @@ def test_has_at_least_one_key():
 
 def test_enum():
     """Test enum validator."""
-
     class TestEnum(enum.Enum):
         """Test enum."""
 
