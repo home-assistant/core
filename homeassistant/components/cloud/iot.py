@@ -12,9 +12,10 @@ from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
-from homeassistant.util.aiohttp import MockRequest, serialize_response
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
+from . import utils
 from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
 
 HANDLERS = Registry()
@@ -360,7 +361,7 @@ async def async_handle_webhook(hass, cloud, payload):
     response = await hass.components.webhook.async_handle_webhook(
         found['webhook_id'], request)
 
-    response_dict = serialize_response(response)
+    response_dict = utils.aiohttp_serialize_response(response)
     body = response_dict.get('body')
 
     return {
