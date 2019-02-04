@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import Throttle, dt, slugify
+from homeassistant.util import Throttle, slugify
 
 DEPENDENCIES = ['smhi']
 
