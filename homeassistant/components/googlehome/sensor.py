@@ -7,11 +7,10 @@ https://home-assistant.io/components/sensor.googlehome/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.googlehome import (
     CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 
@@ -35,11 +34,15 @@ async def async_setup_platform(hass, config,
     if discovery_info is None:
         _LOGGER.warning(
             "To use this you need to configure the 'googlehome' component")
+        return
 
     devices = []
     for condition in SENSOR_TYPES:
+        await hass.data[CLIENT].update_info(discovery_info['host'])
+        data = hass.data[GOOGLEHOME_DOMAIN][discovery_info['host']]
+        info = data.get('info', {})
         device = GoogleHomeAlarm(hass.data[CLIENT], condition,
-                                 discovery_info)
+                                 discovery_info, info.get('name', NAME))
         devices.append(device)
 
     async_add_entities(devices, True)
@@ -48,7 +51,7 @@ async def async_setup_platform(hass, config,
 class GoogleHomeAlarm(Entity):
     """Representation of a GoogleHomeAlarm."""
 
-    def __init__(self, client, condition, config):
+    def __init__(self, client, condition, config, name):
         """Initialize the GoogleHomeAlarm sensor."""
         self._host = config['host']
         self._client = client
@@ -56,18 +59,8 @@ class GoogleHomeAlarm(Entity):
         self._name = None
         self._state = None
         self._available = True
-
-    async def async_added_to_hass(self):
-        """Subscribe GoogleHome events."""
-        await self._client.update_info(self._host)
-        data = self.hass.data[GOOGLEHOME_DOMAIN][self._host]
-        info = data.get('info', {})
-        if info is None:
-            return
-        self._name = "{} {}".format(info.get('name', NAME),
-                                    SENSOR_TYPES[self._condition])
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, self._name, hass=self.hass)
+        self._info = None
+        self._name = "{} {}".format(name, SENSOR_TYPES[self._condition])
 
     async def async_update(self):
         """Update the data."""
