@@ -759,7 +759,7 @@ def async_process_component_config(
                     p_validated = component.PLATFORM_SCHEMA(  # type: ignore
                         p_config)
             except vol.Invalid as ex:
-                async_log_exception(ex, domain, config, hass)
+                async_log_exception(ex, domain, p_config, hass)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -782,7 +782,7 @@ def async_process_component_config(
                         p_validated)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_validated, hass)
+                                        p_config, hass)
                     continue
 
             platforms.append(p_validated)
