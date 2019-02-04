@@ -85,8 +85,7 @@ LEAF_COMPONENTS = [
 SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set-up the Nissan Leaf component."""
     import pycarwings2
 
@@ -144,7 +143,7 @@ def async_setup(hass, config):
     hass.data[DATA_LEAF] = {}
     tasks = [async_setup_leaf(car) for car in config[DOMAIN]]
     if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
@@ -171,7 +170,6 @@ class LeafDataStore:
         self.last_battery_response = None
         self.request_in_progress = False
 
-    @asyncio.coroutine
     async def async_update_data(self, now):
         """Update data from nissan leaf."""
         await self.async_refresh_data(now)
