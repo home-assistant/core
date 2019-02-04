@@ -99,9 +99,9 @@ class EbusdData:
                 raise RuntimeError("Error in reading ebus")
             else:
                 self.value[name] = command_result
-        except RuntimeError as e:
-            _LOGGER.error(e)
-            raise RuntimeError(e)
+        except RuntimeError as err:
+            _LOGGER.error(err)
+            raise RuntimeError(err)
 
     def write(self, call):
         """Call write methon on ebusd."""
