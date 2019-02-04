@@ -53,6 +53,8 @@ class CloudIoT:
         self.client = None
         # Scheduled sleep task till next connection retry
         self.retry_task = None
+        # Scheduled token refresh task
+        self.token_task = None
         # Boolean to indicate if we wanted the connection to close
         self.close_requested = False
         # The current number of attempts to connect, impacts wait time
@@ -73,8 +75,7 @@ class CloudIoT:
         """Return if we're currently connected."""
         return self.state == STATE_CONNECTED
 
-    @asyncio.coroutine
-    def connect(self):
+    async def connect(self):
         """Connect to the IoT broker."""
         if self.state != STATE_DISCONNECTED:
             raise RuntimeError('Connect called while not disconnected')
@@ -84,19 +85,36 @@ class CloudIoT:
         self.state = STATE_CONNECTING
         self.tries = 0
 
-        @asyncio.coroutine
-        def _handle_hass_stop(event):
+        async def _handle_hass_stop(event):
             """Handle Home Assistant shutting down."""
             nonlocal remove_hass_stop_listener
             remove_hass_stop_listener = None
-            yield from self.disconnect()
+            await self.disconnect()
 
         remove_hass_stop_listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _handle_hass_stop)
 
+        async def _handle_token_refresh():
+            """Handle Cloud access token refresh."""
+            sleep_time = random.randint(2400, 3600)
+            while True:
+                try:
+                    await asyncio.sleep(sleep_time)
+                    await hass.async_add_executor_job(
+                        auth_api.renew_access_token, self.cloud)
+                except auth_api.CloudError as err:
+                    _LOGGER.error("Can't refresh cloud token: %s", err)
+                except asyncio.CancelledError:
+                    # Task would be canceled
+                    break
+
+                sleep_time = random.randint(3100, 3600)
+
+        self.token_task = hass.async_create_task(_handle_token_refresh())
+
         while True:
             try:
-                yield from self._handle_connection()
+                await self._handle_connection()
             except Exception:  # pylint: disable=broad-except
                 # Safety net. This should never hit.
                 # Still adding it here to make sure we can always reconnect
@@ -114,7 +132,7 @@ class CloudIoT:
                     asyncio.sleep(2**min(9, self.tries) +
                                   random.randint(0, self.tries * 3),
                                   loop=hass.loop))
-                yield from self.retry_task
+                await self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
                 # Happens if disconnect called
@@ -123,6 +141,8 @@ class CloudIoT:
         self.state = STATE_DISCONNECTED
         if remove_hass_stop_listener is not None:
             remove_hass_stop_listener()
+        if self.token_task and not self.token_task.done():
+            self.token_task.cancel()
 
     async def async_send_message(self, handler, payload,
                                  expect_answer=True):
@@ -148,13 +168,12 @@ class CloudIoT:
         if expect_answer:
             return await fut
 
-    @asyncio.coroutine
-    def _handle_connection(self):
+    async def _handle_connection(self):
         """Connect to the IoT broker."""
         hass = self.cloud.hass
 
         try:
-            yield from hass.async_add_job(auth_api.check_token, self.cloud)
+            await hass.async_add_job(auth_api.check_token, self.cloud)
         except auth_api.Unauthenticated as err:
             _LOGGER.error('Unable to refresh token: %s', err)
 
@@ -181,7 +200,7 @@ class CloudIoT:
         disconnect_warn = None
 
         try:
-            self.client = client = yield from session.ws_connect(
+            self.client = client = await session.ws_connect(
                 self.cloud.relayer, heartbeat=55, headers={
                     hdrs.AUTHORIZATION:
                         'Bearer {}'.format(self.cloud.id_token)
@@ -192,10 +211,10 @@ class CloudIoT:
             self.state = STATE_CONNECTED
 
             if self._on_connect:
-                yield from asyncio.wait([cb() for cb in self._on_connect])
+                await asyncio.wait([cb() for cb in self._on_connect])
 
             while not client.closed:
-                msg = yield from client.receive()
+                msg = await client.receive()
 
                 if msg.type in (WSMsgType.CLOSED, WSMsgType.CLOSING):
                     break
@@ -234,7 +253,7 @@ class CloudIoT:
                     'msgid': msg['msgid'],
                 }
                 try:
-                    result = yield from async_handle_message(
+                    result = await async_handle_message(
                         hass, self.cloud, msg['handler'], msg['payload'])
 
                     # No response from handler
@@ -253,7 +272,7 @@ class CloudIoT:
                 if _LOGGER.isEnabledFor(logging.DEBUG):
                     _LOGGER.debug("Publishing message:\n%s\n",
                                   pprint.pformat(response))
-                yield from client.send_json(response)
+                await client.send_json(response)
 
         except client_exceptions.WSServerHandshakeError as err:
             if err.status == 401:
@@ -272,46 +291,42 @@ class CloudIoT:
             else:
                 _LOGGER.warning("Connection closed: %s", disconnect_warn)
 
-    @asyncio.coroutine
-    def disconnect(self):
+    async def disconnect(self):
         """Disconnect the client."""
         self.close_requested = True
 
         if self.client is not None:
-            yield from self.client.close()
+            await self.client.close()
         elif self.retry_task is not None:
             self.retry_task.cancel()
 
 
-@asyncio.coroutine
-def async_handle_message(hass, cloud, handler_name, payload):
+async def async_handle_message(hass, cloud, handler_name, payload):
     """Handle incoming IoT message."""
     handler = HANDLERS.get(handler_name)
 
     if handler is None:
         raise UnknownHandler()
 
-    return (yield from handler(hass, cloud, payload))
+    return await handler(hass, cloud, payload)
 
 
 @HANDLERS.register('alexa')
-@asyncio.coroutine
-def async_handle_alexa(hass, cloud, payload):
+async def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    result = yield from alexa.async_handle_message(
+    result = await alexa.async_handle_message(
         hass, cloud.alexa_config, payload,
         enabled=cloud.prefs.alexa_enabled)
     return result
 
 
 @HANDLERS.register('google_actions')
-@asyncio.coroutine
-def async_handle_google_actions(hass, cloud, payload):
+async def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
     if not cloud.prefs.google_enabled:
         return ga.turned_off_response(payload)
 
-    result = yield from ga.async_handle_message(
+    result = await ga.async_handle_message(
         hass, cloud.gactions_config, payload)
     return result
 
@@ -326,11 +341,6 @@ async def async_handle_cloud(hass, cloud, payload):
         await cloud.logout()
         _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
-    elif action == 'refresh_auth':
-        # Refresh the auth token between now and payload['seconds']
-        hass.helpers.event.async_call_later(
-            random.randint(0, payload['seconds']),
-            lambda now: auth_api.check_token(cloud))
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
 
