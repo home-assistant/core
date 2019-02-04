@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Inga tillg\u00e4ngliga meddelande tj\u00e4nster."
+            },
+            "error": {
+                "invalid_code": "Ogiltig kod, var god f\u00f6rs\u00f6k igen."
+            },
+            "step": {
+                "init": {
+                    "description": "Var god v\u00e4lj en av notifieringstj\u00e4nsterna:",
+                    "title": "Konfigurera ett eng\u00e5ngsl\u00f6senord levererat genom notifieringskomponenten"
+                },
+                "setup": {
+                    "description": "Ett eng\u00e5ngsl\u00f6senord har skickats av **notify.{notify_service}**. V\u00e4nligen ange det nedan:",
+                    "title": "Verifiera inst\u00e4llningen"
+                }
+            },
+            "title": "Meddela eng\u00e5ngsl\u00f6senord"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Ogiltig kod, f\u00f6rs\u00f6k igen. Om du flera g\u00e5nger i rad f\u00e5r detta fel, se till att klockan i din Home Assistant \u00e4r korrekt inst\u00e4lld."
+            },
+            "step": {
+                "init": {
+                    "description": "F\u00f6r att aktivera tv\u00e5faktorsautentisering som anv\u00e4nder tidsbaserade eng\u00e5ngsl\u00f6senord, skanna QR-koden med din autentiseringsapp. Om du inte har en, rekommenderar vi antingen [Google Authenticator] (https://support.google.com/accounts/answer/1066447) eller [Authy] (https://authy.com/). \n\n{qr_code} \n\nN\u00e4r du har skannat koden anger du den sexsiffriga koden fr\u00e5n din app f\u00f6r att verifiera inst\u00e4llningen. Om du har problem med att skanna QR-koden, g\u00f6r en manuell inst\u00e4llning med kod ** ` {code} ` **.",
+                    "title": "St\u00e4ll in tv\u00e5faktorsautentisering med TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

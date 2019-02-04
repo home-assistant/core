@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A ponte j\u00e1 est\u00e1 configurada",
+            "no_bridges": "N\u00e3o h\u00e1 pontes de deCONZ descobertas",
+            "one_instance_only": "Componente suporta apenas uma inst\u00e2ncia deCONZ"
+        },
+        "error": {
+            "no_key": "N\u00e3o foi poss\u00edvel obter uma chave de API"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Hospedeiro",
+                    "port": "Porta (valor padr\u00e3o: '80')"
+                },
+                "title": "Defina o gateway deCONZ"
+            },
+            "link": {
+                "description": "Desbloqueie o seu gateway deCONZ para se registar no Home Assistant. \n\n 1. V\u00e1 para as configura\u00e7\u00f5es do sistema deCONZ \n 2. Pressione o bot\u00e3o \"Desbloquear Gateway\"",
+                "title": "Linkar com deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Permitir a importa\u00e7\u00e3o de sensores virtuais",
+                    "allow_deconz_groups": "Permitir a importa\u00e7\u00e3o de grupos deCONZ"
+                },
+                "title": "Op\u00e7\u00f5es extras de configura\u00e7\u00e3o para deCONZ"
+            }
+        },
+        "title": "Gateway deCONZ Zigbee"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "no_bridges": "Ingen deConz bridge fundet",
+            "one_instance_only": "Komponenten underst\u00f8tter kun \u00e9n deCONZ forekomst"
+        },
+        "error": {
+            "no_key": "Kunne ikke f\u00e5 en API-n\u00f8gle"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "port": "Port (standardv\u00e6rdi: '80')"
+                }
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Tillad import af virtuelle sensorer",
+                    "allow_deconz_groups": "Tillad importering af deCONZ grupper"
+                },
+                "title": "Ekstra konfiguration valgmuligheder for deCONZ"
+            }
+        }
+    }
+}
