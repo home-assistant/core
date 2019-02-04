@@ -37,11 +37,11 @@ async def async_setup_platform(hass, config,
         return
 
     await hass.data[CLIENT].update_info(discovery_info['host'])
+    data = hass.data[GOOGLEHOME_DOMAIN][discovery_info['host']]
+    info = data.get('info', {})
 
     devices = []
     for condition in SENSOR_TYPES:
-        data = hass.data[GOOGLEHOME_DOMAIN][discovery_info['host']]
-        info = data.get('info', {})
         device = GoogleHomeAlarm(hass.data[CLIENT], condition,
                                  discovery_info, info.get('name', NAME))
         devices.append(device)
