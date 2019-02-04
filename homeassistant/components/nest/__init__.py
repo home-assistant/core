@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from . import local_auth
 
-REQUIREMENTS = ['python-nest==4.0.5']
+REQUIREMENTS = ['python-nest==4.1.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

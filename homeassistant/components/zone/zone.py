@@ -56,7 +56,7 @@ def async_active_zone(hass, latitude, longitude, radius=0):
     return closest
 
 
-def in_zone(zone, latitude, longitude, radius=0):
+def in_zone(zone, latitude, longitude, radius=0) -> bool:
     """Test if given latitude, longitude is in given zone.
 
     Async friendly.

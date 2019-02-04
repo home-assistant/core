@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -24,9 +24,12 @@ REQUIREMENTS = ['dsmr_parser==0.12']
 
 CONF_DSMR_VERSION = 'dsmr_version'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
+CONF_PRECISION = 'precision'
 
 DEFAULT_DSMR_VERSION = '2.2'
 DEFAULT_PORT = '/dev/ttyUSB0'
+DEFAULT_PRECISION = 3
+
 DOMAIN = 'dsmr'
 
 ICON_GAS = 'mdi:fire'
@@ -45,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['5', '4', '2.2'])),
     vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
+    vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
 
@@ -146,7 +150,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     ]
 
     # Generate device entities
-    devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
+    devices = [DSMREntity(name, obis, config) for name, obis in obis_mapping]
 
     # Protocol version specific obis
     if dsmr_version in ('4', '5'):
@@ -156,8 +160,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     # Add gas meter reading and derivative for usage
     devices += [
-        DSMREntity('Gas Consumption', gas_obis),
-        DerivativeDSMREntity('Hourly Gas Consumption', gas_obis),
+        DSMREntity('Gas Consumption', gas_obis, config),
+        DerivativeDSMREntity('Hourly Gas Consumption', gas_obis, config),
     ]
 
     async_add_entities(devices)
@@ -224,10 +228,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, obis):
+    def __init__(self, name, obis, config):
         """Initialize entity."""
         self._name = name
         self._obis = obis
+        self._config = config
         self.telegram = {}
 
     def get_dsmr_object_attr(self, attribute):
@@ -267,10 +272,15 @@ class DSMREntity(Entity):
         if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
 
+        try:
+            value = round(float(value), self._config[CONF_PRECISION])
+        except TypeError:
+            pass
+
         if value is not None:
             return value
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -287,7 +297,7 @@ class DSMREntity(Entity):
         if value == '0001':
             return 'low'
 
-        return STATE_UNKNOWN
+        return None
 
 
 class DerivativeDSMREntity(DSMREntity):
@@ -300,7 +310,7 @@ class DerivativeDSMREntity(DSMREntity):
 
     _previous_reading = None
     _previous_timestamp = None
-    _state = STATE_UNKNOWN
+    _state = None
 
     @property
     def state(self):

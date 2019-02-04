@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, )
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING, STATE_STANDBY)
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FIRETV = SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_VOLUME_SET | SUPPORT_PLAY
+    SUPPORT_PLAY
 
 CONF_ADBKEY = 'adbkey'
 CONF_GET_SOURCE = 'get_source'
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     device = FireTVDevice(ftv, name, get_source, get_sources)
     add_entities([device])
-    _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+    _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
 
 
 def adb_decorator(override_available=False):
@@ -96,17 +96,17 @@ def adb_decorator(override_available=False):
 
             # If an ADB command is already running, skip this command
             if not self.adb_lock.acquire(blocking=False):
-                _LOGGER.info('Skipping an ADB command because a previous '
-                             'command is still running')
+                _LOGGER.info("Skipping an ADB command because a previous "
+                             "command is still running")
                 return None
 
             # Additional ADB commands will be prevented while trying this one
             try:
                 returns = func(self, *args, **kwargs)
-            except self.exceptions:
-                _LOGGER.error('Failed to execute an ADB command; will attempt '
-                              'to re-establish the ADB connection in the next '
-                              'update')
+            except self.exceptions as err:
+                _LOGGER.error(
+                    "Failed to execute an ADB command. ADB connection re-"
+                    "establishing attempt in the next update. Error: %s", err)
                 returns = None
                 self._available = False  # pylint: disable=protected-access
             finally:
@@ -137,9 +137,9 @@ class FireTVDevice(MediaPlayerDevice):
         self.adb_lock = threading.Lock()
 
         # ADB exceptions to catch
-        self.exceptions = (AttributeError, BrokenPipeError, TypeError,
-                           ValueError, InvalidChecksumError,
-                           InvalidCommandError, InvalidResponseError)
+        self.exceptions = (
+            AttributeError, BrokenPipeError, TypeError, ValueError,
+            InvalidChecksumError, InvalidCommandError, InvalidResponseError)
 
         self._state = None
         self._available = self.firetv.available
@@ -170,6 +170,11 @@ class FireTVDevice(MediaPlayerDevice):
     def available(self):
         """Return whether or not the ADB connection is valid."""
         return self._available
+
+    @property
+    def app_id(self):
+        """Return the current app."""
+        return self._current_app
 
     @property
     def source(self):
@@ -231,8 +236,7 @@ class FireTVDevice(MediaPlayerDevice):
                         self._running_apps = None
 
                 # Check if the launcher is active.
-                if self._current_app in [PACKAGE_LAUNCHER,
-                                         PACKAGE_SETTINGS]:
+                if self._current_app in [PACKAGE_LAUNCHER, PACKAGE_SETTINGS]:
                     self._state = STATE_STANDBY
 
                 # Check for a wake lock (device is playing).

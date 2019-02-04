@@ -12,7 +12,8 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (CONF_URL, CONF_ACCESS_TOKEN)
+from homeassistant.const import (CONF_URL, CONF_ACCESS_TOKEN,
+                                 CONF_UPDATE_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,8 +24,6 @@ DEFAULT_INTERVAL = timedelta(minutes=10)
 
 TIMEOUT = 10
 UPDATE_URL = 'https://freedns.afraid.org/dynamic/update.php'
-
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
