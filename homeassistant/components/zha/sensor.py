@@ -59,6 +59,13 @@ def humidity_formatter(value, sensor):
     return round(float(value) / 100, 1)
 
 
+def active_power_formatter(value, sensor):
+    """Return the state of the entity."""
+    if value is None:
+        return None
+    return round(float(value) / 10, 1)
+
+
 def pressure_formatter(value, sensor):
     """Return the state of the entity."""
     if value is None:
@@ -71,6 +78,7 @@ FORMATTER_FUNC_REGISTRY = {
     HUMIDITY: humidity_formatter,
     TEMPERATURE: temperature_formatter,
     PRESSURE: pressure_formatter,
+    ELECTRICAL_MEASUREMENT: active_power_formatter,
     GENERIC: pass_through_formatter,
 }
 
