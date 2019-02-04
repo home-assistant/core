@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ffmpeg/
 """
 import logging
+import re
 
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['ha-ffmpeg==1.9']
+REQUIREMENTS = ['ha-ffmpeg==1.11']
 
 DOMAIN = 'ffmpeg'
 
@@ -60,6 +61,8 @@ async def async_setup(hass, config):
         conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY)
     )
 
+    await manager.async_get_version()
+
     # Register service
     async def async_service_handle(service):
         """Handle service ffmpeg process."""
@@ -96,11 +99,36 @@ class FFmpegManager:
         self.hass = hass
         self._cache = {}
         self._bin = ffmpeg_bin
+        self._version = None
+        self._major_version = None
 
     @property
     def binary(self):
         """Return ffmpeg binary from config."""
         return self._bin
+
+    async def async_get_version(self):
+        """Return ffmpeg version."""
+        from haffmpeg.tools import FFVersion
+
+        ffversion = FFVersion(self._bin, self.hass.loop)
+        self._version = await ffversion.get_version()
+
+        self._major_version = None
+        if self._version is not None:
+            result = re.search(r"(\d+)\.", self._version)
+            if result is not None:
+                self._major_version = int(result.group(1))
+
+        return self._version, self._major_version
+
+    @property
+    def ffmpeg_stream_content_type(self):
+        """Return HTTP content type for ffmpeg stream."""
+        if self._major_version is not None and self._major_version > 3:
+            return 'multipart/x-mixed-replace;boundary=ffmpeg'
+
+        return 'multipart/x-mixed-replace;boundary=ffserver'
 
 
 class FFmpegBase(Entity):
