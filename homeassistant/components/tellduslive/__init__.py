@@ -70,30 +70,30 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-
-    interval = entry.data[KEY_SCAN_INTERVAL]
-    _LOGGER.debug('Update interval %s seconds.', interval)
-    client = TelldusLiveClient(hass, entry, session, interval)
-    hass.data[DOMAIN] = client
-    hass.loop.create_task(async_add_hubs(hass, client, entry.entry_id))
+    hass.data[INTERVAL_TRACKER] = hass.loop.create_task(
+        async_create_client(hass, session, entry))
 
     return True
 
 
-async def async_add_hubs(hass, client, entry_id):
+async def async_create_client(hass, session, entry):
     """Add the hubs associated with the current client to device_registry."""
+    interval = entry.data[KEY_SCAN_INTERVAL]
+    _LOGGER.debug('Update interval %s seconds.', interval)
+    client = TelldusLiveClient(hass, entry, session, interval)
+    hass.data[DOMAIN] = client
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub['name'])
         dev_reg.async_get_or_create(
-            config_entry_id=entry_id,
+            config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, hub['id'])},
             manufacturer='Telldus',
             name=hub['name'],
             model=hub['type'],
             sw_version=hub['version'],
         )
-    hass.loop.create_task(client.update())
+    hass.data[INTERVAL_TRACKER] = hass.loop.create_task(client.update())
 
 
 async def async_setup(hass, config):
@@ -204,10 +204,6 @@ class TelldusLiveClient:
                 await self._discover(d_id)
             self._known_devices |= new_devices
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
-        except asyncio.TimeoutError:
-            _LOGGER.warning(
-                'Update took longer than %d seconds,'
-                ' try increasing the update interval', self._interval)
         finally:
             self._hass.data[INTERVAL_TRACKER] = async_call_later(
                 self._hass, self._interval, self.update)
