@@ -555,7 +555,7 @@ async def test_reload_config_when_invalid_config(hass, calls):
     assert calls[0].data.get('event') == 'test_event'
 
     with patch('homeassistant.config.load_yaml_config_file', autospec=True,
-               return_value={automation.DOMAIN: {'not valid': {}}}):
+               return_value={automation.DOMAIN: 'not valid'}):
         with patch('homeassistant.config.find_config_file',
                    return_value=''):
             await common.async_reload(hass)

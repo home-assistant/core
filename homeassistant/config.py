@@ -446,7 +446,11 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    domain_config = config.get(domain, config)
+    try:
+        domain_config = config.get(domain, config)
+    except AttributeError:
+        domain_config = config
+
     message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
