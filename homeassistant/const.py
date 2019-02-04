@@ -181,9 +181,10 @@ EVENT_SCRIPT_STARTED = 'script_started'
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_POWER = 'power'
+DEVICE_CLASS_PRESSURE = 'pressure'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
 DEVICE_CLASS_TIMESTAMP = 'timestamp'
-DEVICE_CLASS_PRESSURE = 'pressure'
 
 # #### STATES ####
 STATE_ON = 'on'
