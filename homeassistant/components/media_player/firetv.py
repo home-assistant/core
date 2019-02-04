@@ -23,18 +23,18 @@ REQUIREMENTS = ['firetv==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FIRETV = SUPPORT_PAUSE | \
+SUPPORT_FIRETV = SUPPORT_PAUSE | SUPPORT_PLAY | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_PLAY
+    SUPPORT_NEXT_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_STOP
 
 CONF_ADBKEY = 'adbkey'
-CONF_GET_SOURCE = 'get_source'
+CONF_ADB_SERVER_IP = 'adb_server_ip'
+CONF_ADB_SERVER_PORT = 'adb_server_port'
 CONF_GET_SOURCES = 'get_sources'
 
 DEFAULT_NAME = 'Amazon Fire TV'
 DEFAULT_PORT = 5555
-DEFAULT_GET_SOURCE = True
+DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 
 
@@ -51,7 +51,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_ADBKEY): has_adb_files,
-    vol.Optional(CONF_GET_SOURCE, default=DEFAULT_GET_SOURCE): cv.boolean,
+    vol.Optional(CONF_ADB_SERVER_IP): cv.string,
+    vol.Optional(
+        CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
     vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean
 })
 
@@ -69,22 +71,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
-    if CONF_ADBKEY in config:
-        ftv = FireTV(host, config[CONF_ADBKEY])
-        adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
+    if CONF_ADB_SERVER_IP not in config:
+        # "python-adb"
+        if CONF_ADBKEY in config:
+            ftv = FireTV(host, config[CONF_ADBKEY])
+            adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
+        else:
+            ftv = FireTV(host)
+            adb_log = ""
     else:
-        ftv = FireTV(host)
-        adb_log = ""
+        # "pure-python-adb"
+        ftv = FireTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
+                     adb_server_port=config[CONF_ADB_SERVER_PORT])
+        adb_log = " using ADB server at {0}:{1}".format(
+            config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
     if not ftv.available:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
         return
 
     name = config[CONF_NAME]
-    get_source = config[CONF_GET_SOURCE]
     get_sources = config[CONF_GET_SOURCES]
 
-    device = FireTVDevice(ftv, name, get_source, get_sources)
+    device = FireTVDevice(ftv, name, get_sources)
     add_entities([device])
     _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
 
@@ -116,21 +125,28 @@ def adb_decorator(override_available=False):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    def __init__(self, ftv, name, get_source, get_sources):
+    def __init__(self, ftv, name, get_sources):
         """Initialize the FireTV device."""
-        from adb.adb_protocol import (
-            InvalidChecksumError, InvalidCommandError, InvalidResponseError)
-
         self.firetv = ftv
 
         self._name = name
-        self._get_source = get_source
         self._get_sources = get_sources
 
         # ADB exceptions to catch
-        self.exceptions = (
-            AttributeError, BrokenPipeError, TypeError, ValueError,
-            InvalidChecksumError, InvalidCommandError, InvalidResponseError)
+        if not self.firetv.adb_server_ip:
+            # "python-adb"
+            from adb.adb_protocol import (InvalidChecksumError,
+                                          InvalidCommandError,
+                                          InvalidResponseError)
+            from adb.usb_exceptions import TcpTimeoutException
+
+            self.exceptions = (AttributeError, BrokenPipeError, TypeError,
+                               ValueError, InvalidChecksumError,
+                               InvalidCommandError, InvalidResponseError,
+                               TcpTimeoutException)
+        else:
+            # "pure-python-adb"
+            self.exceptions = (ConnectionResetError,)
 
         self._state = None
         self._available = self.firetv.available
