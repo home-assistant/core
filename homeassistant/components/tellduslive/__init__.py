@@ -24,7 +24,7 @@ from .const import (
 
 APPLICATION_NAME = 'Home Assistant'
 
-REQUIREMENTS = ['tellduslive==0.10.8']
+REQUIREMENTS = ['tellduslive==0.10.10']
 
 _LOGGER = logging.getLogger(__name__)
 
