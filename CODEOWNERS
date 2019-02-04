@@ -220,6 +220,7 @@ homeassistant/components/*/mystrom.py @fabaff
 # N
 homeassistant/components/ness_alarm.py @nickw444
 homeassistant/components/*/ness_alarm.py @nickw444
+homeassistant/components/nissan_leaf/* @filcole
 
 # O
 homeassistant/components/openuv/* @bachya
