@@ -48,6 +48,40 @@ def test_async_track_states(hass):
         sorted(states, key=lambda state: state.entity_id)
 
 
+@asyncio.coroutine
+def test_call_to_component(hass):
+        """Test calls to components state reproduction functions"""
+        with patch(('homeassistant.components.media_player.'
+                    'async_reproduce_states')) as media_player_fun:
+            media_player_fun.return_value = asyncio.Future()
+            media_player_fun.return_value.set_result(None)
+
+            with patch(('homeassistant.components.climate.'
+                        'async_reproduce_states')) as climate_fun:
+                climate_fun.return_value = asyncio.Future()
+                climate_fun.return_value.set_result(None)
+
+                state_media_player = ha.State('media_player.test', 'bad')
+                state_climate = ha.State('climate.test', 'bad')
+                context = "dummy_context"
+
+                yield from state.async_reproduce_state(
+                    hass,
+                    [state_media_player, state_climate],
+                    blocking=True,
+                    context=context)
+
+                media_player_fun.assert_called_once_with(
+                    hass,
+                    [state_media_player],
+                    context=context)
+
+                climate_fun.assert_called_once_with(
+                    hass,
+                    [state_climate],
+                    context=context)
+
+
 class TestStateHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
