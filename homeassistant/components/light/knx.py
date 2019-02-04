@@ -35,7 +35,6 @@ CONF_MAX_KELVIN = 'max_kelvin'
 DEFAULT_NAME = 'KNX Light'
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
-DEFAULT_COLOR_TEMPERATURE = 333  # mireds ~ 3000 K
 DEFAULT_COLOR_TEMP_MODE = 'absolute'
 DEFAULT_MIN_KELVIN = 2700  # 370 mireds
 DEFAULT_MAX_KELVIN = 6000  # 166 mireds
@@ -192,13 +191,13 @@ class KNXLight(Light):
         """Return the color temperature in mireds."""
         if self.device.supports_color_temperature:
             kelvin = self.device.current_color_temperature
-            return color_util.color_temperature_kelvin_to_mired(kelvin) \
-                if kelvin is not None else DEFAULT_COLOR_TEMPERATURE
+            if kelvin is not None:
+                return color_util.color_temperature_kelvin_to_mired(kelvin)
         if self.device.supports_tunable_white:
             relative_ct = self.device.current_tunable_white
-            return self.min_mireds + (((255 - relative_ct) / 255) *
-                                      (self.max_mireds - self.min_mireds)) \
-                if relative_ct is not None else DEFAULT_COLOR_TEMPERATURE
+            if relative_ct is not None:
+                return self.min_mireds + (((255 - relative_ct) / 255) *
+                                          (self.max_mireds - self.min_mireds))
         return None
 
     @property
