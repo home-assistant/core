@@ -51,7 +51,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def state(self):
         """Battery state percentage."""
-        return round(self.car.data[DATA_BATTERY], 0)
+        return round(self.car.data[DATA_BATTERY])
 
     @property
     def unit_of_measurement(self):
@@ -92,8 +92,6 @@ class LeafRangeSensor(LeafEntity):
     @property
     def state(self):
         """Battery range in miles or kms."""
-        ret = 0
-
         if self._ac_on:
             ret = self.car.data[DATA_RANGE_AC]
         else:
@@ -103,7 +101,7 @@ class LeafRangeSensor(LeafEntity):
                 self.car.force_miles):
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
-        return round(ret, 0)
+        return round(ret)
 
     @property
     def unit_of_measurement(self):
