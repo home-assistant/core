@@ -48,6 +48,6 @@ def serialize_response(response: web.Response) -> Dict[str, Any]:
     """Serialize an aiohttp response to a dictionary."""
     return {
         'status': response.status,
-        'body': response.body,
+        'body': response.text,
         'headers': dict(response.headers),
     }
