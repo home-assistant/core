@@ -140,6 +140,7 @@ class CommandLineLoginFlow(LoginFlow):
         errors = {}
 
         if user_input is not None:
+            user_input["username"] = user_input["username"].strip()
             try:
                 await cast(CommandLineAuthProvider, self._auth_provider) \
                         .async_validate_login(

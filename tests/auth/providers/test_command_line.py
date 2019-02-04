@@ -135,3 +135,14 @@ async def test_login_flow_validates(provider):
     })
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["username"] == "good-user"
+
+
+async def test_strip_username(provider):
+    """Test authentication works with username with whitespace around."""
+    flow = await provider.async_login_flow({})
+    result = await flow.async_step_init({
+        "username": "\t\ngood-user ",
+        "password": "good-pass",
+    })
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["username"] == "good-user"
