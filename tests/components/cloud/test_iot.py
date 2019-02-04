@@ -158,26 +158,6 @@ async def test_handling_core_messages_logout(hass, mock_cloud):
     assert len(mock_cloud.logout.mock_calls) == 1
 
 
-async def test_handling_core_messages_refresh_auth(hass, mock_cloud):
-    """Test handling core messages."""
-    mock_cloud.hass = hass
-    with patch('random.randint', return_value=0) as mock_rand, patch(
-        'homeassistant.components.cloud.auth_api.check_token'
-    ) as mock_check:
-        await iot.async_handle_cloud(hass, mock_cloud, {
-            'action': 'refresh_auth',
-            'seconds': 230,
-        })
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
-
-    assert len(mock_rand.mock_calls) == 1
-    assert mock_rand.mock_calls[0][1] == (0, 230)
-
-    assert len(mock_check.mock_calls) == 1
-    assert mock_check.mock_calls[0][1][0] is mock_cloud
-
-
 @asyncio.coroutine
 def test_cloud_getting_disconnected_by_server(mock_client, caplog, mock_cloud):
     """Test server disconnecting instance."""
