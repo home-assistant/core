@@ -7,6 +7,7 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
@@ -180,7 +181,7 @@ class Sensor(ZhaEntity):
     @property
     def state(self) -> str:
         """Return the state of the entity."""
-        if self._state == 'unknown' or self._state is None:
+        if self._state is STATE_UNKNOWN or self._state is None:
             return None
         if isinstance(self._state, float):
             return str(round(self._state, 2))
@@ -190,8 +191,3 @@ class Sensor(ZhaEntity):
         """Handle state update from listener."""
         self._state = self._formatter_function(state, self)
         self.async_schedule_update_ha_state()
-
-    @unit_of_measurement.setter
-    def unit_of_measurement(self, unit):
-        """Set the unit of measurement."""
-        self._unit = unit
