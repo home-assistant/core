@@ -107,7 +107,7 @@ def _handle_cloud_errors(handler):
             result = await handler(view, request, *args, **kwargs)
             return result
 
-        except Exception as err:  # pylint: disable=bare-except
+        except Exception as err:  # pylint: disable=broad-except
             err_info = _CLOUD_ERRORS.get(err.__class__)
             if err_info is None:
                 _LOGGER.exception(
