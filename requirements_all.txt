@@ -487,7 +487,7 @@ greenwavereality==0.5.1
 gstreamer-player==1.1.2
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.11
+ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
@@ -535,7 +535,7 @@ homeassistant-pyozw==0.1.2
 homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.4
+homematicip==0.10.5
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk

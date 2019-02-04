@@ -101,7 +101,7 @@ geojson_client==0.3
 georss_client==0.5
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.11
+ha-ffmpeg==1.9
 
 # homeassistant.components.hangouts
 hangups==0.4.6
@@ -122,7 +122,7 @@ home-assistant-frontend==20190203.0
 homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.4
+homematicip==0.10.5
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
