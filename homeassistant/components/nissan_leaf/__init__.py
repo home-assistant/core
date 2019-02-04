@@ -312,9 +312,9 @@ class LeafDataStore:
                 _LOGGER.error("Battery update request failed")
                 return None
 
-            for _ in range(MAX_RESPONSE_ATTEMPTS):
-                _LOGGER.info("Waiting %s seconds for battery update",
-                             PYCARWINGS2_SLEEP)
+            for attempt in range(MAX_RESPONSE_ATTEMPTS):
+                _LOGGER.info("Waiting %s seconds for battery update (%s) (%s)",
+                             PYCARWINGS2_SLEEP, self.leaf.vin, attempt)
                 await asyncio.sleep(PYCARWINGS2_SLEEP)
 
                 # Note leaf.get_status_from_update is always returning 0, so
