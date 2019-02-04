@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['firetv==1.0.7']
+REQUIREMENTS = ['firetv==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,38 +87,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def adb_decorator(override_available=False):
-    """Send an ADB command if the device is available and not locked."""
-    def adb_wrapper(func):
+    """Send an ADB command if the device is available and catch exceptions."""
+    def _adb_decorator(func):
         """Wait if previous ADB commands haven't finished."""
         @functools.wraps(func)
-        def _adb_wrapper(self, *args, **kwargs):
+        def __adb_decorator(self, *args, **kwargs):
             # If the device is unavailable, don't do anything
             if not self.available and not override_available:
                 return None
 
-            # If an ADB command is already running, skip this command
-            if not self.adb_lock.acquire(blocking=False):
-                _LOGGER.info("Skipping an ADB command because a previous "
-                             "command is still running")
-                return None
-
-            # Additional ADB commands will be prevented while trying this one
             try:
-                returns = func(self, *args, **kwargs)
+                return func(self, *args, **kwargs)
             except self.exceptions as err:
                 _LOGGER.error(
                     "Failed to execute an ADB command. ADB connection re-"
                     "establishing attempt in the next update. Error: %s", err)
-                returns = None
                 self._available = False  # pylint: disable=protected-access
-            finally:
-                self.adb_lock.release()
+                return None
 
-            return returns
+        return __adb_decorator
 
-        return _adb_wrapper
-
-    return adb_wrapper
+    return _adb_decorator
 
 
 class FireTVDevice(MediaPlayerDevice):
