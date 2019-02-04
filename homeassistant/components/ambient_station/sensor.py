@@ -12,13 +12,10 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TOPIC_UPDATE, UNITS_SI, UNITS_US)
+from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
 DEPENDENCIES = ['ambient_station']
 _LOGGER = logging.getLogger(__name__)
-
-UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
 
 
 async def async_setup_platform(
@@ -31,20 +28,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up an Ambient PWS sensor based on a config entry."""
     ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
-    if ambient.unit_system:
-        sys_units = ambient.unit_system
-    elif hass.config.units.is_metric:
-        sys_units = UNITS_SI
-    else:
-        sys_units = UNITS_US
-
     sensor_list = []
     for mac_address, station in ambient.stations.items():
         for condition in ambient.monitored_conditions:
             name, unit = SENSOR_TYPES[condition]
-            if isinstance(unit, list):
-                unit = unit[UNIT_SYSTEM[sys_units]]
-
             sensor_list.append(
                 AmbientWeatherSensor(
                     ambient, mac_address, station[ATTR_NAME], condition, name,
@@ -58,7 +45,7 @@ class AmbientWeatherSensor(Entity):
 
     def __init__(
             self, ambient, mac_address, station_name, sensor_type, sensor_name,
-            units):
+            unit):
         """Initialize the sensor."""
         self._ambient = ambient
         self._async_unsub_dispatcher_connect = None
@@ -67,7 +54,7 @@ class AmbientWeatherSensor(Entity):
         self._sensor_type = sensor_type
         self._state = None
         self._station_name = station_name
-        self._units = units
+        self._unit = unit
 
     @property
     def name(self):
@@ -87,7 +74,7 @@ class AmbientWeatherSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._units
+        return self._unit
 
     @property
     def unique_id(self):

@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
-    CONF_UNIT_SYSTEM, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,8 +19,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .config_flow import configured_instances
 from .const import (
-    ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE, UNITS_SI,
-    UNITS_US)
+    ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE)
 
 REQUIREMENTS = ['aioambient==0.1.0']
 _LOGGER = logging.getLogger(__name__)
@@ -28,36 +27,36 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 SENSOR_TYPES = {
-    '24hourrainin': ['24 Hr Rain', 'in'],
-    'baromabsin': ['Abs Pressure', 'inHg'],
-    'baromrelin': ['Rel Pressure', 'inHg'],
-    'battout': ['Battery', ''],
-    'co2': ['co2', 'ppm'],
-    'dailyrainin': ['Daily Rain', 'in'],
-    'dewPoint': ['Dew Point', ['°F', '°C']],
-    'eventrainin': ['Event Rain', 'in'],
-    'feelsLike': ['Feels Like', ['°F', '°C']],
-    'hourlyrainin': ['Hourly Rain Rate', 'in/hr'],
-    'humidity': ['Humidity', '%'],
-    'humidityin': ['Humidity In', '%'],
-    'lastRain': ['Last Rain', ''],
-    'maxdailygust': ['Max Gust', 'mph'],
-    'monthlyrainin': ['Monthly Rain', 'in'],
-    'solarradiation': ['Solar Rad', 'W/m^2'],
-    'tempf': ['Temp', ['°F', '°C']],
-    'tempinf': ['Inside Temp', ['°F', '°C']],
-    'totalrainin': ['Lifetime Rain', 'in'],
-    'uv': ['uv', 'Index'],
-    'weeklyrainin': ['Weekly Rain', 'in'],
-    'winddir': ['Wind Dir', '°'],
-    'winddir_avg10m': ['Wind Dir Avg 10m', '°'],
-    'winddir_avg2m': ['Wind Dir Avg 2m', 'mph'],
-    'windgustdir': ['Gust Dir', '°'],
-    'windgustmph': ['Wind Gust', 'mph'],
-    'windspdmph_avg10m': ['Wind Avg 10m', 'mph'],
-    'windspdmph_avg2m': ['Wind Avg 2m', 'mph'],
-    'windspeedmph': ['Wind Speed', 'mph'],
-    'yearlyrainin': ['Yearly Rain', 'in'],
+    '24hourrainin': ('24 Hr Rain', 'in'),
+    'baromabsin': ('Abs Pressure', 'inHg'),
+    'baromrelin': ('Rel Pressure', 'inHg'),
+    'battout': ('Battery', ''),
+    'co2': ('co2', 'ppm'),
+    'dailyrainin': ('Daily Rain', 'in'),
+    'dewPoint': ('Dew Point', '°F'),
+    'eventrainin': ('Event Rain', 'in'),
+    'feelsLike': ('Feels Like', '°F'),
+    'hourlyrainin': ('Hourly Rain Rate', 'in/hr'),
+    'humidity': ('Humidity', '%'),
+    'humidityin': ('Humidity In', '%'),
+    'lastRain': ('Last Rain', ''),
+    'maxdailygust': ('Max Gust', 'mph'),
+    'monthlyrainin': ('Monthly Rain', 'in'),
+    'solarradiation': ('Solar Rad', 'W/m^2'),
+    'tempf': ('Temp', '°F'),
+    'tempinf': ('Inside Temp', '°F'),
+    'totalrainin': ('Lifetime Rain', 'in'),
+    'uv': ('uv', 'Index'),
+    'weeklyrainin': ('Weekly Rain', 'in'),
+    'winddir': ('Wind Dir', '°'),
+    'winddir_avg10m': ('Wind Dir Avg 10m', '°'),
+    'winddir_avg2m': ('Wind Dir Avg 2m', 'mph'),
+    'windgustdir': ('Gust Dir', '°'),
+    'windgustmph': ('Wind Gust', 'mph'),
+    'windspdmph_avg10m': ('Wind Avg 10m', 'mph'),
+    'windspdmph_avg2m': ('Wind Avg 2m', 'mph'),
+    'windspeedmph': ('Wind Speed', 'mph'),
+    'yearlyrainin': ('Yearly Rain', 'in'),
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -70,8 +69,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(
                 CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
                 vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-            vol.Optional(CONF_UNIT_SYSTEM):
-                vol.In([UNITS_SI, UNITS_US]),
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -111,8 +108,7 @@ async def async_setup_entry(hass, config_entry):
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
             config_entry.data.get(
-                CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)),
-            config_entry.data.get(CONF_UNIT_SYSTEM))
+                CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketConnectionError as err:
@@ -139,9 +135,7 @@ async def async_unload_entry(hass, config_entry):
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(
-            self, hass, config_entry, client, monitored_conditions,
-            unit_system):
+    def __init__(self, hass, config_entry, client, monitored_conditions):
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
@@ -149,7 +143,6 @@ class AmbientStation:
         self.client = client
         self.monitored_conditions = monitored_conditions
         self.stations = {}
-        self.unit_system = unit_system
 
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""
