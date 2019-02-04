@@ -74,9 +74,9 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-        self._on_off_listener = self.get_listener(LISTENER_ON_OFF)
-        self._level_listener = self.get_listener(LISTENER_LEVEL)
-        self._color_listener = self.get_listener(LISTENER_COLOR)
+        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
+        self._level_listener = self.cluster_listeners.get(LISTENER_LEVEL)
+        self._color_listener = self.cluster_listeners.get(LISTENER_COLOR)
 
         if self._level_listener:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -104,11 +104,6 @@ class Light(ZhaEntity, light.Light):
         """Return the brightness of this light."""
         return self._brightness
 
-    @brightness.setter
-    def brightness(self, brightness):
-        """Set the brightness of this light."""
-        self._brightness = brightness
-
     @property
     def device_state_attributes(self):
         """Return state attributes."""
@@ -116,13 +111,9 @@ class Light(ZhaEntity, light.Light):
 
     def set_level(self, value):
         """Set the brightness of this light between 0..255."""
-        if value < 0:
-            value = 0
-        if value > 255:
-            value = 255
-
-        self.brightness = value
-        self.set_state(value)
+        value = max(0, min(255, value))
+        self._brightness = value
+        self.async_set_state(value)
 
     @property
     def hs_color(self):
@@ -139,7 +130,7 @@ class Light(ZhaEntity, light.Light):
         """Flag supported features."""
         return self._supported_features
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)
         self.async_schedule_update_ha_state()
@@ -148,7 +139,7 @@ class Light(ZhaEntity, light.Light):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
         if self._level_listener:
             await self.async_accept_signal(
                 self._level_listener, SIGNAL_SET_LEVEL, self.set_level)
@@ -190,7 +181,7 @@ class Light(ZhaEntity, light.Light):
             if not success:
                 return
             self._state = True
-            self.brightness = brightness
+            self._brightness = brightness
             self.async_schedule_update_ha_state()
             return
 

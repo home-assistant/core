@@ -84,13 +84,13 @@ class ZhaFan(ZhaEntity, FanEntity):
     def __init__(self, unique_id, zha_device, listeners, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, listeners, **kwargs)
-        self._fan_listener = self.get_listener(LISTENER_FAN)
+        self._fan_listener = self.cluster_listeners.get(LISTENER_FAN)
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._fan_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+            self._fan_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
 
     @property
     def supported_features(self) -> int:
@@ -119,7 +119,7 @@ class ZhaFan(ZhaEntity, FanEntity):
         """Return state attributes."""
         return self.state_attributes
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Handle state update from listener."""
         self._state = VALUE_TO_SPEED.get(state, self._state)
         self.async_schedule_update_ha_state()
@@ -138,4 +138,4 @@ class ZhaFan(ZhaEntity, FanEntity):
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         await self._fan_listener.async_set_speed(SPEED_TO_VALUE[speed])
-        self.set_state(speed)
+        self.async_set_state(speed)

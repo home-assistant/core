@@ -11,7 +11,7 @@ from functools import wraps
 import logging
 from random import uniform
 
-from homeassistant.core import callback, EventOrigin
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .helpers import (
     bind_configure_reporting, construct_unique_id,
@@ -185,8 +185,7 @@ class ClusterListener:
                 'unique_id': self._unique_id,
                 'command': command,
                 'args': args
-            },
-            EventOrigin.remote
+            }
         )
 
     async def async_update(self):
@@ -201,7 +200,7 @@ class ClusterListener:
             allow_cache=from_cache,
             only_cache=from_cache
         )
-        return result.get(attribute, None)
+        return result.get(attribute)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""

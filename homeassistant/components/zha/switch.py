@@ -60,7 +60,7 @@ class Switch(ZhaEntity, SwitchDevice):
     def __init__(self, **kwargs):
         """Initialize the ZHA switch."""
         super().__init__(**kwargs)
-        self._on_off_listener = self.get_listener(LISTENER_ON_OFF)
+        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
 
     @property
     def is_on(self) -> bool:
@@ -77,7 +77,7 @@ class Switch(ZhaEntity, SwitchDevice):
         """Turn the entity off."""
         await self._on_off_listener.off()
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Handle state update from listener."""
         self._state = bool(state)
         self.async_schedule_update_ha_state()
@@ -91,4 +91,4 @@ class Switch(ZhaEntity, SwitchDevice):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)

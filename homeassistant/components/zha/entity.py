@@ -60,14 +60,14 @@ class ZhaEntity(entity.Entity):
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
-        self._cluster_listeners = {}
+        self.cluster_listeners = {}
         # this will get flipped to false once we enable the feature after the
         # reorg is merged
         self._available = True
         self._component = kwargs['component']
         self._unsubs = []
         for listener in listeners:
-            self._cluster_listeners[listener.name] = listener
+            self.cluster_listeners[listener.name] = listener
 
     @property
     def name(self):
@@ -99,21 +99,6 @@ class ZhaEntity(entity.Entity):
         """Poll state from device."""
         return self._should_poll
 
-    @force_update.setter
-    def force_update(self, force_update):
-        """Set force update."""
-        self._force_update = force_update
-
-    @should_poll.setter
-    def should_poll(self, should_poll):
-        """Set should poll."""
-        self._should_poll = should_poll
-
-    @property
-    def cluster_listeners(self):
-        """Return cluster listeners for entity."""
-        return self._cluster_listeners.values()
-
     @property
     def device_info(self):
         """Return a device description for device registry."""
@@ -133,23 +118,19 @@ class ZhaEntity(entity.Entity):
         """Return entity availability."""
         return self._available
 
-    def set_available(self, available):
+    def async_set_available(self, available):
         """Set entity availability."""
         self._available = available
         self.async_schedule_update_ha_state()
 
-    def get_listener(self, name):
-        """Get listener by listener name."""
-        return self._cluster_listeners.get(name, None)
-
-    def update_state_attribute(self, key, value):
+    def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         self._device_state_attributes.update({
             key: value
         })
         self.async_schedule_update_ha_state()
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Set the entity state."""
         pass
 
@@ -158,7 +139,7 @@ class ZhaEntity(entity.Entity):
         await super().async_added_to_hass()
         await self.async_accept_signal(
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
-            self.set_available,
+            self.async_set_available,
             signal_override=True)
         self._zha_device.gateway.register_entity(self._zha_device.ieee, self)
 

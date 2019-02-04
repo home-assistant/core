@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
+import asyncio
 import collections
 import itertools
 import logging
@@ -25,8 +26,7 @@ from .const import (
 from .device import ZHADevice
 from ..device_entity import ZhaDeviceEntity
 from .listeners import (
-    LISTENER_REGISTRY, AttributeListener, EventRelayListener, ZDOListener,
-    populate_listener_registry)
+    LISTENER_REGISTRY, AttributeListener, EventRelayListener, ZDOListener)
 from .helpers import convert_ieee
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,13 +45,6 @@ class ZHAGateway:
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
-        establish_device_mappings()
-        populate_listener_registry()
-
-        hass.bus.async_listen_once(
-            ha_const.EVENT_HOMEASSISTANT_START,
-            self.accept_zigbee_messages
-        )
 
         for component in COMPONENTS:
             hass.data[DATA_ZHA][component] = (
@@ -144,8 +137,10 @@ class ZHAGateway:
 
     async def accept_zigbee_messages(self, _service_or_event):
         """Allow devices to accept zigbee messages."""
+        accept_messages_calls = []
         for device in self.devices.values():
-            await device.async_accept_messages()
+            accept_messages_calls.append(device.async_accept_messages())
+        await asyncio.gather(*accept_messages_calls)
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
@@ -252,13 +247,17 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
                     if c in endpoint.out_clusters]
 
     listeners = []
+    in_cluster_tasks = []
     for cluster in in_clusters:
-        await _create_cluster_listener(cluster, zha_device, is_new_join,
-                                       listeners=listeners)
+        in_cluster_tasks.append(_create_cluster_listener(
+            cluster, zha_device, is_new_join, listeners=listeners))
+    await asyncio.gather(*in_cluster_tasks)
 
+    out_cluster_tasks = []
     for cluster in out_clusters:
-        await _create_cluster_listener(cluster, zha_device, is_new_join,
-                                       listeners=listeners)
+        out_cluster_tasks.append(_create_cluster_listener(
+            cluster, zha_device, is_new_join, listeners=listeners))
+    await asyncio.gather(*out_cluster_tasks)
 
     discovery_info = {
         'unique_id': device_key,
@@ -337,14 +336,6 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
             component = candidate_component
             break
 
-    # for signature, comp in zha_const.CUSTOM_CLUSTER_MAPPINGS.items():
-    #     if (isinstance(cluster.endpoint.device, signature[0]) and
-    #             cluster.cluster_id == signature[1]):
-    #         component = comp[0]
-    #         sub_component = comp[1]
-    #         break
-    #
-
     if component is None or component not in COMPONENTS:
         return
     listeners = []
@@ -374,9 +365,6 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
             SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster.cluster_id, UNKNOWN)
         })
 
-    # discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
-    # if sub_component:
-    #     discovery_info.update({'sub_component': sub_component})
     return discovery_info
 
 

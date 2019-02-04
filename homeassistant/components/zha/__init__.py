@@ -24,6 +24,8 @@ from .core.const import (
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
+from .core.gateway import establish_device_mappings
+from .core.listeners import populate_listener_registry
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -86,9 +88,11 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    establish_device_mappings()
+    populate_listener_registry()
+
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
-
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
     if config.get(ENABLE_QUIRKS, True):
@@ -137,6 +141,8 @@ async def async_setup_entry(hass, config_entry):
     )
 
     zha_gateway = ZHAGateway(hass, config)
+    hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_START, zha_gateway.accept_zigbee_messages)
 
     # Patch handle_message until zigpy can provide an event here
     def handle_message(sender, is_reply, profile, cluster,

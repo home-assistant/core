@@ -88,10 +88,10 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         super().__init__(**kwargs)
         self._device_state_attributes = {}
         self._temporary_state_attributes = {}
-        self._zone_listener = self.get_listener(LISTENER_ZONE)
-        self._on_off_listener = self.get_listener(LISTENER_ON_OFF)
-        self._level_listener = self.get_listener(LISTENER_LEVEL)
-        self._attr_listener = self.get_listener(LISTENER_ATTRIBUTE)
+        self._zone_listener = self.cluster_listeners.get(LISTENER_ZONE)
+        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
+        self._level_listener = self.cluster_listeners.get(LISTENER_LEVEL)
+        self._attr_listener = self.cluster_listeners.get(LISTENER_ATTRIBUTE)
         self._zha_sensor_type = kwargs[SENSOR_TYPE]
 
     async def _determine_device_class(self):
@@ -99,7 +99,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         device_class_supplier = DEVICE_CLASS_REGISTRY.get(
             self._zha_sensor_type)
         if callable(device_class_supplier):
-            listener = self.get_listener(self._zha_sensor_type)
+            listener = self.cluster_listeners.get(self._zha_sensor_type)
             if listener is None:
                 return None
             return await device_class_supplier(listener)
@@ -116,13 +116,14 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
                 self._level_listener, SIGNAL_MOVE_LEVEL, self.move_level)
         if self._on_off_listener:
             await self.async_accept_signal(
-                self._on_off_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+                self._on_off_listener, SIGNAL_ATTR_UPDATED,
+                self.async_set_state)
         if self._zone_listener:
             await self.async_accept_signal(
-                self._zone_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+                self._zone_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
         if self._attr_listener:
             await self.async_accept_signal(
-                self._attr_listener, SIGNAL_ATTR_UPDATED, self.set_state)
+                self._attr_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
 
     @property
     def is_on(self) -> bool:
@@ -136,7 +137,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)
         self.async_schedule_update_ha_state()

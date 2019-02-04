@@ -61,8 +61,8 @@ class ZhaDeviceEntity(ZhaEntity):
             'lqi': zha_device.lqi,
             'rssi': zha_device.rssi,
         })
-        self.should_poll = True
-        self._battery_listener = self.get_listener(LISTENER_BATTERY)
+        self._should_poll = True
+        self._battery_listener = self.cluster_listeners.get(LISTENER_BATTERY)
 
     @property
     def state(self) -> str:
@@ -96,7 +96,7 @@ class ZhaDeviceEntity(ZhaEntity):
         if self._battery_listener:
             await self.async_accept_signal(
                 self._battery_listener, SIGNAL_STATE_ATTR,
-                self.update_state_attribute)
+                self.async_update_state_attribute)
             # only do this on add to HA because it is static
             await self._async_init_battery_values()
 

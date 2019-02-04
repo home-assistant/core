@@ -169,7 +169,7 @@ class Sensor(ZhaEntity):
             sensor_type,
             False
         )
-        self._listener = self.get_listener(
+        self._listener = self.cluster_listeners.get(
             LISTENER_REGISTRY.get(sensor_type, LISTENER_ATTRIBUTE)
         )
 
@@ -177,9 +177,10 @@ class Sensor(ZhaEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._listener, SIGNAL_ATTR_UPDATED, self.set_state)
+            self._listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
         await self.async_accept_signal(
-            self._listener, SIGNAL_STATE_ATTR, self.update_state_attribute)
+            self._listener, SIGNAL_STATE_ATTR,
+            self.async_update_state_attribute)
 
     @property
     def unit_of_measurement(self):
@@ -195,7 +196,7 @@ class Sensor(ZhaEntity):
             return str(round(self._state, 2))
         return self._state
 
-    def set_state(self, state):
+    def async_set_state(self, state):
         """Handle state update from listener."""
         self._state = self._formatter_function(state, self)
         self.async_schedule_update_ha_state()
