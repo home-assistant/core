@@ -98,6 +98,7 @@ def dropwebhook(hass):
     """Drop the webhook subscription."""
     NETATMO_AUTH.dropwebhook()
 
+
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
     body = await request.text()
