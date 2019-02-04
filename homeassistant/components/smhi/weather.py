@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import Throttle, dt, slugify
+from homeassistant.util import Throttle, slugify
 
 DEPENDENCIES = ['smhi']
 
@@ -212,21 +212,24 @@ class SmhiWeather(WeatherEntity):
             return None
 
         data = []
+        first_cast = True
+
         for forecast in self._forecasts:
             condition = next((
                 k for k, v in CONDITION_CLASSES.items()
                 if forecast.symbol in v), None)
 
-            #  Only get mid day forecasts
-            if forecast.valid_time.hour == 12:
+            if not first_cast:
                 data.append({
-                    ATTR_FORECAST_TIME: dt.as_local(forecast.valid_time),
+                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
                     ATTR_FORECAST_TEMP: forecast.temperature_max,
                     ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_PRECIPITATION:
-                        round(forecast.mean_precipitation*24),
+                        round(forecast.total_precipitation),
                     ATTR_FORECAST_CONDITION: condition,
                 })
+            else:
+                first_cast = False
 
         return data
 
