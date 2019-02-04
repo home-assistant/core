@@ -64,8 +64,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Transmission Component."""
     host = config[DOMAIN][CONF_HOST]
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
     port = config[DOMAIN][CONF_PORT]
     scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
