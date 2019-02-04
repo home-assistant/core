@@ -52,7 +52,6 @@ async def test_light(hass, config_entry, zha_gateway):
     # dimmable light
     level_device_on_off_cluster = zigpy_device_level.endpoints.get(1).on_off
     level_device_level_cluster = zigpy_device_level.endpoints.get(1).level
-
     level_entity_id = make_entity_id(DOMAIN, zigpy_device_level,
                                      level_device_on_off_cluster,
                                      use_suffix=False)
@@ -76,15 +75,12 @@ async def test_light(hass, config_entry, zha_gateway):
         hass, level_device_on_off_cluster, level_entity_id)
 
     # test turning the lights on and off from the light
-    await async_test_dimmer_from_light(
-        hass, level_device_level_cluster, level_entity_id, 150, STATE_ON)
+    await async_test_on_from_light(
+        hass, level_device_on_off_cluster, level_entity_id)
 
     # test getting a brightness change from the network
     await async_test_dimmer_from_light(
-        hass, level_device_level_cluster, level_entity_id, 0, STATE_OFF)
-
-    await async_test_dimmer_from_light(
-        hass, level_device_level_cluster, level_entity_id, 255, STATE_ON)
+        hass, level_device_level_cluster, level_entity_id, 150, STATE_ON)
 
     # test adding a new light to the network and HA
     await async_test_device_join(

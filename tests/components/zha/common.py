@@ -177,7 +177,7 @@ async def async_test_device_join(
     only trigger during device joins can be tested.
     """
     from zigpy.zcl.foundation import Status
-    # create zigpy device
+    # create zigpy device mocking out the zigbee network operations
     with patch(
             'zigpy.zcl.Cluster.configure_reporting',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
