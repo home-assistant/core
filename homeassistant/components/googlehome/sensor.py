@@ -36,9 +36,10 @@ async def async_setup_platform(hass, config,
             "To use this you need to configure the 'googlehome' component")
         return
 
+    await hass.data[CLIENT].update_info(discovery_info['host'])
+
     devices = []
     for condition in SENSOR_TYPES:
-        await hass.data[CLIENT].update_info(discovery_info['host'])
         data = hass.data[GOOGLEHOME_DOMAIN][discovery_info['host']]
         info = data.get('info', {})
         device = GoogleHomeAlarm(hass.data[CLIENT], condition,
@@ -59,7 +60,6 @@ class GoogleHomeAlarm(Entity):
         self._name = None
         self._state = None
         self._available = True
-        self._info = None
         self._name = "{} {}".format(name, SENSOR_TYPES[self._condition])
 
     async def async_update(self):
