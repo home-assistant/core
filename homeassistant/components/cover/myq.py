@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_OPEN, STATE_OPENING)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-REQUIREMENTS = ['pymyq==1.0.0']
+REQUIREMENTS = ['pymyq==1.1.0']
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {
