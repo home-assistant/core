@@ -68,7 +68,7 @@ class FFmpegCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                self._manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()
 

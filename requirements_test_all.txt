@@ -98,7 +98,7 @@ geojson_client==0.3
 georss_client==0.5
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.9
+ha-ffmpeg==1.11
 
 # homeassistant.components.hangouts
 hangups==0.4.6
