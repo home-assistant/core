@@ -15,8 +15,6 @@ from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED,
     STATE_ON, STATE_OFF,
     STATE_HOME, STATE_NOT_HOME)
-from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
 
@@ -146,63 +144,6 @@ class TestStateHelpers(unittest.TestCase):
         assert 'light' == last_call.domain
         assert SERVICE_TURN_ON == last_call.service
         assert complex_data == last_call.data.get('complex')
-
-    def test_reproduce_media_data(self):
-        """Test reproduce_state with SERVICE_PLAY_MEDIA."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_PLAY_MEDIA)
-
-        self.hass.states.set('media_player.test', 'off')
-
-        media_attributes = {'media_content_type': 'movie',
-                            'media_content_id': 'batman'}
-
-        state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
-                                                  media_attributes))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_PLAY_MEDIA == last_call.service
-        assert 'movie' == last_call.data.get('media_content_type')
-        assert 'batman' == last_call.data.get('media_content_id')
-
-    def test_reproduce_media_play(self):
-        """Test reproduce_state with SERVICE_MEDIA_PLAY."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PLAY)
-
-        self.hass.states.set('media_player.test', 'off')
-
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'playing'))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_MEDIA_PLAY == last_call.service
-        assert 'media_player.test' == \
-            last_call.data.get('entity_id')
-
-    def test_reproduce_media_pause(self):
-        """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PAUSE)
-
-        self.hass.states.set('media_player.test', 'playing')
-
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'paused'))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_MEDIA_PAUSE == last_call.service
-        assert 'media_player.test' == \
-            last_call.data.get('entity_id')
 
     def test_reproduce_bad_state(self):
         """Test reproduce_state with bad state."""
