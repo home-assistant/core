@@ -41,9 +41,12 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the Fast.com component."""
     conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(
-        hass, conf[CONF_UPDATE_INTERVAL], conf[CONF_MANUAL]
-    )
+    data = hass.data[DOMAIN] = SpeedtestData(hass)
+
+    if not conf[CONF_MANUAL]:
+        async_track_time_interval(
+            hass, data.update, conf[CONF_UPDATE_INTERVAL]
+        )
 
     def update(call=None):
         """Service call to manually update the data."""
@@ -61,14 +64,12 @@ async def async_setup(hass, config):
 class SpeedtestData:
     """Get the latest data from fast.com."""
 
-    def __init__(self, hass, interval, manual):
+    def __init__(self, hass):
         """Initialize the data object."""
         self.data = None
         self._hass = hass
-        if not manual:
-            async_track_time_interval(self._hass, self.update, interval)
 
-    def update(self):
+    def update(self, now=None):
         """Get the latest data from fast.com."""
         from fastdotcom import fast_com
         _LOGGER.debug("Executing fast.com speedtest")
