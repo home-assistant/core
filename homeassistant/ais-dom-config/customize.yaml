@@ -1,5 +1,3 @@
-weblink.cloud:
-  friendly_name: Przejdz do konfiguracji usług online
 binary_sensor.ping_binary_sensor:
   friendly_name: Status serwisu Asystent domowy
   icon: mdi:cloud
@@ -39,6 +37,7 @@ input_text.buttons_ais_remote:
     column_width: 110px
     row_height: 22px
     entities:
+
 #    - entity: script.ais_button_click
 #      data:
 #        code: '{"KeyCode":190, "Action": 1}'
@@ -117,18 +116,6 @@ input_text.buttons_ais_remote:
 #      color_on: red
 #      color_off: green
 #      icon: mdi:microphone-settings
-weblink.klucz_ssh:
-  friendly_name: 'KLUCZ SSH'
-weblink.ftp_url:
-  friendly_name: 'FTP://AIS-DOM.LOCAL:1024'
-weblink.http_url:
-  friendly_name: 'HTTP://AIS-DOM.LOCAL:8180'
-weblink.https_url:
-  friendly_name: 'HTTPS://AIS-DOM.LOCAL:8123'
-weblink.https_localhost_cert:
-  friendly_name: CERTYFIKAT HTTPS
-weblink.uncertified_android_registration:
-  friendly_name: Rejestracja urządzenia w Google Android
 sensor.internal_ip_address:
   friendly_name: Adres IP
   icon: mdi:access-point-network
@@ -181,6 +168,12 @@ sensor.dark_sky_pressure:
 sensor.dark_sky_visibility:
     friendly_name: Widoczność
 
+camera.remote_access:
+  friendly_name: Adres aplikacji w Internecie
+sensor.ais_secure_android_id_dom:
+  friendly_name: Unikalny identyfikator bramki
+  icon: mdi:account-card-details
+
 
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
@@ -189,9 +182,10 @@ group.dom_system_version:
   friendly_name: System
   remote_group_view: Pomoc
   order: 1
-#group.dom_cloud:
-#  friendly_name: Usługi AIS dom
-#  order: 2
+group.dom_cloud:
+  friendly_name: Konfiguracja treści i usług
+  remote_group_view: Pomoc
+  order: 2
 group.ais_rss_help_remote:
   context_key_words: instrukcja,pomoc,pomocy,help
   context_answer: OK, wybierz pilotem stronę pomocy

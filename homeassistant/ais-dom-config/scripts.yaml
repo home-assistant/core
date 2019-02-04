@@ -14,6 +14,18 @@ ais_restart_system:
         text: "Restartuję. Do usłyszenia."
     - service: ais_shell_command.execute_restart
 
+ais_cloud_sync:
+  alias: 'Synchronizacja z serwisem Asystent domowy'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Synchronizuje treści i ustawienia z serwisem."
+    - service: ais_updater.check_version
+    - service: ais_cloud.get_radio_types
+    - service: ais_cloud.get_podcast_types
+    - service: ais_cloud.get_rss_news_category
+    - service: ais_ai_service.prepare_remote_menu
+
 ais_stop_system:
   alias: 'Wyłączenie bramki'
   sequence:

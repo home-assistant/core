@@ -1385,8 +1385,8 @@ async def async_setup(hass, config):
         "Ogrzewanie [na] [w] [tryb] poza domem", "Ogrzewanie włącz [tryb] poza domem"])
     async_register(hass, INTENT_CLIMATE_UNSET_AWAY, [
         "Ogrzewanie [na] [w] [tryb] w domu", "Ogrzewanie wyłącz [tryb] poza domem"])
-    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz [całe] ogrzewnie", "Ogrzewanie wyłącz"])
-    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz [całe] ogrzewnie", "Ogrzewanie włącz"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewnie", "Wyłącz ogrzewnie"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewnie", "Włącz ogrzewnie"])
     async_register(hass, INTENT_LAMPS_ON, [
             'włącz światła',
             'zapal światła',
@@ -1711,7 +1711,7 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
-        info = "Połączenie Wifi: "
+        info = " "
         if "ssid" in cci:
             ais_global.set_my_ssid(cci["ssid"])
             if cci["ssid"] == "<unknown ssid>":
@@ -1726,7 +1726,7 @@ def _process_command_from_frame(hass, service):
                     info += "; " + _wifi_frequency_info(cci["frequency_mhz"])
 
         hass.states.async_set(
-            'sensor.ais_android_wifi_current_network_info', info)
+            'sensor.ais_android_wifi_current_network_info', info, {"friendly_name": "Połączenie Wifi"})
         return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info
@@ -2061,7 +2061,7 @@ def _process(hass, text, callback):
             if s is False:
                 m = m_org
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_ON:
+        if s is False and found_intent == INTENT_TURN_ON  and "ogrzewanie" in text:
             m_org = m
             m, s = yield from hass.helpers.intent.async_handle(
                 DOMAIN, INTENT_CLIMATE_SET_ALL_ON,
@@ -2070,7 +2070,7 @@ def _process(hass, text, callback):
             if s is False:
                 m = m_org
         # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_OFF:
+        if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
             m_org = m
             m, s = yield from hass.helpers.intent.async_handle(
                 DOMAIN, INTENT_CLIMATE_SET_ALL_OFF,

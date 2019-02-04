@@ -72,6 +72,10 @@ def async_setup(hass, config):
         import os
         os.system("pm2 flush")
 
+    @asyncio.coroutine
+    def change_remote_access(service):
+        yield from _change_remote_access(hass, service)
+
     # register services
     hass.services.async_register(
         DOMAIN, 'change_host_name', change_host_name)
@@ -99,6 +103,8 @@ def async_setup(hass, config):
         DOMAIN, 'init_local_sdcard', init_local_sdcard)
     hass.services.async_register(
         DOMAIN, 'flush_logs', flush_logs)
+    hass.services.async_register(
+        DOMAIN, 'change_remote_access', change_remote_access)
     return True
 
 
@@ -114,6 +120,16 @@ def _change_host_name(hass, call):
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
 
+
+@asyncio.coroutine
+def _change_remote_access(hass, call):
+    import os
+    access = hass.states.get('input_boolean.ais_remote_access').state
+    gate_id = hass.states.get('sensor.ais_secure_android_id_dom').state
+    if access == 'on':
+        os.system("pm2 start lt --name tunnel -- -h http://paczka.pro -p 8180 -s " + gate_id)
+    else:
+        os.system("pm2 delete tunnel")
 
 @asyncio.coroutine
 def _key_event(hass, call):
@@ -280,7 +296,7 @@ def _scan_device(hass, call):
     from requests_futures.sessions import FuturesSession
     from urllib.parse import urlparse
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
-    session = FuturesSession(max_workers=1)
+    session = FuturesSession()
 
     def bg_cb(resp, *args, **kwargs):
         try:
@@ -325,8 +341,8 @@ def _scan_device(hass, call):
         except Exception:
             pass
 
-    session.get(url, timeout=10, hooks={'response': bg_cb})
-    session.get(url_a, timeout=10, hooks={'response': bg_cb_a})
+    session.get(url, hooks={'response': bg_cb})
+    session.get(url_a, hooks={'response': bg_cb_a})
     hass.async_add_job(
         hass.services.async_call(
             'ais_shell_command', 'scan_network_for_devices'))
@@ -357,6 +373,11 @@ def _scan_network_for_devices(hass, call):
         yield from hass.services.async_call('mqtt', 'publish', {
             'topic': 'dom/cmnd/status',
             'payload': 0
+        })
+        # disco
+        yield from hass.services.async_call('mqtt', 'publish', {
+            'topic': 'dom/cmnd/SetOption19',
+            'payload': 1
         })
 
         yield from hass.services.async_call(

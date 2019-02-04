@@ -13,7 +13,7 @@ sensor:
   - platform: ais_android_cmd
     command: getprop net.hostname
     name: local_host_name
-    scan_interval: 360
+    scan_interval: 3600
   - platform: command_line
     command: python3 -c "import socket; print((([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
               if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
@@ -28,25 +28,9 @@ sensor:
     method: get_rss_help_text
 weblink:
   entities:
-    - name: http_url
-      url: http://ais-dom.local:8180
-    - name: https_url
-      url: https://ais-dom.local:8123
-    - name: klucz_ssh
-      url: /local/id_rsa_ais
-      icon: mdi:console-line
-    - name: ftp_url
-      url: ftp://ais-dom.local:1024
-      icon: mdi:play-network
     - name: cloud
       url: https://powiedz.co/ords/f?p=1000:101
       icon: mdi:open-in-new
-    - name: upgrade_log
-      url: /local/upgrade_log.txt
-      icon: mdi:file-document
-    - name: https_localhost_cert
-      url: /local/rootCA.pem
-      icon: mdi:verified
 
 input_text:
   ais_android_wifi_password:
@@ -73,7 +57,8 @@ input_select:
       - "4. Sterowanie pilotem"
       - "5. Serwisy audio"
       - "6. Automatyka domowa"
-      - "7. Zdalny dostęp"
+      - "7. Dostęp do bramki w sieci lokalnej"
+      - "8. Dostęp do bramki z Internetu"
     initial: "-"
     icon: mdi:format-list-bulleted-type
   ais_android_wifi_network:

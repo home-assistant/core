@@ -529,9 +529,9 @@ class ConfigEntries:
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
             self.hass.components.persistent_notification.async_create(
-                title='New devices discovered',
-                message=("We have discovered new devices on your network. "
-                         "[Check it out](/config/integrations)"),
+                title='Wykryto nowe urządzenia',
+                message=("Wykryliśmy nowe urządzenia w Twojej sieci."
+                         "[ Sprawdz](/config/integrations)"),
                 notification_id=DISCOVERY_NOTIFICATION_ID
             )
 

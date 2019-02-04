@@ -153,6 +153,8 @@ async def async_setup(hass, config):
 
 async def get_system_info(hass, include_components):
     """Return info about the system."""
+
+    gate_id = hass.states.get('sensor.ais_secure_android_id_dom').state
     info_object = {
         'arch': platform.machine(),
         'dev': 'dev' in current_version,
@@ -163,6 +165,7 @@ async def get_system_info(hass, include_components):
         'version': current_version,
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
         'hassio': hass.components.hassio.is_hassio(),
+        'gate_id': gate_id,
     }
 
     if include_components:

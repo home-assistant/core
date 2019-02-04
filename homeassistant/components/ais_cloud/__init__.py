@@ -10,11 +10,8 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import (CONF_NAME, CONF_IP_ADDRESS, CONF_MAC)
 from homeassistant.util import slugify
 DOMAIN = 'ais_cloud'
-# DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['feedparser==5.2.1', 'readability-lxml', 'bs4']
-CLOUD_TOKEN_PATH = "/data/data/pl.sviete.dom/files"
-CLOUD_TOKEN_PATH += "/home/AIS/.dom/.ais_token.txt"
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
 CLOUD_WS_TOKEN = None
 CLOUD_WS_HEADER = {}
@@ -54,10 +51,10 @@ def async_setup(hass, config):
     data = hass.data[DOMAIN] = AisColudData(hass)
     yield from data.get_types_async()
 
-    # add "Projekt" panel to the menu list
+    # TODO add "Clound" panel to the menu list
     # yield from hass.components.frontend.async_register_built_in_panel(
-    #         'iframe', "Projekt", "mdi:shuffle-variant",
-    #         "dom", {'url': 'https://' + ais_global.get_my_global_ip() + ':1880'})
+    #         'iframe', "Usługi online", "mdi:cloud-sync",
+    #         "cloud", {'url': 'https://powiedz.co/ords/f?p=100:101'})
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types  ")
@@ -99,6 +96,10 @@ def async_setup(hass, config):
         _LOGGER.info("select_media_player")
         data.select_media_player(call)
 
+    def get_rss_news_category(call):
+        _LOGGER.info("get_rss_news_category")
+        data.get_rss_news_category(call)
+
     def get_rss_news_channels(call):
         _LOGGER.info("get_rss_news_channels")
         data.get_rss_news_channels(call)
@@ -136,6 +137,8 @@ def async_setup(hass, config):
         DOMAIN, 'select_podcast_track', select_podcast_track)
     hass.services.async_register(
         DOMAIN, 'select_media_player', select_media_player)
+    hass.services.async_register(
+        DOMAIN, 'get_rss_news_category', get_rss_news_category)
     hass.services.async_register(
         DOMAIN, 'get_rss_news_channels', get_rss_news_channels)
     hass.services.async_register(
@@ -232,31 +235,6 @@ def async_setup(hass, config):
                 ais_global.GLOBAL_TTS_PITCH = 1
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed)
-    #
-    aisCloud = AisCloudWS()
-    CLOUD_WS_TOKEN = aisCloud.getCurrentToken()
-    if CLOUD_WS_TOKEN is not None:
-        # Show the ais cloud group
-        hass.states.async_set(
-            'weblink.cloud', CLOUD_APP_URL + CLOUD_WS_TOKEN, {
-                'icon': 'mdi:open-in-new',
-                'friendly_name': 'Konfiguracja usług'
-            })
-        # yield from hass.services.async_call(
-        #     'group',
-        #     'set_visibility', {
-        #         "entity_id": "group.dom_cloud",
-        #         "visible": True
-        #         })
-
-    # else:
-    #     # Hide the group ais cloud group
-    #     yield from hass.services.async_call(
-    #         'group',
-    #         'set_visibility', {
-    #             "entity_id": "group.dom_cloud",
-    #             "visible": False
-    #             })
     return True
 
 
@@ -265,51 +243,29 @@ class AisCloudWS:
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
 
-    def fomatCloudToken(self, token):
-        global CLOUD_WS_HEADER, CLOUD_WS_TOKEN
-        CLOUD_WS_TOKEN = token
-        CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
-        _LOGGER.info('CLOUD_WS_HEADER: ' + str(CLOUD_WS_HEADER))
-
-    def getCurrentToken(self):
+    def setCloudToken(self):
         # take the token from secrets
-        try:
-            with open(CLOUD_TOKEN_PATH, 'r') as myfile:
-                token = myfile.read().replace('\n', '')
-            rest_url = self.url + 'token_info?token=' + token
-            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
-            json_ws_resp = ws_resp.json()
-            if json_ws_resp["valid"] == 1:
-                self.fomatCloudToken(token)
-                return token
-        except Exception as e:
-            _LOGGER.info("Exception: getCurrentToken " + str(e))
-        return None
-
-    def getCloudToken(self, login, password):
-        from uuid import getnode as get_mac
-        mac = get_mac()
-        rest_url = self.url + 'token?mac=' + str(mac)
-        try:
-            ws_resp = requests.get(rest_url, auth=(login, password))
-            json_ws_resp = ws_resp.json()
-            token = json_ws_resp["token"]
-            with open(CLOUD_TOKEN_PATH, 'w+') as myfile:
-                myfile.write(token)
-            self.fomatCloudToken(token)
-            return token
-        except Exception as e:
-            _LOGGER.info("Exception: getCloudToken " + str(e))
-        return None
+        global CLOUD_WS_TOKEN, CLOUD_WS_HEADER
+        if CLOUD_WS_TOKEN is None:
+            try:
+                import subprocess
+                CLOUD_WS_TOKEN = 'dom_' + subprocess.check_output(
+                    'su -c "settings get secure android_id"', shell=True, timeout=15)
+                CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
+            except Exception as e:
+                CLOUD_WS_TOKEN = 'dom-unknown'
+                CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
+                _LOGGER.info("Exception: getCurrentToken " + str(e))
 
     def ask(self, question, org_answer):
+        self.setCloudToken()
         rest_url = self.url + 'ask?question=' + question + " "
         rest_url += '&org_answer=' + org_answer
-        _LOGGER.info('rest_url: ' + str(rest_url))
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
     def audio_type(self, nature):
+        self.setCloudToken()
         try:
             rest_url = self.url + "audio_type?nature=" + nature
             ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=7)
@@ -319,18 +275,21 @@ class AisCloudWS:
             ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, a_type):
+        self.setCloudToken()
         rest_url = self.url + "audio_name?nature=" + nature
         rest_url += "&type=" + a_type
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
     def audio(self, item, a_type, text_input):
+        self.setCloudToken()
         rest_url = self.url + "audio?item=" + item + "&type="
         rest_url += a_type + "&text_input=" + text_input
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
     def key(self, service):
+        self.setCloudToken()
         rest_url = self.url + "key?service=" + service
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
@@ -1021,6 +980,19 @@ class AisColudData:
         # rebuild the groups
         import homeassistant.components.ais_ai_service as ais_ai
         ais_ai.get_groups(hass)
+
+    def get_rss_news_category(self, call):
+        ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
+        json_ws_resp = ws_resp.json()
+        self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+        types = [ais_global.G_EMPTY_OPTION]
+        for item in json_ws_resp["data"]:
+            types.append(item)
+        self.hass.services.call(
+            'input_select',
+            'set_options', {
+                "entity_id": "input_select.rss_news_category",
+                "options": types})
 
     def get_rss_news_channels(self, call):
         """Load news channels of the for the selected category."""

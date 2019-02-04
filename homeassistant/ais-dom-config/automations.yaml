@@ -36,6 +36,8 @@
    - service: ais_cloud.get_radio_types
    - delay: '1'
    - service: ais_cloud.get_podcast_types
+   - delay: 1
+   - service: ais_cloud.get_rss_news_category
    - delay: '3'
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_ai_service.publish_command_to_frame
@@ -53,6 +55,9 @@
      data:
        payload: 0
        topic: dom/cmnd/state
+   - service: input_boolean.turn_off
+     data:
+       entity_id: input_boolean.ais_remote_access
    - delay: '300'
    - service: ais_ai_service.prepare_remote_menu
 
@@ -494,3 +499,12 @@
         entity_id: input_text.ais_android_wifi_password
         value: ""
 
+- id: '201902030742123'
+  alias: 'Change remote web access'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_boolean.ais_remote_access
+  action:
+    - service: ais_shell_command.change_remote_access

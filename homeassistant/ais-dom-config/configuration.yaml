@@ -19,7 +19,7 @@ sun:
 
 # ais-dom cloud functionality
 ais_cloud:
-# ais_cloud_sync:
+#ais_cloud_sync:
 ais_ai_service:
 ais_knowledge_service:
 ais_shell_command:
@@ -87,7 +87,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  #development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   themes: !include_dir_merge_named themes
 
