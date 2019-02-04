@@ -61,6 +61,8 @@ async def async_setup(hass, config):
         conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY)
     )
 
+    await manager.async_get_version()
+
     # Register service
     async def async_service_handle(service):
         """Handle service ffmpeg process."""
@@ -98,6 +100,7 @@ class FFmpegManager:
         self._cache = {}
         self._bin = ffmpeg_bin
         self._version = None
+        self._major_version = None
 
     @property
     def binary(self):
@@ -108,23 +111,21 @@ class FFmpegManager:
         """Return ffmpeg version."""
         from haffmpeg.tools import FFVersion
 
-        if self._version is None:
-            ffversion = FFVersion(self._bin, self.hass.loop)
-            self._version = await ffversion.get_version()
+        ffversion = FFVersion(self._bin, self.hass.loop)
+        self._version = await ffversion.get_version()
 
-        return self._version
-
-    async def async_get_ffmpeg_stream_content_type(self):
-        """Return HTTP content type for ffmpeg stream."""
-        major_version = 3
-
-        version_string = await self.async_get_version()
-        if version_string is not None:
-            result = re.search(r"(\d+)\.", version_string)
+        self._major_version = None
+        if self._version is not None:
+            result = re.search(r"(\d+)\.", self._version)
             if result is not None:
-                major_version = int(result.group(1))
+                self._major_version = int(result.group(1))
 
-        if major_version > 3:
+        return self._version, self._major_version
+
+    @property
+    def ffmpeg_stream_content_type(self):
+        """Return HTTP content type for ffmpeg stream."""
+        if self._major_version is not None and self._major_version > 3:
             return 'multipart/x-mixed-replace;boundary=ffmpeg'
 
         return 'multipart/x-mixed-replace;boundary=ffserver'

@@ -101,7 +101,7 @@ class CanaryCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                await self._ffmpeg.async_get_ffmpeg_stream_content_type())
+                self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()
 
