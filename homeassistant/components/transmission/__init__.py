@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_USERNAME
+    CONF_USERNAME,
+    CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.event import track_time_interval
@@ -42,6 +43,8 @@ SENSOR_TYPES = {
     'started_torrents': ['Started Torrents', None],
 }
 
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=120)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -50,20 +53,21 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(TURTLE_MODE, default=False): cv.boolean,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_status']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SCAN_INTERVAL = timedelta(minutes=2)
-
 
 def setup(hass, config):
     """Set up the Transmission Component."""
     host = config[DOMAIN][CONF_HOST]
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
     port = config[DOMAIN][CONF_PORT]
+    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
@@ -85,7 +89,7 @@ def setup(hass, config):
         """Get the latest data from Transmission."""
         tm_data.update()
 
-    track_time_interval(hass, refresh, SCAN_INTERVAL)
+    track_time_interval(hass, refresh, scan_interval)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
