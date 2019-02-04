@@ -39,7 +39,7 @@ def test_serialize_text():
     response = web.Response(status=201, text='Hello')
     assert aiohttp.serialize_response(response) == {
         'status': 201,
-        'body': b'Hello',
+        'body': 'Hello',
         'headers': {'Content-Type': 'text/plain; charset=utf-8'},
     }
 
@@ -49,6 +49,6 @@ def test_serialize_json():
     response = web.json_response({"how": "what"})
     assert aiohttp.serialize_response(response) == {
         'status': 200,
-        'body': b'{"how": "what"}',
+        'body': '{"how": "what"}',
         'headers': {'Content-Type': 'application/json; charset=utf-8'},
     }
