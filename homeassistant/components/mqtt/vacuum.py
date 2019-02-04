@@ -10,16 +10,16 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice, DOMAIN)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_DEVICE)
+    VacuumDevice)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -94,7 +94,6 @@ CONF_FAN_SPEED_TEMPLATE = 'fan_speed_template'
 CONF_SET_FAN_SPEED_TOPIC = 'set_fan_speed_topic'
 CONF_FAN_SPEED_LIST = 'fan_speed_list'
 CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Vacuum'
 DEFAULT_RETAIN = False
@@ -162,18 +161,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT vacuum dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities, config_entry,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry,
                               discovery_hash=None):
     """Set up the MQTT vacuum."""
-    async_add_entities([MqttVacuum(config, discovery_hash)])
+    async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -181,7 +186,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
-    def __init__(self, config, discovery_info):
+    def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""
         self._cleaning = False
         self._charging = False
@@ -203,7 +208,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
@@ -257,6 +262,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 

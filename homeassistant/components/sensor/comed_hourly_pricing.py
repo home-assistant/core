@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -120,7 +120,7 @@ class ComedHourlyPricingSensor(Entity):
                         float(data[0]['price']) + self.offset, 2)
 
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)

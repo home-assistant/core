@@ -127,8 +127,8 @@ class EntityRegistry:
                 device_id=device_id,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
-                # Fix introduced in 0.86 (Jan 23, 2018). Next line can be
-                # removed when we release 1.0 or in 2019.
+                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
+                # removed when we release 1.0 or in 2020.
                 new_entity_id='.'.join(slugify(part) for part
                                        in entity_id.split('.', 1)))
 
@@ -148,6 +148,12 @@ class EntityRegistry:
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity
+
+    @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.async_schedule_save()
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
