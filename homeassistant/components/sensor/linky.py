@@ -146,9 +146,12 @@ class LinkySensor(Entity):
                                           self._attributes["peak_hours"] +
                                           self._offpeak_hours_cost *
                                           self._attributes["offpeak_hours"])
-        self._attributes["monthly_evolution"] = (
-            1 - ((self._lk.monthly[0][CONSUMPTION]) /
-                 (self._lk.compare_month))) * 100
+        if self._lk.compare_month == 0:
+            self._attributes["monthly_evolution"] = 0
+        else:
+            self._attributes["monthly_evolution"] = (
+                1 - ((self._lk.monthly[0][CONSUMPTION]) /
+                     (self._lk.compare_month))) * 100
         _LOGGER.debug("Computed values: " +
                       str(self._attributes))
 
