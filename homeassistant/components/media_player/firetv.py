@@ -36,17 +36,6 @@ DEFAULT_PORT = 5555
 DEFAULT_GET_SOURCE = True
 DEFAULT_GET_SOURCES = True
 
-FIRETV_KEY_POWER = 'POWER'
-FIRETV_KEY_SLEEP = 'SLEEP'
-FIRETV_KEY_HOME = 'HOME'
-FIRETV_KEY_UP = 'UP'
-FIRETV_KEY_DOWN = 'DOWN'
-FIRETV_KEY_LEFT = 'LEFT'
-FIRETV_KEY_RIGHT = 'RIGHT'
-FIRETV_KEY_ENTER = 'ENTER'
-FIRETV_KEY_BACK = 'BACK'
-FIRETV_KEY_SPACE = 'SPACE'
-FIRETV_KEY_MENU = 'MENU'
 
 KEY_SERVICE = 'firetv_key'
 
@@ -115,34 +104,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def service_key(service):
         """Dispatch service calls to target entities."""
-        key = service.data.get(ATTR_KEY)
+        key = service.data.get(ATTR_KEY).upper()
         entity_id = service.data.get(ATTR_ENTITY_ID)
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
-            if key == FIRETV_KEY_POWER:
-                target_device.firetv.power()
-            elif key == FIRETV_KEY_SLEEP:
-                target_device.firetv.sleep()
-            elif key == FIRETV_KEY_HOME:
-                target_device.firetv.home()
-            elif key == FIRETV_KEY_UP:
-                target_device.firetv.up()
-            elif key == FIRETV_KEY_DOWN:
-                target_device.firetv.down()
-            elif key == FIRETV_KEY_LEFT:
-                target_device.firetv.left()
-            elif key == FIRETV_KEY_RIGHT:
-                target_device.firetv.right()
-            elif key == FIRETV_KEY_ENTER:
-                target_device.firetv.enter()
-            elif key == FIRETV_KEY_BACK:
-                target_device.firetv.back()
-            elif key == FIRETV_KEY_SPACE:
-                target_device.firetv.space()
-            elif key == FIRETV_KEY_MENU:
-                target_device.firetv.menu()
+
+            key_functions = {
+                                'POWER': target_device.firetv.power,
+                                'SLEEP': target_device.firetv.sleep,
+                                'HOME' : target_device.firetv.home,
+                                'UP': target_device.firetv.up,
+                                'DOWN': target_device.firetv.down,
+                                'LEFT': target_device.firetv.left,
+                                'RIGHT': target_device.firetv.right,
+                                'ENTER': target_device.firetv.enter,
+                                'BACK': target_device.firetv.back,
+                                'SPACE': target_device.firetv.space,
+                                'MENU': target_device.firetv.menu
+                                }
+            if key in key_functions:
+                key_functions[key]()
 
     hass.services.register(
         DOMAIN, KEY_SERVICE, service_key, schema=SERVICE_KEY_SCHEMA)
