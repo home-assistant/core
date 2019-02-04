@@ -145,6 +145,14 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.tahoma_device.type != \
             'rts:RollerShutterRTSComponent':
             self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
+        else:
+            if kwargs.get(ATTR_POSITION) == 100:
+               self.open_cover()
+            elif kwargs.get(ATTR_POSITION) == 0:
+               self.close_cover()
+            else:
+               self.stop_cover()
+
 
     @property
     def is_closed(self):
