@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 
 from .const import (DOMAIN, SENSOR_TYPES)
 
-REQUIREMENTS = ['ebusdpy==0.0.15']
+REQUIREMENTS = ['ebusdpy==0.0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,12 +99,9 @@ class EbusdData:
                 raise RuntimeError("Error in reading ebus")
             else:
                 self.value[name] = command_result
-        except socket.timeout:
-            _LOGGER.error("socket timeout error")
-            raise RuntimeError("socket timeout")
-        except socket.error:
-            _LOGGER.error("socket error: %s", socket.error)
-            raise RuntimeError("Command failed")
+        except RuntimeError as e:
+            _LOGGER.error(e)
+            raise RuntimeError(e)
 
     def write(self, call):
         """Call write methon on ebusd."""
