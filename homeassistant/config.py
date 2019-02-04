@@ -779,7 +779,7 @@ def async_process_component_config(
                 # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                        p_validated)
+                        p_config)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
                                         p_config, hass)
