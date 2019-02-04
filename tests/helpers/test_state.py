@@ -217,47 +217,6 @@ class TestStateHelpers(unittest.TestCase):
         assert len(calls) == 0
         assert 'off' == self.hass.states.get('light.test').state
 
-    def test_reproduce_group(self):
-        """Test reproduce_state with group."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        self.hass.states.set('group.test', 'off', {
-            'entity_id': ['light.test1', 'light.test2']})
-        self.hass.states.set('light.test1', 'off')
-        self.hass.states.set('light.test2', 'off')
-
-        state.reproduce_state(self.hass, ha.State('group.test', 'on'))
-
-        self.hass.block_till_done()
-
-        assert 1 == len(light_calls)
-        last_call = light_calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert ['light.test1', 'light.test2'] == \
-            last_call.data.get('entity_id')
-
-    def test_reproduce_group_same_data(self):
-        """Test reproduce_state with group with same domain and data."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        self.hass.states.set('light.test1', 'off')
-        self.hass.states.set('light.test2', 'off')
-
-        state.reproduce_state(self.hass, [
-            ha.State('light.test1', 'on', {'brightness': 95}),
-            ha.State('light.test2', 'on', {'brightness': 95})])
-
-        self.hass.block_till_done()
-
-        assert 1 == len(light_calls)
-        last_call = light_calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert ['light.test1', 'light.test2'] == \
-            last_call.data.get('entity_id')
-        assert 95 == last_call.data.get('brightness')
-
     def test_as_number_states(self):
         """Test state_as_number with states."""
         zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
