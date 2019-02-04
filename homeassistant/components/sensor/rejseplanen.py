@@ -11,7 +11,6 @@ import logging
 from datetime import timedelta, datetime
 from operator import itemgetter
 
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +19,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['rjpl==0.3.2']
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'http://xmlopen.rejseplanen.dk/bin/rest.exe/departureBoard'
 
 ATTR_STOP_ID = 'Stop ID'
 ATTR_STOP_NAME = 'Stop'
@@ -166,64 +165,33 @@ class PublicTransportData():
 
     def update(self):
         """Get the latest data from rejseplanen."""
-        params = {}
-        params['id'] = self.stop_id
-        # Can't specify route and direction in query for rejseplanen
-        # Will have to filter results
-        params['format'] = 'json'
-
-        response = requests.get(_RESOURCE, params, timeout=10)
-
-        if response.status_code != 200:
-            self.info = [{ATTR_DUE_IN: 'n/a',
-                          ATTR_DUE_AT: 'n/a',
-                          ATTR_TYPE: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DIRECTION: 'n/a',
-                          ATTR_STOP_NAME: 'n/a'}]
-            return
-
-        result = response.json()['DepartureBoard']
-
-        # This key is present on error
-        if 'error' in result:
-            self.info = [{ATTR_DUE_IN: 'n/a',
-                          ATTR_DUE_AT: 'n/a',
-                          ATTR_TYPE: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DIRECTION: 'n/a',
-                          ATTR_STOP_NAME: 'n/a'}]
-            return
-
+        import rjpl
         self.info = []
-        for item in result['Departure']:
-            departure_type = item.get('type')
-            stop = item.get('stop')
+
+        try:
+            results = rjpl.departureBoard(int(self.stop_id), timeout=5)
+        except RuntimeError:
+            _LOGGER.debug("No departures returned from API call.")
+            self.info = [{ATTR_DUE_IN: 'n/a',
+                          ATTR_DUE_AT: 'n/a',
+                          ATTR_TYPE: 'n/a',
+                          ATTR_ROUTE: self.route,
+                          ATTR_DIRECTION: 'n/a',
+                          ATTR_STOP_NAME: 'n/a'}]
+            return
+
+        # Filter result
+        results = [d for d in results if 'cancelled' not in d]
+        if self.route:
+            results = [d for d in results if d['name'] in self.route]
+        if self.direction:
+            results = [d for d in results if d['direction'] in self.direction]
+        if self.departure_type:
+            results = [d for d in results if d['type'] in self.departure_type]
+
+        for item in results:
             route = item.get('name')
-            direction = item.get('direction')
 
-            # Make sure it's not cancelled
-            cancelled = item.get('cancelled')
-            if cancelled is not None:
-                continue
-
-            # Filter based on route
-            if self.route:
-                if route not in self.route:
-                    continue
-
-            # Filter based on direction
-            if self.direction:
-                if direction not in self.direction:
-                    continue
-
-            # Filter based on type
-            if self.departure_type:
-                if departure_type not in self.departure_type:
-                    continue
-
-            # The fields rtDate and rtTime have information about delays.
-            # They are however not always present.
             due_at_date = item.get('rtDate')
             due_at_time = item.get('rtTime')
 
@@ -239,13 +207,14 @@ class PublicTransportData():
 
                 departure_data = {ATTR_DUE_IN: due_in_minutes(due_at),
                                   ATTR_DUE_AT: due_at,
-                                  ATTR_TYPE: departure_type,
+                                  ATTR_TYPE: item.get('type'),
                                   ATTR_ROUTE: route,
-                                  ATTR_DIRECTION: direction,
-                                  ATTR_STOP_NAME: stop}
+                                  ATTR_DIRECTION: item.get('direction'),
+                                  ATTR_STOP_NAME: item.get('stop')}
                 self.info.append(departure_data)
 
         if not self.info:
+            _LOGGER.debug("No departures with given parameters.")
             self.info = [{ATTR_DUE_IN: 'n/a',
                           ATTR_DUE_AT: 'n/a',
                           ATTR_TYPE: 'n/a',

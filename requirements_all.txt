@@ -1434,6 +1434,9 @@ ring_doorbell==0.2.2
 # homeassistant.components.device_tracker.ritassist
 ritassist==0.9.2
 
+# homeassistant.components.sensor.rejseplanen
+rjpl==0.3.2
+
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
 
