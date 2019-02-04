@@ -208,25 +208,24 @@ class SmhiWeather(WeatherEntity):
     @property
     def forecast(self) -> List:
         """Return the forecast."""
-        if self._forecasts is None:
+        if self._forecasts is None or len(self._forecasts) < 2:
             return None
 
         data = []
 
-        if len(self._forecasts) > 1:
-            for forecast in self._forecasts[1:]:
-                condition = next((
-                    k for k, v in CONDITION_CLASSES.items()
-                    if forecast.symbol in v), None)
+        for forecast in self._forecasts[1:]:
+            condition = next((
+                k for k, v in CONDITION_CLASSES.items()
+                if forecast.symbol in v), None)
 
-                data.append({
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_PRECIPITATION:
-                        round(forecast.total_precipitation),
-                    ATTR_FORECAST_CONDITION: condition,
-                })
+            data.append({
+                ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
+                ATTR_FORECAST_TEMP: forecast.temperature_max,
+                ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
+                ATTR_FORECAST_PRECIPITATION:
+                    round(forecast.total_precipitation),
+                ATTR_FORECAST_CONDITION: condition,
+            })
 
         return data
 
