@@ -4,10 +4,12 @@ Support for monitoring the Transmission BitTorrent client API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.transmission/
 """
+from datetime import timedelta
+
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
+    DATA_TRANSMISSION, SENSOR_TYPES)
 from homeassistant.const import STATE_IDLE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -17,6 +19,8 @@ DEPENDENCIES = ['transmission']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
+
+SCAN_INTERVAL = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
