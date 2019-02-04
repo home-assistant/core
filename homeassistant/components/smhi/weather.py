@@ -212,14 +212,13 @@ class SmhiWeather(WeatherEntity):
             return None
 
         data = []
-        first_cast = True
 
-        for forecast in self._forecasts:
-            condition = next((
-                k for k, v in CONDITION_CLASSES.items()
-                if forecast.symbol in v), None)
+        if len(self._forecasts) > 1:
+            for forecast in self._forecasts[1:]:
+                condition = next((
+                    k for k, v in CONDITION_CLASSES.items()
+                    if forecast.symbol in v), None)
 
-            if not first_cast:
                 data.append({
                     ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
                     ATTR_FORECAST_TEMP: forecast.temperature_max,
@@ -228,8 +227,6 @@ class SmhiWeather(WeatherEntity):
                         round(forecast.total_precipitation),
                     ATTR_FORECAST_CONDITION: condition,
                 })
-            else:
-                first_cast = False
 
         return data
 
