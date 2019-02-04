@@ -18,7 +18,11 @@ async def async_reproduce_states(hass: HomeAssistantType,
         members = get_entity_ids(hass, state.entity_id)
         for member in members:
             states_copy.append(
-                State(member, state.state,
-                      state.attributes, context=state.context))
+                State(member,
+                      state.state,
+                      state.attributes,
+                      last_changed=state.last_changed,
+                      last_updated=state.last_updated,
+                      context=state.context))
     await async_reproduce_state(hass, states_copy, blocking=True,
                                 context=context)
