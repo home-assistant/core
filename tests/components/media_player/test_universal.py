@@ -584,7 +584,8 @@ class TestMediaPlayer(unittest.TestCase):
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE \
-            | universal.SUPPORT_SELECT_SOURCE | universal.SUPPORT_SHUFFLE_SET
+            | universal.SUPPORT_SELECT_SOURCE | universal.SUPPORT_SHUFFLE_SET \
+            | universal.SUPPORT_VOLUME_SET
 
         assert check_flags == ump.supported_features
 
