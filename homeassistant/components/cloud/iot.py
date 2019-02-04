@@ -362,8 +362,6 @@ async def async_handle_webhook(hass, cloud, payload):
 
     response_dict = serialize_response(response)
     body = response_dict.get('body')
-    if body:
-        body = body.decode('utf-8')
 
     return {
         'body': body,
