@@ -537,7 +537,6 @@ omit =
     homeassistant/components/sensor/socialblade.py
     homeassistant/components/sensor/solaredge.py
     homeassistant/components/sensor/sonarr.py
-    homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
     homeassistant/components/sensor/srp_energy.py
     homeassistant/components/sensor/starlingbank.py
@@ -580,6 +579,7 @@ omit =
     homeassistant/components/skybell/*
     homeassistant/components/smappee/*
     homeassistant/components/sonos/*
+    homeassistant/components/speedtestdotnet/*
     homeassistant/components/spc.py
     homeassistant/components/spider/*
     homeassistant/components/switch/acer_projector.py
