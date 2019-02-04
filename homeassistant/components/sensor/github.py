@@ -172,8 +172,6 @@ class GitHubData():
 
         self.name = repository.get(CONF_NAME, repo.name)
 
-        self.update = self._update
-
         self.available = False
         self.last_commit_message = None
         self.last_commit_sha = None
@@ -184,7 +182,7 @@ class GitHubData():
         self.pull_request_latest = None
         self.stargazers = None
 
-    def _update(self):
+    def update(self):
         """Update GitHub Sensor."""
         try:
             repo = self._github_obj.get_repo(self.repository_path)
