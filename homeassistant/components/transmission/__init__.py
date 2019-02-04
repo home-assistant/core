@@ -63,12 +63,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Transmission Component."""
-    conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    port = conf.get(CONF_PORT)
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+    host = config[DOMAIN][CONF_HOST]
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
+    port = config[DOMAIN][CONF_PORT]
+    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
