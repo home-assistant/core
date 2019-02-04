@@ -114,7 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             key_functions = {
                                 'POWER': target_device.firetv.power,
                                 'SLEEP': target_device.firetv.sleep,
-                                'HOME' : target_device.firetv.home,
+                                'HOME': target_device.firetv.home,
                                 'UP': target_device.firetv.up,
                                 'DOWN': target_device.firetv.down,
                                 'LEFT': target_device.firetv.left,
