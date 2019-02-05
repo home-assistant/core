@@ -10,9 +10,8 @@ from homeassistant.components.cloud import (
     Cloud, iot, auth_api, MODE_DEV)
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
-from homeassistant.util import dt as dt_util
 from tests.components.alexa import test_smart_home as test_alexa
-from tests.common import mock_coro, async_fire_time_changed
+from tests.common import mock_coro
 
 from . import mock_cloud_prefs
 
