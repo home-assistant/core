@@ -1,7 +1,7 @@
 """Test for the smhi weather entity."""
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 from homeassistant.components.weather import (
