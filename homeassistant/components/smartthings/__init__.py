@@ -23,7 +23,7 @@ from .const import (
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.2']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.5.0']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,6 +139,7 @@ class DeviceBroker:
     async def event_handler(self, req, resp, app):
         """Broker for incoming events."""
         from pysmartapp.event import EVENT_TYPE_DEVICE
+        from pysmartthings import Capability, Attribute
 
         # Do not process events received from a different installed app
         # under the same parent SmartApp (valid use-scenario)
@@ -156,7 +157,8 @@ class DeviceBroker:
                 evt.component_id, evt.capability, evt.attribute, evt.value)
 
             # Fire events for buttons
-            if evt.capability == 'button' and evt.attribute == 'button':
+            if evt.capability == Capability.button and \
+                    evt.attribute == Attribute.button:
                 data = {
                     'component_id': evt.component_id,
                     'device_id': evt.device_id,
