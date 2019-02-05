@@ -114,7 +114,4 @@ class Ted5000Gateway:
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]
                               ["VoltageNow"])
 
-                if power == 0 or voltage == 0:
-                    continue
-                else:
-                    self.data[mtu] = {'W': power, 'V': voltage / 10}
+                self.data[mtu] = {'W': power, 'V': voltage / 10}
