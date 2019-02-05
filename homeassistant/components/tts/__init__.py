@@ -68,6 +68,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
     vol.Optional(CONF_BASE_URL): cv.string,
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
