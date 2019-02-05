@@ -95,7 +95,6 @@ async def async_new_client(hass, session, entry):
             sw_version=hub['version'],
         )
     await client.update()
-    return True
 
 
 async def async_setup(hass, config):
