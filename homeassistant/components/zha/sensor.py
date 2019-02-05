@@ -22,33 +22,33 @@ DEPENDENCIES = ['zha']
 
 
 # Formatter functions
-def pass_through_formatter(value, sensor):
+def pass_through_formatter(value):
     """No op update function."""
     return value
 
 
-def temperature_formatter(value, sensor):
+def temperature_formatter(value):
     """Convert temperature data."""
     if value is None:
         return None
     return round(value / 100, 1)
 
 
-def humidity_formatter(value, sensor):
+def humidity_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
     return round(float(value) / 100, 1)
 
 
-def active_power_formatter(value, sensor):
+def active_power_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
     return round(float(value) / 10, 1)
 
 
-def pressure_formatter(value, sensor):
+def pressure_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
@@ -135,10 +135,7 @@ class Sensor(ZhaEntity):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, listeners, **kwargs)
         sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
-        unit = UNIT_REGISTRY.get(sensor_type, None)
-        if callable(unit):
-            unit = unit(self)
-        self._unit = unit
+        self._unit = UNIT_REGISTRY.get(sensor_type)
         self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
             sensor_type,
             pass_through_formatter
@@ -180,5 +177,5 @@ class Sensor(ZhaEntity):
 
     def async_set_state(self, state):
         """Handle state update from listener."""
-        self._state = self._formatter_function(state, self)
+        self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()
