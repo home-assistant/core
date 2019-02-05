@@ -44,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 DATA_CONFIG_ENTRY_LOCK = 'tellduslive_config_entry_lock'
 CONFIG_ENTRY_IS_SETUP = 'telldus_config_entry_is_setup'
 
+NEW_CLIENT_TASK = 'telldus_new_client_task'
 INTERVAL_TRACKER = '{}_INTERVAL'.format(DOMAIN)
 
 
@@ -70,13 +71,13 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-    hass.data[INTERVAL_TRACKER] = hass.loop.create_task(
-        async_create_client(hass, session, entry))
+    hass.data[NEW_CLIENT_TASK] = hass.loop.create_task(
+        async_new_client(hass, session, entry))
 
     return True
 
 
-async def async_create_client(hass, session, entry):
+async def async_new_client(hass, session, entry):
     """Add the hubs associated with the current client to device_registry."""
     interval = entry.data[KEY_SCAN_INTERVAL]
     _LOGGER.debug('Update interval %s seconds.', interval)
@@ -93,7 +94,8 @@ async def async_create_client(hass, session, entry):
             model=hub['type'],
             sw_version=hub['version'],
         )
-    hass.data[INTERVAL_TRACKER] = hass.loop.create_task(client.update())
+    await client.update()
+    return True
 
 
 async def async_setup(hass, config):
@@ -114,6 +116,8 @@ async def async_setup(hass, config):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
+    if not hass.data[NEW_CLIENT_TASK].done():
+        hass.data[NEW_CLIENT_TASK].cancel()
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
     await asyncio.wait([
