@@ -38,12 +38,11 @@ DEFAULT_TOPIC = 'room_presence'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
     vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_AWAY_TIMEOUT,
                  default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+}).extend(mqtt.MQTT_RO_PLATFORM_SCHEMA.schema)
 
 MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
     vol.Required(ATTR_ID): cv.string,
