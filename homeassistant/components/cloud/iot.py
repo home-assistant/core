@@ -62,11 +62,17 @@ class CloudIoT:
         # Local code waiting for a response
         self._response_handler = {}
         self._on_connect = []
+        self._on_disconnect = []
 
     @callback
     def register_on_connect(self, on_connect_cb):
         """Register an async on_connect callback."""
         self._on_connect.append(on_connect_cb)
+
+    @callback
+    def register_on_disconnect(self, on_disconnect_cb):
+        """Register an async on_disconnect callback."""
+        self._on_disconnect.append(on_disconnect_cb)
 
     @property
     def connected(self):
@@ -101,6 +107,17 @@ class CloudIoT:
                 # Safety net. This should never hit.
                 # Still adding it here to make sure we can always reconnect
                 _LOGGER.exception("Unexpected error")
+
+            if self.state == STATE_CONNECTED and self._on_disconnect:
+                try:
+                    yield from asyncio.wait([
+                        cb() for cb in self._on_disconnect
+                    ])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_disconnect callbacks")
 
             if self.close_requested:
                 break
@@ -192,7 +209,13 @@ class CloudIoT:
             self.state = STATE_CONNECTED
 
             if self._on_connect:
-                yield from asyncio.wait([cb() for cb in self._on_connect])
+                try:
+                    yield from asyncio.wait([cb() for cb in self._on_connect])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_connect callbacks")
 
             while not client.closed:
                 msg = yield from client.receive()

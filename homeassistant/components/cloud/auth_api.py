@@ -1,4 +1,10 @@
 """Package to communicate with the authentication API."""
+import asyncio
+import logging
+import random
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CloudError(Exception):
@@ -37,6 +43,40 @@ AWS_EXCEPTIONS = {
     'UserNotConfirmedException': UserNotConfirmed,
     'PasswordResetRequiredException': PasswordChangeRequired,
 }
+
+
+async def async_setup(hass, cloud):
+    """Configure the auth api."""
+    refresh_task = None
+
+    async def handle_token_refresh():
+        """Handle Cloud access token refresh."""
+        sleep_time = 5
+        sleep_time = random.randint(2400, 3600)
+        while True:
+            try:
+                await asyncio.sleep(sleep_time)
+                await hass.async_add_executor_job(renew_access_token, cloud)
+            except CloudError as err:
+                _LOGGER.error("Can't refresh cloud token: %s", err)
+            except asyncio.CancelledError:
+                # Task is canceled, stop it.
+                break
+
+            sleep_time = random.randint(3100, 3600)
+
+    async def on_connect():
+        """When the instance is connected."""
+        nonlocal refresh_task
+        refresh_task = hass.async_create_task(handle_token_refresh())
+
+    async def on_disconnect():
+        """When the instance is disconnected."""
+        nonlocal refresh_task
+        refresh_task.cancel()
+
+    cloud.iot.register_on_connect(on_connect)
+    cloud.iot.register_on_disconnect(on_disconnect)
 
 
 def _map_aws_exception(err):
