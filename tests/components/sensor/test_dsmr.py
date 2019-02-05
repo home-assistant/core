@@ -82,7 +82,7 @@ def test_default_setup(hass, mock_connection_factory):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
     assert power_consumption.state == '0.0'
-    assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
+    assert power_consumption.attributes.get('unit_of_measurement') == 'kWh'
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get('sensor.power_tariff')
