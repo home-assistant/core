@@ -24,7 +24,7 @@ DEPENDENCIES = ['webhook']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SECRET_KEY = 'secret_key'
-CONF_WEBHOOK_URL = 'webhook_url'
+CONF_WEBHOOKS = 'webhooks'
 
 DOMAIN = 'netatmo'
 
@@ -32,6 +32,7 @@ NETATMO_AUTH = None
 NETATMO_PERSONS = {}
 DEFAULT_PERSON = 'Unknown'
 DEFAULT_DISCOVERY = True
+DEFAULT_WEBHOOKS = False
 
 EVENT_RECEIVED = 'netatmo_webhook_received'
 EVENT_PERSON = 'person'
@@ -56,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_WEBHOOK_URL): cv.string,
+        vol.Optional(CONF_WEBHOOKS, default=DEFAULT_WEBHOOKS): cv.boolean,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -82,9 +83,10 @@ def setup(hass, config):
         for component in 'camera', 'sensor', 'binary_sensor', 'climate':
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-    if config[DOMAIN][CONF_WEBHOOK_URL]:
-        webhook_url = config[DOMAIN].get(CONF_WEBHOOK_URL)
-        webhook_id = webhook_url.split('/')[-1]
+    if config[DOMAIN][CONF_WEBHOOKS]:
+        webhook_id = hass.components.webhook.async_generate_id()
+        webhook_url = hass.components.webhook.async_generate_url(
+            webhook_id)
         hass.components.webhook.async_register(
             DOMAIN, 'Netatmo', webhook_id, handle_webhook)
         NETATMO_AUTH.addwebhook(webhook_url)
@@ -108,8 +110,6 @@ async def handle_webhook(hass, webhook_id, request):
         return None
 
     published_data = {}
-    if isinstance(data, dict):
-        published_data['webhook_id'] = webhook_id
     if data.get(ATTR_EVENT_TYPE) == EVENT_PERSON:
         published_data[ATTR_EVENT_TYPE] = EVENT_PERSON
         published_data[ATTR_HOME_NAME] = data.get(ATTR_HOME_NAME)
@@ -120,13 +120,11 @@ async def handle_webhook(hass, webhook_id, request):
             published_data[ATTR_NAME] = NETATMO_PERSONS.get(
                 published_data[ATTR_ID], DEFAULT_PERSON)
             published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
-            _LOGGER.debug("webhook data: %s", published_data)
             hass.bus.async_fire(EVENT_RECEIVED, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_MOVEMENT:
         published_data[ATTR_EVENT_TYPE] = EVENT_MOVEMENT
         published_data[ATTR_HOME_NAME] = data.get(ATTR_HOME_NAME)
         published_data[ATTR_CAMERA_ID] = data.get(ATTR_CAMERA_ID)
-        _LOGGER.debug("webhook data: %s", published_data)
         hass.bus.async_fire(EVENT_RECEIVED, published_data)
 
 
