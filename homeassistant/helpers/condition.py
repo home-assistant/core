@@ -177,7 +177,7 @@ nand_from_config = _threaded_factory(async_nand_from_config)
 def async_nor_from_config(config: ConfigType,
                           config_validation: bool = True) \
                           -> Callable[..., bool]:
-    """Create multi condition matcher using 'NOR' no conditions are false."""
+    """Create multi condition matcher using 'NOR' no conditions are true."""
     if config_validation:
         config = cv.NOR_CONDITION_SCHEMA(config)
     checks = None
