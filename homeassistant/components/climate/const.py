@@ -1,3 +1,5 @@
+"""Proides the constants needed for component"""
+
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
