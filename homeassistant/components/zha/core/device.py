@@ -155,10 +155,6 @@ class ZHADevice:
         else:
             self.cluster_listeners[cluster_listener.name] = cluster_listener
 
-    def get_cluster_listener(self, name):
-        """Get cluster listener by name."""
-        return self.cluster_listeners.get(name)
-
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)

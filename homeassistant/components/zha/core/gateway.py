@@ -379,7 +379,7 @@ def _create_device_entity(zha_device):
     """Create ZHADeviceEntity."""
     device_entity_listeners = []
     if LISTENER_BATTERY in zha_device.cluster_listeners:
-        listener = zha_device.get_cluster_listener(LISTENER_BATTERY)
+        listener = zha_device.cluster_listeners.get(LISTENER_BATTERY)
         device_entity_listeners.append(listener)
     return ZhaDeviceEntity(zha_device, device_entity_listeners)
 
