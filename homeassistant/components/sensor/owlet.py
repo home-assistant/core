@@ -103,7 +103,6 @@ class OwletSensor(Entity):
 
     def update(self):
         """Update state of sensor."""
-
         self._is_charging = self._device.device.charge_status
         self._battery_level = self._device.device.batt_level
         self._sock_off = self._device.device.sock_off
