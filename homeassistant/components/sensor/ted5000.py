@@ -1,5 +1,5 @@
 """
-Support gathering ted500 information.
+Support gathering ted5000 information.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ted5000/
@@ -22,13 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'ted'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional('show_unavailable', default=True): cv.boolean,
 })
 
 
@@ -37,11 +38,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
+    availability = config.get('show_unavailable')
     url = 'http://{}:{}/api/LiveData.xml'.format(host, port)
 
-    gateway = Ted5000Gateway(url)
+    gateway = Ted5000Gateway(url, availability)
 
-    # Get MUT information to create the sensors.
+    # Get MTU information to create the sensors.
     gateway.update()
 
     dev = []
@@ -64,6 +66,7 @@ class Ted5000Sensor(Entity):
         self._mtu = mtu
         self._unit = unit
         self.update()
+        self._available = True
 
     @property
     def name(self):
@@ -86,15 +89,27 @@ class Ted5000Sensor(Entity):
     def update(self):
         """Get the latest data from REST API."""
         self._gateway.update()
+        
+    @property
+    def available(self):
+        """Return the availability state."""
+        try:
+            if self._gateway.availability:
+                return self._gateway.data[self._mtu]['A']
+            else:
+                return True
+        except KeyError:
+            pass
 
 
 class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url):
+    def __init__(self, url, availability):
         """Initialize the data object."""
         self.url = url
         self.data = dict()
+        self.availability = availability
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -114,4 +129,7 @@ class Ted5000Gateway:
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]
                               ["VoltageNow"])
 
-                self.data[mtu] = {'W': power, 'V': voltage / 10}
+                if power == 0 and voltage == 0:
+                    self.data[mtu] = {'W': power, 'V': voltage / 10, 'A': False}
+                else:
+                    self.data[mtu] = {'W': power, 'V': voltage / 10, 'A': True}
