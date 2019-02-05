@@ -666,7 +666,6 @@ omit =
     homeassistant/components/zha/core/listeners.py
     homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
-    homeassistant/components/zha/event.py
     homeassistant/components/zigbee/*
     homeassistant/components/zoneminder/*
     homeassistant/components/zwave/util.py
