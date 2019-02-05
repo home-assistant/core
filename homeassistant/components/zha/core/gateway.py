@@ -276,14 +276,10 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
 
     if component == 'binary_sensor':
         discovery_info.update({SENSOR_TYPE: UNKNOWN})
-        for cluster_id in profile_clusters[0]:
-            if cluster_id in BINARY_SENSOR_TYPES:
-                discovery_info.update({
-                    SENSOR_TYPE: BINARY_SENSOR_TYPES.get(
-                        cluster_id, UNKNOWN)
-                })
-                break
-        for cluster_id in profile_clusters[1]:
+        cluster_ids = []
+        cluster_ids.extend(profile_clusters[0])
+        cluster_ids.extend(profile_clusters[1])
+        for cluster_id in cluster_ids:
             if cluster_id in BINARY_SENSOR_TYPES:
                 discovery_info.update({
                     SENSOR_TYPE: BINARY_SENSOR_TYPES.get(
