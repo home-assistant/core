@@ -130,8 +130,8 @@ class Ted5000Gateway:
                               ["VoltageNow"])
 
                 if power == 0 and voltage == 0:
-                    self.data[mtu] = {'W': power, 'V': voltage / 10, 
+                    self.data[mtu] = {'W': power, 'V': voltage / 10,
                                       'A': False}
                 else:
-                    self.data[mtu] = {'W': power, 'V': voltage / 10, 
+                    self.data[mtu] = {'W': power, 'V': voltage / 10,
                                       'A': True}
