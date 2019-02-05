@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
