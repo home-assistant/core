@@ -198,6 +198,9 @@ homeassistant/components/homekit/* @cdce8p
 homeassistant/components/huawei_lte.py @scop
 homeassistant/components/*/huawei_lte.py @scop
 
+# I
+homeassistant/components/ipma/* @dgomes
+
 # K
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
