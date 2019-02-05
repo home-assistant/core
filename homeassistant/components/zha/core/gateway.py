@@ -82,7 +82,7 @@ class ZHAGateway:
             )
 
     def get_device(self, ieee_str):
-        """Return ZHADeviceEntity for given ieee."""
+        """Return ZHADevice for given ieee."""
         ieee = convert_ieee(ieee_str)
         return self._devices.get(ieee)
 
