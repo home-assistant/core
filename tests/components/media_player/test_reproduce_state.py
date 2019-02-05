@@ -30,7 +30,7 @@ ENTITY_2 = 'media_player.test2'
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED),
     ])
 async def test_state(hass, service, state):
-    """Test that we can turn a state into a service call"""
+    """Test that we can turn a state into a service call."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
 
     await async_reproduce_states(hass, [
@@ -44,7 +44,7 @@ async def test_state(hass, service, state):
 
 
 async def test_turn_on_with_mode(hass):
-    """Test that state with additional attributes call multiple services"""
+    """Test that state with additional attributes call multiple services."""
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     calls_2 = async_mock_service(hass, DOMAIN, SERVICE_SELECT_SOUND_MODE)
 
@@ -64,7 +64,7 @@ async def test_turn_on_with_mode(hass):
 
 
 async def test_multiple_same_state(hass):
-    """Test that multiple states with same state gets calls"""
+    """Test that multiple states with same state gets calls."""
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     await async_reproduce_states(hass, [
@@ -83,7 +83,7 @@ async def test_multiple_same_state(hass):
 
 
 async def test_multiple_different_state(hass):
-    """Test that multiple states with different state gets calls"""
+    """Test that multiple states with different state gets calls."""
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     calls_2 = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
 
@@ -101,7 +101,7 @@ async def test_multiple_different_state(hass):
 
 
 async def test_state_with_context(hass):
-    """Test that context is forwarded"""
+    """Test that context is forwarded."""
     calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     context = Context()
@@ -118,7 +118,7 @@ async def test_state_with_context(hass):
 
 
 async def test_attribute_no_state(hass):
-    """Test that no state service call is made with none state"""
+    """Test that no state service call is made with none state."""
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     calls_2 = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
     calls_3 = async_mock_service(hass, DOMAIN, SERVICE_SELECT_SOUND_MODE)
@@ -148,7 +148,7 @@ async def test_attribute_no_state(hass):
         (SERVICE_SELECT_SOUND_MODE, ATTR_SOUND_MODE),
     ])
 async def test_attribute(hass, service, attribute):
-    """Test that service call is made for each attribute"""
+    """Test that service call is made for each attribute."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
 
     value = "dummy"
@@ -166,7 +166,7 @@ async def test_attribute(hass, service, attribute):
 
 
 async def test_play_media(hass):
-    """Test that no state service call is made with none state"""
+    """Test that no state service call is made with none state."""
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
 
     value_1 = "dummy_1"
