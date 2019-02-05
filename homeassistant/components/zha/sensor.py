@@ -7,7 +7,7 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
@@ -21,13 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 
 
-# unit getters
-def get_temperature_unit(sensor):
-    """Get the configured temperature unit."""
-    # hass is bound eager on device and lazy on entity. Use device here
-    return sensor.zha_device.hass.config.units.temperature_unit
-
-
 # Formatter functions
 def pass_through_formatter(value, sensor):
     """No op update function."""
@@ -36,20 +29,9 @@ def pass_through_formatter(value, sensor):
 
 def temperature_formatter(value, sensor):
     """Convert temperature data."""
-    from homeassistant.const import TEMP_CELSIUS
-    from homeassistant.util.temperature import convert as convert_temperature
     if value is None:
         return None
-    celsius = value / 100
-    return round(
-        convert_temperature(
-            celsius,
-            TEMP_CELSIUS,
-            # hass is bound eager on device and lazy on entity. Use device here
-            sensor.zha_device.hass.config.units.temperature_unit
-        ),
-        1
-    )
+    return round(value / 100, 1)
 
 
 def humidity_formatter(value, sensor):
@@ -84,7 +66,7 @@ FORMATTER_FUNC_REGISTRY = {
 
 UNIT_REGISTRY = {
     HUMIDITY: '%',
-    TEMPERATURE: get_temperature_unit,
+    TEMPERATURE: TEMP_CELSIUS,
     PRESSURE: 'hPa',
     ILLUMINANCE: 'lx',
     METERING: 'W',

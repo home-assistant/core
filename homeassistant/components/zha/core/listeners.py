@@ -368,7 +368,7 @@ class IASZoneListener(ClusterListener):
         elif command_id == 1:
             _LOGGER.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            self._zha_device.hass.async_add_job(res)
+            self._zha_device.hass.async_create_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""
