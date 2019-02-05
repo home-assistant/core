@@ -31,9 +31,8 @@ async def _async_reproduce_states(hass: HomeAssistantType,
                                   state: State,
                                   context: Optional[Context] = None) -> None:
     """Reproduce component states."""
-
     async def call_service(service: str, keys: Iterable):
-        """Call service with set of attributes given"""
+        """Call service with set of attributes given."""
         data = {}
         data['entity_id'] = state.entity_id
         for key in keys:
