@@ -2,7 +2,7 @@
 Support for openSenseMap Air Quality data.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality/opensensemap/
+https://home-assistant.io/components/air_quality.opensensemap/
 """
 from datetime import timedelta
 import logging
