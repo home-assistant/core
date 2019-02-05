@@ -89,7 +89,7 @@ class Ted5000Sensor(Entity):
     def update(self):
         """Get the latest data from REST API."""
         self._gateway.update()
-        
+
     @property
     def available(self):
         """Return the availability state."""
@@ -130,6 +130,8 @@ class Ted5000Gateway:
                               ["VoltageNow"])
 
                 if power == 0 and voltage == 0:
-                    self.data[mtu] = {'W': power, 'V': voltage / 10, 'A': False}
+                    self.data[mtu] = {'W': power, 'V': voltage / 10, 
+                                      'A': False}
                 else:
-                    self.data[mtu] = {'W': power, 'V': voltage / 10, 'A': True}
+                    self.data[mtu] = {'W': power, 'V': voltage / 10, 
+                                      'A': True}
