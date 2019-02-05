@@ -234,7 +234,7 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
     vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
 })
 
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA_2.extend(SCHEMA_BASE)
+MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({

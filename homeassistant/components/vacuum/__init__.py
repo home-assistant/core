@@ -16,7 +16,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import (ToggleEntity, Entity)
 from homeassistant.helpers.icon import icon_for_battery_level
