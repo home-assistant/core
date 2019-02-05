@@ -94,11 +94,11 @@ class EbusdData:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
                 self._address, self._circuit, name, stype, CACHE_TTL)
-            if 'ERR:' in command_result:
-                _LOGGER.error(command_result)
-                raise RuntimeError("Error in reading ebus")
-            else:
-                self.value[name] = command_result
+            if command_result is not None:
+                if 'ERR:' in command_result:
+                    _LOGGER.warning(command_result)
+                else:
+                    self.value[name] = command_result
         except RuntimeError as err:
             _LOGGER.error(err)
             raise RuntimeError(err)
@@ -113,9 +113,8 @@ class EbusdData:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.write(
                 self._address, self._circuit, name, value)
-            if 'done' not in command_result:
-                _LOGGER.warning('Write command failed: %s', name)
-        except socket.timeout:
-            _LOGGER.error("socket timeout error")
-        except socket.error:
-            _LOGGER.error()
+            if command_result is not None:
+                if 'done' not in command_result:
+                    _LOGGER.warning('Write command failed: %s', name)
+        except RuntimeError as err:
+            _LOGGER.error(err)
