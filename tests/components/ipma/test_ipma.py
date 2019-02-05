@@ -1,23 +1,20 @@
 """The tests for the IPMA weather component."""
-import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from collections import namedtuple
 
-from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN)
-from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.setup import setup_component
 
-from tests.common import load_fixture, MockDependency, MockConfigEntry
+from tests.common import MockConfigEntry
 
 TEST_CONFIG = {
     "name": "HomeTown",
     "latitude": "40.00",
     "longitude": "-8.00",
 }
+
 
 class MockStation():
     """Mock Station from pyipma."""
@@ -69,7 +66,7 @@ async def test_setup_hass(hass):
     """Test for successfully setting up the IPMA platform."""
     entry = MockConfigEntry(domain='ipma', data=TEST_CONFIG)
     await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
-    
+
     state = hass.states.get('weather.hometown')
     assert state.state == 'rainy'
 
