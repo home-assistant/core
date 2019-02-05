@@ -1,3 +1,5 @@
+"""Proides the constants needed for component"""
+
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
 ATTR_MEDIA_SEEK_POSITION = 'seek_position'
