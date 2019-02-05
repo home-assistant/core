@@ -265,7 +265,7 @@ def _is_sensor_a_binary_sensor(hass: HomeAssistant, node) -> bool:
 
 
 def _categorize_nodes(hass: HomeAssistant, nodes, ignore_identifier: str,
-                      sensor_identifier: str)-> None:
+                      sensor_identifier: str) -> None:
     """Sort the nodes to their proper domains."""
     for (path, node) in nodes:
         ignored = ignore_identifier in path or ignore_identifier in node.name
