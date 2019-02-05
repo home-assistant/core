@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional('show_unavailable', default=True): cv.boolean,
 })
 
 
@@ -38,10 +37,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
-    availability = config.get('show_unavailable')
     url = 'http://{}:{}/api/LiveData.xml'.format(host, port)
 
-    gateway = Ted5000Gateway(url, availability)
+    gateway = Ted5000Gateway(url)
 
     # Get MTU information to create the sensors.
     gateway.update()
@@ -94,10 +92,7 @@ class Ted5000Sensor(Entity):
     def available(self):
         """Return the availability state."""
         try:
-            if self._gateway.availability:
-                return self._gateway.data[self._mtu]['A']
-            else:
-                return True
+            return self._gateway.data[self._mtu]['A']
         except KeyError:
             pass
 
@@ -105,11 +100,10 @@ class Ted5000Sensor(Entity):
 class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url, availability):
+    def __init__(self, url):
         """Initialize the data object."""
         self.url = url
         self.data = dict()
-        self.availability = availability
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
