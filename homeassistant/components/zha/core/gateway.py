@@ -82,7 +82,7 @@ class ZHAGateway:
     def get_device(self, ieee_str):
         """Return ZHADeviceEntity for given ieee."""
         ieee = convert_ieee(ieee_str)
-        return self._devices.get(ieee, None)
+        return self._devices.get(ieee)
 
     def get_device_entity(self, ieee_str):
         """Return ZHADeviceEntity for given ieee."""
@@ -124,7 +124,7 @@ class ZHAGateway:
 
     async def _get_or_create_device(self, zigpy_device):
         """Get or create a ZHA device."""
-        zha_device = self._devices.get(zigpy_device.ieee, None)
+        zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device

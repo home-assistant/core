@@ -33,7 +33,7 @@ CLASS_MAPPING = {
 async def get_ias_device_class(listener):
     """Get the HA device class from the listener."""
     zone_type = await listener.get_attribute_value('zone_type')
-    return CLASS_MAPPING.get(zone_type, None)
+    return CLASS_MAPPING.get(zone_type)
 
 
 DEVICE_CLASS_REGISTRY = {
