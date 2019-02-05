@@ -14,7 +14,7 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_CUSTOM_BYPASS)
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA_BASE, PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent

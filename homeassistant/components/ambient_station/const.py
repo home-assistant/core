@@ -8,6 +8,3 @@ CONF_APP_KEY = 'app_key'
 DATA_CLIENT = 'data_client'
 
 TOPIC_UPDATE = 'update'
-
-UNITS_SI = 'si'
-UNITS_US = 'us'
