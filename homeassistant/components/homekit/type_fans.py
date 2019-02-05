@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON)
 
 from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import debounce, HomeAccessory
 from .const import (
     CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED, CHAR_SWING_MODE,
     SERV_FANV2)
@@ -96,6 +96,7 @@ class Fan(HomeAccessory):
                   ATTR_OSCILLATING: oscillating}
         self.call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
+    @debounce
     def set_speed(self, value):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
