@@ -11,7 +11,7 @@ async def test_reproduce_group(hass):
     context = Context()
 
     def clone_state(state, entity_id):
-        """Return a cloned state with different entity_id"""
+        """Return a cloned state with different entity_id."""
         return State(entity_id,
                      state.state,
                      state.attributes,
