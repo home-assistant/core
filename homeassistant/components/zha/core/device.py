@@ -34,7 +34,7 @@ class ZHADevice:
         self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
         self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
-        self._cluster_listeners = {}
+        self.cluster_listeners = {}
         self._relay_listeners = []
         self._all_listeners = []
         self._name = "{} {}".format(
@@ -102,19 +102,9 @@ class ZHADevice:
         return self._zha_gateway
 
     @property
-    def cluster_listeners(self):
-        """Return cluster listeners for device."""
-        return self._cluster_listeners.values()
-
-    @property
     def all_listeners(self):
         """Return cluster listeners and relay listeners for device."""
         return self._all_listeners
-
-    @property
-    def cluster_listener_keys(self):
-        """Return cluster listeners for device."""
-        return self._cluster_listeners.keys()
 
     @property
     def available_signal(self):
@@ -157,17 +147,17 @@ class ZHADevice:
         """Add cluster listener to device."""
         # only keep 1 power listener
         if cluster_listener.name is LISTENER_BATTERY and \
-                LISTENER_BATTERY in self._cluster_listeners:
+                LISTENER_BATTERY in self.cluster_listeners:
             return
         self._all_listeners.append(cluster_listener)
         if isinstance(cluster_listener, EventRelayListener):
             self._relay_listeners.append(cluster_listener)
         else:
-            self._cluster_listeners[cluster_listener.name] = cluster_listener
+            self.cluster_listeners[cluster_listener.name] = cluster_listener
 
     def get_cluster_listener(self, name):
         """Get cluster listener by name."""
-        return self._cluster_listeners.get(name, None)
+        return self.cluster_listeners.get(name)
 
     async def async_configure(self):
         """Configure the device."""

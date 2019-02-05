@@ -382,7 +382,7 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
 def _create_device_entity(zha_device):
     """Create ZHADeviceEntity."""
     device_entity_listeners = []
-    if LISTENER_BATTERY in zha_device.cluster_listener_keys:
+    if LISTENER_BATTERY in zha_device.cluster_listeners:
         listener = zha_device.get_cluster_listener(LISTENER_BATTERY)
         device_entity_listeners.append(listener)
     return ZhaDeviceEntity(zha_device, device_entity_listeners)
