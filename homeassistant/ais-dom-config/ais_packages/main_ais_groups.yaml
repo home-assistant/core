@@ -64,7 +64,6 @@ group:
       entities:
         - group.dom_system_version
         - group.ais_rss_help
-        # - group.dom_cloud
   system:
       name: System
       view: yes

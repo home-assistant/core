@@ -112,16 +112,28 @@ async def async_setup(hass, config):
                 }
             )
             # add all entities to keep the order
-            hass.async_add_job(
-                hass.services.async_call(
-                    'group',
-                    'set', {
-                        "object_id": "dom_system_version",
-                        "entities": [
-                            "sensor.version_info",
-                            "script.ais_update_system",
-                            "script.ais_restart_system",
-                            "script.ais_stop_system"]}))
+            # hass.async_add_job(
+            #     hass.services.async_call(
+            #         'group',
+            #         'set', {
+            #             "object_id": "dom_system_version",
+            #             "entities": [
+            #                 "sensor.version_info",
+            #                 "script.ais_update_system",
+            #                 "camera.remote_access",
+            #                 "input_boolean.ais_remote_access",
+            #                 "sensor.ais_secure_android_id_dom",
+            #                 "script.ais_scan_network_devices",
+            #                 "script.ais_restart_system",
+            #                 "script.ais_stop_system"]}))
+
+            hass.states.async_set(
+                'script.ais_update_system', 'off', {
+                    ATTR_FRIENDLY_NAME: ' Zainstaluj aktualizację',
+                    "icon": "mdi:download"
+                }
+            )
+
         else:
             info = 'Twój system jest aktualny, wersja ' + newest + '. '
             info += releasenotes
@@ -134,8 +146,14 @@ async def async_setup(hass, config):
                     "apt": apt
                 }
             )
+            hass.states.async_set(
+                'script.ais_update_system', 'off', {
+                    ATTR_FRIENDLY_NAME: ' Sprawdź dostępność aktualizacji',
+                    "icon": "mdi:refresh"
+                }
+            )
             _LOGGER.info(
-                "You are on the latest version (%s) of Home Assistant", newest)
+                "You are on the latest version (%s) of Assystent domowy", newest)
 
     # Update daily, start 1 hour after startup
 

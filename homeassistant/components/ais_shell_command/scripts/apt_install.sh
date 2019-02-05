@@ -1,2 +1,2 @@
 #!/data/data/pl.sviete.dom/files/usr/bin/sh
-apt update
+curl https://raw.githubusercontent.com/sviete/AIS-utils/master/upgrades/0.86.sh | bash  >> /data/data/pl.sviete.dom/files/home/AIS/www/upgrade_log.txt

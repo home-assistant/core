@@ -8,13 +8,14 @@ from homeassistant.const import (
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
+from datetime import timedelta
 
-REQUIREMENTS = ['pyqrcode==1.2.1', 'pypng==0.0.18']
+REQUIREMENTS = ['pyqrcode==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'qr_code'
 
-# SCAN_INTERVAL = timedelta(seconds=2)
+SCAN_INTERVAL = timedelta(seconds=2000)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -85,7 +86,6 @@ class QRCodeCamera(Camera):
 
     def _refresh_(self):
         import pyqrcode
-        import png
         qr_code = pyqrcode.create(self._template.async_render())
         self._image.truncate(0)
         self._image.seek(0)
