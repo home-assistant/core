@@ -147,11 +147,12 @@ def async_load_api(hass, application_controller, zha_gateway):
         attribute = service.data.get(ATTR_ATTRIBUTE)
         value = service.data.get(ATTR_VALUE)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
-        entity = zha_gateway.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         response = None
-        if entity is not None:
-            response = await entity.zha_device.write_zigbee_attribute(
-                list(entity.cluster_listeners)[0].cluster.endpoint.endpoint_id,
+        if entity_ref is not None:
+            response = await entity_ref.zha_device.write_zigbee_attribute(
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 attribute,
                 value,
@@ -183,12 +184,13 @@ def async_load_api(hass, application_controller, zha_gateway):
         command_type = service.data.get(ATTR_COMMAND_TYPE)
         args = service.data.get(ATTR_ARGS)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
-        entity = zha_gateway.get_entity(entity_id)
-        zha_device = entity.zha_device
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
+        zha_device = entity_ref.zha_device
         response = None
-        if entity is not None:
+        if entity_ref is not None:
             response = await zha_device.issue_cluster_command(
-                list(entity.cluster_listeners)[0].cluster.endpoint.endpoint_id,
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 command,
                 command_type,
@@ -253,10 +255,10 @@ def async_load_api(hass, application_controller, zha_gateway):
     async def websocket_entity_clusters(hass, connection, msg):
         """Return a list of entity clusters."""
         entity_id = msg[ATTR_ENTITY_ID]
-        entity = zha_gateway.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         clusters = []
-        if entity is not None:
-            for listener in entity.cluster_listeners:
+        if entity_ref is not None:
+            for listener in entity_ref.cluster_listeners:
                 cluster = listener.cluster
                 in_clusters = cluster.endpoint.in_clusters.values()
                 out_clusters = cluster.endpoint.out_clusters.values()
@@ -291,12 +293,13 @@ def async_load_api(hass, application_controller, zha_gateway):
         cluster_type = msg[ATTR_CLUSTER_TYPE]
         ieee = msg[ATTR_IEEE]
         cluster_attributes = []
-        entity = zha_gateway.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         device = zha_gateway.get_device(ieee)
         attributes = None
-        if entity is not None:
+        if entity_ref is not None:
             attributes = await device.get_cluster_attributes(
-                list(entity.cluster_listeners)[0].cluster.endpoint.endpoint_id,
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 cluster_type)
             if attributes is not None:
@@ -331,13 +334,14 @@ def async_load_api(hass, application_controller, zha_gateway):
         cluster_id = msg[ATTR_CLUSTER_ID]
         cluster_type = msg[ATTR_CLUSTER_TYPE]
         ieee = msg[ATTR_IEEE]
-        entity = zha_gateway.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         device = zha_gateway.get_device(ieee)
         cluster_commands = []
         commands = None
-        if entity is not None:
+        if entity_ref is not None:
             commands = await device.get_cluster_commands(
-                list(entity.cluster_listeners)[0].cluster.endpoint.endpoint_id,
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 cluster_type)
 
@@ -382,18 +386,20 @@ def async_load_api(hass, application_controller, zha_gateway):
         cluster_id = msg[ATTR_CLUSTER_ID]
         cluster_type = msg[ATTR_CLUSTER_TYPE]
         attribute = msg[ATTR_ATTRIBUTE]
-        entity = zha_gateway.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         manufacturer = msg.get(ATTR_MANUFACTURER) or None
         success = failure = None
         clusters = []
         if cluster_type == IN:
             clusters = \
-                list(entity.cluster_listeners)[0].cluster.endpoint.in_clusters
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.in_clusters
         else:
             clusters = \
-                list(entity.cluster_listeners)[0].cluster.endpoint.out_clusters
+                list(entity_ref.cluster_listeners)[
+                    0].cluster.endpoint.out_clusters
         cluster = clusters[cluster_id]
-        if entity is not None:
+        if entity_ref is not None:
             success, failure = await cluster.read_attributes(
                 [attribute],
                 allow_cache=False,

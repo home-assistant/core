@@ -35,6 +35,16 @@ SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 
 
+class EntityReference:
+    """Reference to a HA entity and its ZHA data."""
+
+    def __init__(self, entity_id, zha_device, cluster_listeners):
+        """Initialize the entity reference."""
+        self.reference_id = entity_id
+        self.zha_device = zha_device
+        self.cluster_listeners = cluster_listeners
+
+
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
@@ -86,29 +96,12 @@ class ZHAGateway:
         ieee = convert_ieee(ieee_str)
         return self._devices.get(ieee)
 
-    def get_device_entity(self, ieee_str):
-        """Return ZHADeviceEntity for given ieee."""
-        ieee = convert_ieee(ieee_str)
-        if ieee in self._device_registry:
-            entities = self._device_registry[ieee]
-            entity = next(
-                ent for ent in entities if isinstance(ent, ZhaDeviceEntity))
-            return entity
-        return None
-
-    def get_entities_for_ieee(self, ieee_str):
-        """Return list of entities for given ieee."""
-        ieee = convert_ieee(ieee_str)
-        if ieee in self._device_registry:
-            return self._device_registry[ieee]
-        return []
-
-    def get_entity(self, entity_id):
-        """Return entity for given entity_id if found."""
-        for entity in itertools.chain.from_iterable(
+    def get_entity_reference(self, entity_id):
+        """Return entity reference for given entity_id if found."""
+        for entity_reference in itertools.chain.from_iterable(
                 self.device_registry.values()):
-            if entity_id == entity.entity_id:
-                return entity
+            if entity_id == entity_reference.reference_id:
+                return entity_reference
 
     @property
     def devices(self):
@@ -120,9 +113,15 @@ class ZHAGateway:
         """Return entities by ieee."""
         return self._device_registry
 
-    def register_entity(self, ieee, entity_obj):
+    def register_entity_reference(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
-        self._device_registry[ieee].append(entity_obj)
+        self._device_registry[ieee].append(
+            EntityReference(
+                entity_obj.entity_id,
+                entity_obj.zha_device,
+                entity_obj.cluster_listeners
+            )
+        )
 
     async def _get_or_create_device(self, zigpy_device):
         """Get or create a ZHA device."""
