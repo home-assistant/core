@@ -50,7 +50,7 @@ def test_async_track_states(hass):
 
 @asyncio.coroutine
 def test_call_to_component(hass):
-        """Test calls to components state reproduction functions"""
+        """Test calls to components state reproduction functions."""
         with patch(('homeassistant.components.media_player.'
                     'async_reproduce_states')) as media_player_fun:
             media_player_fun.return_value = asyncio.Future()
