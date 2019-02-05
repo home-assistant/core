@@ -4,6 +4,7 @@ Support for Zigbee Home Automation devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
+import asyncio
 import logging
 import os
 import types
@@ -91,6 +92,11 @@ async def async_setup_entry(hass, config_entry):
     establish_device_mappings()
     populate_listener_registry()
 
+    for component in COMPONENTS:
+        hass.data[DATA_ZHA][component] = (
+            hass.data[DATA_ZHA].get(component, {})
+        )
+
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
@@ -160,9 +166,12 @@ async def async_setup_entry(hass, config_entry):
     application_controller.add_listener(zha_gateway)
     await application_controller.startup(auto_form=True)
 
+    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(application_controller.ieee)
+
+    init_tasks = []
     for device in application_controller.devices.values():
-        hass.async_create_task(
-            zha_gateway.async_device_initialized(device, False))
+        init_tasks.append(zha_gateway.async_device_initialized(device, False))
+    await asyncio.gather(*init_tasks)
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
@@ -174,8 +183,6 @@ async def async_setup_entry(hass, config_entry):
         manufacturer="ZHA",
         model=radio_description,
     )
-
-    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(application_controller.ieee)
 
     for component in COMPONENTS:
         hass.async_create_task(

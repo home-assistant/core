@@ -45,11 +45,6 @@ class ZHAGateway:
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
-
-        for component in COMPONENTS:
-            hass.data[DATA_ZHA][component] = (
-                hass.data[DATA_ZHA].get(component, {})
-            )
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
 
     def device_joined(self, device):
@@ -144,68 +139,81 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
-        import zigpy.profiles
-
         zha_device = await self._get_or_create_device(device)
         discovery_infos = []
+        endpoint_tasks = []
         for endpoint_id, endpoint in device.endpoints.items():
-            if endpoint_id == 0:  # ZDO
-                await _create_cluster_listener(
-                    endpoint,
-                    zha_device,
-                    is_new_join,
-                    listener_class=ZDOListener
-                )
-                continue
-
-            component = None
-            profile_clusters = ([], [])
-            device_key = "{}-{}".format(device.ieee, endpoint_id)
-            node_config = {}
-            if CONF_DEVICE_CONFIG in self._config:
-                node_config = self._config[CONF_DEVICE_CONFIG].get(
-                    device_key, {}
-                )
-
-            if endpoint.profile_id in zigpy.profiles.PROFILES:
-                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
-                if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
-                                              {}).get(endpoint.device_type,
-                                                      None):
-                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
-                    profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
-                    component = profile_info[endpoint.device_type]
-
-            if ha_const.CONF_TYPE in node_config:
-                component = node_config[ha_const.CONF_TYPE]
-                profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
-
-            if component and component in COMPONENTS:
-                profile_match = await _handle_profile_match(
-                    self._hass, endpoint, profile_clusters, zha_device,
-                    component, device_key, is_new_join)
-                discovery_infos.append(profile_match)
-
-            discovery_infos.extend(await _handle_single_cluster_matches(
-                self._hass,
-                endpoint,
-                zha_device,
-                profile_clusters,
-                device_key,
+            endpoint_tasks.append(self._async_process_endpoint(
+                endpoint_id, endpoint, discovery_infos, device, zha_device,
                 is_new_join
             ))
+        await asyncio.gather(*endpoint_tasks)
 
         await zha_device.async_initialize(not is_new_join)
 
+        discovery_tasks = []
         for discovery_info in discovery_infos:
-            await _dispatch_discovery_info(
+            discovery_tasks.append(_dispatch_discovery_info(
                 self._hass,
                 is_new_join,
                 discovery_info
-            )
+            ))
+        await asyncio.gather(*discovery_tasks)
 
         device_entity = _create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
+
+    async def _async_process_endpoint(
+            self, endpoint_id, endpoint, discovery_infos, device, zha_device,
+            is_new_join):
+        """Process an endpoint on a zigpy device."""
+        import zigpy.profiles
+
+        if endpoint_id == 0:  # ZDO
+            await _create_cluster_listener(
+                endpoint,
+                zha_device,
+                is_new_join,
+                listener_class=ZDOListener
+            )
+            return
+
+        component = None
+        profile_clusters = ([], [])
+        device_key = "{}-{}".format(device.ieee, endpoint_id)
+        node_config = {}
+        if CONF_DEVICE_CONFIG in self._config:
+            node_config = self._config[CONF_DEVICE_CONFIG].get(
+                device_key, {}
+            )
+
+        if endpoint.profile_id in zigpy.profiles.PROFILES:
+            profile = zigpy.profiles.PROFILES[endpoint.profile_id]
+            if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
+                                          {}).get(endpoint.device_type,
+                                                  None):
+                profile_clusters = profile.CLUSTERS[endpoint.device_type]
+                profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
+                component = profile_info[endpoint.device_type]
+
+        if ha_const.CONF_TYPE in node_config:
+            component = node_config[ha_const.CONF_TYPE]
+            profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
+
+        if component and component in COMPONENTS:
+            profile_match = await _handle_profile_match(
+                self._hass, endpoint, profile_clusters, zha_device,
+                component, device_key, is_new_join)
+            discovery_infos.append(profile_match)
+
+        discovery_infos.extend(await _handle_single_cluster_matches(
+            self._hass,
+            endpoint,
+            zha_device,
+            profile_clusters,
+            device_key,
+            is_new_join
+        ))
 
 
 async def _create_cluster_listener(cluster, zha_device, is_new_join,
@@ -247,17 +255,17 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
                     if c in endpoint.out_clusters]
 
     listeners = []
-    in_cluster_tasks = []
-    for cluster in in_clusters:
-        in_cluster_tasks.append(_create_cluster_listener(
-            cluster, zha_device, is_new_join, listeners=listeners))
-    await asyncio.gather(*in_cluster_tasks)
+    cluster_tasks = []
 
-    out_cluster_tasks = []
-    for cluster in out_clusters:
-        out_cluster_tasks.append(_create_cluster_listener(
+    for cluster in in_clusters:
+        cluster_tasks.append(_create_cluster_listener(
             cluster, zha_device, is_new_join, listeners=listeners))
-    await asyncio.gather(*out_cluster_tasks)
+
+    for cluster in out_clusters:
+        cluster_tasks.append(_create_cluster_listener(
+            cluster, zha_device, is_new_join, listeners=listeners))
+
+    await asyncio.gather(*cluster_tasks)
 
     discovery_info = {
         'unique_id': device_key,
@@ -291,39 +299,42 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
                                          is_new_join):
     """Dispatch single cluster matches to HA components."""
     cluster_matches = []
+    cluster_match_tasks = []
+    event_listener_tasks = []
     for cluster in endpoint.in_clusters.values():
         if cluster.cluster_id not in profile_clusters[0]:
-            cluster_match = await _handle_single_cluster_match(
+            cluster_match_tasks.append(_handle_single_cluster_match(
                 hass,
                 zha_device,
                 cluster,
                 device_key,
                 zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
                 is_new_join,
-            )
-            if cluster_match is not None:
-                cluster_matches.append(cluster_match)
+            ))
 
     for cluster in endpoint.out_clusters.values():
         if cluster.cluster_id not in profile_clusters[1]:
-            cluster_match = await _handle_single_cluster_match(
+            cluster_match_tasks.append(_handle_single_cluster_match(
                 hass,
                 zha_device,
                 cluster,
                 device_key,
                 zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
                 is_new_join,
-            )
-            if cluster_match is not None:
-                cluster_matches.append(cluster_match)
+            ))
 
         if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
-            await _create_cluster_listener(
+            event_listener_tasks.append(_create_cluster_listener(
                 cluster,
                 zha_device,
                 is_new_join,
                 listener_class=EventRelayListener
-            )
+            ))
+    await asyncio.gather(*event_listener_tasks)
+    cluster_match_results = await asyncio.gather(*cluster_match_tasks)
+    for cluster_match in cluster_match_results:
+        if cluster_match is not None:
+            cluster_matches.append(cluster_match)
     return cluster_matches
 
 
