@@ -33,16 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
-
-
-class EntityReference:
-    """Reference to a HA entity and its ZHA data."""
-
-    def __init__(self, entity_id, zha_device, cluster_listeners):
-        """Initialize the entity reference."""
-        self.reference_id = entity_id
-        self.zha_device = zha_device
-        self.cluster_listeners = cluster_listeners
+EntityReference = collections.namedtuple(
+    'EntityReference', 'reference_id zha_device cluster_listeners')
 
 
 class ZHAGateway:
@@ -113,13 +105,14 @@ class ZHAGateway:
         """Return entities by ieee."""
         return self._device_registry
 
-    def register_entity_reference(self, ieee, entity_obj):
+    def register_entity_reference(
+            self, ieee, reference_id, zha_device, cluster_listeners):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
             EntityReference(
-                entity_obj.entity_id,
-                entity_obj.zha_device,
-                entity_obj.cluster_listeners
+                reference_id=reference_id,
+                zha_device=zha_device,
+                cluster_listeners=cluster_listeners
             )
         )
 
