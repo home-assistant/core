@@ -59,7 +59,6 @@ class TestFilterSensor(unittest.TestCase):
                 'platform': 'filter',
                 'name': 'test',
                 'entity_id': 'sensor.test_monitored',
-                'history_period': '00:05',
                 'filters': [{
                     'filter': 'outlier',
                     'window_size': 10,

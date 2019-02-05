@@ -778,7 +778,7 @@ class StateMachine:
         self._bus = bus
         self._loop = loop
 
-    def entity_ids(self, domain_filter: Optional[str] = None)-> List[str]:
+    def entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
         """List of entity ids that are being tracked."""
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
@@ -800,13 +800,13 @@ class StateMachine:
         return [state.entity_id for state in self._states.values()
                 if state.domain == domain_filter]
 
-    def all(self)-> List[State]:
+    def all(self) -> List[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(  # type: ignore
             self._loop, self.async_all).result()
 
     @callback
-    def async_all(self)-> List[State]:
+    def async_all(self) -> List[State]:
         """Create a list of all states.
 
         This method must be run in the event loop.

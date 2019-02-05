@@ -19,11 +19,11 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .config_flow import SmartThingsFlowHandler  # noqa
 from .const import (
     CONF_APP_ID, CONF_INSTALLED_APP_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
-    SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.2']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.5.0']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,6 +139,7 @@ class DeviceBroker:
     async def event_handler(self, req, resp, app):
         """Broker for incoming events."""
         from pysmartapp.event import EVENT_TYPE_DEVICE
+        from pysmartthings import Capability, Attribute
 
         # Do not process events received from a different installed app
         # under the same parent SmartApp (valid use-scenario)
@@ -154,6 +155,20 @@ class DeviceBroker:
                 continue
             device.status.apply_attribute_update(
                 evt.component_id, evt.capability, evt.attribute, evt.value)
+
+            # Fire events for buttons
+            if evt.capability == Capability.button and \
+                    evt.attribute == Attribute.button:
+                data = {
+                    'component_id': evt.component_id,
+                    'device_id': evt.device_id,
+                    'location_id': evt.location_id,
+                    'value': evt.value,
+                    'name': device.label
+                }
+                self._hass.bus.async_fire(EVENT_BUTTON, data)
+                _LOGGER.debug("Fired button event: %s", data)
+
             updated_devices.add(device.device_id)
         _LOGGER.debug("Update received with %s events and updated %s devices",
                       len(req.events), len(updated_devices))
