@@ -269,7 +269,7 @@ simplisafe-python==3.1.14
 sleepyq==0.6
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.5
+smhi-pkg==1.0.8
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
