@@ -245,8 +245,10 @@ class BroadlinkRMSwitch(SwitchDevice):
     def _auth(self, retry=2):
         try:
             auth = self._device.auth()
-        except socket.timeout:
+        except socket.timeout as error:
             auth = False
+            if retry < 1:
+                _LOGGER.error(error)
         if not auth and retry > 0:
             return self._auth(retry-1)
         return auth
