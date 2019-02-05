@@ -43,7 +43,7 @@ DEFAULT_NAME = "Enigma2 Satelite"
 DEFAULT_TIMEOUT = 30
 DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = ''
-DEFAULT_BOUQUET = 'bouquet'
+DEFAULT_BOUQUET = ''
 DEFAULT_PICON = 'picon'
 
 # Return cached results if last scan was less then this time ago.
