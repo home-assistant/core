@@ -69,13 +69,13 @@ OPENING = 'opening'
 ZONE = 'zone'
 OCCUPANCY = 'occupancy'
 
-LEVEL = 'level'
+ATTR_LEVEL = 'level'
 
 LISTENER_ON_OFF = 'on_off'
 LISTENER_ATTRIBUTE = 'attribute'
 LISTENER_COLOR = 'color'
 LISTENER_FAN = 'fan'
-LISTENER_LEVEL = LEVEL
+LISTENER_LEVEL = ATTR_LEVEL
 LISTENER_ZONE = 'zone'
 LISTENER_ACTIVE_POWER = 'active_power'
 LISTENER_BATTERY = 'battery'

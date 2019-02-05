@@ -18,7 +18,7 @@ from .helpers import (
     safe_read, get_attr_id_by_name)
 from .const import (
     CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
-    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, LEVEL
+    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, ATTR_LEVEL
 )
 
 LISTENER_REGISTRY = {}
@@ -297,7 +297,7 @@ class OnOffListener(ClusterListener):
 class LevelListener(ClusterListener):
     """Listener for the LevelControl Zigbee cluster."""
 
-    name = LEVEL
+    name = ATTR_LEVEL
 
     CURRENT_LEVEL = 0
 

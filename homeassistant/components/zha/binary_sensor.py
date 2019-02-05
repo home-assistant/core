@@ -12,7 +12,7 @@ from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, LISTENER_ON_OFF,
     LISTENER_LEVEL, LISTENER_ZONE, SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL, LISTENER_ATTRIBUTE, UNKNOWN, OPENING, ZONE, OCCUPANCY,
-    LEVEL, SENSOR_TYPE)
+    ATTR_LEVEL, SENSOR_TYPE)
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,12 +87,12 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_state_attributes = {}
-        self._temporary_state_attributes = {}
         self._zone_listener = self.cluster_listeners.get(LISTENER_ZONE)
         self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
         self._level_listener = self.cluster_listeners.get(LISTENER_LEVEL)
         self._attr_listener = self.cluster_listeners.get(LISTENER_ATTRIBUTE)
         self._zha_sensor_type = kwargs[SENSOR_TYPE]
+        self._level = None
 
     async def _determine_device_class(self):
         """Determine the device class for this binary sensor."""
@@ -144,30 +144,24 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 
     def move_level(self, change):
         """Increment the level, setting state if appropriate."""
-        level = self._temporary_state_attributes.get(LEVEL, 0)
+        level = self._level or 0
         if not self._state and change > 0:
             level = 0
-        level = min(254, max(0, level + change))
-        self._state = bool(level)
-        self._temporary_state_attributes.update({
-            LEVEL: level
-        })
+        self._level = min(254, max(0, level + change))
+        self._state = bool(self._level)
         self.async_schedule_update_ha_state()
 
     def set_level(self, level):
         """Set the level, setting state if appropriate."""
-        self._temporary_state_attributes.update({
-            LEVEL: level
-        })
+        self._level = level
         self._state = bool(level)
         self.async_schedule_update_ha_state()
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if LEVEL in self._temporary_state_attributes:
-            level = self._temporary_state_attributes.get(LEVEL, 0)
+        if self._level_listener is not None:
             self._device_state_attributes.update({
-                LEVEL: self._state and level or 0
+                ATTR_LEVEL: self._state and self._level or 0
             })
         return self._device_state_attributes
