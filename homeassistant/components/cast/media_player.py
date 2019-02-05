@@ -323,7 +323,7 @@ class CastDevice(MediaPlayerDevice):
 
     def __init__(self, cast_info):
         """Initialize the cast device."""
-        import pychromecast  # pylint: disable=unused-import
+        import pychromecast  # noqa: pylint: disable=unused-import
         self._cast_info = cast_info  # type: ChromecastInfo
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
