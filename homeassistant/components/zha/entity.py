@@ -13,7 +13,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
 from .core.const import (
-    DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME
+    DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
+    SIGNAL_REMOVE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,6 +142,11 @@ class ZhaEntity(entity.Entity):
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
             self.async_set_available,
             signal_override=True)
+        await self.async_accept_signal(
+            None, "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
+            self.async_remove,
+            signal_override=True
+        )
         self._zha_device.gateway.register_entity(self._zha_device.ieee, self)
 
     async def async_will_remove_from_hass(self) -> None:

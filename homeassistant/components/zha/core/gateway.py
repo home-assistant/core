@@ -22,7 +22,7 @@ from .const import (
     LISTENER_BATTERY, UNKNOWN, OPENING, ZONE, OCCUPANCY,
     CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE, REPORT_CONFIG_ASAP,
     REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_OP)
+    REPORT_CONFIG_OP, SIGNAL_REMOVE)
 from .device import ZHADevice
 from ..device_entity import ZhaDeviceEntity
 from .listeners import (
@@ -72,12 +72,14 @@ class ZHAGateway:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        for device_entity in self._device_registry[device.ieee]:
-            self._hass.async_create_task(device_entity.async_remove())
         device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
         if device is not None:
             self._hass.async_create_task(device.async_unsub_dispatcher())
+            async_dispatcher_send(
+                self._hass,
+                "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
+            )
 
     def get_device(self, ieee_str):
         """Return ZHADeviceEntity for given ieee."""

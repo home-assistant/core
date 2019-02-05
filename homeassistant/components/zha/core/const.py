@@ -86,6 +86,7 @@ SIGNAL_MOVE_LEVEL = "move_level"
 SIGNAL_SET_LEVEL = "set_level"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
+SIGNAL_REMOVE = 'remove'
 
 
 class RadioType(enum.Enum):
