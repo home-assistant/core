@@ -211,7 +211,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self):
-        """Returns the current power consumption of the device"""
+        """Represenation of the HomematicIP power comsumption value."""
         return self._device.currentPowerConsumption
 
     @property
