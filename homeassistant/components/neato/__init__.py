@@ -33,16 +33,16 @@ MODE = {
 }
 
 ACTION = {
-    0: 'No action',
-    1: 'House cleaning',
-    2: 'Spot cleaning',
-    3: 'Manual cleaning',
+    0: 'Invalid',
+    1: 'House Cleaning',
+    2: 'Spot Cleaning',
+    3: 'Manual Cleaning',
     4: 'Docking',
-    5: 'User menu active',
-    6: 'Cleaning cancelled',
-    7: 'Updating...',
-    8: 'Copying logs...',
-    9: 'Calculating position...',
+    5: 'User Menu Active',
+    6: 'Suspended Cleaning',
+    7: 'Updating',
+    8: 'Copying logs',
+    9: 'Recovering Location',
     10: 'IEC test',
     11: 'Map cleaning',
     12: 'Exploring map (creating a persistent map)',
@@ -169,7 +169,7 @@ ALERTS = {
 }
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Neato component."""
     from pybotvac import Account
 
