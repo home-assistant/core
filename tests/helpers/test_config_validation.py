@@ -402,8 +402,7 @@ def test_template():
     schema = vol.Schema(cv.template)
 
     for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
-        with pytest.raises(vol.Invalid,
-                           message='{} not considered invalid'.format(value)):
+        with pytest.raises(vol.Invalid):
             schema(value)
 
     options = (
