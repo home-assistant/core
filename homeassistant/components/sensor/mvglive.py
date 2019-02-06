@@ -14,8 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
-    )
+    CONF_NAME, ATTR_ATTRIBUTION)
 
 REQUIREMENTS = ['PyMVGLive==1.1.4']
 
@@ -87,7 +86,7 @@ class MVGLiveSensor(Entity):
         self._name = name
         self.data = MVGLiveData(station, destinations, directions,
                                 lines, products, timeoffset, number)
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._icon = ICONS['-']
 
     @property
@@ -147,10 +146,10 @@ class MVGLiveData:
         self._products = products
         self._timeoffset = timeoffset
         self._number = number
-        self._include_ubahn = True if 'U-Bahn' in self._products else False
-        self._include_tram = True if 'Tram' in self._products else False
-        self._include_bus = True if 'Bus' in self._products else False
-        self._include_sbahn = True if 'S-Bahn' in self._products else False
+        self._include_ubahn = 'U-Bahn' in self._products
+        self._include_tram = 'Tram' in self._products
+        self._include_bus = 'Bus' in self._products
+        self._include_sbahn = 'S-Bahn' in self._products
         self.mvg = MVGLive.MVGLive()
         self.departures = []
 

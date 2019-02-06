@@ -2,15 +2,20 @@
 import asyncio
 import logging
 import pprint
+import random
+import uuid
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
+from . import utils
 from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
 
 HANDLERS = Registry()
@@ -23,6 +28,19 @@ STATE_DISCONNECTED = 'disconnected'
 
 class UnknownHandler(Exception):
     """Exception raised when trying to handle unknown handler."""
+
+
+class NotConnected(Exception):
+    """Exception raised when trying to handle unknown handler."""
+
+
+class ErrorMessage(Exception):
+    """Exception raised when there was error handling message in the cloud."""
+
+    def __init__(self, error):
+        """Initialize Error Message."""
+        super().__init__(self, "Error in Cloud")
+        self.error = error
 
 
 class CloudIoT:
@@ -41,6 +59,25 @@ class CloudIoT:
         self.tries = 0
         # Current state of the connection
         self.state = STATE_DISCONNECTED
+        # Local code waiting for a response
+        self._response_handler = {}
+        self._on_connect = []
+        self._on_disconnect = []
+
+    @callback
+    def register_on_connect(self, on_connect_cb):
+        """Register an async on_connect callback."""
+        self._on_connect.append(on_connect_cb)
+
+    @callback
+    def register_on_disconnect(self, on_disconnect_cb):
+        """Register an async on_disconnect callback."""
+        self._on_disconnect.append(on_disconnect_cb)
+
+    @property
+    def connected(self):
+        """Return if we're currently connected."""
+        return self.state == STATE_CONNECTED
 
     @asyncio.coroutine
     def connect(self):
@@ -71,6 +108,17 @@ class CloudIoT:
                 # Still adding it here to make sure we can always reconnect
                 _LOGGER.exception("Unexpected error")
 
+            if self.state == STATE_CONNECTED and self._on_disconnect:
+                try:
+                    yield from asyncio.wait([
+                        cb() for cb in self._on_disconnect
+                    ])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_disconnect callbacks")
+
             if self.close_requested:
                 break
 
@@ -78,9 +126,11 @@ class CloudIoT:
             self.tries += 1
 
             try:
-                # Sleep 2^tries seconds between retries
-                self.retry_task = hass.async_create_task(asyncio.sleep(
-                    2**min(9, self.tries), loop=hass.loop))
+                # Sleep 2^tries + 0…tries*3 seconds between retries
+                self.retry_task = hass.async_create_task(
+                    asyncio.sleep(2**min(9, self.tries) +
+                                  random.randint(0, self.tries * 3),
+                                  loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
@@ -90,6 +140,30 @@ class CloudIoT:
         self.state = STATE_DISCONNECTED
         if remove_hass_stop_listener is not None:
             remove_hass_stop_listener()
+
+    async def async_send_message(self, handler, payload,
+                                 expect_answer=True):
+        """Send a message."""
+        if self.state != STATE_CONNECTED:
+            raise NotConnected
+
+        msgid = uuid.uuid4().hex
+
+        if expect_answer:
+            fut = self._response_handler[msgid] = asyncio.Future()
+
+        message = {
+            'msgid': msgid,
+            'handler': handler,
+            'payload': payload,
+        }
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Publishing message:\n%s\n",
+                          pprint.pformat(message))
+        await self.client.send_json(message)
+
+        if expect_answer:
+            return await fut
 
     @asyncio.coroutine
     def _handle_connection(self):
@@ -134,6 +208,15 @@ class CloudIoT:
             _LOGGER.info("Connected")
             self.state = STATE_CONNECTED
 
+            if self._on_connect:
+                try:
+                    yield from asyncio.wait([cb() for cb in self._on_connect])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_connect callbacks")
+
             while not client.closed:
                 msg = yield from client.receive()
 
@@ -158,6 +241,17 @@ class CloudIoT:
                 if _LOGGER.isEnabledFor(logging.DEBUG):
                     _LOGGER.debug("Received message:\n%s\n",
                                   pprint.pformat(msg))
+
+                response_handler = self._response_handler.pop(msg['msgid'],
+                                                              None)
+
+                if response_handler is not None:
+                    if 'payload' in msg:
+                        response_handler.set_result(msg["payload"])
+                    else:
+                        response_handler.set_exception(
+                            ErrorMessage(msg['error']))
+                    continue
 
                 response = {
                     'msgid': msg['msgid'],
@@ -229,7 +323,7 @@ def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
     result = yield from alexa.async_handle_message(
         hass, cloud.alexa_config, payload,
-        enabled=cloud.alexa_enabled)
+        enabled=cloud.prefs.alexa_enabled)
     return result
 
 
@@ -237,7 +331,7 @@ def async_handle_alexa(hass, cloud, payload):
 @asyncio.coroutine
 def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
-    if not cloud.google_enabled:
+    if not cloud.prefs.google_enabled:
         return ga.turned_off_response(payload)
 
     result = yield from ga.async_handle_message(
@@ -246,14 +340,52 @@ def async_handle_google_actions(hass, cloud, payload):
 
 
 @HANDLERS.register('cloud')
-@asyncio.coroutine
-def async_handle_cloud(hass, cloud, payload):
+async def async_handle_cloud(hass, cloud, payload):
     """Handle an incoming IoT message for cloud component."""
     action = payload['action']
 
     if action == 'logout':
-        yield from cloud.logout()
+        # Log out of Home Assistant Cloud
+        await cloud.logout()
         _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
+
+
+@HANDLERS.register('webhook')
+async def async_handle_webhook(hass, cloud, payload):
+    """Handle an incoming IoT message for cloud webhooks."""
+    cloudhook_id = payload['cloudhook_id']
+
+    found = None
+    for cloudhook in cloud.prefs.cloudhooks.values():
+        if cloudhook['cloudhook_id'] == cloudhook_id:
+            found = cloudhook
+            break
+
+    if found is None:
+        return {
+            'status': 200
+        }
+
+    request = MockRequest(
+        content=payload['body'].encode('utf-8'),
+        headers=payload['headers'],
+        method=payload['method'],
+        query_string=payload['query'],
+    )
+
+    response = await hass.components.webhook.async_handle_webhook(
+        found['webhook_id'], request)
+
+    response_dict = utils.aiohttp_serialize_response(response)
+    body = response_dict.get('body')
+
+    return {
+        'body': body,
+        'status': response_dict['status'],
+        'headers': {
+            'Content-Type': response.content_type
+        }
+    }

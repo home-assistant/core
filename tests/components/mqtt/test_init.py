@@ -1,22 +1,22 @@
 """The tests for the MQTT component."""
 import asyncio
+import ssl
 import unittest
 from unittest import mock
-import ssl
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import mqtt
+from homeassistant.const import (
+    ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-from homeassistant.components import mqtt
-from homeassistant.const import (EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE,
-                                 EVENT_HOMEASSISTANT_STOP)
 
-from tests.common import (get_test_home_assistant, mock_coro,
-                          mock_mqtt_component,
-                          threadsafe_coroutine_factory, fire_mqtt_message,
-                          async_fire_mqtt_message, MockConfigEntry)
+from tests.common import (
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    fire_mqtt_message, get_test_home_assistant, mock_coro, mock_mqtt_component,
+    threadsafe_coroutine_factory)
 
 
 @pytest.fixture
@@ -113,11 +113,12 @@ class TestMQTTComponent(unittest.TestCase):
         """
         payload = "not a template"
         payload_template = "a template"
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: payload,
-            mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
-        }, blocking=True)
+        with pytest.raises(vol.Invalid):
+            self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: payload,
+                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
+            }, blocking=True)
         assert not self.hass.data['mqtt'].async_publish.called
 
     def test_service_call_with_ascii_qos_retain_flags(self):
@@ -229,6 +230,19 @@ class TestMQTTComponent(unittest.TestCase):
             'name': 'Beer',
             'model': 'Glass',
             'sw_version': '0.1-beta',
+        })
+        # full device info with via_hub
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['helloworld', 'hello'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+                ["zigbee", "zigbee_id"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+            'via_hub': 'test-hub',
         })
         # no identifiers
         with pytest.raises(vol.Invalid):
@@ -735,3 +749,21 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 async def test_setup_fails_without_config(hass):
     """Test if the MQTT component fails to load with no config."""
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
+
+
+async def test_message_callback_exception_gets_logged(hass, caplog):
+    """Test exception raised by message handler."""
+    await async_mock_mqtt_component(hass)
+
+    @callback
+    def bad_handler(*args):
+        """Record calls."""
+        raise Exception('This is a bad message callback')
+
+    await mqtt.async_subscribe(hass, 'test-topic', bad_handler)
+    async_fire_mqtt_message(hass, 'test-topic', 'test')
+    await hass.async_block_till_done()
+
+    assert \
+        "Exception in bad_handler when handling msg on 'test-topic':" \
+        " 'test'" in caplog.text

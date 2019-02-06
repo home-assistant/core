@@ -1,4 +1,5 @@
 """Storage for auth models."""
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 import hmac
@@ -11,7 +12,7 @@ from homeassistant.util import dt as dt_util
 
 from . import models
 from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
-from .permissions import system_policies
+from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType  # noqa: F401
 
 STORAGE_VERSION = 1
@@ -34,6 +35,7 @@ class AuthStore:
         self.hass = hass
         self._users = None  # type: Optional[Dict[str, models.User]]
         self._groups = None  # type: Optional[Dict[str, models.Group]]
+        self._perm_lookup = None  # type: Optional[PermissionLookup]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
                                                  private=True)
 
@@ -44,6 +46,14 @@ class AuthStore:
             assert self._groups is not None
 
         return list(self._groups.values())
+
+    async def async_get_group(self, group_id: str) -> Optional[models.Group]:
+        """Retrieve all users."""
+        if self._groups is None:
+            await self._async_load()
+            assert self._groups is not None
+
+        return self._groups.get(group_id)
 
     async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""
@@ -86,6 +96,7 @@ class AuthStore:
             # Until we get group management, we just put everyone in the
             # same group.
             'groups': groups,
+            'perm_lookup': self._perm_lookup,
         }  # type: Dict[str, Any]
 
         if is_owner is not None:
@@ -123,6 +134,33 @@ class AuthStore:
             assert self._users is not None
 
         self._users.pop(user.id)
+        self._async_schedule_save()
+
+    async def async_update_user(
+            self, user: models.User, name: Optional[str] = None,
+            is_active: Optional[bool] = None,
+            group_ids: Optional[List[str]] = None) -> None:
+        """Update a user."""
+        assert self._groups is not None
+
+        if group_ids is not None:
+            groups = []
+            for grid in group_ids:
+                group = self._groups.get(grid)
+                if group is None:
+                    raise ValueError("Invalid group specified.")
+                groups.append(group)
+
+            user.groups = groups
+            user.invalidate_permission_cache()
+
+        for attr_name, value in (
+                ('name', name),
+                ('is_active', is_active),
+        ):
+            if value is not None:
+                setattr(user, attr_name, value)
+
         self._async_schedule_save()
 
     async def async_activate_user(self, user: models.User) -> None:
@@ -234,12 +272,17 @@ class AuthStore:
 
     async def _async_load(self) -> None:
         """Load the users."""
-        data = await self._store.async_load()
+        [ent_reg, data] = await asyncio.gather(
+            self.hass.helpers.entity_registry.async_get_registry(),
+            self._store.async_load(),
+        )
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
         if self._users is not None:
             return
+
+        self._perm_lookup = perm_lookup = PermissionLookup(ent_reg)
 
         if data is None:
             self._set_defaults()
@@ -339,6 +382,7 @@ class AuthStore:
                 is_owner=user_dict['is_owner'],
                 is_active=user_dict['is_active'],
                 system_generated=user_dict['system_generated'],
+                perm_lookup=perm_lookup,
             )
 
         for cred_dict in data['credentials']:
@@ -427,10 +471,11 @@ class AuthStore:
         for group in self._groups.values():
             g_dict = {
                 'id': group.id,
+                # Name not read for sys groups. Kept here for backwards compat
+                'name': group.name
             }  # type: Dict[str, Any]
 
             if group.id not in (GROUP_ID_READ_ONLY, GROUP_ID_ADMIN):
-                g_dict['name'] = group.name
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)

@@ -223,7 +223,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         # Restoring wrong media player to its previous state
         # Nothing should be done
         self.hass.services.call(DOMAIN, SERVICE_RESTORE,
-                                {'entity_id': 'not_existing'},
+                                {'entity_id': 'media.not_existing'},
                                 blocking=True)
         # self.hass.block_till_done()
 

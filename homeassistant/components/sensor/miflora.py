@@ -30,13 +30,13 @@ DEFAULT_NAME = 'Mi Flora'
 
 SCAN_INTERVAL = timedelta(seconds=1200)
 
-# Sensor types are defined like: Name, units
+# Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
-    'temperature': ['Temperature', '°C'],
-    'light': ['Light intensity', 'lx'],
-    'moisture': ['Moisture', '%'],
-    'conductivity': ['Conductivity', 'µS/cm'],
-    'battery': ['Battery', '%'],
+    'temperature': ['Temperature', '°C', 'mdi:thermometer'],
+    'light': ['Light intensity', 'lx', 'mdi:white-balance-sunny'],
+    'moisture': ['Moisture', '%', 'mdi:water-percent'],
+    'conductivity': ['Conductivity', 'µS/cm', 'mdi:flash-circle'],
+    'battery': ['Battery', '%', 'mdi:battery-charging'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-variable
+        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:
@@ -75,13 +75,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
         unit = SENSOR_TYPES[parameter][1]
+        icon = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
         if prefix:
             name = "{} {}".format(prefix, name)
 
         devs.append(MiFloraSensor(
-            poller, parameter, name, unit, force_update, median))
+            poller, parameter, name, unit, icon, force_update, median))
 
     async_add_entities(devs)
 
@@ -89,11 +90,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    def __init__(self, poller, parameter, name, unit, force_update, median):
+    def __init__(
+            self, poller, parameter, name, unit, icon, force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
         self._unit = unit
+        self._icon = icon
         self._name = name
         self._state = None
         self.data = []
@@ -125,6 +128,11 @@ class MiFloraSensor(Entity):
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def force_update(self):

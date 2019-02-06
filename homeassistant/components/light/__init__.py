@@ -12,13 +12,16 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
+from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
@@ -88,7 +91,7 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -115,13 +118,13 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
 })
 
@@ -255,6 +258,21 @@ async def async_setup(hass, config):
         # Convert the entity ids to valid light ids
         target_lights = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
+
+        if service.context.user_id:
+            user = await hass.auth.async_get_user(service.context.user_id)
+            if user is None:
+                raise UnknownUser(context=service.context)
+
+            entity_perms = user.permissions.check_entity
+
+            for light in target_lights:
+                if not entity_perms(light, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=service.context,
+                        entity_id=light,
+                        permission=POLICY_CONTROL
+                    )
 
         preprocess_turn_on_alternatives(params)
 

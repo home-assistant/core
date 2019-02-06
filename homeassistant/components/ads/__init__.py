@@ -46,8 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE]),
-    vol.Required(CONF_ADS_VALUE): cv.match_all,
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL]),
+    vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
     vol.Required(CONF_ADS_VAR): cv.string,
 })
 
@@ -125,16 +125,23 @@ class AdsHub:
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
+        import pyads
         _LOGGER.debug("Shutting down ADS")
         for notification_item in self._notification_items.values():
-            self._client.del_device_notification(
-                notification_item.hnotify,
-                notification_item.huser
-            )
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
                 notification_item.hnotify, notification_item.huser)
-        self._client.close()
+            try:
+                self._client.del_device_notification(
+                    notification_item.hnotify,
+                    notification_item.huser
+                )
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+        try:
+            self._client.close()
+        except pyads.ADSError as err:
+            _LOGGER.error(err)
 
     def register_device(self, device):
         """Register a new device."""

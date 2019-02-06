@@ -16,8 +16,8 @@ class SmartHomeError(Exception):
 class Config:
     """Hold the configuration for Google Assistant."""
 
-    def __init__(self, should_expose, agent_user_id, entity_config=None,
-                 allow_unlock=False):
+    def __init__(self, should_expose, allow_unlock, agent_user_id,
+                 entity_config=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.agent_user_id = agent_user_id

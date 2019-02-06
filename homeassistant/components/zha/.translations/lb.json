@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun ZHA ass erlaabt."
+        },
+        "error": {
+            "cannot_connect": "Keng Verbindung mam ZHA Apparat m\u00e9iglech."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "Typ vun Radio",
+                    "usb_path": "Pad zum USB Apparat"
+                },
+                "description": "Eidel",
+                "title": "ZHA"
+            }
+        },
+        "title": "ZHA"
+    }
+}

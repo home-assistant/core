@@ -16,14 +16,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['magicseaweed==1.0.0']
+REQUIREMENTS = ['magicseaweed==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOURS = 'hours'
 CONF_SPOT_ID = 'spot_id'
 CONF_UNITS = 'units'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_UNIT = 'us'
 DEFAULT_NAME = 'MSW'

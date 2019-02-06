@@ -12,20 +12,22 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME)
+    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.1.2']
+REQUIREMENTS = ['pytraccar==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = 'address'
 ATTR_CATEGORY = 'category'
 ATTR_GEOFENCE = 'geofence'
+ATTR_MOTION = 'motion'
+ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
@@ -78,13 +80,21 @@ class TraccarScanner:
         await self._api.get_device_info()
         for devicename in self._api.device_info:
             device = self._api.device_info[devicename]
-            device_attributes = {
-                ATTR_ADDRESS: device['address'],
-                ATTR_GEOFENCE: device['geofence'],
-                ATTR_CATEGORY: device['category'],
-                ATTR_TRACKER: 'traccar'
-                }
+            attr = {}
+            attr[ATTR_TRACKER] = 'traccar'
+            if device.get('address') is not None:
+                attr[ATTR_ADDRESS] = device['address']
+            if device.get('geofence') is not None:
+                attr[ATTR_GEOFENCE] = device['geofence']
+            if device.get('category') is not None:
+                attr[ATTR_CATEGORY] = device['category']
+            if device.get('speed') is not None:
+                attr[ATTR_SPEED] = device['speed']
+            if device.get('battery') is not None:
+                attr[ATTR_BATTERY_LEVEL] = device['battery']
+            if device.get('motion') is not None:
+                attr[ATTR_MOTION] = device['motion']
             await self._async_see(
                 dev_id=slugify(device['device_id']),
-                gps=(device['latitude'], device['longitude']),
-                attributes=device_attributes)
+                gps=(device.get('latitude'), device.get('longitude')),
+                attributes=attr)

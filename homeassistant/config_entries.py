@@ -30,7 +30,7 @@ At a minimum, each config flow will have to define a version number and the
     class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
-        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
@@ -135,27 +135,40 @@ SOURCE_IMPORT = 'import'
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'ambient_station',
     'cast',
+    'daikin',
     'deconz',
     'dialogflow',
+    'esphome',
+    'emulated_roku',
+    'geofency',
+    'gpslogger',
     'hangouts',
     'homematicip_cloud',
     'hue',
     'ifttt',
     'ios',
     'lifx',
-    'mailgun',
+    'locative',
     'luftdaten',
+    'mailgun',
     'mqtt',
     'nest',
     'openuv',
+    'owntracks',
+    'point',
+    'rainmachine',
     'simplisafe',
+    'smartthings',
     'smhi',
     'sonos',
+    'tellduslive',
     'tradfri',
     'twilio',
     'unifi',
     'upnp',
+    'zha',
     'zone',
     'zwave'
 ]

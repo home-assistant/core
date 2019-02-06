@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['geizhals==0.0.7']
+REQUIREMENTS = ['geizhals==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,9 @@ class Geizwatch(Entity):
     @property
     def state(self):
         """Return the best price of the selected product."""
+        if not self._device.prices:
+            return None
+
         return self._device.prices[0]
 
     @property

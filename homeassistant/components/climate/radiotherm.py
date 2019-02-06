@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.4.1']
+REQUIREMENTS = ['radiotherm==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,6 +219,11 @@ class RadioThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._tstate != STATE_IDLE
+
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
@@ -235,13 +240,15 @@ class RadioThermostat(ClimateDevice):
             self._name = self.device.name['raw']
 
         # Request the current state from the thermostat.
-        data = self.device.tstat['raw']
+        import radiotherm
+        try:
+            data = self.device.tstat['raw']
+        except radiotherm.validate.RadiothermTstatError:
+            _LOGGER.error('%s (%s) was busy (invalid value returned)',
+                          self._name, self.device.host)
+            return
 
         current_temp = data['temp']
-        if current_temp == -1:
-            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
-                          self.device.host)
-            return
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp

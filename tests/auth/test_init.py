@@ -870,3 +870,28 @@ async def test_async_remove_user(hass):
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data['user_id'] == user.id
+
+
+async def test_new_users_admin(mock_hass):
+    """Test newly created users are admin."""
+    manager = await auth.auth_manager_from_config(mock_hass, [{
+        'type': 'insecure_example',
+        'users': [{
+            'username': 'test-user',
+            'password': 'test-pass',
+            'name': 'Test Name'
+        }]
+    }], [])
+    ensure_auth_manager_loaded(manager)
+
+    user = await manager.async_create_user('Hello')
+    assert user.is_admin
+
+    user_cred = await manager.async_get_or_create_user(auth_models.Credentials(
+        id='mock-id',
+        auth_provider_type='insecure_example',
+        auth_provider_id=None,
+        data={'username': 'test-user'},
+        is_new=True,
+    ))
+    assert user_cred.is_admin

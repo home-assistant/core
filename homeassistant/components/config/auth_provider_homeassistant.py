@@ -3,7 +3,6 @@ import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import require_owner
 
 
 WS_TYPE_CREATE = 'config/auth_provider/homeassistant/create'
@@ -54,7 +53,7 @@ def _get_provider(hass):
     raise RuntimeError('Provider not found')
 
 
-@require_owner
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
@@ -91,7 +90,7 @@ async def websocket_create(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg['id']))
 
 
-@require_owner
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_delete(hass, connection, msg):
     """Delete username and related credential."""
@@ -123,6 +122,7 @@ async def websocket_delete(hass, connection, msg):
         websocket_api.result_message(msg['id']))
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
     """Change user password."""

@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yalesmartalarmclient==0.1.4']
+REQUIREMENTS = ['yalesmartalarmclient==0.1.6']
 
 CONF_AREA_ID = 'area_id'
 

@@ -7,6 +7,7 @@ about: Create a report to help us improve
 <!-- READ THIS FIRST:
 - If you need additional help with this template please refer to https://www.home-assistant.io/help/reporting_issues/
 - Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/home-assistant/releases
+- Frontend issues should be submitted to the home-assistant-polymer repository: https://github.com/home-assistant/home-assistant-polymer/issues
 - Do not report issues for components if you are using custom components: files in <config-dir>/custom_components
 - This is for bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
 - Provide as many details as possible. Paste logs, configuration sample and code into the backticks. Do not delete any text from this template!

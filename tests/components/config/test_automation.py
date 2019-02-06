@@ -6,12 +6,12 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
 
-async def test_get_device_config(hass, aiohttp_client):
+async def test_get_device_config(hass, hass_client):
     """Test getting device config."""
     with patch.object(config, 'SECTIONS', ['automation']):
         await async_setup_component(hass, 'config', {})
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     def mock_read(path):
         """Mock reading data."""
@@ -34,12 +34,12 @@ async def test_get_device_config(hass, aiohttp_client):
     assert result == {'id': 'moon'}
 
 
-async def test_update_device_config(hass, aiohttp_client):
+async def test_update_device_config(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['automation']):
         await async_setup_component(hass, 'config', {})
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     orig_data = [
         {
@@ -83,12 +83,12 @@ async def test_update_device_config(hass, aiohttp_client):
     assert written[0] == orig_data
 
 
-async def test_bad_formatted_automations(hass, aiohttp_client):
+async def test_bad_formatted_automations(hass, hass_client):
     """Test that we handle automations without ID."""
     with patch.object(config, 'SECTIONS', ['automation']):
         await async_setup_component(hass, 'config', {})
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     orig_data = [
         {

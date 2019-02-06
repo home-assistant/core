@@ -97,7 +97,7 @@ class GoogleWifiSensor(Entity):
         """Initialize a Google Wifi sensor."""
         self._api = api
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
 
         variable_info = MONITORED_CONDITIONS[variable]
         self._var_name = variable
@@ -135,7 +135,7 @@ class GoogleWifiSensor(Entity):
         if self.available:
             self._state = self._api.data[self._var_name]
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
 
 class GoogleWifiAPI:

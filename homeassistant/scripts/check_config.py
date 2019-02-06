@@ -21,7 +21,7 @@ from homeassistant.config import (
 from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.4',)
+REQUIREMENTS = ('colorlog==4.0.2',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -327,11 +327,6 @@ def check_ha_config_file(hass):
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     core_config.pop(CONF_PACKAGES, None)
 
-    # Ensure we have no None values after merge
-    for key, value in config.items():
-        if not value:
-            config[key] = {}
-
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())
 
@@ -350,14 +345,21 @@ def check_ha_config_file(hass):
                 _comp_error(ex, domain, config)
                 continue
 
-        if not hasattr(component, 'PLATFORM_SCHEMA'):
+        if (not hasattr(component, 'PLATFORM_SCHEMA') and
+                not hasattr(component, 'PLATFORM_SCHEMA_BASE')):
             continue
 
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
+                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
+                    p_validated = \
+                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
+                            p_config)
+                else:
+                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
+                        p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue

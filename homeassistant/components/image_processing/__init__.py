@@ -60,9 +60,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 
@@ -76,10 +77,14 @@ async def async_setup(hass, config):
         """Service handler for scan."""
         image_entities = component.async_extract_from_service(service)
 
-        update_task = [entity.async_update_ha_state(True) for
-                       entity in image_entities]
-        if update_task:
-            await asyncio.wait(update_task, loop=hass.loop)
+        update_tasks = []
+        for entity in image_entities:
+            entity.async_set_context(service.context)
+            update_tasks.append(
+                entity.async_update_ha_state(True))
+
+        if update_tasks:
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,

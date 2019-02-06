@@ -131,6 +131,6 @@ def _response_to_json(response):
                 active_clients[client.get("mac")] = client
 
         return active_clients
-    except ValueError:
+    except (ValueError, TypeError):
         _LOGGER.error("Failed to decode response from AP.")
         return {}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "invalid_password": "Mot de passe invalide !"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "title": "Entrer votre mot de passe"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

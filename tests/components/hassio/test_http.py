@@ -40,9 +40,10 @@ def test_forward_request(hassio_client):
     'build_type', [
         'supervisor/info', 'homeassistant/update', 'host/info'
     ])
-def test_auth_required_forward_request(hassio_client, build_type):
+def test_auth_required_forward_request(hassio_noauth_client, build_type):
     """Test auth required for normal request."""
-    resp = yield from hassio_client.post("/api/hassio/{}".format(build_type))
+    resp = yield from hassio_noauth_client.post(
+        "/api/hassio/{}".format(build_type))
 
     # Check we got right response
     assert resp.status == 401
@@ -102,15 +103,15 @@ def test_forward_request_no_auth_for_logo(hassio_client):
 
 @asyncio.coroutine
 def test_forward_log_request(hassio_client):
-    """Test fetching normal log path."""
+    """Test fetching normal log path doesn't remove ANSI color escape codes."""
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
     with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
             patch('homeassistant.components.hassio.http.'
-                  '_create_response_log') as mresp:
-        mresp.return_value = 'response'
+                  '_create_response') as mresp:
+        mresp.return_value = '\033[32mresponse\033[0m'
         resp = yield from hassio_client.get('/api/hassio/beer/logs', headers={
                 HTTP_HEADER_HA_AUTH: API_PASSWORD
             })
@@ -118,7 +119,7 @@ def test_forward_log_request(hassio_client):
     # Check we got right response
     assert resp.status == 200
     body = yield from resp.text()
-    assert body == 'response'
+    assert body == '\033[32mresponse\033[0m'
 
     # Check we forwarded command
     assert len(mresp.mock_calls) == 1
@@ -135,3 +136,20 @@ def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
                 HTTP_HEADER_HA_AUTH: API_PASSWORD
             })
     assert resp.status == 502
+
+
+async def test_forwarding_user_info(hassio_client, hass_admin_user,
+                                    aioclient_mock):
+    """Test that we forward user info correctly."""
+    aioclient_mock.get('http://127.0.0.1/hello')
+
+    resp = await hassio_client.get('/api/hassio/hello')
+
+    # Check we got right response
+    assert resp.status == 200
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    req_headers = aioclient_mock.mock_calls[0][-1]
+    req_headers['X-HASS-USER-ID'] == hass_admin_user.id
+    req_headers['X-HASS-IS-ADMIN'] == '1'

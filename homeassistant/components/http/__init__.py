@@ -25,8 +25,7 @@ from .auth import setup_auth
 from .ban import setup_bans
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import (
-    CachingFileResponse, CachingStaticResource, staticresource_middleware)
+from .static import CachingFileResponse, CachingStaticResource
 
 # Import as alias
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
@@ -99,6 +98,7 @@ class ApiConfig:
         self.port = port
         self.api_password = api_password
 
+        host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
             self.base_url = host
         elif use_ssl:
@@ -191,8 +191,7 @@ class HomeAssistantHTTP:
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
                  login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(
-            middlewares=[staticresource_middleware])
+        app = self.app = web.Application(middlewares=[])
 
         # This order matters
         setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
@@ -200,14 +199,13 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        if hass.auth.active and hass.auth.support_legacy:
+        if hass.auth.support_legacy:
             _LOGGER.warning(
                 "legacy_api_password support has been enabled. If you don't "
                 "require it, remove the 'api_password' from your http config.")
 
-        setup_auth(app, trusted_networks, hass.auth.active,
-                   support_legacy=hass.auth.support_legacy,
-                   api_password=api_password)
+        setup_auth(app, trusted_networks,
+                   api_password if hass.auth.support_legacy else None)
 
         setup_cors(app, cors_origins)
 
@@ -302,12 +300,6 @@ class HomeAssistantHTTP:
 
     async def start(self):
         """Start the aiohttp server."""
-        # We misunderstood the startup signal. You're not allowed to change
-        # anything during startup. Temp workaround.
-        # pylint: disable=protected-access
-        self.app._on_startup.freeze()
-        await self.app.startup()
-
         if self.ssl_certificate:
             try:
                 if self.ssl_profile == SSL_INTERMEDIATE:
@@ -335,6 +327,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
+        # pylint: disable=protected-access
         self.app._router.freeze = lambda: None
 
         self.runner = web.AppRunner(self.app)

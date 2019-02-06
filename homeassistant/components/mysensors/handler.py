@@ -45,6 +45,12 @@ async def handle_battery_level(hass, hass_config, msg):
     _handle_node_update(hass, msg)
 
 
+@HANDLERS.register('I_HEARTBEAT_RESPONSE')
+async def handle_heartbeat(hass, hass_config, msg):
+    """Handle an heartbeat."""
+    _handle_node_update(hass, msg)
+
+
 @HANDLERS.register('I_SKETCH_NAME')
 async def handle_sketch_name(hass, hass_config, msg):
     """Handle an internal sketch name message."""
@@ -93,7 +99,6 @@ def _handle_child_update(hass, hass_config, msg):
     for signal in set(signals):
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
-        # FOR LATER: Add timer to not signal if another update comes in.
         async_dispatcher_send(hass, signal)
 
 

@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
@@ -70,7 +70,7 @@ class PhilipsTV(MediaPlayerDevice):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._min_volume = None
         self._max_volume = None
         self._volume = None

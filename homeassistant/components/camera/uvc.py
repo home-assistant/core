@@ -10,12 +10,12 @@ import socket
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['uvcclient==0.10.1']
+REQUIREMENTS = ['uvcclient==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,12 +25,14 @@ CONF_PASSWORD = 'password'
 
 DEFAULT_PASSWORD = 'ubnt'
 DEFAULT_PORT = 7080
+DEFAULT_SSL = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NVR): cv.string,
     vol.Required(CONF_KEY): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
@@ -40,11 +42,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     key = config[CONF_KEY]
     password = config[CONF_PASSWORD]
     port = config[CONF_PORT]
+    ssl = config[CONF_SSL]
 
     from uvcclient import nvr
     try:
         # Exceptions may be raised in all method calls to the nvr library.
-        nvrconn = nvr.UVCRemote(addr, port, key)
+        nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
         cameras = nvrconn.index()
 
         identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'

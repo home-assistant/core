@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.1.8']
+REQUIREMENTS = ['pyhik==0.1.9']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'

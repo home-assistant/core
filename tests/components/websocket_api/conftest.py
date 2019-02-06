@@ -9,9 +9,10 @@ from . import API_PASSWORD
 
 
 @pytest.fixture
-def websocket_client(hass, hass_ws_client):
+def websocket_client(hass, hass_ws_client, hass_access_token):
     """Create a websocket client."""
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    return hass.loop.run_until_complete(
+        hass_ws_client(hass, hass_access_token))
 
 
 @pytest.fixture

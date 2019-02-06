@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice,
+    STATE_ON, STATE_OFF, STATE_HEAT, STATE_MANUAL, STATE_ECO, PLATFORM_SCHEMA,
+    ClimateDevice,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF)
 from homeassistant.const import (
@@ -21,8 +22,6 @@ REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
 _LOGGER = logging.getLogger(__name__)
 
 STATE_BOOST = 'boost'
-STATE_AWAY = 'away'
-STATE_MANUAL = 'manual'
 
 ATTR_STATE_WINDOW_OPEN = 'window_open'
 ATTR_STATE_VALVE = 'valve'
@@ -65,10 +64,10 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self.modes = {
             eq3.Mode.Open: STATE_ON,
             eq3.Mode.Closed: STATE_OFF,
-            eq3.Mode.Auto: STATE_AUTO,
+            eq3.Mode.Auto: STATE_HEAT,
             eq3.Mode.Manual: STATE_MANUAL,
             eq3.Mode.Boost: STATE_BOOST,
-            eq3.Mode.Away: STATE_AWAY,
+            eq3.Mode.Away: STATE_ECO,
         }
 
         self.reverse_modes = {v: k for k, v in self.modes.items()}
@@ -140,20 +139,20 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Away mode off turns to AUTO mode."""
-        self.set_operation_mode(STATE_AUTO)
+        self.set_operation_mode(STATE_HEAT)
 
     def turn_away_mode_on(self):
         """Set away mode on."""
-        self.set_operation_mode(STATE_AWAY)
+        self.set_operation_mode(STATE_ECO)
 
     @property
     def is_away_mode_on(self):
         """Return if we are away."""
-        return self.current_operation == STATE_AWAY
+        return self.current_operation == STATE_ECO
 
     def turn_on(self):
         """Turn device on."""
-        self.set_operation_mode(STATE_AUTO)
+        self.set_operation_mode(STATE_HEAT)
 
     def turn_off(self):
         """Turn device off."""

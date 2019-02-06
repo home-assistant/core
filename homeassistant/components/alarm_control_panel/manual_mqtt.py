@@ -241,8 +241,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
-        return 'Any'
+            return alarm.FORMAT_NUMBER
+        return alarm.FORMAT_TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -335,11 +335,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
         return state_attr
 
-    def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_added_to_hass(self):
+        """Subscribe to MQTT events."""
         async_track_state_change(
             self.hass, self.entity_id, self._async_state_changed_listener
         )
@@ -359,7 +356,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                 _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
 
-        return mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._command_topic, message_received, self._qos)
 
     async def _async_state_changed_listener(self, entity_id, old_state,

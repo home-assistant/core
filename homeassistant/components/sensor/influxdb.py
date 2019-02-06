@@ -22,7 +22,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==5.0.0']
+REQUIREMENTS = ['influxdb==5.2.0']
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
@@ -111,7 +111,7 @@ class InfluxSensor(Entity):
             database=database, ssl=influx_conf['ssl'],
             verify_ssl=influx_conf['verify_ssl'])
         try:
-            influx.query("select * from /.*/ LIMIT 1;")
+            influx.query("SHOW SERIES LIMIT 1;")
             self.connected = True
             self.data = InfluxSensorData(
                 influx, query.get(CONF_GROUP_FUNCTION), query.get(CONF_FIELD),

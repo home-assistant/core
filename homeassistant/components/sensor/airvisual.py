@@ -41,33 +41,39 @@ SENSOR_TYPE_LEVEL = 'air_pollution_level'
 SENSOR_TYPE_AQI = 'air_quality_index'
 SENSOR_TYPE_POLLUTANT = 'main_pollutant'
 SENSORS = [
-    (SENSOR_TYPE_LEVEL, 'Air Pollution Level', 'mdi:scale', None),
-    (SENSOR_TYPE_AQI, 'Air Quality Index', 'mdi:format-list-numbers', 'AQI'),
+    (SENSOR_TYPE_LEVEL, 'Air Pollution Level', 'mdi:gauge', None),
+    (SENSOR_TYPE_AQI, 'Air Quality Index', 'mdi:chart-line', 'AQI'),
     (SENSOR_TYPE_POLLUTANT, 'Main Pollutant', 'mdi:chemical-weapon', None),
 ]
 
 POLLUTANT_LEVEL_MAPPING = [{
     'label': 'Good',
+    'icon': 'mdi:emoticon-excited',
     'minimum': 0,
     'maximum': 50
 }, {
     'label': 'Moderate',
+    'icon': 'mdi:emoticon-happy',
     'minimum': 51,
     'maximum': 100
 }, {
-    'label': 'Unhealthy for sensitive group',
+    'label': 'Unhealthy for sensitive groups',
+    'icon': 'mdi:emoticon-neutral',
     'minimum': 101,
     'maximum': 150
 }, {
     'label': 'Unhealthy',
+    'icon': 'mdi:emoticon-sad',
     'minimum': 151,
     'maximum': 200
 }, {
     'label': 'Very Unhealthy',
+    'icon': 'mdi:emoticon-dead',
     'minimum': 201,
     'maximum': 300
 }, {
     'label': 'Hazardous',
+    'icon': 'mdi:biohazard',
     'minimum': 301,
     'maximum': 10000
 }]
@@ -237,6 +243,7 @@ class AirVisualSensor(Entity):
                 if i['minimum'] <= aqi <= i['maximum']
             ]
             self._state = level['label']
+            self._icon = level['icon']
         elif self._type == SENSOR_TYPE_AQI:
             self._state = data['aqi{0}'.format(self._locale)]
         elif self._type == SENSOR_TYPE_POLLUTANT:

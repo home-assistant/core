@@ -23,6 +23,8 @@ from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
+from .reproduce_state import async_reproduce_states  # noqa
+
 DOMAIN = 'group'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -49,7 +51,7 @@ SERVICE_REMOVE = 'remove'
 CONTROL_TYPES = vol.In(['hidden', None])
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_VISIBLE): cv.boolean
 })
 
@@ -207,6 +209,13 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
         schema=RELOAD_SERVICE_SCHEMA)
 
+    service_lock = asyncio.Lock()
+
+    async def locked_service_handler(service):
+        """Handle a service with an async lock."""
+        async with service_lock:
+            await groups_service_handler(service)
+
     async def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
@@ -284,7 +293,7 @@ async def async_setup(hass, config):
             await component.async_remove_entity(entity_id)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET, groups_service_handler,
+        DOMAIN, SERVICE_SET, locked_service_handler,
         schema=SET_SERVICE_SCHEMA)
 
     hass.services.async_register(

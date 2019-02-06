@@ -7,7 +7,6 @@ automatic sensor creation.
 from datetime import timedelta
 from unittest.mock import patch
 
-from ..test_rflink import mock_rflink
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL)
 
@@ -17,6 +16,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
+from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = 'binary_sensor'
 
@@ -46,7 +46,7 @@ CONFIG = {
 async def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
-    event_callback, create, _, disconnect_callback = await mock_rflink(
+    event_callback, create, _, _ = await mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
@@ -86,7 +86,7 @@ async def test_entity_availability(hass, monkeypatch):
     config[CONF_RECONNECT_INTERVAL] = 60
 
     # Create platform and entities
-    event_callback, create, _, disconnect_callback = await mock_rflink(
+    _, _, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures)
 
     # Entities are available by default
@@ -114,7 +114,7 @@ async def test_entity_availability(hass, monkeypatch):
 async def test_off_delay(hass, monkeypatch):
     """Test off_delay option."""
     # setup mocking rflink module
-    event_callback, create, _, disconnect_callback = await mock_rflink(
+    event_callback, create, _, _ = await mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed

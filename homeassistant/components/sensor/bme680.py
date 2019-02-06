@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['bme680==1.0.4',
+REQUIREMENTS = ['bme680==1.0.5',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ CONF_GAS_HEATER_DURATION = 'gas_heater_duration'
 CONF_AQ_BURN_IN_TIME = 'aq_burn_in_time'
 CONF_AQ_HUM_BASELINE = 'aq_humidity_baseline'
 CONF_AQ_HUM_WEIGHTING = 'aq_humidity_bias'
+CONF_TEMP_OFFSET = 'temp_offset'
 
 
 DEFAULT_NAME = 'BME680 Sensor'
@@ -50,6 +51,7 @@ DEFAULT_GAS_HEATER_DURATION = 150  # Heater duration in ms 1 - 4032
 DEFAULT_AQ_BURN_IN_TIME = 300  # 300 second burn in time for AQ gas measurement
 DEFAULT_AQ_HUM_BASELINE = 40  # 40%, an optimal indoor humidity.
 DEFAULT_AQ_HUM_WEIGHTING = 25  # 25% Weighting of humidity to gas in AQ score
+DEFAULT_TEMP_OFFSET = 0  # No calibration out of the box.
 
 SENSOR_TEMP = 'temperature'
 SENSOR_HUMID = 'humidity'
@@ -93,6 +95,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(1, 100)),
     vol.Optional(CONF_AQ_HUM_WEIGHTING, default=DEFAULT_AQ_HUM_WEIGHTING):
         vol.All(vol.Coerce(int), vol.Range(1, 100)),
+    vol.Optional(CONF_TEMP_OFFSET, default=DEFAULT_TEMP_OFFSET):
+        vol.All(vol.Coerce(float), vol.Range(-100.0, 100.0)),
 })
 
 
@@ -140,6 +144,9 @@ def _setup_bme680(config):
         sensor.set_temperature_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_TEMP)]
         )
+        sensor.set_temp_offset(
+            config.get(CONF_TEMP_OFFSET)
+        )
         sensor.set_humidity_oversample(
             os_lookup[config.get(CONF_OVERSAMPLING_HUM)]
         )
@@ -179,10 +186,8 @@ def _setup_bme680(config):
 
     sensor_handler = BME680Handler(
         sensor,
-        True if (
-            SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
-            SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]
-        ) else False,
+        (SENSOR_GAS in config[CONF_MONITORED_CONDITIONS] or
+         SENSOR_AQ in config[CONF_MONITORED_CONDITIONS]),
         config[CONF_AQ_BURN_IN_TIME],
         config[CONF_AQ_HUM_BASELINE],
         config[CONF_AQ_HUM_WEIGHTING]

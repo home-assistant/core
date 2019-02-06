@@ -1,5 +1,4 @@
 """Test Z-Wave node entity."""
-import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
 import tests.mock.zwave as mock_zwave
@@ -8,8 +7,7 @@ from homeassistant.components.zwave import node_entity, const
 from homeassistant.const import ATTR_ENTITY_ID
 
 
-@asyncio.coroutine
-def test_maybe_schedule_update(hass, mock_openzwave):
+async def test_maybe_schedule_update(hass, mock_openzwave):
     """Test maybe schedule update."""
     base_entity = node_entity.ZWaveBaseEntity()
     base_entity.hass = hass
@@ -31,8 +29,7 @@ def test_maybe_schedule_update(hass, mock_openzwave):
         assert len(mock_call_later.mock_calls) == 2
 
 
-@asyncio.coroutine
-def test_node_event_activated(hass, mock_openzwave):
+async def test_node_event_activated(hass, mock_openzwave):
     """Test Node event activated event."""
     mock_receivers = []
 
@@ -57,7 +54,7 @@ def test_node_event_activated(hass, mock_openzwave):
     # Test event before entity added to hass
     value = 234
     hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(events) == 0
 
     # Add entity to hass
@@ -66,7 +63,7 @@ def test_node_event_activated(hass, mock_openzwave):
 
     value = 234
     hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
@@ -74,8 +71,7 @@ def test_node_event_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_BASIC_LEVEL] == value
 
 
-@asyncio.coroutine
-def test_scene_activated(hass, mock_openzwave):
+async def test_scene_activated(hass, mock_openzwave):
     """Test scene activated event."""
     mock_receivers = []
 
@@ -100,7 +96,7 @@ def test_scene_activated(hass, mock_openzwave):
     # Test event before entity added to hass
     scene_id = 123
     hass.async_add_job(mock_receivers[0], node, scene_id)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(events) == 0
 
     # Add entity to hass
@@ -109,7 +105,7 @@ def test_scene_activated(hass, mock_openzwave):
 
     scene_id = 123
     hass.async_add_job(mock_receivers[0], node, scene_id)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
@@ -117,8 +113,7 @@ def test_scene_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_SCENE_ID] == scene_id
 
 
-@asyncio.coroutine
-def test_central_scene_activated(hass, mock_openzwave):
+async def test_central_scene_activated(hass, mock_openzwave):
     """Test central scene activated event."""
     mock_receivers = []
 
@@ -148,7 +143,7 @@ def test_central_scene_activated(hass, mock_openzwave):
         index=scene_id,
         data=scene_data)
     hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(events) == 0
 
     # Add entity to hass
@@ -162,7 +157,7 @@ def test_central_scene_activated(hass, mock_openzwave):
         index=scene_id,
         data=scene_data)
     hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"

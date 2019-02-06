@@ -135,7 +135,7 @@ class TestYAML(unittest.TestCase):
     def test_save_and_load(self):
         """Test saving and loading back."""
         fname = self._path_for("test1")
-        open(fname, "w+")
+        open(fname, "w+").close()
         util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
         data = util_yaml.load_yaml(fname, True)
         assert data == self.yaml.load(TEST_YAML_A)
@@ -143,7 +143,7 @@ class TestYAML(unittest.TestCase):
     def test_overwrite_and_reload(self):
         """Test that we can overwrite an existing file and read back."""
         fname = self._path_for("test2")
-        open(fname, "w+")
+        open(fname, "w+").close()
         util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
         util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_B))
         data = util_yaml.load_yaml(fname, True)

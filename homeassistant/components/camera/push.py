@@ -5,35 +5,33 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/camera.push/
 """
 import logging
+import asyncio
 
 from collections import deque
 from datetime import timedelta
 import voluptuous as vol
+import aiohttp
+import async_timeout
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING
+    STATE_IDLE, STATE_RECORDING, DOMAIN
 from homeassistant.core import callback
-from homeassistant.components.http.view import KEY_AUTHENTICATED,\
-    HomeAssistantView
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT,\
-    HTTP_NOT_FOUND, HTTP_UNAUTHORIZED, HTTP_BAD_REQUEST
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['webhook']
 
-DEPENDENCIES = ['http']
+_LOGGER = logging.getLogger(__name__)
 
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
-CONF_TOKEN = 'token'
 
 DEFAULT_NAME = "Push Camera"
 
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
-ATTR_TOKEN = 'token'
 
 PUSH_CAMERA_DATA = 'push_camera'
 
@@ -43,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_IMAGE_FIELD, default='image'): cv.string,
-    vol.Optional(CONF_TOKEN): vol.All(cv.string, vol.Length(min=8)),
+    vol.Required(CONF_WEBHOOK_ID): cv.string,
 })
 
 
@@ -53,69 +51,43 @@ async def async_setup_platform(hass, config, async_add_entities,
     if PUSH_CAMERA_DATA not in hass.data:
         hass.data[PUSH_CAMERA_DATA] = {}
 
-    cameras = [PushCamera(config[CONF_NAME],
+    webhook_id = config.get(CONF_WEBHOOK_ID)
+
+    cameras = [PushCamera(hass,
+                          config[CONF_NAME],
                           config[CONF_BUFFER_SIZE],
                           config[CONF_TIMEOUT],
-                          config.get(CONF_TOKEN))]
-
-    hass.http.register_view(CameraPushReceiver(hass,
-                                               config[CONF_IMAGE_FIELD]))
+                          config[CONF_IMAGE_FIELD],
+                          webhook_id)]
 
     async_add_entities(cameras)
 
 
-class CameraPushReceiver(HomeAssistantView):
-    """Handle pushes from remote camera."""
+async def handle_webhook(hass, webhook_id, request):
+    """Handle incoming webhook POST with image files."""
+    try:
+        with async_timeout.timeout(5, loop=hass.loop):
+            data = dict(await request.post())
+    except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
+        _LOGGER.error("Could not get information from POST <%s>", error)
+        return
 
-    url = "/api/camera_push/{entity_id}"
-    name = 'api:camera_push:camera_entity'
-    requires_auth = False
+    camera = hass.data[PUSH_CAMERA_DATA][webhook_id]
 
-    def __init__(self, hass, image_field):
-        """Initialize CameraPushReceiver with camera entity."""
-        self._cameras = hass.data[PUSH_CAMERA_DATA]
-        self._image = image_field
+    if camera.image_field not in data:
+        _LOGGER.warning("Webhook call without POST parameter <%s>",
+                        camera.image_field)
+        return
 
-    async def post(self, request, entity_id):
-        """Accept the POST from Camera."""
-        _camera = self._cameras.get(entity_id)
-
-        if _camera is None:
-            _LOGGER.error("Unknown %s", entity_id)
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED]\
-                else HTTP_UNAUTHORIZED
-            return self.json_message('Unknown {}'.format(entity_id),
-                                     status)
-
-        # Supports HA authentication and token based
-        # when token has been configured
-        authenticated = (request[KEY_AUTHENTICATED] or
-                         (_camera.token is not None and
-                          request.query.get('token') == _camera.token))
-
-        if not authenticated:
-            return self.json_message(
-                'Invalid authorization credentials for {}'.format(entity_id),
-                HTTP_UNAUTHORIZED)
-
-        try:
-            data = await request.post()
-            _LOGGER.debug("Received Camera push: %s", data[self._image])
-            await _camera.update_image(data[self._image].file.read(),
-                                       data[self._image].filename)
-        except ValueError as value_error:
-            _LOGGER.error("Unknown value %s", value_error)
-            return self.json_message('Invalid POST', HTTP_BAD_REQUEST)
-        except KeyError as key_error:
-            _LOGGER.error('In your POST message %s', key_error)
-            return self.json_message('{} missing'.format(self._image),
-                                     HTTP_BAD_REQUEST)
+    await camera.update_image(data[camera.image_field].file.read(),
+                              data[camera.image_field].filename)
 
 
 class PushCamera(Camera):
     """The representation of a Push camera."""
 
-    def __init__(self, name, buffer_size, timeout, token):
+    def __init__(self, hass, name, buffer_size, timeout, image_field,
+                 webhook_id):
         """Initialize push camera component."""
         super().__init__()
         self._name = name
@@ -126,11 +98,28 @@ class PushCamera(Camera):
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
-        self.token = token
+        self._image_field = image_field
+        self.webhook_id = webhook_id
+        self.webhook_url = \
+            hass.components.webhook.async_generate_url(webhook_id)
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[PUSH_CAMERA_DATA][self.entity_id] = self
+        self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
+
+        try:
+            self.hass.components.webhook.async_register(DOMAIN,
+                                                        self.name,
+                                                        self.webhook_id,
+                                                        handle_webhook)
+        except ValueError:
+            _LOGGER.error("In <%s>, webhook_id <%s> already used",
+                          self.name, self.webhook_id)
+
+    @property
+    def image_field(self):
+        """HTTP field containing the image file."""
+        return self._image_field
 
     @property
     def state(self):
@@ -189,6 +178,5 @@ class PushCamera(Camera):
             name: value for name, value in (
                 (ATTR_LAST_TRIP, self._last_trip),
                 (ATTR_FILENAME, self._filename),
-                (ATTR_TOKEN, self.token),
             ) if value is not None
         }

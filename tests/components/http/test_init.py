@@ -80,6 +80,11 @@ class TestApiConfig(unittest.TestCase):
         api_config = http.ApiConfig('http://example.com', use_ssl=True)
         assert api_config.base_url == 'http://example.com:8123'
 
+    def test_api_base_url_removes_trailing_slash(hass):
+        """Test a trialing slash is removed when setting the API URL."""
+        api_config = http.ApiConfig('http://example.com/')
+        assert api_config.base_url == 'http://example.com:8123'
+
 
 async def test_api_base_url_with_domain(hass):
     """Test setting API URL."""
@@ -124,7 +129,18 @@ async def test_api_no_base_url(hass):
     assert hass.config.api.base_url == 'http://127.0.0.1:8123'
 
 
-async def test_not_log_password(hass, aiohttp_client, caplog):
+async def test_api_base_url_removes_trailing_slash(hass):
+    """Test setting api url."""
+    result = await async_setup_component(hass, 'http', {
+        'http': {
+            'base_url': 'https://example.com/'
+        }
+    })
+    assert result
+    assert hass.config.api.base_url == 'https://example.com'
+
+
+async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, 'api', {
         'http': {

@@ -33,14 +33,6 @@ def test_generate_entity_id_given_keys():
             'test.another_entity']) == 'test.overwrite_hidden_true'
 
 
-def test_generate_entity_id_with_nonlatin_name():
-    """Test generate_entity_id given a name containing non-latin characters."""
-    fmt = 'test.{}'
-    assert entity.generate_entity_id(
-        fmt, 'ホームアシスタント', current_ids=[]
-    ) == 'test.unnamed_device'
-
-
 def test_async_update_support(hass):
     """Test async update getting called."""
     sync_update = []

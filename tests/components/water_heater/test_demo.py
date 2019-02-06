@@ -1,6 +1,9 @@
 """The tests for the demo water_heater component."""
 import unittest
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM
 )
@@ -48,7 +51,8 @@ class TestDemowater_heater(unittest.TestCase):
         """Test setting the target temperature without required attribute."""
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         assert 119 == state.attributes.get('temperature')
-        common.set_temperature(self.hass, None, ENTITY_WATER_HEATER)
+        with pytest.raises(vol.Invalid):
+            common.set_temperature(self.hass, None, ENTITY_WATER_HEATER)
         self.hass.block_till_done()
         assert 119 == state.attributes.get('temperature')
 
@@ -69,7 +73,8 @@ class TestDemowater_heater(unittest.TestCase):
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         assert "eco" == state.attributes.get('operation_mode')
         assert "eco" == state.state
-        common.set_operation_mode(self.hass, None, ENTITY_WATER_HEATER)
+        with pytest.raises(vol.Invalid):
+            common.set_operation_mode(self.hass, None, ENTITY_WATER_HEATER)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         assert "eco" == state.attributes.get('operation_mode')

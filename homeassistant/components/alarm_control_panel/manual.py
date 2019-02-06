@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )])
 
 
-class ManualAlarm(alarm.AlarmControlPanel):
+class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     """
     Representation of an alarm status.
 
@@ -207,8 +207,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
-        return 'Any'
+            return alarm.FORMAT_NUMBER
+        return alarm.FORMAT_TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -310,7 +310,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
-        state = await async_get_last_state(self.hass, self.entity_id)
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
         if state:
-            self._state = state.state
-            self._state_ts = state.last_updated
+            if state.state == STATE_ALARM_PENDING and \
+                    hasattr(state, 'attributes') and \
+                    state.attributes['pre_pending_state']:
+                # If in pending state, we return to the pre_pending_state
+                self._state = state.attributes['pre_pending_state']
+                self._state_ts = dt_util.utcnow()
+            else:
+                self._state = state.state
+                self._state_ts = state.last_updated

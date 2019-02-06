@@ -183,19 +183,6 @@ async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_webhook_config_flow_aborts_external_url(hass,
-                                                       webhook_flow_conf):
-    """Test configuring a webhook without an external url."""
-    flow = config_entries.HANDLERS['test_single']()
-    flow.hass = hass
-
-    hass.config.api = Mock(base_url='http://192.168.1.10')
-    result = await flow.async_step_user()
-
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'not_internet_accessible'
-
-
 async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
     """Test setting up an entry creates a webhook."""
     flow = config_entries.HANDLERS['test_single']()

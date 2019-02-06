@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant.components.homematicip_cloud import hap as hmipc
 from homeassistant.components.homematicip_cloud import const, errors
-from tests.common import mock_coro
+from tests.common import mock_coro, mock_coro_func
 
 
 async def test_auth_setup(hass):
@@ -65,7 +65,7 @@ async def test_hap_setup_works(aioclient_mock):
         assert await hap.async_setup() is True
 
     assert hap.home is home
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'alarm_control_panel')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
@@ -95,6 +95,7 @@ async def test_hap_reset_unloads_entry_if_setup():
     hass = Mock()
     entry = Mock()
     home = Mock()
+    home.disable_events = mock_coro_func()
     entry.data = {
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
@@ -106,10 +107,10 @@ async def test_hap_reset_unloads_entry_if_setup():
 
     assert hap.home is home
     assert len(hass.services.async_register.mock_calls) == 0
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     await hap.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 7

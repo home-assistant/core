@@ -199,13 +199,22 @@ async def test_loading_empty_data(hass, hass_storage):
     assert len(users) == 0
 
 
-async def test_system_groups_only_store_id(hass, hass_storage):
-    """Test that for system groups we only store the ID."""
+async def test_system_groups_store_id_and_name(hass, hass_storage):
+    """Test that for system groups we store the ID and name.
+
+    Name is stored so that we remain backwards compat with < 0.82.
+    """
     store = auth_store.AuthStore(hass)
     await store._async_load()
     data = store._data_to_save()
     assert len(data['users']) == 0
     assert data['groups'] == [
-        {'id': auth_store.GROUP_ID_ADMIN},
-        {'id': auth_store.GROUP_ID_READ_ONLY},
+        {
+            'id': auth_store.GROUP_ID_ADMIN,
+            'name': auth_store.GROUP_NAME_ADMIN,
+        },
+        {
+            'id': auth_store.GROUP_ID_READ_ONLY,
+            'name': auth_store.GROUP_NAME_READ_ONLY,
+        },
     ]

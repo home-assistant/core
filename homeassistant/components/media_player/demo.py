@@ -4,6 +4,7 @@ Demo implementation of the media player.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
+import homeassistant.util.dt as dt_util
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
@@ -12,7 +13,6 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
-import homeassistant.util.dt as dt_util
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,7 +34,7 @@ DEFAULT_SOUND_MODE = 'Dummy Music'
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE
+    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SELECT_SOURCE
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
