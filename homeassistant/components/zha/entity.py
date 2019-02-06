@@ -149,7 +149,7 @@ class ZhaEntity(entity.Entity):
         )
         self._zha_device.gateway.register_entity_reference(
             self._zha_device.ieee, self.entity_id, self._zha_device,
-            self.cluster_listeners)
+            self.cluster_listeners, self.device_info)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""

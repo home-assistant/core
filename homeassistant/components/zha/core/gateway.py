@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 EntityReference = collections.namedtuple(
-    'EntityReference', 'reference_id zha_device cluster_listeners')
+    'EntityReference', 'reference_id zha_device cluster_listeners device_info')
 
 
 class ZHAGateway:
@@ -106,13 +106,15 @@ class ZHAGateway:
         return self._device_registry
 
     def register_entity_reference(
-            self, ieee, reference_id, zha_device, cluster_listeners):
+            self, ieee, reference_id, zha_device, cluster_listeners,
+            device_info):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
             EntityReference(
                 reference_id=reference_id,
                 zha_device=zha_device,
-                cluster_listeners=cluster_listeners
+                cluster_listeners=cluster_listeners,
+                device_info=device_info
             )
         )
 
