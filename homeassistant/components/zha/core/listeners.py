@@ -183,6 +183,7 @@ class ClusterListener:
             'zha_event',
             {
                 'unique_id': self._unique_id,
+                'device_ieee': str(self._zha_device.ieee),
                 'command': command,
                 'args': args
             }
