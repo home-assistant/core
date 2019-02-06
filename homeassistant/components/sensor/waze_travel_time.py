@@ -16,6 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
@@ -40,6 +41,7 @@ ICON = 'mdi:car'
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
 SCAN_INTERVAL = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
@@ -67,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter, realtime)
 
-    add_entities([sensor])
+    add_entities([sensor], True)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(
@@ -182,6 +184,7 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
