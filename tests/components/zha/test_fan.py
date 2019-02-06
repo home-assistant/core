@@ -26,7 +26,6 @@ async def test_fan(hass, config_entry, zha_gateway):
     # load up fan domain
     await hass.config_entries.async_forward_entry_setup(
         config_entry, DOMAIN)
-    await zha_gateway.accept_zigbee_messages({})
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).fan
