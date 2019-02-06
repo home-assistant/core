@@ -7,7 +7,8 @@ https://home-assistant.io/components/climate.xs1/
 from functools import partial
 import logging
 
-from homeassistant.components.climate import ATTR_TEMPERATURE, ClimateDevice
+from homeassistant.components.climate import (
+    ATTR_TEMPERATURE, ClimateDevice, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.xs1 import (
     ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
 
@@ -57,6 +58,10 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     def name(self):
         """Return the name of the device if any."""
         return self.device.name()
+
+    @property
+    def supported_features(self):
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def current_temperature(self):
