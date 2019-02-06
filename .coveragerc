@@ -81,6 +81,7 @@ omit =
     homeassistant/components/climate/sensibo.py
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
+    homeassistant/components/climate/xs1.py
     homeassistant/components/climate/zhong_hong.py
     homeassistant/components/cloudflare/*
     homeassistant/components/coinbase/*
@@ -570,6 +571,7 @@ omit =
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
+    homeassistant/components/sensor/xs1.py
     homeassistant/components/sensor/zamg.py
     homeassistant/components/sensor/zestimate.py
     homeassistant/components/shiftr/*
@@ -609,6 +611,7 @@ omit =
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/vesync.py
+    homeassistant/components/switch/xs1.py
     homeassistant/components/tado/*
     homeassistant/components/tahoma/*
     homeassistant/components/telegram_bot/*
@@ -654,6 +657,7 @@ omit =
     homeassistant/components/wirelesstag/*
     homeassistant/components/xiaomi_aqara/*
     homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xs1.py
     homeassistant/components/zabbix/*
     homeassistant/components/zeroconf/*
     homeassistant/components/zha/__init__.py
