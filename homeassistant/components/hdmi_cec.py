@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
                                  STATE_PLAYING, STATE_IDLE,
@@ -324,7 +324,7 @@ class CecDevice(Entity):
         """Initialize the device."""
         self._device = device
         self._icon = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 

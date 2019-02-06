@@ -167,7 +167,7 @@ class Plant(Entity):
         for reading, entity_id in config['sensors'].items():
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = name
         self._battery = None
         self._moisture = None

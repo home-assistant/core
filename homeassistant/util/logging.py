@@ -1,7 +1,7 @@
 """Logging utilities."""
 import asyncio
 from asyncio.events import AbstractEventLoop
-from functools import wraps
+from functools import partial, wraps
 import inspect
 import logging
 import threading
@@ -139,8 +139,13 @@ def catch_log_exception(
         friendly_msg = format_err(*args)
         logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
 
+    # Check for partials to properly determine if coroutine function
+    check_func = func
+    while isinstance(check_func, partial):
+        check_func = check_func.func
+
     wrapper_func = None
-    if asyncio.iscoroutinefunction(func):
+    if asyncio.iscoroutinefunction(check_func):
         @wraps(func)
         async def async_wrapper(*args: Any) -> None:
             """Catch and log exception."""

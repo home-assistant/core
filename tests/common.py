@@ -1,35 +1,37 @@
 """Test the helper method for writing tests."""
 import asyncio
-from collections import OrderedDict
-from datetime import timedelta
 import functools as ft
 import json
+import logging
 import os
 import sys
-from unittest.mock import patch, MagicMock, Mock
-from io import StringIO
-import logging
 import threading
-from contextlib import contextmanager
 
-from homeassistant import auth, core as ha, config_entries
+from collections import OrderedDict
+from contextlib import contextmanager
+from datetime import timedelta
+from io import StringIO
+from unittest.mock import MagicMock, Mock, patch
+
+import homeassistant.util.dt as date_util
+import homeassistant.util.yaml as yaml
+
+from homeassistant import auth, config_entries, core as ha
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers,
     permissions as auth_permissions)
 from homeassistant.auth.permissions import system_policies
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.config import async_process_component_config
-from homeassistant.helpers import (
-    intent, entity, restore_state, entity_registry,
-    entity_platform, storage, device_registry)
-from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.dt as date_util
-import homeassistant.util.yaml as yaml
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
-    EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
+from homeassistant.config import async_process_component_config
+from homeassistant.const import (
+    ATTR_DISCOVERED, ATTR_SERVICE, DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, SERVER_PORT, STATE_ON, STATE_OFF)
+from homeassistant.helpers import (
+    area_registry, device_registry, entity, entity_platform, entity_registry,
+    intent, restore_state, storage)
+from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
@@ -333,6 +335,19 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
+def mock_area_registry(hass, mock_entries=None):
+    """Mock the Area Registry."""
+    registry = area_registry.AreaRegistry(hass)
+    registry.areas = mock_entries or OrderedDict()
+
+    async def _get_reg():
+        return registry
+
+    hass.data[area_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
+    return registry
+
+
 def mock_device_registry(hass, mock_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
@@ -435,8 +450,8 @@ class MockModule:
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None, async_setup_entry=None,
-                 async_unload_entry=None):
+                 platform_schema_base=None, async_setup=None,
+                 async_setup_entry=None, async_unload_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -447,6 +462,9 @@ class MockModule:
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if platform_schema_base is not None:
+            self.PLATFORM_SCHEMA_BASE = platform_schema_base
 
         if setup is not None:
             # We run this in executor, wrap it in function
@@ -872,3 +890,8 @@ async def flush_store(store):
         return
 
     await store._async_handle_write_data()
+
+
+async def get_system_health_info(hass, domain):
+    """Get system health info."""
+    return await hass.data['system_health']['info'][domain](hass)

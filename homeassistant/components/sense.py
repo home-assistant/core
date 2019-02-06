@@ -12,7 +12,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['sense_energy==0.5.1']
+REQUIREMENTS = ['sense_energy==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

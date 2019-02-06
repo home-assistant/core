@@ -4,20 +4,20 @@ import unittest
 from unittest.mock import ANY
 
 from homeassistant.components import cover, mqtt
-from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION)
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.mqtt.cover import MqttCover
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE, ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
-    STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
-from homeassistant.setup import setup_component, async_setup_component
+    ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, async_fire_mqtt_message,
-    fire_mqtt_message, MockConfigEntry, async_mock_mqtt_component,
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    fire_mqtt_message, get_test_home_assistant, mock_mqtt_component,
     mock_registry)
 
 
@@ -758,6 +758,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_percentage_in_range(44)
@@ -788,6 +789,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 40 == mqtt_cover.find_percentage_in_range(120)
@@ -818,6 +820,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 56 == mqtt_cover.find_percentage_in_range(44)
@@ -848,6 +851,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 60 == mqtt_cover.find_percentage_in_range(120)
@@ -878,6 +882,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(44)
@@ -908,6 +913,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(40)
@@ -938,6 +944,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(56)
@@ -968,6 +975,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'set_position_topic': None, 'set_position_template': None,
                 'unique_id': None, 'device_config': None,
             },
+            None,
             None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(60)
@@ -1042,6 +1050,106 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         assert STATE_UNAVAILABLE == state.state
+
+
+async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'test-topic',
+            'json_attributes_topic': 'attr-topic'
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test')
+
+    assert '100' == state.attributes.get('val')
+
+
+async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+    """Test attributes get extracted from a JSON result."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'test-topic',
+            'json_attributes_topic': 'attr-topic'
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'attr-topic', '[ "list", "of", "things"]')
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test')
+
+    assert state.attributes.get('val') is None
+    assert 'JSON result was not a dictionary' in caplog.text
+
+
+async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+    """Test attributes get extracted from a JSON result."""
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'test-topic',
+            'json_attributes_topic': 'attr-topic'
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'attr-topic', 'This is not JSON')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('cover.test')
+    assert state.attributes.get('val') is None
+    assert 'Erroneous JSON: This is not JSON' in caplog.text
+
+
+async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+    """Test update of discovered MQTTAttributes."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic",'
+        '  "json_attributes_topic": "attr-topic1" }'
+    )
+    data2 = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic",'
+        '  "json_attributes_topic": "attr-topic2" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.beer')
+    assert '100' == state.attributes.get('val')
+
+    # Change json_attributes_topic
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Verify we are no longer subscribing to the old topic
+    async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.beer')
+    assert '100' == state.attributes.get('val')
+
+    # Verify we are subscribing to the new topic
+    async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.beer')
+    assert '75' == state.attributes.get('val')
 
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
@@ -1191,6 +1299,53 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
 
 
 async def test_entity_id_update(hass, mqtt_mock):

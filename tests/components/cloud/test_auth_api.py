@@ -1,4 +1,5 @@
 """Tests for the tools to communicate with the cloud."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
 from botocore.exceptions import ClientError
@@ -165,3 +166,31 @@ def test_check_token_raises(mock_cognito):
     assert cloud.id_token != mock_cognito.id_token
     assert cloud.access_token != mock_cognito.access_token
     assert len(cloud.write_user_info.mock_calls) == 0
+
+
+async def test_async_setup(hass):
+    """Test async setup."""
+    cloud = MagicMock()
+    await auth_api.async_setup(hass, cloud)
+    assert len(cloud.iot.mock_calls) == 2
+    on_connect = cloud.iot.mock_calls[0][1][0]
+    on_disconnect = cloud.iot.mock_calls[1][1][0]
+
+    with patch('random.randint', return_value=0), patch(
+            'homeassistant.components.cloud.auth_api.renew_access_token'
+    ) as mock_renew:
+        await on_connect()
+        # Let handle token sleep once
+        await asyncio.sleep(0)
+        # Let handle token refresh token
+        await asyncio.sleep(0)
+
+        assert len(mock_renew.mock_calls) == 1
+        assert mock_renew.mock_calls[0][1][0] is cloud
+
+        await on_disconnect()
+
+        # Make sure task is no longer being called
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert len(mock_renew.mock_calls) == 1

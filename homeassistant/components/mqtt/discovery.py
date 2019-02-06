@@ -10,7 +10,7 @@ import logging
 import re
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
+from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -216,8 +216,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             key = ABBREVIATIONS.get(key, key)
             payload[key] = payload.pop(abbreviated_key)
 
-        if TOPIC_BASE in payload:
-            base = payload[TOPIC_BASE]
+        base = payload.pop(TOPIC_BASE, None)
+        if base:
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):

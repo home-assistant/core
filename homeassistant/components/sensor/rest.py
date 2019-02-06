@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_METHOD, CONF_PASSWORD, CONF_PAYLOAD, CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_DEVICE_CLASS,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
+    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -100,7 +100,7 @@ class RestSensor(Entity):
         self._hass = hass
         self.rest = rest
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._device_class = device_class
         self._value_template = value_template
@@ -159,11 +159,9 @@ class RestSensor(Entity):
                     _LOGGER.debug("Erroneous JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
-        if value is None:
-            value = STATE_UNKNOWN
-        elif self._value_template is not None:
+        if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
-                value, STATE_UNKNOWN)
+                value, None)
 
         self._state = value
 

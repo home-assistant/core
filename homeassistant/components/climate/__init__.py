@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS)
 
 DEFAULT_MIN_TEMP = 7
@@ -208,7 +208,7 @@ class ClimateDevice(Entity):
             return self.current_operation
         if self.is_on:
             return STATE_ON
-        return STATE_UNKNOWN
+        return None
 
     @property
     def precision(self):

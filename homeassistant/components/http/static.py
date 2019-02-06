@@ -1,14 +1,9 @@
 """Static file handling for HTTP component."""
-
-import re
-
 from aiohttp import hdrs
-from aiohttp.web import FileResponse, middleware
+from aiohttp.web import FileResponse
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from yarl import URL
-
-_FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
 class CachingStaticResource(StaticResource):
@@ -56,19 +51,3 @@ class CachingFileResponse(FileResponse):
 
         # Overwriting like this because __init__ can change implementation.
         self._sendfile = sendfile
-
-
-@middleware
-async def staticresource_middleware(request, handler):
-    """Middleware to strip out fingerprint from fingerprinted assets."""
-    path = request.path
-    if not path.startswith('/static/') and not path.startswith('/frontend'):
-        return await handler(request)
-
-    fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
-
-    if fingerprinted:
-        request.match_info['filename'] = \
-            '{}.{}'.format(*fingerprinted.groups())
-
-    return await handler(request)

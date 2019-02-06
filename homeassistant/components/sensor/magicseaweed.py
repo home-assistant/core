@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_HOURS = 'hours'
 CONF_SPOT_ID = 'spot_id'
 CONF_UNITS = 'units'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_UNIT = 'us'
 DEFAULT_NAME = 'MSW'
