@@ -34,7 +34,8 @@ DEFAULT_PERSON = 'Unknown'
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
-EVENT_RECEIVED = 'netatmo_webhook'
+EVENT_BUS_PERSON = 'netatmo_person'
+EVENT_BUS_MOVEMENT = 'netatmo_movement'
 EVENT_PERSON = 'person'
 EVENT_MOVEMENT = 'movement'
 
@@ -120,12 +121,12 @@ async def handle_webhook(hass, webhook_id, request):
             published_data[ATTR_NAME] = NETATMO_PERSONS.get(
                 published_data[ATTR_ID], DEFAULT_PERSON)
             published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
-            hass.bus.async_fire(EVENT_RECEIVED, published_data)
+            hass.bus.async_fire(EVENT_BUS_PERSON, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_MOVEMENT:
         published_data[ATTR_EVENT_TYPE] = EVENT_MOVEMENT
         published_data[ATTR_HOME_NAME] = data.get(ATTR_HOME_NAME)
         published_data[ATTR_CAMERA_ID] = data.get(ATTR_CAMERA_ID)
-        hass.bus.async_fire(EVENT_RECEIVED, published_data)
+        hass.bus.async_fire(EVENT_BUS_MOVEMENT, published_data)
 
 
 class CameraData:
