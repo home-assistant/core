@@ -13,8 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.air_quality import (
     PLATFORM_SCHEMA, AirQualityEntity)
 from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_NAME,
-                                 CONF_SHOW_ON_MAP)
+                                 CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -37,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
 })
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -62,7 +60,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities([AirSensor(name, coordinates,
                                   forecast, async_get_clientsession(hass),
-                                  config.get(CONF_SHOW_ON_MAP)
                                   )],
                        True)
 
@@ -80,15 +77,12 @@ def round_state(func):
 class AirSensor(AirQualityEntity):
     """Representation of an Yr.no sensor."""
 
-    def __init__(self, name, coordinates, forecast, session, show_on_map):
+    def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
         import metno
         self._name = name
         self._api = metno.AirQualityData(coordinates, forecast, session)
         self._attrs = {}
-        if show_on_map:
-            self._attrs[CONF_LATITUDE] = coordinates['lat']
-            self._attrs[CONF_LONGITUDE] = coordinates['lon']
 
     @property
     def attribution(self) -> str:
@@ -98,7 +92,7 @@ class AirSensor(AirQualityEntity):
     @property
     def device_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
-        return self._attrs
+        return {'level': self._api.data.get('level')}
 
     @property
     def name(self) -> str:
@@ -143,11 +137,3 @@ class AirSensor(AirQualityEntity):
     async def async_update(self) -> None:
         """Update the sensor."""
         await self._api.update()
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        res = super().state_attributes
-        res = dict() if res is None else res
-        res['level'] = self._api.data.get('level')
-        return res
