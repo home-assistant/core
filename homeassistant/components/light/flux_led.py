@@ -146,7 +146,7 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self._bulb = None
         self._error_reported = False
-        self._color = None
+        self._color = (255, 255, 255)
 
     def _connect(self):
         """Connect to Flux light."""
@@ -194,7 +194,7 @@ class FluxLight(Light):
     @property
     def hs_color(self):
         """Return the color property."""
-        return color_util.color_RGB_to_hs(*self._bulb.getRgb())
+        return color_util.color_RGB_to_hsv(*self._color)[0:2]
 
     @property
     def supported_features(self):
@@ -220,7 +220,6 @@ class FluxLight(Light):
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         self._bulb.turnOn()
-        rgb = None
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -228,7 +227,7 @@ class FluxLight(Light):
         white = kwargs.get(ATTR_WHITE_VALUE)
 
         # Show warning if effect set with rgb, brightness, or white level
-        if effect and (brightness or white or rgb):
+        if effect and (brightness or white or hs_color):
             _LOGGER.warning("RGB, brightness and white level are ignored when"
                             " an effect is specified for a flux bulb")
 
@@ -252,10 +251,6 @@ class FluxLight(Light):
             self._color = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1],
                                                       brightness / 255 * 100)
 
-        # Preserve color on brightness/white level change
-        if rgb is None:
-            rgb = self._color
-
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
@@ -263,16 +258,12 @@ class FluxLight(Light):
         # handle RGBW mode
         elif self._mode == MODE_RGBW:
             if white is None:
-                self._bulb.setRgbw(*tuple(rgb))
+                self._bulb.setRgbw(*tuple(self._color))
             else:
                 self._bulb.setRgbw(w=white)
-
         # handle RGB mode
         else:
-            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-
-        from time import sleep
-        sleep(2)
+            self._bulb.setRgb(*tuple(self._color), brightness=brightness)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -284,6 +275,8 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
+                if self._bulb.getRgb() != (0, 0, 0):
+                    self._color = self._bulb.getRgb()
             except socket.error:
                 self._disconnect()
                 if not self._error_reported:
@@ -291,5 +284,4 @@ class FluxLight(Light):
                                     self._ipaddr, self._name)
                     self._error_reported = True
                 return
-
         self._bulb.update_state(retry=2)
