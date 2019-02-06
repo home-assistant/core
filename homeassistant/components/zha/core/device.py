@@ -14,7 +14,7 @@ from .const import (
     ATTR_MANUFACTURER, LISTENER_BATTERY, SIGNAL_AVAILABLE, IN, OUT,
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
-    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN
 )
 from .listeners import EventRelayListener
 
@@ -30,9 +30,12 @@ class ZHADevice:
         self._zigpy_device = zigpy_device
         # Get first non ZDO endpoint id to use to get manufacturer and model
         endpoint_ids = zigpy_device.endpoints.keys()
-        ept_id = next(ept_id for ept_id in endpoint_ids if ept_id != 0)
-        self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
-        self._model = zigpy_device.endpoints[ept_id].model
+        self._manufacturer = UNKNOWN
+        self._model = UNKNOWN
+        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
+        if ept_id is not None:
+            self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
+            self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
         self.cluster_listeners = {}
         self._relay_listeners = []

@@ -354,6 +354,12 @@ class IASZoneListener(ClusterListener):
 
     name = 'zone'
 
+    def __init__(self, cluster, device):
+        """Initialize IASZoneListener."""
+        super().__init__(cluster, device)
+        self._cluster.add_listener(self)
+        self._status = ListenerStatus.LISTENING
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
@@ -422,6 +428,10 @@ class IASZoneListener(ClusterListener):
         await self.get_attribute_value('zone_status', from_cache=from_cache)
         await self.get_attribute_value('zone_state', from_cache=from_cache)
         await super().async_initialize(from_cache)
+
+    async def accept_messages(self):
+        """Attach to the cluster so we can receive messages."""
+        self._status = ListenerStatus.LISTENING
 
 
 class ActivePowerListener(AttributeListener):
