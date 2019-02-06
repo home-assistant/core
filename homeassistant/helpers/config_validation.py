@@ -436,13 +436,15 @@ def template(value):
 def template_complex(value):
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
-        for idx, element in enumerate(value):
-            value[idx] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for idx, element in enumerate(return_value):
+            return_value[idx] = template_complex(element)
+        return return_value
     if isinstance(value, dict):
-        for key, element in value.items():
-            value[key] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for key, element in return_value.items():
+            return_value[key] = template_complex(element)
+        return return_value
 
     return template(value)
 

@@ -433,6 +433,15 @@ def test_template_complex():
     for value in options:
         schema(value)
 
+    # ensure the validator didn't mutate the input
+    assert options == (
+        1, 'Hello',
+        '{{ beer }}',
+        '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
+        {'test': 1, 'test2': '{{ beer }}'},
+        ['{{ beer }}', 1]
+    )
+
 
 def test_time_zone():
     """Test time zone validation."""
