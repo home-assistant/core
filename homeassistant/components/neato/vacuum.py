@@ -5,16 +5,15 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    StateVacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    StateVacuumDevice, DOMAIN, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
     STATE_PAUSED, STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR,
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
-    SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT)
+    SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT, VACUUM_SERVICE_SCHEMA)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS,
     NEATO_PERSISTENT_MAPS)
 
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 
@@ -294,7 +293,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         """Run a spot cleaning starting from the base."""
         self.robot.start_spot_cleaning()
 
-    def neato_custom_cleaning(self, mode, navigation, category, zone=None, **kwargs):
+    def neato_custom_cleaning(self, mode, navigation, category,
+                              zone=None, **kwargs):
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:
@@ -303,7 +303,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                     boundary_id = boundary['id']
             if boundary_id is None:
                 _LOGGER.error(
-                    "Zone '%s' was not found for the robot '%s'", zone, self._name)
+                    "Zone '%s' was not found for the robot '%s'",
+                    zone, self._name)
                 return
 
         self._clean_state = STATE_CLEANING
