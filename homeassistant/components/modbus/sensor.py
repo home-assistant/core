@@ -178,8 +178,8 @@ class ModbusRegisterSensor(RestoreEntity):
             if self._reverse_order:
                 registers.reverse()
         except AttributeError:
-            _LOGGER.error("No response from modbus slave %s, register %s",
-                          self._slave, self._register)
+            _LOGGER.error("No response from hub %s, slave %s, register %s",
+                          self._hub.name, self._slave, self._register)
             return
         byte_string = b''.join(
             [x.to_bytes(2, byteorder='big') for x in registers]

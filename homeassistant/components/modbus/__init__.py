@@ -119,8 +119,8 @@ def setup(hass, config):
 
     for client_config in config[DOMAIN]:
         client = setup_client(client_config)
-        client_name = client_config[CONF_NAME]
-        hub_collect[client_name] = ModbusHub(client)
+        name = client_config[CONF_NAME]
+        hub_collect[name] = ModbusHub(client, name)
         _LOGGER.debug('Setting up hub: %s', client_config)
 
     def stop_modbus(event):
@@ -176,10 +176,16 @@ def setup(hass, config):
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client):
+    def __init__(self, modbus_client, name):
         """Initialize the modbus hub."""
         self._client = modbus_client
         self._lock = threading.Lock()
+        self._name = name
+
+    @property
+    def name(self):
+        """Return the name of this hub."""
+        return self._name
 
     def close(self):
         """Disconnect client."""
