@@ -297,7 +297,7 @@ class DeviceTracker:
             if not device:
                 dev_id = util.slugify(host_name or '') or util.slugify(mac)
         else:
-            dev_id = cv.slug(str(dev_id).lower())
+            dev_id = util.slugify(dev_id)
             device = self.devices.get(dev_id)
 
         if device:
