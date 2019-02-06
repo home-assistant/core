@@ -287,9 +287,8 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_pause(self):
         """Pause the cleaning task."""
-        if self.state == STATE_CLEANING:
-            await self._try_command(
-                "Unable to set start/pause: %s", self._vacuum.pause)
+        await self._try_command(
+            "Unable to set start/pause: %s", self._vacuum.pause)
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
