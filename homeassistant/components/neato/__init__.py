@@ -18,6 +18,7 @@ DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
 NEATO_LOGIN = 'neato_login'
 NEATO_MAP_DATA = 'neato_map_data'
+NEATO_PERSISTENT_MAPS = 'neato_persistent_maps'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -32,16 +33,16 @@ MODE = {
 }
 
 ACTION = {
-    0: 'Invalid',
-    1: 'House Cleaning',
-    2: 'Spot Cleaning',
-    3: 'Manual Cleaning',
+    0: 'No action',
+    1: 'House cleaning',
+    2: 'Spot cleaning',
+    3: 'Manual cleaning',
     4: 'Docking',
-    5: 'User Menu Active',
-    6: 'Suspended Cleaning',
-    7: 'Updating',
-    8: 'Copying logs',
-    9: 'Recovering Location',
+    5: 'User menu active',
+    6: 'Cleaning cancelled',
+    7: 'Updating...',
+    8: 'Copying logs...',
+    9: 'Calculating position...',
     10: 'IEC test',
     11: 'Map cleaning',
     12: 'Exploring map (creating a persistent map)',
@@ -168,7 +169,7 @@ ALERTS = {
 }
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Neato component."""
     from pybotvac import Account
 
@@ -184,7 +185,7 @@ def setup(hass, config):
     return True
 
 
-class NeatoHub:
+class NeatoHub(object):
     """A My Neato hub wrapper class."""
 
     def __init__(self, hass, domain_config, neato):
@@ -197,6 +198,7 @@ class NeatoHub:
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def login(self):
@@ -216,6 +218,7 @@ class NeatoHub:
         _LOGGER.debug("Running HUB.update_robots %s",
                       self._hass.data[NEATO_ROBOTS])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def download_map(self, url):
