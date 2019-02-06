@@ -5,18 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.waze_travel_time/
 """
 from datetime import timedelta
-from homeassistant.util import Throttle
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE, ATTR_LONGITUDE)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME,
+                                 CONF_REGION,EVENT_HOMEASSISTANT_START,
+                                 ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
+
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
@@ -86,7 +87,7 @@ class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                incl_filter, excl_filter, realtime):
+                 incl_filter, excl_filter, realtime):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
