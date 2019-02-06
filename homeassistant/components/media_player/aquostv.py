@@ -82,7 +82,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_entities([SharpAquosTVDevice(name, host, port, timeout, remote, power_on_enabled)])
+    add_entities([SharpAquosTVDevice(name, host, port, 
+                  timeout, remote, power_on_enabled)])
     return True
 
 
@@ -91,24 +92,25 @@ def _retry(func):
     def wrapper(obj, *args, **kwargs):
         """Wrap all query functions."""
         if obj.test_connection():
-          update_retries = 5
-          while update_retries > 0:
-              try:
-                  func(obj, *args, **kwargs)
-                  break
-              except (OSError, TypeError, ValueError):
-                  update_retries -= 1
-                  if update_retries == 0:
-                      obj.set_state(STATE_OFF)
+            update_retries = 5
+            while update_retries > 0:
+                try:
+                    func(obj, *args, **kwargs)
+                    break
+                except (OSError, TypeError, ValueError):
+                    update_retries -= 1
+                    if update_retries == 0:
+                        obj.set_state(STATE_OFF)
         else:
-          obj.set_state(STATE_OFF)
+            obj.set_state(STATE_OFF)
     return wrapper
 
 
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
-    def __init__(self, name, host, port, timeout, remote, power_on_enabled=False):
+    def __init__(self, name, host, port, timeout, 
+                remote, power_on_enabled=False):
         """Initialize the aquos device."""
         global SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
@@ -130,7 +132,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
     def set_state(self, state):
         """Set TV state."""
         self._state = state
-    
+
     def test_connection(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
