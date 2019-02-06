@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_REPOS = 'repositories'
 
-ATTR_LAST_COMMIT_MESSAGE = 'last_commit_message'
-ATTR_LAST_COMMIT_SHA = 'last_commit_sha'
+ATTR_LATEST_COMMIT_MESSAGE = 'latest_commit_message'
+ATTR_LATEST_COMMIT_SHA = 'latest_commit_sha'
 ATTR_LATEST_RELEASE_URL = 'latest_release_url'
 ATTR_OPEN_ISSUE_LATEST = 'open_issue_latest'
 ATTR_OPEN_ISSUES = 'open_issues'
@@ -74,8 +74,8 @@ class GitHubSensor(Entity):
         self._state = None
         self._available = False
         self._repository_path = None
-        self._last_commit_message = None
-        self._last_commit_sha = None
+        self._latest_commit_message = None
+        self._latest_commit_sha = None
         self._latest_release_url = None
         self._open_issue_count = None
         self._open_issue_latest = None
@@ -110,8 +110,8 @@ class GitHubSensor(Entity):
         return {
             ATTR_PATH: self._repository_path,
             ATTR_NAME: self._name,
-            ATTR_LAST_COMMIT_MESSAGE: self._last_commit_message,
-            ATTR_LAST_COMMIT_SHA: self._last_commit_sha,
+            ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
+            ATTR_LATEST_COMMIT_SHA: self._latest_commit_sha,
             ATTR_LATEST_RELEASE_URL: self._latest_release_url,
             ATTR_OPEN_ISSUE_LATEST: self._open_issue_latest,
             ATTR_OPEN_ISSUES: self._open_issue_count,
@@ -130,11 +130,11 @@ class GitHubSensor(Entity):
         self._github_data.update()
 
         self._name = self._github_data.name
-        self._state = self._github_data.last_commit_sha
+        self._state = self._github_data.latest_commit_sha
         self._repository_path = self._github_data.repository_path
         self._available = self._github_data.available
-        self._last_commit_message = self._github_data.last_commit_message
-        self._last_commit_sha = self._github_data.last_commit_sha
+        self._latest_commit_message = self._github_data.latest_commit_message
+        self._latest_commit_sha = self._github_data.latest_commit_sha
         self._latest_release_url = self._github_data.latest_release_url
         self._open_issue_count = self._github_data.open_issue_count
         self._open_issue_latest = self._github_data.open_issue_latest
@@ -173,8 +173,8 @@ class GitHubData():
         self.name = repository.get(CONF_NAME, repo.name)
 
         self.available = False
-        self.last_commit_message = None
-        self.last_commit_sha = None
+        self.latest_commit_message = None
+        self.latest_commit_sha = None
         self.latest_release_url = None
         self.open_issue_count = None
         self.open_issue_latest = None
@@ -201,9 +201,9 @@ class GitHubData():
                 if open_pull_requests.totalCount > 0:
                     self.pull_request_latest = open_pull_requests[0].html_url
 
-            last_commit = repo.get_commits()[0]
-            self.last_commit_sha = last_commit.sha
-            self.last_commit_message = last_commit.commit.message
+            latest_commit = repo.get_commits()[0]
+            self.latest_commit_sha = latest_commit.sha
+            self.latest_commit_message = latest_commit.commit.message
 
             releases = repo.get_releases()
             if releases and releases.totalCount > 0:
