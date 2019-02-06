@@ -6,7 +6,7 @@ import requests_mock
 from homeassistant.components.binary_sensor import ring
 from homeassistant.components import ring as base_ring
 
-from tests.components.test_ring import ATTRIBUTION, VALID_CONFIG
+from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, load_fixture)
 

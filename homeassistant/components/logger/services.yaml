@@ -1,0 +1,6 @@
+set_default_level:
+  description: Set the default log level for components.
+  fields:
+    level: {description: 'Default severity level. Possible values are notset, debug,
+        info, warn, warning, error, fatal, critical', example: debug}
+set_level: {description: Set log level for components.}

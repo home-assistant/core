@@ -167,7 +167,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.14.3
+async-upnp-client==0.14.4
 
 # homeassistant.components.light.avion
 # avion==0.10
@@ -490,7 +490,7 @@ greenwavereality==0.5.1
 gstreamer-player==1.1.2
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.9
+ha-ffmpeg==1.11
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
@@ -1134,7 +1134,7 @@ pymonoprice==0.3
 pymusiccast==0.1.6
 
 # homeassistant.components.cover.myq
-pymyq==1.0.0
+pymyq==1.1.0
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1231,7 +1231,7 @@ pysma==0.3.1
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.4.2
+pysmartthings==0.5.0
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
@@ -1555,7 +1555,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.5
+smhi-pkg==1.0.8
 
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.9
@@ -1631,7 +1631,7 @@ tellcore-net==0.4
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.8
+tellduslive==0.10.10
 
 # homeassistant.components.media_player.lg_soundbar
 temescal==0.1

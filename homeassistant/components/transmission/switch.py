@@ -4,10 +4,12 @@ Support for setting the Transmission BitTorrent client Turtle Mode.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.transmission/
 """
+from datetime import timedelta
+
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SCAN_INTERVAL)
+    DATA_TRANSMISSION)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
@@ -18,6 +20,8 @@ DEPENDENCIES = ['transmission']
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
+
+SCAN_INTERVAL = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
