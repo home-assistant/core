@@ -248,12 +248,6 @@ class KNXLight(Light):
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
 
-        # fall back to default values, if required
-        if brightness is None:
-            brightness = DEFAULT_BRIGHTNESS
-        if hs_color is None:
-            hs_color = DEFAULT_COLOR
-
         update_brightness = ATTR_BRIGHTNESS in kwargs
         update_color = ATTR_HS_COLOR in kwargs
         update_color_temp = ATTR_COLOR_TEMP in kwargs
@@ -269,6 +263,12 @@ class KNXLight(Light):
         elif self.device.supports_color and \
                 (update_brightness or update_color):
             # change RGB color (includes brightness)
+            # if brightness or hs_color was not yet set use the default value
+            # to claculate RGB from as a fallback
+            if brightness is None:
+                brightness = DEFAULT_BRIGHTNESS
+            if hs_color is None:
+                hs_color = DEFAULT_COLOR
             await self.device.set_color(
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         elif self.device.supports_color_temperature and \
