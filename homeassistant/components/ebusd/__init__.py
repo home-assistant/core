@@ -54,6 +54,7 @@ def setup(hass, config):
         conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
+        _LOGGER.debug("Ebusd component setup started.")
         import ebusdpy
         ebusdpy.init(server_address)
         hass.data[DATA_EBUSD] = EbusdData(server_address, circuit)
