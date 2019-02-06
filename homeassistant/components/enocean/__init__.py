@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['enocean==0.40']
+REQUIREMENTS = ['enocean-lib==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class EnOceanDongle:
             port=ser, callback=self.callback)
         self.__communicator.start()
         self.__devices = []
+        self.base_id = self.__communicator.base_id
 
     def register_device(self, dev):
         """Register another device."""
@@ -70,12 +71,18 @@ class EnOceanDongle:
         This is the callback function called by python-enocan whenever there
         is an incoming packet.
         """
-        from enocean.protocol.packet import RadioPacket
+        from enocean.protocol.packet import RadioPacket, Packet
+        from enocean.protocol.constants import PACKET, RORG
         if isinstance(temp, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", temp)
             rxtype = None
             value = None
             channel = 0
+            if temp.rorg == RORG.VLD:
+                temp.select_eep(0x05, 0x00)
+                temp.parse_eep()
+                rxtype = "cover"
+                value = temp.parsed["POS"]["raw_value"]
             if temp.data[6] == 0x30:
                 rxtype = "wallswitch"
                 value = 1
@@ -96,6 +103,9 @@ class EnOceanDongle:
                 rxtype = "dimmerstatus"
                 value = temp.data[2]
             for device in self.__devices:
+                if rxtype == "cover" and device.stype == "cover":
+                    if temp.sender_int == self._combine_hex(device.dev_id):
+                        device.value_changed(value)
                 if rxtype == "wallswitch" and device.stype == "listener":
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value, temp.data[1])
@@ -113,7 +123,14 @@ class EnOceanDongle:
                 if rxtype == "dimmerstatus" and device.stype == "dimmer":
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
-
+        elif isinstance(temp, Packet):
+            # case of base_id packet which not identied as RadioPacket but simple Packet
+            from enocean.protocol.constants import PARSE_RESULT, RETURN_CODE
+            packet = temp
+            if (packet.packet_type == PACKET.RESPONSE
+                    and packet.response == RETURN_CODE.OK
+                    and len(packet.response_data) == 4):
+                self.__communicator.base_id = packet.response_data
 
 class EnOceanDevice():
     """Parent class for all devices associated with the EnOcean component."""
@@ -123,10 +140,14 @@ class EnOceanDevice():
         ENOCEAN_DONGLE.register_device(self)
         self.stype = ""
         self.sensorid = [0x00, 0x00, 0x00, 0x00]
+        self.base_id = ENOCEAN_DONGLE.base_id
 
     # pylint: disable=no-self-use
     def send_command(self, data, optional, packet_type):
         """Send a command via the EnOcean dongle."""
         from enocean.protocol.packet import Packet
         packet = Packet(packet_type, data=data, optional=optional)
+        ENOCEAN_DONGLE.send_command(packet)
+
+    def send_packet(self, packet):
         ENOCEAN_DONGLE.send_command(packet)
