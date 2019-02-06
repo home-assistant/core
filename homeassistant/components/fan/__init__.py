@@ -12,8 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-                                 STATE_UNKNOWN)
+                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -94,7 +93,7 @@ def is_on(hass, entity_id: str = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
-    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
+    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
 
 
 async def async_setup(hass, config: dict):
@@ -199,7 +198,7 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
+        return self.speed not in [SPEED_OFF, None]
 
     @property
     def speed(self) -> str:

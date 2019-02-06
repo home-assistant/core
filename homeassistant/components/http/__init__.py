@@ -25,8 +25,7 @@ from .auth import setup_auth
 from .ban import setup_bans
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import (
-    CachingFileResponse, CachingStaticResource, staticresource_middleware)
+from .static import CachingFileResponse, CachingStaticResource
 
 # Import as alias
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
@@ -99,6 +98,7 @@ class ApiConfig:
         self.port = port
         self.api_password = api_password
 
+        host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
             self.base_url = host
         elif use_ssl:
@@ -191,8 +191,7 @@ class HomeAssistantHTTP:
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
                  login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(
-            middlewares=[staticresource_middleware])
+        app = self.app = web.Application(middlewares=[])
 
         # This order matters
         setup_real_ip(app, use_x_forwarded_for, trusted_proxies)

@@ -73,7 +73,6 @@ async def test_changing_password_raises_invalid_user(data, hass):
 async def test_adding_user(data, hass):
     """Test adding a user."""
     data.add_auth('test-user', 'test-pass')
-    data.validate_login('test-user', 'test-pass')
     data.validate_login(' test-user ', 'test-pass')
 
 
@@ -81,7 +80,7 @@ async def test_adding_user_duplicate_username(data, hass):
     """Test adding a user with duplicate username."""
     data.add_auth('test-user', 'test-pass')
     with pytest.raises(hass_auth.InvalidUser):
-        data.add_auth('test-user ', 'other-pass')
+        data.add_auth('TEST-user ', 'other-pass')
 
 
 async def test_validating_password_invalid_password(data, hass):
@@ -91,16 +90,22 @@ async def test_validating_password_invalid_password(data, hass):
     with pytest.raises(hass_auth.InvalidAuth):
         data.validate_login(' test-user ', 'invalid-pass')
 
+    with pytest.raises(hass_auth.InvalidAuth):
+        data.validate_login('test-user', 'test-pass ')
+
+    with pytest.raises(hass_auth.InvalidAuth):
+        data.validate_login('test-user', 'Test-pass')
+
 
 async def test_changing_password(data, hass):
     """Test adding a user."""
     data.add_auth('test-user', 'test-pass')
-    data.change_password('test-user ', 'new-pass')
+    data.change_password('TEST-USER ', 'new-pass')
 
     with pytest.raises(hass_auth.InvalidAuth):
         data.validate_login('test-user', 'test-pass')
 
-    data.validate_login('test-user', 'new-pass')
+    data.validate_login('test-UsEr', 'new-pass')
 
 
 async def test_login_flow_validates(data, hass):
@@ -122,18 +127,18 @@ async def test_login_flow_validates(data, hass):
     assert result['errors']['base'] == 'invalid_auth'
 
     result = await flow.async_step_init({
-        'username': 'test-user ',
+        'username': 'TEST-user ',
         'password': 'incorrect-pass',
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['errors']['base'] == 'invalid_auth'
 
     result = await flow.async_step_init({
-        'username': 'test-user',
+        'username': 'test-USER',
         'password': 'test-pass',
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['data']['username'] == 'test-user'
+    assert result['data']['username'] == 'test-USER'
 
 
 async def test_saving_loading(data, hass):
@@ -179,6 +184,9 @@ async def test_legacy_adding_user_duplicate_username(legacy_data, hass):
     legacy_data.add_auth('test-user', 'test-pass')
     with pytest.raises(hass_auth.InvalidUser):
         legacy_data.add_auth('test-user', 'other-pass')
+    # Not considered duplicate
+    legacy_data.add_auth('test-user ', 'test-pass')
+    legacy_data.add_auth('Test-user', 'test-pass')
 
 
 async def test_legacy_validating_password_invalid_password(legacy_data, hass):

@@ -8,7 +8,8 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, mock_coro, mock_component
+from tests.common import (
+    async_fire_time_changed, mock_coro, mock_component, MockDependency)
 
 NEW_VERSION = '10000.0'
 MOCK_VERSION = '10.0'
@@ -21,6 +22,13 @@ MOCK_RESPONSE = {
 MOCK_CONFIG = {updater.DOMAIN: {
     'reporting': True
 }}
+
+
+@pytest.fixture(autouse=True)
+def mock_distro():
+    """Mock distro dep."""
+    with MockDependency('distro'):
+        yield
 
 
 @pytest.fixture
@@ -100,29 +108,11 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
 
 
 @asyncio.coroutine
-def test_enabled_component_info(hass, mock_get_uuid):
-    """Test if new entity is created if new version is available."""
-    with patch('homeassistant.components.updater.platform.system',
-               Mock(return_value="junk")):
-        res = yield from updater.get_system_info(hass, True)
-        assert 'components' in res, 'Updater failed to generate component list'
-
-
-@asyncio.coroutine
-def test_disable_component_info(hass, mock_get_uuid):
-    """Test if new entity is created if new version is available."""
-    with patch('homeassistant.components.updater.platform.system',
-               Mock(return_value="junk")):
-        res = yield from updater.get_system_info(hass, False)
-        assert 'components' not in res, 'Updater failed, components generate'
-
-
-@asyncio.coroutine
 def test_get_newest_version_no_analytics_when_no_huuid(hass, aioclient_mock):
     """Test we do not gather analytics when no huuid is passed in."""
     aioclient_mock.post(updater.UPDATER_URL, json=MOCK_RESPONSE)
 
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                side_effect=Exception):
         res = yield from updater.get_newest_version(hass, None, False)
         assert res == (MOCK_RESPONSE['version'],
@@ -134,7 +124,7 @@ def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
     """Test we do not gather analytics when no huuid is passed in."""
     aioclient_mock.post(updater.UPDATER_URL, json=MOCK_RESPONSE)
 
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
         res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE['version'],
@@ -144,7 +134,7 @@ def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 @asyncio.coroutine
 def test_error_fetching_new_version_timeout(hass):
     """Test we do not gather analytics when no huuid is passed in."""
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))), \
             patch('async_timeout.timeout', side_effect=asyncio.TimeoutError):
         res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
@@ -156,7 +146,7 @@ def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
     """Test we do not gather analytics when no huuid is passed in."""
     aioclient_mock.post(updater.UPDATER_URL, text='not json')
 
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
         res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None
@@ -170,7 +160,7 @@ def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
         # 'release-notes' is missing
     })
 
-    with patch('homeassistant.components.updater.get_system_info',
+    with patch('homeassistant.helpers.system_info.async_get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))):
         res = yield from updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res is None

@@ -114,7 +114,7 @@ async def get_controller(
     )
 
     try:
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             await controller.login()
         return controller
 
