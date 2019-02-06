@@ -210,11 +210,6 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
         super().__init__(home, device, 'Power')
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return 'power'
-
-    @property
     def state(self):
         """Return the state."""
         return self._device.currentPowerConsumption
