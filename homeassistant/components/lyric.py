@@ -124,8 +124,14 @@ def setup(hass, config):
     cache_ttl = conf[CONF_SCAN_INTERVAL]
     filename = LYRIC_CONFIG_FILE
     token_cache_file = hass.config.path(filename)
+    lyric_auth_url = '/api/lyric/authenticate'
+
+    if hass.config.api.base_url.endswith('/'):
+        # strip prefix slash to prevent double slashes in redirect_url
+        lyric_auth_url = lyric_auth_url[1:]
+
     redirect_uri = conf.get(CONF_REDIRECT_URI, hass.config.api.base_url +
-                            '/api/lyric/authenticate')
+                            lyric_auth_url)
 
     lyric = lyric.Lyric(
         token_cache_file=token_cache_file,
