@@ -10,8 +10,6 @@ from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-DEPENDENCIES = ['owlet']
-
 SCAN_INTERVAL = timedelta(seconds=120)
 
 SENSOR_CONDITIONS = {

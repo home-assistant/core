@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+
 
 REQUIREMENTS = ['pyowlet==1.0.2']
 
@@ -49,6 +51,9 @@ def setup(hass, config):
         name = '{}\'s Owlet'.format(device.baby_name)
 
     hass.data[DOMAIN] = OwletDevice(device, name, SENSOR_TYPES)
+
+    load_platform(hass, 'sensor', DOMAIN, None, config)
+    load_platform(hass, 'binary_sensor', DOMAIN, None, config)
 
     return True
 
