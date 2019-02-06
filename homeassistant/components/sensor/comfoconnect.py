@@ -11,8 +11,7 @@ from homeassistant.components.comfoconnect import (
     ATTR_CURRENT_HUMIDITY, ATTR_OUTSIDE_TEMPERATURE,
     ATTR_OUTSIDE_HUMIDITY, ATTR_AIR_FLOW_SUPPLY,
     ATTR_AIR_FLOW_EXHAUST, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED)
-from homeassistant.const import (
-    CONF_RESOURCES, TEMP_CELSIUS, STATE_UNKNOWN)
+from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -122,7 +121,7 @@ class ComfoConnectSensor(Entity):
         try:
             return self._ccb.data[self._sensor_id]
         except KeyError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def name(self):

@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.const import STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-from . import helpers
-from .const import (
+from .core import helpers
+from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
-from .entities import ZhaEntity
-from .entities.listeners import (
+from .entity import ZhaEntity
+from .core.listeners import (
     OnOffListener, LevelListener
 )
 

@@ -10,21 +10,18 @@ from datetime import timedelta
 from distutils.version import StrictVersion
 import json
 import logging
-import os
-import platform
 import uuid
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.const import __version__ as current_version
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, __version__ as current_version)
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.util.package import is_virtual_env
 
 REQUIREMENTS = ['distro==1.3.0']
 
@@ -124,44 +121,22 @@ async def async_setup(hass, config):
     return True
 
 
-async def get_system_info(hass, include_components):
-    """Return info about the system."""
-    info_object = {
-        'arch': platform.machine(),
-        'dev': 'dev' in current_version,
-        'docker': False,
-        'os_name': platform.system(),
-        'python_version': platform.python_version(),
-        'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
-        'version': current_version,
-        'virtualenv': is_virtual_env(),
-        'hassio': hass.components.hassio.is_hassio(),
-    }
-
-    if include_components:
-        info_object['components'] = list(hass.config.components)
-
-    if platform.system() == 'Windows':
-        info_object['os_version'] = platform.win32_ver()[0]
-    elif platform.system() == 'Darwin':
-        info_object['os_version'] = platform.mac_ver()[0]
-    elif platform.system() == 'FreeBSD':
-        info_object['os_version'] = platform.release()
-    elif platform.system() == 'Linux':
-        import distro
-        linux_dist = await hass.async_add_job(
-            distro.linux_distribution, False)
-        info_object['distribution'] = linux_dist[0]
-        info_object['os_version'] = linux_dist[1]
-        info_object['docker'] = os.path.isfile('/.dockerenv')
-
-    return info_object
-
-
 async def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
-        info_object = await get_system_info(hass, include_components)
+        info_object = \
+            await hass.helpers.system_info.async_get_system_info()
+
+        if include_components:
+            info_object['components'] = list(hass.config.components)
+
+        import distro
+
+        linux_dist = await hass.async_add_executor_job(
+            distro.linux_distribution, False)
+        info_object['distribution'] = linux_dist[0]
+        info_object['os_version'] = linux_dist[1]
+
         info_object['huuid'] = huuid
     else:
         info_object = {}

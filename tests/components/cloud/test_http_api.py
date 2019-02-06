@@ -111,6 +111,18 @@ def test_login_view(hass, cloud_client, mock_cognito):
     assert result_pass == 'my_password'
 
 
+async def test_login_view_random_exception(cloud_client):
+    """Try logging in with invalid JSON."""
+    with patch('async_timeout.timeout', side_effect=ValueError('Boom')):
+        req = await cloud_client.post('/api/cloud/login', json={
+            'email': 'my_username',
+            'password': 'my_password'
+        })
+    assert req.status == 502
+    resp = await req.json()
+    assert resp == {'code': 'valueerror', 'message': 'Unexpected error: Boom'}
+
+
 @asyncio.coroutine
 def test_login_view_invalid_json(cloud_client):
     """Try logging in with invalid JSON."""

@@ -282,6 +282,13 @@ class HistoryStatsSensor(Entity):
         if end is None:
             end = start + self._duration
 
+        if start > dt_util.now():
+            # History hasn't been written yet for this period
+            return
+        if dt_util.now() < end:
+            # No point in making stats of the future
+            end = dt_util.now()
+
         self._period = start, end
 
 

@@ -4,8 +4,7 @@ Support for Wink Covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.wink/
 """
-from homeassistant.components.cover import CoverDevice, STATE_UNKNOWN, \
-    ATTR_POSITION
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
@@ -54,7 +53,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         """Return the current position of cover shutter."""
         if self.wink.state() is not None:
             return int(self.wink.state()*100)
-        return STATE_UNKNOWN
+        return None
 
     @property
     def is_closed(self):
