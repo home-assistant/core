@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 import homeassistant.util.dt as dt_util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,

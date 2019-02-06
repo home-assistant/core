@@ -6,7 +6,8 @@ https://home-assistant.io/components/media_player.openhome/
 """
 import logging
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,

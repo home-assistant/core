@@ -13,10 +13,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_MUSIC,
-    PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)

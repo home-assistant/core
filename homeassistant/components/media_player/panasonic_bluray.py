@@ -9,9 +9,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING)

@@ -6,7 +6,8 @@ https://home-assistant.io/components/media_player.lg_soundbar/
 """
 import logging
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOUND_MODE)
