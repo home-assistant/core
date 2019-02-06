@@ -53,7 +53,6 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
-
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
@@ -63,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if dev:
         def neato_custom_cleaning_service(call):
-            """Zone cleaning service that allows user to change options"""
+            """Zone cleaning service that allows user to change options."""
             for robot in service_to_entities(call):
                 if call.service == SERVICE_NEATO_CUSTOM_CLEANING:
                     mode = call.data.get(ATTR_MODE)
