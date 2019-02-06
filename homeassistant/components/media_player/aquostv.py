@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_entities([SharpAquosTVDevice(name, host, port, 
+    add_entities([SharpAquosTVDevice(name, host, port,
                   timeout, remote, power_on_enabled)])
     return True
 
@@ -109,8 +109,8 @@ def _retry(func):
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
-    def __init__(self, name, host, port, timeout, 
-                remote, power_on_enabled=False):
+    def __init__(self, name, host, port, timeout,
+                 remote, power_on_enabled=False):
         """Initialize the aquos device."""
         global SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
