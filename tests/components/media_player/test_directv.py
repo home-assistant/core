@@ -6,7 +6,7 @@ import requests
 import pytest
 
 import homeassistant.components.media_player as mp
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_ENQUEUE, DOMAIN,
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.directv import (

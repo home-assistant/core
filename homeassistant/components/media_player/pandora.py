@@ -12,11 +12,12 @@ import shutil
 import signal
 
 from homeassistant import util
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)

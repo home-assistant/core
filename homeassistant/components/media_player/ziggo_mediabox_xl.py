@@ -9,10 +9,11 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, MediaPlayerDevice)
+    SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv

@@ -9,10 +9,10 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 
 REQUIREMENTS = ['nad_receiver==0.0.11']

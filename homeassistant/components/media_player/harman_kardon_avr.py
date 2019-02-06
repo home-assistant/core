@@ -9,10 +9,10 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
-    MediaPlayerDevice)
+    PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 
