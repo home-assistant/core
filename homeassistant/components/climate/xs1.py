@@ -61,6 +61,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
 
     @property
     def supported_features(self):
+        """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
