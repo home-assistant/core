@@ -60,7 +60,8 @@ class MockStation():
 
 async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
-    with patch('pyipma.Station.get', return_value=mock_coro(MockStation())):
+    with patch('homeassistant.components.ipma.weather.async_get_station',
+               return_value=mock_coro(MockStation())):
         assert await async_setup_component(hass, weather.DOMAIN, {
             'weather': {
                 'name': 'HomeTown',
@@ -83,7 +84,8 @@ async def test_setup_configuration(hass):
 
 async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
-    with patch('pyipma.Station.get', return_value=mock_coro(MockStation())):
+    with patch('homeassistant.components.ipma.weather.async_get_station',
+               return_value=mock_coro(MockStation())):
         entry = MockConfigEntry(domain='ipma', data=TEST_CONFIG)
         await hass.config_entries.async_forward_entry_setup(
             entry, WEATHER_DOMAIN)
