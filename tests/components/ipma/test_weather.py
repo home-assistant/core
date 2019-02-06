@@ -2,12 +2,14 @@
 from unittest.mock import patch
 from collections import namedtuple
 
+from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN)
 
-from tests.common import MockConfigEntry, MockDependency
+from tests.common import MockConfigEntry, mock_coro
+from homeassistant.setup import async_setup_component
 
 TEST_CONFIG = {
     "name": "HomeTown",
@@ -18,11 +20,6 @@ TEST_CONFIG = {
 
 class MockStation():
     """Mock Station from pyipma."""
-
-    @classmethod
-    async def get(cls, websession, lat, lon):
-        """Mock Factory."""
-        return MockStation()
 
     async def observation(self):
         """Mock Observation."""
@@ -61,12 +58,36 @@ class MockStation():
         return 0
 
 
-@MockDependency("pyipma")
-@patch("pyipma.Station", new=MockStation)
-async def test_setup(hass):
+async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
-    entry = MockConfigEntry(domain='ipma', data=TEST_CONFIG)
-    await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+    with patch('pyipma.Station.get', return_value=mock_coro(MockStation())):
+        assert await async_setup_component(hass, weather.DOMAIN, {
+            'weather': {
+                'name': 'HomeTown',
+                'platform': 'ipma',
+            }
+        })
+    await hass.async_block_till_done()
+
+    state = hass.states.get('weather.hometown')
+    assert state.state == 'rainy'
+
+    component = hass.data.get(weather.DOMAIN)
+    my_entity = component.get_entity('weather.hometown')
+    assert my_entity.temperature == 18
+    assert my_entity.humidity == 71
+    assert my_entity.pressure == 1000.0
+    assert my_entity.wind_speed == 3.94
+    assert my_entity.wind_bearing == 'NW'
+
+
+async def test_setup_config_flow(hass):
+    """Test for successfully setting up the IPMA platform."""
+    with patch('pyipma.Station.get', return_value=mock_coro(MockStation())):
+        entry = MockConfigEntry(domain='ipma', data=TEST_CONFIG)
+        await hass.config_entries.async_forward_entry_setup(
+            entry, WEATHER_DOMAIN)
+        await hass.async_block_till_done()
 
     state = hass.states.get('weather.hometown')
     assert state.state == 'rainy'
