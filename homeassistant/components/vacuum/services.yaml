@@ -161,5 +161,5 @@ neato_custom_cleaning:
       description: "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found)."
       example: 2
     zone:
-      description: Name of the zone to clean. Defaults to no zone i.e. complete house cleanup.
+      description: Only supported on the Botvac D7. Name of the zone to clean. Defaults to no zone i.e. complete house cleanup.
       example: "Kitchen"
