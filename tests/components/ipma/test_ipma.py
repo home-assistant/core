@@ -60,6 +60,7 @@ class MockStation():
         """Mock longitude."""
         return 0
 
+
 @MockDependency("pyipma")
 @patch("pyipma.Station", new=MockStation)
 async def test_setup(hass):
