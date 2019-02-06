@@ -12,7 +12,7 @@ from homeassistant.components.verisure import (
     CONF_LOCKS, CONF_DEFAULT_LOCK_CODE, CONF_CODE_DIGITS)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
-    ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
+    ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class VerisureDoorlock(LockDevice):
     def __init__(self, device_label):
         """Initialize the Verisure lock."""
         self._device_label = device_label
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None
         self._change_timestamp = 0
@@ -80,7 +80,7 @@ class VerisureDoorlock(LockDevice):
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
             self._device_label)
         if status == 'UNLOCKED':
-            self._state = STATE_UNLOCKED
+            self._state = None
         elif status == 'LOCKED':
             self._state = STATE_LOCKED
         elif status != 'PENDING':
@@ -96,7 +96,7 @@ class VerisureDoorlock(LockDevice):
 
     def unlock(self, **kwargs):
         """Send unlock command."""
-        if self._state == STATE_UNLOCKED:
+        if self._state is None:
             return
 
         code = kwargs.get(ATTR_CODE, self._default_lock_code)

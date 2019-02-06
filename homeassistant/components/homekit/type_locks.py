@@ -4,8 +4,8 @@ import logging
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import (
-    ATTR_ENTITY_ID, DOMAIN, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
-from homeassistant.const import ATTR_CODE
+    ATTR_ENTITY_ID, DOMAIN, STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
 
 from . import TYPES
 from .accessories import HomeAccessory

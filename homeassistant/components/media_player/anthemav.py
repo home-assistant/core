@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['anthemav==1.1.8']
@@ -100,7 +100,7 @@ class AnthemAVR(MediaPlayerDevice):
             return STATE_ON
         if pwrstate is False:
             return STATE_OFF
-        return STATE_UNKNOWN
+        return None
 
     @property
     def is_volume_muted(self):

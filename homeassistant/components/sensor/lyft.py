@@ -33,8 +33,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
-    vol.Required(CONF_START_LATITUDE): cv.latitude,
-    vol.Required(CONF_START_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_START_LATITUDE): cv.latitude,
+    vol.Optional(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
     vol.Optional(CONF_PRODUCT_IDS):
@@ -56,7 +56,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         session = auth_flow.get_session()
 
         timeandpriceest = LyftEstimate(
-            session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
+            session, config.get(CONF_START_LATITUDE, hass.config.latitude),
+            config.get(CONF_START_LONGITUDE, hass.config.longitude),
             config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
         timeandpriceest.fetch_data()
     except APIError as exc:

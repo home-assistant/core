@@ -219,6 +219,11 @@ class RadioThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._tstate != STATE_IDLE
+
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond

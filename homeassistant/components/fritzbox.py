@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyfritzhome==0.4.0']
 
-SUPPORTED_DOMAINS = ['binary_sensor', 'climate', 'switch']
+SUPPORTED_DOMAINS = ['binary_sensor', 'climate', 'switch', 'sensor']
 
 DOMAIN = 'fritzbox'
 

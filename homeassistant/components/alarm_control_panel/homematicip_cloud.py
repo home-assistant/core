@@ -76,7 +76,7 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self._home.set_security_zones_activation(True, False)
+        await self._home.set_security_zones_activation(False, True)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""

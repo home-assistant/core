@@ -22,15 +22,12 @@ DOMAIN = 'geo_location'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_EVENTS = 'All Geolocation Events'
-
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass, config):
     """Set up the Geolocation component."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_EVENTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
     return True
 

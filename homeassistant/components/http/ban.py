@@ -104,7 +104,7 @@ async def process_wrong_login(request):
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
-    if (request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] >
+    if (request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] >=
             request.app[KEY_LOGIN_THRESHOLD]):
         new_ban = IpBan(remote_addr)
         request.app[KEY_BANNED_IPS].append(new_ban)

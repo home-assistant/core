@@ -189,7 +189,7 @@ class Volumio(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         volume = self._state.get('volume', None)
         if volume is not None and volume != "":
-            volume = volume / 100
+            volume = int(volume) / 100
         return volume
 
     @property
