@@ -34,7 +34,7 @@ DEFAULT_PERSON = 'Unknown'
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
-EVENT_RECEIVED = 'netatmo_webhook_received'
+EVENT_RECEIVED = 'netatmo_webhook'
 EVENT_PERSON = 'person'
 EVENT_MOVEMENT = 'movement'
 
