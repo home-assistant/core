@@ -3,9 +3,12 @@ from unittest.mock import patch
 import pytest
 from homeassistant import config_entries
 from homeassistant.components.zha.core.const import (
-    DOMAIN, DATA_ZHA
+    DOMAIN, DATA_ZHA, COMPONENTS
 )
 from homeassistant.components.zha.core.gateway import ZHAGateway
+from homeassistant.components.zha.core.gateway import establish_device_mappings
+from homeassistant.components.zha.core.listeners \
+    import populate_listener_registry
 from .common import async_setup_entry
 
 
@@ -25,6 +28,12 @@ def zha_gateway_fixture(hass):
     Create a ZHAGateway object that can be used to interact with as if we
     had a real zigbee network running.
     """
+    populate_listener_registry()
+    establish_device_mappings()
+    for component in COMPONENTS:
+        hass.data[DATA_ZHA][component] = (
+            hass.data[DATA_ZHA].get(component, {})
+        )
     return ZHAGateway(hass, {})
 
 

@@ -24,6 +24,7 @@ async def test_switch(hass, config_entry, zha_gateway):
     # load up switch domain
     await hass.config_entries.async_forward_entry_setup(
         config_entry, DOMAIN)
+    await zha_gateway.accept_zigbee_messages({})
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).on_off
@@ -44,6 +45,7 @@ async def test_switch(hass, config_entry, zha_gateway):
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    # turn on from HA
     with patch(
             'zigpy.zcl.Cluster.request',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
@@ -55,6 +57,7 @@ async def test_switch(hass, config_entry, zha_gateway):
         assert cluster.request.call_args == call(
             False, ON, (), expect_reply=True, manufacturer=None)
 
+    # turn off from HA
     with patch(
             'zigpy.zcl.Cluster.request',
             return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
@@ -66,5 +69,6 @@ async def test_switch(hass, config_entry, zha_gateway):
         assert cluster.request.call_args == call(
             False, OFF, (), expect_reply=True, manufacturer=None)
 
+    # test joining a new switch to the network and HA
     await async_test_device_join(
         hass, zha_gateway, OnOff.cluster_id, DOMAIN, expected_state=STATE_OFF)
