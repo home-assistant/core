@@ -9,7 +9,7 @@ from homeassistant.components.sensor.canary import CanarySensor, \
     SENSOR_TYPES, ATTR_AIR_QUALITY, STATE_AIR_QUALITY_NORMAL, \
     STATE_AIR_QUALITY_ABNORMAL, STATE_AIR_QUALITY_VERY_ABNORMAL
 from tests.common import (get_test_home_assistant)
-from tests.components.test_canary import mock_device, mock_location
+from tests.components.canary.test_init import mock_device, mock_location
 
 VALID_CONFIG = {
     "canary": {

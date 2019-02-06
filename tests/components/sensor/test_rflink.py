@@ -9,7 +9,7 @@ from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL, TMP_ENTITY, DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND, EVENT_KEY_SENSOR)
 from homeassistant.const import STATE_UNKNOWN
-from ..test_rflink import mock_rflink
+from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = 'sensor'
 
