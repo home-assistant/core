@@ -48,6 +48,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
     # load up binary_sensor domain
     await hass.config_entries.async_forward_entry_setup(
         config_entry, DOMAIN)
+    await zha_gateway.accept_zigbee_messages({})
     await hass.async_block_till_done()
 
     # on off binary_sensor

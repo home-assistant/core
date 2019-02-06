@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
-from .device_entity import ZhaDeviceEntity
-from .const import (
+from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
     CLIENT_COMMANDS, SERVER_COMMANDS, SERVER)
@@ -118,115 +117,7 @@ SCHEMA_WS_CLUSTER_COMMANDS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
-@websocket_api.async_response
-async def websocket_entity_cluster_attributes(hass, connection, msg):
-    """Return a list of cluster attributes."""
-    entity_id = msg[ATTR_ENTITY_ID]
-    cluster_id = msg[ATTR_CLUSTER_ID]
-    cluster_type = msg[ATTR_CLUSTER_TYPE]
-    component = hass.data.get(entity_id.split('.')[0])
-    entity = component.get_entity(entity_id)
-    cluster_attributes = []
-    if entity is not None:
-        res = await entity.get_cluster_attributes(cluster_id, cluster_type)
-        if res is not None:
-            for attr_id in res:
-                cluster_attributes.append(
-                    {
-                        ID: attr_id,
-                        NAME: res[attr_id][0]
-                    }
-                )
-    _LOGGER.debug("Requested attributes for: %s %s %s %s",
-                  "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
-                  "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
-                  "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
-                  "{}: [{}]".format(RESPONSE, cluster_attributes)
-                  )
-
-    connection.send_message(websocket_api.result_message(
-        msg[ID],
-        cluster_attributes
-    ))
-
-
-@websocket_api.async_response
-async def websocket_entity_cluster_commands(hass, connection, msg):
-    """Return a list of cluster commands."""
-    entity_id = msg[ATTR_ENTITY_ID]
-    cluster_id = msg[ATTR_CLUSTER_ID]
-    cluster_type = msg[ATTR_CLUSTER_TYPE]
-    component = hass.data.get(entity_id.split('.')[0])
-    entity = component.get_entity(entity_id)
-    cluster_commands = []
-    if entity is not None:
-        res = await entity.get_cluster_commands(cluster_id, cluster_type)
-        if res is not None:
-            for cmd_id in res[CLIENT_COMMANDS]:
-                cluster_commands.append(
-                    {
-                        TYPE: CLIENT,
-                        ID: cmd_id,
-                        NAME: res[CLIENT_COMMANDS][cmd_id][0]
-                    }
-                )
-            for cmd_id in res[SERVER_COMMANDS]:
-                cluster_commands.append(
-                    {
-                        TYPE: SERVER,
-                        ID: cmd_id,
-                        NAME: res[SERVER_COMMANDS][cmd_id][0]
-                    }
-                )
-    _LOGGER.debug("Requested commands for: %s %s %s %s",
-                  "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
-                  "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
-                  "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
-                  "{}: [{}]".format(RESPONSE, cluster_commands)
-                  )
-
-    connection.send_message(websocket_api.result_message(
-        msg[ID],
-        cluster_commands
-    ))
-
-
-@websocket_api.async_response
-async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
-    """Read zigbee attribute for cluster on zha entity."""
-    entity_id = msg[ATTR_ENTITY_ID]
-    cluster_id = msg[ATTR_CLUSTER_ID]
-    cluster_type = msg[ATTR_CLUSTER_TYPE]
-    attribute = msg[ATTR_ATTRIBUTE]
-    component = hass.data.get(entity_id.split('.')[0])
-    entity = component.get_entity(entity_id)
-    clusters = await entity.get_clusters()
-    cluster = clusters[cluster_type][cluster_id]
-    manufacturer = msg.get(ATTR_MANUFACTURER) or None
-    success = failure = None
-    if entity is not None:
-        success, failure = await cluster.read_attributes(
-            [attribute],
-            allow_cache=False,
-            only_cache=False,
-            manufacturer=manufacturer
-        )
-    _LOGGER.debug("Read attribute for: %s %s %s %s %s %s %s",
-                  "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
-                  "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
-                  "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
-                  "{}: [{}]".format(ATTR_ATTRIBUTE, attribute),
-                  "{}: [{}]".format(ATTR_MANUFACTURER, manufacturer),
-                  "{}: [{}]".format(RESPONSE, str(success.get(attribute))),
-                  "{}: [{}]".format('failure', failure)
-                  )
-    connection.send_message(websocket_api.result_message(
-        msg[ID],
-        str(success.get(attribute))
-    ))
-
-
-def async_load_api(hass, application_controller, listener):
+def async_load_api(hass, application_controller, zha_gateway):
     """Set up the web socket API."""
     async def permit(service):
         """Allow devices to join this network."""
@@ -256,11 +147,12 @@ def async_load_api(hass, application_controller, listener):
         attribute = service.data.get(ATTR_ATTRIBUTE)
         value = service.data.get(ATTR_VALUE)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
-        component = hass.data.get(entity_id.split('.')[0])
-        entity = component.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         response = None
-        if entity is not None:
-            response = await entity.write_zigbe_attribute(
+        if entity_ref is not None:
+            response = await entity_ref.zha_device.write_zigbee_attribute(
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 attribute,
                 value,
@@ -292,11 +184,13 @@ def async_load_api(hass, application_controller, listener):
         command_type = service.data.get(ATTR_COMMAND_TYPE)
         args = service.data.get(ATTR_ARGS)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
-        component = hass.data.get(entity_id.split('.')[0])
-        entity = component.get_entity(entity_id)
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
+        zha_device = entity_ref.zha_device
         response = None
-        if entity is not None:
-            response = await entity.issue_cluster_command(
+        if entity_ref is not None:
+            response = await zha_device.issue_cluster_command(
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.endpoint_id,
                 cluster_id,
                 command,
                 command_type,
@@ -325,11 +219,9 @@ def async_load_api(hass, application_controller, listener):
     async def websocket_reconfigure_node(hass, connection, msg):
         """Reconfigure a ZHA nodes entities by its ieee address."""
         ieee = msg[ATTR_IEEE]
-        entities = listener.get_entities_for_ieee(ieee)
+        device = zha_gateway.get_device(ieee)
         _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
-        for entity in entities:
-            if hasattr(entity, 'async_configure'):
-                hass.async_create_task(entity.async_configure())
+        hass.async_create_task(device.async_configure())
 
     hass.components.websocket_api.async_register_command(
         WS_RECONFIGURE_NODE, websocket_reconfigure_node,
@@ -340,15 +232,15 @@ def async_load_api(hass, application_controller, listener):
     async def websocket_entities_by_ieee(hass, connection, msg):
         """Return a dict of all zha entities grouped by ieee."""
         entities_by_ieee = {}
-        for ieee, entities in listener.device_registry.items():
+        for ieee, entities in zha_gateway.device_registry.items():
             ieee_string = str(ieee)
             entities_by_ieee[ieee_string] = []
             for entity in entities:
-                if not isinstance(entity, ZhaDeviceEntity):
-                    entities_by_ieee[ieee_string].append({
-                        ATTR_ENTITY_ID: entity.entity_id,
-                        DEVICE_INFO: entity.device_info
-                    })
+                entities_by_ieee[ieee_string].append({
+                    ATTR_ENTITY_ID: entity.reference_id,
+                    DEVICE_INFO: entity.device_info
+                })
+
         connection.send_message(websocket_api.result_message(
             msg[ID],
             entities_by_ieee
@@ -363,24 +255,25 @@ def async_load_api(hass, application_controller, listener):
     async def websocket_entity_clusters(hass, connection, msg):
         """Return a list of entity clusters."""
         entity_id = msg[ATTR_ENTITY_ID]
-        entities = listener.get_entities_for_ieee(msg[ATTR_IEEE])
-        entity = next(
-            ent for ent in entities if ent.entity_id == entity_id)
-        entity_clusters = await entity.get_clusters()
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
         clusters = []
-
-        for cluster_id, cluster in entity_clusters[IN].items():
-            clusters.append({
-                TYPE: IN,
-                ID: cluster_id,
-                NAME: cluster.__class__.__name__
-            })
-        for cluster_id, cluster in entity_clusters[OUT].items():
-            clusters.append({
-                TYPE: OUT,
-                ID: cluster_id,
-                NAME: cluster.__class__.__name__
-            })
+        if entity_ref is not None:
+            for listener in entity_ref.cluster_listeners.values():
+                cluster = listener.cluster
+                in_clusters = cluster.endpoint.in_clusters.values()
+                out_clusters = cluster.endpoint.out_clusters.values()
+                if cluster in in_clusters:
+                    clusters.append({
+                        TYPE: IN,
+                        ID: cluster.cluster_id,
+                        NAME: cluster.__class__.__name__
+                    })
+                elif cluster in out_clusters:
+                    clusters.append({
+                        TYPE: OUT,
+                        ID: cluster.cluster_id,
+                        NAME: cluster.__class__.__name__
+                    })
 
         connection.send_message(websocket_api.result_message(
             msg[ID],
@@ -392,15 +285,140 @@ def async_load_api(hass, application_controller, listener):
         SCHEMA_WS_CLUSTERS
     )
 
+    @websocket_api.async_response
+    async def websocket_entity_cluster_attributes(hass, connection, msg):
+        """Return a list of cluster attributes."""
+        entity_id = msg[ATTR_ENTITY_ID]
+        cluster_id = msg[ATTR_CLUSTER_ID]
+        cluster_type = msg[ATTR_CLUSTER_TYPE]
+        ieee = msg[ATTR_IEEE]
+        cluster_attributes = []
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
+        device = zha_gateway.get_device(ieee)
+        attributes = None
+        if entity_ref is not None:
+            attributes = await device.get_cluster_attributes(
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.endpoint_id,
+                cluster_id,
+                cluster_type)
+            if attributes is not None:
+                for attr_id in attributes:
+                    cluster_attributes.append(
+                        {
+                            ID: attr_id,
+                            NAME: attributes[attr_id][0]
+                        }
+                    )
+        _LOGGER.debug("Requested attributes for: %s %s %s %s",
+                      "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
+                      "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
+                      "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
+                      "{}: [{}]".format(RESPONSE, cluster_attributes)
+                      )
+
+        connection.send_message(websocket_api.result_message(
+            msg[ID],
+            cluster_attributes
+        ))
+
     hass.components.websocket_api.async_register_command(
         WS_ENTITY_CLUSTER_ATTRIBUTES, websocket_entity_cluster_attributes,
         SCHEMA_WS_CLUSTER_ATTRIBUTES
     )
 
+    @websocket_api.async_response
+    async def websocket_entity_cluster_commands(hass, connection, msg):
+        """Return a list of cluster commands."""
+        entity_id = msg[ATTR_ENTITY_ID]
+        cluster_id = msg[ATTR_CLUSTER_ID]
+        cluster_type = msg[ATTR_CLUSTER_TYPE]
+        ieee = msg[ATTR_IEEE]
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
+        device = zha_gateway.get_device(ieee)
+        cluster_commands = []
+        commands = None
+        if entity_ref is not None:
+            commands = await device.get_cluster_commands(
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.endpoint_id,
+                cluster_id,
+                cluster_type)
+
+            if commands is not None:
+                for cmd_id in commands[CLIENT_COMMANDS]:
+                    cluster_commands.append(
+                        {
+                            TYPE: CLIENT,
+                            ID: cmd_id,
+                            NAME: commands[CLIENT_COMMANDS][cmd_id][0]
+                        }
+                    )
+                for cmd_id in commands[SERVER_COMMANDS]:
+                    cluster_commands.append(
+                        {
+                            TYPE: SERVER,
+                            ID: cmd_id,
+                            NAME: commands[SERVER_COMMANDS][cmd_id][0]
+                        }
+                    )
+        _LOGGER.debug("Requested commands for: %s %s %s %s",
+                      "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
+                      "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
+                      "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
+                      "{}: [{}]".format(RESPONSE, cluster_commands)
+                      )
+
+        connection.send_message(websocket_api.result_message(
+            msg[ID],
+            cluster_commands
+        ))
+
     hass.components.websocket_api.async_register_command(
         WS_ENTITY_CLUSTER_COMMANDS, websocket_entity_cluster_commands,
         SCHEMA_WS_CLUSTER_COMMANDS
     )
+
+    @websocket_api.async_response
+    async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
+        """Read zigbee attribute for cluster on zha entity."""
+        entity_id = msg[ATTR_ENTITY_ID]
+        cluster_id = msg[ATTR_CLUSTER_ID]
+        cluster_type = msg[ATTR_CLUSTER_TYPE]
+        attribute = msg[ATTR_ATTRIBUTE]
+        entity_ref = zha_gateway.get_entity_reference(entity_id)
+        manufacturer = msg.get(ATTR_MANUFACTURER) or None
+        success = failure = None
+        clusters = []
+        if cluster_type == IN:
+            clusters = \
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.in_clusters
+        else:
+            clusters = \
+                list(entity_ref.cluster_listeners.values())[
+                    0].cluster.endpoint.out_clusters
+        cluster = clusters[cluster_id]
+        if entity_ref is not None:
+            success, failure = await cluster.read_attributes(
+                [attribute],
+                allow_cache=False,
+                only_cache=False,
+                manufacturer=manufacturer
+            )
+        _LOGGER.debug("Read attribute for: %s %s %s %s %s %s %s",
+                      "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
+                      "{}: [{}]".format(ATTR_CLUSTER_TYPE, cluster_type),
+                      "{}: [{}]".format(ATTR_ENTITY_ID, entity_id),
+                      "{}: [{}]".format(ATTR_ATTRIBUTE, attribute),
+                      "{}: [{}]".format(ATTR_MANUFACTURER, manufacturer),
+                      "{}: [{}]".format(RESPONSE, str(success.get(attribute))),
+                      "{}: [{}]".format('failure', failure)
+                      )
+        connection.send_message(websocket_api.result_message(
+            msg[ID],
+            str(success.get(attribute))
+        ))
 
     hass.components.websocket_api.async_register_command(
         WS_READ_CLUSTER_ATTRIBUTE, websocket_read_zigbee_cluster_attributes,
