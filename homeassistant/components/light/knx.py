@@ -244,7 +244,9 @@ class KNXLight(Light):
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
 
-        # fall back to default values, if required
+        # to make sure that the following calculations always have valid values available,
+        # fall back to default values for any parameter that has neither been set
+        # to a new value nor has an known current value.
         if brightness is None:
             brightness = DEFAULT_BRIGHTNESS
         if hs_color is None:
