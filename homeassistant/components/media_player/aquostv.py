@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.aquostv/
 """
 import logging
+import socket
 
 import voluptuous as vol
 
@@ -26,7 +27,7 @@ DEFAULT_NAME = 'Sharp Aquos TV'
 DEFAULT_PORT = 10002
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = 'password'
-DEFAULT_TIMEOUT = 0.5
+DEFAULT_TIMEOUT = 5
 DEFAULT_RETRIES = 2
 
 SUPPORT_SHARPTV = SUPPORT_TURN_OFF | \
@@ -40,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional('retries', default=DEFAULT_RETRIES): cv.string,
     vol.Optional('power_on_enabled', default=False): cv.boolean,
 })
@@ -62,6 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
+    timeout = config.get(CONF_TIMEOUT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     power_on_enabled = config.get('power_on_enabled')
@@ -80,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
+    add_entities([SharpAquosTVDevice(name, host, port, timeout, remote, power_on_enabled)])
     return True
 
 
@@ -88,22 +90,25 @@ def _retry(func):
     """Handle query retries."""
     def wrapper(obj, *args, **kwargs):
         """Wrap all query functions."""
-        update_retries = 5
-        while update_retries > 0:
-            try:
-                func(obj, *args, **kwargs)
-                break
-            except (OSError, TypeError, ValueError):
-                update_retries -= 1
-                if update_retries == 0:
-                    obj.set_state(STATE_OFF)
+        if obj.test_connection():
+          update_retries = 5
+          while update_retries > 0:
+              try:
+                  func(obj, *args, **kwargs)
+                  break
+              except (OSError, TypeError, ValueError):
+                  update_retries -= 1
+                  if update_retries == 0:
+                      obj.set_state(STATE_OFF)
+        else:
+          obj.set_state(STATE_OFF)
     return wrapper
 
 
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
-    def __init__(self, name, remote, power_on_enabled=False):
+    def __init__(self, name, host, port, timeout, remote, power_on_enabled=False):
         """Initialize the aquos device."""
         global SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
@@ -111,6 +116,9 @@ class SharpAquosTVDevice(MediaPlayerDevice):
             SUPPORT_SHARPTV = SUPPORT_SHARPTV | SUPPORT_TURN_ON
         # Save a reference to the imported class
         self._name = name
+        self._port = port
+        self._host = host
+        self._timeout = timeout
         # Assume that the TV is not muted
         self._muted = False
         self._state = None
@@ -122,6 +130,15 @@ class SharpAquosTVDevice(MediaPlayerDevice):
     def set_state(self, state):
         """Set TV state."""
         self._state = state
+    
+    def test_connection(self):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(self._timeout)
+            sock.connect((self._host, self._port))
+            return True
+        except socket.error:
+            return False
 
     @_retry
     def update(self):
