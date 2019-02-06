@@ -7,7 +7,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockDependency
 
 TEST_CONFIG = {
     "name": "HomeTown",
@@ -60,9 +60,9 @@ class MockStation():
         """Mock longitude."""
         return 0
 
-
+@MockDependency("pyipma")
 @patch("pyipma.Station", new=MockStation)
-async def test_setup_hass(hass):
+async def test_setup(hass):
     """Test for successfully setting up the IPMA platform."""
     entry = MockConfigEntry(domain='ipma', data=TEST_CONFIG)
     await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
