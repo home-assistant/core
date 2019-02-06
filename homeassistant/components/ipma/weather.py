@@ -22,7 +22,7 @@ from homeassistant.util import Throttle
 
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyipma==1.2']
+REQUIREMENTS = ['pyipma==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
