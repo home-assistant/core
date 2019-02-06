@@ -15,8 +15,6 @@ from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED,
     STATE_ON, STATE_OFF,
     STATE_HOME, STATE_NOT_HOME)
-from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
 
@@ -48,6 +46,40 @@ def test_async_track_states(hass):
 
     assert [state2, state3] == \
         sorted(states, key=lambda state: state.entity_id)
+
+
+@asyncio.coroutine
+def test_call_to_component(hass):
+    """Test calls to components state reproduction functions."""
+    with patch(('homeassistant.components.media_player.'
+                'async_reproduce_states')) as media_player_fun:
+        media_player_fun.return_value = asyncio.Future()
+        media_player_fun.return_value.set_result(None)
+
+        with patch(('homeassistant.components.climate.'
+                    'async_reproduce_states')) as climate_fun:
+            climate_fun.return_value = asyncio.Future()
+            climate_fun.return_value.set_result(None)
+
+            state_media_player = ha.State('media_player.test', 'bad')
+            state_climate = ha.State('climate.test', 'bad')
+            context = "dummy_context"
+
+            yield from state.async_reproduce_state(
+                hass,
+                [state_media_player, state_climate],
+                blocking=True,
+                context=context)
+
+            media_player_fun.assert_called_once_with(
+                hass,
+                [state_media_player],
+                context=context)
+
+            climate_fun.assert_called_once_with(
+                hass,
+                [state_climate],
+                context=context)
 
 
 class TestStateHelpers(unittest.TestCase):
@@ -147,63 +179,6 @@ class TestStateHelpers(unittest.TestCase):
         assert SERVICE_TURN_ON == last_call.service
         assert complex_data == last_call.data.get('complex')
 
-    def test_reproduce_media_data(self):
-        """Test reproduce_state with SERVICE_PLAY_MEDIA."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_PLAY_MEDIA)
-
-        self.hass.states.set('media_player.test', 'off')
-
-        media_attributes = {'media_content_type': 'movie',
-                            'media_content_id': 'batman'}
-
-        state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
-                                                  media_attributes))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_PLAY_MEDIA == last_call.service
-        assert 'movie' == last_call.data.get('media_content_type')
-        assert 'batman' == last_call.data.get('media_content_id')
-
-    def test_reproduce_media_play(self):
-        """Test reproduce_state with SERVICE_MEDIA_PLAY."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PLAY)
-
-        self.hass.states.set('media_player.test', 'off')
-
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'playing'))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_MEDIA_PLAY == last_call.service
-        assert ['media_player.test'] == \
-            last_call.data.get('entity_id')
-
-    def test_reproduce_media_pause(self):
-        """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PAUSE)
-
-        self.hass.states.set('media_player.test', 'playing')
-
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'paused'))
-
-        self.hass.block_till_done()
-
-        assert len(calls) > 0
-        last_call = calls[-1]
-        assert 'media_player' == last_call.domain
-        assert SERVICE_MEDIA_PAUSE == last_call.service
-        assert ['media_player.test'] == \
-            last_call.data.get('entity_id')
-
     def test_reproduce_bad_state(self):
         """Test reproduce_state with bad state."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
@@ -216,45 +191,6 @@ class TestStateHelpers(unittest.TestCase):
 
         assert len(calls) == 0
         assert 'off' == self.hass.states.get('light.test').state
-
-    def test_reproduce_group(self):
-        """Test reproduce_state with group."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        self.hass.states.set('group.test', 'off', {
-            'entity_id': ['light.test1', 'light.test2']})
-
-        state.reproduce_state(self.hass, ha.State('group.test', 'on'))
-
-        self.hass.block_till_done()
-
-        assert 1 == len(light_calls)
-        last_call = light_calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert ['light.test1', 'light.test2'] == \
-            last_call.data.get('entity_id')
-
-    def test_reproduce_group_same_data(self):
-        """Test reproduce_state with group with same domain and data."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        self.hass.states.set('light.test1', 'off')
-        self.hass.states.set('light.test2', 'off')
-
-        state.reproduce_state(self.hass, [
-            ha.State('light.test1', 'on', {'brightness': 95}),
-            ha.State('light.test2', 'on', {'brightness': 95})])
-
-        self.hass.block_till_done()
-
-        assert 1 == len(light_calls)
-        last_call = light_calls[-1]
-        assert 'light' == last_call.domain
-        assert SERVICE_TURN_ON == last_call.service
-        assert ['light.test1', 'light.test2'] == \
-            last_call.data.get('entity_id')
-        assert 95 == last_call.data.get('brightness')
 
     def test_as_number_states(self):
         """Test state_as_number with states."""
