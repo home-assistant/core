@@ -56,35 +56,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
 
+    if not dev:
+        return
+
     _LOGGER.debug("Adding vacuums %s", dev)
     add_entities(dev, True)
 
-    if dev:
-        def neato_custom_cleaning_service(call):
-            """Zone cleaning service that allows user to change options."""
-            for robot in service_to_entities(call):
-                if call.service == SERVICE_NEATO_CUSTOM_CLEANING:
-                    mode = call.data.get(ATTR_MODE)
-                    navigation = call.data.get(ATTR_NAVIGATION)
-                    category = call.data.get(ATTR_CATEGORY)
-                    zone = call.data.get(ATTR_ZONE)
-                    robot.neato_custom_cleaning(
-                        mode, navigation, category, zone)
+    def neato_custom_cleaning_service(call):
+        """Zone cleaning service that allows user to change options."""
+        for robot in service_to_entities(call):
+            if call.service == SERVICE_NEATO_CUSTOM_CLEANING:
+                mode = call.data.get(ATTR_MODE)
+                navigation = call.data.get(ATTR_NAVIGATION)
+                category = call.data.get(ATTR_CATEGORY)
+                zone = call.data.get(ATTR_ZONE)
+                robot.neato_custom_cleaning(
+                    mode, navigation, category, zone)
 
-        def service_to_entities(call):
-            """Return the known devices that a service call mentions."""
-            entity_ids = extract_entity_ids(hass, call)
-            if entity_ids:
-                entities = [entity for entity in dev
-                            if entity.entity_id in entity_ids]
-            else:
-                entities = None
+    def service_to_entities(call):
+        """Return the known devices that a service call mentions."""
+        entity_ids = extract_entity_ids(hass, call)
+        if entity_ids:
+            entities = [entity for entity in dev
+                        if entity.entity_id in entity_ids]
+        else:
+            entities = None
 
-            return entities
+        return entities
 
-        hass.services.register(DOMAIN, SERVICE_NEATO_CUSTOM_CLEANING,
-                               neato_custom_cleaning_service,
-                               schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_NEATO_CUSTOM_CLEANING,
+                           neato_custom_cleaning_service,
+                           schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA)
 
 
 class NeatoConnectedVacuum(StateVacuumDevice):
