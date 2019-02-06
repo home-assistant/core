@@ -1253,6 +1253,9 @@ pytautulli==0.5.0
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.4
 
+# homeassistant.components.teletask
+pyteletask==0.0.1
+
 # homeassistant.components.thinkingcleaner.sensor
 # homeassistant.components.thinkingcleaner.switch
 pythinkingcleaner==0.0.3

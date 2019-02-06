@@ -1,22 +1,14 @@
-"""
-Connects to Teletask platform.
-
-"""
-
-import json
+"""Connects to Teletask platform."""
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import discovery
-from homeassistant.core import callback
+from homeassistant.const import (CONF_HOST, CONF_PORT,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-# from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['teletask==0.0.1']
+REQUIREMENTS = ['pyteletask==0.0.1']
 
 DOMAIN = "teletask"
 
@@ -32,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-         vol.Inclusive(CONF_TELETASK_FIRE_EVENT, 'fire_ev'):
+        vol.Inclusive(CONF_TELETASK_FIRE_EVENT, 'fire_ev'):
             cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -40,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the TELETASK component."""
-    from teletask.exceptions import TeletaskException
+    from pydocstylepy.testteletask.exceptions import TeletaskException
     try:
         hass.data[DATA_TELETASK] = TeletaskModule(hass, config)
         await hass.data[DATA_TELETASK].start()
@@ -82,21 +74,22 @@ class TeletaskModule:
         self.teletask = Teletask(config=None, loop=self.hass.loop)
 
     async def start(self):
-        """Start TELETASK object. Connect to tunneling or Routing device."""
-        await self.teletask.start(host="192.168.97.31", port=55957)
+        """Start TELETASK object. Connect to device."""
+        await self.teletask.start(host=self.config[DOMAIN][CONF_HOST],
+                                  port=self.config[DOMAIN][CONF_PORT])
         await self.teletask.register_feedback()
-        
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
     async def stop(self, event):
-        """Stop TELETASK object. Disconnect from tunneling or Routing device."""
+        """Stop TELETASK object. Disconnect from device."""
         await self.teletask.stop()
 
     def register_callbacks(self):
         """Register callbacks within teletask object."""
-        self.teletask.telegram_queue.register_telegram_received_cb(self.telegram_received_cb)
+        self.teletask.telegram_queue.register_telegram_received_cb(
+            self.telegram_received_cb)
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a TELETASK telegram was received."""

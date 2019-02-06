@@ -1,24 +1,22 @@
 """
-Support for Teletask/IP switchs.
+Support for Teletask/IP lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.teletask/
+https://home-assistant.io/components/light.teletask/
 """
 
 import voluptuous as vol
-import asyncio
 
-from homeassistant.components.teletask import DATA_TELETASK
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.teletask import (DATA_TELETASK)
+from homeassistant.components.light import (PLATFORM_SCHEMA, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 
 CONF_ADDRESS = 'address'
 CONF_DOIP_COMP = 'doip_component'
 
-DEFAULT_NAME = 'Teletask Switch'
+DEFAULT_NAME = 'Teletask Light'
 DEPENDENCIES = ['teletask']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -28,29 +26,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
-    """Set up switchs for Teletask platform."""
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info):
+    """Set up lights for Teletask platform."""
     await async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
 async def async_add_entities_config(hass, config, async_add_entities):
-    """Set up switch for Teletask platform configured within platform."""
+    """Set up light for Teletask platform configured within platform."""
     import teletask
-    switch = teletask.devices.Switch(
+    light = teletask.devices.Light(
         hass.data[DATA_TELETASK].teletask,
         name=config.get(CONF_NAME),
         group_address_switch=config.get(CONF_ADDRESS),
         doip_component=config.get(CONF_DOIP_COMP))
-    await switch.current_state()
-    hass.data[DATA_TELETASK].teletask.devices.add(switch)
-    async_add_entities([TeletaskSwitch(switch)])
+    await light.current_state()
+    hass.data[DATA_TELETASK].teletask.devices.add(light)
+    async_add_entities([TeletaskLight(light)])
 
-class TeletaskSwitch(SwitchDevice):
-    """Representation of a Teletask switch."""
+
+class TeletaskLight(Light):
+    """Representation of a Teletask light."""
 
     def __init__(self, device):
-        """Initialize of Teletask switch."""
+        """Initialize of Teletask light."""
         self.device = device
         self.teletask = device.teletask
 
@@ -78,7 +78,7 @@ class TeletaskSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """Return true if switch is on."""
+        """Return true if light is on."""
         return self.device.state
 
     @property
@@ -88,12 +88,9 @@ class TeletaskSwitch(SwitchDevice):
         return flags
 
     async def async_turn_on(self, **kwargs):
-            await self.device.set_on()
+        """Turn the light on."""
+        await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
-        """Turn the switch off."""
+        """Turn the light off."""
         await self.device.set_off()
-
-    # async def async_update(self):
-    #     """Synchronize state with bridge."""
-    #     await self.async_request_update(self.device.state.id)
