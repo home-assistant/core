@@ -42,7 +42,7 @@ async def test_flow_with_home_location(hass):
     flow.hass = hass
 
     hass.config.location_name = 'Home'
-    hass.config.latitude = 1 
+    hass.config.latitude = 1
     hass.config.longitude = 1
 
     result = await flow.async_step_user()
@@ -88,13 +88,14 @@ async def test_flow_entry_created_from_user_input():
 
         assert result['type'] == 'create_entry'
         assert result['data'] == test_data
+        assert len(config_entries.mock_calls) == 1
         assert not config_form.mock_calls
 
 
 async def test_flow_entry_config_entry_already_exists():
     """Test that create data from user input and config_entry already exists.
 
-    Test when the form should show when user puts existing name 
+    Test when the form should show when user puts existing name
     in the config gui. Then the form should show with error
     """
     hass = Mock()
@@ -113,5 +114,5 @@ async def test_flow_entry_config_entry_already_exists():
         await flow.async_step_user(user_input=test_data)
 
         assert len(config_form.mock_calls) == 1
+        assert len(config_entries.mock_calls) == 1
         assert len(flow._errors) == 1
-
