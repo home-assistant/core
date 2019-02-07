@@ -21,16 +21,16 @@ DEPENDENCIES = ['transmission']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
-DATA_UPDATED = 'transmission_data_updated' 
+DATA_UPDATED = 'transmission_data_updated'
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_platform(
-    hass,
-    config,
-    add_entities,
-    discovery_info=None):
+        hass,
+        config,
+        add_entities,
+        discovery_info=None):
     """Set up the Transmission sensors."""
     if discovery_info is None:
         return

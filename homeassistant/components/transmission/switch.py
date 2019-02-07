@@ -24,11 +24,12 @@ _LOGGING = logging.getLogger(__name__)
 DEFAULT_NAME = 'Transmission Turtle Mode'
 DATA_UPDATED = 'transmission_data_updated'
 
+
 async def async_setup_platform(
-    hass,
-    config,
-    add_entities,
-    discovery_info=None):
+        hass,
+        config,
+        add_entities,
+        discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return

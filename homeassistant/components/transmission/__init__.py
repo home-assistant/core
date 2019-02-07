@@ -28,7 +28,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
-DATA_UPDATED = 'transmission_data_updated' 
+DATA_UPDATED = 'transmission_data_updated'
 DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
@@ -86,7 +86,7 @@ def setup(hass, config):
 
     tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
         hass, config, api)
-        
+
     tm_data.update()
     tm_data.init_torrent_list()
 
@@ -95,13 +95,13 @@ def setup(hass, config):
         tm_data.update()
 
     async_track_time_interval(hass, refresh, scan_interval)
-    
+
     hass.services.async_register(DOMAIN, 'transmission', refresh)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME]}
-        
+
     hass.async_create_task(
         async_load_platform(
             hass,
