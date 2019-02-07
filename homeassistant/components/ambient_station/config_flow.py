@@ -69,4 +69,8 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
         # to show nicely in the UI, so we take the first 12 characters (similar
         # to how GitHub does it):
         return self.async_create_entry(
-            title=user_input[CONF_APP_KEY][:12], data=user_input)
+            title=user_input[CONF_APP_KEY][:12],
+            data={
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_APP_KEY: user_input[CONF_APP_KEY],
+            })
