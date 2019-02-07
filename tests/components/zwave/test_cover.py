@@ -1,7 +1,8 @@
 """Test Z-Wave cover devices."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.cover import zwave, SUPPORT_OPEN, SUPPORT_CLOSE
+from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
+import homeassistant.components.zwave.cover as zwave
 from homeassistant.components.zwave import const
 
 from tests.mock.zwave import (
