@@ -12,14 +12,18 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_NAME, ATTR_LOCATION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 from .config_flow import configured_instances
 from .const import (
-    ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE)
+    ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
+    TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
 REQUIREMENTS = ['aioambient==0.1.0']
 _LOGGER = logging.getLogger(__name__)
@@ -27,36 +31,36 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 SENSOR_TYPES = {
-    '24hourrainin': ('24 Hr Rain', 'in'),
-    'baromabsin': ('Abs Pressure', 'inHg'),
-    'baromrelin': ('Rel Pressure', 'inHg'),
-    'battout': ('Battery', ''),
-    'co2': ('co2', 'ppm'),
-    'dailyrainin': ('Daily Rain', 'in'),
-    'dewPoint': ('Dew Point', '°F'),
-    'eventrainin': ('Event Rain', 'in'),
-    'feelsLike': ('Feels Like', '°F'),
-    'hourlyrainin': ('Hourly Rain Rate', 'in/hr'),
-    'humidity': ('Humidity', '%'),
-    'humidityin': ('Humidity In', '%'),
-    'lastRain': ('Last Rain', ''),
-    'maxdailygust': ('Max Gust', 'mph'),
-    'monthlyrainin': ('Monthly Rain', 'in'),
-    'solarradiation': ('Solar Rad', 'W/m^2'),
-    'tempf': ('Temp', '°F'),
-    'tempinf': ('Inside Temp', '°F'),
-    'totalrainin': ('Lifetime Rain', 'in'),
-    'uv': ('uv', 'Index'),
-    'weeklyrainin': ('Weekly Rain', 'in'),
-    'winddir': ('Wind Dir', '°'),
-    'winddir_avg10m': ('Wind Dir Avg 10m', '°'),
-    'winddir_avg2m': ('Wind Dir Avg 2m', 'mph'),
-    'windgustdir': ('Gust Dir', '°'),
-    'windgustmph': ('Wind Gust', 'mph'),
-    'windspdmph_avg10m': ('Wind Avg 10m', 'mph'),
-    'windspdmph_avg2m': ('Wind Avg 2m', 'mph'),
-    'windspeedmph': ('Wind Speed', 'mph'),
-    'yearlyrainin': ('Yearly Rain', 'in'),
+    '24hourrainin': ('24 Hr Rain', 'in', TYPE_SENSOR, None),
+    'baromabsin': ('Abs Pressure', 'inHg', TYPE_SENSOR, None),
+    'baromrelin': ('Rel Pressure', 'inHg', TYPE_SENSOR, None),
+    'battout': ('Battery', None, TYPE_BINARY_SENSOR, 'battery'),
+    'co2': ('co2', 'ppm', TYPE_SENSOR, None),
+    'dailyrainin': ('Daily Rain', 'in', TYPE_SENSOR, None),
+    'dewPoint': ('Dew Point', '°F', TYPE_SENSOR, None),
+    'eventrainin': ('Event Rain', 'in', TYPE_SENSOR, None),
+    'feelsLike': ('Feels Like', '°F', TYPE_SENSOR, None),
+    'hourlyrainin': ('Hourly Rain Rate', 'in/hr', TYPE_SENSOR, None),
+    'humidity': ('Humidity', '%', TYPE_SENSOR, None),
+    'humidityin': ('Humidity In', '%', TYPE_SENSOR, None),
+    'lastRain': ('Last Rain', None, TYPE_SENSOR, None),
+    'maxdailygust': ('Max Gust', 'mph', TYPE_SENSOR, None),
+    'monthlyrainin': ('Monthly Rain', 'in', TYPE_SENSOR, None),
+    'solarradiation': ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
+    'tempf': ('Temp', '°F', TYPE_SENSOR, None),
+    'tempinf': ('Inside Temp', '°F', TYPE_SENSOR, None),
+    'totalrainin': ('Lifetime Rain', 'in', TYPE_SENSOR, None),
+    'uv': ('uv', 'Index', TYPE_SENSOR, None),
+    'weeklyrainin': ('Weekly Rain', 'in', TYPE_SENSOR, None),
+    'winddir': ('Wind Dir', '°', TYPE_SENSOR, None),
+    'winddir_avg10m': ('Wind Dir Avg 10m', '°', TYPE_SENSOR, None),
+    'winddir_avg2m': ('Wind Dir Avg 2m', 'mph', TYPE_SENSOR, None),
+    'windgustdir': ('Gust Dir', '°', TYPE_SENSOR, None),
+    'windgustmph': ('Wind Gust', 'mph', TYPE_SENSOR, None),
+    'windspdmph_avg10m': ('Wind Avg 10m', 'mph', TYPE_SENSOR, None),
+    'windspdmph_avg2m': ('Wind Avg 2m', 'mph', TYPE_SENSOR, None),
+    'windspeedmph': ('Wind Speed', 'mph', TYPE_SENSOR, None),
+    'yearlyrainin': ('Yearly Rain', 'in', TYPE_SENSOR, None),
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -102,8 +106,7 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         ambient = AmbientStation(
-            hass,
-            config_entry,
+            hass, config_entry,
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
@@ -194,8 +197,7 @@ class AmbientStation:
         except WebsocketError as err:
             _LOGGER.error("Error with the websocket connection: %s", err)
 
-            self._ws_reconnect_delay = min(
-                2 * self._ws_reconnect_delay, 480)
+            self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
 
             async_call_later(
                 self._hass, self._ws_reconnect_delay, self.ws_connect)
@@ -203,3 +205,55 @@ class AmbientStation:
     async def ws_disconnect(self):
         """Disconnect from the websocket."""
         await self.client.websocket.disconnect()
+
+
+class AmbientWeatherEntity(Entity):
+    """Define a base Ambient PWS entity."""
+
+    def __init__(
+            self, ambient, mac_address, station_name, sensor_type,
+            sensor_name):
+        """Initialize the sensor."""
+        self._ambient = ambient
+        self._async_unsub_dispatcher_connect = None
+        self._mac_address = mac_address
+        self._sensor_name = sensor_name
+        self._sensor_type = sensor_type
+        self._state = None
+        self._station_name = station_name
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return '{0}_{1}'.format(self._station_name, self._sensor_name)
+
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique, unchanging string that represents this sensor."""
+        return '{0}_{1}'.format(self._mac_address, self._sensor_name)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
