@@ -14,7 +14,7 @@ from .const import (
     ATTR_MANUFACTURER, LISTENER_BATTERY, SIGNAL_AVAILABLE, IN, OUT,
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
-    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN
 )
 from .listeners import EventRelayListener
 
@@ -30,11 +30,14 @@ class ZHADevice:
         self._zigpy_device = zigpy_device
         # Get first non ZDO endpoint id to use to get manufacturer and model
         endpoint_ids = zigpy_device.endpoints.keys()
-        ept_id = next(ept_id for ept_id in endpoint_ids if ept_id != 0)
-        self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
-        self._model = zigpy_device.endpoints[ept_id].model
+        self._manufacturer = UNKNOWN
+        self._model = UNKNOWN
+        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
+        if ept_id is not None:
+            self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
+            self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
-        self._cluster_listeners = {}
+        self.cluster_listeners = {}
         self._relay_listeners = []
         self._all_listeners = []
         self._name = "{} {}".format(
@@ -102,19 +105,9 @@ class ZHADevice:
         return self._zha_gateway
 
     @property
-    def cluster_listeners(self):
-        """Return cluster listeners for device."""
-        return self._cluster_listeners.values()
-
-    @property
     def all_listeners(self):
         """Return cluster listeners and relay listeners for device."""
         return self._all_listeners
-
-    @property
-    def cluster_listener_keys(self):
-        """Return cluster listeners for device."""
-        return self._cluster_listeners.keys()
 
     @property
     def available_signal(self):
@@ -157,17 +150,13 @@ class ZHADevice:
         """Add cluster listener to device."""
         # only keep 1 power listener
         if cluster_listener.name is LISTENER_BATTERY and \
-                LISTENER_BATTERY in self._cluster_listeners:
+                LISTENER_BATTERY in self.cluster_listeners:
             return
         self._all_listeners.append(cluster_listener)
         if isinstance(cluster_listener, EventRelayListener):
             self._relay_listeners.append(cluster_listener)
         else:
-            self._cluster_listeners[cluster_listener.name] = cluster_listener
-
-    def get_cluster_listener(self, name):
-        """Get cluster listener by name."""
-        return self._cluster_listeners.get(name, None)
+            self.cluster_listeners[cluster_listener.name] = cluster_listener
 
     async def async_configure(self):
         """Configure the device."""
@@ -180,10 +169,6 @@ class ZHADevice:
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_listener_tasks('async_initialize', from_cache)
         _LOGGER.debug('%s: completed initialization', self.name)
-
-    async def async_accept_messages(self):
-        """Start accepting messages from the zigbee network."""
-        await self._execute_listener_tasks('accept_messages')
 
     async def _execute_listener_tasks(self, task_name, *args):
         """Gather and execute a set of listener tasks."""

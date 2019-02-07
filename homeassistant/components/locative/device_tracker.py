@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import \
 from homeassistant.components.locative import DOMAIN as LOCATIVE_DOMAIN
 from homeassistant.components.locative import TRACKER_UPDATE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ async def async_setup_entry(hass, entry, async_see):
     async def _set_location(device, gps_location, location_name):
         """Fire HA event to set location."""
         await async_see(
-            dev_id=device,
+            dev_id=slugify(device),
             gps=gps_location,
             location_name=location_name
         )

@@ -1,6 +1,6 @@
 # Home Assistant core
 aiohttp==3.5.4
-astral==1.8
+astral==1.9.2
 async_timeout==3.0.1
 attrs==18.2.0
 bcrypt==3.1.5
@@ -37,6 +37,9 @@ HAP-python==2.4.2
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.3.1
+
+# homeassistant.components.sensor.github
+PyGithub==1.43.5
 
 # homeassistant.components.isy994
 PyISY==1.1.1
@@ -167,7 +170,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.14.3
+async-upnp-client==0.14.4
 
 # homeassistant.components.light.avion
 # avion==0.10
@@ -327,7 +330,7 @@ discogs_client==2.2.1
 discord.py==0.16.12
 
 # homeassistant.components.updater
-distro==1.3.0
+distro==1.4.0
 
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
@@ -891,7 +894,7 @@ pyMetno==0.3.0
 pyRFXtrx==0.23
 
 # homeassistant.components.switch.switchmate
-pySwitchmate==0.4.4
+pySwitchmate==0.4.5
 
 # homeassistant.components.tibber
 pyTibber==0.9.4
@@ -1131,7 +1134,7 @@ pymonoprice==0.3
 pymusiccast==0.1.6
 
 # homeassistant.components.cover.myq
-pymyq==1.0.0
+pymyq==1.1.0
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1228,7 +1231,7 @@ pysma==0.3.1
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.4.2
+pysmartthings==0.5.0
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
@@ -1552,7 +1555,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.5
+smhi-pkg==1.0.8
 
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.9
@@ -1628,7 +1631,7 @@ tellcore-net==0.4
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.8
+tellduslive==0.10.10
 
 # homeassistant.components.media_player.lg_soundbar
 temescal==0.1
@@ -1750,6 +1753,9 @@ xknx==0.9.3
 # homeassistant.components.sensor.yr
 # homeassistant.components.sensor.zestimate
 xmltodict==0.11.0
+
+# homeassistant.components.xs1
+xs1-api-client==2.3.5
 
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather

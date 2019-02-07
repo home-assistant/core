@@ -1,7 +1,7 @@
 """Test for the smhi weather entity."""
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 from homeassistant.components.weather import (
@@ -61,12 +61,11 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 7
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     _LOGGER.error(state.attributes)
-    assert len(state.attributes['forecast']) == 1
+    assert len(state.attributes['forecast']) == 4
 
-    forecast = state.attributes['forecast'][0]
-    assert forecast[ATTR_FORECAST_TIME] == datetime(2018, 9, 2, 12, 0,
-                                                    tzinfo=timezone.utc)
-    assert forecast[ATTR_FORECAST_TEMP] == 20
+    forecast = state.attributes['forecast'][1]
+    assert forecast[ATTR_FORECAST_TIME] == '2018-09-02T12:00:00'
+    assert forecast[ATTR_FORECAST_TEMP] == 21
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
     assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == 'partlycloudy'
@@ -102,7 +101,8 @@ def test_properties_unknown_symbol() -> None:
     hass = Mock()
     data = Mock()
     data.temperature = 5
-    data.mean_precipitation = 1
+    data.mean_precipitation = 0.5
+    data.total_precipitation = 1
     data.humidity = 5
     data.wind_speed = 10
     data.wind_direction = 180
@@ -114,7 +114,8 @@ def test_properties_unknown_symbol() -> None:
 
     data2 = Mock()
     data2.temperature = 5
-    data2.mean_precipitation = 1
+    data2.mean_precipitation = 0.5
+    data2.total_precipitation = 1
     data2.humidity = 5
     data2.wind_speed = 10
     data2.wind_direction = 180
@@ -126,7 +127,8 @@ def test_properties_unknown_symbol() -> None:
 
     data3 = Mock()
     data3.temperature = 5
-    data3.mean_precipitation = 1
+    data3.mean_precipitation = 0.5
+    data3.total_precipitation = 1
     data3.humidity = 5
     data3.wind_speed = 10
     data3.wind_direction = 180

@@ -1,9 +1,9 @@
 """Test zha sensor."""
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 from .common import (
     async_init_zigpy_device, make_attribute, make_entity_id,
-    async_test_device_join
+    async_test_device_join, async_enable_traffic
 )
 
 
@@ -31,6 +31,17 @@ async def test_sensor(hass, config_entry, zha_gateway):
         hass, zha_gateway, config_entry, cluster_ids)
 
     # ensure the sensor entity was created for each id in cluster_ids
+    for cluster_id in cluster_ids:
+        zigpy_device_info = zigpy_device_infos[cluster_id]
+        entity_id = zigpy_device_info["entity_id"]
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and devices
+    await async_enable_traffic(hass, zha_gateway, [
+        zigpy_device_info["zha_device"] for zigpy_device_info in
+        zigpy_device_infos.values()])
+
+    # test that the sensors now have a state of unknown
     for cluster_id in cluster_ids:
         zigpy_device_info = zigpy_device_infos[cluster_id]
         entity_id = zigpy_device_info["entity_id"]
@@ -102,6 +113,8 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
             1).in_clusters[cluster_id]
         device_info["entity_id"] = make_entity_id(
             DOMAIN, zigpy_device, device_info["cluster"])
+        device_info["zha_device"] = zha_gateway.get_device(
+            str(zigpy_device.ieee))
     return device_infos
 
 

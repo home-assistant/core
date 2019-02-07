@@ -1,11 +1,11 @@
 """Test zha light."""
 from unittest.mock import call, patch
 from homeassistant.components.light import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 from tests.common import mock_coro
 from .common import (
     async_init_zigpy_device, make_attribute, make_entity_id,
-    async_test_device_join
+    async_test_device_join, async_enable_traffic
 )
 
 ON = 1
@@ -47,6 +47,7 @@ async def test_light(hass, config_entry, zha_gateway):
     on_off_entity_id = make_entity_id(DOMAIN, zigpy_device_on_off,
                                       on_off_device_on_off_cluster,
                                       use_suffix=False)
+    on_off_zha_device = zha_gateway.get_device(str(zigpy_device_on_off.ieee))
 
     # dimmable light
     level_device_on_off_cluster = zigpy_device_level.endpoints.get(1).on_off
@@ -54,6 +55,15 @@ async def test_light(hass, config_entry, zha_gateway):
     level_entity_id = make_entity_id(DOMAIN, zigpy_device_level,
                                      level_device_on_off_cluster,
                                      use_suffix=False)
+    level_zha_device = zha_gateway.get_device(str(zigpy_device_level.ieee))
+
+    # test that the lights were created and that they are unavailable
+    assert hass.states.get(on_off_entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(level_entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, zha_gateway,
+                               [on_off_zha_device, level_zha_device])
 
     # test that the lights were created and are off
     assert hass.states.get(on_off_entity_id).state == STATE_OFF
@@ -84,7 +94,7 @@ async def test_light(hass, config_entry, zha_gateway):
     # test adding a new light to the network and HA
     await async_test_device_join(
         hass, zha_gateway, OnOff.cluster_id,
-        DOMAIN, device_type=DeviceType.ON_OFF_LIGHT, expected_state=STATE_OFF)
+        DOMAIN, device_type=DeviceType.ON_OFF_LIGHT)
 
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):

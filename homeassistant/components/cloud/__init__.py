@@ -106,6 +106,7 @@ async def async_setup(hass, config):
     )
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
+    await auth_api.async_setup(hass, cloud)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     await http_api.async_setup(hass)
     return True
@@ -263,7 +264,7 @@ class Cloud:
         self.access_token = info['access_token']
         self.refresh_token = info['refresh_token']
 
-        self.hass.add_job(self.iot.connect())
+        self.hass.async_create_task(self.iot.connect())
 
     def _decode_claims(self, token):  # pylint: disable=no-self-use
         """Decode the claims in a token."""

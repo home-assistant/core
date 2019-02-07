@@ -2,12 +2,14 @@
 import logging
 import uuid
 from collections import OrderedDict
-from typing import List, Optional
+from typing import MutableMapping  # noqa: F401
+from typing import Iterable, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +31,14 @@ class AreaEntry:
 class AreaRegistry:
     """Class to hold a registry of areas."""
 
-    def __init__(self, hass) -> None:
+    def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the area registry."""
         self.hass = hass
-        self.areas = None
+        self.areas = {}  # type: MutableMapping[str, AreaEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_list_areas(self) -> List[AreaEntry]:
+    def async_list_areas(self) -> Iterable[AreaEntry]:
         """Get all areas."""
         return self.areas.values()
 
@@ -81,18 +83,18 @@ class AreaRegistry:
         return new
 
     @callback
-    def _async_is_registered(self, name) -> Optional[AreaEntry]:
+    def _async_is_registered(self, name: str) -> Optional[AreaEntry]:
         """Check if a name is currently registered."""
         for area in self.areas.values():
             if name == area.name:
                 return area
-        return False
+        return None
 
     async def async_load(self) -> None:
         """Load the area registry."""
         data = await self._store.async_load()
 
-        areas = OrderedDict()
+        areas = OrderedDict()  # type: OrderedDict[str, AreaEntry]
 
         if data is not None:
             for area in data['areas']:
@@ -124,16 +126,16 @@ class AreaRegistry:
 
 
 @bind_hass
-async def async_get_registry(hass) -> AreaRegistry:
+async def async_get_registry(hass: HomeAssistantType) -> AreaRegistry:
     """Return area registry instance."""
     task = hass.data.get(DATA_REGISTRY)
 
     if task is None:
-        async def _load_reg():
+        async def _load_reg() -> AreaRegistry:
             registry = AreaRegistry(hass)
             await registry.async_load()
             return registry
 
         task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 
-    return await task
+    return cast(AreaRegistry, await task)

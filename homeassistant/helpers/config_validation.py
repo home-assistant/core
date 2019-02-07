@@ -436,13 +436,15 @@ def template(value):
 def template_complex(value):
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
-        for idx, element in enumerate(value):
-            value[idx] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for idx, element in enumerate(return_value):
+            return_value[idx] = template_complex(element)
+        return return_value
     if isinstance(value, dict):
-        for key, element in value.items():
-            value[key] = template_complex(element)
-        return value
+        return_value = value.copy()
+        for key, element in return_value.items():
+            return_value[key] = template_complex(element)
+        return return_value
 
     return template(value)
 
@@ -556,16 +558,9 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
     vol.Optional(CONF_ENTITY_NAMESPACE): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
-}, extra=vol.ALLOW_EXTRA)
-
-# This will replace PLATFORM_SCHEMA once all base components are updated
-PLATFORM_SCHEMA_2 = vol.Schema({
-    vol.Required(CONF_PLATFORM): string,
-    vol.Optional(CONF_ENTITY_NAMESPACE): string,
-    vol.Optional(CONF_SCAN_INTERVAL): time_period
 })
 
-PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA_2.extend({
+PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

@@ -1,7 +1,7 @@
 """Common test objects."""
 import time
 from unittest.mock import patch, Mock
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.components.zha.core.const import (
     DATA_ZHA, DATA_ZHA_CONFIG, DATA_ZHA_DISPATCHERS, DATA_ZHA_BRIDGE_ID
@@ -161,15 +161,13 @@ def make_entity_id(domain, device, cluster, use_suffix=True):
 
 async def async_enable_traffic(hass, zha_gateway, zha_devices):
     """Allow traffic to flow through the gateway and the zha device."""
-    await zha_gateway.accept_zigbee_messages({})
     for zha_device in zha_devices:
         zha_device.update_available(True)
     await hass.async_block_till_done()
 
 
 async def async_test_device_join(
-        hass, zha_gateway, cluster_id, domain, device_type=None,
-        expected_state=STATE_UNKNOWN):
+        hass, zha_gateway, cluster_id, domain, device_type=None):
     """Test a newly joining device.
 
     This creates a new fake device and adds it to the network. It is meant to
@@ -193,4 +191,4 @@ async def async_test_device_join(
             cluster = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
             entity_id = make_entity_id(
                 domain, zigpy_device, cluster, use_suffix=device_type is None)
-            assert hass.states.get(entity_id).state == expected_state
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
