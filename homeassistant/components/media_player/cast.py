@@ -613,7 +613,7 @@ class CastDevice(MediaPlayerDevice):
         return self.media_status.artist if self.media_status else None
 
     @property
-    def media_album(self):
+    def media_album_name(self):
         """Album of current playing media (Music track only)."""
         return self.media_status.album_name if self.media_status else None
 

@@ -9,7 +9,6 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -73,7 +72,7 @@ class WanIpSensor(Entity):
         self.resolver = aiodns.DNSResolver(loop=self.hass.loop)
         self.resolver.nameservers = [resolver]
         self.querytype = 'AAAA' if ipv6 else 'A'
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):
@@ -97,4 +96,4 @@ class WanIpSensor(Entity):
         if response:
             self._state = response[0].host
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None

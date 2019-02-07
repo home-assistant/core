@@ -13,7 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['dweepy==0.3.0']
@@ -69,7 +69,7 @@ class DweetSensor(Entity):
         self.dweet = dweet
         self._name = name
         self._value_template = value_template
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
 
     @property
@@ -92,11 +92,11 @@ class DweetSensor(Entity):
         self.dweet.update()
 
         if self.dweet.data is None:
-            self._state = STATE_UNKNOWN
+            self._state = None
         else:
             values = json.dumps(self.dweet.data[0]['content'])
             self._state = self._value_template.render_with_possible_json_value(
-                values, STATE_UNKNOWN)
+                values, None)
 
 
 class DweetData:

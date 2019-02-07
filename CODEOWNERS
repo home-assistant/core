@@ -95,6 +95,7 @@ homeassistant/components/notify/syslog.py @fabaff
 homeassistant/components/notify/xmpp.py @fabaff
 homeassistant/components/notify/yessssms.py @flowolf
 homeassistant/components/plant.py @ChristianKuehnel
+homeassistant/components/remote/harmony.py @ehendrix23
 homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/alpha_vantage.py @fabaff
@@ -152,6 +153,7 @@ homeassistant/components/weather/openweathermap.py @fabaff
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 # A
+homeassistant/components/ambient_station/* @bachya
 homeassistant/components/arduino.py @fabaff
 homeassistant/components/*/arduino.py @fabaff
 homeassistant/components/*/arest.py @fabaff
@@ -234,6 +236,7 @@ homeassistant/components/*/rfxtrx.py @danielhiversen
 
 # S
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/smartthings/* @andrewsayre
 
 # T
 homeassistant/components/tahoma.py @philklei
@@ -268,8 +271,7 @@ homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
 
 # Z
-homeassistant/components/zoneminder/ @rohankapoorcom
-homeassistant/components/*/zoneminder.py @rohankapoorcom
+homeassistant/components/zoneminder/* @rohankapoorcom
 
 # Other code
 homeassistant/scripts/check_config.py @kellerza

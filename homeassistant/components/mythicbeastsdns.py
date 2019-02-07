@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_DOMAIN, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_DOMAIN, CONF_PASSWORD, \
+    CONF_UPDATE_INTERVAL
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -20,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'mythicbeastsdns'
 
 DEFAULT_INTERVAL = timedelta(minutes=10)
-
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

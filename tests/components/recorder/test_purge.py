@@ -170,5 +170,5 @@ class TestRecorderPurge(unittest.TestCase):
                                         service_data=service_data)
                 self.hass.block_till_done()
                 self.hass.data[DATA_INSTANCE].block_till_done()
-                assert mock_logger.debug.mock_calls[4][1][0] == \
+                assert mock_logger.debug.mock_calls[3][1][0] == \
                     "Vacuuming SQLite to free space"

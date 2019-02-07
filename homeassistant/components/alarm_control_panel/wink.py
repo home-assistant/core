@@ -9,8 +9,7 @@ import logging
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
         elif wink_state == "night":
             state = STATE_ALARM_ARMED_HOME
         else:
-            state = STATE_UNKNOWN
+            state = None
         return state
 
     def alarm_disarm(self, code=None):
