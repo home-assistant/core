@@ -80,7 +80,7 @@ class GitHubSensor(Entity):
         self._open_issue_count = None
         self._latest_open_issue_url = None
         self._pull_request_count = None
-        self._latest_open_pull_request_url = None
+        self._latest_open_pr_url = None
         self._stargazers = None
         self._github_data = github_data
 
@@ -115,8 +115,7 @@ class GitHubSensor(Entity):
             ATTR_LATEST_RELEASE_URL: self._latest_release_url,
             ATTR_LATEST_OPEN_ISSUE_URL: self._latest_open_issue_url,
             ATTR_OPEN_ISSUES: self._open_issue_count,
-            ATTR_LATEST_OPEN_PULL_REQUEST_URL: 
-                self._latest_open_pull_request_url,
+            ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pr_url,
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers
         }
@@ -140,8 +139,7 @@ class GitHubSensor(Entity):
         self._open_issue_count = self._github_data.open_issue_count
         self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
-        self._latest_open_pull_request_url = 
-            self._github_data.latest_open_pull_request_url
+        self._latest_open_pr_url = self._github_data.latest_open_pr_url
         self._stargazers = self._github_data.stargazers
 
 
@@ -181,7 +179,7 @@ class GitHubData():
         self.open_issue_count = None
         self.latest_open_issue_url = None
         self.pull_request_count = None
-        self.latest_open_pull_request_url = None
+        self.latest_open_pr_url = None
         self.stargazers = None
 
     def update(self):
@@ -201,7 +199,7 @@ class GitHubData():
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:
-                    self.latest_open_pull_request_url =
+                    self.latest_open_pr_url =
                         open_pull_requests[0].html_url
 
             latest_commit = repo.get_commits()[0]
