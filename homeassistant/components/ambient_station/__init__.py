@@ -30,37 +30,67 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
+TYPE_24HOURRAININ = '24hourrainin'
+TYPE_BAROMABSIN = 'baromabsin'
+TYPE_BAROMRELIN = 'baromrelin'
+TYPE_BATTOUT = 'battout'
+TYPE_CO2 = 'co2'
+TYPE_DAILYRAININ = 'dailyrainin'
+TYPE_DEWPOINT = 'dewPoint'
+TYPE_EVENTRAININ = 'eventrainin'
+TYPE_FEELSLIKE = 'feelsLike'
+TYPE_HOURLYRAININ = 'hourlyrainin'
+TYPE_HUMIDITY = 'humidity'
+TYPE_HUMIDITYIN = 'humidityin'
+TYPE_LASTRAIN = 'lastRain'
+TYPE_MAXDAILYGUST = 'maxdailygust'
+TYPE_MONTHLYRAININ = 'monthlyrainin'
+TYPE_SOLARRADIATION = 'solarradiation'
+TYPE_TEMPF = 'tempf'
+TYPE_TEMPINF = 'tempinf'
+TYPE_TOTALRAININ = 'totalrainin'
+TYPE_UV = 'uv'
+TYPE_WEEKLYRAININ = 'weeklyrainin'
+TYPE_WINDDIR = 'winddir'
+TYPE_WINDDIR_AVG10M = 'winddir_avg10m'
+TYPE_WINDDIR_AVG2M = 'winddir_avg2m'
+TYPE_WINDGUSTDIR = 'windgustdir'
+TYPE_WINDGUSTMPH = 'windgustmph'
+TYPE_WINDSPDMPH_AVG10M = 'windspdmph_avg10m'
+TYPE_WINDSPDMPH_AVG2M = 'windspdmph_avg2m'
+TYPE_WINDSPEEDMPH = 'windspeedmph'
+TYPE_YEARLYRAININ = 'yearlyrainin'
 SENSOR_TYPES = {
-    '24hourrainin': ('24 Hr Rain', 'in', TYPE_SENSOR, None),
-    'baromabsin': ('Abs Pressure', 'inHg', TYPE_SENSOR, None),
-    'baromrelin': ('Rel Pressure', 'inHg', TYPE_SENSOR, None),
-    'battout': ('Battery', None, TYPE_BINARY_SENSOR, 'battery'),
-    'co2': ('co2', 'ppm', TYPE_SENSOR, None),
-    'dailyrainin': ('Daily Rain', 'in', TYPE_SENSOR, None),
-    'dewPoint': ('Dew Point', '°F', TYPE_SENSOR, None),
-    'eventrainin': ('Event Rain', 'in', TYPE_SENSOR, None),
-    'feelsLike': ('Feels Like', '°F', TYPE_SENSOR, None),
-    'hourlyrainin': ('Hourly Rain Rate', 'in/hr', TYPE_SENSOR, None),
-    'humidity': ('Humidity', '%', TYPE_SENSOR, None),
-    'humidityin': ('Humidity In', '%', TYPE_SENSOR, None),
-    'lastRain': ('Last Rain', None, TYPE_SENSOR, None),
-    'maxdailygust': ('Max Gust', 'mph', TYPE_SENSOR, None),
-    'monthlyrainin': ('Monthly Rain', 'in', TYPE_SENSOR, None),
-    'solarradiation': ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
-    'tempf': ('Temp', '°F', TYPE_SENSOR, None),
-    'tempinf': ('Inside Temp', '°F', TYPE_SENSOR, None),
-    'totalrainin': ('Lifetime Rain', 'in', TYPE_SENSOR, None),
-    'uv': ('uv', 'Index', TYPE_SENSOR, None),
-    'weeklyrainin': ('Weekly Rain', 'in', TYPE_SENSOR, None),
-    'winddir': ('Wind Dir', '°', TYPE_SENSOR, None),
-    'winddir_avg10m': ('Wind Dir Avg 10m', '°', TYPE_SENSOR, None),
-    'winddir_avg2m': ('Wind Dir Avg 2m', 'mph', TYPE_SENSOR, None),
-    'windgustdir': ('Gust Dir', '°', TYPE_SENSOR, None),
-    'windgustmph': ('Wind Gust', 'mph', TYPE_SENSOR, None),
-    'windspdmph_avg10m': ('Wind Avg 10m', 'mph', TYPE_SENSOR, None),
-    'windspdmph_avg2m': ('Wind Avg 2m', 'mph', TYPE_SENSOR, None),
-    'windspeedmph': ('Wind Speed', 'mph', TYPE_SENSOR, None),
-    'yearlyrainin': ('Yearly Rain', 'in', TYPE_SENSOR, None),
+    TYPE_24HOURRAININ: ('24 Hr Rain', 'in', TYPE_SENSOR, None),
+    TYPE_BAROMABSIN: ('Abs Pressure', 'inHg', TYPE_SENSOR, None),
+    TYPE_BAROMRELIN: ('Rel Pressure', 'inHg', TYPE_SENSOR, None),
+    TYPE_BATTOUT: ('Battery', None, TYPE_BINARY_SENSOR, 'battery'),
+    TYPE_CO2: ('co2', 'ppm', TYPE_SENSOR, None),
+    TYPE_DAILYRAININ: ('Daily Rain', 'in', TYPE_SENSOR, None),
+    TYPE_DEWPOINT: ('Dew Point', '°F', TYPE_SENSOR, None),
+    TYPE_EVENTRAININ: ('Event Rain', 'in', TYPE_SENSOR, None),
+    TYPE_FEELSLIKE: ('Feels Like', '°F', TYPE_SENSOR, None),
+    TYPE_HOURLYRAININ: ('Hourly Rain Rate', 'in/hr', TYPE_SENSOR, None),
+    TYPE_HUMIDITY: ('Humidity', '%', TYPE_SENSOR, None),
+    TYPE_HUMIDITYIN: ('Humidity In', '%', TYPE_SENSOR, None),
+    TYPE_LASTRAIN: ('Last Rain', None, TYPE_SENSOR, None),
+    TYPE_MAXDAILYGUST: ('Max Gust', 'mph', TYPE_SENSOR, None),
+    TYPE_MONTHLYRAININ: ('Monthly Rain', 'in', TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION: ('Solar Rad', 'W/m^2', TYPE_SENSOR, None),
+    TYPE_TEMPF: ('Temp', '°F', TYPE_SENSOR, None),
+    TYPE_TEMPINF: ('Inside Temp', '°F', TYPE_SENSOR, None),
+    TYPE_TOTALRAININ: ('Lifetime Rain', 'in', TYPE_SENSOR, None),
+    TYPE_UV: ('uv', 'Index', TYPE_SENSOR, None),
+    TYPE_WEEKLYRAININ: ('Weekly Rain', 'in', TYPE_SENSOR, None),
+    TYPE_WINDDIR: ('Wind Dir', '°', TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG10M: ('Wind Dir Avg 10m', '°', TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG2M: ('Wind Dir Avg 2m', 'mph', TYPE_SENSOR, None),
+    TYPE_WINDGUSTDIR: ('Gust Dir', '°', TYPE_SENSOR, None),
+    TYPE_WINDGUSTMPH: ('Wind Gust', 'mph', TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG10M: ('Wind Avg 10m', 'mph', TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG2M: ('Wind Avg 2m', 'mph', TYPE_SENSOR, None),
+    TYPE_WINDSPEEDMPH: ('Wind Speed', 'mph', TYPE_SENSOR, None),
+    TYPE_YEARLYRAININ: ('Yearly Rain', 'in', TYPE_SENSOR, None),
 }
 
 CONFIG_SCHEMA = vol.Schema({
