@@ -79,12 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def service_to_entities(call):
         """Return the known devices that a service call mentions."""
         entity_ids = extract_entity_ids(hass, call)
-        if entity_ids:
-            entities = [entity for entity in dev
-                        if entity.entity_id in entity_ids]
-        else:
-            entities = None
-
+        entities = [entity for entity in dev
+                    if entity.entity_id in entity_ids]
         return entities
 
     hass.services.register(DOMAIN, SERVICE_NEATO_CUSTOM_CLEANING,
