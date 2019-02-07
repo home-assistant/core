@@ -184,3 +184,15 @@ async def test_restore_home_state(hass, hass_owner_user):
     # When restoring state the entity_id of the person will be used as source.
     assert state.attributes.get(ATTR_SOURCE) == 'person.tracked_person'
     assert state.attributes.get(ATTR_USER_ID) == user_id
+
+
+async def test_duplicate_ids(hass, hass_owner_user):
+    """Test we don't allow duplicate IDs."""
+    config = {DOMAIN: [
+        {'id': '1234', 'name': 'test user 1'},
+        {'id': '1234', 'name': 'test user 2'}]}
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert len(hass.states.async_entity_ids('person')) == 1
+    assert hass.states.get('person.test_user_1') is not None
+    assert hass.states.get('person.test_user_2') is None

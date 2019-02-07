@@ -24,6 +24,8 @@ ATTR_USER_ID = 'user_id'
 CONF_DEVICE_TRACKERS = 'device_trackers'
 CONF_USER_ID = 'user_id'
 DOMAIN = 'person'
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 
 PERSON_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.string,
@@ -34,23 +36,35 @@ PERSON_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [PERSON_SCHEMA])
+    vol.Optional(DOMAIN): vol.All(cv.ensure_list, [PERSON_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the person component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, [])
     entities = []
+    added = set()
+
     for person_conf in conf:
+        person_id = person_conf[CONF_ID]
+
+        if person_id in added:
+            _LOGGER.error("Found user with duplicate ID.")
+            continue
+
         user_id = person_conf.get(CONF_USER_ID)
+
         if (user_id is not None
                 and await hass.auth.async_get_user(user_id) is None):
             _LOGGER.error(
                 "Invalid user_id detected for person %s",
                 person_conf[CONF_NAME])
             continue
+
+        added.add(person_id)
+
         entities.append(Person(person_conf, user_id))
 
     if not entities:
