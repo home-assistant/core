@@ -9,9 +9,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES)
+    DATA_TRANSMISSION, DOMAIN, SENSOR_TYPES)
 from homeassistant.const import STATE_IDLE
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
@@ -19,11 +21,12 @@ DEPENDENCIES = ['transmission']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
+DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
     if discovery_info is None:
         return
@@ -44,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class TransmissionSensor(Entity):
+class TransmissionSensor(RestoreEntity):
     """Representation of a Transmission sensor."""
 
     def __init__(
@@ -74,6 +77,11 @@ class TransmissionSensor(Entity):
         return self._state
 
     @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -83,10 +91,24 @@ class TransmissionSensor(Entity):
         """Could the device be accessed during the last update call."""
         return self._transmission_api.available
 
-    @Throttle(SCAN_INTERVAL)
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state
+
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     def update(self):
-        """Get the latest data from Transmission and updates the state."""
-        self._transmission_api.update()
+        """Get the latest data from Transmission and updates the state.""" 
         self._data = self._transmission_api.data
 
         if self.type == 'completed_torrents':

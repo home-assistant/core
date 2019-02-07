@@ -9,10 +9,12 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION)
+    DATA_TRANSMISSION, DOMAIN)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
@@ -20,11 +22,9 @@ DEPENDENCIES = ['transmission']
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
-
-SCAN_INTERVAL = timedelta(seconds=120)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+ 
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([TransmissionSwitch(transmission_api, name)], True)
 
 
-class TransmissionSwitch(ToggleEntity):
+class TransmissionSwitch(RestoreEntity):
     """Representation of a Transmission switch."""
 
     def __init__(self, transmission_client, name):
@@ -58,7 +58,7 @@ class TransmissionSwitch(ToggleEntity):
     @property
     def should_poll(self):
         """Poll for status regularly."""
-        return True
+        return False
 
     @property
     def is_on(self):
@@ -75,8 +75,27 @@ class TransmissionSwitch(ToggleEntity):
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
         self.transmission_client.set_alt_speed_enabled(False)
 
-    @Throttle(SCAN_INTERVAL)
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state
+
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     def update(self):
         """Get the latest data from Transmission and updates the state."""
         active = self.transmission_client.get_alt_speed_enabled()
+
+        if active is None:
+            return
+
         self._state = STATE_ON if active else STATE_OFF

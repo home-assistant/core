@@ -19,13 +19,16 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import discovery, config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
+DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
@@ -61,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Transmission Component."""
     host = config[DOMAIN][CONF_HOST]
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -85,19 +88,39 @@ def setup(hass, config):
         hass, config, api)
     tm_data.init_torrent_list()
 
-    def refresh(event_time):
-        """Get the latest data from Transmission."""
+    def refresh(call=None):
+        """Service call to update the data."""
         tm_data.update()
 
-    track_time_interval(hass, refresh, scan_interval)
+    async_track_time_interval(hass, refresh, scan_interval)
+    
+    hass.services.async_register(DOMAIN, 'transmission', refresh)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME]}
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
+        
+    hass.async_create_task(
+        async_load_platform(
+            hass, 
+            'sensor', 
+            DOMAIN, 
+            sensorconfig, 
+            config
+        )
+    )
 
     if config[DOMAIN][TURTLE_MODE]:
-        discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
+        hass.async_create_task(
+            async_load_platform( 
+                    hass, 
+                    'switch', 
+                    DOMAIN, 
+                    sensorconfig, 
+                    config
+            )
+        )   
+
     return True
 
 
@@ -115,8 +138,6 @@ class TransmissionData:
         self.started_torrents = []
         self.hass = hass
 
-        self.update()
-
     def update(self):
         """Get the latest data from Transmission instance."""
         from transmissionrpc.error import TransmissionError
@@ -129,6 +150,8 @@ class TransmissionData:
             self.check_completed_torrent()
             self.check_started_torrent()
 
+            dispatcher_send(self.hass, DATA_UPDATED)
+            
             _LOGGER.debug("Torrent Data updated")
             self.available = True
         except TransmissionError:
@@ -191,4 +214,7 @@ class TransmissionData:
 
     def get_alt_speed_enabled(self):
         """Get the alternative speed flag."""
+        if self.session is None:
+            return 
+
         return self.session.alt_speed_enabled
