@@ -4,6 +4,7 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.components.vacuum import (
     StateVacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
@@ -43,7 +44,8 @@ ATTR_ZONE = 'zone'
 
 SERVICE_NEATO_CUSTOM_CLEANING = 'neato_custom_cleaning'
 
-SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
+SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_MODE, default=2): cv.positive_int,
     vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
     vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
