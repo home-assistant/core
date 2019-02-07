@@ -103,7 +103,6 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
     # load up sensor domain
     await hass.config_entries.async_forward_entry_setup(
         config_entry, DOMAIN)
-    await zha_gateway.accept_zigbee_messages({})
     await hass.async_block_till_done()
 
     # put the other relevant info in the device info dict
