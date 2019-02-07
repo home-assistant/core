@@ -28,14 +28,14 @@ SCAN_INTERVAL = timedelta(minutes=10)
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    'life_time_data': ['lifeTimeData', "Lifetime energy", 'Wh',
-                       'mdi:solar-power'],
-    'last_year_data': ['lastYearData', "Energy this year", 'Wh',
-                       'mdi:solar-power'],
-    'last_month_data': ['lastMonthData', "Energy this month", 'Wh',
+    'lifetime_energy': ['lifeTimeData', "Lifetime energy", 'Wh',
                         'mdi:solar-power'],
-    'last_day_data': ['lastDayData', "Energy today", 'Wh',
-                      'mdi:solar-power'],
+    'energy_this_year': ['lastYearData', "Energy this year", 'Wh',
+                         'mdi:solar-power'],
+    'energy_this_month': ['lastMonthData', "Energy this month", 'Wh',
+                          'mdi:solar-power'],
+    'energy_today': ['lastDayData', "Energy today", 'Wh',
+                     'mdi:solar-power'],
     'current_power': ['currentPower', "Current Power", 'W',
                       'mdi:solar-power']
 }
@@ -106,7 +106,8 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{}_{}".format(self.platform_name, self.sensor_key)
+        return "{} ({})".format(self.platform_name,
+                                SENSOR_TYPES[self.sensor_key][1])
 
     @property
     def unit_of_measurement(self):

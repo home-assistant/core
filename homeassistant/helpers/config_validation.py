@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    ENTITY_MATCH_ALL)
+    ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -26,6 +26,13 @@ from homeassistant.helpers import template as template_helper
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+OLD_SLUG_VALIDATION = r'^[a-z0-9_]+$'
+OLD_ENTITY_ID_VALIDATION = r"^(\w+)\.(\w+)$"
+# Keep track of invalid slugs and entity ids found so we can create a
+# persistent notification. Rare temporary exception to use a global.
+INVALID_SLUGS_FOUND = {}
+INVALID_ENTITY_IDS_FOUND = {}
+
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -149,6 +156,18 @@ def entity_id(value: Any) -> str:
     value = string(value).lower()
     if valid_entity_id(value):
         return value
+    if re.match(OLD_ENTITY_ID_VALIDATION, value):
+        # To ease the breaking change, we allow old slugs for now
+        # Remove after 0.94 or 1.0
+        fixed = '.'.join(util_slugify(part) for part in value.split('.', 1))
+        INVALID_ENTITY_IDS_FOUND[value] = fixed
+        logging.getLogger(__name__).warning(
+            "Found invalid entity_id %s, please update with %s. This "
+            "will become a breaking change.",
+            value, fixed
+        )
+        return value
+
     raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
@@ -333,7 +352,22 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             raise vol.Invalid('expected dictionary')
 
         for key in value.keys():
-            slug(key)
+            try:
+                slug(key)
+            except vol.Invalid:
+                # To ease the breaking change, we allow old slugs for now
+                # Remove after 0.94 or 1.0
+                if re.match(OLD_SLUG_VALIDATION, key):
+                    fixed = util_slugify(key)
+                    INVALID_SLUGS_FOUND[key] = fixed
+                    logging.getLogger(__name__).warning(
+                        "Found invalid slug %s, please update with %s. This "
+                        "will be come a breaking change.",
+                        key, fixed
+                    )
+                else:
+                    raise
+
         return schema(value)
     return verify
 
@@ -520,7 +554,18 @@ def key_dependency(key, dependency):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_ENTITY_NAMESPACE): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
+}, extra=vol.ALLOW_EXTRA)
+
+# This will replace PLATFORM_SCHEMA once all base components are updated
+PLATFORM_SCHEMA_2 = vol.Schema({
+    vol.Required(CONF_PLATFORM): string,
+    vol.Optional(CONF_ENTITY_NAMESPACE): string,
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
+})
+
+PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA_2.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

@@ -8,24 +8,23 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import fan, mqtt
-from homeassistant.const import (
-    CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
-    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_DEVICE)
+from homeassistant.components.fan import (
+    ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF,
+    SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH, FanEntity,
-                                          SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
-                                          SPEED_OFF, ATTR_SPEED)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.const import (
+    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
+    CONF_STATE, STATE_OFF, STATE_ON)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,6 @@ CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
 CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
 CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
 CONF_SPEED_LIST = 'speeds'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Fan'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -80,7 +78,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -94,9 +93,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT fan."""
         try:
-            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
+            await _async_setup_entity(config, async_add_entities, config_entry,
                                       discovery_hash)
         except Exception:
             if discovery_hash:
@@ -108,20 +107,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
                               discovery_hash=None):
     """Set up the MQTT fan."""
-    async_add_entities([MqttFan(
-        config,
-        discovery_hash,
-    )])
+    async_add_entities([MqttFan(config, config_entry, discovery_hash)])
 
 
-class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-              FanEntity):
+# pylint: disable=too-many-ancestors
+class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+              MqttEntityDeviceInfo, FanEntity):
     """A MQTT fan component."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the MQTT fan."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = False
@@ -142,10 +139,11 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -156,7 +154,9 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
@@ -199,8 +199,6 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                                      is not None and SUPPORT_OSCILLATE)
         self._supported_features |= (self._topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
-
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -273,6 +271,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property

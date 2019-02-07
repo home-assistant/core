@@ -8,70 +8,67 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import mqtt, cover
+from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (
-    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
-from homeassistant.exceptions import TemplateError
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, CONF_DEVICE)
+    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION, SUPPORT_STOP, SUPPORT_STOP_TILT, CoverDevice)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
+from homeassistant.const import (
+    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, STATE_CLOSED,
+    STATE_OPEN, STATE_UNKNOWN)
+from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
 CONF_GET_POSITION_TOPIC = 'position_topic'
-
+CONF_SET_POSITION_TEMPLATE = 'set_position_template'
+CONF_SET_POSITION_TOPIC = 'set_position_topic'
 CONF_TILT_COMMAND_TOPIC = 'tilt_command_topic'
 CONF_TILT_STATUS_TOPIC = 'tilt_status_topic'
-CONF_SET_POSITION_TOPIC = 'set_position_topic'
-CONF_SET_POSITION_TEMPLATE = 'set_position_template'
 
-CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_CLOSE = 'payload_close'
+CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_STOP = 'payload_stop'
-CONF_STATE_OPEN = 'state_open'
-CONF_STATE_CLOSED = 'state_closed'
-CONF_POSITION_OPEN = 'position_open'
 CONF_POSITION_CLOSED = 'position_closed'
+CONF_POSITION_OPEN = 'position_open'
+CONF_STATE_CLOSED = 'state_closed'
+CONF_STATE_OPEN = 'state_open'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
-CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
-CONF_TILT_MIN = 'tilt_min'
-CONF_TILT_MAX = 'tilt_max'
-CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
-CONF_UNIQUE_ID = 'unique_id'
+CONF_TILT_MAX = 'tilt_max'
+CONF_TILT_MIN = 'tilt_min'
+CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
+CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 
-TILT_PAYLOAD = "tilt"
-COVER_PAYLOAD = "cover"
+TILT_PAYLOAD = 'tilt'
+COVER_PAYLOAD = 'cover'
 
 DEFAULT_NAME = 'MQTT Cover'
-DEFAULT_PAYLOAD_OPEN = 'OPEN'
-DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
-DEFAULT_PAYLOAD_STOP = 'STOP'
-DEFAULT_POSITION_OPEN = 100
-DEFAULT_POSITION_CLOSED = 0
 DEFAULT_OPTIMISTIC = False
+DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
+DEFAULT_PAYLOAD_OPEN = 'OPEN'
+DEFAULT_PAYLOAD_STOP = 'STOP'
+DEFAULT_POSITION_CLOSED = 0
+DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
-DEFAULT_TILT_OPEN_POSITION = 100
-DEFAULT_TILT_MIN = 0
-DEFAULT_TILT_MAX = 100
-DEFAULT_TILT_OPTIMISTIC = False
 DEFAULT_TILT_INVERT_STATE = False
+DEFAULT_TILT_MAX = 100
+DEFAULT_TILT_MIN = 0
+DEFAULT_TILT_OPEN_POSITION = 100
+DEFAULT_TILT_OPTIMISTIC = False
 
 OPEN_CLOSE_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP)
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
@@ -123,7 +120,8 @@ PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema), validate_options)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema), validate_options)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -137,9 +135,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
         try:
-            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
+            await _async_setup_entity(config, async_add_entities, config_entry,
                                       discovery_hash)
         except Exception:
             if discovery_hash:
@@ -151,16 +149,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities, discovery_hash=None):
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
+                              discovery_hash=None):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(config, discovery_hash)])
+    async_add_entities([MqttCover(config, config_entry, discovery_hash)])
 
 
-class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                CoverDevice):
+class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+                MqttEntityDeviceInfo, CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize the cover."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
@@ -176,10 +175,11 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         device_config = config.get(CONF_DEVICE)
 
+        MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash,
-                                     self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttDiscoveryUpdate.__init__(
+            self, discovery_hash, self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
@@ -190,7 +190,9 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
@@ -290,6 +292,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state)
+        await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
     @property

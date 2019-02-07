@@ -9,6 +9,7 @@ COMPONENTS = [
     'alarm_control_panel',
     'binary_sensor',
     'climate',
+    'cover',
     'light',
     'sensor',
     'switch',

@@ -259,9 +259,10 @@ class HomeAssistant:
         """
         task = None
 
+        # Check for partials to properly determine if coroutine function
         check_target = target
-        if isinstance(target, functools.partial):
-            check_target = target.func
+        while isinstance(check_target, functools.partial):
+            check_target = check_target.func
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
@@ -681,7 +682,7 @@ class State:
                 "State max length is 255 characters.").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = state
+        self.state = state  # type: str
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
