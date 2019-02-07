@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
@@ -41,8 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional('retries', default=DEFAULT_RETRIES): cv.string,
     vol.Optional('power_on_enabled', default=False): cv.boolean,
 })
 
@@ -63,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
-    timeout = config.get(CONF_TIMEOUT)
+    timeout = DEFAULT_TIMEOUT
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     power_on_enabled = config.get('power_on_enabled')
@@ -76,14 +74,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         host = vals[0]
         remote = sharp_aquos_rc.TV(host, port, username, password, timeout=20)
-        add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
+        add_entities([SharpAquosTVDevice(name, remote, timeout, power_on_enabled)])
         return True
 
     host = config.get(CONF_HOST)
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_entities([SharpAquosTVDevice(name, host, port,
-                  timeout, remote, power_on_enabled)])
+                                     timeout, remote, power_on_enabled)])
     return True
 
 
