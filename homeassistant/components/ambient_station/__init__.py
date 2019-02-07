@@ -265,18 +265,12 @@ class AmbientWeatherEntity(Entity):
         return False
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
         return '{0}_{1}'.format(self._mac_address, self._sensor_name)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         @callback
         def update():
             """Update the state."""
