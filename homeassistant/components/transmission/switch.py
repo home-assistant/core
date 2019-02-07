@@ -9,12 +9,12 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, DOMAIN)
+    DATA_TRANSMISSION)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
@@ -22,9 +22,13 @@ DEPENDENCIES = ['transmission']
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
-DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
- 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+DATA_UPDATED = 'transmission_data_updated'
+
+async def async_setup_platform(
+    hass,
+    config,
+    add_entities,
+    discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return
@@ -35,8 +39,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([TransmissionSwitch(transmission_api, name)], True)
 
-
-class TransmissionSwitch(RestoreEntity):
+class TransmissionSwitch(ToggleEntity):
     """Representation of a Transmission switch."""
 
     def __init__(self, transmission_client, name):
@@ -65,24 +68,18 @@ class TransmissionSwitch(RestoreEntity):
         """Return true if device is on."""
         return self._state == STATE_ON
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGING.debug("Turning Turtle Mode of Transmission on")
         self.transmission_client.set_alt_speed_enabled(True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
         self.transmission_client.set_alt_speed_enabled(False)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
-            return
-        self._state = state.state
-
         async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )

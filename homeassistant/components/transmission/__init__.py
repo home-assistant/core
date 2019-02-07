@@ -28,7 +28,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
-DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+DATA_UPDATED = 'transmission_data_updated' 
 DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Transmission Component."""
     host = config[DOMAIN][CONF_HOST]
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -86,6 +86,8 @@ async def async_setup(hass, config):
 
     tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
         hass, config, api)
+        
+    tm_data.update()
     tm_data.init_torrent_list()
 
     def refresh(call=None):
@@ -102,27 +104,26 @@ async def async_setup(hass, config):
         
     hass.async_create_task(
         async_load_platform(
-            hass, 
-            'sensor', 
-            DOMAIN, 
-            sensorconfig, 
+            hass,
+            'sensor',
+            DOMAIN,
+            sensorconfig,
             config
         )
     )
 
     if config[DOMAIN][TURTLE_MODE]:
         hass.async_create_task(
-            async_load_platform( 
-                    hass, 
-                    'switch', 
-                    DOMAIN, 
-                    sensorconfig, 
+            async_load_platform(
+                    hass,
+                    'switch',
+                    DOMAIN,
+                    sensorconfig,
                     config
             )
-        )   
+        )
 
     return True
-
 
 class TransmissionData:
     """Get the latest data and update the states."""
@@ -151,7 +152,7 @@ class TransmissionData:
             self.check_started_torrent()
 
             dispatcher_send(self.hass, DATA_UPDATED)
-            
+
             _LOGGER.debug("Torrent Data updated")
             self.available = True
         except TransmissionError:
