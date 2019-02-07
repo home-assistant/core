@@ -65,11 +65,6 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
 
         return self._state == 1
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
     async def async_update(self):
         """Fetch new state data for the entity."""
         self._state = self._ambient.stations[
