@@ -199,8 +199,7 @@ class GitHubData():
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:
-                    self.latest_open_pr_url =
-                        open_pull_requests[0].html_url
+                    self.latest_open_pr_url = open_pull_requests[0].html_url
 
             latest_commit = repo.get_commits()[0]
             self.latest_commit_sha = latest_commit.sha
