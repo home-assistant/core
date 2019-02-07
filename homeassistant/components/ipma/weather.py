@@ -135,8 +135,8 @@ class IPMAWeather(WeatherEntity):
                 (DOMAIN, self.unique_id)
             },
             'name': self.name,
-            'manufacturer': "Instituto Português do Mar e Atmosfera",
-            'model': "{} weather station".format(self._station.local),
+            'provider': "Instituto Português do Mar e Atmosfera",
+            'service': "{} weather station".format(self._station.local),
         }
 
     @property
@@ -161,32 +161,42 @@ class IPMAWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature."""
-        if self._condition:
-            return self._condition.temperature
+        if not self._condition:
+            return None
+
+        return self._condition.temperature
 
     @property
     def pressure(self):
         """Return the current pressure."""
-        if self._condition:
-            return self._condition.pressure
+        if not self._condition:
+            return None
+
+        return self._condition.pressure
 
     @property
     def humidity(self):
         """Return the name of the sensor."""
-        if self._condition:
-            return self._condition.humidity
+        if not self._condition:
+            return None
+
+        return self._condition.humidity
 
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        if self._condition:
-            return self._condition.windspeed
+        if not self._condition:
+            return None
+
+        return self._condition.windspeed
 
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
-        if self._condition:
-            return self._condition.winddirection
+        if not self._condition:
+            return None
+
+        return self._condition.winddirection
 
     @property
     def temperature_unit(self):

@@ -22,6 +22,8 @@ class IpmaFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        self._errors = {}
+
         if user_input is not None:
             if user_input[CONF_NAME] not in\
                     self.hass.config_entries.async_entries(DOMAIN):
