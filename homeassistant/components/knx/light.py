@@ -107,7 +107,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     light = xknx.devices.Light(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
-        group_address_switch=config.get(CONF_ADDRESS),
+        group_address_switch=config[CONF_ADDRESS],
         group_address_switch_state=config.get(CONF_STATE_ADDRESS),
         group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
