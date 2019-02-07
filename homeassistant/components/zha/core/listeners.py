@@ -83,7 +83,6 @@ class ListenerStatus(Enum):
     CREATED = 1
     CONFIGURED = 2
     INITIALIZED = 3
-    LISTENING = 4
 
 
 class ClusterListener:
@@ -99,6 +98,7 @@ class ClusterListener:
             [{'attr': 0, 'config': REPORT_CONFIG_DEFAULT}]
         )
         self._status = ListenerStatus.CREATED
+        self._cluster.add_listener(self)
 
     @property
     def unique_id(self):
@@ -155,11 +155,6 @@ class ClusterListener:
     async def async_initialize(self, from_cache):
         """Initialize listener."""
         self._status = ListenerStatus.INITIALIZED
-
-    async def accept_messages(self):
-        """Attach to the cluster so we can receive messages."""
-        self._cluster.add_listener(self)
-        self._status = ListenerStatus.LISTENING
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -354,12 +349,6 @@ class IASZoneListener(ClusterListener):
 
     name = 'zone'
 
-    def __init__(self, cluster, device):
-        """Initialize IASZoneListener."""
-        super().__init__(cluster, device)
-        self._cluster.add_listener(self)
-        self._status = ListenerStatus.LISTENING
-
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
@@ -428,10 +417,6 @@ class IASZoneListener(ClusterListener):
         await self.get_attribute_value('zone_status', from_cache=from_cache)
         await self.get_attribute_value('zone_state', from_cache=from_cache)
         await super().async_initialize(from_cache)
-
-    async def accept_messages(self):
-        """Attach to the cluster so we can receive messages."""
-        self._status = ListenerStatus.LISTENING
 
 
 class ActivePowerListener(AttributeListener):
@@ -625,6 +610,7 @@ class ZDOListener:
         self._zha_device = device
         self._status = ListenerStatus.CREATED
         self._unique_id = "{}_ZDO".format(device.name)
+        self._cluster.add_listener(self)
 
     @property
     def unique_id(self):
@@ -650,11 +636,6 @@ class ZDOListener:
     def permit_duration(self, duration):
         """Permit handler."""
         pass
-
-    async def accept_messages(self):
-        """Attach to the cluster so we can receive messages."""
-        self._cluster.add_listener(self)
-        self._status = ListenerStatus.LISTENING
 
     async def async_initialize(self, from_cache):
         """Initialize listener."""
