@@ -45,9 +45,7 @@ def set_component(hass,  # type: HomeAssistant
 
     Async friendly.
     """
-    cache = hass.data.get(DATA_KEY)
-    if cache is None:
-        cache = hass.data[DATA_KEY] = {}
+    cache = hass.data.setdefault(DATA_KEY, {})
     cache[comp_name] = component
 
 
@@ -60,13 +58,22 @@ def get_platform(hass,  # type: HomeAssistant
     platform = _load_file(hass, PLATFORM_FORMAT.format(
         domain=domain, platform=platform_name))
 
-    if platform is None:
-        # Turn it around for legacy purposes
-        platform = _load_file(hass, PLATFORM_FORMAT.format(
-            domain=platform_name, platform=domain))
+    if platform is not None:
+        return platform
+
+    # Legacy platform check: light/hue.py
+    platform = _load_file(hass, PLATFORM_FORMAT.format(
+        domain=platform_name, platform=domain))
 
     if platform is None:
         _LOGGER.error("Unable to find platform %s", platform_name)
+        return None
+
+    if platform.__name__.startswith(PATH_CUSTOM_COMPONENTS):
+        _LOGGER.warning(
+            "Integrations need to be in their own folder. Change %s/%s.py to "
+            "%s/%s.py. This will stop working soon.",
+            domain, platform_name, platform_name, domain)
 
     return platform
 
