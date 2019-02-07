@@ -129,8 +129,9 @@ async def async_unload_entry(hass, config_entry):
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, 'sensor')
+    for component in ('binary_sensor', 'sensor'):
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
 
     return True
 
@@ -181,9 +182,10 @@ class AmbientStation:
                     ATTR_NAME: station['info']['name'],
                 }
 
+            for component in ('binary_sensor', 'sensor'):
                 self._hass.async_create_task(
                     self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, 'sensor'))
+                        self._config_entry, component))
 
                 self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
