@@ -128,18 +128,6 @@ class IPMAWeather(WeatherEntity):
         return '{}, {}'.format(self._station.latitude, self._station.longitude)
 
     @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'provider': "Instituto Português do Mar e Atmosfera",
-            'service': "{} weather station".format(self._station.local),
-        }
-
-    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
