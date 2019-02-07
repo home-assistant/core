@@ -147,8 +147,6 @@ async def async_setup_entry(hass, config_entry):
     )
 
     zha_gateway = ZHAGateway(hass, config)
-    hass.bus.async_listen_once(
-        ha_const.EVENT_HOMEASSISTANT_START, zha_gateway.accept_zigbee_messages)
 
     # Patch handle_message until zigpy can provide an event here
     def handle_message(sender, is_reply, profile, cluster,

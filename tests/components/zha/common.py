@@ -161,7 +161,6 @@ def make_entity_id(domain, device, cluster, use_suffix=True):
 
 async def async_enable_traffic(hass, zha_gateway, zha_devices):
     """Allow traffic to flow through the gateway and the zha device."""
-    await zha_gateway.accept_zigbee_messages({})
     for zha_device in zha_devices:
         zha_device.update_available(True)
     await hass.async_block_till_done()

@@ -170,10 +170,6 @@ class ZHADevice:
         await self._execute_listener_tasks('async_initialize', from_cache)
         _LOGGER.debug('%s: completed initialization', self.name)
 
-    async def async_accept_messages(self):
-        """Start accepting messages from the zigbee network."""
-        await self._execute_listener_tasks('accept_messages')
-
     async def _execute_listener_tasks(self, task_name, *args):
         """Gather and execute a set of listener tasks."""
         listener_tasks = []
