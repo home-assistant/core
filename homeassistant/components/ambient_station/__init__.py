@@ -104,8 +104,7 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
-            config_entry.data.get(
-                CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)))
+            config_entry.data.get(CONF_MONITORED_CONDITIONS, []))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketConnectionError as err:
