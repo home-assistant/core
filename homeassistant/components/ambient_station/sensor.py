@@ -52,11 +52,6 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
         self._unit = unit
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
