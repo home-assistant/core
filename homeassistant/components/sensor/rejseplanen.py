@@ -19,7 +19,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rjpl==0.3.4']
+REQUIREMENTS = ['rjpl==0.3.5']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'Stop ID'
@@ -111,12 +111,14 @@ class RejseplanenTransportSensor(Entity):
         if self._times is not None:
             next_up = None
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ROUTE] + " towards "
-                next_up += self._times[1][ATTR_DIRECTION] + " in "
-                next_up += str(self._times[1][ATTR_DUE_IN])
-                next_up += " from " + self._times[1][ATTR_STOP_NAME]
-
-            return {
+                next_up = ('{} towards '
+                           '{} in '
+                           '{} from '
+                           '{}'.format(self._times[1][ATTR_ROUTE],
+                                       self._times[1][ATTR_DIRECTION],
+                                       str(self._times[1][ATTR_DUE_IN]),
+                                       self._times[1][ATTR_STOP_NAME]))
+            params = {
                 ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
                 ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
                 ATTR_TYPE: self._times[0][ATTR_TYPE],
@@ -126,7 +128,8 @@ class RejseplanenTransportSensor(Entity):
                 ATTR_STOP_ID: self._stop_id,
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
                 ATTR_NEXT_UP: next_up
-            }
+                }
+            return {k: v for k, v in params.items() if v}
 
     @property
     def unit_of_measurement(self):
@@ -175,11 +178,11 @@ class PublicTransportData():
 
         try:
             results = rjpl.departureBoard(int(self.stop_id), timeout=5)
-        except rjpl.APIError:
-            _LOGGER.debug("No departures returned from API call")
+        except rjpl.rjplAPIError as error:
+            _LOGGER.debug("API returned error: %s", error)
             self.info = self.empty_result()
             return
-        except (rjpl.ConnectionError, rjpl.HTTPError):
+        except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
             _LOGGER.debug("Error occured while connecting to the API")
             self.info = self.empty_result()
             return
