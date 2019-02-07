@@ -65,7 +65,7 @@ DEFAULT_CORE_CONFIG = (
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
-# Show links to resources in log and frontend
+# Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
 # Show the introduction message on startup.
