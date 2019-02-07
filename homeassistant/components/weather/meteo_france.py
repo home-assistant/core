@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.meteo_france import (DATA_METEO_FRANCE,
                                                    CONDITION_CLASSES,
-                                                   CONF_POSTAL_CODE,
+                                                   CONF_CITY,
                                                    CONF_ATTRIBUTION)
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_CONDITION,
@@ -24,9 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    postal_code = discovery_info[CONF_POSTAL_CODE]
+    city = discovery_info[CONF_CITY]
 
-    client = hass.data[DATA_METEO_FRANCE][postal_code]
+    client = hass.data[DATA_METEO_FRANCE][city]
 
     add_entities([MeteoFranceWeather(client)], True)
 

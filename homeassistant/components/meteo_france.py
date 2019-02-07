@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'meteo_france'
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 CONF_ATTRIBUTION = "Data provided by Météo-France"
-CONF_POSTAL_CODE = 'postal_code'
+CONF_CITY = 'city'
 DEFAULT_WEATHER_CARD = True
 DATA_METEO_FRANCE = 'data_meteo_france'
 
@@ -45,7 +45,7 @@ CONDITION_CLASSES = {
             'Brouillard', 'Brouillard givrant'],
     'hail': ['Risque de grêle'],
     'lightning': ["Risque d'orages", 'Orages'],
-    'lightning-rainy': ['Pluie orageuses', 'Pluies orageuses'],
+    'lightning-rainy': ['Pluie orageuses', 'Pluies orageuses', 'Averses orageuses'],
     'partlycloudy': ['Ciel voilé', 'Ciel voilé nuit', 'Éclaircies'],
     'pouring': ['Pluie forte'],
     'rainy': ['Bruine / Pluie faible', 'Bruine', 'Pluie faible',
@@ -62,7 +62,7 @@ CONDITION_CLASSES = {
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_POSTAL_CODE): cv.string,
+        vol.Required(CONF_CITY): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     })])
@@ -75,17 +75,17 @@ def setup(hass, config):
 
     for location in config[DOMAIN]:
 
-        postal_code = location[CONF_POSTAL_CODE]
+        city = location[CONF_CITY]
 
         from meteofrance.client import meteofranceClient, meteofranceError
 
         try:
-            client = meteofranceClient(postal_code)
+            client = meteofranceClient(city)
         except meteofranceError as exp:
             _LOGGER.error(exp)
             return
 
-        hass.data[DATA_METEO_FRANCE][postal_code] = MeteoFranceUpdater(client)
+        hass.data[DATA_METEO_FRANCE][city] = MeteoFranceUpdater(client)
 
         if CONF_MONITORED_CONDITIONS in location:
             monitored_conditions = location[CONF_MONITORED_CONDITIONS]
@@ -93,7 +93,7 @@ def setup(hass, config):
                 hass,
                 'sensor',
                 DOMAIN,
-                {CONF_POSTAL_CODE: postal_code,
+                {CONF_CITY: city,
                  CONF_MONITORED_CONDITIONS: monitored_conditions},
                 config)
 
@@ -101,7 +101,7 @@ def setup(hass, config):
             hass,
             'weather',
             DOMAIN,
-            {CONF_POSTAL_CODE: postal_code},
+            {CONF_CITY: city},
             config)
 
     return True
