@@ -1,7 +1,7 @@
 """Test Z-Wave switches."""
 from unittest.mock import patch
 
-from homeassistant.components.switch import zwave
+import homeassistant.components.zwave.switch as zwave
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)

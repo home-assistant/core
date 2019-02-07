@@ -2,7 +2,7 @@
 from unittest.mock import patch, MagicMock
 
 from homeassistant import config_entries
-from homeassistant.components.lock import zwave
+import homeassistant.components.zwave.lock as zwave
 from homeassistant.components.zwave import const
 
 from tests.mock.zwave import (
