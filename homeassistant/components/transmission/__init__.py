@@ -115,6 +115,8 @@ class TransmissionData:
         self.started_torrents = []
         self.hass = hass
 
+        self.update()
+
     def update(self):
         """Get the latest data from Transmission instance."""
         from transmissionrpc.error import TransmissionError
