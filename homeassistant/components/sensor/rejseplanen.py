@@ -19,7 +19,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rjpl==0.3.2']
+REQUIREMENTS = ['rjpl==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'Stop ID'
@@ -68,11 +68,11 @@ def due_in_minutes(timestamp):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Rejseplanen transport sensor."""
-    name = config.get(CONF_NAME)
-    stop_id = config.get(CONF_STOP_ID)
+    name = config[CONF_NAME]
+    stop_id = config[CONF_STOP_ID]
     route = config.get(CONF_ROUTE)
-    direction = config.get(CONF_DIRECTION)
-    departure_type = config.get(CONF_DEPARTURE_TYPE)
+    direction = config[CONF_DIRECTION]
+    departure_type = config[CONF_DEPARTURE_TYPE]
 
     data = PublicTransportData(stop_id, route, direction, departure_type)
     add_devices([RejseplanenTransportSensor(data,
@@ -109,7 +109,7 @@ class RejseplanenTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
-            next_up = "None"
+            next_up = None
             if len(self._times) > 1:
                 next_up = self._times[1][ATTR_ROUTE] + " towards "
                 next_up += self._times[1][ATTR_DIRECTION] + " in "
@@ -175,8 +175,12 @@ class PublicTransportData():
 
         try:
             results = rjpl.departureBoard(int(self.stop_id), timeout=5)
-        except RuntimeError:
-            _LOGGER.debug("No departures returned from API call.")
+        except rjpl.APIError:
+            _LOGGER.debug("No departures returned from API call")
+            self.info = self.empty_result()
+            return
+        except (rjpl.ConnectionError, rjpl.HTTPError):
+            _LOGGER.debug("Error occured while connecting to the API")
             self.info = self.empty_result()
             return
 
@@ -203,7 +207,7 @@ class PublicTransportData():
             if (due_at_date is not None and
                     due_at_time is not None and
                     route is not None):
-                due_at = due_at_date + " " + due_at_time
+                due_at = '{} {}'.format(due_at_date, due_at_time)
 
                 departure_data = {ATTR_DUE_IN: due_in_minutes(due_at),
                                   ATTR_DUE_AT: due_at,
@@ -214,7 +218,7 @@ class PublicTransportData():
                 self.info.append(departure_data)
 
         if not self.info:
-            _LOGGER.debug("No departures with given parameters.")
+            _LOGGER.debug("No departures with given parameters")
             self.info = self.empty_result()
 
         # Sort the data by time
