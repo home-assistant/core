@@ -10,14 +10,13 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 
 @config_entries.HANDLERS.register(DOMAIN)
 class IpmaFlowHandler(data_entry_flow.FlowHandler):
-    """Config flow for SMHI component."""
+    """Config flow for IPMA component."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Init IpmaFlowHandler."""
-        super().__init__()
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
