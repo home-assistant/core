@@ -7,8 +7,8 @@ __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
 
-# Format for platforms
-PLATFORM_FORMAT = '{domain}.{platform}'
+# Format for platform files
+PLATFORM_FORMAT = '{platform}.{domain}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'

@@ -132,3 +132,17 @@ async def test_log_warning_custom_component(hass, caplog):
 
     loader.get_component(hass, 'light.test')
     assert 'You are using a custom component for light.test' in caplog.text
+
+
+async def test_get_platform(hass, caplog):
+    """Test get_platform."""
+    # Test we prefer embedded over normal platforms."""
+    embedded_platform = loader.get_platform(hass, 'switch', 'test_embedded')
+    assert embedded_platform.__name__ == \
+        'custom_components.test_embedded.switch'
+
+    caplog.clear()
+
+    legacy_platform = loader.get_platform(hass, 'switch', 'test')
+    assert legacy_platform.__name__ == 'custom_components.switch.test'
+    assert 'Integrations need to be in their own folder.' in caplog.text
