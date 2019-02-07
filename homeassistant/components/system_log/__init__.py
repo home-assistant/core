@@ -110,7 +110,7 @@ class LogEntry:
 
     def hash(self):
         """Calculate a key for DedupStore."""
-        return frozenset([self.messages, self.root_cause])
+        return frozenset([self.message, self.root_cause])
 
     def to_dict(self):
         """Convert object into dict to maintain backward compatability."""
