@@ -28,8 +28,6 @@ from .const import (
 REQUIREMENTS = ['aioambient==0.1.0']
 _LOGGER = logging.getLogger(__name__)
 
-DATA_CONFIG = 'config'
-
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 TYPE_24HOURRAININ = '24hourrainin'
@@ -123,9 +121,6 @@ async def async_setup(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN, context={'source': SOURCE_IMPORT}, data=conf))
 
-    # Store config for entry setup:
-    hass.data[DOMAIN][DATA_CONFIG] = conf.get(CONF_MONITORED_CONDITIONS)
-
     return True
 
 
@@ -142,7 +137,8 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
-            hass.data[DOMAIN].get(DATA_CONFIG, []))
+            config_entry.data.get(
+                CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketConnectionError as err:
