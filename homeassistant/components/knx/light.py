@@ -95,18 +95,18 @@ def async_add_entities_config(hass, config, async_add_entities):
     group_address_tunable_white_state = None
     group_address_color_temp = None
     group_address_color_temp_state = None
-    if config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.absolute:
+    if config[CONF_COLOR_TEMP_MODE] == ColorTempModes.absolute:
         group_address_color_temp = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_color_temp_state = \
             config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
-    elif config.get(CONF_COLOR_TEMP_MODE) == ColorTempModes.relative:
+    elif config[CONF_COLOR_TEMP_MODE] == ColorTempModes.relative:
         group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = \
             config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
 
     light = xknx.devices.Light(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
+        name=config[CONF_NAME],
         group_address_switch=config.get(CONF_ADDRESS),
         group_address_switch_state=config.get(CONF_STATE_ADDRESS),
         group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
@@ -118,8 +118,8 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
         group_address_color_temperature_state=group_address_color_temp_state,
-        min_kelvin=config.get(CONF_MIN_KELVIN),
-        max_kelvin=config.get(CONF_MAX_KELVIN))
+        min_kelvin=config[CONF_MIN_KELVIN],
+        max_kelvin=config[CONF_MAX_KELVIN])
     hass.data[DATA_KNX].xknx.devices.add(light)
     async_add_entities([KNXLight(light)])
 
@@ -264,7 +264,7 @@ class KNXLight(Light):
                 (update_brightness or update_color):
             # change RGB color (includes brightness)
             # if brightness or hs_color was not yet set use the default value
-            # to claculate RGB from as a fallback
+            # to calculate RGB from as a fallback
             if brightness is None:
                 brightness = DEFAULT_BRIGHTNESS
             if hs_color is None:
