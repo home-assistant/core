@@ -91,10 +91,9 @@ class WinkSensorDevice(WinkDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         super_attrs = super().device_state_attributes
-        _LOGGER.debug("Adding in eggs if egg minder")
         try:
             super_attrs['egg_times'] = self.wink.eggs()
-            _LOGGER.debug("Its an egg minder")
         except AttributeError:
-            _LOGGER.debug("Not an eggtray")
+            # Ignore error, this sensor isn't an eggminder
+            pass
         return super_attrs
