@@ -126,13 +126,6 @@ class ZHAGateway:
             self._devices[zigpy_device.ieee] = zha_device
         return zha_device
 
-    async def accept_zigbee_messages(self, _service_or_event):
-        """Allow devices to accept zigbee messages."""
-        accept_messages_calls = []
-        for device in self.devices.values():
-            accept_messages_calls.append(device.async_accept_messages())
-        await asyncio.gather(*accept_messages_calls)
-
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
         zha_device = await self._get_or_create_device(device)
