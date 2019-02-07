@@ -107,7 +107,7 @@ aiofreepybox==0.0.6
 # homeassistant.components.camera.yi
 aioftp==0.12.0
 
-# homeassistant.components.remote.harmony
+# homeassistant.components.harmony.remote
 aioharmony==0.1.5
 
 # homeassistant.components.emulated_hue
@@ -1069,7 +1069,7 @@ pyirishrail==0.0.2
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
-# homeassistant.components.remote.itach
+# homeassistant.components.itach.remote
 pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
