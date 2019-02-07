@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import patch
 
 from homeassistant.components.zwave import const
-from homeassistant.components.binary_sensor import zwave
+import homeassistant.components.zwave.binary_sensor as zwave
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)

@@ -1,7 +1,8 @@
 """Test Z-Wave climate devices."""
 import pytest
 
-from homeassistant.components.climate import zwave, STATE_COOL, STATE_HEAT
+from homeassistant.components.climate import STATE_COOL, STATE_HEAT
+import homeassistant.components.zwave.climate as zwave
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 

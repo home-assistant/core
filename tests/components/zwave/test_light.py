@@ -3,8 +3,9 @@ from unittest.mock import patch, MagicMock
 
 import homeassistant.components.zwave
 from homeassistant.components.zwave import const
+import homeassistant.components.zwave.light as zwave
 from homeassistant.components.light import (
-    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR, ATTR_WHITE_VALUE,
     SUPPORT_COLOR_TEMP, SUPPORT_WHITE_VALUE)
 
