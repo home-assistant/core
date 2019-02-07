@@ -74,7 +74,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         host = vals[0]
         remote = sharp_aquos_rc.TV(host, port, username, password, timeout=20)
-        add_entities([SharpAquosTVDevice(name, remote, timeout, power_on_enabled)])
+        add_entities([SharpAquosTVDevice(name, remote, timeout,
+                                         power_on_enabled)])
         return True
 
     host = config.get(CONF_HOST)
