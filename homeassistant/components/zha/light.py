@@ -113,7 +113,7 @@ class Light(ZhaEntity, light.Light):
         """Set the brightness of this light between 0..255."""
         value = max(0, min(255, value))
         self._brightness = value
-        self.async_set_state(value)
+        self.async_schedule_update_ha_state()
 
     @property
     def hs_color(self):
