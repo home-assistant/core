@@ -66,6 +66,9 @@ DEFAULT_CORE_CONFIG = (
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
+default_config:
+
+# Show the introduction message on startup.
 introduction:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
