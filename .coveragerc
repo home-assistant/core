@@ -655,6 +655,7 @@ omit =
     homeassistant/components/wirelesstag/*
     homeassistant/components/xiaomi_aqara/*
     homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xs1/*
     homeassistant/components/zabbix/*
     homeassistant/components/zeroconf/*
     homeassistant/components/zha/__init__.py
