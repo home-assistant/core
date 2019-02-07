@@ -46,7 +46,7 @@ class ComponentNotFound(LoaderError):
     """Raised when a component is not found."""
 
     def __init__(self, domain: str) -> None:
-        """initialize a component not found error."""
+        """Initialize a component not found error."""
         super().__init__("Component {} not found.".format(domain))
         self.domain = domain
 

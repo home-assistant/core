@@ -1,7 +1,6 @@
 """Helper methods for various modules."""
 import asyncio
 from datetime import datetime, timedelta
-from itertools import chain
 import threading
 import re
 import enum
