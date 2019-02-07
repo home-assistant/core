@@ -196,8 +196,12 @@ class KNXLight(Light):
         if self.device.supports_tunable_white:
             relative_ct = self.device.current_tunable_white
             if relative_ct is not None:
-                return self.min_mireds + (((255 - relative_ct) / 255) *
-                                          (self.max_mireds - self.min_mireds))
+                # as KNX devices typically use Kelvin we use it as base for
+                # calculating ct from percent
+                return color_util.color_temperature_kelvin_to_mired(
+                    self._min_kelvin + (
+                        (relative_ct / 255) *
+                        (self._max_kelvin - self._min_kelvin)))
         return None
 
     @property
@@ -244,14 +248,6 @@ class KNXLight(Light):
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
 
-        # to make sure that the following calculations always have valid values available,
-        # fall back to default values for any parameter that has neither been set
-        # to a new value nor has an known current value.
-        if brightness is None:
-            brightness = DEFAULT_BRIGHTNESS
-        if hs_color is None:
-            hs_color = DEFAULT_COLOR
-
         update_brightness = ATTR_BRIGHTNESS in kwargs
         update_color = ATTR_HS_COLOR in kwargs
         update_color_temp = ATTR_COLOR_TEMP in kwargs
@@ -267,6 +263,12 @@ class KNXLight(Light):
         elif self.device.supports_color and \
                 (update_brightness or update_color):
             # change RGB color (includes brightness)
+            # if brightness or hs_color was not yet set use the default value
+            # to claculate RGB from as a fallback
+            if brightness is None:
+                brightness = DEFAULT_BRIGHTNESS
+            if hs_color is None:
+                hs_color = DEFAULT_COLOR
             await self.device.set_color(
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         elif self.device.supports_color_temperature and \
@@ -280,8 +282,10 @@ class KNXLight(Light):
             await self.device.set_color_temperature(kelvin)
         elif self.device.supports_tunable_white and \
                 update_color_temp:
-            relative_ct = 255 - int(255 * (mireds - self.min_mireds) /
-                                    (self.max_mireds - self.min_mireds))
+            # calculate relative_ct from Kelvin to fit typical KNX devices
+            kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
+            relative_ct = int(255 * (kelvin - self._min_kelvin) /
+                                    (self._max_kelvin - self._min_kelvin))
             await self.device.set_tunable_white(relative_ct)
         else:
             # no color/brightness change requested, so just turn it on
