@@ -1,0 +1,71 @@
+turn_on:
+  description: 'Turn on the Switcher device.'
+
+turn_off:
+  description: 'Turn off the Switcher device.'
+
+turn_on_15_minutes:
+  description: 'Turn on the Switcher device for 15 minutes.'
+  
+turn_on_30_minutes:
+  description: 'Turn on the Switcher device for 30 minutes.'
+  
+turn_on_45_minutes:
+  description: 'Turn on the Switcher device for 45 minutes.'
+  
+turn_on_60_minutes:
+  description: 'Turn on the Switcher device for 60 minutes.'
+
+set_auto_off:
+  description: 'Update Switcher device auto off setting.'
+  fields:
+    auto_off:
+      description: 'Time period string containing hours and minutes.'
+      example: '"02:30"'
+
+update_device_name:
+  description: 'Update Switcher device name setting.'
+  fields:
+    name:
+      description: 'Any string with the minimum length of 2 and the maximum length of 32.'
+      example: '"My Switcher Device"'
+
+create_schedule:
+  description: 'Create a schedule.'
+  fields:
+    start_time:
+      description: 'Time string containing hours and minutes representing the time to start the schedule.'
+      example: '"13:45"'
+    end_time:
+      description: 'Time string containing hours and minutes representing the time to stop the schedule.'
+      example: '"14:10"'
+    recurring:
+      description: 'Boolean indicating if the schedule is recurring (true) or is it to be executed once (false).'
+      example: true
+    days:
+      description: >
+        Name(s) of the days for the schedule to run in,
+        This is an optional field that must be passed if recurring=true.
+        Possible values are: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday.
+      example: '"Monday", "Wednesday", "Saturday"'
+
+delete_schedule:
+  description: 'Delete specific schedule.'
+  fields:
+    schedule_id:
+      description: 'Integer identifier of the schedule to be deleted, minumum value is 0, maximum value is 7.'
+      example: 3
+      
+enable_schedule:
+  description: 'Enable specific schedule.'
+  fields:
+    schedule_id:
+      description: 'Integer identifier of the schedule to be enabled, minumum value is 0, maximum value is 7.'
+      example: 3
+      
+disable_schedule:
+  description: 'Disable specific schedule.'
+  fields:
+    schedule_id:
+      description: 'Integer identifier of the schedule to be disabled, minumum value is 0, maximum value is 7.'
+      example: 3

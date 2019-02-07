@@ -304,3 +304,7 @@ warrant==0.6.1
 
 # homeassistant.components.zha
 zigpy==0.2.0
+
+# homeassistant.components.switcher_kis
+aioswitcher==2019.2.6
+
