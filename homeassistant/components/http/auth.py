@@ -92,8 +92,8 @@ def setup_auth(app, trusted_networks, api_password):
             for user in users:
                 if user.is_owner:
                     request['hass_user'] = user
+                    authenticated = True
                     break
-            authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)

@@ -50,6 +50,16 @@ harmony_sync:
       description: Name(s) of entities to sync.
       example: 'remote.family_room'
 
+harmony_change_channel:
+  description: Sends change channel command to the Harmony HUB
+  fields:
+    entity_id:
+      description: Name(s) of Harmony remote entities to send change channel command to
+      example: 'remote.family_room'
+    channel:
+      description: Channel number to change to
+      example: '200'
+
 xiaomi_miio_learn_command:
   description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
   fields:

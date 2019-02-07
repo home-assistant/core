@@ -10,8 +10,8 @@ from typing import Any, Optional, Tuple, Dict
 import requests
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.net/json/'
 IP_API = 'http://ip-api.com/json'
+IPAPI = 'https://ipapi.co/json/'
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -35,7 +35,7 @@ LocationInfo = collections.namedtuple(
 
 def detect_location_info() -> Optional[LocationInfo]:
     """Detect location information."""
-    data = _get_freegeoip()
+    data = _get_ipapi()
 
     if data is None:
         data = _get_ip_api()
@@ -159,22 +159,22 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
     return round(s, 6)
 
 
-def _get_freegeoip() -> Optional[Dict[str, Any]]:
-    """Query freegeoip.io for location data."""
+def _get_ipapi() -> Optional[Dict[str, Any]]:
+    """Query ipapi.co for location data."""
     try:
-        raw_info = requests.get(FREEGEO_API, timeout=5).json()
+        raw_info = requests.get(IPAPI, timeout=5).json()
     except (requests.RequestException, ValueError):
         return None
 
     return {
         'ip': raw_info.get('ip'),
-        'country_code': raw_info.get('country_code'),
+        'country_code': raw_info.get('country'),
         'country_name': raw_info.get('country_name'),
         'region_code': raw_info.get('region_code'),
-        'region_name': raw_info.get('region_name'),
+        'region_name': raw_info.get('region'),
         'city': raw_info.get('city'),
-        'zip_code': raw_info.get('zip_code'),
-        'time_zone': raw_info.get('time_zone'),
+        'zip_code': raw_info.get('postal'),
+        'time_zone': raw_info.get('timezone'),
         'latitude': raw_info.get('latitude'),
         'longitude': raw_info.get('longitude'),
     }

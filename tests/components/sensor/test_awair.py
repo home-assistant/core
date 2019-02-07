@@ -45,6 +45,7 @@ AIR_DATA_FIXTURE_UPDATED = json.loads(
     load_fixture("awair_air_data_latest_updated.json")
 )
 AIR_DATA_FIXTURE_UPDATED[0][ATTR_TIMESTAMP] = str(NOW + timedelta(minutes=5))
+AIR_DATA_FIXTURE_EMPTY = []
 
 
 @contextmanager
@@ -60,13 +61,13 @@ def alter_time(retval):
         yield
 
 
-async def setup_awair(hass, config=None):
+async def setup_awair(hass, config=None, data_fixture=AIR_DATA_FIXTURE):
     """Load the Awair platform."""
     devices_json = json.loads(load_fixture("awair_devices.json"))
     devices_mock = mock_coro(devices_json)
     devices_patch = patch(
         "python_awair.AwairClient.devices", return_value=devices_mock)
-    air_data_mock = mock_coro(AIR_DATA_FIXTURE)
+    air_data_mock = mock_coro(data_fixture)
     air_data_patch = patch(
         "python_awair.AwairClient.air_data_latest", return_value=air_data_mock
     )
@@ -134,6 +135,12 @@ async def test_bad_platform_setup(hass):
         assert await async_setup_component(
             hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
         assert not hass.states.async_all()
+
+
+async def test_awair_setup_no_data(hass):
+    """Ensure that we do not crash during setup when no data is returned."""
+    await setup_awair(hass, data_fixture=AIR_DATA_FIXTURE_EMPTY)
+    assert not hass.states.async_all()
 
 
 async def test_awair_misc_attributes(hass):
@@ -251,6 +258,19 @@ async def test_availability(hass):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.awair_score").state == "79"
+
+    future = NOW + timedelta(minutes=90)
+    fixture = AIR_DATA_FIXTURE_EMPTY
+    data_patch = patch(
+        "python_awair.AwairClient.air_data_latest",
+        return_value=mock_coro(fixture)
+    )
+
+    with data_patch, alter_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.awair_score").state == STATE_UNAVAILABLE
 
 
 async def test_async_update(hass):

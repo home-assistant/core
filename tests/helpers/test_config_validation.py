@@ -110,7 +110,7 @@ def test_platform_config():
         {'platform': 'mqtt', 'beer': 'yes'},
     )
     for value in options:
-        cv.PLATFORM_SCHEMA(value)
+        cv.PLATFORM_SCHEMA_BASE(value)
 
 
 def test_ensure_list():
@@ -258,11 +258,12 @@ def test_icon():
     """Test icon validation."""
     schema = vol.Schema(cv.icon)
 
-    for value in (False, 'work', 'icon:work'):
+    for value in (False, 'work'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     schema('mdi:work')
+    schema('custom:prefix')
 
 
 def test_time_period():
@@ -332,6 +333,10 @@ def test_service_schema():
             'entity_id': 'light.kitchen',
         },
         {
+            'service': 'light.turn_on',
+            'entity_id': 'all',
+        },
+        {
             'service': 'homeassistant.turn_on',
             'entity_id': ['light.kitchen', 'light.ceiling'],
         },
@@ -397,8 +402,7 @@ def test_template():
     schema = vol.Schema(cv.template)
 
     for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
-        with pytest.raises(vol.Invalid,
-                           message='{} not considered invalid'.format(value)):
+        with pytest.raises(vol.Invalid):
             schema(value)
 
     options = (
@@ -427,6 +431,15 @@ def test_template_complex():
     )
     for value in options:
         schema(value)
+
+    # ensure the validator didn't mutate the input
+    assert options == (
+        1, 'Hello',
+        '{{ beer }}',
+        '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
+        {'test': 1, 'test2': '{{ beer }}'},
+        ['{{ beer }}', 1]
+    )
 
 
 def test_time_zone():
@@ -597,3 +610,31 @@ def test_comp_entity_ids():
     for invalid in (['light.kitchen', 'not-entity-id'], '*', ''):
         with pytest.raises(vol.Invalid):
             schema(invalid)
+
+
+def test_schema_with_slug_keys_allows_old_slugs(caplog):
+    """Test schema with slug keys allowing old slugs."""
+    schema = cv.schema_with_slug_keys(str)
+
+    with patch.dict(cv.INVALID_SLUGS_FOUND, clear=True):
+        for value in ('_world', 'wow__yeah'):
+            caplog.clear()
+            # Will raise if not allowing old slugs
+            schema({value: 'yo'})
+            assert "Found invalid slug {}".format(value) in caplog.text
+
+        assert len(cv.INVALID_SLUGS_FOUND) == 2
+
+
+def test_entity_id_allow_old_validation(caplog):
+    """Test schema allowing old entity_ids."""
+    schema = vol.Schema(cv.entity_id)
+
+    with patch.dict(cv.INVALID_ENTITY_IDS_FOUND, clear=True):
+        for value in ('hello.__world', 'great.wow__yeah'):
+            caplog.clear()
+            # Will raise if not allowing old entity ID
+            schema(value)
+            assert "Found invalid entity_id {}".format(value) in caplog.text
+
+        assert len(cv.INVALID_ENTITY_IDS_FOUND) == 2

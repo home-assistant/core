@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Clau d'aplicaci\u00f3 i/o clau API ja registrada",
+            "invalid_key": "Clau API i/o clau d'aplicaci\u00f3 inv\u00e0lida/es",
+            "no_devices": "No s'ha trobat cap dispositiu al compte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "app_key": "Clau d'aplicaci\u00f3"
+                },
+                "title": "Introdueix la teva informaci\u00f3"
+            }
+        },
+        "title": "Ambient PWS"
+    }
+}

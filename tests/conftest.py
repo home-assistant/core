@@ -14,7 +14,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import legacy_api_password, homeassistant
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
+    async_test_home_assistant, INSTANCES, mock_coro,
     mock_storage as mock_storage, MockUser, CLIENT_ID)
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
@@ -90,14 +90,6 @@ def aioclient_mock():
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session
-
-
-@pytest.fixture
-def mqtt_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_component(hass))
-    client.reset_mock()
-    return client
 
 
 @pytest.fixture

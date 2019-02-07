@@ -47,8 +47,8 @@ CONF_SERVICE_DATA = 'service_data'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
-ATTRS_SCHEMA = vol.Schema({cv.slug: cv.string})
-CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
+ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
+CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
@@ -333,8 +333,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP,
                                               SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
-            flags &= ~SUPPORT_VOLUME_SET
-        elif SERVICE_VOLUME_SET in self._cmds:
+        if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \

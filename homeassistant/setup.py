@@ -190,7 +190,8 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
 
     This method is a coroutine.
     """
-    platform_path = PLATFORM_FORMAT.format(domain, platform_name)
+    platform_path = PLATFORM_FORMAT.format(domain=domain,
+                                           platform=platform_name)
 
     def log_error(msg: str) -> None:
         """Log helper."""

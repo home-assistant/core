@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==2.4.0']
+REQUIREMENTS = ['pylast==3.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

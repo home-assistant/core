@@ -1,5 +1,5 @@
 """
-Geo Location component.
+Geolocation component.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/geo_location/
@@ -9,7 +9,8 @@ import logging
 from typing import Optional
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -22,21 +23,18 @@ DOMAIN = 'geo_location'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
-
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass, config):
-    """Set up the Geo Location component."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_EVENTS)
+    """Set up the Geolocation component."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
     return True
 
 
-class GeoLocationEvent(Entity):
-    """This represents an external event with an associated geo location."""
+class GeolocationEvent(Entity):
+    """This represents an external event with an associated geolocation."""
 
     @property
     def state(self):

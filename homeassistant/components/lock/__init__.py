@@ -13,11 +13,12 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
+    SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
 from homeassistant.components import group
 
 ATTR_CHANGED_BY = 'changed_by'
@@ -150,5 +151,5 @@ class LockDevice(Entity):
         """Return the state."""
         locked = self.is_locked
         if locked is None:
-            return STATE_UNKNOWN
+            return None
         return STATE_LOCKED if locked else STATE_UNLOCKED

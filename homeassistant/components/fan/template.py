@@ -62,7 +62,7 @@ FAN_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FANS): vol.Schema({cv.slug: FAN_SCHEMA}),
+    vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_SCHEMA),
 })
 
 
