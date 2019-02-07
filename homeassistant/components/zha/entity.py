@@ -62,9 +62,7 @@ class ZhaEntity(entity.Entity):
         self._device_state_attributes = {}
         self._zha_device = zha_device
         self.cluster_listeners = {}
-        # this will get flipped to false once we enable the feature after the
-        # reorg is merged
-        self._available = True
+        self._available = False
         self._component = kwargs['component']
         self._unsubs = []
         for listener in listeners:
