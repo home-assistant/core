@@ -46,23 +46,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ROUTE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=0)),
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DIRECTION, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=0)),
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=0))
+        vol.All(cv.ensure_list, [vol.In(list(['BUS', 'EXB', 'M',
+                                              'S', 'REG']))])
 })
 
 
 def due_in_minutes(timestamp):
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format day/month/year hour/minute/second
+    The timestamp should be in the format day.month.year hour:minute
     """
     diff = datetime.strptime(
         timestamp, "%d.%m.%y %H:%M") - dt_util.now().replace(tzinfo=None)
 
-    return int(diff.total_seconds() / 60)
+    return int(diff.total_seconds() // 60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -156,12 +157,16 @@ class PublicTransportData():
         self.route = route
         self.direction = direction
         self.departure_type = departure_type
-        self.info = [{ATTR_DUE_IN: 'n/a',
-                      ATTR_DUE_AT: 'n/a',
-                      ATTR_TYPE: 'n/a',
-                      ATTR_ROUTE: self.route,
-                      ATTR_DIRECTION: 'n/a',
-                      ATTR_STOP_NAME: 'n/a'}]
+        self.info = self.empty_result()
+
+    def empty_result(self):
+        """Object returned when no departures are found."""
+        return [{ATTR_DUE_IN: 'n/a',
+                 ATTR_DUE_AT: 'n/a',
+                 ATTR_TYPE: 'n/a',
+                 ATTR_ROUTE: self.route,
+                 ATTR_DIRECTION: 'n/a',
+                 ATTR_STOP_NAME: 'n/a'}]
 
     def update(self):
         """Get the latest data from rejseplanen."""
@@ -172,12 +177,7 @@ class PublicTransportData():
             results = rjpl.departureBoard(int(self.stop_id), timeout=5)
         except RuntimeError:
             _LOGGER.debug("No departures returned from API call.")
-            self.info = [{ATTR_DUE_IN: 'n/a',
-                          ATTR_DUE_AT: 'n/a',
-                          ATTR_TYPE: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DIRECTION: 'n/a',
-                          ATTR_STOP_NAME: 'n/a'}]
+            self.info = self.empty_result()
             return
 
         # Filter result
@@ -215,12 +215,7 @@ class PublicTransportData():
 
         if not self.info:
             _LOGGER.debug("No departures with given parameters.")
-            self.info = [{ATTR_DUE_IN: 'n/a',
-                          ATTR_DUE_AT: 'n/a',
-                          ATTR_TYPE: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DIRECTION: 'n/a',
-                          ATTR_STOP_NAME: 'n/a'}]
+            self.info = self.empty_result()
 
         # Sort the data by time
         self.info = sorted(self.info, key=itemgetter(ATTR_DUE_IN))
