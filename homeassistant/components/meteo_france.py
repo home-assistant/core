@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['meteofrance==0.2.8']
+REQUIREMENTS = ['meteofrance==0.3.2']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'meteo_france'
