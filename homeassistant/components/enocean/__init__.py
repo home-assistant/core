@@ -124,13 +124,15 @@ class EnOceanDongle:
                     if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
         elif isinstance(temp, Packet):
-            # case of base_id packet which not identied as RadioPacket but simple Packet
-            from enocean.protocol.constants import PARSE_RESULT, RETURN_CODE
+            # case of base_id packet which not identied as
+            # RadioPacket but simple Packet
+            from enocean.protocol.constants import RETURN_CODE
             packet = temp
             if (packet.packet_type == PACKET.RESPONSE
                     and packet.response == RETURN_CODE.OK
                     and len(packet.response_data) == 4):
                 self.__communicator.base_id = packet.response_data
+
 
 class EnOceanDevice():
     """Parent class for all devices associated with the EnOcean component."""
@@ -150,4 +152,5 @@ class EnOceanDevice():
         ENOCEAN_DONGLE.send_command(packet)
 
     def send_packet(self, packet):
+        """Send a packet via the EnOcean dongle."""
         ENOCEAN_DONGLE.send_command(packet)

@@ -1,5 +1,5 @@
 """
-Support for EnOcean cover sources
+Support for EnOcean cover sources.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.enocean/
@@ -36,11 +36,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_infom=None):
     """Set up the EnOcean Cover platform."""
     devname = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
     add_devices([EnOceanCover(devname, dev_id)])
+
 
 class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
     """Representation of an EnOcean cover source."""
@@ -80,9 +82,12 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
         return 100 - self.percent_closed
 
     def value_changed(self, value):
-        """Update the current cover position and adjust all status of cover entity"""
-        def on_done(a):
-            """Called when timer throttle or percent determine close or opened"""
+        """Update the current cover position.
+
+        And adjust all status of cover entity
+        """
+        def on_done(time):
+            """Reset opening/closing status."""
             self._is_closing = False
             self._is_opening = False
             self.schedule_update_ha_state()
