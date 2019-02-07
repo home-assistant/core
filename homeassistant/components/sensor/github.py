@@ -23,9 +23,9 @@ CONF_REPOS = 'repositories'
 ATTR_LATEST_COMMIT_MESSAGE = 'latest_commit_message'
 ATTR_LATEST_COMMIT_SHA = 'latest_commit_sha'
 ATTR_LATEST_RELEASE_URL = 'latest_release_url'
-ATTR_OPEN_ISSUE_LATEST = 'open_issue_latest'
+ATTR_LATEST_OPEN_ISSUE_URL = 'latest_open_issue_url'
 ATTR_OPEN_ISSUES = 'open_issues'
-ATTR_OPEN_PULL_REQUEST_LATEST = 'open_pull_request_latest'
+ATTR_LATEST_OPEN_PULL_REQUEST_URL = 'latest_open_pull_request_url'
 ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
 ATTR_PATH = 'path'
 ATTR_STARGAZERS = 'stargazers'
@@ -78,9 +78,9 @@ class GitHubSensor(Entity):
         self._latest_commit_sha = None
         self._latest_release_url = None
         self._open_issue_count = None
-        self._open_issue_latest = None
+        self._latest_open_issue_url = None
         self._pull_request_count = None
-        self._pull_request_latest = None
+        self._latest_open_pull_request_url = None
         self._stargazers = None
         self._github_data = github_data
 
@@ -113,9 +113,9 @@ class GitHubSensor(Entity):
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
             ATTR_LATEST_COMMIT_SHA: self._latest_commit_sha,
             ATTR_LATEST_RELEASE_URL: self._latest_release_url,
-            ATTR_OPEN_ISSUE_LATEST: self._open_issue_latest,
+            ATTR_LATEST_OPEN_ISSUE_URL: self._latest_open_issue_url,
             ATTR_OPEN_ISSUES: self._open_issue_count,
-            ATTR_OPEN_PULL_REQUEST_LATEST: self._pull_request_latest,
+            ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pull_request_url,
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers
         }
@@ -137,9 +137,9 @@ class GitHubSensor(Entity):
         self._latest_commit_sha = self._github_data.latest_commit_sha
         self._latest_release_url = self._github_data.latest_release_url
         self._open_issue_count = self._github_data.open_issue_count
-        self._open_issue_latest = self._github_data.open_issue_latest
+        self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
-        self._pull_request_latest = self._github_data.pull_request_latest
+        self._latest_open_pull_request_url = self._github_data.latest_open_pull_request_url
         self._stargazers = self._github_data.stargazers
 
 
@@ -177,9 +177,9 @@ class GitHubData():
         self.latest_commit_sha = None
         self.latest_release_url = None
         self.open_issue_count = None
-        self.open_issue_latest = None
+        self.latest_open_issue_url = None
         self.pull_request_count = None
-        self.pull_request_latest = None
+        self.latest_open_pull_request_url = None
         self.stargazers = None
 
     def update(self):
@@ -193,13 +193,13 @@ class GitHubData():
             if open_issues is not None:
                 self.open_issue_count = open_issues.totalCount
                 if open_issues.totalCount > 0:
-                    self.open_issue_latest = open_issues[0].html_url
+                    self.latest_open_issue_url = open_issues[0].html_url
 
             open_pull_requests = repo.get_pulls(state='open', sort='created')
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:
-                    self.pull_request_latest = open_pull_requests[0].html_url
+                    self.latest_open_pull_request_url = open_pull_requests[0].html_url
 
             latest_commit = repo.get_commits()[0]
             self.latest_commit_sha = latest_commit.sha
