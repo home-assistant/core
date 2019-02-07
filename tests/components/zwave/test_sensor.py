@@ -1,5 +1,5 @@
 """Test Z-Wave sensor."""
-from homeassistant.components.sensor import zwave
+import homeassistant.components.zwave.sensor as zwave
 from homeassistant.components.zwave import const
 import homeassistant.const
 
