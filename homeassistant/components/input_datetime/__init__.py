@@ -127,9 +127,9 @@ class InputDatetime(RestoreEntity):
 
         if restore_val is not None:
             if not self.has_date:
-                self._current_datetime = dt_util.parse_time(restore_val)
-            elif not self.has_time:
                 self._current_datetime = dt_util.parse_date(restore_val)
+            elif not self.has_time:
+                self._current_datetime = dt_util.parse_time(restore_val)
             else:
                 self._current_datetime = dt_util.parse_datetime(restore_val)
 
