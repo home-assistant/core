@@ -8,3 +8,6 @@ CONF_APP_KEY = 'app_key'
 DATA_CLIENT = 'data_client'
 
 TOPIC_UPDATE = 'update'
+
+TYPE_BINARY_SENSOR = 'binary_sensor'
+TYPE_SENSOR = 'sensor'
