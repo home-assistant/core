@@ -63,7 +63,7 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
         if self._sensor_type == TYPE_BATTOUT:
             return self._state == 0
 
-        return self._state
+        return self._state == 1
 
     async def async_update(self):
         """Fetch new state data for the entity."""
