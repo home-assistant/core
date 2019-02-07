@@ -1,6 +1,7 @@
 """Test Z-Wave fans."""
+import homeassistant.components.zwave.fan as zwave
 from homeassistant.components.fan import (
-    zwave, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
