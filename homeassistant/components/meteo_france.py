@@ -23,7 +23,6 @@ DOMAIN = 'meteo_france'
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 CONF_ATTRIBUTION = "Data provided by Météo-France"
 CONF_POSTAL_CODE = 'postal_code'
-CONF_WEATHER_CARD = 'weather_card'
 DEFAULT_WEATHER_CARD = True
 DATA_METEO_FRANCE = 'data_meteo_france'
 
@@ -64,8 +63,6 @@ CONDITION_CLASSES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_POSTAL_CODE): cv.string,
-        vol.Optional(
-            CONF_WEATHER_CARD, default=DEFAULT_WEATHER_CARD): cv.boolean,
         vol.Optional(CONF_MONITORED_CONDITIONS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     })])
@@ -100,13 +97,12 @@ def setup(hass, config):
                  CONF_MONITORED_CONDITIONS: monitored_conditions},
                 config)
 
-        if location[CONF_WEATHER_CARD]:
-            load_platform(
-                hass,
-                'weather',
-                DOMAIN,
-                {CONF_POSTAL_CODE: postal_code},
-                config)
+        load_platform(
+            hass,
+            'weather',
+            DOMAIN,
+            {CONF_POSTAL_CODE: postal_code},
+            config)
 
     return True
 
