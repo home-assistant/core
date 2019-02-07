@@ -95,4 +95,5 @@ class WinkSensorDevice(WinkDevice):
             super_attrs['egg_times'] = self.wink.eggs()
         except AttributeError:
             # Ignore error, this sensor isn't an eggminder
+            pass
         return super_attrs
