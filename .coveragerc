@@ -544,6 +544,7 @@ omit =
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
+    homeassistant/components/sensor/switcher_kis.py
     homeassistant/components/sensor/syncthru.py
     homeassistant/components/sensor/synologydsm.py
     homeassistant/components/sensor/systemmonitor.py
@@ -605,10 +606,12 @@ omit =
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
     homeassistant/components/switch/switchbot.py
+    homeassistant/components/switch/switcher_kis.py
     homeassistant/components/switch/switchmate.py
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/vesync.py
+    homeassistant/components/switcher_kis/*
     homeassistant/components/tado/*
     homeassistant/components/tahoma/*
     homeassistant/components/telegram_bot/*
