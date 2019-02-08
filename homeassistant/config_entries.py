@@ -480,7 +480,6 @@ class ConfigEntries:
             self.hass.config.path(PATH_CONFIG), self._store,
             old_conf_migrate_func=_old_conf_migrator
         )
-        print('async load config entries', config)
 
         if config is None:
             self._entries = []

@@ -52,8 +52,6 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
         def supports_options(domain):
             """"""
-            if domain == 'axis':
-                return None
             handler = config_entries.HANDLERS[domain]
             return handler.async_get_options_flow() is not None
 

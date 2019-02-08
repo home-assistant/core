@@ -181,8 +181,6 @@ from homeassistant import data_entry_flow
 class DeconzOptionsFlowHandler(data_entry_flow.FlowHandler):
     """Handle a deCONZ options flow."""
 
-    VERSION = 1
-
     def __init__(self, config, options):
         """"""
         pass
