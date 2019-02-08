@@ -142,30 +142,15 @@ class TestEcobee(unittest.TestCase):
 
     def test_current_operation(self):
         """Test current operation property."""
-        self.ecobee['settings']['hvacMode'] = 'auto'
-        self.ecobee['equipmentStatus'] = ''
-        assert 'idle' == self.thermostat.current_operation
-        self.ecobee['equipmentStatus'] = 'fan,heatPump1'
+        assert 'auto' == self.thermostat.current_operation
+        self.ecobee['settings']['hvacMode'] = 'heat'
         assert 'heat' == self.thermostat.current_operation
-        self.ecobee['equipmentStatus'] = 'fan,compCool1'
+        self.ecobee['settings']['hvacMode'] = 'cool'
         assert 'cool' == self.thermostat.current_operation
-        self.ecobee['equipmentStatus'] = 'fan,auxHeat1'
+        self.ecobee['settings']['hvacMode'] = 'auxHeatOnly'
         assert 'heat' == self.thermostat.current_operation
         self.ecobee['settings']['hvacMode'] = 'off'
         assert 'off' == self.thermostat.current_operation
-
-    def test_current_operation_mode(self):
-        """Test current operation mode property."""
-        self.ecobee['settings']['hvacMode'] = 'auto'
-        assert 'auto' == self.thermostat.current_operation_mode
-        self.ecobee['settings']['hvacMode'] = 'heat'
-        assert 'heat' == self.thermostat.current_operation_mode
-        self.ecobee['settings']['hvacMode'] = 'cool'
-        assert 'cool' == self.thermostat.current_operation_mode
-        self.ecobee['settings']['hvacMode'] = 'auxHeatOnly'
-        assert 'heat' == self.thermostat.current_operation_mode
-        self.ecobee['settings']['hvacMode'] = 'off'
-        assert 'off' == self.thermostat.current_operation_mode
 
     def test_operation_list(self):
         """Test operation list property."""
