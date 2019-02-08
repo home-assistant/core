@@ -10,9 +10,10 @@ from pysmartthings.api import Api
 import pytest
 
 from homeassistant.components import webhook
+from homeassistant.components.smartthings import DeviceBroker
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
+    CONF_LOCATION_ID, DATA_BROKERS, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
     STORAGE_VERSION)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
@@ -20,6 +21,23 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
+
+
+async def setup_platform(hass, platform: str, *devices):
+    """Set up the SmartThings platform and prerequisites."""
+    hass.config.components.add(DOMAIN)
+    broker = DeviceBroker(hass, devices, '')
+    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
+                               SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
+    hass.data[DOMAIN] = {
+        DATA_BROKERS: {
+            config_entry.entry_id: broker
+        }
+    }
+    await hass.config_entries.async_forward_entry_setup(
+        config_entry, platform)
+    await hass.async_block_till_done()
+    return config_entry
 
 
 @pytest.fixture(autouse=True)

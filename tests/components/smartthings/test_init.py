@@ -162,7 +162,7 @@ async def test_event_handler_dispatches_updated_devices(
 
     assert called
     for device in devices:
-        assert device.status.attributes['Updated'] == 'Value'
+        assert device.status.values['Updated'] == 'Value'
 
 
 async def test_event_handler_ignores_other_installed_app(
