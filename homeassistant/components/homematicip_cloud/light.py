@@ -235,7 +235,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             brightness = self.brightness
         dim_level = brightness / 255.0
 
-        # disable LED if dim_level belox 1.
+        # disable LED if dim_level below 0.01.
         if dim_level < 0.01:
             dim_level = 0.0
             simple_rgb_color = RGBColorState.BLACK
