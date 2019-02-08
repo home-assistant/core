@@ -275,6 +275,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._away = False
         self._hold = None
         self._aux = False
+        self._is_on = None
 
         value_templates = {}
         if CONF_VALUE_TEMPLATE in config:
