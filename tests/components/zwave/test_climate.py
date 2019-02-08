@@ -1,7 +1,8 @@
 """Test Z-Wave climate devices."""
 import pytest
 
-from homeassistant.components.climate import zwave, STATE_COOL, STATE_HEAT
+from homeassistant.components.climate import STATE_COOL, STATE_HEAT
+from homeassistant.components.zwave import climate
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
@@ -21,7 +22,7 @@ def device(hass, mock_openzwave):
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
     )
-    device = zwave.get_device(hass, node=node, values=values, node_config={})
+    device = climate.get_device(hass, node=node, values=values, node_config={})
 
     yield device
 
@@ -41,7 +42,7 @@ def device_zxt_120(hass, mock_openzwave):
         zxt_120_swing_mode=MockValue(
             data='test3', data_items=[6, 7, 8], node=node),
     )
-    device = zwave.get_device(hass, node=node, values=values, node_config={})
+    device = climate.get_device(hass, node=node, values=values, node_config={})
 
     yield device
 
@@ -59,7 +60,7 @@ def device_mapping(hass, mock_openzwave):
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
     )
-    device = zwave.get_device(hass, node=node, values=values, node_config={})
+    device = climate.get_device(hass, node=node, values=values, node_config={})
 
     yield device
 
@@ -195,15 +196,15 @@ def test_fan_mode_value_changed(device):
 
 def test_operating_state_value_changed(device):
     """Test values changed for climate device."""
-    assert device.device_state_attributes[zwave.ATTR_OPERATING_STATE] == 6
+    assert device.device_state_attributes[climate.ATTR_OPERATING_STATE] == 6
     device.values.operating_state.data = 8
     value_changed(device.values.operating_state)
-    assert device.device_state_attributes[zwave.ATTR_OPERATING_STATE] == 8
+    assert device.device_state_attributes[climate.ATTR_OPERATING_STATE] == 8
 
 
 def test_fan_state_value_changed(device):
     """Test values changed for climate device."""
-    assert device.device_state_attributes[zwave.ATTR_FAN_STATE] == 7
+    assert device.device_state_attributes[climate.ATTR_FAN_STATE] == 7
     device.values.fan_state.data = 9
     value_changed(device.values.fan_state)
-    assert device.device_state_attributes[zwave.ATTR_FAN_STATE] == 9
+    assert device.device_state_attributes[climate.ATTR_FAN_STATE] == 9

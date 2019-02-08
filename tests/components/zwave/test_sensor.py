@@ -1,6 +1,5 @@
 """Test Z-Wave sensor."""
-from homeassistant.components.sensor import zwave
-from homeassistant.components.zwave import const
+from homeassistant.components.zwave import const, sensor
 import homeassistant.const
 
 from tests.mock.zwave import (
@@ -13,7 +12,7 @@ def test_get_device_detects_none(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device is None
 
 
@@ -24,8 +23,8 @@ def test_get_device_detects_alarmsensor(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZWaveAlarmSensor)
+    device = sensor.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, sensor.ZWaveAlarmSensor)
 
 
 def test_get_device_detects_multilevelsensor(mock_openzwave):
@@ -35,8 +34,8 @@ def test_get_device_detects_multilevelsensor(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZWaveMultilevelSensor)
+    device = sensor.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, sensor.ZWaveMultilevelSensor)
     assert device.force_update
 
 
@@ -46,8 +45,8 @@ def test_get_device_detects_multilevel_meter(mock_openzwave):
     value = MockValue(data=0, node=node, type=const.TYPE_DECIMAL)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZWaveMultilevelSensor)
+    device = sensor.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, sensor.ZWaveMultilevelSensor)
 
 
 def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
@@ -57,7 +56,7 @@ def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
     value = MockValue(data=190.95555, units='F', node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 191.0
     assert device.unit_of_measurement == homeassistant.const.TEMP_FAHRENHEIT
     value.data = 197.95555
@@ -72,7 +71,7 @@ def test_multilevelsensor_value_changed_temp_celsius(mock_openzwave):
     value = MockValue(data=38.85555, units='C', node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 38.9
     assert device.unit_of_measurement == homeassistant.const.TEMP_CELSIUS
     value.data = 37.95555
@@ -87,7 +86,7 @@ def test_multilevelsensor_value_changed_other_units(mock_openzwave):
     value = MockValue(data=190.95555, units='kWh', node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 190.96
     assert device.unit_of_measurement == 'kWh'
     value.data = 197.95555
@@ -102,7 +101,7 @@ def test_multilevelsensor_value_changed_integer(mock_openzwave):
     value = MockValue(data=5, units='counts', node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 5
     assert device.unit_of_measurement == 'counts'
     value.data = 6
@@ -117,7 +116,7 @@ def test_alarm_sensor_value_changed(mock_openzwave):
     value = MockValue(data=12.34, node=node, units='%')
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 12.34
     assert device.unit_of_measurement == '%'
     value.data = 45.67

@@ -224,7 +224,12 @@ class HomeKitEntity(Entity):
                 if service['iid'] != self._iid:
                     continue
                 for char in service['characteristics']:
-                    uuid = CharacteristicsTypes.get_uuid(char['type'])
+                    try:
+                        uuid = CharacteristicsTypes.get_uuid(char['type'])
+                    except KeyError:
+                        # If a KeyError is raised its a non-standard
+                        # characteristic. We must ignore it in this case.
+                        continue
                     if uuid not in characteristic_types:
                         continue
                     self._setup_characteristic(char)

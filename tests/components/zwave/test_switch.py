@@ -1,7 +1,7 @@
 """Test Z-Wave switches."""
 from unittest.mock import patch
 
-from homeassistant.components.switch import zwave
+from homeassistant.components.zwave import switch
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
@@ -13,8 +13,8 @@ def test_get_device_detects_switch(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZwaveSwitch)
+    device = switch.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, switch.ZwaveSwitch)
 
 
 def test_switch_turn_on_and_off(mock_openzwave):
@@ -22,7 +22,7 @@ def test_switch_turn_on_and_off(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = switch.get_device(node=node, values=values, node_config={})
 
     device.turn_on()
 
@@ -45,7 +45,7 @@ def test_switch_value_changed(mock_openzwave):
     node = MockNode()
     value = MockValue(data=False, node=node)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = switch.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
@@ -63,7 +63,7 @@ def test_switch_refresh_on_update(mock_counter, mock_openzwave):
                     product_id='0005')
     value = MockValue(data=False, node=node, instance=1)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = switch.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 

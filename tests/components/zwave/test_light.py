@@ -1,10 +1,10 @@
 """Test Z-Wave lights."""
 from unittest.mock import patch, MagicMock
 
-import homeassistant.components.zwave
-from homeassistant.components.zwave import const
+from homeassistant.components import zwave
+from homeassistant.components.zwave import const, light
 from homeassistant.components.light import (
-    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR, ATTR_WHITE_VALUE,
     SUPPORT_COLOR_TEMP, SUPPORT_WHITE_VALUE)
 
@@ -29,8 +29,8 @@ def test_get_device_detects_dimmer(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZwaveDimmer)
+    device = light.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, light.ZwaveDimmer)
     assert device.supported_features == SUPPORT_BRIGHTNESS
 
 
@@ -40,8 +40,8 @@ def test_get_device_detects_colorlight(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZwaveColorLight)
+    device = light.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, light.ZwaveColorLight)
     assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 
@@ -51,8 +51,8 @@ def test_get_device_detects_zw098(mock_openzwave):
                     command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZwaveColorLight)
+    device = light.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, light.ZwaveColorLight)
     assert device.supported_features == (
         SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP)
 
@@ -66,9 +66,9 @@ def test_get_device_detects_rgbw_light(mock_openzwave):
     values = MockLightValues(
         primary=value, color=color, color_channels=color_channels)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
     device.value_added()
-    assert isinstance(device, zwave.ZwaveColorLight)
+    assert isinstance(device, light.ZwaveColorLight)
     assert device.supported_features == (
         SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
@@ -78,7 +78,7 @@ def test_dimmer_turn_on(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     device.turn_on()
 
@@ -97,7 +97,7 @@ def test_dimmer_turn_on(mock_openzwave):
     assert value_id == value.value_id
     assert brightness == 46  # int(120 / 255 * 99)
 
-    with patch.object(zwave, '_LOGGER', MagicMock()) as mock_logger:
+    with patch.object(light, '_LOGGER', MagicMock()) as mock_logger:
         device.turn_on(**{ATTR_TRANSITION: 35})
         assert mock_logger.debug.called
         assert node.set_dimmer.called
@@ -110,7 +110,7 @@ def test_dimmer_min_brightness(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
@@ -131,7 +131,7 @@ def test_dimmer_transitions(mock_openzwave):
     value = MockValue(data=0, node=node)
     duration = MockValue(data=0, node=node)
     values = MockLightValues(primary=value, dimming_duration=duration)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
     assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     # Test turn_on
@@ -174,7 +174,7 @@ def test_dimmer_turn_off(mock_openzwave):
     node = MockNode()
     value = MockValue(data=46, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     device.turn_off()
 
@@ -189,7 +189,7 @@ def test_dimmer_value_changed(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
@@ -205,14 +205,14 @@ def test_dimmer_refresh_value(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={
-        homeassistant.components.zwave.CONF_REFRESH_VALUE: True,
-        homeassistant.components.zwave.CONF_REFRESH_DELAY: 5,
+    device = light.get_device(node=node, values=values, node_config={
+        zwave.CONF_REFRESH_VALUE: True,
+        zwave.CONF_REFRESH_DELAY: 5,
     })
 
     assert not device.is_on
 
-    with patch.object(zwave, 'Timer', MagicMock()) as mock_timer:
+    with patch.object(light, 'Timer', MagicMock()) as mock_timer:
         value.data = 46
         value_changed(value)
 
@@ -224,7 +224,7 @@ def test_dimmer_refresh_value(mock_openzwave):
         assert mock_timer().start.called
         assert len(mock_timer().start.mock_calls) == 1
 
-        with patch.object(zwave, 'Timer', MagicMock()) as mock_timer_2:
+        with patch.object(light, 'Timer', MagicMock()) as mock_timer_2:
             value_changed(value)
             assert not device.is_on
             assert mock_timer().cancel.called
@@ -248,7 +248,7 @@ def test_set_hs_color(mock_openzwave):
     color_channels = MockValue(data=0x1c, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert color.data == '#0000000000'
 
@@ -266,7 +266,7 @@ def test_set_white_value(mock_openzwave):
     color_channels = MockValue(data=0x1d, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert color.data == '#0000000000'
 
@@ -289,7 +289,7 @@ def test_disable_white_if_set_color(mock_openzwave):
     color_channels = MockValue(data=0x1c, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
     device._white = 234
 
     assert color.data == '#0000000000'
@@ -311,7 +311,7 @@ def test_zw098_set_color_temp(mock_openzwave):
     color_channels = MockValue(data=0x1f, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert color.data == '#0000000000'
 
@@ -333,7 +333,7 @@ def test_rgb_not_supported(mock_openzwave):
     color_channels = MockValue(data=0x01, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color is None
 
@@ -343,7 +343,7 @@ def test_no_color_value(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color is None
 
@@ -354,7 +354,7 @@ def test_no_color_channels_value(mock_openzwave):
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
     values = MockLightValues(primary=value, color=color)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color is None
 
@@ -368,7 +368,7 @@ def test_rgb_value_changed(mock_openzwave):
     color_channels = MockValue(data=0x1c, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
 
@@ -387,7 +387,7 @@ def test_rgbww_value_changed(mock_openzwave):
     color_channels = MockValue(data=0x1d, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
     assert device.white_value == 0
@@ -408,7 +408,7 @@ def test_rgbcw_value_changed(mock_openzwave):
     color_channels = MockValue(data=0x1e, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
     assert device.white_value == 0
@@ -430,16 +430,16 @@ def test_ct_value_changed(mock_openzwave):
     color_channels = MockValue(data=0x1f, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = light.get_device(node=node, values=values, node_config={})
 
-    assert device.color_temp == zwave.TEMP_MID_HASS
+    assert device.color_temp == light.TEMP_MID_HASS
 
     color.data = '#000000ff00'
     value_changed(color)
 
-    assert device.color_temp == zwave.TEMP_WARM_HASS
+    assert device.color_temp == light.TEMP_WARM_HASS
 
     color.data = '#00000000ff'
     value_changed(color)
 
-    assert device.color_temp == zwave.TEMP_COLD_HASS
+    assert device.color_temp == light.TEMP_COLD_HASS

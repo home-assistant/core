@@ -69,6 +69,8 @@ def decorate_command(listener, command):
                           "{}: {}".format("with args", args),
                           "{}: {}".format("with kwargs", kwds),
                           "{}: {}".format("and result", result))
+            if isinstance(result, bool):
+                return result
             return result[1] is Status.SUCCESS
         except DeliveryError:
             _LOGGER.debug("%s: command failed: %s", listener.unique_id,
@@ -178,6 +180,7 @@ class ClusterListener:
             'zha_event',
             {
                 'unique_id': self._unique_id,
+                'device_ieee': str(self._zha_device.ieee),
                 'command': command,
                 'args': args
             }

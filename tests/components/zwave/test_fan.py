@@ -1,6 +1,7 @@
 """Test Z-Wave fans."""
+from homeassistant.components.zwave import fan
 from homeassistant.components.fan import (
-    zwave, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
@@ -12,8 +13,8 @@ def test_get_device_detects_fan(mock_openzwave):
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZwaveFan)
+    device = fan.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, fan.ZwaveFan)
     assert device.supported_features == SUPPORT_SET_SPEED
     assert device.speed_list == [
         SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
@@ -24,7 +25,7 @@ def test_fan_turn_on(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = fan.get_device(node=node, values=values, node_config={})
 
     device.turn_on()
 
@@ -79,7 +80,7 @@ def test_fan_turn_off(mock_openzwave):
     node = MockNode()
     value = MockValue(data=46, node=node)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = fan.get_device(node=node, values=values, node_config={})
 
     device.turn_off()
 
@@ -94,7 +95,7 @@ def test_fan_value_changed(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockEntityValues(primary=value)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = fan.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
