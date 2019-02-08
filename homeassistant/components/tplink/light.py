@@ -111,7 +111,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+        from pyHS100 import SmartBulb
+        self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
@@ -128,7 +129,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
+        from pyHS100 import SmartBulb
+        self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
     def min_mireds(self):
@@ -162,13 +164,13 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartDeviceException
+        from pyHS100 import SmartDeviceException, SmartBulb
         try:
             if self._supported_features is None:
                 self.get_features()
 
             self._state = (
-                self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
+                self.smartbulb.state == SmartBulb.BULB_STATE_ON)
 
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
