@@ -10,7 +10,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand
 
@@ -36,19 +36,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in sensors:
         dev.append(DanfossAir(data, sensor[0], sensor[1], sensor[2]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class DanfossAir(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, data, name, sensorUnit, sensorType):
+    def __init__(self, data, name, sensor_unit, sensor_type):
         """Initialize the sensor."""
         self._data = data
         self._name = name
         self._state = None
-        self._type = sensorType
-        self._unit = sensorUnit
+        self._type = sensor_type
+        self._unit = sensor_unit
 
     @property
     def name(self):
@@ -68,7 +68,7 @@ class DanfossAir(Entity):
     def update(self):
         """Update the new state of the sensor.
 
-        This is done through the DanfossAir object tthat does the actually
+        This is done through the DanfossAir object that does the actual
         communication with the Air CCM.
         """
         self._data.update()

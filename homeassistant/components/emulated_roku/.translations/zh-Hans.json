@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "\u540d\u79f0\u5df2\u5b58\u5728"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host_ip": "\u4e3b\u673aIP",
+                    "listen_port": "\u76d1\u542c\u7aef\u53e3",
+                    "name": "\u59d3\u540d"
+                },
+                "title": "\u5b9a\u4e49\u670d\u52a1\u5668\u914d\u7f6e"
+            }
+        }
+    }
+}

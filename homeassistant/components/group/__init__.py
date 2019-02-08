@@ -23,6 +23,8 @@ from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
+from .reproduce_state import async_reproduce_states  # noqa
+
 DOMAIN = 'group'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

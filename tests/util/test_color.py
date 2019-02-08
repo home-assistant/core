@@ -8,6 +8,18 @@ import voluptuous as vol
 GAMUT = color_util.GamutType(color_util.XYPoint(0.704, 0.296),
                              color_util.XYPoint(0.2151, 0.7106),
                              color_util.XYPoint(0.138, 0.08))
+GAMUT_INVALID_1 = color_util.GamutType(color_util.XYPoint(0.704, 0.296),
+                                       color_util.XYPoint(-0.201, 0.7106),
+                                       color_util.XYPoint(0.138, 0.08))
+GAMUT_INVALID_2 = color_util.GamutType(color_util.XYPoint(0.704, 1.296),
+                                       color_util.XYPoint(0.2151, 0.7106),
+                                       color_util.XYPoint(0.138, 0.08))
+GAMUT_INVALID_3 = color_util.GamutType(color_util.XYPoint(0.0, 0.0),
+                                       color_util.XYPoint(0.0, 0.0),
+                                       color_util.XYPoint(0.0, 0.0))
+GAMUT_INVALID_4 = color_util.GamutType(color_util.XYPoint(0.1, 0.1),
+                                       color_util.XYPoint(0.3, 0.3),
+                                       color_util.XYPoint(0.7, 0.7))
 
 
 class TestColorUtil(unittest.TestCase):
@@ -337,6 +349,14 @@ class TestColorUtil(unittest.TestCase):
         assert color_util.color_rgb_to_hex(0, 0, 0) == '000000'
         assert color_util.color_rgb_to_hex(51, 153, 255) == '3399ff'
         assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == 'ff4400'
+
+    def test_gamut(self):
+        """Test gamut functions."""
+        assert color_util.check_valid_gamut(GAMUT)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_1)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_2)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_3)
+        assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
 
 
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):

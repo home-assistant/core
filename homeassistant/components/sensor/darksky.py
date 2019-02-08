@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX)
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_UPDATE_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -28,7 +28,6 @@ ATTRIBUTION = "Powered by Dark Sky"
 CONF_FORECAST = 'forecast'
 CONF_LANGUAGE = 'language'
 CONF_UNITS = 'units'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_LANGUAGE = 'en'
 
