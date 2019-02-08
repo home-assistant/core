@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS,
-    NEATO_PERSISTENT_MAPS)
+    NEATO_PERSISTENT_MAPS, NEATO_DOMAIN)
 
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +28,6 @@ SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
     SUPPORT_STOP | SUPPORT_START | SUPPORT_CLEAN_SPOT | \
     SUPPORT_STATE | SUPPORT_MAP | SUPPORT_LOCATE
 
-DOMAIN = 'neato'
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
 ATTR_CLEAN_AREA = 'clean_area'
@@ -45,7 +44,7 @@ ATTR_ZONE = 'zone'
 SERVICE_NEATO_CUSTOM_CLEANING = 'neato_custom_cleaning'
 
 SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_MODE, default=2): cv.positive_int,
     vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
     vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
@@ -83,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     if entity.entity_id in entity_ids]
         return entities
 
-    hass.services.register(DOMAIN, SERVICE_NEATO_CUSTOM_CLEANING,
+    hass.services.register(NEATO_DOMAIN, SERVICE_NEATO_CUSTOM_CLEANING,
                            neato_custom_cleaning_service,
                            schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA)
 
