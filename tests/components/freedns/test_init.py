@@ -40,7 +40,7 @@ def test_setup(hass, aioclient_mock):
     result = yield from async_setup_component(hass, freedns.DOMAIN, {
         freedns.DOMAIN: {
             'access_token': ACCESS_TOKEN,
-            'update_interval': UPDATE_INTERVAL,
+            'scan_interval': UPDATE_INTERVAL,
         }
     })
     assert result
