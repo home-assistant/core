@@ -326,6 +326,9 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     assert persons[0]['device_trackers'] == [DEVICE_TRACKER_2]
     assert persons[0]['user_id'] is None
 
+    state = hass.states.get('person.tracked_person')
+    assert state.name == 'Updated Name'
+
 
 async def test_ws_update_require_admin(hass, hass_ws_client, storage_setup,
                                        hass_admin_user):
@@ -369,6 +372,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert len(persons) == 0
 
     assert resp['success']
+    assert len(hass.states.async_entity_ids('person')) == 0
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert not ent_reg.async_is_registered('person.tracked_person')
 
 
 async def test_ws_delete_require_admin(hass, hass_ws_client, storage_setup,

@@ -43,7 +43,7 @@ PERSON_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN): vol.Any({}, vol.All(cv.ensure_list, [PERSON_SCHEMA]))
+    vol.Optional(DOMAIN): vol.Any(vol.All(cv.ensure_list, [PERSON_SCHEMA]), {})
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
@@ -150,6 +150,12 @@ class PersonManager:
 
         self.storage_data[person_id].update(changes)
         self._async_schedule_save()
+
+        for entity in self.component.entities:
+            if entity.unique_id == person_id:
+                entity.person_updated()
+                break
+
         return self.storage_data[person_id]
 
     async def async_delete_person(self, person_id):
@@ -159,6 +165,13 @@ class PersonManager:
 
         self.storage_data.pop(person_id)
         self._async_schedule_save()
+        ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
+
+        for entity in self.component.entities:
+            if entity.unique_id == person_id:
+                await entity.async_remove()
+                ent_reg.async_remove(entity.entity_id)
+                break
 
     @callback
     def _async_schedule_save(self) -> None:
@@ -194,19 +207,17 @@ class Person(RestoreEntity):
     def __init__(self, config, editable):
         """Set up person."""
         self._config = config
+        self._editable = editable
         self._latitude = None
         self._longitude = None
-        self._name = config[CONF_NAME]
         self._source = None
         self._state = None
-        self._trackers = config.get(CONF_DEVICE_TRACKERS)
-        self._user_id = config.get(CONF_USER_ID)
-        self._editable = editable
+        self._unsub_track_device = None
 
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._name
+        return self._config[CONF_NAME]
 
     @property
     def should_poll(self):
@@ -234,8 +245,9 @@ class Person(RestoreEntity):
             data[ATTR_LONGITUDE] = round(self._longitude, 5)
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
-        if self._user_id is not None:
-            data[ATTR_USER_ID] = self._user_id
+        user_id = self._config.get(CONF_USER_ID)
+        if user_id is not None:
+            data[ATTR_USER_ID] = user_id
         return data
 
     @property
@@ -249,6 +261,39 @@ class Person(RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             self._parse_source_state(state)
+        self._update_state_tracking()
+
+    @callback
+    def person_updated(self):
+        """Handle when the config is updated."""
+        print("PERSON UDPATED")
+        self._update_state_tracking()
+
+        trackers = self._config.get(CONF_DEVICE_TRACKERS)
+
+        if trackers:
+            latest = max(
+                [self.hass.states.get(entity_id) for entity_id in trackers],
+                key=lambda state: 0 if state is None else state.last_updated
+            )
+        else:
+            latest = None
+
+        if latest:
+            self._parse_source_state(latest)
+        else:
+            self._state = None
+            self._source = None
+            self._latitude = None
+            self._longitude = None
+
+        self.async_schedule_update_ha_state()
+
+    @callback
+    def _update_state_tracking(self):
+        """Update the state tracking."""
+        if self._unsub_track_device is not None:
+            self._unsub_track_device()
 
         trackers = self._config.get(CONF_DEVICE_TRACKERS)
 
@@ -264,11 +309,15 @@ class Person(RestoreEntity):
         _LOGGER.debug(
             "Subscribe to device trackers for %s", self.entity_id)
 
-        async_track_state_change(
+        self._unsub_track_device = async_track_state_change(
             self.hass, trackers, async_handle_tracker_update)
 
+    @callback
     def _parse_source_state(self, state):
-        """Parse source state and set person attributes."""
+        """Parse source state and set person attributes.
+
+        This is a device tracker state or the restored person state.
+        """
         self._state = state.state
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
