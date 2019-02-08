@@ -9,7 +9,7 @@ from collections import namedtuple
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -204,8 +204,7 @@ class SmartThingsSensor(SmartThingsEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.status.attributes[self._attribute].value \
-            or STATE_UNKNOWN
+        return self._device.status.attributes[self._attribute].value
 
     @property
     def device_class(self):
