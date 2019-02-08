@@ -130,40 +130,40 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    from homematicip.base.enums import RGBColorState
+    _channel_index = None
 
-    channel_index = None
-
-    channel_name = None
+    _channel_name = None
 
     # Dictionary to translate between RGBColorState and hs_color
-    __color_switcher = {
-        RGBColorState.WHITE: [0.0, 0.0],
-        RGBColorState.RED: [0.0, 100.0],
-        RGBColorState.YELLOW: [60.0, 100.0],
-        RGBColorState.GREEN: [120.0, 100.0],
-        RGBColorState.TURQUOISE: [180.0, 100.0],
-        RGBColorState.BLUE: [240.0, 100.0],
-        RGBColorState.PURPLE: [300.0, 100.0]
-    }
+    _color_switcher = None
 
     def __init__(self, home, device, channel_Index: int):
         """Initialize the dimmer light device."""
         super().__init__(home, device)
-        self.channel_index = channel_Index
-        if self.channel_index == 2:
-            self.channel_name = 'Top'
+        self._channel_index = channel_Index
+        if self._channel_index == 2:
+            self._channel_name = 'Top'
         else:
-            self.channel_name = 'Buttom'
+            self._channel_name = 'Buttom'
+
+        from homematicip.base.enums import RGBColorState
+        self._color_switcher = {
+            RGBColorState.WHITE: [0.0, 0.0],
+            RGBColorState.RED: [0.0, 100.0],
+            RGBColorState.YELLOW: [60.0, 100.0],
+            RGBColorState.GREEN: [120.0, 100.0],
+            RGBColorState.TURQUOISE: [180.0, 100.0],
+            RGBColorState.BLUE: [240.0, 100.0],
+            RGBColorState.PURPLE: [300.0, 100.0]
+        }
 
     def _channel(self):
-        return self._device.functionalChannels[self.channel_index]
+        return self._device.functionalChannels[self._channel_index]
 
     @property
     def is_on(self):
         """Return true if device is on."""
         from homematicip.base.enums import RGBColorState
-
         return self._channel().dimLevel > 0.0 and not \
             self._channel().simpleRGBColorState == RGBColorState.BLACK
 
@@ -176,7 +176,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         simple_rgb_color = self._channel().simpleRGBColorState
-        return self.__color_switcher.get(simple_rgb_color, [0.0, 0.0])
+        return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
     def device_state_attributes(self):
@@ -198,7 +198,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Return the name of the generic device."""
         return "{} {} {}".format(super().name,
                                  'Notification',
-                                 self.channel_name)
+                                 self._channel_name)
 
     @property
     def supported_features(self):
@@ -215,7 +215,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Return a unique ID."""
         return "{}_{}_{}".format(self.__class__.__name__,
                                  self._device.id,
-                                 self.channel_name)
+                                 self._channel_name)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -245,7 +245,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             simple_rgb_color = RGBColorState.WHITE
 
         await self._device.set_rgb_dim_level(
-            self.channel_index,
+            self._channel_index,
             simple_rgb_color,
             dim_level)
 
@@ -253,7 +253,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Turn the light off."""
         from homematicip.base.enums import RGBColorState
         await self._device.set_rgb_dim_level(
-            self.channel_index,
+            self._channel_index,
             RGBColorState.BLACK, 0.0)
 
 
