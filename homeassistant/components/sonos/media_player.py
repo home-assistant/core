@@ -15,11 +15,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.components.sonos import DOMAIN as SONOS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
