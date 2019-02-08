@@ -255,6 +255,17 @@ class AmbientWeatherEntity(Entity):
         self._station_name = station_name
 
     @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            'identifiers': {
+                (DOMAIN, self._mac_address)
+            },
+            'name': self._station_name,
+            'manufacturer': 'Ambient Weather',
+        }
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return '{0}_{1}'.format(self._station_name, self._sensor_name)
