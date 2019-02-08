@@ -228,6 +228,10 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             brightness = self.brightness
         dim_level = brightness / 255.0
 
+        if kwargs.__len__() == 0:
+            dim_level = 1.0
+            simple_rgb_color = RGBColorState.WHITE
+
         await self._device.set_rgb_dim_level(
             self.channel_index,
             simple_rgb_color,
