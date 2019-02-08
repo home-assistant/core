@@ -144,8 +144,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         RGBColorState.GREEN: [120.0, 100.0],
         RGBColorState.TURQUOISE: [180.0, 100.0],
         RGBColorState.BLUE: [240.0, 100.0],
-        RGBColorState.PURPLE: [300.0, 100.0],
-        RGBColorState.BLACK: [0.0, 0.0]
+        RGBColorState.PURPLE: [300.0, 100.0]
     }
 
     def __init__(self, home, device, channel_Index: int):
@@ -218,16 +217,26 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
+        # Use hs_color from kwargs,
+        # if not applicable use current hs_color.
         hs_color = kwargs.get(ATTR_HS_COLOR, None)
         if hs_color is None:
             hs_color = self.hs_color
         simple_rgb_color = _convert_color(hs_color)
 
+        # Use brightness from kwargs,
+        # if not applicable use current brightness.
         brightness = kwargs.get(ATTR_BRIGHTNESS, None)
         if brightness is None:
             brightness = self.brightness
         dim_level = brightness / 255.0
 
+        # disable LED if dim_level belox 1.
+        if dim_level < 0.01:
+            dim_level = 0.0
+            simple_rgb_color = RGBColorState.BLACK
+
+        # If no kwargs, use default value.
         if kwargs.__len__() == 0:
             dim_level = 1.0
             simple_rgb_color = RGBColorState.WHITE
