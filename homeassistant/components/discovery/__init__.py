@@ -105,7 +105,7 @@ CONF_IGNORE = 'ignore'
 CONF_ENABLE = 'enable'
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): vol.Schema({
+    vol.Optional(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [
                 vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
@@ -126,11 +126,15 @@ async def async_setup(hass, config):
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
 
-    # Platforms ignore by config
-    ignored_platforms = config[DOMAIN][CONF_IGNORE]
+    if DOMAIN in config:
+        # Platforms ignore by config
+        ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
-    # Optional platforms enabled by config
-    enabled_platforms = config[DOMAIN][CONF_ENABLE]
+        # Optional platforms enabled by config
+        enabled_platforms = config[DOMAIN][CONF_ENABLE]
+    else:
+        ignored_platforms = []
+        enabled_platforms = []
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
