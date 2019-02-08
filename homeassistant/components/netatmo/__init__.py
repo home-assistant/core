@@ -30,14 +30,23 @@ DOMAIN = 'netatmo'
 
 NETATMO_AUTH = None
 NETATMO_PERSONS = {}
+
 DEFAULT_PERSON = 'Unknown'
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
-EVENT_BUS_PERSON = 'netatmo_person'
-EVENT_BUS_MOVEMENT = 'netatmo_movement'
 EVENT_PERSON = 'person'
 EVENT_MOVEMENT = 'movement'
+EVENT_HUMAN = 'human'
+EVENT_ANIMAL = 'animal'
+EVENT_VEHICLE = 'vehicle'
+
+EVENT_BUS_PERSON = 'netatmo_person'
+EVENT_BUS_MOVEMENT = 'netatmo_movement'
+EVENT_BUS_HUMAN = 'netatmo_human'
+EVENT_BUS_ANIMAL = 'netatmo_animal'
+EVENT_BUS_VEHICLE = 'netatmo_vehicle'
+EVENT_BUS_OTHER = 'netatmo_other'
 
 ATTR_ID = 'id'
 ATTR_PSEUDO = 'pseudo'
@@ -110,12 +119,13 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    published_data = {}
+    published_data = {
+        ATTR_EVENT_TYPE: data.get(ATTR_EVENT_TYPE),
+        ATTR_HOME_NAME: data.get(ATTR_HOME_NAME),
+        ATTR_CAMERA_ID: data.get(ATTR_CAMERA_ID),
+        ATTR_MESSAGE: data.get(ATTR_MESSAGE)
+    }
     if data.get(ATTR_EVENT_TYPE) == EVENT_PERSON:
-        published_data[ATTR_EVENT_TYPE] = EVENT_PERSON
-        published_data[ATTR_HOME_NAME] = data.get(ATTR_HOME_NAME)
-        published_data[ATTR_CAMERA_ID] = data.get(ATTR_CAMERA_ID)
-        published_data[ATTR_MESSAGE] = data.get(ATTR_MESSAGE)
         for person in data[ATTR_PERSONS]:
             published_data[ATTR_ID] = person.get(ATTR_ID)
             published_data[ATTR_NAME] = NETATMO_PERSONS.get(
@@ -123,10 +133,15 @@ async def handle_webhook(hass, webhook_id, request):
             published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             hass.bus.async_fire(EVENT_BUS_PERSON, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_MOVEMENT:
-        published_data[ATTR_EVENT_TYPE] = EVENT_MOVEMENT
-        published_data[ATTR_HOME_NAME] = data.get(ATTR_HOME_NAME)
-        published_data[ATTR_CAMERA_ID] = data.get(ATTR_CAMERA_ID)
         hass.bus.async_fire(EVENT_BUS_MOVEMENT, published_data)
+    elif data.get(ATTR_EVENT_TYPE) == EVENT_HUMAN:
+        hass.bus.async_fire(EVENT_BUS_HUMAN, published_data)
+    elif data.get(ATTR_EVENT_TYPE) == EVENT_ANIMAL:
+        hass.bus.async_fire(EVENT_BUS_ANIMAL, published_data)
+    elif data.get(ATTR_EVENT_TYPE) == EVENT_VEHICLE:
+        hass.bus.async_fire(EVENT_BUS_VEHICLE, published_data)
+    else:
+        hass.bus.async_fire(EVENT_BUS_OTHER, published_data)
 
 
 class CameraData:
