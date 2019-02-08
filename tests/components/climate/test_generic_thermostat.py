@@ -223,6 +223,27 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     assert 23 == state.attributes.get('temperature')
 
 
+async def test_change_temp_when_away_and_restore_prev_temp(hass, setup_comp_2):
+    """Test that setting a temperature in away mode updates stored temperature.
+
+    Verify new temperature is restored.
+    """
+    common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
+    common.async_set_away_mode(hass, True)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 16 == state.attributes.get('temperature')
+    common.async_set_temperature(hass, 30)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 16 == state.attributes.get('temperature')
+    common.async_set_away_mode(hass, False)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 30 == state.attributes.get('temperature')
+
+
 async def test_sensor_bad_value(hass, setup_comp_2):
     """Test sensor that have None as state."""
     state = hass.states.get(ENTITY)
