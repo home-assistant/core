@@ -22,24 +22,8 @@ SUPPORTED_PLATFORMS = [
     'binary_sensor',
     'fan',
     'light',
+    'sensor',
     'switch'
-]
-SUPPORTED_CAPABILITIES = [
-    'accelerationSensor',
-    'button',
-    'colorControl',
-    'colorTemperature',
-    'contactSensor',
-    'fanSpeed',
-    'filterStatus',
-    'motionSensor',
-    'presenceSensor',
-    'soundSensor',
-    'switch',
-    'switchLevel',
-    'tamperAlert',
-    'valve',
-    'waterSensor'
 ]
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
