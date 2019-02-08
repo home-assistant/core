@@ -177,6 +177,27 @@ class TestMQTTClimate(unittest.TestCase):
         ])
         self.mock_publish.async_publish.reset_mock()
 
+    def test_set_operation_with_device_state(self):
+        """Test setting of new operation mode and getting device state."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['device_state_topic'] = 'device-state'
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert "off" == state.attributes.get('operation_mode')
+        assert "off" == state.state
+        common.set_operation_mode(self.hass, "on", ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert "on" == state.attributes.get('operation_mode')
+        assert "on" == state.state
+
+        fire_mqtt_message(self.hass, 'device-state', 'OFF')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert "on" == state.attributes.get('operation_mode')
+        assert "off" == state.state
+
     def test_set_fan_mode_bad_attr(self):
         """Test setting fan mode without required attribute."""
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
@@ -542,6 +563,7 @@ class TestMQTTClimate(unittest.TestCase):
         config['climate']['hold_state_topic'] = 'hold-state'
         config['climate']['aux_state_topic'] = 'aux-state'
         config['climate']['current_temperature_topic'] = 'current-temperature'
+        config['climate']['device_state_topic'] = 'device-state'
 
         assert setup_component(self.hass, climate.DOMAIN, config)
 
@@ -632,6 +654,13 @@ class TestMQTTClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 74656 == state.attributes.get('current_temperature')
+
+        # Device state
+        assert "cool" == state.state
+        fire_mqtt_message(self.hass, 'device-state', '"OFF"')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert "off" == state.state
 
     def test_min_temp_custom(self):
         """Test a custom min temp."""

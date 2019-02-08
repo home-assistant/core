@@ -60,6 +60,8 @@ CONF_HOLD_STATE_TEMPLATE = 'hold_state_template'
 CONF_AUX_COMMAND_TOPIC = 'aux_command_topic'
 CONF_AUX_STATE_TOPIC = 'aux_state_topic'
 CONF_AUX_STATE_TEMPLATE = 'aux_state_template'
+CONF_DEVICE_STATE_TOPIC = 'device_state_topic'
+CONF_DEVICE_STATE_TEMPLATE = 'device_state_template'
 
 CONF_CURRENT_TEMPERATURE_TEMPLATE = 'current_temperature_template'
 CONF_CURRENT_TEMPERATURE_TOPIC = 'current_temperature_topic'
@@ -86,6 +88,7 @@ TEMPLATE_KEYS = (
     CONF_AWAY_MODE_STATE_TEMPLATE,
     CONF_HOLD_STATE_TEMPLATE,
     CONF_AUX_STATE_TEMPLATE,
+    CONF_DEVICE_STATE_TEMPLATE,
     CONF_CURRENT_TEMPERATURE_TEMPLATE
 )
 
@@ -108,6 +111,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_DEVICE_STATE_TOPIC): mqtt.valid_subscribe_topic,
 
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
@@ -118,6 +122,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_CURRENT_TEMPERATURE_TEMPLATE): cv.template,
 
     vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
@@ -201,6 +206,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._hold = None
         self._current_temperature = None
         self._aux = False
+        self._is_on = None
 
         self._setup_from_config(config)
 
@@ -250,6 +256,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 CONF_AWAY_MODE_STATE_TOPIC,
                 CONF_HOLD_STATE_TOPIC,
                 CONF_AUX_STATE_TOPIC,
+                CONF_DEVICE_STATE_TOPIC,
                 CONF_CURRENT_TEMPERATURE_TOPIC
             )
         }
@@ -456,6 +463,34 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'msg_callback': handle_hold_mode_received,
                 'qos': qos}
 
+        @callback
+        def handle_device_state_received(topic, payload, qos):
+            """Handle receiving activity state via MQTT."""
+            payload_on = self._config.get(CONF_PAYLOAD_ON)
+            payload_off = self._config.get(CONF_PAYLOAD_OFF)
+            if CONF_DEVICE_STATE_TEMPLATE in self._value_templates:
+                payload = self._value_templates[CONF_DEVICE_STATE_TEMPLATE].\
+                  async_render_with_possible_json_value(payload)
+                if payload == "True":
+                    payload = payload_on
+                elif payload == "False":
+                    payload = payload_off
+
+            if payload == payload_on:
+                self._is_on = True
+            elif payload == payload_off:
+                self._is_on = False
+            else:
+                _LOGGER.error("Invalid activity state: %s", payload)
+
+            self.async_schedule_update_ha_state()
+
+        if self._topic[CONF_DEVICE_STATE_TOPIC] is not None:
+            topics[CONF_DEVICE_STATE_TOPIC] = {
+                'topic': self._topic[CONF_DEVICE_STATE_TOPIC],
+                'msg_callback': handle_device_state_received,
+                'qos': qos}
+
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
             topics)
@@ -521,6 +556,11 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def current_hold_mode(self):
         """Return hold mode setting."""
         return self._hold
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._is_on
 
     @property
     def is_aux_heat_on(self):
