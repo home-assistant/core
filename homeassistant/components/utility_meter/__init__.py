@@ -87,20 +87,20 @@ async def async_setup(hass, config):
             hass.async_create_task(discovery.async_load_platform(
                 hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config))
 
-    component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_METER_SCHEMA,
-        'async_reset_meters'
-    )
+            component.async_register_entity_service(
+                SERVICE_RESET, SERVICE_METER_SCHEMA,
+                'async_reset_meters'
+            )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
-        'async_select_tariff'
-    )
+            component.async_register_entity_service(
+                SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
+                'async_select_tariff'
+            )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
-        'async_next_tariff'
-    )
+            component.async_register_entity_service(
+                SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
+                'async_next_tariff'
+            )
 
     return True
 
@@ -156,6 +156,7 @@ class TariffSelect(RestoreEntity):
 
     async def async_reset_meters(self):
         """Reset all sensors of this meter."""
+        _LOGGER.debug("reset meter %s", self.entity_id)
         async_dispatcher_send(self.hass, SIGNAL_RESET_METER,
                               self.entity_id)
 
