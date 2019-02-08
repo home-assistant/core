@@ -60,11 +60,13 @@ CONDITION_CLASSES = {
     'exceptional': [],
 }
 
+
 def has_all_unique_cities(value):
     """Validate that all cities are unique."""
     cities = [location[CONF_CITY] for location in value]
     vol.Schema(vol.Unique())(cities)
     return value
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
