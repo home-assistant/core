@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['meteofrance==0.3.2']
+REQUIREMENTS = ['meteofrance==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'meteo_france'
@@ -85,6 +85,10 @@ def setup(hass, config):
         except meteofranceError as exp:
             _LOGGER.error(exp)
             return
+
+        client.need_rain_forecast = bool(CONF_MONITORED_CONDITIONS in location
+                                         and 'next_rain' in
+                                         location[CONF_MONITORED_CONDITIONS])
 
         hass.data[DATA_METEO_FRANCE][city] = MeteoFranceUpdater(client)
 
