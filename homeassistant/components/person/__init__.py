@@ -174,7 +174,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf_persons = config.get(DOMAIN, [])
     manager = hass.data[DOMAIN] = PersonManager(hass, component, conf_persons)
     await manager.async_initialize()
+
+    websocket_api.async_register_command(hass, ws_list_person)
     websocket_api.async_register_command(hass, ws_create_person)
+    websocket_api.async_register_command(hass, ws_update_person)
+    websocket_api.async_register_command(hass, ws_delete_person)
+
     return True
 
 
@@ -270,20 +275,21 @@ def ws_list_person(hass: HomeAssistantType,
                    connection: websocket_api.ActiveConnection, msg):
     """List persons."""
     manager = hass.data[DOMAIN]  # type: PersonManager
-    connection.send_result(msg['id'], list(manager.list_persons))
+    connection.send_result(msg['id'], list(manager.list_persons()))
 
 
 @websocket_api.websocket_command({
     vol.Required('type'): 'person/create',
     vol.Required('name'): str,
-    vol.Optional('user_id'): str,
+    vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional('device_trackers', default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
+@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_create_person(hass: HomeAssistantType,
                            connection: websocket_api.ActiveConnection, msg):
-    """Create a new person."""
+    """Create a person."""
     manager = hass.data[DOMAIN]  # type: PersonManager
     person = await manager.async_create_person(
         name=msg['name'],
@@ -297,14 +303,15 @@ async def ws_create_person(hass: HomeAssistantType,
     vol.Required('type'): 'person/update',
     vol.Required('person_id'): str,
     vol.Optional('name'): str,
-    vol.Optional('user_id'): str,
+    vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
+@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_update_person(hass: HomeAssistantType,
                            connection: websocket_api.ActiveConnection, msg):
-    """Update a new person."""
+    """Update a person."""
     manager = hass.data[DOMAIN]  # type: PersonManager
     changes = {}
     for key in ('name', 'user_id', 'device_trackers'):
@@ -319,11 +326,12 @@ async def ws_update_person(hass: HomeAssistantType,
     vol.Required('type'): 'person/delete',
     vol.Required('person_id'): str,
 })
+@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_delete_person(hass: HomeAssistantType,
                            connection: websocket_api.ActiveConnection,
                            msg):
-    """Delete a new person."""
+    """Delete a person."""
     manager = hass.data[DOMAIN]  # type: PersonManager
     await manager.async_delete_person(msg['person_id'])
     connection.send_result(msg['id'])
