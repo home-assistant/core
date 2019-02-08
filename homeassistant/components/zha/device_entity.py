@@ -108,12 +108,18 @@ class ZhaDeviceEntity(ZhaEntity):
             difference = time.time() - self._zha_device.last_seen
             if difference > self._keepalive_interval:
                 self._zha_device.update_available(False)
-                self._state = None
             else:
                 self._zha_device.update_available(True)
-                self._state = 'online'
                 if self._battery_listener:
                     await self.async_get_latest_battery_reading()
+
+    def async_set_available(self, available):
+        """Set entity availability."""
+        if available:
+            self._state = 'online'
+        else:
+            self._state = 'offline'
+        super().async_set_available(available)
 
     async def _async_init_battery_values(self):
         """Get initial battery level and battery info from listener cache."""
