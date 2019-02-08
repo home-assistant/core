@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import discovery, config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
@@ -90,13 +89,11 @@ def setup(hass, config):
     tm_data.update()
     tm_data.init_torrent_list()
 
-    def refresh(call=None):
+    def refresh(event_time):
         """Service call to update the data."""
         tm_data.update()
 
     track_time_interval(hass, refresh, scan_interval)
-
-    hass.services.async_register(DOMAIN, 'transmission', refresh)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
@@ -112,6 +109,7 @@ def setup(hass, config):
 class TransmissionData:
     """Get the latest data and update the states."""
 
+    
     def __init__(self, hass, config, api):
         """Initialize the Transmission RPC API."""
         self.data = None
@@ -200,6 +198,6 @@ class TransmissionData:
     def get_alt_speed_enabled(self):
         """Get the alternative speed flag."""
         if self.session is None:
-            return 
+            return None
 
         return self.session.alt_speed_enabled

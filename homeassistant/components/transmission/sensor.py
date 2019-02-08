@@ -13,8 +13,7 @@ from homeassistant.components.transmission import (
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity 
-from homeassistant.util import Throttle
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['transmission']
 
@@ -52,6 +51,7 @@ async def async_setup_platform(
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
+    
     def __init__(
             self,
             sensor_type,

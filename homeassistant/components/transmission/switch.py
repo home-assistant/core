@@ -4,8 +4,6 @@ Support for setting the Transmission BitTorrent client Turtle Mode.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.transmission/
 """
-from datetime import timedelta
-
 import logging
 
 from homeassistant.components.transmission import (
@@ -14,8 +12,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity 
-from homeassistant.util import Throttle
+from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['transmission']
 
@@ -42,6 +39,7 @@ async def async_setup_platform(
 class TransmissionSwitch(ToggleEntity):
     """Representation of a Transmission switch."""
 
+    
     def __init__(self, transmission_client, name):
         """Initialize the Transmission switch."""
         self._name = name
