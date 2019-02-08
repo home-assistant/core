@@ -229,7 +229,7 @@ class LinkyData:
         self._fetch_data()
         if not self.data:
             return
-        _LOGGER.debug("Linky data retrieved: " + str(self.data))
+        _LOGGER.debug("Linky data retrieved: %s", str(self.data))
         self.halfhourly = list(reversed(self.data["hourly"]))
         self.daily = list(reversed(self.data["daily"]))
         self.monthly = list(reversed(self.data["monthly"]))
