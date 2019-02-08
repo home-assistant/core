@@ -1,7 +1,8 @@
 """The tests for the person component."""
 from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN)
+    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
@@ -115,6 +116,12 @@ async def test_setup_tracker(hass, hass_admin_user):
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
     assert state.state == 'home'
     assert state.attributes.get(ATTR_ID) == '1234'
     assert state.attributes.get(ATTR_LATITUDE) is None
@@ -152,6 +159,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_SOURCE) is None
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     hass.states.async_set(DEVICE_TRACKER, 'home')
     await hass.async_block_till_done()
 
@@ -224,6 +233,8 @@ async def test_load_person_storage(hass, hass_admin_user, storage_setup):
     assert state.attributes.get(ATTR_SOURCE) is None
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     hass.states.async_set(DEVICE_TRACKER, 'home')
     await hass.async_block_till_done()
 

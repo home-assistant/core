@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME)
+    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -22,6 +23,7 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components import websocket_api
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_EDITABLE = 'editable'
@@ -262,20 +264,46 @@ class Person(RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             self._parse_source_state(state)
-        self._update_state_tracking()
+
+        @callback
+        def person_start_hass(now):
+            self.person_updated()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        person_start_hass)
 
     @callback
     def person_updated(self):
         """Handle when the config is updated."""
-        self._update_state_tracking()
+        if self._unsub_track_device is not None:
+            self._unsub_track_device()
+            self._unsub_track_device = None
 
         trackers = self._config.get(CONF_DEVICE_TRACKERS)
 
         if trackers:
+            def sort_key(state):
+                if state:
+                    return state.last_updated
+                return dt_util.utc_from_timestamp(0)
+
             latest = max(
                 [self.hass.states.get(entity_id) for entity_id in trackers],
-                key=lambda state: 0 if state is None else state.last_updated
+                key=sort_key
             )
+
+            @callback
+            def async_handle_tracker_update(entity, old_state, new_state):
+                """Handle the device tracker state changes."""
+                self._parse_source_state(new_state)
+                self.async_schedule_update_ha_state()
+
+            _LOGGER.debug(
+                "Subscribe to device trackers for %s", self.entity_id)
+
+            self._unsub_track_device = async_track_state_change(
+                self.hass, trackers, async_handle_tracker_update)
+
         else:
             latest = None
 
@@ -288,29 +316,6 @@ class Person(RestoreEntity):
             self._longitude = None
 
         self.async_schedule_update_ha_state()
-
-    @callback
-    def _update_state_tracking(self):
-        """Update the state tracking."""
-        if self._unsub_track_device is not None:
-            self._unsub_track_device()
-
-        trackers = self._config.get(CONF_DEVICE_TRACKERS)
-
-        if not trackers:
-            return
-
-        @callback
-        def async_handle_tracker_update(entity, old_state, new_state):
-            """Handle the device tracker state changes."""
-            self._parse_source_state(new_state)
-            self.async_schedule_update_ha_state()
-
-        _LOGGER.debug(
-            "Subscribe to device trackers for %s", self.entity_id)
-
-        self._unsub_track_device = async_track_state_change(
-            self.hass, trackers, async_handle_tracker_update)
 
     @callback
     def _parse_source_state(self, state):
