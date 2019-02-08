@@ -60,12 +60,18 @@ CONDITION_CLASSES = {
     'exceptional': [],
 }
 
+def has_all_unique_cities(value):
+    """Validate that all cities are unique."""
+    cities = [location[CONF_CITY] for location in value]
+    vol.Schema(vol.Unique())(cities)
+    return value
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_CITY): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    })])
+    })], has_all_unique_cities)
 }, extra=vol.ALLOW_EXTRA)
 
 
