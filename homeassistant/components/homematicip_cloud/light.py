@@ -233,12 +233,11 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS, None)
         if brightness is None:
             brightness = self.brightness
-        dim_level = brightness / 255.0
 
-        # disable LED if dim_level below 0.01.
-        if dim_level < 0.01:
-            dim_level = 0.0
-            simple_rgb_color = RGBColorState.BLACK
+        # Minimum brightness is 10, otherwise the led is disabled
+        if brightness < 10:
+            brightness = 10
+        dim_level = brightness / 255.0
 
         # If no kwargs, use default value.
         if kwargs.__len__() == 0:
