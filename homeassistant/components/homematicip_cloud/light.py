@@ -6,8 +6,6 @@ https://home-assistant.io/components/light.homematicip_cloud/
 """
 import logging
 
-from homematicip.base.enums import RGBColorState
-
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.light import (
@@ -132,6 +130,8 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
+    from homematicip.base.enums import RGBColorState
+
     channel_index = None
 
     channel_name = None
@@ -162,6 +162,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
+        from homematicip.base.enums import RGBColorState
+
         return self._channel().dimLevel > 0.0 and not \
             self._channel().simpleRGBColorState == RGBColorState.BLACK
 
@@ -217,6 +219,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
+        from homematicip.base.enums import RGBColorState
+
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
         hs_color = kwargs.get(ATTR_HS_COLOR, None)
@@ -248,18 +252,21 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
+        from homematicip.base.enums import RGBColorState
         await self._device.set_rgb_dim_level(
             self.channel_index,
             RGBColorState.BLACK, 0.0)
 
 
-def _convert_color(color) -> RGBColorState:
+def _convert_color(color):
     """
     Convert the given color to the reduced RGBColorState color.
 
     RGBColorStat contains only 8 colors including white and black,
     so a conversion is required.
     """
+    from homematicip.base.enums import RGBColorState
+
     if color is None:
         return RGBColorState.WHITE
 
