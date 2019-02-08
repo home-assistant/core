@@ -96,6 +96,7 @@ def setup(hass, config):
                                          location[CONF_MONITORED_CONDITIONS])
 
         hass.data[DATA_METEO_FRANCE][city] = MeteoFranceUpdater(client)
+        hass.data[DATA_METEO_FRANCE][city].update()
 
         if CONF_MONITORED_CONDITIONS in location:
             monitored_conditions = location[CONF_MONITORED_CONDITIONS]
@@ -123,7 +124,6 @@ class MeteoFranceUpdater:
     def __init__(self, client):
         """Initialize the data object."""
         self._client = client
-        self.update()
 
     def get_data(self):
         """Get the latest data from Meteo-France."""
