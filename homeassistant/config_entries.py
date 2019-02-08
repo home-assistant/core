@@ -149,6 +149,7 @@ FLOWS = [
     'hue',
     'ifttt',
     'ios',
+    'ipma',
     'lifx',
     'locative',
     'luftdaten',
