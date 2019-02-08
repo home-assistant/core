@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from homeassistant.components.meteo_france import (DATA_METEO_FRANCE,
                                                    CONDITION_CLASSES,
                                                    CONF_CITY,
-                                                   CONF_ATTRIBUTION)
+                                                   ATTRIBUTION)
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
@@ -82,7 +82,7 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return CONF_ATTRIBUTION
+        return ATTRIBUTION
 
     @property
     def forecast(self):

@@ -10,7 +10,7 @@ import logging
 from homeassistant.components.meteo_france import (SENSOR_TYPES,
                                                    DATA_METEO_FRANCE,
                                                    CONF_CITY,
-                                                   CONF_ATTRIBUTION)
+                                                   ATTRIBUTION)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
@@ -66,10 +66,10 @@ class MeteoFranceSensor(Entity):
                 },
                 ** self._data["next_rain_intervals"],
                 **{
-                    ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+                    ATTR_ATTRIBUTION: ATTRIBUTION
                 }
             }
-        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def unit_of_measurement(self):

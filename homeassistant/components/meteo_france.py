@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'meteo_france'
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
-CONF_ATTRIBUTION = "Data provided by Météo-France"
+ATTRIBUTION = "Data provided by Météo-France"
 CONF_CITY = 'city'
 DEFAULT_WEATHER_CARD = True
 DATA_METEO_FRANCE = 'data_meteo_france'
