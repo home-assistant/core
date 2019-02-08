@@ -137,11 +137,11 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     # Dictionary to translate between RGBColorState and hs_color
     _color_switcher = None
 
-    def __init__(self, home, device, channel_Index: int):
+    def __init__(self, home, device, channel_index: int):
         """Initialize the dimmer light device."""
         super().__init__(home, device)
-        self._channel_index = channel_Index
-        if self._channel_index == 2:
+        self._channel_index = channel_index
+        if self._channel_index == device.topLightChannelIndex:
             self._channel_name = 'Top'
         else:
             self._channel_name = 'Buttom'
