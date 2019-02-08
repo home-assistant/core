@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.gocr/
 """
 import logging
-import io
-import os
 
 import voluptuous as vol
 
@@ -72,14 +70,14 @@ class ImageProcessingGocr(ImageProcessingEntity):
             self._name = name
         else:
             self._name = ("GOCR {0}".format(
-                split_entity_id(camera_entity)[1]) 
+                split_entity_id(camera_entity)[1])
                 if config[CONF_NAME] == '' else
                 config[CONF_NAME])
         self._state = None
         if config[CONF_WIDTH] != 0 and config[CONF_HEIGHT] != 0:
-          self.crop = (config[CONF_X_POS], config[CONF_Y_POS],
-                  config[CONF_X_POS] + config[CONF_WIDTH],
-                  config[CONF_Y_POS] + config[CONF_HEIGHT])
+            self.crop = (config[CONF_X_POS], config[CONF_Y_POS],
+                         config[CONF_X_POS] + config[CONF_WIDTH],
+                         config[CONF_Y_POS] + config[CONF_HEIGHT])
         self.rotate = config[CONF_ROTATE]
         self.negate = config[CONF_NEGATE]
         if config.get(CONF_CHARS) != '':
@@ -93,8 +91,10 @@ class ImageProcessingGocr(ImageProcessingEntity):
         threshold = ['-l', str(config[CONF_THRESHOLD])]
         extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(' ')
 
-        self._command = [config[CONF_GOCR_BIN], '-e', '/dev/null', '-f', 'UTF8'] +\
-                         digits + unrecognized + threshold + extra_arguments
+        self._command = ([config[CONF_GOCR_BIN],
+                         '-e', '/dev/null', '-f', 'UTF8'] +\
+                         digits + unrecognized + threshold +
+                         extra_arguments)
         _LOGGER.info("Command : " + ' '.join(self._command) + " -i <tmpfile>")
 
     @property
@@ -120,7 +120,7 @@ class ImageProcessingGocr(ImageProcessingEntity):
     def process_image(self, image):
         """Process the image."""
         from PIL import Image
-        import PIL.ImageOps 
+        import PIL.ImageOps
         from subprocess import run, PIPE
         import io
         from tempfile import NamedTemporaryFile
@@ -129,17 +129,18 @@ class ImageProcessingGocr(ImageProcessingEntity):
 
         stream = io.BytesIO(image)
         img = Image.open(stream)
-        if hasattr(self, 'crop') :
+        if hasattr(self, 'crop'):
             img = img.crop(self.crop)
         if self.negate:
             img = PIL.ImageOps.invert(img)
         if self.rotate != 0:
-            img = img.rotate( self.rotate, expand=1 )
+            img = img.rotate(self.rotate, expand=1)
         tmp = NamedTemporaryFile(suffix='.ppm')
         self._state = None
         try:
             img.save(tmp.name)
-            ocr = run(self._command + ['-i', tmp.name], stdout=PIPE, encoding='utf-8')
+            ocr = run(self._command + ['-i', tmp.name],
+                      stdout=PIPE, encoding='utf-8')
             self._state = ocr.stdout[:255]
             _LOGGER.info("Processed: " + self._state)
         finally:
