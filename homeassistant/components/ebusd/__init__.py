@@ -70,9 +70,7 @@ def setup(hass, config):
 
         _LOGGER.debug("Ebusd component setup completed.")
         return True
-    except socket.timeout:
-        return False
-    except socket.error:
+    except (socket.timeout, socket.error):
         return False
 
 
