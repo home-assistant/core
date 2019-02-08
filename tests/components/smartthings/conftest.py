@@ -13,8 +13,8 @@ from homeassistant.components import webhook
 from homeassistant.components.smartthings import DeviceBroker
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
-    STORAGE_VERSION, DATA_BROKERS)
+    CONF_LOCATION_ID, DATA_BROKERS, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
+    STORAGE_VERSION)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID

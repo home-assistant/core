@@ -4,9 +4,10 @@ Test for the SmartThings sensors platform.
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
-from pysmartthings import Attribute, Capability, CAPABILITIES, ATTRIBUTES
+from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
-from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN)
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
@@ -20,10 +21,11 @@ async def test_mapping_integrity():
     """Test ensures the map dicts have proper integrity."""
     for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
         assert capability in CAPABILITIES, capability
-        for map in maps:
-            assert map.attribute in ATTRIBUTES, map.attribute
-            if map.device_class:
-                assert map.device_class in DEVICE_CLASSES, map.device_class
+        for sensor_map in maps:
+            assert sensor_map.attribute in ATTRIBUTES, sensor_map.attribute
+            if sensor_map.device_class:
+                assert sensor_map.device_class in DEVICE_CLASSES, \
+                    sensor_map.device_class
 
 
 async def test_async_setup_platform():
