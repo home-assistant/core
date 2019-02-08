@@ -14,6 +14,7 @@ from homeassistant.util.yaml import load_yaml, dump
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = (
+    'area_registry',
     'auth',
     'auth_provider_homeassistant',
     'automation',

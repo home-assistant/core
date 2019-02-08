@@ -5,18 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
 import datetime
-from datetime import timedelta
 import logging
 
 import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 REQUIREMENTS = ['concord232==0.15']
 
@@ -26,7 +25,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -44,33 +43,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     url = 'http://{}:{}'.format(host, port)
 
     try:
-        add_entities([Concord232Alarm(hass, url, name)])
+        add_entities([Concord232Alarm(url, name)], True)
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return
 
 
 class Concord232Alarm(alarm.AlarmControlPanel):
     """Representation of the Concord232-based alarm panel."""
 
-    def __init__(self, hass, url, name):
+    def __init__(self, url, name):
         """Initialize the Concord232 alarm panel."""
         from concord232 import client as concord232_client
 
-        self._state = STATE_UNKNOWN
-        self._hass = hass
+        self._state = None
         self._name = name
         self._url = url
-
-        try:
-            client = concord232_client.Client(self._url)
-        except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-
-        self._alarm = client
+        self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
         self._alarm.last_partition_update = datetime.datetime.now()
-        self.update()
 
     @property
     def name(self):
@@ -80,7 +70,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the characters if code is defined."""
-        return 'Number'
+        return alarm.FORMAT_NUMBER
 
     @property
     def state(self):
@@ -94,22 +84,17 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
-            newstate = STATE_UNKNOWN
+            return
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")
-            newstate = STATE_UNKNOWN
+            return
 
         if part['arming_level'] == 'Off':
-            newstate = STATE_ALARM_DISARMED
+            self._state = STATE_ALARM_DISARMED
         elif 'Home' in part['arming_level']:
-            newstate = STATE_ALARM_ARMED_HOME
+            self._state = STATE_ALARM_ARMED_HOME
         else:
-            newstate = STATE_ALARM_ARMED_AWAY
-
-        if not newstate == self._state:
-            _LOGGER.info("State change from %s to %s", self._state, newstate)
-            self._state = newstate
-        return self._state
+            self._state = STATE_ALARM_ARMED_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

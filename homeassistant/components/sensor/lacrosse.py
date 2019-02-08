@@ -45,7 +45,7 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
     vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
     vol.Optional(CONF_DATARATE): cv.positive_int,
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,

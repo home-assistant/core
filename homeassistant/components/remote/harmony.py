@@ -22,10 +22,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['aioharmony==0.1.2']
+REQUIREMENTS = ['aioharmony==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CHANNEL = 'channel'
 ATTR_CURRENT_ACTIVITY = 'current_activity'
 
 DEFAULT_PORT = 8088
@@ -33,6 +34,7 @@ DEVICES = []
 CONF_DEVICE_CACHE = 'harmony_device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
+SERVICE_CHANGE_CHANNEL = 'harmony_change_channel'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string,
@@ -45,6 +47,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_CHANNEL): cv.positive_int
 })
 
 
@@ -99,6 +106,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     try:
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs)
+        if not await device.connect():
+            raise PlatformNotReady
+
         DEVICES.append(device)
         async_add_entities([device])
         register_services(hass)
@@ -111,6 +121,10 @@ def register_services(hass):
     hass.services.async_register(
         DOMAIN, SERVICE_SYNC, _sync_service,
         schema=HARMONY_SYNC_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_CHANGE_CHANNEL, _change_channel_service,
+        schema=HARMONY_CHANGE_CHANNEL_SCHEMA)
 
 
 async def _apply_service(service, service_func, *service_func_args):
@@ -131,38 +145,46 @@ async def _sync_service(service):
     await _apply_service(service, HarmonyRemote.sync)
 
 
+async def _change_channel_service(service):
+    channel = service.data.get(ATTR_CHANNEL)
+    await _apply_service(service, HarmonyRemote.change_channel, channel)
+
+
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
     def __init__(self, name, host, port, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
-        from aioharmony.harmonyapi import (
-            HarmonyAPI as HarmonyClient, ClientCallbackType
-        )
+        from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
-        _LOGGER.debug("%s: Device init started", name)
         self._name = name
         self.host = host
         self.port = port
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-        self._client = HarmonyClient(
-            ip_address=host,
-            callbacks=ClientCallbackType(
-                new_activity=self.new_activity,
-                config_updated=self.new_config,
-                connect=self.got_connected,
-                disconnect=self.got_disconnected
-            )
-        )
+        self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self._delay_secs = delay_secs
         self._available = False
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
+        from aioharmony.harmonyapi import ClientCallbackType
+
         _LOGGER.debug("%s: Harmony Hub added", self._name)
+        # Register the callbacks
+        self._client.callbacks = ClientCallbackType(
+            new_activity=self.new_activity,
+            config_updated=self.new_config,
+            connect=self.got_connected,
+            disconnect=self.got_disconnected
+        )
+
+        # Store Harmony HUB config, this will also update our current
+        # activity
+        await self.new_config()
+
         import aioharmony.exceptions as aioexc
 
         async def shutdown(_):
@@ -174,15 +196,6 @@ class HarmonyRemote(remote.RemoteDevice):
                 _LOGGER.warning("%s: Disconnect timed-out", self._name)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-        _LOGGER.debug("%s: Connecting", self._name)
-        try:
-            await self._client.connect()
-        except aioexc.TimeOut:
-            _LOGGER.error("%s: Connection timed-out", self._name)
-        else:
-            # Set initial state
-            self.new_activity(self._client.current_activity)
 
     @property
     def name(self):
@@ -208,6 +221,22 @@ class HarmonyRemote(remote.RemoteDevice):
     def available(self):
         """Return True if connected to Hub, otherwise False."""
         return self._available
+
+    async def connect(self):
+        """Connect to the Harmony HUB."""
+        import aioharmony.exceptions as aioexc
+
+        _LOGGER.debug("%s: Connecting", self._name)
+        try:
+            if not await self._client.connect():
+                _LOGGER.warning("%s: Unable to connect to HUB.", self._name)
+                await self._client.close()
+                return False
+        except aioexc.TimeOut:
+            _LOGGER.warning("%s: Connection timed-out", self._name)
+            return False
+
+        return True
 
     def new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
@@ -324,7 +353,7 @@ class HarmonyRemote(remote.RemoteDevice):
         for _ in range(num_repeats):
             for single_command in command:
                 send_command = SendCommandDevice(
-                    device=device,
+                    device=device_id,
                     command=single_command,
                     delay=0
                 )
@@ -344,9 +373,22 @@ class HarmonyRemote(remote.RemoteDevice):
                           "%s: %s",
                           result.command.command,
                           result.command.device,
-                          result.command.code,
-                          result.command.msg
+                          result.code,
+                          result.msg
                           )
+
+    async def change_channel(self, channel):
+        """Change the channel using Harmony remote."""
+        import aioharmony.exceptions as aioexc
+
+        _LOGGER.debug("%s: Changing channel to %s",
+                      self.name, channel)
+        try:
+            await self._client.change_channel(channel)
+        except aioexc.TimeOut:
+            _LOGGER.error("%s: Changing channel to %s timed-out",
+                          self.name,
+                          channel)
 
     async def sync(self):
         """Sync the Harmony device with the web service."""

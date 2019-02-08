@@ -11,7 +11,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeoLocationEvent)
+    PLATFORM_SCHEMA, GeolocationEvent)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_RADIUS, CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START, CONF_LATITUDE, CONF_LONGITUDE)
@@ -148,7 +148,7 @@ class UsgsEarthquakesFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class UsgsEarthquakesEvent(GeoLocationEvent):
+class UsgsEarthquakesEvent(GeolocationEvent):
     """This represents an external event with USGS Earthquake data."""
 
     def __init__(self, feed_manager, external_id):

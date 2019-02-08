@@ -57,7 +57,7 @@ class XboxSensor(Entity):
     def __init__(self, hass, api, xuid):
         """Initialize the sensor."""
         self._hass = hass
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._presence = {}
         self._xuid = xuid
         self._api = api
@@ -117,5 +117,5 @@ class XboxSensor(Entity):
     def update(self):
         """Update state data from Xbox API."""
         presence = self._api.get_user_presence(self._xuid)
-        self._state = presence.get('state', STATE_UNKNOWN)
+        self._state = presence.get('state')
         self._presence = presence.get('devices', {})

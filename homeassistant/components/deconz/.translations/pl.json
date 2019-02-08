@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Host",
-                    "port": "Port (warto\u015b\u0107 domy\u015blna: \"80\")"
+                    "port": "Port"
                 },
                 "title": "Zdefiniuj bramk\u0119 deCONZ"
             },
@@ -28,6 +28,6 @@
                 "title": "Dodatkowe opcje konfiguracji dla deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "Brama deCONZ Zigbee"
     }
 }

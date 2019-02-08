@@ -1,10 +1,10 @@
 """Translation string lookup helpers."""
 import logging
-from os import path
+import pathlib
 from typing import Any, Dict, Iterable
 
 from homeassistant import config_entries
-from homeassistant.loader import get_component, bind_hass
+from homeassistant.loader import get_component, get_platform, bind_hass
 from homeassistant.util.json import load_json
 from .typing import HomeAssistantType
 
@@ -32,24 +32,51 @@ def flatten(data: Dict) -> Dict[str, Any]:
 
 def component_translation_file(hass: HomeAssistantType, component: str,
                                language: str) -> str:
-    """Return the translation json file location for a component."""
-    if '.' in component:
-        name = component.split('.', 1)[1]
-    else:
-        name = component
+    """Return the translation json file location for a component.
 
-    module = get_component(hass, component)
+    For component one of:
+     - components/light/.translations/nl.json
+     - components/.translations/group.nl.json
+
+    For platform one of:
+     - components/light/.translations/hue.nl.json
+     - components/hue/.translations/light.nl.json
+    """
+    is_platform = '.' in component
+
+    if not is_platform:
+        module = get_component(hass, component)
+        assert module is not None
+
+        module_path = pathlib.Path(module.__file__)
+
+        if module.__name__ == module.__package__:
+            # light/__init__.py
+            filename = '{}.json'.format(language)
+        else:
+            # group.py
+            filename = '{}.{}.json'.format(component, language)
+
+        return str(module_path.parent / '.translations' / filename)
+
+    # It's a platform
+    parts = component.split('.', 1)
+    module = get_platform(hass, *parts)
     assert module is not None
-    component_path = path.dirname(module.__file__)
 
-    # If loading translations for the package root, (__init__.py), the
-    # prefix should be skipped.
-    if module.__name__ == module.__package__:
-        filename = '{}.json'.format(language)
+    # Either within HA or custom_components
+    # Either light/hue.py or hue/light.py
+    module_path = pathlib.Path(module.__file__)
+
+    # Compare to parent so we don't have to strip off `.py`
+    if module_path.parent.name == parts[0]:
+        # this is light/hue.py
+        filename = "{}.{}.json".format(parts[1], language)
     else:
-        filename = '{}.{}.json'.format(name, language)
+        # this is hue/light.py
+        filename = "{}.{}.json".format(parts[0], language)
 
-    return path.join(component_path, '.translations', filename)
+    return str(module_path.parent / '.translations' / filename)
 
 
 def load_translations_files(translation_files: Dict[str, str]) \

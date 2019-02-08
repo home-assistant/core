@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP ist bereits konfiguriert"
+        },
+        "error": {
+            "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achten Sie darauf, dass Ihre YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
+            "invalid_password": "Ung\u00fcltiges Passwort!",
+            "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, legen Sie eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte geben Sie das Passwort der ESPhome-Konfiguration ein:",
+                "title": "Passwort eingeben"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte geben Sie die Verbindungseinstellungen Ihres [ESPHome](https://esphomelib.com/)-Knotens ein.",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

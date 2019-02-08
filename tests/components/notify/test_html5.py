@@ -82,6 +82,40 @@ class TestHtml5Notify:
         assert service is not None
 
     @patch('pywebpush.WebPusher')
+    def test_dismissing_message(self, mock_wp):
+        """Test dismissing message."""
+        hass = MagicMock()
+
+        data = {
+            'device': SUBSCRIPTION_1
+        }
+
+        m = mock_open(read_data=json.dumps(data))
+        with patch(
+            'homeassistant.util.json.open',
+            m, create=True
+        ):
+            service = html5.get_service(hass, {'gcm_sender_id': '100'})
+
+        assert service is not None
+
+        service.dismiss(target=['device', 'non_existing'],
+                        data={'tag': 'test'})
+
+        assert len(mock_wp.mock_calls) == 3
+
+        # WebPusher constructor
+        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
+        # Third mock_call checks the status_code of the response.
+        assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
+
+        # Call to send
+        payload = json.loads(mock_wp.mock_calls[1][1][0])
+
+        assert payload['dismiss'] is True
+        assert payload['tag'] == 'test'
+
+    @patch('pywebpush.WebPusher')
     def test_sending_message(self, mock_wp):
         """Test sending message."""
         hass = MagicMock()
@@ -165,6 +199,23 @@ async def test_registering_new_device_view(hass, hass_client):
     }
 
 
+async def test_registering_new_device_view_with_name(hass, hass_client):
+    """Test that the HTML view works with name attribute."""
+    client = await mock_client(hass, hass_client)
+
+    SUB_WITH_NAME = SUBSCRIPTION_1.copy()
+    SUB_WITH_NAME['name'] = 'test device'
+
+    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+        resp = await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
+
+    assert resp.status == 200
+    assert len(mock_save.mock_calls) == 1
+    assert mock_save.mock_calls[0][1][1] == {
+        'test device': SUBSCRIPTION_1,
+    }
+
+
 async def test_registering_new_device_expiration_view(hass, hass_client):
     """Test that the HTML view works."""
     client = await mock_client(hass, hass_client)
@@ -206,6 +257,27 @@ async def test_registering_existing_device_view(hass, hass_client):
     }
     assert registrations == {
         'unnamed device': SUBSCRIPTION_4,
+    }
+
+
+async def test_registering_existing_device_view_with_name(hass, hass_client):
+    """Test subscription is updated when reg'ing existing device with name."""
+    registrations = {}
+    client = await mock_client(hass, hass_client, registrations)
+
+    SUB_WITH_NAME = SUBSCRIPTION_1.copy()
+    SUB_WITH_NAME['name'] = 'test device'
+
+    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+        await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
+        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+
+    assert resp.status == 200
+    assert mock_save.mock_calls[0][1][1] == {
+        'test device': SUBSCRIPTION_4,
+    }
+    assert registrations == {
+        'test device': SUBSCRIPTION_4,
     }
 
 

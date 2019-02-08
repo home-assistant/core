@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_code": "Kehtetu kood"
+        },
+        "step": {
+            "link": {
+                "data": {
+                    "code": "PIN-kood"
+                }
+            }
+        },
+        "title": ""
+    }
+}
