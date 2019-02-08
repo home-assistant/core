@@ -651,11 +651,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if flw['handler'] == self.handler and
                 flw['flow_id'] != self.flow_id]
 
-    @staticmethod
-    def async_get_options_flow():
-        """"""
-        return None
-
 
 class Options:
     """"""
@@ -668,17 +663,10 @@ class Options:
         self.active_options = {}
 
     @callback
-    def async_active_flow(self, entry: ConfigEntry):
-        """"""
-        if entry in self.active_options.values():
-            return True
-        return False
-
-    @callback
     def _async_create_flow(self, handler_key, *, context, data: ConfigEntry):
         """"""
-        handler = HANDLERS[handler_key].async_get_options_flow()
-        flow = handler(data['data'], data['options'])
+        flow = HANDLERS[handler_key].async_get_options_flow(
+            data['data'], data['options'])
         flow.init_step = context['source']
         self.active_options[flow.flow_id] = data
         return flow

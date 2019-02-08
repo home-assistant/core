@@ -170,9 +170,9 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_options(user_input=user_input)
 
     @staticmethod
-    def async_get_options_flow():
+    def async_get_options_flow(config, options):
         """"""
-        return DeconzOptionsFlowHandler
+        return DeconzOptionsFlowHandler(config, options)
 
 
 from homeassistant import data_entry_flow

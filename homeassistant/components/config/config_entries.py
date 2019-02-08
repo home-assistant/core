@@ -52,8 +52,8 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
         def supports_options(domain):
             """"""
-            handler = config_entries.HANDLERS[domain]
-            return handler.async_get_options_flow() is not None
+            return hasattr(
+                config_entries.HANDLERS[domain], 'async_get_options_flow')
 
         return self.json([{
             'entry_id': entry.entry_id,
