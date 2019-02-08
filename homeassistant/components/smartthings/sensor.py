@@ -10,7 +10,6 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
     STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -180,7 +179,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class SmartThingsSensor(SmartThingsEntity, Entity):
+class SmartThingsSensor(SmartThingsEntity):
     """Define a SmartThings Binary Sensor."""
 
     def __init__(self, device, attribute: str, name: str,
