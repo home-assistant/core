@@ -51,7 +51,7 @@ async def async_setup_platform(
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
-    
+
     def __init__(
             self,
             sensor_type,

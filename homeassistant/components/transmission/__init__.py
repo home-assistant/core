@@ -90,7 +90,7 @@ def setup(hass, config):
     tm_data.init_torrent_list()
 
     def refresh(event_time):
-        """Service call to update the data."""
+        """Get the latest data from Transmission."""
         tm_data.update()
 
     track_time_interval(hass, refresh, scan_interval)
@@ -109,7 +109,7 @@ def setup(hass, config):
 class TransmissionData:
     """Get the latest data and update the states."""
 
-    
+
     def __init__(self, hass, config, api):
         """Initialize the Transmission RPC API."""
         self.data = None
