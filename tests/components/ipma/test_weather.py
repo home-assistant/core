@@ -72,15 +72,14 @@ async def test_setup_configuration(hass):
 
     state = hass.states.get('weather.hometown')
     assert state.state == 'rainy'
-
-    component = hass.data.get(weather.DOMAIN)
-    my_entity = component.get_entity('weather.hometown')
-    assert my_entity.temperature == 18
-    assert my_entity.humidity == 71
-    assert my_entity.pressure == 1000.0
-    assert my_entity.wind_speed == 3.94
-    assert my_entity.wind_bearing == 'NW'
-
+    
+    data = state.attributes
+    assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
+    assert data.get(ATTR_WEATHER_HUMIDITY) == 71
+    assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
+    assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
+    assert data.get(ATTR_WEATHER_WIND_BEARING) == 'NW'
+    assert state.attributes.get('friendly_name') == 'HomeTown'
 
 async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
