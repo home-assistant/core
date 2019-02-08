@@ -113,12 +113,13 @@ async def test_reading_yaml_config(hass, yaml_devices):
 @patch('homeassistant.components.device_tracker._LOGGER.warning')
 async def test_track_with_duplicate_mac_dev_id(mock_warning, hass):
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
+    consider_home = timedelta(seconds=180)
     devices = [
-        device_tracker.Device(hass, True, True, 'my_device', 'AB:01',
-                              'My device', None, None, False),
-        device_tracker.Device(hass, True, True, 'your_device',
-                              'AB:01', 'Your device', None, None, False)]
-    device_tracker.DeviceTracker(hass, False, True, {}, devices)
+        device_tracker.Device(
+            hass, consider_home, True, 'my_device', 'AB:01', 'My device'),
+        device_tracker.Device(
+            hass, consider_home, True, 'your_device', 'AB:01', 'Your device')]
+    device_tracker.DeviceTracker(hass, consider_home, True, {}, devices)
     _LOGGER.debug(mock_warning.call_args_list)
     assert mock_warning.call_count == 1, \
         "The only warning call should be duplicates (check DEBUG)"
@@ -128,11 +129,11 @@ async def test_track_with_duplicate_mac_dev_id(mock_warning, hass):
 
     mock_warning.reset_mock()
     devices = [
-        device_tracker.Device(hass, True, True, 'my_device',
-                              'AB:01', 'My device', None, None, False),
-        device_tracker.Device(hass, True, True, 'my_device',
-                              None, 'Your device', None, None, False)]
-    device_tracker.DeviceTracker(hass, False, True, {}, devices)
+        device_tracker.Device(
+            hass, consider_home, True, 'my_device', 'AB:01', 'My device'),
+        device_tracker.Device(
+            hass, consider_home, True, 'my_device', None, 'Your device')]
+    device_tracker.DeviceTracker(hass, consider_home, True, {}, devices)
 
     _LOGGER.debug(mock_warning.call_args_list)
     assert mock_warning.call_count == 1, \
@@ -491,7 +492,7 @@ async def test_see_passive_zone_state(hass):
 async def test_see_failures(mock_warning, hass, yaml_devices):
     """Test that the device tracker see failures."""
     tracker = device_tracker.DeviceTracker(
-        hass, timedelta(seconds=60), 0, {}, [])
+        hass, timedelta(seconds=60), False, {}, [])
 
     # MAC is not a string (but added)
     await tracker.async_see(mac=567, host_name="Number MAC")
@@ -518,7 +519,6 @@ def test_async_added_to_hass(hass):
     """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
-        device_tracker.ATTR_LATITUDE: -33,
         device_tracker.ATTR_LATITUDE: -33,
         device_tracker.ATTR_SOURCE_TYPE: 'gps',
         device_tracker.ATTR_GPS_ACCURACY: 2,
@@ -577,7 +577,7 @@ async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf,
     """Test that picture and icon are set in initial see."""
     tracker = device_tracker.DeviceTracker(
         hass, timedelta(seconds=60), False, {}, [])
-    await tracker.async_see(dev_id=11, picture='pic_url', icon='mdi:icon')
+    await tracker.async_see(dev_id='11', picture='pic_url', icon='mdi:icon')
     await hass.async_block_till_done()
     assert len(mock_device_tracker_conf) == 1
     assert mock_device_tracker_conf[0].icon == 'mdi:icon'
@@ -589,7 +589,7 @@ async def test_default_hide_if_away_is_used(mock_device_tracker_conf, hass):
     tracker = device_tracker.DeviceTracker(
         hass, timedelta(seconds=60), False,
         {device_tracker.CONF_AWAY_HIDE: True}, [])
-    await tracker.async_see(dev_id=12)
+    await tracker.async_see(dev_id='12')
     await hass.async_block_till_done()
     assert len(mock_device_tracker_conf) == 1
     assert mock_device_tracker_conf[0].away_hide
@@ -601,7 +601,7 @@ async def test_backward_compatibility_for_track_new(mock_device_tracker_conf,
     tracker = device_tracker.DeviceTracker(
         hass, timedelta(seconds=60), False,
         {device_tracker.CONF_TRACK_NEW: True}, [])
-    await tracker.async_see(dev_id=13)
+    await tracker.async_see(dev_id='13')
     await hass.async_block_till_done()
     assert len(mock_device_tracker_conf) == 1
     assert mock_device_tracker_conf[0].track is False
@@ -612,7 +612,7 @@ async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     tracker = device_tracker.DeviceTracker(
         hass, timedelta(seconds=60), None,
         {device_tracker.CONF_TRACK_NEW: False}, [])
-    await tracker.async_see(dev_id=14)
+    await tracker.async_see(dev_id='14')
     await hass.async_block_till_done()
     assert len(mock_device_tracker_conf) == 1
     assert mock_device_tracker_conf[0].track is False
