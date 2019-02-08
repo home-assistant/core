@@ -80,7 +80,7 @@ class VerisureDoorlock(LockDevice):
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
             self._device_label)
         if status == 'UNLOCKED':
-            self._state = None
+            self._state = STATE_UNLOCKED
         elif status == 'LOCKED':
             self._state = STATE_LOCKED
         elif status != 'PENDING':
