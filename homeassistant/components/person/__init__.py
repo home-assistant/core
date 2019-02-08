@@ -24,6 +24,7 @@ from homeassistant.components import websocket_api
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+ATTR_EDITABLE = 'editable'
 ATTR_SOURCE = 'source'
 ATTR_USER_ID = 'user_id'
 CONF_DEVICE_TRACKERS = 'device_trackers'
@@ -69,11 +70,15 @@ class PersonManager:
 
             config_data[person_id] = conf
 
-    @callback
-    def list_persons(self):
-        """Iterate the person manager."""
-        yield from self.config_data.values()
-        yield from self.storage_data.values()
+    @property
+    def storage_persons(self):
+        """Iterate over persons stored in storage."""
+        return list(self.storage_data.values())
+
+    @property
+    def config_persons(self):
+        """Iterate over persons stored in config."""
+        return list(self.config_data.values())
 
     async def async_initialize(self):
         """Get the person data."""
@@ -219,8 +224,10 @@ class Person(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the person."""
-        data = {}
-        data[ATTR_ID] = self.unique_id
+        data = {
+            ATTR_EDITABLE: self._editable,
+            ATTR_ID: self.unique_id,
+        }
         if self._latitude is not None:
             data[ATTR_LATITUDE] = round(self._latitude, 5)
         if self._longitude is not None:
@@ -275,7 +282,10 @@ def ws_list_person(hass: HomeAssistantType,
                    connection: websocket_api.ActiveConnection, msg):
     """List persons."""
     manager = hass.data[DOMAIN]  # type: PersonManager
-    connection.send_result(msg['id'], list(manager.list_persons()))
+    connection.send_result(msg['id'], {
+        'storage': manager.storage_persons,
+        'config': manager.config_persons,
+    })
 
 
 @websocket_api.websocket_command({

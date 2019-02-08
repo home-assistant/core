@@ -248,8 +248,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     })
     resp = await client.receive_json()
     assert resp['success']
-    assert resp['result'] == list(manager.list_persons())
-    assert len(resp['result']) == 1
+    assert resp['result']['storage'] == manager.storage_persons
+    assert len(resp['result']['storage']) == 1
+    assert len(resp['result']['config']) == 0
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup,
@@ -268,7 +269,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup,
     })
     resp = await client.receive_json()
 
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
     assert len(persons) == 2
 
     assert resp['success']
@@ -292,7 +293,7 @@ async def test_ws_create_requires_admin(hass, hass_ws_client, storage_setup,
     })
     resp = await client.receive_json()
 
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
     assert len(persons) == 1
 
     assert not resp['success']
@@ -303,7 +304,7 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     manager = hass.data[DOMAIN]
 
     client = await hass_ws_client(hass)
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
 
     resp = await client.send_json({
         'id': 6,
@@ -315,7 +316,7 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     })
     resp = await client.receive_json()
 
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
     assert len(persons) == 1
 
     assert resp['success']
@@ -333,7 +334,7 @@ async def test_ws_update_require_admin(hass, hass_ws_client, storage_setup,
     manager = hass.data[DOMAIN]
 
     client = await hass_ws_client(hass)
-    original = dict(list(manager.list_persons())[0])
+    original = dict(manager.storage_persons[0])
 
     resp = await client.send_json({
         'id': 6,
@@ -346,7 +347,7 @@ async def test_ws_update_require_admin(hass, hass_ws_client, storage_setup,
     resp = await client.receive_json()
     assert not resp['success']
 
-    not_updated = dict(list(manager.list_persons())[0])
+    not_updated = dict(manager.storage_persons[0])
     assert original == not_updated
 
 
@@ -355,7 +356,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     manager = hass.data[DOMAIN]
 
     client = await hass_ws_client(hass)
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
 
     resp = await client.send_json({
         'id': 6,
@@ -364,7 +365,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     })
     resp = await client.receive_json()
 
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
     assert len(persons) == 0
 
     assert resp['success']
@@ -381,7 +382,7 @@ async def test_ws_delete_require_admin(hass, hass_ws_client, storage_setup,
     resp = await client.send_json({
         'id': 6,
         'type': 'person/delete',
-        'person_id': list(manager.list_persons())[0]['id'],
+        'person_id': manager.storage_persons[0]['id'],
         'name': 'Updated Name',
         'device_trackers': [DEVICE_TRACKER_2],
         'user_id': None,
@@ -389,5 +390,5 @@ async def test_ws_delete_require_admin(hass, hass_ws_client, storage_setup,
     resp = await client.receive_json()
     assert not resp['success']
 
-    persons = list(manager.list_persons())
+    persons = manager.storage_persons
     assert len(persons) == 1
