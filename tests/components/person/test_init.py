@@ -214,8 +214,8 @@ async def test_duplicate_ids(hass, hass_admin_user):
     assert hass.states.get('person.test_user_2') is None
 
 
-async def test_load_person_stoarge(hass, hass_admin_user, storage_setup):
-    """Test set up person with one device tracker."""
+async def test_load_person_storage(hass, hass_admin_user, storage_setup):
+    """Test set up person from storage."""
     state = hass.states.get('person.tracked_person')
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ID) == '1234'

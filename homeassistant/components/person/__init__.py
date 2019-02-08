@@ -65,7 +65,8 @@ class PersonManager:
             person_id = conf[CONF_ID]
 
             if person_id in config_data:
-                _LOGGER.error("Found config user with duplicate ID.")
+                _LOGGER.error("Found config user with duplicate ID: %s",
+                              person_id)
                 continue
 
             config_data[person_id] = conf
@@ -112,7 +113,7 @@ class PersonManager:
             if person_conf[CONF_ID] in self.config_data:
                 _LOGGER.error(
                     "Skipping adding person from storage with same ID as"
-                    " configuration.yaml entry: %s.", person_id)
+                    " configuration.yaml entry: %s", person_id)
                 continue
 
             entities.append(Person(person_conf, True))
@@ -266,7 +267,6 @@ class Person(RestoreEntity):
     @callback
     def person_updated(self):
         """Handle when the config is updated."""
-        print("PERSON UDPATED")
         self._update_state_tracking()
 
         trackers = self._config.get(CONF_DEVICE_TRACKERS)
