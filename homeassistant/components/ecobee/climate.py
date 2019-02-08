@@ -238,7 +238,7 @@ class Thermostat(ClimateDevice):
         - STATE_IDLE: thermostat is on, but not actively heating or cooling
         - STATE_HEAT: actively heating
         - STATE_COOL: actively cooling
-        - None: unknown state"""
+        """
         status = self.thermostat['equipmentStatus']
         if self.operation_mode == STATE_OFF:
             operation = STATE_OFF
@@ -402,8 +402,8 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.current_operation_mode == STATE_HEAT or self.current_operation_mode == \
-                STATE_COOL:
+        if self.current_operation_mode == STATE_HEAT or \
+                self.current_operation_mode == STATE_COOL:
             heat_temp = temp
             cool_temp = temp
         else:
