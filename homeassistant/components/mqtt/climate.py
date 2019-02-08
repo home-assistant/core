@@ -254,9 +254,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             )
         }
 
-        # set to None in non-optimistic mode
-        self._target_temperature = self._current_fan_mode = \
-            self._current_operation = self._current_swing_mode = None
         if self._topic[CONF_TEMPERATURE_STATE_TOPIC] is None:
             self._target_temperature = config.get(CONF_INITIAL)
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
@@ -265,9 +262,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._current_swing_mode = STATE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = STATE_OFF
-        self._away = False
-        self._hold = None
-        self._aux = False
 
         value_templates = {}
         if CONF_VALUE_TEMPLATE in config:
