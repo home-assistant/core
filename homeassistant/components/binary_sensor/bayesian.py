@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bayesian/
 """
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
@@ -18,8 +17,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_OBSERVATIONS = 'observations'
 ATTR_PROBABILITY = 'probability'
