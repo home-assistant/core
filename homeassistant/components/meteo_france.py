@@ -2,9 +2,8 @@
 Support for Meteo France weather forecast.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.meteo_france/
+https://home-assistant.io/components/meteo_france/
 """
-
 import logging
 import datetime
 
