@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Set up the TELETASK component."""
+    """Set up the TELETASK component"""
     from pydocstylepy.testteletask.exceptions import TeletaskException
     try:
         hass.data[DATA_TELETASK] = TeletaskModule(hass, config)
