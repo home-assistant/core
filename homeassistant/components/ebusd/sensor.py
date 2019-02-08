@@ -10,9 +10,10 @@ import datetime
 
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN
+
 DEPENDENCIES = ['ebusd']
 
-DATA_EBUSD = 'EBUSD'
 TIME_FRAME1_BEGIN = 'time_frame1_begin'
 TIME_FRAME1_END = 'time_frame1_end'
 TIME_FRAME2_BEGIN = 'time_frame2_begin'
@@ -25,29 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ebus sensor."""
-    ebusd_api = hass.data[DATA_EBUSD]
+    ebusd_api = hass.data[DOMAIN]
     monitored_conditions = discovery_info['monitored_conditions']
     name = discovery_info['client_name']
 
     dev = []
     for condition in monitored_conditions:
-        dev.append(Ebusd(
+        dev.append(EbusdSensor(
             ebusd_api, discovery_info['sensor_types'][condition], name))
 
     add_entities(dev, True)
 
 
-class Ebusd(Entity):
-    """Representation of a Sensor."""
+class EbusdSensor(Entity):
+    """Ebusd component sensor methods definition."""
 
     def __init__(self, data, sensor, name):
         """Initialize the sensor."""
         self._state = None
         self._client_name = name
-        self._name = sensor[0]
-        self._unit_of_measurement = sensor[1]
-        self._icon = sensor[2]
-        self._type = sensor[3]
+        self._name, self._unit_of_measurement, self._icon, self._type = sensor
         self.data = data
 
     @property

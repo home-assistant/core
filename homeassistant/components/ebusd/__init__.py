@@ -23,7 +23,6 @@ REQUIREMENTS = ['ebusdpy==0.0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_EBUSD = 'EBUSD'
 DEFAULT_NAME = 'ebusd'
 DEFAULT_PORT = 8888
 CONF_CIRCUIT = 'circuit'
@@ -57,7 +56,7 @@ def setup(hass, config):
         _LOGGER.debug("Ebusd component setup started.")
         import ebusdpy
         ebusdpy.init(server_address)
-        hass.data[DATA_EBUSD] = EbusdData(server_address, circuit)
+        hass.data[DOMAIN] = EbusdData(server_address, circuit)
 
         sensor_config = {
             'monitored_conditions': monitored_conditions,
@@ -67,7 +66,7 @@ def setup(hass, config):
         load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
         hass.services.register(
-            DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DATA_EBUSD].write)
+            DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
 
         _LOGGER.debug("Ebusd component setup completed.")
         return True
