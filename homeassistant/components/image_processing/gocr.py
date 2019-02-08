@@ -92,7 +92,7 @@ class ImageProcessingGocr(ImageProcessingEntity):
         extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(' ')
 
         self._command = ([config[CONF_GOCR_BIN],
-                         '-e', '/dev/null', '-f', 'UTF8'] +\
+                         '-e', '/dev/null', '-f', 'UTF8'] +
                          digits + unrecognized + threshold +
                          extra_arguments)
         _LOGGER.info("Command : " + ' '.join(self._command) + " -i <tmpfile>")
