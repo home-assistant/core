@@ -219,8 +219,8 @@ class LinkyData:
             _LOGGER.info("Same month last year (from 1st to same day): %s",
                          str(self.compare_month))
         except PyLinkyError as exp:
-            maintenance = "(maybe due to night maintenance downtime schedule):"
-            _LOGGER.warning("Unable to fetch Linky data %s %s", maintenance, exp)
+            reason = "(maybe due to night maintenance downtime schedule):"
+            _LOGGER.warning("Unable to fetch Linky data %s %s", reason, exp)
             return False
         return True
 
