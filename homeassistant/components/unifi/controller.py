@@ -55,8 +55,9 @@ class UniFiController:
             async def retry_setup(_now):
                 """Retry setup."""
                 if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
+                    hass.config_entries.async_update_entry(
+                        entry=self.config_entry,
+                        state=config_entries.ENTRY_STATE_LOADED)
 
             self._cancel_retry_setup = hass.helpers.event.async_call_later(
                 retry_delay, retry_setup)

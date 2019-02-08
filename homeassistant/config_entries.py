@@ -127,6 +127,7 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
+_UNDEF = object()
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
@@ -441,9 +442,12 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(self, entry, *, data):
+    def async_update_entry(self, entry, *, data=_UNDEF, state=_UNDEF):
         """Update a config entry."""
-        entry.data = data
+        if data is not _UNDEF:
+            entry.data = data
+        if state is not _UNDEF:
+            entry.state = state
         self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):

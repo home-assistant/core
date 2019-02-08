@@ -411,13 +411,20 @@ async def test_updating_entry_data(manager):
     entry = MockConfigEntry(
         domain='test',
         data={'first': True},
+        state=config_entries.ENTRY_STATE_SETUP_ERROR,
     )
     entry.add_to_manager(manager)
+
+    manager.async_update_entry(entry, state=config_entries.ENTRY_STATE_LOADED)
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.data == {
+        'first': True
+    }
 
     manager.async_update_entry(entry, data={
         'second': True
     })
-
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
     assert entry.data == {
         'second': True
     }
