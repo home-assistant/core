@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS,
-    NEATO_PERSISTENT_MAPS, NEATO_DOMAIN)
+    NEATO_PERSISTENT_MAPS, DOMAIN as NEATO_DOMAIN)
 
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv

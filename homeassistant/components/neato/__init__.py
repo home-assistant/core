@@ -19,7 +19,6 @@ NEATO_ROBOTS = 'neato_robots'
 NEATO_LOGIN = 'neato_login'
 NEATO_MAP_DATA = 'neato_map_data'
 NEATO_PERSISTENT_MAPS = 'neato_persistent_maps'
-NEATO_DOMAIN = 'neato'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
