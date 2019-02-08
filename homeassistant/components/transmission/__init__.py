@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import track_time_interval
 
 
 REQUIREMENTS = ['transmissionrpc==0.11']
@@ -94,7 +94,7 @@ def setup(hass, config):
         """Service call to update the data."""
         tm_data.update()
 
-    async_track_time_interval(hass, refresh, scan_interval)
+    track_time_interval(hass, refresh, scan_interval)
 
     hass.services.async_register(DOMAIN, 'transmission', refresh)
 
@@ -102,26 +102,10 @@ def setup(hass, config):
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME]}
 
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            'sensor',
-            DOMAIN,
-            sensorconfig,
-            config
-        )
-    )
+    discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
 
     if config[DOMAIN][TURTLE_MODE]:
-        hass.async_create_task(
-            async_load_platform(
-                    hass,
-                    'switch',
-                    DOMAIN,
-                    sensorconfig,
-                    config
-            )
-        )
+        discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
 
     return True
 

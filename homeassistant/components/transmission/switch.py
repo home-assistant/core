@@ -9,12 +9,12 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION)
+    DATA_TRANSMISSION, DATA_UPDATED)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity 
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
@@ -22,13 +22,12 @@ DEPENDENCIES = ['transmission']
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
-DATA_UPDATED = 'transmission_data_updated'
 
 
 async def async_setup_platform(
         hass,
         config,
-        add_entities,
+        async_add_entities,
         discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
@@ -38,7 +37,7 @@ async def async_setup_platform(
     transmission_api = hass.data[component_name]
     name = discovery_info['client_name']
 
-    add_entities([TransmissionSwitch(transmission_api, name)], True)
+    async_add_entities([TransmissionSwitch(transmission_api, name)], True)
 
 class TransmissionSwitch(ToggleEntity):
     """Representation of a Transmission switch."""
@@ -69,12 +68,12 @@ class TransmissionSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state == STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGING.debug("Turning Turtle Mode of Transmission on")
         self.transmission_client.set_alt_speed_enabled(True)
 
-    async def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
         self.transmission_client.set_alt_speed_enabled(False)

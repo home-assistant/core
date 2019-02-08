@@ -9,11 +9,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES)
+    DATA_TRANSMISSION, SENSOR_TYPES, DATA_UPDATED)
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity 
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
@@ -21,7 +21,6 @@ DEPENDENCIES = ['transmission']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
-DATA_UPDATED = 'transmission_data_updated'
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -29,7 +28,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 async def async_setup_platform(
         hass,
         config,
-        add_entities,
+        async_add_entities,
         discovery_info=None):
     """Set up the Transmission sensors."""
     if discovery_info is None:
@@ -48,7 +47,7 @@ async def async_setup_platform(
             SENSOR_TYPES[sensor_type][0],
             SENSOR_TYPES[sensor_type][1]))
 
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
