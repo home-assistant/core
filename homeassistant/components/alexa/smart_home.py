@@ -1809,7 +1809,8 @@ async def async_api_select_input(hass, config, directive, context):
     entity = directive.entity
 
     # attempt to map the ALL UPPERCASE payload name to a source
-    source_list = entity.attributes[media_player.const.ATTR_INPUT_SOURCE_LIST] or []
+    source_list = entity.attributes[
+        media_player.const.ATTR_INPUT_SOURCE_LIST] or []
     for source in source_list:
         # response will always be space separated, so format the source in the
         # most likely way to find a match
@@ -1840,7 +1841,8 @@ async def async_api_adjust_volume(hass, config, directive, context):
     volume_delta = int(directive.payload['volume'])
 
     entity = directive.entity
-    current_level = entity.attributes.get(media_player.const.ATTR_MEDIA_VOLUME_LEVEL)
+    current_level = entity.attributes.get(
+        media_player.const.ATTR_MEDIA_VOLUME_LEVEL)
 
     # read current state
     try:
