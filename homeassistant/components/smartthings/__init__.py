@@ -23,7 +23,7 @@ from .const import (
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.5.0']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.0']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
