@@ -124,7 +124,7 @@ async def _async_process_config(hass, config, component):
 
     scripts = []
 
-    for object_id, cfg in config[DOMAIN].items():
+    for object_id, cfg in config.get(DOMAIN, {}).items():
         alias = cfg.get(CONF_ALIAS, object_id)
         script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
         scripts.append(script)
