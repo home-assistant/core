@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -45,14 +46,19 @@ async def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     conf = config.get(DOMAIN, [])
     entities = []
-    added = set()
+    seen_ids = set()
 
     for person_conf in conf:
         person_id = person_conf[CONF_ID]
 
-        if person_id in added:
+        if person_id in seen_ids:
             _LOGGER.error("Found user with duplicate ID.")
             continue
+
+        # We are going to track the ID as seen, even if they might be skipped
+        # because of an invalid user id. That way we have predictable behavior
+        # if users are added/removed.
+        seen_ids.add(person_id)
 
         user_id = person_conf.get(CONF_USER_ID)
 
@@ -63,15 +69,26 @@ async def async_setup(hass, config):
                 person_conf[CONF_NAME])
             continue
 
-        added.add(person_id)
+        entities.append(Person(person_conf, False))
 
-        entities.append(Person(person_conf, user_id))
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
-    if not entities:
-        _LOGGER.error("No persons could be set up")
-        return False
+    data = await store.async_load()
 
-    await component.async_add_entities(entities)
+    if data is not None:
+        for person_conf in data['persons']:
+            person_id = person_conf[CONF_ID]
+
+            if person_id in seen_ids:
+                _LOGGER.error("Found storage user with duplicate ID.")
+                continue
+
+            seen_ids.add(person_id)
+
+            entities.append(Person(person_conf, True))
+
+    if entities:
+        await component.async_add_entities(entities)
 
     return True
 
@@ -79,16 +96,17 @@ async def async_setup(hass, config):
 class Person(RestoreEntity):
     """Represent a tracked person."""
 
-    def __init__(self, config, user_id):
+    def __init__(self, config, editable):
         """Set up person."""
-        self._id = config[CONF_ID]
+        self._config = config
         self._latitude = None
         self._longitude = None
         self._name = config[CONF_NAME]
         self._source = None
         self._state = None
         self._trackers = config.get(CONF_DEVICE_TRACKERS)
-        self._user_id = user_id
+        self._user_id = config.get(CONF_USER_ID)
+        self._editable = editable
 
     @property
     def name(self):
@@ -112,7 +130,7 @@ class Person(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes of the person."""
         data = {}
-        data[ATTR_ID] = self._id
+        data[ATTR_ID] = self.unique_id
         if self._latitude is not None:
             data[ATTR_LATITUDE] = round(self._latitude, 5)
         if self._longitude is not None:
@@ -126,7 +144,7 @@ class Person(RestoreEntity):
     @property
     def unique_id(self):
         """Return a unique ID for the person."""
-        return self._id
+        return self._config[CONF_ID]
 
     async def async_added_to_hass(self):
         """Register device trackers."""
@@ -135,7 +153,9 @@ class Person(RestoreEntity):
         if state:
             self._parse_source_state(state)
 
-        if not self._trackers:
+        trackers = self._config.get(CONF_DEVICE_TRACKERS)
+
+        if not trackers:
             return
 
         @callback
@@ -147,9 +167,8 @@ class Person(RestoreEntity):
         _LOGGER.debug(
             "Subscribe to device trackers for %s", self.entity_id)
 
-        for tracker in self._trackers:
-            async_track_state_change(
-                self.hass, tracker, async_handle_tracker_update)
+        async_track_state_change(
+            self.hass, trackers, async_handle_tracker_update)
 
     def _parse_source_state(self, state):
         """Parse source state and set person attributes."""

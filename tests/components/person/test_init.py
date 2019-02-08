@@ -52,14 +52,6 @@ async def test_setup_user_id(hass, hass_owner_user):
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
 
-async def test_setup_invalid_user_id(hass):
-    """Test config with invalid user id."""
-    config = {
-        DOMAIN: {
-            'id': '1234', 'name': 'test bad user', 'user_id': 'bad_user_id'}}
-    assert not await async_setup_component(hass, DOMAIN, config)
-
-
 async def test_valid_invalid_user_ids(hass, hass_owner_user):
     """Test a person with valid user id and a person with invalid user id ."""
     user_id = hass_owner_user.id
@@ -196,3 +188,42 @@ async def test_duplicate_ids(hass, hass_owner_user):
     assert len(hass.states.async_entity_ids('person')) == 1
     assert hass.states.get('person.test_user_1') is not None
     assert hass.states.get('person.test_user_2') is None
+
+
+async def test_load_person_stoarge(hass, hass_owner_user, hass_storage):
+    """Test set up person with one device tracker."""
+    user_id = hass_owner_user.id
+    hass_storage[DOMAIN] = {
+        'key': DOMAIN,
+        'version': 1,
+        'data': {
+            'persons': [
+                {
+                    'id': '1234',
+                    'name': 'tracked person',
+                    'user_id': user_id,
+                    'device_trackers': DEVICE_TRACKER
+                }
+            ]
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_ID) == '1234'
+    assert state.attributes.get(ATTR_LATITUDE) is None
+    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_SOURCE) is None
+    assert state.attributes.get(ATTR_USER_ID) == user_id
+
+    hass.states.async_set(DEVICE_TRACKER, 'home')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'home'
+    assert state.attributes.get(ATTR_ID) == '1234'
+    assert state.attributes.get(ATTR_LATITUDE) is None
+    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
+    assert state.attributes.get(ATTR_USER_ID) == user_id
