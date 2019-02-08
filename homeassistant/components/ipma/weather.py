@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.1.6']
+REQUIREMENTS = ['pyipma==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the ipma platform."""
+    """Set up the ipma platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading IPMA via platform config is deprecated')
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -64,6 +69,23 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
 
+    station = await async_get_station(hass, latitude, longitude)
+
+    async_add_entities([IPMAWeather(station, config)], True)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
+
+    station = await async_get_station(hass, latitude, longitude)
+
+    async_add_entities([IPMAWeather(station, config_entry.data)], True)
+
+
+async def async_get_station(hass, latitude, longitude):
+    """Retrieve weather station, station name to be used as the entity name."""
     from pyipma import Station
 
     websession = async_get_clientsession(hass)
@@ -74,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     _LOGGER.debug("Initializing for coordinates %s, %s -> station %s",
                   latitude, longitude, station.local)
 
-    async_add_entities([IPMAWeather(station, config)], True)
+    return station
 
 
 class IPMAWeather(WeatherEntity):
@@ -104,6 +126,11 @@ class IPMAWeather(WeatherEntity):
             self._description = self._forecast[0].description
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique id."""
+        return '{}, {}'.format(self._station.latitude, self._station.longitude)
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -125,26 +152,41 @@ class IPMAWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature."""
+        if not self._condition:
+            return None
+
         return self._condition.temperature
 
     @property
     def pressure(self):
         """Return the current pressure."""
+        if not self._condition:
+            return None
+
         return self._condition.pressure
 
     @property
     def humidity(self):
         """Return the name of the sensor."""
+        if not self._condition:
+            return None
+
         return self._condition.humidity
 
     @property
     def wind_speed(self):
         """Return the current windspeed."""
+        if not self._condition:
+            return None
+
         return self._condition.windspeed
 
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
+        if not self._condition:
+            return None
+
         return self._condition.winddirection
 
     @property
