@@ -96,12 +96,9 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN:
         vol.Schema({
-            vol.Required(CONF_APP_KEY):
-                cv.string,
-            vol.Required(CONF_API_KEY):
-                cv.string,
-            vol.Optional(
-                CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+            vol.Required(CONF_APP_KEY): cv.string,
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_MONITORED_CONDITIONS):
                 vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         })
 }, extra=vol.ALLOW_EXTRA)
@@ -140,8 +137,7 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
-            config_entry.data.get(
-                CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)))
+            config_entry.data.get(CONF_MONITORED_CONDITIONS, []))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketConnectionError as err:
@@ -205,6 +201,15 @@ class AmbientStation:
                     continue
 
                 _LOGGER.debug('New station subscription: %s', data)
+
+                # If the user hasn't specified monitored conditions, use only
+                # those that their station supports (and which are defined
+                # here):
+                if not self.monitored_conditions:
+                    self.monitored_conditions = [
+                        k for k in station['lastData'].keys()
+                        if k in SENSOR_TYPES
+                    ]
 
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
