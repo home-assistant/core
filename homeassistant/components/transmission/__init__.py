@@ -106,9 +106,9 @@ def setup(hass, config):
 
     return True
 
+
 class TransmissionData:
     """Get the latest data and update the states."""
-
 
     def __init__(self, hass, config, api):
         """Initialize the Transmission RPC API."""

@@ -36,9 +36,9 @@ async def async_setup_platform(
 
     async_add_entities([TransmissionSwitch(transmission_api, name)], True)
 
+
 class TransmissionSwitch(ToggleEntity):
     """Representation of a Transmission switch."""
-
 
     def __init__(self, transmission_client, name):
         """Initialize the Transmission switch."""
