@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the ebusd component."""
+    """Set up the eBusd component."""
     conf = config[DOMAIN]
     name = conf.get(CONF_NAME)
     circuit = conf.get(CONF_CIRCUIT)
