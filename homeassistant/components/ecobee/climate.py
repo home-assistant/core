@@ -159,25 +159,25 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation_mode == STATE_AUTO:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation_mode == STATE_AUTO:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
+        if self.current_operation_mode == STATE_AUTO:
             return None
-        if self.current_operation == STATE_HEAT:
+        if self.current_operation_mode == STATE_HEAT:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
-        if self.current_operation == STATE_COOL:
+        if self.current_operation_mode == STATE_COOL:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
@@ -232,7 +232,29 @@ class Thermostat(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation."""
+        """Return current operation the thermostat is calling for.
+
+        - STATE_OFF : thermostat is off
+        - STATE_IDLE: thermostat is on, but not actively heating or cooling
+        - STATE_HEAT: actively heating
+        - STATE_COOL: actively cooling
+        - None: unknown state"""
+        status = self.thermostat['equipmentStatus']
+        if self.operation_mode == STATE_OFF:
+            operation = STATE_OFF
+        elif 'Cool' in status:
+            operation = STATE_COOL
+        elif 'auxHeat' in status:
+            operation = STATE_HEAT
+        elif 'heatPump' in status:
+            operation = STATE_HEAT
+        else:
+            operation = STATE_IDLE
+        return operation
+
+    @property
+    def current_operation_mode(self):
+        """Return current mode mapped to states."""
         if self.operation_mode == 'auxHeatOnly' or \
                 self.operation_mode == 'heatPump':
             return STATE_HEAT
@@ -264,9 +286,7 @@ class Thermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        # Move these to Thermostat Device and make them global
         status = self.thermostat['equipmentStatus']
-        operation = None
         if status == '':
             operation = STATE_IDLE
         elif 'Cool' in status:
@@ -382,7 +402,7 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.current_operation == STATE_HEAT or self.current_operation == \
+        if self.current_operation_mode == STATE_HEAT or self.current_operation_mode == \
                 STATE_COOL:
             heat_temp = temp
             cool_temp = temp
@@ -398,7 +418,7 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and \
+        if self.current_operation_mode == STATE_AUTO and \
                 (low_temp is not None or high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
