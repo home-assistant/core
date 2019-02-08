@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
 )
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL, SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.fan import (
