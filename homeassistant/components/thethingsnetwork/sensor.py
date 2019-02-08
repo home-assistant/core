@@ -153,7 +153,7 @@ class TtnDataStorage:
             return False
 
         data = await req.json()
-        self.data = data[len(data)-1]
+        self.data = data[-1]
 
         for value in self._values.items():
             if value[0] not in self.data.keys():
