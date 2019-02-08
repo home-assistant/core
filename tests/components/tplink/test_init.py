@@ -55,7 +55,7 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
     """Test that light or switch platform list is filled correctly."""
     with patch('pyHS100.Discover.discover') as discover, \
             patch('pyHS100.SmartDevice._query_helper'):
-        discovery_data = {"123.123.123.%s" % c: cls("123.123.123.123")
+        discovery_data = {"123.123.123.{}".format(c): cls("123.123.123.123")
                           for c in range(count)}
         discover.return_value = discovery_data
         await async_setup_component(hass, tplink.DOMAIN, {'tplink': {}})
@@ -150,8 +150,8 @@ async def test_unload(hass, platform):
     entry.add_to_hass(hass)
 
     with patch('pyHS100.SmartDevice._query_helper'), \
-        patch('homeassistant.components.tplink.%s.async_setup_entry'
-              % platform,
+        patch('homeassistant.components.tplink.{}.async_setup_entry'
+                      .format(platform),
               return_value=mock_coro(True)) as light_setup:
         config = {
             'tplink': {
