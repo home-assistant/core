@@ -197,4 +197,4 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         return '{:s}_{:s}'.format(self._doorbell.device_id,
                                   SENSOR_TYPES_DOORBELL[self._sensor_type][0]
                                   .lower())
-    
+
