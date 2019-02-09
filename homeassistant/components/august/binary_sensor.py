@@ -152,7 +152,6 @@ class AugustDoorBinarySensor(BinarySensorDevice):
                                   .lower())
 
 
-
 class AugustDoorbellBinarySensor(BinarySensorDevice):
     """Representation of an August binary sensor."""
 
