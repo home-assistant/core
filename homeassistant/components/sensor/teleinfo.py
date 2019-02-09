@@ -8,12 +8,26 @@ a user accessible serial port.
 For more details about this platform, please refer to the documentation at
 https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf
 
+Work based on https://github.com/nlamirault
+
 Sample configuration.yaml
 
     sensor:
-    - platform: teleinfo2
+    - platform: teleinfo
         name: "EDF teleinfo"
         serial_port: "/dev/ttyAMA0"
+    - platform: template
+        sensors:
+        teleinfo_base:
+            value_template: '{{ (states.sensor.edf_teleinfo.attributes["BASE"] | float / 1000) | round(0) }}'
+            unit_of_measurement: 'kWh'
+            icon_template: mdi:flash
+    - platform: template
+        sensors:
+        teleinfo_iinst1:
+            value_template: '{{ states.sensor.edf_teleinfo.attributes["IINST1"] | int }}'
+            unit_of_measurement: 'A'
+            icon_template: mdi:flash
 
 """
 import logging
@@ -68,14 +82,15 @@ class SerialTeleinfoSensor(Entity):
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.loop.create_task(
-            self.serial_read(self._port, baudrate=1200, bytesize=7,\
+            self.serial_read(self._port, baudrate=1200, bytesize=7,
                              parity='E', stopbits=1, rtscts=1))
 
     async def serial_read(self, device, **kwargs):
         """ Process the serial data """
         import serial_asyncio
         _LOGGER.debug(u"Initializing Teleinfo")
-        reader, _ = await serial_asyncio.open_serial_connection(url=device, **kwargs)
+        reader, _ = await serial_asyncio.open_serial_connection(url=device,
+                          **kwargs)
 
         is_over = True
 
