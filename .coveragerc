@@ -235,6 +235,7 @@ omit =
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
     homeassistant/components/light/sensehat.py
+    homeassistant/components/light/teletask.py
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
@@ -606,12 +607,14 @@ omit =
     homeassistant/components/switch/snmp.py
     homeassistant/components/switch/switchbot.py
     homeassistant/components/switch/switchmate.py
+    homeassistant/components/switch/teletask.py
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/vesync.py
     homeassistant/components/tado/*
     homeassistant/components/tahoma/*
     homeassistant/components/telegram_bot/*
+    homeassistant/components/teletask/*
     homeassistant/components/tellduslive/*
     homeassistant/components/tellstick/*
     homeassistant/components/tesla/*
