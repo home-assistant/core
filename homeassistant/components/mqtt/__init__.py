@@ -13,7 +13,7 @@ import os
 import socket
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
+from typing import Any, Callable, List, Optional, Union  # noqa: F401
 
 import attr
 import requests.certs
