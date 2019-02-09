@@ -58,9 +58,10 @@
    - service: input_boolean.turn_off
      data:
        entity_id: input_boolean.ais_remote_access
-   - service: camera.snapshot
-     data:
-       entity_id: camera.remote_access
+#   - service: camera.snapshot
+#     data:
+#       entity_id: camera.remote_access
+#       filename: ~/tmp
    - delay: '300'
    - service: ais_ai_service.prepare_remote_menu
 

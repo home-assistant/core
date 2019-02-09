@@ -13,7 +13,6 @@ from operator import itemgetter
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
-# DEPENDENCIES = ['group', 'http']
 REQUIREMENTS = ['gmusicapi==11.0.1']
 
 DOMAIN = 'ais_gm_service'
