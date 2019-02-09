@@ -6,6 +6,7 @@ https://home-assistant.io/components/zha/
 """
 import asyncio
 import logging
+from concurrent.futures._base import TimeoutError as Timeout
 
 from .const import (
     DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
@@ -48,7 +49,7 @@ async def bind_cluster(entity_id, cluster):
         _LOGGER.debug(
             "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
         )
-    except DeliveryError as ex:
+    except (DeliveryError, Timeout) as ex:
         _LOGGER.debug(
             "%s: Failed to bind '%s' cluster: %s",
             entity_id, cluster_name, str(ex)
@@ -68,7 +69,8 @@ async def configure_reporting(entity_id, cluster, attr,
     from zigpy.exceptions import DeliveryError
 
     attr_name = cluster.attributes.get(attr, [attr])[0]
-    attr_id = get_attr_id_by_name(cluster, attr_name)
+    attr_id = (attr, get_attr_id_by_name(cluster, attr_name))[
+        isinstance(attr, str)]
     cluster_name = cluster.ep_attribute
     kwargs = {}
     if manufacturer:
@@ -82,7 +84,7 @@ async def configure_reporting(entity_id, cluster, attr,
             entity_id, attr_name, cluster_name, min_report, max_report,
             reportable_change, res
         )
-    except DeliveryError as ex:
+    except (DeliveryError, Timeout) as ex:
         _LOGGER.debug(
             "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
             entity_id, attr_name, cluster_name, str(ex)
