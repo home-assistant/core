@@ -13,8 +13,8 @@ from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PORT,
-    CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
+    CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
     CONF_BINARY_SENSORS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -36,10 +36,20 @@ def has_all_unique_names(value):
     return value
 
 
+def ensure_valid_path(value):
+    """Validate the path, ensuring it starts and ends with a /."""
+    vol.Schema(cv.string)(value)
+    if value[0] != '/':
+        value = '/' + value
+    if value[-1] != '/':
+        value += '/'
+    return value
+
+
 BINARY_SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit
     'Printing': ['printer', 'state', 'printing', None],
-    'Printing Error': ['printer', 'state', 'error', None]
+    "Printing Error": ['printer', 'state', 'error', None]
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
@@ -51,12 +61,12 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit, icon
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
-    'Current State': ['printer', 'state', 'text', None, 'mdi:printer-3d'],
-    'Job Percentage': ['job', 'progress', 'completion', '%',
+    "Current State": ['printer', 'state', 'text', None, 'mdi:printer-3d'],
+    "Job Percentage": ['job', 'progress', 'completion', '%',
                        'mdi:file-percent'],
-    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds',
+    "Time Remaining": ['job', 'progress', 'printTimeLeft', 'seconds',
                        'mdi:clock-end'],
-    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds',
+    "Time Elapsed": ['job', 'progress', 'printTime', 'seconds',
                      'mdi:clock-start'],
 }
 
@@ -72,6 +82,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PATH, default='/'): ensure_valid_path,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
         vol.Optional(CONF_BED, default=False): cv.boolean,
@@ -88,16 +99,21 @@ def setup(hass, config):
 
     def device_discovered(service, info):
         """Get called when an Octoprint server has been discovered."""
-        _LOGGER.debug('Found an Octoprint server: %s', info)
+        _LOGGER.debug("Found an Octoprint server: %s", info)
 
     discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
+
+    if DOMAIN not in config:
+        # Skip the setup if there is no configuration present
+        return True
 
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
         ssl = 's' if printer[CONF_SSL] else ''
-        base_url = 'http{}://{}:{}/api/'.format(ssl,
-                                                printer[CONF_HOST],
-                                                printer[CONF_PORT])
+        base_url = 'http{}://{}:{}{}api/'.format(ssl,
+                                                 printer[CONF_HOST],
+                                                 printer[CONF_PORT],
+                                                 printer[CONF_PATH])
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
         bed = printer[CONF_BED]
@@ -150,7 +166,7 @@ class OctoPrintAPI:
         tools = []
         if self.number_of_tools > 0:
             for tool_number in range(0, self.number_of_tools):
-                tools.append("tool" + str(tool_number))
+                tools.append('tool' + str(tool_number))
         if self.bed:
             tools.append('bed')
         if not self.bed and self.number_of_tools == 0:
@@ -163,12 +179,12 @@ class OctoPrintAPI:
         """Send a get request, and return the response as a dict."""
         # Only query the API at most every 30 seconds
         now = time.time()
-        if endpoint == "job":
+        if endpoint == 'job':
             last_time = self.job_last_reading[1]
             if last_time is not None:
                 if now - last_time < 30.0:
                     return self.job_last_reading[0]
-        elif endpoint == "printer":
+        elif endpoint == 'printer':
             last_time = self.printer_last_reading[1]
             if last_time is not None:
                 if now - last_time < 30.0:
@@ -179,11 +195,11 @@ class OctoPrintAPI:
             response = requests.get(
                 url, headers=self.headers, timeout=9)
             response.raise_for_status()
-            if endpoint == "job":
+            if endpoint == 'job':
                 self.job_last_reading[0] = response.json()
                 self.job_last_reading[1] = time.time()
                 self.job_available = True
-            elif endpoint == "printer":
+            elif endpoint == 'printer':
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
                 self.printer_available = True
@@ -196,13 +212,13 @@ class OctoPrintAPI:
             log_string = "Failed to update OctoPrint status. " + \
                                "  Error: %s" % (conn_exc)
             # Only log the first failure
-            if endpoint == "job":
+            if endpoint == 'job':
                 log_string = "Endpoint: job " + log_string
                 if not self.job_error_logged:
                     _LOGGER.error(log_string)
                     self.job_error_logged = True
                     self.job_available = False
-            elif endpoint == "printer":
+            elif endpoint == 'printer':
                 log_string = "Endpoint: printer " + log_string
                 if not self.printer_error_logged:
                     _LOGGER.error(log_string)
@@ -225,7 +241,7 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
         return None
 
     if sensor_type in json_dict[group]:
-        if sensor_type == "target" and json_dict[sensor_type] is None:
+        if sensor_type == 'target' and json_dict[sensor_type] is None:
             return 0
         return json_dict[group][sensor_type]
 

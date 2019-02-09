@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_COMMAND, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
@@ -242,7 +242,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 return STATE_PLAYING
             if self._status['mode'] == 'stop':
                 return STATE_IDLE
-        return STATE_UNKNOWN
+        return None
 
     def async_query(self, *parameters):
         """Send a command to the LMS.

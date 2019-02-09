@@ -49,9 +49,7 @@ ZONE_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: ZONE_SCHEMA,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(ZONE_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

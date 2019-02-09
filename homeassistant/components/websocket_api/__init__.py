@@ -22,13 +22,22 @@ result_message = messages.result_message
 async_response = decorators.async_response
 require_admin = decorators.require_admin
 ws_require_user = decorators.ws_require_user
+websocket_command = decorators.websocket_command
 # pylint: enable=invalid-name
 
 
 @bind_hass
 @callback
-def async_register_command(hass, command, handler, schema):
+def async_register_command(hass, command_or_handler, handler=None,
+                           schema=None):
     """Register a websocket command."""
+    # pylint: disable=protected-access
+    if handler is None:
+        handler = command_or_handler
+        command = handler._ws_command
+        schema = handler._ws_schema
+    else:
+        command = command_or_handler
     handlers = hass.data.get(DOMAIN)
     if handlers is None:
         handlers = hass.data[DOMAIN] = {}

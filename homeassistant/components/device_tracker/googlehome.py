@@ -89,5 +89,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
                 devices[uuid]['btle_mac_address'] = device['mac_address']
                 devices[uuid]['ghname'] = ghname
                 devices[uuid]['source_type'] = 'bluetooth'
+                if device['name']:
+                    devices[uuid]['btle_name'] = device['name']
         await self.scanner.clear_scan_result()
         self.last_results = devices

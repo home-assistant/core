@@ -47,8 +47,8 @@ CONF_SERVICE_DATA = 'service_data'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
-ATTRS_SCHEMA = vol.Schema({cv.slug: cv.string})
-CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
+ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
+CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,

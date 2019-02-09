@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.hive/
 """
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.hive import DATA_HIVE
+from homeassistant.components.hive import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 
@@ -31,7 +31,23 @@ class HiveDevicePlug(SwitchDevice):
         self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
+        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
         self.session.entities.append(self)
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.unique_id)
+            },
+            'name': self.name
+        }
 
     def handle_update(self, updatesource):
         """Handle the new update request."""

@@ -47,6 +47,7 @@ SERVICE_OCTOPRINT = 'octoprint'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_IGD = 'igd'
 SERVICE_DLNA_DMR = 'dlna_dmr'
+SERVICE_ROKU = 'roku'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: 'daikin',
@@ -67,6 +68,7 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
+    SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
@@ -76,7 +78,6 @@ SERVICE_HANDLERS = {
     SERVICE_FREEBOX: ('freebox', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
-    'roku': ('media_player', 'roku'),
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),

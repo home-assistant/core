@@ -55,8 +55,8 @@ def _cv_input_text(cfg):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
             vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
@@ -67,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_MODE, default=MODE_TEXT):
                 vol.In([MODE_TEXT, MODE_PASSWORD]),
         }, _cv_input_text)
-    })
+    )
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 

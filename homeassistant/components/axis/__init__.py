@@ -50,9 +50,7 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: DEVICE_SCHEMA,
-    }),
+    DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_VAPIX_CALL = 'vapix_call'

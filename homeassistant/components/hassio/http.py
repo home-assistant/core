@@ -17,7 +17,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 
-from .const import X_HASSIO
+from .const import X_HASSIO, X_HASS_USER_ID, X_HASS_IS_ADMIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,9 +75,16 @@ class HassIOView(HomeAssistantView):
         read_timeout = _get_timeout(path)
         hass = request.app['hass']
 
+        data = None
+        headers = {
+            X_HASSIO: os.environ.get('HASSIO_TOKEN', ""),
+        }
+        user = request.get('hass_user')
+        if user is not None:
+            headers[X_HASS_USER_ID] = request['hass_user'].id
+            headers[X_HASS_IS_ADMIN] = str(int(request['hass_user'].is_admin))
+
         try:
-            data = None
-            headers = {X_HASSIO: os.environ.get('HASSIO_TOKEN', "")}
             with async_timeout.timeout(10, loop=hass.loop):
                 data = await request.read()
                 if data:

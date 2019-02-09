@@ -64,7 +64,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return 'Number'
+        return alarm.FORMAT_NUMBER
 
     @property
     def state(self):

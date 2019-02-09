@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, STATE_HEAT, STATE_OFF, STATE_ON,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.components.hive import DATA_HIVE
+from homeassistant.components.hive import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 HIVE_TO_HASS_STATE = {'SCHEDULE': STATE_AUTO, 'MANUAL': STATE_HEAT,
@@ -44,6 +44,7 @@ class HiveClimateEntity(ClimateDevice):
         self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
+        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
 
         if self.device_type == "Heating":
             self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
@@ -51,6 +52,21 @@ class HiveClimateEntity(ClimateDevice):
             self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
 
         self.session.entities.append(self)
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.unique_id)
+            },
+            'name': self.name
+        }
 
     @property
     def supported_features(self):

@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
 
-REQUIREMENTS = ["waterfurnace==1.0.0"]
+REQUIREMENTS = ["waterfurnace==1.1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 

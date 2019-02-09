@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.mychevy import (
     EVSensorConfig, DOMAIN as MYCHEVY_DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    NOTIFICATION_ID, NOTIFICATION_TITLE, UPDATE_TOPIC, ERROR_TOPIC
+    UPDATE_TOPIC, ERROR_TOPIC
 )
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.core import callback
@@ -74,13 +74,10 @@ class MyChevyStatus(Entity):
     @callback
     def error(self):
         """Update state, trigger updates."""
-        if self._state != MYCHEVY_ERROR:
-            self.hass.components.persistent_notification.create(
-                "Error:<br/>Connection to mychevy website failed. "
-                "This probably means the mychevy to OnStar link is down.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-            self._state = MYCHEVY_ERROR
+        _LOGGER.error(
+            "Connection to mychevy website failed. "
+            "This probably means the mychevy to OnStar link is down")
+        self._state = MYCHEVY_ERROR
         self.async_schedule_update_ha_state()
 
     @property
@@ -144,7 +141,7 @@ class EVSensor(Entity):
     def icon(self):
         """Return the icon."""
         if self._attr == BATTERY_SENSOR:
-            charging = self.state_attributes.get("charging", False)
+            charging = self._state_attributes.get("charging", False)
             return icon_for_battery_level(self.state, charging)
         return self._icon
 

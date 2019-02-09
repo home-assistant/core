@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.amcrest import DATA_AMCREST, SENSORS
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_NAME, CONF_SENSORS, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_SENSORS
 
 DEPENDENCIES = ['amcrest']
 
@@ -48,7 +48,7 @@ class AmcrestSensor(Entity):
         self._name = '{0}_{1}'.format(name,
                                       SENSORS.get(self._sensor_type)[0])
         self._icon = 'mdi:{}'.format(SENSORS.get(self._sensor_type)[2])
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):

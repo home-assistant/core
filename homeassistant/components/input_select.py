@@ -64,14 +64,15 @@ def _cv_input_select(cfg):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.All({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_OPTIONS):
                 vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
             vol.Optional(CONF_INITIAL): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
-        }, _cv_input_select)})
+        }, _cv_input_select)
+    )
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 

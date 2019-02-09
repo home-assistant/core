@@ -19,8 +19,8 @@ CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
 CONF_RELATIVE_URL_REGEX = r'\A/'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: {
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Schema({
             # pylint: disable=no-value-for-parameter
             vol.Optional(CONF_TITLE): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
@@ -29,7 +29,9 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_RELATIVE_URL_REGEX,
                     msg=CONF_RELATIVE_URL_ERROR_MSG),
                 vol.Url()),
-        }})}, extra=vol.ALLOW_EXTRA)
+        })
+    )
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):

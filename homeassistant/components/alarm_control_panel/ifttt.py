@@ -129,8 +129,8 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
-        return 'Any'
+            return alarm.FORMAT_NUMBER
+        return alarm.FORMAT_TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

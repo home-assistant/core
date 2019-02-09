@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HEADERS, CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD,
-    CONF_USERNAME, CONF_PASSWORD)
+    CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -29,6 +29,7 @@ DEFAULT_BODY_OFF = 'OFF'
 DEFAULT_BODY_ON = 'ON'
 DEFAULT_NAME = 'REST Switch'
 DEFAULT_TIMEOUT = 10
+DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ['post', 'put']
 
@@ -44,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
@@ -59,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
 
     auth = None
     if username:
@@ -74,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         switch = RestSwitch(name, resource, method, headers, auth, body_on,
-                            body_off, is_on_template, timeout)
+                            body_off, is_on_template, timeout, verify_ssl)
 
         req = await switch.get_device_state(hass)
         if req.status >= 400:
@@ -92,7 +95,7 @@ class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(self, name, resource, method, headers, auth, body_on,
-                 body_off, is_on_template, timeout):
+                 body_off, is_on_template, timeout, verify_ssl):
         """Initialize the REST switch."""
         self._state = None
         self._name = name
@@ -104,6 +107,7 @@ class RestSwitch(SwitchDevice):
         self._body_off = body_off
         self._is_on_template = is_on_template
         self._timeout = timeout
+        self._verify_ssl = verify_ssl
 
     @property
     def name(self):
@@ -148,7 +152,7 @@ class RestSwitch(SwitchDevice):
 
     async def set_device_state(self, body):
         """Send a state update to the device."""
-        websession = async_get_clientsession(self.hass)
+        websession = async_get_clientsession(self.hass, self._verify_ssl)
 
         with async_timeout.timeout(self._timeout, loop=self.hass.loop):
             req = await getattr(websession, self._method)(
@@ -167,7 +171,7 @@ class RestSwitch(SwitchDevice):
 
     async def get_device_state(self, hass):
         """Get the latest data from REST API and update the state."""
-        websession = async_get_clientsession(hass)
+        websession = async_get_clientsession(hass, self._verify_ssl)
 
         with async_timeout.timeout(self._timeout, loop=hass.loop):
             req = await websession.get(self._resource, auth=self._auth,

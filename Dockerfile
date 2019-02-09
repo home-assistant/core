@@ -16,7 +16,6 @@ LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
 
 VOLUME /config
 
-RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy build scripts

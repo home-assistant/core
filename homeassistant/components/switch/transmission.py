@@ -6,54 +6,30 @@ https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.transmission import (
+    DATA_TRANSMISSION, SCAN_INTERVAL)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME, STATE_OFF,
-    STATE_ON)
+    STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['transmissionrpc==0.11']
+DEPENDENCIES = ['transmission']
 
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'
-DEFAULT_PORT = 9091
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission switch."""
-    import transmissionrpc
-    from transmissionrpc.error import TransmissionError
+    if discovery_info is None:
+        return
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
+    component_name = DATA_TRANSMISSION
+    transmission_api = hass.data[component_name]
+    name = discovery_info['client_name']
 
-    try:
-        transmission_api = transmissionrpc.Client(
-            host, port=port, user=username, password=password)
-        transmission_api.session_stats()
-    except TransmissionError as error:
-        _LOGGING.error(
-            "Connection to Transmission API failed on %s:%s with message %s",
-            host, port, error.original
-        )
-        return False
-
-    add_entities([TransmissionSwitch(transmission_api, name)])
+    add_entities([TransmissionSwitch(transmission_api, name)], True)
 
 
 class TransmissionSwitch(ToggleEntity):
@@ -88,14 +64,15 @@ class TransmissionSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGING.debug("Turning Turtle Mode of Transmission on")
-        self.transmission_client.set_session(alt_speed_enabled=True)
+        self.transmission_client.set_alt_speed_enabled(True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGING.debug("Turning Turtle Mode of Transmission off")
-        self.transmission_client.set_session(alt_speed_enabled=False)
+        self.transmission_client.set_alt_speed_enabled(False)
 
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        active = self.transmission_client.get_session().alt_speed_enabled
+        active = self.transmission_client.get_alt_speed_enabled()
         self._state = STATE_ON if active else STATE_OFF

@@ -107,7 +107,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
 
     def update(self):
         """Update the sensor state."""
-        _LOGGER.debug('Updating xiaomi sensor by polling')
+        _LOGGER.debug('Updating xiaomi sensor (%s) by polling', self._sid)
         self._get_from_hub(self._sid)
 
 
@@ -178,7 +178,28 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
-        """Parse data sent by gateway."""
+        """Parse data sent by gateway.
+
+        Polling (proto v1, firmware version 1.4.1_159.0143)
+
+        >> { "cmd":"read","sid":"158..."}
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+            'cmd': 'read_ack', 'data': '{"voltage":3005}'}
+
+        Multicast messages (proto v1, firmware version 1.4.1_159.0143)
+
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+            'cmd': 'report', 'data': '{"status":"motion"}'}
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+            'cmd': 'report', 'data': '{"no_motion":"120"}'}
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+            'cmd': 'report', 'data': '{"no_motion":"180"}'}
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+           'cmd': 'report', 'data': '{"no_motion":"300"}'}
+        << {'model': 'motion', 'sid': '158...', 'short_id': 26331,
+            'cmd': 'heartbeat', 'data': '{"voltage":3005}'}
+
+        """
         if raw_data['cmd'] == 'heartbeat':
             _LOGGER.debug(
                 'Skipping heartbeat of the motion sensor. '
@@ -187,8 +208,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 '11631#issuecomment-357507744).')
             return
 
-        self._should_poll = False
-        if NO_MOTION in data:  # handle push from the hub
+        if NO_MOTION in data:
             self._no_motion_since = data[NO_MOTION]
             self._state = False
             return True
@@ -203,25 +223,19 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                     self._unsub_set_no_motion()
                 self._unsub_set_no_motion = async_call_later(
                     self._hass,
-                    180,
+                    120,
                     self._async_set_no_motion
                 )
-            else:
-                self._should_poll = True
-                if self.entity_id is not None:
-                    self._hass.bus.fire('xiaomi_aqara.motion', {
-                        'entity_id': self.entity_id
-                    })
+
+            if self.entity_id is not None:
+                self._hass.bus.fire('xiaomi_aqara.motion', {
+                    'entity_id': self.entity_id
+                })
 
             self._no_motion_since = 0
             if self._state:
                 return False
             self._state = True
-            return True
-        if value == NO_MOTION:
-            if not self._state:
-                return False
-            self._state = False
             return True
 
 

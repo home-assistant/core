@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
@@ -115,7 +116,7 @@ class Template:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
 
-    def render(self, variables=None, **kwargs):
+    def render(self, variables: TemplateVarsType = None, **kwargs):
         """Render given template."""
         if variables is not None:
             kwargs.update(variables)
@@ -123,7 +124,8 @@ class Template:
         return run_callback_threadsafe(
             self.hass.loop, self.async_render, kwargs).result()
 
-    def async_render(self, variables=None, **kwargs):
+    def async_render(self, variables: TemplateVarsType = None,
+                     **kwargs) -> str:
         """Render given template.
 
         This method must be run in the event loop.
@@ -165,7 +167,7 @@ class Template:
 
         try:
             variables['value_json'] = json.loads(value)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         try:

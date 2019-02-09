@@ -59,7 +59,7 @@ MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SWITCHES, default={}):
-        vol.Schema({cv.slug: SWITCH_SCHEMA}),
+        cv.schema_with_slug_keys(SWITCH_SCHEMA),
     vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,

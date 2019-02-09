@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['greeneye_monitor==0.1']
+REQUIREMENTS = ['greeneye_monitor==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,15 @@ CHANNEL_SCHEMA = vol.Schema({
 CHANNELS_SCHEMA = vol.All(cv.ensure_list, [CHANNEL_SCHEMA])
 
 MONITOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_SERIAL_NUMBER): cv.positive_int,
+    vol.Required(CONF_SERIAL_NUMBER):
+        vol.All(
+            cv.string,
+            vol.Length(
+                min=8,
+                max=8,
+                msg="GEM serial number must be specified as an 8-character "
+                    "string (including leading zeroes)."),
+            vol.Coerce(int)),
     vol.Optional(CONF_CHANNELS, default=[]): CHANNELS_SCHEMA,
     vol.Optional(
         CONF_TEMPERATURE_SENSORS,

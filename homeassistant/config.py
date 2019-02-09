@@ -105,6 +105,9 @@ map:
 # Track the sun
 sun:
 
+# Allow diagnosing system problems
+system_health:
+
 # Sensors
 sensor:
   # Weather prediction
@@ -170,10 +173,9 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
     return configs
 
 
-PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema(  # Package names are slugs
-        {cv.string: vol.Any(dict, list, None)})  # Component configuration
-})
+PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
+    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
+)
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -444,7 +446,11 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    domain_config = config.get(domain, config)
+    try:
+        domain_config = config.get(domain, config)
+    except AttributeError:
+        domain_config = config
+
     message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
@@ -627,7 +633,7 @@ def _identify_config_schema(module: ModuleType) -> \
     except (AttributeError, KeyError):
         return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{'):
+    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
@@ -743,15 +749,21 @@ def async_process_component_config(
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif hasattr(component, 'PLATFORM_SCHEMA'):
+    elif (hasattr(component, 'PLATFORM_SCHEMA') or
+          hasattr(component, 'PLATFORM_SCHEMA_BASE')):
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                    p_config)
+                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
+                    p_validated = \
+                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
+                            p_config)
+                else:
+                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
+                        p_config)
             except vol.Invalid as ex:
-                async_log_exception(ex, domain, config, hass)
+                async_log_exception(ex, domain, p_config, hass)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -771,10 +783,10 @@ def async_process_component_config(
                 # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                        p_validated)
+                        p_config)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_validated, hass)
+                                        p_config, hass)
                     continue
 
             platforms.append(p_validated)

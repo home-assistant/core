@@ -1,9 +1,9 @@
 """
-Offer geo location automation rules.
+Offer geolocation automation rules.
 
 For more details about this automation trigger, please refer to the
 documentation at
-https://home-assistant.io/docs/automation/trigger/#geo-location-trigger
+https://home-assistant.io/docs/automation/trigger/#geolocation-trigger
 """
 import voluptuous as vol
 

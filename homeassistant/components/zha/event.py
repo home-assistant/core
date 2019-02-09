@@ -67,3 +67,33 @@ class ZhaEvent():
             },
             EventOrigin.remote
         )
+
+
+class ZhaRelayEvent(ZhaEvent):
+    """Event relay that can be attached to zigbee clusters."""
+
+    @callback
+    def attribute_updated(self, attribute, value):
+        """Handle an attribute updated on this cluster."""
+        self.zha_send_event(
+            self._cluster,
+            'attribute_updated',
+            {
+                'attribute_id': attribute,
+                'attribute_name': self._cluster.attributes.get(
+                    attribute,
+                    ['Unknown'])[0],
+                'value': value
+            }
+        )
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+        if self._cluster.server_commands is not None and\
+                self._cluster.server_commands.get(command_id) is not None:
+            self.zha_send_event(
+                self._cluster,
+                self._cluster.server_commands.get(command_id)[0],
+                args
+            )

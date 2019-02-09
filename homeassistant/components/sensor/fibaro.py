@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
+    FIBARO_DEVICES, FibaroDevice)
 
 SENSOR_TYPES = {
     'com.fibaro.temperatureSensor':
@@ -37,18 +37,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroSensor(device, hass.data[FIBARO_CONTROLLER])
+        [FibaroSensor(device)
          for device in hass.data[FIBARO_DEVICES]['sensor']], True)
 
 
 class FibaroSensor(FibaroDevice, Entity):
     """Representation of a Fibaro Sensor."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the sensor."""
         self.current_value = None
         self.last_changed_time = None
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         if fibaro_device.type in SENSOR_TYPES:
             self._unit = SENSOR_TYPES[fibaro_device.type][1]

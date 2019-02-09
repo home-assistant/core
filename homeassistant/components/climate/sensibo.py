@@ -19,7 +19,8 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF)
+    SUPPORT_ON_OFF, STATE_HEAT, STATE_COOL, STATE_FAN_ONLY, STATE_DRY,
+    STATE_AUTO)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -56,6 +57,16 @@ FIELD_TO_FLAG = {
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
     'on': SUPPORT_ON_OFF,
 }
+
+SENSIBO_TO_HA = {
+    "cool": STATE_COOL,
+    "heat": STATE_HEAT,
+    "fan": STATE_FAN_ONLY,
+    "auto": STATE_AUTO,
+    "dry": STATE_DRY
+}
+
+HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -129,9 +140,10 @@ class SensiboClimate(ClimateDevice):
         self._ac_states = data['acState']
         self._status = data['connectionStatus']['isAlive']
         capabilities = data['remoteCapabilities']
-        self._operations = sorted(capabilities['modes'].keys())
-        self._current_capabilities = capabilities[
-            'modes'][self.current_operation]
+        self._operations = [SENSIBO_TO_HA[mode] for mode
+                            in capabilities['modes']]
+        self._current_capabilities = \
+            capabilities['modes'][self._ac_states['mode']]
         temperature_unit_key = data.get('temperatureUnit') or \
             self._ac_states.get('temperatureUnit')
         if temperature_unit_key:
@@ -186,7 +198,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._ac_states['mode']
+        return SENSIBO_TO_HA.get(self._ac_states['mode'])
 
     @property
     def current_humidity(self):
@@ -293,7 +305,8 @@ class SensiboClimate(ClimateDevice):
         """Set new target operation mode."""
         with async_timeout.timeout(TIMEOUT):
             await self._client.async_set_ac_state_property(
-                self._id, 'mode', operation_mode, self._ac_states)
+                self._id, 'mode', HA_TO_SENSIBO[operation_mode],
+                self._ac_states)
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""

@@ -9,7 +9,7 @@ import logging
 from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
+    FIBARO_DEVICES, FibaroDevice)
 
 DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)
@@ -21,17 +21,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroSwitch(device, hass.data[FIBARO_CONTROLLER]) for
+        [FibaroSwitch(device) for
          device in hass.data[FIBARO_DEVICES]['switch']], True)
 
 
 class FibaroSwitch(FibaroDevice, SwitchDevice):
     """Representation of a Fibaro Switch."""
 
-    def __init__(self, fibaro_device, controller):
+    def __init__(self, fibaro_device):
         """Initialize the Fibaro device."""
         self._state = False
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     def turn_on(self, **kwargs):

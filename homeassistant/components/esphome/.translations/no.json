@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP er allerede konfigurert"
+        },
+        "error": {
+            "connection_error": "Kan ikke koble til ESP. Kontroller at YAML filen din inneholder en \"api:\" linje.",
+            "invalid_password": "Ugyldig passord!",
+            "resolve_error": "Kan ikke l\u00f8se adressen til ESP. Hvis denne feilen vedvarer, m\u00e5 du [angi en statisk IP-adresse](https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips)"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Vennligst skriv inn passordet du har angitt i din konfigurasjon.",
+                "title": "Skriv Inn Passord"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "description": "Vennligst skriv inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node.",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

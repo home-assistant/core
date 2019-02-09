@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.scene import (
     Scene)
 from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
+    FIBARO_DEVICES, FibaroDevice)
 
 DEPENDENCIES = ['fibaro']
 
@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     async_add_entities(
-        [FibaroScene(scene, hass.data[FIBARO_CONTROLLER])
+        [FibaroScene(scene)
          for scene in hass.data[FIBARO_DEVICES]['scene']], True)
 
 
