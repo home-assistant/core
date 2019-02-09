@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa
 from .const import (
     CONF_HOST, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, KEY_SESSION,
     MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,

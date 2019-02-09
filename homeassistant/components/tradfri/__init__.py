@@ -16,7 +16,7 @@ from homeassistant.util.json import load_json
 from .const import (
     CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa
 
 REQUIREMENTS = ['pytradfri[async]==6.0.1']
 
