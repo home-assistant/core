@@ -48,22 +48,22 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         level = position / 100.0
-        await self._device.set_shutter_level(level)
+        await self._device.set_shutter_level(1-level)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
-            return self._device.shutterLevel == 0
+            return self._device.shutterLevel == 1
         return None
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self._device.set_shutter_level(1)
+        await self._device.set_shutter_level(0)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await self._device.set_shutter_level(0)
+        await self._device.set_shutter_level(1)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the device if in motion."""
