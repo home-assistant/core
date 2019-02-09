@@ -42,14 +42,14 @@ SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spider thermostat."""
     if discovery_info is None:
         return
 
     devices = [SpiderThermostat(hass.data[SPIDER_DOMAIN]['controller'], device)
                for device in hass.data[SPIDER_DOMAIN]['thermostats']]
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class SpiderThermostat(ClimateDevice):
@@ -66,10 +66,10 @@ class SpiderThermostat(ClimateDevice):
         supports = SUPPORT_TARGET_TEMPERATURE
 
         if self.thermostat.has_operation_mode:
-            supports = supports | SUPPORT_OPERATION_MODE
+            supports |= SUPPORT_OPERATION_MODE
 
         if self.thermostat.has_fan_mode:
-            supports = supports | SUPPORT_FAN_MODE
+            supports |= SUPPORT_FAN_MODE
 
         return supports
 
