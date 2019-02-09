@@ -84,10 +84,32 @@ LEAF_COMPONENTS = [
 
 SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
 
+SERVICE_UPDATE_LEAF = 'update'
+ATTR_VIN = 'vin'
+
+UPDATE_LEAF_SCHEMA = vol.Schema({
+    vol.Required(ATTR_VIN): cv.string
+})
+
 
 async def async_setup(hass, config):
     """Set-up the Nissan Leaf component."""
     import pycarwings2
+
+    async def handle_update(service):
+        # It would be better if this was changed to use nickname, or
+        # an entity name rather than a vin.
+        vin = service.data.get(ATTR_VIN, '')
+
+        if vin in hass.data[DATA_LEAF]:
+            data_store = hass.data[DATA_LEAF][vin]
+            async_track_point_in_utc_time(hass, data_store.async_update_data,
+                                          utcnow())
+            return True
+
+        _LOGGER.debug("Vin %s not recognised for update.", vin)
+        return False
+
 
     async def async_setup_leaf(car_config):
         """Set-up a car."""
@@ -145,6 +167,9 @@ async def async_setup(hass, config):
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_LEAF, handle_update,
+                                 schema=UPDATE_LEAF_SCHEMA)
+
     return True
 
 
@@ -174,14 +199,24 @@ class LeafDataStore:
         self.last_battery_response = None
         self.last_climate_response = None
         self.last_location_response = None
+        self._remove_listener = None
 
     async def async_update_data(self, now):
         """Update data from nissan leaf."""
+        # Prevent against a previously scheduled update and an ad-hoc update
+        # started from an update from both being triggered.
+        if self._remove_listener:
+            self._remove_listener()
+            self._remove_listener = None
+
+        # Clear next update whilst this update is underway
+        self.next_update = None
+
         await self.async_refresh_data(now)
-        next_interval = self.get_next_interval()
-        _LOGGER.debug("Next interval=%s", next_interval)
-        async_track_point_in_utc_time(
-            self.hass, self.async_update_data, next_interval)
+        self.next_update = self.get_next_interval()
+        _LOGGER.debug("Next update=%s", self.next_update)
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, self.next_update)
 
     def get_next_interval(self):
         """Calculate when the next update should occur."""
@@ -217,8 +252,7 @@ class LeafDataStore:
             interval = min(intervals)
             _LOGGER.debug("Resulting interval=%s", interval)
 
-        self.next_update = utcnow() + interval
-        return self.next_update
+        return utcnow() + interval
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
@@ -436,8 +470,9 @@ class LeafDataStore:
             _LOGGER.debug("Start charging sent, "
                           "request updated data in 1 minute")
             check_charge_at = utcnow() + timedelta(minutes=1)
+            self.next_update = check_charge_at
             async_track_point_in_utc_time(
-                self.hass, self.async_refresh_data, check_charge_at)
+                self.hass, self.async_update_data, check_charge_at)
 
 
 class LeafEntity(Entity):
