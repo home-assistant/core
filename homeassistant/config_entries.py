@@ -349,7 +349,8 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self, handler.VERSION)
+            result = await component.async_migrate_entry(
+                hass, self, handler.VERSION)
             assert isinstance(result, bool)
             return result
         except Exception:  # pylint: disable=broad-except
