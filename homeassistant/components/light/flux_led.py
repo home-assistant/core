@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.flux_led/
 import logging
 import socket
 import random
+from asyncio import sleep
 
 import voluptuous as vol
 
@@ -217,11 +218,11 @@ class FluxLight(Light):
         """Return the list of supported effects."""
         return FLUX_EFFECT_LIST
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         self._bulb.turnOn()
-        hs_color = kwargs.get(ATTR_HS_COLOR)
 
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
@@ -236,11 +237,13 @@ class FluxLight(Light):
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
+            await sleep(delay=2)
             return
 
         # Effect selection
         if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            await sleep(delay=2)
             return
 
         # Preserve current brightness on color/white level change
@@ -250,6 +253,9 @@ class FluxLight(Light):
         if hs_color and brightness:
             self._color = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1],
                                                       brightness / 255 * 100)
+        elif brightness and (hs_color is None) and self._mode != MODE_WHITE:
+            hsv = color_util.color_RGB_to_hsv(*self._color)
+            self._color = color_util.color_hsv_to_RGB(hsv[0], hsv[1], brightness / 255 * 100)
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
@@ -264,6 +270,8 @@ class FluxLight(Light):
         # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(self._color), brightness=brightness)
+
+        await sleep(delay=2)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
