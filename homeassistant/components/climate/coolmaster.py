@@ -19,6 +19,8 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pycoolmasternet==0.0.4']
 
+DOMAIN = 'coolmaster'
+
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
 
@@ -26,10 +28,10 @@ FAN_ONLY_OVERRIDE = 'fan'
 
 DEFAULT_PORT = 10102
 
-DOMAIN = 'coolmaster'
-
 AVAILABLE_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_DRY,
                    STATE_FAN_ONLY]
+
+FAN_MODES = ['low', 'med', 'high', 'auto']
 
 CONF_SUPPORTED_MODES = 'supported_modes'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,9 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     port = config.get(CONF_PORT)
     cool = CoolMasterNet(host, port=port)
 
-    default_unit = hass.config.units.temperature_unit
-
-    all_devices = [CoolmasterClimate(device, supported_modes, default_unit)
+    all_devices = [CoolmasterClimate(device, supported_modes)
                    for device in cool.devices()]
 
     async_add_entities(all_devices, True)
@@ -63,20 +63,18 @@ async def async_setup_platform(hass, config, async_add_entities,
 class CoolmasterClimate(ClimateDevice):
     """Representation of a coolmaster climate device."""
 
-    def __init__(self, device, supported_modes, default_unit):
+    def __init__(self, device, supported_modes):
         """Initialize the climate device."""
-        _LOGGER.debug("Adding device %s", device.uid)
+        _LOGGER.debug("Creating device %s", device.uid)
         self._device = device
         self._uid = device.uid
         self._operation_list = supported_modes
-        self._support_flags = SUPPORT_FLAGS
-        self._fan_list = ['low', 'med', 'high', 'auto']
-        self._target_temperature = 0
-        self._current_temperature = 0
-        self._current_fan_mode = ''
-        self._current_operation = ''
-        self._on = False
-        self._unit = default_unit
+        self._target_temperature = None
+        self._current_temperature = None
+        self._current_fan_mode = None
+        self._current_operation = None
+        self._on = None
+        self._unit = None
 
     def update(self):
         """Pull state from CoolMasterNet."""
@@ -116,7 +114,7 @@ class CoolmasterClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._support_flags
+        return SUPPORT_FLAGS
 
     @property
     def should_poll(self):
@@ -140,7 +138,7 @@ class CoolmasterClimate(ClimateDevice):
 
     @property
     def target_temperature(self):
-        """Return the temperature we try to reach."""
+        """Return the temperature we are trying to reach."""
         return self._target_temperature
 
     @property
@@ -166,7 +164,7 @@ class CoolmasterClimate(ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return self._fan_list
+        return FAN_MODES
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -178,14 +176,14 @@ class CoolmasterClimate(ClimateDevice):
             self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan_mode):
-        """Set new target temperature."""
+        """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id,
                       fan_mode)
         self._device.set_fan_speed(fan_mode)
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
-        """Set new target temperature."""
+        """Set new operation mode."""
         if operation_mode == STATE_FAN_ONLY:
             operation_mode = FAN_ONLY_OVERRIDE
 
