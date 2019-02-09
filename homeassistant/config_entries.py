@@ -334,7 +334,7 @@ class ConfigEntry:
     async def async_migrate(self, hass: HomeAssistant):
         """Migrate an entry.
 
-        Returns if migration was successful.
+        Returns True if migration was needed and successful.
         """
         component = getattr(hass.components, self.domain)
         supports_migrate = hasattr(component, 'async_migrate_entry')
@@ -468,7 +468,7 @@ class ConfigEntries:
                                            CONN_CLASS_UNKNOWN))
 
             migrated = await entry.async_migrate(self.hass)
-            any_migrated = True if migrated else migrated
+            any_migrated = True if migrated else any_migrated
             self._entries.append(entry)
 
         if any_migrated:

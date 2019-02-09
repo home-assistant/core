@@ -125,6 +125,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 
 async def async_migrate_entry(hass, entry, version):
+    """Migrate a previous verison config entry."""
     _LOGGER.debug('Migrating entry from %s to %s', entry.version, version)
     entry.version = version
     return True
