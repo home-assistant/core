@@ -6,8 +6,9 @@ import logging
 import os
 import re
 import shutil
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Any, Tuple, Optional, Dict, List, Union, Callable, Sequence, Set)
+from typing import (
+    Any, Callable, Dict, Optional, Sequence, Tuple, Union)
+from typing import List, Set  # pylint: disable=unused-import
 from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error

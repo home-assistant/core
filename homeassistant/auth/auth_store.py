@@ -4,7 +4,7 @@ from collections import OrderedDict
 from datetime import timedelta
 import hmac
 from logging import getLogger
-from typing import Any, Dict, List, Optional  # noqa: F401
+from typing import Any, Dict, List, Optional
 
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from . import models
 from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from .permissions import PermissionLookup, system_policies
-from .permissions.types import PolicyType  # noqa: F401
+from .permissions.types import PolicyType
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'

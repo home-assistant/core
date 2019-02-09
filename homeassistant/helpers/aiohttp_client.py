@@ -1,9 +1,8 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
 import sys
-from ssl import SSLContext  # noqa: F401
-from typing import Any, Awaitable, Optional, cast
-from typing import Union  # noqa: F401
+from ssl import SSLContext
+from typing import Any, Awaitable, Optional, Union, cast
 
 import aiohttp
 from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE

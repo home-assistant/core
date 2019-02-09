@@ -1,6 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional  # noqa: F401
+from typing import Dict, List, NamedTuple, Optional
 import uuid
 
 import attr

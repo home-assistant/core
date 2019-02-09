@@ -43,12 +43,12 @@ from homeassistant.util.async_ import (
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
+from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntries  # noqa
+    from homeassistant.config_entries import ConfigEntries
 
 # pylint: disable=invalid-name
 T = TypeVar('T')

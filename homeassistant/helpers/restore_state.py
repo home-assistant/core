@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from datetime import timedelta, datetime
-from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused-import
+from typing import Any, Dict, List, Set, Optional
 
 from homeassistant.core import (
     HomeAssistant, callback, State, CoreState, valid_entity_id)
@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import Store  # noqa  pylint_disable=unused-import
+from homeassistant.helpers.storage import Store
 
 DATA_RESTORE_STATE_TASK = 'restore_state_task'
 

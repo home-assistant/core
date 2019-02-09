@@ -1,7 +1,7 @@
 """Time-based One Time Password auth module."""
 import logging
 from io import BytesIO
-from typing import Any, Dict, Optional, Tuple  # noqa: F401
+from typing import Any, Dict, Optional, Tuple
 
 import voluptuous as vol
 

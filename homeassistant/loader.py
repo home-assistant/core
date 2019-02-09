@@ -15,14 +15,14 @@ import importlib
 import logging
 import sys
 from types import ModuleType
-from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # noqa pylint: disable=unused-import
+from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar
 
 from homeassistant.const import PLATFORM_FORMAT
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant  # NOQA
+    from homeassistant.core import HomeAssistant
 
 CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 

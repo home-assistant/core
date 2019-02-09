@@ -5,8 +5,8 @@ import json
 import logging
 from collections import defaultdict
 from types import TracebackType
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Awaitable, Dict, Iterable, List, Optional, Tuple, Type, Union)
+from typing import Iterable, List, Optional, Type, Union
+from typing import Awaitable, Dict, Tuple  # pylint: disable=unused-import
 
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util

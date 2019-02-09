@@ -1,6 +1,5 @@
 """Merging of policies."""
-from typing import (  # noqa: F401
-    cast, Dict, List, Set)
+from typing import cast, Dict, List, Set
 
 from .types import PolicyType, CategoryType
 

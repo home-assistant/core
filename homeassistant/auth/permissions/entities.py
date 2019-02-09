@@ -1,6 +1,6 @@
 """Entity permissions."""
 from functools import wraps
-from typing import Callable, List, Union  # noqa: F401
+from typing import Callable, List, Union
 
 import voluptuous as vol
 

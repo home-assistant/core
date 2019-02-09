@@ -2,8 +2,7 @@
 import logging
 import uuid
 from collections import OrderedDict
-from typing import MutableMapping  # noqa: F401
-from typing import Iterable, Optional, cast
+from typing import Iterable, MutableMapping, Optional, cast
 
 import attr
 

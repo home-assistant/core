@@ -16,7 +16,7 @@ from .. import AuthManager
 from ..models import Credentials, UserMeta, User
 
 if TYPE_CHECKING:
-    from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
+    from homeassistant.components.http import HomeAssistantHTTP
 
 
 USER_SCHEMA = vol.Schema({

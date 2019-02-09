@@ -2,7 +2,7 @@
 from collections import OrderedDict
 import fnmatch
 import re
-from typing import Any, Dict, Optional, Pattern  # noqa: F401
+from typing import Any, Dict, Optional, Pattern
 
 from homeassistant.core import split_entity_id
 

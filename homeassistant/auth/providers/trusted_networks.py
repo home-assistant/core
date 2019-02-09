@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
+from homeassistant.components.http import HomeAssistantHTTP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
