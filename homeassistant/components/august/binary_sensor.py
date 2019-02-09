@@ -143,7 +143,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
 
         from august.lock import LockDoorStatus
         self._state = self._state == LockDoorStatus.OPEN
-
+    
     @property
     def unique_id(self) -> str:
         """Get the unique of the door open binary sensor."""
@@ -197,3 +197,4 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         return '{:s}_{:s}'.format(self._doorbell.device_id,
                                   SENSOR_TYPES_DOORBELL[self._sensor_type][0]
                                   .lower())
+
