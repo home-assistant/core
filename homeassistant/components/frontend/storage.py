@@ -21,7 +21,7 @@ async def async_setup_frontend_storage(hass):
 
 
 def with_store(orig_func):
-    """Decorator to provide data."""
+    """Decorate function to provide data."""
     @wraps(orig_func)
     async def with_store_func(hass, connection, msg):
         """Provide user specific data and store to function."""
