@@ -255,7 +255,8 @@ class FluxLight(Light):
                                                       brightness / 255 * 100)
         elif brightness and (hs_color is None) and self._mode != MODE_WHITE:
             hsv = color_util.color_RGB_to_hsv(*self._color)
-            self._color = color_util.color_hsv_to_RGB(hsv[0], hsv[1], brightness / 255 * 100)
+            self._color = color_util.color_hsv_to_RGB(hsv[0], hsv[1],
+                                                      brightness / 255 * 100)
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
