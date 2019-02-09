@@ -57,6 +57,7 @@ async def async_setup(hass, config):
     """Set up an Utility Meter."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DATA_UTILITY] = {}
+    register_services = False
 
     for meter, conf in config.get(DOMAIN).items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
@@ -86,21 +87,23 @@ async def async_setup(hass, config):
                     })
             hass.async_create_task(discovery.async_load_platform(
                 hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config))
+            register_services = True
 
-            component.async_register_entity_service(
-                SERVICE_RESET, SERVICE_METER_SCHEMA,
-                'async_reset_meters'
-            )
+    if register_services:
+        component.async_register_entity_service(
+            SERVICE_RESET, SERVICE_METER_SCHEMA,
+            'async_reset_meters'
+        )
 
-            component.async_register_entity_service(
-                SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
-                'async_select_tariff'
-            )
+        component.async_register_entity_service(
+            SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
+            'async_select_tariff'
+        )
 
-            component.async_register_entity_service(
-                SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
-                'async_next_tariff'
-            )
+        component.async_register_entity_service(
+            SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
+            'async_next_tariff'
+        )
 
     return True
 

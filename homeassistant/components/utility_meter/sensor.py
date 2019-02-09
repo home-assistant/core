@@ -196,6 +196,7 @@ class UtilityMeterSensor(RestoreEntity):
                 if self._tariff != tariff_entity_state.state:
                     return
 
+            _LOGGER.debug("tracking source: %s", self._sensor_source_id)
             self._collecting = async_track_state_change(
                 self.hass, self._sensor_source_id, self.async_reading)
 
