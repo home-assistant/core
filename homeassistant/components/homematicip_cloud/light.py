@@ -163,9 +163,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        from homematicip.base.enums import RGBColorState
-        return self._channel.dimLevel > 0.0 and not \
-            self._channel.simpleRGBColorState == RGBColorState.BLACK
+        return self._channel.dimLevel > 0.0
 
     @property
     def brightness(self):
@@ -210,8 +208,6 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        from homematicip.base.enums import RGBColorState
-
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
         hs_color = kwargs.get(ATTR_HS_COLOR, None)
@@ -224,16 +220,14 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS, None)
         if brightness is None:
             brightness = self.brightness
+        # If no kwargs, use default value.
+        if kwargs.__len__() == 0:
+            brightness = 255
 
         # Minimum brightness is 10, otherwise the led is disabled
         if brightness < 10:
             brightness = 10
         dim_level = brightness / 255.0
-
-        # If no kwargs, use default value.
-        if kwargs.__len__() == 0:
-            dim_level = 1.0
-            simple_rgb_color = RGBColorState.WHITE
 
         await self._device.set_rgb_dim_level(
             self._channel_index,
@@ -242,10 +236,10 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        from homematicip.base.enums import RGBColorState
+        simple_rgb_color = self._channel.simpleRGBColorState
         await self._device.set_rgb_dim_level(
             self._channel_index,
-            RGBColorState.BLACK, 0.0)
+            simple_rgb_color, 0.0)
 
 
 def _convert_color(color):
