@@ -7,7 +7,6 @@ https://home-assistant.io/components/zha/
 import asyncio
 import logging
 
-from zigpy.quirks import CustomDevice
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send
 )
@@ -54,7 +53,7 @@ class ZHADevice:
             self._available_signal,
             self.async_initialize
         )
-
+        from zigpy.quirks import CustomDevice
         self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
