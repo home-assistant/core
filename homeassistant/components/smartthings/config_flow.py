@@ -35,7 +35,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         b) Config entries setup for all installations
     """
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):

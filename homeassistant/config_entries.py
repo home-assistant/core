@@ -331,6 +331,32 @@ class ConfigEntry:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
+    async def async_migrate(self, hass: HomeAssistant):
+        """Migrate an entry.
+
+        Returns if migration was successful.
+        """
+        component = getattr(hass.components, self.domain)
+        supports_migrate = hasattr(component, 'async_migrate_entry')
+        if not supports_migrate:
+            return False
+
+        handler = HANDLERS.get(self.domain)
+        if handler is None:
+            return False
+
+        if self.version == handler.VERSION:
+            return False
+
+        try:
+            result = await component.async_migrate_entry(hass, self, handler.VERSION)
+            assert isinstance(result, bool)
+            return result
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error migrating entry %s for %s',
+                              self.title, component.DOMAIN)
+            return False
+
     def as_dict(self):
         """Return dictionary version of this entry."""
         return {
@@ -427,8 +453,9 @@ class ConfigEntries:
             self._entries = []
             return
 
-        self._entries = [
-            ConfigEntry(
+        any_migrated = False
+        for entry in config['entries']:
+            entry = ConfigEntry(
                 version=entry['version'],
                 domain=entry['domain'],
                 entry_id=entry['entry_id'],
@@ -438,7 +465,13 @@ class ConfigEntries:
                 # New in 0.79
                 connection_class=entry.get('connection_class',
                                            CONN_CLASS_UNKNOWN))
-            for entry in config['entries']]
+
+            migrated = await entry.async_migrate(self.hass)
+            any_migrated = True if migrated else migrated
+            self._entries.append(entry)
+
+        if any_migrated:
+            self._async_schedule_save()
 
     @callback
     def async_update_entry(self, entry, *, data):

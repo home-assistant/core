@@ -124,6 +124,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return all(await asyncio.gather(*tasks))
 
 
+async def async_migrate_entry(hass, entry, version):
+    _LOGGER.debug('Migrating entry from %s to %s', entry.version, version)
+    entry.version = version
+    return True
+
+
 class DeviceBroker:
     """Manages an individual SmartThings config entry."""
 
