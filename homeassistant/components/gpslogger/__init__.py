@@ -15,8 +15,8 @@ from homeassistant.components.device_tracker.tile import ATTR_ALTITUDE
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, \
     HTTP_OK, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,9 +57,6 @@ WEBHOOK_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Set up the GPSLogger component."""
-    hass.async_create_task(
-        async_load_platform(hass, 'device_tracker', DOMAIN, {}, hass_config)
-    )
     return True
 
 
@@ -69,7 +66,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            body=error.error_message,
+            text=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
@@ -94,7 +91,7 @@ async def handle_webhook(hass, webhook_id, request):
     )
 
     return web.Response(
-        body='Setting location for {}'.format(device),
+        text='Setting location for {}'.format(device),
         status=HTTP_OK
     )
 
@@ -103,12 +100,18 @@ async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         DOMAIN, 'GPSLogger', entry.data[CONF_WEBHOOK_ID], handle_webhook)
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
+    )
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+
+    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
 config_entry_flow.register_webhook_flow(

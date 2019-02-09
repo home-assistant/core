@@ -10,10 +10,10 @@ import voluptuous as vol
 from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME, \
     ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, HTTP_OK, ATTR_NAME
 from homeassistant.helpers import config_entry_flow
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
 
@@ -68,13 +68,9 @@ WEBHOOK_SCHEMA = vol.Schema({
 
 async def async_setup(hass, hass_config):
     """Set up the Geofency component."""
-    config = hass_config[DOMAIN]
-    mobile_beacons = config[CONF_MOBILE_BEACONS]
+    config = hass_config.get(DOMAIN, {})
+    mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
     hass.data[DOMAIN] = [slugify(beacon) for beacon in mobile_beacons]
-
-    hass.async_create_task(
-        async_load_platform(hass, 'device_tracker', DOMAIN, {}, hass_config)
-    )
     return True
 
 
@@ -127,7 +123,7 @@ def _set_location(hass, data, location_name):
     )
 
     return web.Response(
-        body="Setting location for {}".format(device),
+        text="Setting location for {}".format(device),
         status=HTTP_OK
     )
 
@@ -136,12 +132,18 @@ async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         DOMAIN, 'Geofency', entry.data[CONF_WEBHOOK_ID], handle_webhook)
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
+    )
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+
+    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
 config_entry_flow.register_webhook_flow(

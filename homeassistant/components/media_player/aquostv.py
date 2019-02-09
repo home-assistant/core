@@ -9,13 +9,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_USERNAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_USERNAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['sharp_aquos_rc==0.3.2']
@@ -113,7 +115,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
         self._name = name
         # Assume that the TV is not muted
         self._muted = False
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._remote = remote
         self._volume = 0
         self._source = None

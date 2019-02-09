@@ -11,12 +11,13 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -132,7 +133,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._artist = None
         self._uri = None
         self._image_url = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._current_device = None
         self._devices = {}
         self._volume = None

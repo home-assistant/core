@@ -12,11 +12,10 @@ from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import \
-    DOMAIN as DEVICE_TRACKER_DOMAIN
+    DOMAIN as DEVICE_TRACKER
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, ATTR_LATITUDE, \
     ATTR_LONGITUDE, STATE_NOT_HOME, CONF_WEBHOOK_ID, ATTR_ID, HTTP_OK
 from homeassistant.helpers import config_entry_flow
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,17 +48,14 @@ WEBHOOK_SCHEMA = vol.All(
         vol.Required(ATTR_LONGITUDE): cv.longitude,
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_TRIGGER): cv.string,
-        vol.Optional(ATTR_ID): vol.All(cv.string, _id)
-    }),
+        vol.Optional(ATTR_ID): vol.All(cv.string, _id),
+    }, extra=vol.ALLOW_EXTRA),
     _validate_test_mode
 )
 
 
 async def async_setup(hass, hass_config):
     """Set up the Locative component."""
-    hass.async_create_task(
-        async_load_platform(hass, 'device_tracker', DOMAIN, {}, hass_config)
-    )
     return True
 
 
@@ -93,7 +89,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     if direction == 'exit':
         current_state = hass.states.get(
-            '{}.{}'.format(DEVICE_TRACKER_DOMAIN, device))
+            '{}.{}'.format(DEVICE_TRACKER, device))
 
         if current_state is None or current_state.state == location_name:
             location_name = STATE_NOT_HOME
@@ -105,7 +101,7 @@ async def handle_webhook(hass, webhook_id, request):
                 location_name
             )
             return web.Response(
-                body='Setting location to not home',
+                text='Setting location to not home',
                 status=HTTP_OK
             )
 
@@ -114,7 +110,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            body='Ignoring exit from {} (already in {})'.format(
+            text='Ignoring exit from {} (already in {})'.format(
                 location_name, current_state
             ),
             status=HTTP_OK
@@ -124,14 +120,14 @@ async def handle_webhook(hass, webhook_id, request):
         # In the app, a test message can be sent. Just return something to
         # the user to let them know that it works.
         return web.Response(
-            body='Received test message.',
+            text='Received test message.',
             status=HTTP_OK
         )
 
     _LOGGER.error('Received unidentified message from Locative: %s',
                   direction)
     return web.Response(
-        body='Received unidentified message: {}'.format(direction),
+        text='Received unidentified message: {}'.format(direction),
         status=HTTP_UNPROCESSABLE_ENTITY
     )
 
@@ -140,12 +136,18 @@ async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         DOMAIN, 'Locative', entry.data[CONF_WEBHOOK_ID], handle_webhook)
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
+    )
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+
+    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
 config_entry_flow.register_webhook_flow(

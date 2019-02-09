@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
-REQUIREMENTS = ['homekit==0.12.0']
+REQUIREMENTS = ['homekit==0.12.2']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
@@ -28,7 +28,8 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'garage-door-opener': 'cover',
     'window': 'cover',
     'window-covering': 'cover',
-    'lock-mechanism': 'lock'
+    'lock-mechanism': 'lock',
+    'motion': 'binary_sensor',
 }
 
 HOMEKIT_IGNORE = [
@@ -49,10 +50,6 @@ RETRY_INTERVAL = 60  # seconds
 PAIRING_FILE = "pairing.json"
 
 
-class HomeKitConnectionError(ConnectionError):
-    """Raised when unable to connect to target device."""
-
-
 def get_serial(accessory):
     """Obtain the serial number of a HomeKit device."""
     # pylint: disable=import-error
@@ -70,6 +67,11 @@ def get_serial(accessory):
                 continue
             return characteristic['value']
     return None
+
+
+def escape_characteristic_name(char_name):
+    """Escape any dash or dots in a characteristics name."""
+    return char_name.replace('-', '_').replace('.', '_')
 
 
 class HKDevice():
@@ -101,13 +103,14 @@ class HKDevice():
         """Handle setup of a HomeKit accessory."""
         # pylint: disable=import-error
         from homekit.model.services import ServicesTypes
+        from homekit.exceptions import AccessoryDisconnectedError
 
         self.pairing.pairing_data['AccessoryIP'] = self.host
         self.pairing.pairing_data['AccessoryPort'] = self.port
 
         try:
             data = self.pairing.list_accessories_and_characteristics()
-        except HomeKitConnectionError:
+        except AccessoryDisconnectedError:
             call_later(
                 self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
             return
@@ -196,22 +199,85 @@ class HomeKitEntity(Entity):
         self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
+        self.setup()
 
-    def update(self):
-        """Obtain a HomeKit device's state."""
-        try:
-            pairing = self._accessory.pairing
-            data = pairing.list_accessories_and_characteristics()
-        except HomeKitConnectionError:
-            return
-        for accessory in data:
+    def setup(self):
+        """Configure an entity baed on its HomeKit characterstics metadata."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+
+        pairing_data = self._accessory.pairing.pairing_data
+
+        get_uuid = CharacteristicsTypes.get_uuid
+        characteristic_types = [
+            get_uuid(c) for c in self.get_characteristic_types()
+        ]
+
+        self._chars_to_poll = []
+        self._chars = {}
+        self._char_names = {}
+
+        for accessory in pairing_data.get('accessories', []):
             if accessory['aid'] != self._aid:
                 continue
             for service in accessory['services']:
                 if service['iid'] != self._iid:
                     continue
-                self.update_characteristics(service['characteristics'])
-                break
+                for char in service['characteristics']:
+                    try:
+                        uuid = CharacteristicsTypes.get_uuid(char['type'])
+                    except KeyError:
+                        # If a KeyError is raised its a non-standard
+                        # characteristic. We must ignore it in this case.
+                        continue
+                    if uuid not in characteristic_types:
+                        continue
+                    self._setup_characteristic(char)
+
+    def _setup_characteristic(self, char):
+        """Configure an entity based on a HomeKit characteristics metadata."""
+        # pylint: disable=import-error
+        from homekit.model.characteristics import CharacteristicsTypes
+
+        # Build up a list of (aid, iid) tuples to poll on update()
+        self._chars_to_poll.append((self._aid, char['iid']))
+
+        # Build a map of ctype -> iid
+        short_name = CharacteristicsTypes.get_short(char['type'])
+        self._chars[short_name] = char['iid']
+        self._char_names[char['iid']] = short_name
+
+        # Callback to allow entity to configure itself based on this
+        # characteristics metadata (valid values, value ranges, features, etc)
+        setup_fn_name = escape_characteristic_name(short_name)
+        setup_fn = getattr(self, '_setup_{}'.format(setup_fn_name), None)
+        if not setup_fn:
+            return
+        # pylint: disable=not-callable
+        setup_fn(char)
+
+    def update(self):
+        """Obtain a HomeKit device's state."""
+        # pylint: disable=import-error
+        from homekit.exceptions import AccessoryDisconnectedError
+
+        pairing = self._accessory.pairing
+
+        try:
+            new_values_dict = pairing.get_characteristics(self._chars_to_poll)
+        except AccessoryDisconnectedError:
+            return
+
+        for (_, iid), result in new_values_dict.items():
+            if 'value' not in result:
+                continue
+            # Callback to update the entity with this characteristic value
+            char_name = escape_characteristic_name(self._char_names[iid])
+            update_fn = getattr(self, '_update_{}'.format(char_name), None)
+            if not update_fn:
+                continue
+            # pylint: disable=not-callable
+            update_fn(result['value'])
 
     @property
     def unique_id(self):
@@ -228,9 +294,13 @@ class HomeKitEntity(Entity):
         """Return True if entity is available."""
         return self._accessory.pairing is not None
 
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        raise NotImplementedError
+
     def update_characteristics(self, characteristics):
         """Synchronise a HomeKit device state with Home Assistant."""
-        raise NotImplementedError
+        pass
 
     def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""

@@ -10,6 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
     ATTR_APP_ID, ATTR_APP_NAME, ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
@@ -17,11 +19,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, PLATFORM_SCHEMA, SERVICE_CLEAR_PLAYLIST,
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, CONF_NAME,
     CONF_STATE, CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK,
@@ -47,8 +49,8 @@ CONF_SERVICE_DATA = 'service_data'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
-ATTRS_SCHEMA = vol.Schema({cv.slug: cv.string})
-CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
+ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
+CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
@@ -333,8 +335,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP,
                                               SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
-            flags &= ~SUPPORT_VOLUME_SET
-        elif SERVICE_VOLUME_SET in self._cmds:
+        if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \
