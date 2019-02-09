@@ -19,17 +19,23 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pycoolmasternet==0.0.4']
 
-DOMAIN = 'coolmaster'
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
-
-FAN_ONLY_OVERRIDE = 'fan'
 
 DEFAULT_PORT = 10102
 
 AVAILABLE_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_DRY,
                    STATE_FAN_ONLY]
+
+CM_TO_HA_STATE = {
+    'heat': STATE_HEAT,
+    'cool': STATE_COOL,
+    'auto': STATE_AUTO,
+    'dry': STATE_DRY,
+    'fan': STATE_FAN_ONLY,
+}
+
+HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
 FAN_MODES = ['low', 'med', 'high', 'auto']
 
@@ -44,20 +50,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def _build_entity(device, supported_modes):
+    _LOGGER.debug("Found device %s", device.uid)
+    return CoolmasterClimate(device, supported_modes)
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CoolMasterNet climate platform."""
     from pycoolmasternet import CoolMasterNet
 
     supported_modes = config.get(CONF_SUPPORTED_MODES)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     cool = CoolMasterNet(host, port=port)
+    devices = cool.devices()
 
-    all_devices = [CoolmasterClimate(device, supported_modes)
-                   for device in cool.devices()]
+    all_devices = [_build_entity(device, supported_modes)
+                   for device in devices]
 
-    async_add_entities(all_devices, True)
+    add_entities(all_devices, True)
 
 
 class CoolmasterClimate(ClimateDevice):
@@ -65,7 +76,6 @@ class CoolmasterClimate(ClimateDevice):
 
     def __init__(self, device, supported_modes):
         """Initialize the climate device."""
-        _LOGGER.debug("Creating device %s", device.uid)
         self._device = device
         self._uid = device.uid
         self._operation_list = supported_modes
@@ -85,10 +95,7 @@ class CoolmasterClimate(ClimateDevice):
         self._on = status['is_on']
 
         device_mode = status['mode']
-        if device_mode == FAN_ONLY_OVERRIDE:
-            self._current_operation = STATE_FAN_ONLY
-        else:
-            self._current_operation = device_mode
+        self._current_operation = CM_TO_HA_STATE[device_mode]
 
         if status['unit'] == 'celsius':
             self._unit = TEMP_CELSIUS
@@ -101,25 +108,9 @@ class CoolmasterClimate(ClimateDevice):
         return self._uid
 
     @property
-    def device_info(self):
-        """Return information about the device."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id),
-            },
-            'name': self.name,
-            'manufacturer': 'CoolMasterNet',
-        }
-
-    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
@@ -173,33 +164,25 @@ class CoolmasterClimate(ClimateDevice):
             _LOGGER.debug("Setting temp of %s to %s", self.unique_id,
                           str(temp))
             self._device.set_thermostat(str(temp))
-            self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id,
                       fan_mode)
         self._device.set_fan_speed(fan_mode)
-        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        if operation_mode == STATE_FAN_ONLY:
-            operation_mode = FAN_ONLY_OVERRIDE
-
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id,
                       operation_mode)
-        self._device.set_mode(operation_mode)
-        self.schedule_update_ha_state()
+        self._device.set_mode(HA_STATE_TO_CM[operation_mode])
 
     def turn_on(self):
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         self._device.turn_on()
-        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         self._device.turn_off()
-        self.schedule_update_ha_state()
