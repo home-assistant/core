@@ -68,10 +68,12 @@ async def configure_reporting(entity_id, cluster, attr,
     from zigpy.exceptions import DeliveryError
 
     attr_name = cluster.attributes.get(attr, [attr])[0]
-    attr_id = (
-        attr,
-        get_attr_id_by_name(cluster, attr_name)
-        )[isinstance(attr, str)]
+
+    if isinstance(attr, str):
+        attr_id = get_attr_id_by_name(cluster, attr_name)
+    else:
+        attr_id = attr
+
     cluster_name = cluster.ep_attribute
     kwargs = {}
     if manufacturer:
