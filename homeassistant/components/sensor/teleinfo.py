@@ -88,7 +88,7 @@ class SerialTeleinfoSensor(Entity):
                              parity='E', stopbits=1, rtscts=1))
 
     async def serial_read(self, device, **kwargs):
-        """ Process the serial data """
+        """Process the serial data."""
         import serial_asyncio
         _LOGGER.debug(u"Initializing Teleinfo")
         reader, _ = await serial_asyncio.open_serial_connection(url=device,
