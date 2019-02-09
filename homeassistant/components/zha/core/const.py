@@ -88,6 +88,9 @@ SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
 SIGNAL_REMOVE = 'remove'
 
+QUIRK_APPLIED = 'quirk_applied'
+QUIRK_CLASS = 'quirk_class'
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
