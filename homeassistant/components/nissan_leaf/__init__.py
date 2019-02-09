@@ -166,9 +166,14 @@ class LeafDataStore:
         self.data[DATA_RANGE_AC] = 0
         self.data[DATA_RANGE_AC_OFF] = 0
         self.data[DATA_PLUGGED_IN] = False
+        self.next_update = None
         self.last_check = None
-        self.last_battery_response = None
         self.request_in_progress = False
+        # Timestamp of last successful response from battery,
+        # climate or location.
+        self.last_battery_response = None
+        self.last_climate_response = None
+        self.last_location_response = None
 
     async def async_update_data(self, now):
         """Update data from nissan leaf."""
@@ -212,7 +217,8 @@ class LeafDataStore:
             interval = min(intervals)
             _LOGGER.debug("Resulting interval=%s", interval)
 
-        return utcnow() + interval
+        self.next_update = utcnow() + interval
+        return self.next_update
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
@@ -255,6 +261,7 @@ class LeafDataStore:
                     _LOGGER.debug("Got climate data for Leaf: %s",
                                   climate_response.__dict__)
                     self.data[DATA_CLIMATE] = climate_response.is_hvac_running
+                    self.last_climate_response = utcnow()
             except CarwingsError:
                 _LOGGER.error("Error fetching climate info")
 
@@ -268,6 +275,7 @@ class LeafDataStore:
                 else:
                     _LOGGER.debug("Got location data for Leaf")
                     self.data[DATA_LOCATION] = location_response
+                    self.last_location_response = utcnow()
 
                     _LOGGER.debug("Location Response: %s",
                                   location_response.__dict__)
@@ -444,6 +452,18 @@ class LeafEntity(Entity):
         _LOGGER.debug(
             "Registered %s component for VIN %s",
             self.__class__.__name__, self.car.leaf.vin)
+
+    @property
+    def device_state_attributes(self):
+        """Return default attributes for Nissan leaf entities."""
+        return {
+            'next_update': self.car.next_update,
+            'last_attempt': self.car.last_check,
+            'updated_on': self.car.last_battery_response,
+            'update_in_progress': self.car.request_in_progress,
+            'location_updated_on': self.car.last_location_response
+        }
+
 
     async def async_added_to_hass(self):
         """Register callbacks."""
