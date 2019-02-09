@@ -29,6 +29,16 @@ DEFAULT_NAME = 'GTFS Sensor'
 DEFAULT_PATH = 'gtfs'
 
 ICON = 'mdi:train'
+ICONS = {
+    0: 'mdi:tram',
+    1: 'mdi:subway',
+    2: 'mdi:train',
+    3: 'mdi:bus',
+    4: 'mdi:ferry',
+    5: 'mdi:train-variant',
+    6: 'mdi:gondola',
+    7: 'mdi:stairs',
+}
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -193,6 +203,7 @@ class GTFSDepartureSensor(Entity):
         self.destination = destination
         self._offset = offset
         self._custom_name = name
+        self._icon = ICON
         self._name = ''
         self._unit_of_measurement = 'min'
         self._state = 0
@@ -223,7 +234,7 @@ class GTFSDepartureSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        return self._icon
 
     def update(self):
         """Get the latest data from GTFS and update the states."""
@@ -256,6 +267,8 @@ class GTFSDepartureSensor(Entity):
             # Build attributes
             self._attributes = {}
             self._attributes['offset'] = self._offset.seconds / 60
+
+            self._icon = ICONS.get(route.route_type, ICON)
 
             def dict_for_table(resource):
                 """Return a dict for the SQLAlchemy resource given."""
