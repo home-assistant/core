@@ -143,6 +143,14 @@ class AugustDoorBinarySensor(BinarySensorDevice):
 
         from august.lock import LockDoorStatus
         self._state = self._state == LockDoorStatus.OPEN
+    
+    @property
+    def unique_id(self) -> str:
+        """Get the unique of the door open binary sensor."""
+        return '{:s}_{:s}'.format(self._door.device_id,
+                                  SENSOR_TYPES_DOOR[self._sensor_type][0]
+                                  .lower())
+
 
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
@@ -182,3 +190,11 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
         self._available = self._state is not None
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the doorbell sensor."""
+        return '{:s}_{:s}'.format(self._doorbell.device_id,
+                                  SENSOR_TYPES_DOORBELL[self._sensor_type][0]
+                                  .lower())
+    
