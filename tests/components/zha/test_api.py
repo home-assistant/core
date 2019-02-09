@@ -35,7 +35,6 @@ async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
 
 async def test_entities_by_ieee(hass, config_entry, zha_gateway, zha_client):
     """Test getting entity refs by ieee address."""
-
     await zha_client.send_json({
         ID: 5,
         TYPE: WS_ENTITIES_BY_IEEE,
@@ -49,7 +48,6 @@ async def test_entities_by_ieee(hass, config_entry, zha_gateway, zha_client):
 
 async def test_entity_clusters(hass, config_entry, zha_gateway, zha_client):
     """Test getting entity cluster info."""
-
     await zha_client.send_json({
         ID: 5,
         TYPE: WS_ENTITY_CLUSTERS,
@@ -71,7 +69,6 @@ async def test_entity_clusters(hass, config_entry, zha_gateway, zha_client):
 async def test_entity_cluster_attributes(
         hass, config_entry, zha_gateway, zha_client):
     """Test getting entity cluster attributes."""
-
     await zha_client.send_json({
         ID: 5,
         TYPE: WS_ENTITY_CLUSTER_ATTRIBUTES,
@@ -94,7 +91,6 @@ async def test_entity_cluster_attributes(
 async def test_entity_cluster_commands(
         hass, config_entry, zha_gateway, zha_client):
     """Test getting entity cluster commands."""
-
     await zha_client.send_json({
         ID: 5,
         TYPE: WS_ENTITY_CLUSTER_COMMANDS,
