@@ -50,7 +50,6 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         attrs["updated_on"] = self.car.last_climate_response
         return attrs
 
-
     @property
     def is_on(self):
         """Return true if climate control is on."""

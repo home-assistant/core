@@ -110,7 +110,6 @@ async def async_setup(hass, config):
         _LOGGER.debug("Vin %s not recognised for update.", vin)
         return False
 
-
     async def async_setup_leaf(car_config):
         """Set-up a car."""
         _LOGGER.debug("Logging into You+Nissan...")
@@ -498,7 +497,6 @@ class LeafEntity(Entity):
             'update_in_progress': self.car.request_in_progress,
             'location_updated_on': self.car.last_location_response
         }
-
 
     async def async_added_to_hass(self):
         """Register callbacks."""
