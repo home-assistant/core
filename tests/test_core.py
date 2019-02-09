@@ -58,9 +58,9 @@ def test_async_add_job_schedule_partial_callback():
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_coroutinefunction():
+def test_async_add_job_schedule_coroutinefunction(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock()
+    hass = MagicMock(loop=MagicMock(wraps=loop))
 
     async def job():
         pass
@@ -71,9 +71,9 @@ def test_async_add_job_schedule_coroutinefunction():
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_partial_coroutinefunction():
+def test_async_add_job_schedule_partial_coroutinefunction(loop):
     """Test that we schedule partial coros and add jobs to the job pool."""
-    hass = MagicMock()
+    hass = MagicMock(loop=MagicMock(wraps=loop))
 
     async def job():
         pass
@@ -98,9 +98,9 @@ def test_async_add_job_add_threaded_job_to_pool():
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
-def test_async_create_task_schedule_coroutine():
+def test_async_create_task_schedule_coroutine(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock()
+    hass = MagicMock(loop=MagicMock(wraps=loop))
 
     async def job():
         pass
