@@ -1,0 +1,27 @@
+repos:
+-   repo: https://github.com/ambv/black
+    rev: 18.9b0
+    hooks:
+    - id: black
+      language_version: python3.7
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.4  # Use the revision sha / tag you want to point at
+    hooks:
+    -   id: isort
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.1.0
+    hooks:
+    - id: flake8
+-   repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: python3 -m pylint.__main__
+        language: system
+        types: [python]
+-   repo: git://github.com/luismayta/pre-commit-mypy
+    rev: 0.1.1  # Use the sha you want to point at
+    hooks:
+    -   id: mypy
+        args:
+        - --ignore-missing-imports
