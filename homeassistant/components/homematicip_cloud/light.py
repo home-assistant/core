@@ -9,7 +9,8 @@ import logging
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 
 DEPENDENCIES = ['homematicip_cloud']
@@ -19,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ENERGY_COUNTER = 'energy_counter_kwh'
 ATTR_POWER_CONSUMPTION = 'power_consumption'
 ATTR_PROFILE_MODE = 'profile_mode'
-ATTR_SIMPLE_RGB_COLOR = 'simple_rgb_color'
 
 
 async def async_setup_platform(
@@ -42,9 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
             devices.append(HomematicipLight(home, device))
             devices.append(HomematicipNotificationLight(
-                home, device, device.topLightChannelIndex))
+                home, device, 'Top'))
             devices.append(HomematicipNotificationLight(
-                home, device, device.bottomLightChannelIndex))
+                home, device, 'Bottom'))
         elif isinstance(device,
                         (AsyncDimmer, AsyncPluggableDimmer,
                          AsyncBrandDimmer, AsyncFullFlushDimmer)):
@@ -137,14 +137,14 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     # Dictionary to translate between RGBColorState and hs_color
     _color_switcher = None
 
-    def __init__(self, home, device, channel_index: int):
+    def __init__(self, home, device, channel_name):
         """Initialize the dimmer light device."""
         super().__init__(home, device)
-        self._channel_index = channel_index
-        if self._channel_index == device.topLightChannelIndex:
-            self._channel_name = 'Top'
+        self._channel_name = channel_name
+        if self._channel_name == 'Top':
+            self._channel_index = device.topLightChannelIndex
         else:
-            self._channel_name = 'Buttom'
+            self._channel_index = device.bottomLightChannelIndex
 
         from homematicip.base.enums import RGBColorState
         self._color_switcher = {
@@ -157,6 +157,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             RGBColorState.PURPLE: [300.0, 100.0]
         }
 
+    @property
     def _channel(self):
         return self._device.functionalChannels[self._channel_index]
 
@@ -164,18 +165,18 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def is_on(self):
         """Return true if device is on."""
         from homematicip.base.enums import RGBColorState
-        return self._channel().dimLevel > 0.0 and not \
-            self._channel().simpleRGBColorState == RGBColorState.BLACK
+        return self._channel.dimLevel > 0.0 and not \
+            self._channel.simpleRGBColorState == RGBColorState.BLACK
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int(self._channel().dimLevel * 255)
+        return int(self._channel.dimLevel * 255)
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        simple_rgb_color = self._channel().simpleRGBColorState
+        simple_rgb_color = self._channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
@@ -188,8 +189,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
                     round(self.brightness, 2)
             })
             attr.update({
-                ATTR_SIMPLE_RGB_COLOR:
-                    self._channel().simpleRGBColorState
+                ATTR_COLOR_NAME:
+                    self._channel.simpleRGBColorState
             })
         return attr
 
