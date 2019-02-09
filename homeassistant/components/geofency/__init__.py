@@ -123,7 +123,7 @@ def _set_location(hass, data, location_name):
     )
 
     return web.Response(
-        body="Setting location for {}".format(device),
+        text="Setting location for {}".format(device),
         status=HTTP_OK
     )
 
