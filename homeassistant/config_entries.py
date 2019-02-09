@@ -117,7 +117,7 @@ the flow from the config panel.
 """
 import logging
 import uuid
-from typing import Set, Optional, List  # noqa pylint: disable=unused-import
+from typing import Set, Optional, List  # pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant

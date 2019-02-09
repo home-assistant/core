@@ -9,7 +9,7 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
+from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,
                     Iterable, Coroutine)
 
 import slugify as unicode_slug
