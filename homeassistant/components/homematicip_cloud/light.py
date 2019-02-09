@@ -184,10 +184,6 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         attr = super().device_state_attributes
         if self.is_on:
             attr.update({
-                ATTR_BRIGHTNESS:
-                    round(self.brightness, 2)
-            })
-            attr.update({
                 ATTR_COLOR_NAME:
                     self._channel.simpleRGBColorState
             })
