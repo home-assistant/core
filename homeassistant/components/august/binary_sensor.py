@@ -189,7 +189,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
-        self._available = self._state is not None
+        self._available = self._doorbell.is_online
 
     @property
     def unique_id(self) -> str:
