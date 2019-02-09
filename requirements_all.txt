@@ -1213,6 +1213,7 @@ pysabnzbd==1.1.0
 pysensibo==1.0.3
 
 # homeassistant.components.sensor.serial
+# homeassistant.components.sensor.teleinfo
 pyserial-asyncio==0.4
 
 # homeassistant.components.switch.acer_projector
