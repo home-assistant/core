@@ -10,7 +10,7 @@ from homeassistant.const import (CONF_HOST, CONF_LIGHTS, CONF_NAME,
                                  CONF_SWITCHES)
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['lightwave==0.17']
+REQUIREMENTS = ['lightwave==0.16']
 LIGHTWAVE_LINK = 'lightwave_link'
 DOMAIN = 'lightwave'
 
