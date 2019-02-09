@@ -576,7 +576,7 @@ class ConfigEntries:
         flow.init_step = source
         return flow
 
-    def _async_schedule_save(self):
+    def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
