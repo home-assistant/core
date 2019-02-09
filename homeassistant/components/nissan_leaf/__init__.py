@@ -415,7 +415,6 @@ class LeafDataStore:
                 _LOGGER.debug("Location_status=%s", location_status.__dict__)
                 break
 
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
         return location_status
 
     async def async_start_charging(self):

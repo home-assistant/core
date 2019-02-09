@@ -28,11 +28,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
         for key, value in hass.data[DATA_LEAF].items():
             host_name = value.leaf.nickname
             dev_id = 'nissan_leaf_{}'.format(slugify(host_name))
-            if value.data[DATA_LOCATION] in [None, False]:
+            if not value.data[DATA_LOCATION]:
                 _LOGGER.debug("No position found for vehicle %s", key)
                 return False
             _LOGGER.debug("Updating device_tracker for %s with position %s",
-                          value.leaf.nickname, value.data[DATA_LOCATION])
+                          value.leaf.nickname,
+                          value.data[DATA_LOCATION].__dict__)
             see(dev_id=dev_id,
                 host_name=host_name,
                 gps=(
