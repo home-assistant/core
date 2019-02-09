@@ -11,7 +11,6 @@ from homeassistant.components.homematicip_cloud import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
-from homeassistant.const import STATE_OFF, STATE_ON
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -205,11 +204,6 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def unique_id(self) -> str:
