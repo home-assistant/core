@@ -114,7 +114,7 @@ class SerialTeleinfoSensor(Entity):
                     # The checksum char is ' '.
                     name, value = line.split()
                 else:
-                    name, value, checksum = line.split()
+                    name, value = line.split()[0:2]
 
                 _LOGGER.debug(" Got : [%s] =  (%s)", name, value)
                 self._attributes[name] = value
