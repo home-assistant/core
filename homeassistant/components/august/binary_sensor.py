@@ -190,7 +190,6 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
         self._available = self._doorbell.is_online
-
     @property
     def unique_id(self) -> str:
         """Get the unique id of the doorbell sensor."""

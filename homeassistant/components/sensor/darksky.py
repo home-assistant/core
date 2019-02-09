@@ -162,9 +162,9 @@ CONDITION_PICTURES = {
 # Language Supported Codes
 LANGUAGE_CODES = [
     'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'kw', 'nb',
-    'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
-    'x-pig-latin', 'zh', 'zh-tw',
+    'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'ko',
+    'kw', 'lv', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
+    'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
