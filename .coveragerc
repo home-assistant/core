@@ -552,6 +552,7 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/tautulli.py
     homeassistant/components/sensor/ted5000.py
+    homeassistant/components/sensor/teleinfo.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/thermoworks_smoke.py
     homeassistant/components/sensor/time_date.py
