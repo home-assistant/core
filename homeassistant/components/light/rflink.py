@@ -189,10 +189,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
-        if super_attr is not None:
-            attr.update(super_attr)
-
         if self._brightness is not None:
             attr[ATTR_BRIGHTNESS] = self._brightness
         return attr
@@ -255,10 +251,6 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
-        if super_attr is not None:
-            attr.update(super_attr)
-
         if self._brightness is not None:
             attr[ATTR_BRIGHTNESS] = self._brightness
         return attr
