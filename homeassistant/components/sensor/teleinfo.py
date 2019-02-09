@@ -19,13 +19,15 @@ Sample configuration.yaml
     - platform: template
         sensors:
         teleinfo_base:
-            value_template: '{{ (states.sensor.edf_teleinfo.attributes["BASE"] | float / 1000) | round(0) }}'
+            value_template: '{{ (states.sensor.edf_teleinfo.
+                attributes["BASE"] | float / 1000) | round(0) }}'
             unit_of_measurement: 'kWh'
             icon_template: mdi:flash
     - platform: template
         sensors:
         teleinfo_iinst1:
-            value_template: '{{ states.sensor.edf_teleinfo.attributes["IINST1"] | int }}'
+            value_template: '{{ states.sensor.edf_teleinfo.
+                attributes["IINST1"] | int }}'
             unit_of_measurement: 'A'
             icon_template: mdi:flash
 
@@ -90,7 +92,7 @@ class SerialTeleinfoSensor(Entity):
         import serial_asyncio
         _LOGGER.debug(u"Initializing Teleinfo")
         reader, _ = await serial_asyncio.open_serial_connection(url=device,
-                          **kwargs)
+                                                                **kwargs)
 
         is_over = True
 
