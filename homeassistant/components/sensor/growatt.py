@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_USERNAME,
                                  CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['growatt_api_client==0.0.1']
+REQUIREMENTS = ['https://github.com/timvancann/growatt_api_client/archive/0.0.1.zip#growatt_api_client==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
