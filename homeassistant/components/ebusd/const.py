@@ -76,5 +76,25 @@ SENSOR_TYPES = {
             ['HwcTemp', '°C', 'mdi:thermometer', 4],
         'OutsideTemp':
             ['OutsideTemp', '°C', 'mdi:thermometer', 4]
+    },
+    'bai': {
+        'ReturnTemperature':
+            ['ReturnTemp', '°C', 'mdi:thermometer', 4],
+        'CentralHeatingPump':
+            ['WP', None, 'mdi:toggle-switch', 2],
+        'HeatingSwitch':
+            ['HeatingSwitch', None, 'mdi:toggle-switch', 2],
+        'FlowTemperature':
+            ['FlowTemp', '°C', 'mdi:thermometer', 4],
+        'Flame':
+            ['Flame', None, 'mdi:toggle-switch', 2],
+        'PowerEnergyConsumptionHeatingCircuit':
+            ['PrEnergySumHc1', 'kWh', 'mdi:flash', 0],
+        'PowerEnergyConsumptionHotWaterCircuit':
+            ['PrEnergySumHwc1', 'kWh', 'mdi:flash', 0],
+        'RoomThermostat':
+            ['DCRoomthermostat', None, 'mdi:toggle-switch', 2],
+        'HeatingPartLoad':
+            ['PartloadHcKW', 'kWh', 'mdi:flash', 0]
     }
 }
