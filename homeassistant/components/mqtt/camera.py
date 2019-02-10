@@ -110,7 +110,8 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
             self.hass, self._sub_state,
             {'state_topic': {'topic': self._config.get(CONF_TOPIC),
                              'msg_callback': message_received,
-                             'qos': self._qos}})
+                             'qos': self._qos,
+                             'encoding': None}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
