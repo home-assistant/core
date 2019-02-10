@@ -213,7 +213,6 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
-        
         dim_level = brightness / 255.0
 
         await self._device.set_rgb_dim_level(
