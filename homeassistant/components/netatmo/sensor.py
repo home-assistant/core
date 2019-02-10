@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY)
+    DEVICE_CLASS_BATTERY, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -26,6 +26,7 @@ DEPENDENCIES = ['netatmo']
 
 # This is the NetAtmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
+NETATMO_UPDATE_INTERVAL_ON_ERROR = 60
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, None,
@@ -161,149 +162,154 @@ class NetAtmoSensor(Entity):
 
         if data is None:
             _LOGGER.warning("No data found for %s", self.module_name)
-            self._state = None
+            self._state = STATE_UNKNOWN
             return
 
-        if self.type == 'temperature':
-            self._state = round(data['Temperature'], 1)
-        elif self.type == 'humidity':
-            self._state = data['Humidity']
-        elif self.type == 'rain':
-            self._state = data['Rain']
-        elif self.type == 'sum_rain_1':
-            self._state = data['sum_rain_1']
-        elif self.type == 'sum_rain_24':
-            self._state = data['sum_rain_24']
-        elif self.type == 'noise':
-            self._state = data['Noise']
-        elif self.type == 'co2':
-            self._state = data['CO2']
-        elif self.type == 'pressure':
-            self._state = round(data['Pressure'], 1)
-        elif self.type == 'battery_percent':
-            self._state = data['battery_percent']
-        elif self.type == 'battery_lvl':
-            self._state = data['battery_vp']
-        elif (self.type == 'battery_vp' and
-              self._module_type == MODULE_TYPE_WIND):
-            if data['battery_vp'] >= 5590:
-                self._state = "Full"
-            elif data['battery_vp'] >= 5180:
-                self._state = "High"
-            elif data['battery_vp'] >= 4770:
-                self._state = "Medium"
-            elif data['battery_vp'] >= 4360:
-                self._state = "Low"
-            elif data['battery_vp'] < 4360:
-                self._state = "Very Low"
-        elif (self.type == 'battery_vp' and
-              self._module_type == MODULE_TYPE_RAIN):
-            if data['battery_vp'] >= 5500:
-                self._state = "Full"
-            elif data['battery_vp'] >= 5000:
-                self._state = "High"
-            elif data['battery_vp'] >= 4500:
-                self._state = "Medium"
-            elif data['battery_vp'] >= 4000:
-                self._state = "Low"
-            elif data['battery_vp'] < 4000:
-                self._state = "Very Low"
-        elif (self.type == 'battery_vp' and
-              self._module_type == MODULE_TYPE_INDOOR):
-            if data['battery_vp'] >= 5640:
-                self._state = "Full"
-            elif data['battery_vp'] >= 5280:
-                self._state = "High"
-            elif data['battery_vp'] >= 4920:
-                self._state = "Medium"
-            elif data['battery_vp'] >= 4560:
-                self._state = "Low"
-            elif data['battery_vp'] < 4560:
-                self._state = "Very Low"
-        elif (self.type == 'battery_vp' and
-              self._module_type == MODULE_TYPE_OUTDOOR):
-            if data['battery_vp'] >= 5500:
-                self._state = "Full"
-            elif data['battery_vp'] >= 5000:
-                self._state = "High"
-            elif data['battery_vp'] >= 4500:
-                self._state = "Medium"
-            elif data['battery_vp'] >= 4000:
-                self._state = "Low"
-            elif data['battery_vp'] < 4000:
-                self._state = "Very Low"
-        elif self.type == 'min_temp':
-            self._state = data['min_temp']
-        elif self.type == 'max_temp':
-            self._state = data['max_temp']
-        elif self.type == 'windangle_value':
-            self._state = data['WindAngle']
-        elif self.type == 'windangle':
-            if data['WindAngle'] >= 330:
-                self._state = "N (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 300:
-                self._state = "NW (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 240:
-                self._state = "W (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 210:
-                self._state = "SW (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 150:
-                self._state = "S (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 120:
-                self._state = "SE (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 60:
-                self._state = "E (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 30:
-                self._state = "NE (%d\xb0)" % data['WindAngle']
-            elif data['WindAngle'] >= 0:
-                self._state = "N (%d\xb0)" % data['WindAngle']
-        elif self.type == 'windstrength':
-            self._state = data['WindStrength']
-        elif self.type == 'gustangle_value':
-            self._state = data['GustAngle']
-        elif self.type == 'gustangle':
-            if data['GustAngle'] >= 330:
-                self._state = "N (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 300:
-                self._state = "NW (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 240:
-                self._state = "W (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 210:
-                self._state = "SW (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 150:
-                self._state = "S (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 120:
-                self._state = "SE (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 60:
-                self._state = "E (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 30:
-                self._state = "NE (%d\xb0)" % data['GustAngle']
-            elif data['GustAngle'] >= 0:
-                self._state = "N (%d\xb0)" % data['GustAngle']
-        elif self.type == 'guststrength':
-            self._state = data['GustStrength']
-        elif self.type == 'rf_status_lvl':
-            self._state = data['rf_status']
-        elif self.type == 'rf_status':
-            if data['rf_status'] >= 90:
-                self._state = "Low"
-            elif data['rf_status'] >= 76:
-                self._state = "Medium"
-            elif data['rf_status'] >= 60:
-                self._state = "High"
-            elif data['rf_status'] <= 59:
-                self._state = "Full"
-        elif self.type == 'wifi_status_lvl':
-            self._state = data['wifi_status']
-        elif self.type == 'wifi_status':
-            if data['wifi_status'] >= 86:
-                self._state = "Low"
-            elif data['wifi_status'] >= 71:
-                self._state = "Medium"
-            elif data['wifi_status'] >= 56:
-                self._state = "High"
-            elif data['wifi_status'] <= 55:
-                self._state = "Full"
+        try:
+            if self.type == 'temperature':
+                self._state = round(data['Temperature'], 1)
+            elif self.type == 'humidity':
+                self._state = data['Humidity']
+            elif self.type == 'rain':
+                self._state = data['Rain']
+            elif self.type == 'sum_rain_1':
+                self._state = data['sum_rain_1']
+            elif self.type == 'sum_rain_24':
+                self._state = data['sum_rain_24']
+            elif self.type == 'noise':
+                self._state = data['Noise']
+            elif self.type == 'co2':
+                self._state = data['CO2']
+            elif self.type == 'pressure':
+                self._state = round(data['Pressure'], 1)
+            elif self.type == 'battery_percent':
+                self._state = data['battery_percent']
+            elif self.type == 'battery_lvl':
+                self._state = data['battery_vp']
+            elif (self.type == 'battery_vp' and
+                  self._module_type == MODULE_TYPE_WIND):
+                if data['battery_vp'] >= 5590:
+                    self._state = "Full"
+                elif data['battery_vp'] >= 5180:
+                    self._state = "High"
+                elif data['battery_vp'] >= 4770:
+                    self._state = "Medium"
+                elif data['battery_vp'] >= 4360:
+                    self._state = "Low"
+                elif data['battery_vp'] < 4360:
+                    self._state = "Very Low"
+            elif (self.type == 'battery_vp' and
+                  self._module_type == MODULE_TYPE_RAIN):
+                if data['battery_vp'] >= 5500:
+                    self._state = "Full"
+                elif data['battery_vp'] >= 5000:
+                    self._state = "High"
+                elif data['battery_vp'] >= 4500:
+                    self._state = "Medium"
+                elif data['battery_vp'] >= 4000:
+                    self._state = "Low"
+                elif data['battery_vp'] < 4000:
+                    self._state = "Very Low"
+            elif (self.type == 'battery_vp' and
+                  self._module_type == MODULE_TYPE_INDOOR):
+                if data['battery_vp'] >= 5640:
+                    self._state = "Full"
+                elif data['battery_vp'] >= 5280:
+                    self._state = "High"
+                elif data['battery_vp'] >= 4920:
+                    self._state = "Medium"
+                elif data['battery_vp'] >= 4560:
+                    self._state = "Low"
+                elif data['battery_vp'] < 4560:
+                    self._state = "Very Low"
+            elif (self.type == 'battery_vp' and
+                  self._module_type == MODULE_TYPE_OUTDOOR):
+                if data['battery_vp'] >= 5500:
+                    self._state = "Full"
+                elif data['battery_vp'] >= 5000:
+                    self._state = "High"
+                elif data['battery_vp'] >= 4500:
+                    self._state = "Medium"
+                elif data['battery_vp'] >= 4000:
+                    self._state = "Low"
+                elif data['battery_vp'] < 4000:
+                    self._state = "Very Low"
+            elif self.type == 'min_temp':
+                self._state = data['min_temp']
+            elif self.type == 'max_temp':
+                self._state = data['max_temp']
+            elif self.type == 'windangle_value':
+                self._state = data['WindAngle']
+            elif self.type == 'windangle':
+                if data['WindAngle'] >= 330:
+                    self._state = "N (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 300:
+                    self._state = "NW (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 240:
+                    self._state = "W (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 210:
+                    self._state = "SW (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 150:
+                    self._state = "S (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 120:
+                    self._state = "SE (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 60:
+                    self._state = "E (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 30:
+                    self._state = "NE (%d\xb0)" % data['WindAngle']
+                elif data['WindAngle'] >= 0:
+                    self._state = "N (%d\xb0)" % data['WindAngle']
+            elif self.type == 'windstrength':
+                self._state = data['WindStrength']
+            elif self.type == 'gustangle_value':
+                self._state = data['GustAngle']
+            elif self.type == 'gustangle':
+                if data['GustAngle'] >= 330:
+                    self._state = "N (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 300:
+                    self._state = "NW (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 240:
+                    self._state = "W (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 210:
+                    self._state = "SW (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 150:
+                    self._state = "S (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 120:
+                    self._state = "SE (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 60:
+                    self._state = "E (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 30:
+                    self._state = "NE (%d\xb0)" % data['GustAngle']
+                elif data['GustAngle'] >= 0:
+                    self._state = "N (%d\xb0)" % data['GustAngle']
+            elif self.type == 'guststrength':
+                self._state = data['GustStrength']
+            elif self.type == 'rf_status_lvl':
+                self._state = data['rf_status']
+            elif self.type == 'rf_status':
+                if data['rf_status'] >= 90:
+                    self._state = "Low"
+                elif data['rf_status'] >= 76:
+                    self._state = "Medium"
+                elif data['rf_status'] >= 60:
+                    self._state = "High"
+                elif data['rf_status'] <= 59:
+                    self._state = "Full"
+            elif self.type == 'wifi_status_lvl':
+                self._state = data['wifi_status']
+            elif self.type == 'wifi_status':
+                if data['wifi_status'] >= 86:
+                    self._state = "Low"
+                elif data['wifi_status'] >= 71:
+                    self._state = "Medium"
+                elif data['wifi_status'] >= 56:
+                    self._state = "High"
+                elif data['wifi_status'] <= 55:
+                    self._state = "Full"
+        except KeyError:
+            _LOGGER.error("No %s data found for %s", self.type, self.module_name)
+            self._state = STATE_UNKNOWN
+            return
 
 
 class NetAtmoData:
@@ -360,10 +366,14 @@ class NetAtmoData:
                 self.data = self.station_data.lastData(exclude=3600)
 
             newinterval = 0
-            for module in self.data:
-                if 'When' in self.data[module]:
-                    newinterval = self.data[module]['When']
-                    break
+            try:
+                for module in self.data:
+                    if 'When' in self.data[module]:
+                        newinterval = self.data[module]['When']
+                        break
+            except TypeError:
+                raise Exception("No modules found!")
+
             if newinterval:
                 # Try and estimate when fresh data will be available
                 newinterval += NETATMO_UPDATE_INTERVAL - time()
@@ -382,5 +392,9 @@ class NetAtmoData:
                 newinterval = NETATMO_UPDATE_INTERVAL
 
             self._next_update = time() + newinterval
+        except Exception as ex:
+            _LOGGER.error(ex)
+            # On error set new update time
+            self._next_update = time() + NETATMO_UPDATE_INTERVAL_ON_ERROR
         finally:
             self._update_in_progress.release()
