@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
     SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, STATE_AUTO,
+    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_TARGET_TEMPERATURE_HIGH,
     STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY)
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
@@ -42,6 +43,19 @@ DEFAULT_CONFIG = {
         'aux_command_topic': 'aux-topic'
     }}
 
+TEMP_LOW_HIGH_CONFIG = {
+    'climate': {
+        'platform': 'mqtt',
+        'name': 'test',
+        'mode_command_topic': 'mode-topic',
+        'temperature_low_command_topic': 'temperature-low-topic',
+        'temperature_high_command_topic': 'temperature-high-topic',
+        'fan_mode_command_topic': 'fan-mode-topic',
+        'swing_mode_command_topic': 'swing-mode-topic',
+        'away_mode_command_topic': 'away-mode-topic',
+        'hold_command_topic': 'hold-topic',
+        'aux_command_topic': 'aux-topic'
+    }}
 
 class TestMQTTClimate(unittest.TestCase):
     """Test the mqtt climate hvac."""
@@ -74,6 +88,18 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         support = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                   SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
+                   SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT)
+
+        assert state.attributes.get("supported_features") == support
+
+    def test_supported_features_low_high(self):
+        """Test the supported_features."""
+        assert setup_component(self.hass, climate.DOMAIN, TEMP_LOW_HIGH_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        support = (SUPPORT_TARGET_TEMPERATURE_LOW |
+                   SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_OPERATION_MODE |
                    SUPPORT_SWING_MODE | SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE |
                    SUPPORT_HOLD_MODE | SUPPORT_AUX_HEAT)
 
@@ -312,6 +338,50 @@ class TestMQTTClimate(unittest.TestCase):
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('mode-topic', 'cool', 0, False),
             unittest.mock.call('temperature-topic', 21, 0, False)
+        ])
+        self.mock_publish.async_publish.reset_mock()
+
+    def test_set_target_temperature_low_high(self):
+        """Test setting the target low and high temperature."""
+        assert setup_component(self.hass, climate.DOMAIN, TEMP_LOW_HIGH_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 21 == state.attributes.get('temperature_low')
+        assert 21 == state.attributes.get('temperature_high')
+        common.set_operation_mode(self.hass, 'auto', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 'auto' == state.attributes.get('operation_mode')
+        self.mock_publish.async_publish.assert_called_once_with(
+            'mode-topic', 'auto', 0, False)
+        self.mock_publish.async_publish.reset_mock()
+        common.set_temperature(self.hass, temperature_low=47,
+                               temperature_high=49,
+                               entity_id=ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 47 == state.attributes.get('temperature_low')
+        assert 49 == state.attributes.get('temperature_high')
+        self.mock_publish.async_publish.assert_has_calls([
+            unittest.mock.call('temperature-low-topic', 47, 0, False),
+            unittest.mock.call('temperature-high-topic', 49, 0, False)
+        ])
+
+        # also test directly supplying the operation mode to set_temperature
+        self.mock_publish.async_publish.reset_mock()
+        common.set_temperature(self.hass, temperature_low=21,
+                               temperature_high=23,
+                               operation_mode="auto",
+                               entity_id=ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 'auto' == state.attributes.get('operation_mode')
+        assert 21 == state.attributes.get('temperature_low')
+        assert 23 == state.attributes.get('temperature_high')
+        self.mock_publish.async_publish.assert_has_calls([
+            unittest.mock.call('mode-topic', 'auto', 0, False),
+            unittest.mock.call('temperature-low-topic', 21, 0, False),
+            unittest.mock.call('temperature-high-topic', 23, 0, False)
         ])
         self.mock_publish.async_publish.reset_mock()
 
