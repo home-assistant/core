@@ -114,6 +114,7 @@ class LGNetcastRemote(RemoteDevice):
                             client.send_command, cmdline)
                 except (LgNetCastError, RequestException):
                     self._state = STATE_OFF
+                    break
             await asyncio.sleep(delay)
             self._last_command_sent = cmdline
         self.async_schedule_update_ha_state()
