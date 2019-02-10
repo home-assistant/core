@@ -9,11 +9,22 @@ import logging
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE, ClimateDevice)
 from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 
 DEPENDENCIES = ['spider']
+
+FAN_LIST = [
+    'Auto',
+    'Low',
+    'Medium',
+    'High',
+    'Boost 10',
+    'Boost 20',
+    'Boost 30'
+]
 
 OPERATION_LIST = [
     STATE_HEAT,
@@ -55,7 +66,10 @@ class SpiderThermostat(ClimateDevice):
         supports = SUPPORT_TARGET_TEMPERATURE
 
         if self.thermostat.has_operation_mode:
-            supports = supports | SUPPORT_OPERATION_MODE
+            supports |= SUPPORT_OPERATION_MODE
+
+        if self.thermostat.has_fan_mode:
+            supports |= SUPPORT_FAN_MODE
 
         return supports
 
@@ -121,6 +135,20 @@ class SpiderThermostat(ClimateDevice):
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(
             HA_STATE_TO_SPIDER.get(operation_mode))
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        return self.thermostat.current_fan_speed
+
+    def set_fan_mode(self, fan_mode):
+        """Set fan mode."""
+        self.thermostat.set_fan_speed(fan_mode)
+
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return FAN_LIST
 
     def update(self):
         """Get the latest data."""
