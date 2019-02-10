@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.utility_meter/
 """
 import logging
-
+from datetime import date, timedelta
 from decimal import Decimal, DecimalException
 
 import homeassistant.util.dt as dt_util
@@ -133,14 +133,16 @@ class UtilityMeterSensor(RestoreEntity):
 
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger then daily cycles."""
-        now = dt_util.now()
-        if self._period == WEEKLY and now.weekday() != self._period_offset:
+        now = dt_util.now().date()
+        if self._period == WEEKLY and\
+                now != now - timedelta(days=now.weekday())\
+                + self._period_offset:
             return
         if self._period == MONTHLY and\
-                now.day != (1 + self._period_offset):
+                now != date(now.year, now.month, 1) + self._period_offset:
             return
         if self._period == YEARLY and\
-                (now.month != (1 + self._period_offset) or now.day != 1):
+                now != date(now.year, 1, 1) + self._period_offset:
             return
         await self.async_reset_meter(self._tariff_entity)
 
@@ -160,11 +162,12 @@ class UtilityMeterSensor(RestoreEntity):
 
         if self._period == HOURLY:
             async_track_time_change(self.hass, self._async_reset_meter,
-                                    minute=self._period_offset, second=0)
+                                    minute=self._period_offset.seconds//60,
+                                    second=0)
         elif self._period == DAILY:
             async_track_time_change(self.hass, self._async_reset_meter,
-                                    hour=self._period_offset, minute=0,
-                                    second=0)
+                                    hour=self._period_offset.seconds//3600,
+                                    minute=0, second=0)
         elif self._period in [WEEKLY, MONTHLY, YEARLY]:
             async_track_time_change(self.hass, self._async_reset_meter,
                                     hour=0, minute=0, second=0)
