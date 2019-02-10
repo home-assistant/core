@@ -41,9 +41,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Pub/Sub component."""
-    from google.cloud import pubsub_v1  # pylint: disable=E0611
+    from google.cloud import pubsub_v1
 
-    config = yaml_config.get(DOMAIN, {})
+    config = yaml_config[DOMAIN]
     project_id = config[CONF_PROJECT_ID]
     topic_name = config[CONF_TOPIC_NAME]
     service_principal_path = os.path.join(hass.config.config_dir,
@@ -53,11 +53,13 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         _LOGGER.error("Path to credentials file cannot be found")
         return False
 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_principal_path
-
     entities_filter = config[CONF_FILTER]
 
-    publisher = pubsub_v1.PublisherClient()
+    publisher = (pubsub_v1
+                 .PublisherClient
+                 .from_service_account_json(service_principal_path)
+                 )
+
     topic_path = publisher.topic_path(project_id,  # pylint: disable=E1101
                                       topic_name)
 
@@ -87,11 +89,11 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 class DateTimeJSONEncoder(json.JSONEncoder):
     """Encode python objects.
 
-    Additonaly add encoding for datetime objects as isoformat.
+    Additionally add encoding for datetime objects as isoformat.
     """
 
     def default(self, o):  # pylint: disable=E0202
         """Implement encoding logic."""
         if isinstance(o, datetime.datetime):
             return o.isoformat()
-        return super(DateTimeJSONEncoder, self).default(o)
+        return super().default(o)
