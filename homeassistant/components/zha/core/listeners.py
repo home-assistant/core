@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .helpers import (
     bind_configure_reporting, construct_unique_id,
-    safe_read, get_attr_id_by_name)
+    safe_read, get_attr_id_by_name, bind_cluster)
 from .const import (
     CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, ATTR_LEVEL
@@ -373,18 +373,8 @@ class IASZoneListener(ClusterListener):
         from zigpy.exceptions import DeliveryError
         _LOGGER.debug("%s: started IASZoneListener configuration",
                       self._unique_id)
-        try:
-            res = await self._cluster.bind()
-            _LOGGER.debug(
-                "%s: bound  '%s' cluster: %s",
-                self.unique_id, self._cluster.ep_attribute, res[0]
-            )
-        except DeliveryError as ex:
-            _LOGGER.debug(
-                "%s: Failed to bind '%s' cluster: %s",
-                self.unique_id, self._cluster.ep_attribute, str(ex)
-            )
 
+        await bind_cluster(self.unique_id, self._cluster)
         ieee = self._cluster.endpoint.device.application.ieee
 
         try:
