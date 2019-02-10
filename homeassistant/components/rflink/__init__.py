@@ -345,6 +345,7 @@ class RflinkDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
+        await super().async_added_to_hass()
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
