@@ -16,6 +16,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'locative'
+
+DATA_KEY = '{}.{}'.format(DOMAIN, DEVICE_TRACKER)
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 
@@ -65,14 +67,14 @@ async def handle_webhook(hass, webhook_id, request):
     device = data[ATTR_DEVICE_ID]
     location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
     direction = data[ATTR_TRIGGER]
-    gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
     if direction == 'enter':
         async_dispatcher_send(
             hass,
             TRACKER_UPDATE,
             device,
-            gps_location,
+            data[ATTR_LATITUDE],
+            data[ATTR_LONGITUDE],
             location_name
         )
         return web.Response(
@@ -90,7 +92,8 @@ async def handle_webhook(hass, webhook_id, request):
                 hass,
                 TRACKER_UPDATE,
                 device,
-                gps_location,
+                data[ATTR_LATITUDE],
+                data[ATTR_LONGITUDE],
                 location_name
             )
             return web.Response(
@@ -139,6 +142,8 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    hass.data[DATA_KEY]()
+
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
 
