@@ -15,6 +15,8 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
+HMIP_COVER_OPEN = 0
+HMIP_COVER_CLOSED = 1
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -47,23 +49,24 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        level = position / 100.0
-        await self._device.set_shutter_level(1-level)
+        # HmIP cover is closed:1 -> open:0
+        level = 1 - position / 100.0
+        await self._device.set_shutter_level(level)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
-            return self._device.shutterLevel == 1
+            return self._device.shutterLevel == HMIP_COVER_CLOSED
         return None
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self._device.set_shutter_level(0)
+        await self._device.set_shutter_level(HMIP_COVER_OPEN)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await self._device.set_shutter_level(1)
+        await self._device.set_shutter_level(HMIP_COVER_CLOSED)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the device if in motion."""
