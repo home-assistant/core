@@ -26,7 +26,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.0.6']
+REQUIREMENTS = ['pypoint==1.0.7']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)

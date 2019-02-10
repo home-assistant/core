@@ -1186,7 +1186,7 @@ pypck==0.5.9
 pypjlink2==1.2.0
 
 # homeassistant.components.point
-pypoint==1.0.6
+pypoint==1.0.7
 
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
