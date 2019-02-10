@@ -73,8 +73,6 @@ def gen_config(cycle, offset=None):
             'days': offset.days,
             'seconds': offset.seconds
         }
-    import pprint
-    pprint.pprint(config)
     return config
 
 
