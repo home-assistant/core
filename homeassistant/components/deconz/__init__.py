@@ -73,6 +73,8 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = gateway
 
+    config_entry.add_update_listener(async_options_updated)
+
     if not await gateway.async_setup():
         return False
 
