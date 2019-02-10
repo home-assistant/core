@@ -9,187 +9,7 @@ omit =
     homeassistant/helpers/typing.py
     homeassistant/helpers/signal.py
 
-    homeassistant/components/abode.py
-    homeassistant/components/*/abode.py
-
-    homeassistant/components/ads/__init__.py
-    homeassistant/components/*/ads.py
-
-    homeassistant/components/alarmdecoder.py
-    homeassistant/components/*/alarmdecoder.py
-
-    homeassistant/components/amcrest.py
-    homeassistant/components/*/amcrest.py
-
-    homeassistant/components/apcupsd.py
-    homeassistant/components/*/apcupsd.py
-
-    homeassistant/components/apple_tv.py
-    homeassistant/components/*/apple_tv.py
-
-    homeassistant/components/aqualogic.py
-    homeassistant/components/*/aqualogic.py
-
-    homeassistant/components/arduino.py
-    homeassistant/components/*/arduino.py
-
-    homeassistant/components/bmw_connected_drive/*.py
-    homeassistant/components/*/bmw_connected_drive.py
-
-    homeassistant/components/android_ip_webcam.py
-    homeassistant/components/*/android_ip_webcam.py
-
-    homeassistant/components/arlo.py
-    homeassistant/components/*/arlo.py
-
-    homeassistant/components/asterisk_mbox.py
-    homeassistant/components/*/asterisk_mbox.py
-    homeassistant/components/*/asterisk_cdr.py
-
-    homeassistant/components/august.py
-    homeassistant/components/*/august.py
-
-    homeassistant/components/axis.py
-    homeassistant/components/*/axis.py
-
-    homeassistant/components/bbb_gpio.py
-    homeassistant/components/*/bbb_gpio.py
-
-    homeassistant/components/blink/*
-    homeassistant/components/*/blink.py
-
-    homeassistant/components/bloomsky.py
-    homeassistant/components/*/bloomsky.py
-
-    homeassistant/components/coinbase.py
-    homeassistant/components/sensor/coinbase.py
-
-    homeassistant/components/cast/*
-    homeassistant/components/*/cast.py
-
-    homeassistant/components/cloudflare.py
-
-    homeassistant/components/comfoconnect.py
-    homeassistant/components/*/comfoconnect.py
-
-    homeassistant/components/daikin/__init__.py
-    homeassistant/components/daikin/const.py
-    homeassistant/components/*/daikin.py
-
-    homeassistant/components/digital_ocean.py
-    homeassistant/components/*/digital_ocean.py
-
-    homeassistant/components/dominos.py
-
-    homeassistant/components/doorbird.py
-    homeassistant/components/*/doorbird.py
-
-    homeassistant/components/dweet.py
-    homeassistant/components/*/dweet.py
-
-    homeassistant/components/eight_sleep.py
-    homeassistant/components/*/eight_sleep.py
-
-    homeassistant/components/ecoal_boiler.py
-    homeassistant/components/*/ecoal_boiler.py
-
-    homeassistant/components/ecobee.py
-    homeassistant/components/*/ecobee.py
-
-    homeassistant/components/ebusd/*
-
-    homeassistant/components/edp_redy.py
-    homeassistant/components/*/edp_redy.py
-
-    homeassistant/components/egardia.py
-    homeassistant/components/*/egardia.py
-
-    homeassistant/components/elkm1/*
-    homeassistant/components/*/elkm1.py
-
-    homeassistant/components/enocean.py
-    homeassistant/components/*/enocean.py
-
-    homeassistant/components/envisalink/__init__.py
-    homeassistant/components/*/envisalink.py
-
-    homeassistant/components/evohome.py
-    homeassistant/components/*/evohome.py
-
-    homeassistant/components/freebox.py
-    homeassistant/components/*/freebox.py
-
-    homeassistant/components/fritzbox.py
-    homeassistant/components/*/fritzbox.py
-
-    homeassistant/components/ecovacs.py
-    homeassistant/components/*/ecovacs.py
-
-    homeassistant/components/esphome/__init__.py
-    homeassistant/components/esphome/binary_sensor.py
-    homeassistant/components/esphome/cover.py
-    homeassistant/components/esphome/fan.py
-    homeassistant/components/esphome/light.py
-    homeassistant/components/esphome/sensor.py
-    homeassistant/components/esphome/switch.py
-
-    homeassistant/components/eufy.py
-    homeassistant/components/*/eufy.py
-
-    homeassistant/components/fibaro/__init__.py
-    homeassistant/components/*/fibaro.py
-
-    homeassistant/components/gc100.py
-    homeassistant/components/*/gc100.py
-
-    homeassistant/components/google.py
-    homeassistant/components/*/google.py
-
-    homeassistant/components/greeneye_monitor.py
-    homeassistant/components/sensor/greeneye_monitor.py
-
-    homeassistant/components/habitica/*
-    homeassistant/components/*/habitica.py
-
-    homeassistant/components/hangouts/__init__.py
-    homeassistant/components/hangouts/const.py
-    homeassistant/components/hangouts/hangouts_bot.py
-    homeassistant/components/hangouts/hangups_utils.py
-    homeassistant/components/hangouts/intents.py
-    homeassistant/components/*/hangouts.py
-
-    homeassistant/components/hdmi_cec.py
-    homeassistant/components/*/hdmi_cec.py
-
-    homeassistant/components/hive.py
-    homeassistant/components/*/hive.py
-
-    homeassistant/components/hlk_sw16.py
-    homeassistant/components/*/hlk_sw16.py
-
-    homeassistant/components/homekit_controller/__init__.py
-    homeassistant/components/*/homekit_controller.py
-
-    homeassistant/components/homematic/__init__.py
-    homeassistant/components/*/homematic.py
-
-    homeassistant/components/homematicip_cloud/hap.py
-    homeassistant/components/homematicip_cloud/device.py
-    homeassistant/components/*/homematicip_cloud.py
-
-    homeassistant/components/homeworks.py
-    homeassistant/components/*/homeworks.py
-
-    homeassistant/components/huawei_lte.py
-    homeassistant/components/*/huawei_lte.py
-
-    homeassistant/components/hydrawise.py
-    homeassistant/components/*/hydrawise.py
-    
-    homeassistant/components/ads/*
-    homeassistant/components/ihc/*
-    homeassistant/components/knx/*
-    homeassistant/components/lcn/*
+    # omit pieces of code that rely on external devices being present
     homeassistant/components/abode/*
     homeassistant/components/ads/*
     homeassistant/components/air_quality/nilu.py
@@ -321,6 +141,7 @@ omit =
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dweet/*
+    homeassistant/components/ebusd/*
     homeassistant/components/ecoal_boiler/*
     homeassistant/components/ecobee/*
     homeassistant/components/ecovacs/*
@@ -631,6 +452,7 @@ omit =
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
+    homeassistant/components/sensor/github.py
     homeassistant/components/sensor/gitlab_ci.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
@@ -834,11 +656,11 @@ omit =
     homeassistant/components/wirelesstag/*
     homeassistant/components/xiaomi_aqara/*
     homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xs1/*
     homeassistant/components/zabbix/*
     homeassistant/components/zeroconf/*
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/api.py
-    homeassistant/components/zha/binary_sensor.py
     homeassistant/components/zha/const.py
     homeassistant/components/zha/core/const.py
     homeassistant/components/zha/core/device.py
@@ -847,11 +669,8 @@ omit =
     homeassistant/components/zha/core/listeners.py
     homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
-    homeassistant/components/zha/event.py
-    homeassistant/components/zha/fan.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
-    homeassistant/components/zha/switch.py
     homeassistant/components/zigbee/*
     homeassistant/components/zoneminder/*
     homeassistant/components/zwave/util.py
