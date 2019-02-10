@@ -83,10 +83,9 @@ SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required(TYPE): WS_ENTITIES_BY_IEEE,
 })
 
-WS_ENTITY_CLUSTERS = 'zha/entities/clusters'
+WS_DEVICE_CLUSTERS = 'zha/devices/clusters'
 SCHEMA_WS_CLUSTERS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required(TYPE): WS_ENTITY_CLUSTERS,
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(TYPE): WS_DEVICE_CLUSTERS,
     vol.Required(ATTR_IEEE): str
 })
 
@@ -279,36 +278,36 @@ def async_load_api(hass, application_controller, zha_gateway):
     )
 
     @websocket_api.async_response
-    async def websocket_entity_clusters(hass, connection, msg):
-        """Return a list of entity clusters."""
-        entity_id = msg[ATTR_ENTITY_ID]
-        entity_ref = zha_gateway.get_entity_reference(entity_id)
-        clusters = []
-        if entity_ref is not None:
-            for listener in entity_ref.cluster_listeners.values():
-                cluster = listener.cluster
-                in_clusters = cluster.endpoint.in_clusters.values()
-                out_clusters = cluster.endpoint.out_clusters.values()
-                if cluster in in_clusters:
-                    clusters.append({
+    async def websocket_device_clusters(hass, connection, msg):
+        """Return a list of device clusters."""
+        ieee = msg[ATTR_IEEE]
+        zha_device = zha_gateway.get_device(ieee)
+        response_clusters = []
+        if zha_device is not None:
+            clusters_by_endpoint = await zha_device.get_clusters()
+            for ep_id, clusters in clusters_by_endpoint.items():
+                for c_id, cluster in clusters[IN].items():
+                    response_clusters.append({
                         TYPE: IN,
-                        ID: cluster.cluster_id,
-                        NAME: cluster.__class__.__name__
+                        ID: c_id,
+                        NAME: cluster.__class__.__name__,
+                        'endpoint_id': ep_id
                     })
-                elif cluster in out_clusters:
-                    clusters.append({
+                for c_id, cluster in clusters[OUT].items():
+                    response_clusters.append({
                         TYPE: OUT,
-                        ID: cluster.cluster_id,
-                        NAME: cluster.__class__.__name__
+                        ID: c_id,
+                        NAME: cluster.__class__.__name__,
+                        'endpoint_id': ep_id
                     })
 
         connection.send_message(websocket_api.result_message(
             msg[ID],
-            clusters
+            response_clusters
         ))
 
     hass.components.websocket_api.async_register_command(
-        WS_ENTITY_CLUSTERS, websocket_entity_clusters,
+        WS_DEVICE_CLUSTERS, websocket_device_clusters,
         SCHEMA_WS_CLUSTERS
     )
 
