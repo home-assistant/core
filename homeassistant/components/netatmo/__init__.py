@@ -61,6 +61,7 @@ ATTR_CAMERA_ID = 'camera_id'
 ATTR_HOME_NAME = 'home_name'
 ATTR_PERSONS = 'persons'
 ATTR_IS_KNOWN = 'is_known'
+ATTR_FACE_URL = 'face_url'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
@@ -163,6 +164,7 @@ async def handle_webhook(hass, webhook_id, request):
             published_data[ATTR_NAME] = NETATMO_PERSONS.get(
                 published_data[ATTR_ID], DEFAULT_PERSON)
             published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
+            published_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
             hass.bus.async_fire(EVENT_BUS_PERSON, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_MOVEMENT:
         hass.bus.async_fire(EVENT_BUS_MOVEMENT, published_data)
