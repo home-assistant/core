@@ -123,13 +123,13 @@ import logging
 import functools
 import uuid
 from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
+import weakref
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
-
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -223,7 +223,7 @@ class ConfigEntry:
 
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'options',
                  'source', 'connection_class', 'state', '_setup_lock',
-                 '_async_cancel_retry_setup')
+                 'update_listeners', '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
                  source: str, connection_class: str, options: dict = None,
@@ -256,6 +256,9 @@ class ConfigEntry:
 
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
+
+        # Listeners to call on update
+        self.update_listeners = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup = None
@@ -387,6 +390,18 @@ class ConfigEntry:
                               self.title, component.DOMAIN)
             return False
 
+    def add_update_listener(self, listener):
+        """Listen for when entry is updated.
+
+        Listener: Callback function(old_entry, new_entry)
+
+        Returns function to unlisten.
+        """
+        weak_listener = weakref.ref(listener)
+        self.update_listeners.append(weak_listener)
+
+        return lambda: self.update_listeners.remove(weak_listener)
+
     def as_dict(self):
         """Return dictionary version of this entry."""
         return {
@@ -512,11 +527,9 @@ class ConfigEntries:
         if options:
             entry.options = options
 
-            component = getattr(self.hass.components, entry.domain)
-            dynamic_options = hasattr(component, 'async_options_updated')
-            if dynamic_options:
-                self.hass.async_create_task(
-                    component.async_options_updated(self.hass, entry))
+        for listener_ref in entry.update_listeners:
+            listener = listener_ref()
+            self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 
