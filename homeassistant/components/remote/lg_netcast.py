@@ -90,10 +90,6 @@ class LGNetcastRemote(RemoteDevice):
             return {'last_command_sent': self._last_command_sent}
         return None
 
-    def turn_on(self, **kwargs):
-        """Turn the remote on."""
-        # Turn on not support by LG Netcast TV
-
     async def async_turn_off(self, **kwargs):
         """Turn the remote off."""
         await self.async_send_command('POWER')
