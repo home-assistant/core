@@ -14,7 +14,8 @@ from .const import (
     ATTR_MANUFACTURER, LISTENER_BATTERY, SIGNAL_AVAILABLE, IN, OUT,
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
-    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
+    QUIRK_CLASS
 )
 from .listeners import EventRelayListener
 
@@ -51,6 +52,12 @@ class ZHADevice:
             self.hass,
             self._available_signal,
             self.async_initialize
+        )
+        from zigpy.quirks import CustomDevice
+        self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
+        self.quirk_class = "{}.{}".format(
+            self._zigpy_device.__class__.__module__,
+            self._zigpy_device.__class__.__name__
         )
 
     @property
@@ -143,7 +150,9 @@ class ZHADevice:
             IEEE: ieee,
             ATTR_MANUFACTURER: self.manufacturer,
             MODEL: self.model,
-            NAME: self.name or ieee
+            NAME: self.name or ieee,
+            QUIRK_APPLIED: self.quirk_applied,
+            QUIRK_CLASS: self.quirk_class
         }
 
     def add_cluster_listener(self, cluster_listener):
