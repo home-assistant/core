@@ -129,11 +129,6 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    _channel_index = None
-
-    # Dictionary to translate between RGBColorState and hs_color
-    _color_switcher = None
-
     def __init__(self, home, device, channel_index):
         """Initialize the dimmer light device."""
         self._channel_index = channel_index
@@ -205,23 +200,20 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Turn the light on."""
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
-        hs_color = kwargs.get(ATTR_HS_COLOR, None)
-        if hs_color is None:
-            hs_color = self.hs_color
+        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         simple_rgb_color = _convert_color(hs_color)
 
         # Use brightness from kwargs,
         # if not applicable use current brightness.
-        brightness = kwargs.get(ATTR_BRIGHTNESS, None)
-        if brightness is None:
-            brightness = self.brightness
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+
         # If no kwargs, use default value.
-        if kwargs.__len__() == 0:
+        if not kwargs:
             brightness = 255
 
         # Minimum brightness is 10, otherwise the led is disabled
-        if brightness < 10:
-            brightness = 10
+        brightness = max(10, brightness)
+        
         dim_level = brightness / 255.0
 
         await self._device.set_rgb_dim_level(
