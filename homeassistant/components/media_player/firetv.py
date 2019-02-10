@@ -159,6 +159,8 @@ class FireTVDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the player."""
+        if not self._available:
+            return None
         return self._state
 
     @property
@@ -169,16 +171,22 @@ class FireTVDevice(MediaPlayerDevice):
     @property
     def app_id(self):
         """Return the current app."""
+        if not self._available:
+            return None
         return self._current_app
 
     @property
     def source(self):
         """Return the current app."""
+        if not self._available:
+            return None
         return self._current_app
 
     @property
     def source_list(self):
         """Return a list of running apps."""
+        if not self._available:
+            return None
         return self._running_apps
 
     @adb_decorator(override_available=True)
@@ -186,9 +194,6 @@ class FireTVDevice(MediaPlayerDevice):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
         if not self._available:
-            self._running_apps = None
-            self._current_app = None
-
             # Try to connect
             self._available = self.firetv.connect()
 
