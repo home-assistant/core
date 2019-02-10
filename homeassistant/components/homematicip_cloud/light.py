@@ -203,8 +203,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return "{}_{}_{}".format(self.__class__.__name__,
-                                 self._device.id,
-                                 self._channel_name)
+                                 self._channel_name,
+                                 self._device.id)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
