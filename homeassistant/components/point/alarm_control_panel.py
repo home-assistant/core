@@ -73,8 +73,6 @@ class MinutPointAlarmControl(AlarmControlPanel):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            'connections': {(POINT_DOMAIN, d['device_id'])
-                            for d in self._home['devices']},
             'identifieres': self._home_id,
             'manufacturer': 'Minut',
             'name': self.name,

@@ -195,15 +195,15 @@ class MinutPointClient():
                 device_id)
 
         self._is_available = True
+        for home_id in self._client.homes:
+            if home_id not in self._known_homes:
+                await new_device(home_id, 'alarm_control_panel')
+                self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
                 for component in ('sensor', 'binary_sensor'):
                     await new_device(device.device_id, component)
                 self._known_devices.add(device.device_id)
-        for home_id in self._client.homes:
-            if home_id not in self._known_homes:
-                await new_device(home_id, 'alarm_control_panel')
-                self._known_homes.add(home_id)
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
     def device(self, device_id):
@@ -304,6 +304,7 @@ class MinutPointEntity(Entity):
             'model': 'Point v{}'.format(device['hardware_version']),
             'name': device['description'],
             'sw_version': device['firmware']['installed'],
+            'via_hub': device['home'],
         }
 
     @property
