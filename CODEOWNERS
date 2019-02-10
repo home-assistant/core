@@ -53,6 +53,7 @@ homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/binary_sensor/threshold.py @fabaff
 homeassistant/components/binary_sensor/uptimerobot.py @ludeeus
 homeassistant/components/camera/yi.py @bachya
+homeassistant/components/climate/coolmaster.py @OnFreund
 homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/mill.py @danielhiversen
