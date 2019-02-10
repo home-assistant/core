@@ -111,10 +111,10 @@ async def async_setup(hass, config):
 #    _LOGGER.debug("After waiting for task_control_panel")
         
     @callback
-    def alarm_status_update_callback(status):
+    def alarm_status_update_callback():
         """Send status update received from alarm to home assistant."""
-        _LOGGER.debug("Alarm status callback, status: %s", status)
-        hass_alarm_status = STATE_ALARM_DISARMED
+        _LOGGER.debug("Alarm status callback")
+        # hass_alarm_status = STATE_ALARM_DISARMED
 
         # if status == AlarmState.ARMED_MODE0:
         #     hass_alarm_status = STATE_ALARM_ARMED_AWAY
@@ -133,7 +133,7 @@ async def async_setup(hass, config):
         # elif status == AlarmState.DISARMED:
         #     hass_alarm_status = STATE_ALARM_DISARMED
 
-        _LOGGER.debug("Sending request to update state, currently: %s...", controller.status)
+        _LOGGER.debug("Sending request to update panel state")
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, None)
 
     @callback
