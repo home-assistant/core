@@ -26,7 +26,6 @@ DEPENDENCIES = ['netatmo']
 
 # This is the NetAtmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
-NETATMO_UPDATE_INTERVAL_ON_ERROR = 60
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, None,
@@ -373,7 +372,7 @@ class NetAtmoData:
                         newinterval = self.data[module]['When']
                         break
             except TypeError:
-                raise Exception("No modules found!")
+                _LOGGER.error("No modules found!")
 
             if newinterval:
                 # Try and estimate when fresh data will be available
@@ -393,9 +392,5 @@ class NetAtmoData:
                 newinterval = NETATMO_UPDATE_INTERVAL
 
             self._next_update = time() + newinterval
-        except Exception as ex:
-            _LOGGER.error(ex)
-            # On error set new update time
-            self._next_update = time() + NETATMO_UPDATE_INTERVAL_ON_ERROR
         finally:
             self._update_in_progress.release()
