@@ -41,9 +41,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
             devices.append(HomematicipLight(home, device))
             devices.append(HomematicipNotificationLight(
-                home, device, 'Top'))
+                home, device, device.topLightChannelIndex))
             devices.append(HomematicipNotificationLight(
-                home, device, 'Bottom'))
+                home, device, device.bottomLightChannelIndex))
         elif isinstance(device,
                         (AsyncDimmer, AsyncPluggableDimmer,
                          AsyncBrandDimmer, AsyncFullFlushDimmer)):
@@ -131,19 +131,16 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
 
     _channel_index = None
 
-    _channel_name = None
-
     # Dictionary to translate between RGBColorState and hs_color
     _color_switcher = None
 
-    def __init__(self, home, device, channel_name):
+    def __init__(self, home, device, channel_index):
         """Initialize the dimmer light device."""
-        super().__init__(home, device)
-        self._channel_name = channel_name
-        if self._channel_name == 'Top':
-            self._channel_index = device.topLightChannelIndex
+        self._channel_index = channel_index
+        if self._channel_index == 2:
+            super().__init__(home, device, 'Top')
         else:
-            self._channel_index = device.bottomLightChannelIndex
+            super().__init__(home, device, 'Bottom')
 
         from homematicip.base.enums import RGBColorState
         self._color_switcher = {
@@ -190,9 +187,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def name(self):
         """Return the name of the generic device."""
-        return "{} {} {}".format(super().name,
-                                 'Notification',
-                                 self._channel_name)
+        return "{} {}".format(super().name, 'Notification')
 
     @property
     def supported_features(self):
@@ -203,7 +198,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return "{}_{}_{}".format(self.__class__.__name__,
-                                 self._channel_name,
+                                 self.post,
                                  self._device.id)
 
     async def async_turn_on(self, **kwargs):
