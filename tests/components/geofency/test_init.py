@@ -285,9 +285,6 @@ async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
     assert STATE_HOME == state_name
 
 
-@pytest.mark.xfail(
-    reason='The device_tracker component does not support unloading yet.'
-)
 async def test_load_unload_entry(hass, geofency_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
     url = '/api/webhook/{}'.format(webhook_id)
