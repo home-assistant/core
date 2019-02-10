@@ -33,6 +33,7 @@ ATTR_DEVICE = 'device'
 ATTR_ENTRY = 'entry'
 
 BEACON_DEV_PREFIX = 'beacon'
+DATA_KEY = '{}.{}'.format(DOMAIN, DEVICE_TRACKER)
 
 LOCATION_ENTRY = '1'
 LOCATION_EXIT = '0'
@@ -106,8 +107,14 @@ def _set_location(hass, data, location_name):
     device = _device_name(data)
 
     async_dispatcher_send(
-        hass, TRACKER_UPDATE, device,
-        (data[ATTR_LATITUDE], data[ATTR_LONGITUDE]), location_name, data)
+        hass,
+        TRACKER_UPDATE,
+        device,
+        data[ATTR_LATITUDE],
+        data[ATTR_LONGITUDE],
+        location_name,
+        data
+    )
 
     return web.Response(
         text="Setting location for {}".format(device), status=HTTP_OK)
@@ -127,6 +134,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    hass.data[DATA_KEY]()
 
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True

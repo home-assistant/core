@@ -2,34 +2,110 @@
 import logging
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN)
+    ATTR_ATTRIBUTES, ATTR_LOCATION_NAME, SOURCE_TYPE_GPS, DeviceTrackerEntity)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE
+from . import DATA_KEY, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY = '{}.{}'.format(GEOFENCY_DOMAIN, DEVICE_TRACKER_DOMAIN)
+GEOFENCY_ENTITIES = 'geofency_entities'
 
 
-async def async_setup_entry(hass, entry, async_see):
-    """Configure a dispatcher connection based on a config entry."""
-    async def _set_location(device, gps, location_name, attributes):
-        """Fire HA event to set location."""
-        await async_see(
-            dev_id=device,
-            gps=gps,
-            location_name=location_name,
-            attributes=attributes
-        )
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Geofency from config entry."""
+    entities = hass.data.setdefault(GEOFENCY_ENTITIES, {})
+
+    async def async_see(
+            device, latitude, longitude, location_name, attributes):
+        """Notify the device tracker entities that you see a device."""
+        entity = entities.get(device)
+
+        if entity:
+            await entity.async_seen(
+                latitude=latitude, longitude=longitude,
+                location_name=location_name, attributes=attributes)
+            return
+
+        # If no device can be found, create it
+        entity = GeofencyEntity(
+            device, latitude, longitude, location_name, attributes)
+        entities[device] = entity
+        async_add_entities([entity])
 
     hass.data[DATA_KEY] = async_dispatcher_connect(
-        hass, TRACKER_UPDATE, _set_location
+        hass, TRACKER_UPDATE, async_see
     )
     return True
 
 
-async def async_unload_entry(hass, entry):
-    """Unload the config entry and remove the dispatcher connection."""
-    hass.data[DATA_KEY]()
-    return True
+class GeofencyEntity(DeviceTrackerEntity):
+    """Represent a tracked device."""
+
+    def __init__(self, device, latitude, longitude, location_name, attributes):
+        """Set up Geofency entity."""
+        self._attributes = attributes
+        self._name = device
+        self._location_name = location_name
+        self._latitude = latitude
+        self._longitude = longitude
+        self._connected_seen = None
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific attributes."""
+        return self._attributes
+
+    @property
+    def latitude(self):
+        """Return latitude value of the device."""
+        return self._latitude
+
+    @property
+    def location_name(self):
+        """Return a location name for the current location of the device."""
+        return self._location_name
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._longitude
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_GPS
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self._connected_seen = self._async_seen
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self.hass.data[GEOFENCY_ENTITIES].pop(self._name)
+
+    async def async_seen(self, **kwargs):
+        """Mark the device as seen."""
+        if self._connected_seen is None:
+            return
+        await self._connected_seen(**kwargs)
+
+    async def _async_seen(self, **kwargs):
+        """Mark the device as seen."""
+        self._attributes.update(kwargs.get(ATTR_ATTRIBUTES, {}))
+        self._location_name = kwargs.get(ATTR_LOCATION_NAME)
+        self._latitude = kwargs.get(ATTR_LATITUDE)
+        self._longitude = kwargs.get(ATTR_LONGITUDE)
+
+        await self.async_update_ha_state()
