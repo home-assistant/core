@@ -10,6 +10,7 @@ import attr
 
 from homeassistant.components.notify import (
     ATTR_TARGET, BaseNotificationService)
+from homeassistant.const import CONF_RECIPIENT
 
 from ..tplink_lte import DATA_KEY
 
@@ -40,7 +41,7 @@ class TplinkNotifyService(BaseNotificationService):
             _LOGGER.error("No modem available")
             return
 
-        phone = self.config[ATTR_TARGET]
+        phone = self.config[CONF_RECIPIENT]
         targets = kwargs.get(ATTR_TARGET, phone)
         if targets and message:
             for target in targets:
