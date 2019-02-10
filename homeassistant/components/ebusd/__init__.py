@@ -46,8 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the eBusd component."""
     conf = config[DOMAIN]
-    name = conf.get(CONF_NAME)
-    circuit = conf.get(CONF_CIRCUIT)
+    name = conf[CONF_NAME]
+    circuit = conf[CONF_CIRCUIT]
     monitored_conditions = conf.get(CONF_MONITORED_CONDITIONS)
     server_address = (
         conf.get(CONF_HOST), conf.get(CONF_PORT))
