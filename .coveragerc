@@ -142,6 +142,7 @@ omit =
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dweet/*
+    homeassistant/components/ebusd/*
     homeassistant/components/ecoal_boiler/*
     homeassistant/components/ecobee/*
     homeassistant/components/ecovacs/*
