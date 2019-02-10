@@ -67,6 +67,8 @@ class MinutPointSensor(MinutPointEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.value is None:
+            return None
         return round(self.value, self._device_prop[1])
 
     @property
