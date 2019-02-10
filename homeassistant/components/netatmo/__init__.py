@@ -62,6 +62,8 @@ ATTR_HOME_NAME = 'home_name'
 ATTR_PERSONS = 'persons'
 ATTR_IS_KNOWN = 'is_known'
 ATTR_FACE_URL = 'face_url'
+ATTR_SNAPSHOT_URL = 'snapshot_url'
+ATTR_VIGNETTE_URL = 'vignette_url'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
@@ -167,13 +169,21 @@ async def handle_webhook(hass, webhook_id, request):
             published_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
             hass.bus.async_fire(EVENT_BUS_PERSON, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_MOVEMENT:
+        published_data[ATTR_VIGNETTE_URL] = person.get(ATTR_VIGNETTE_URL)
+        published_data[ATTR_SNAPSHOT_URL] = person.get(ATTR_SNAPSHOT_URL)
         hass.bus.async_fire(EVENT_BUS_MOVEMENT, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_HUMAN:
+        published_data[ATTR_VIGNETTE_URL] = person.get(ATTR_VIGNETTE_URL)
+        published_data[ATTR_SNAPSHOT_URL] = person.get(ATTR_SNAPSHOT_URL)
         hass.bus.async_fire(EVENT_BUS_HUMAN, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_ANIMAL:
+        published_data[ATTR_VIGNETTE_URL] = person.get(ATTR_VIGNETTE_URL)
+        published_data[ATTR_SNAPSHOT_URL] = person.get(ATTR_SNAPSHOT_URL)
         hass.bus.async_fire(EVENT_BUS_ANIMAL, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_VEHICLE:
         hass.bus.async_fire(EVENT_BUS_VEHICLE, published_data)
+        published_data[ATTR_VIGNETTE_URL] = person.get(ATTR_VIGNETTE_URL)
+        published_data[ATTR_SNAPSHOT_URL] = person.get(ATTR_SNAPSHOT_URL)
     else:
         hass.bus.async_fire(EVENT_BUS_OTHER, data)
 
