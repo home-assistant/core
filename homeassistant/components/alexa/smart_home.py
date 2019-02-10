@@ -63,6 +63,7 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_COOL, 'COOL'),
     (climate.STATE_AUTO, 'AUTO'),
     (climate.STATE_ECO, 'ECO'),
+    (climate.STATE_MANUAL, 'AUTO'),
     (climate.STATE_OFF, 'OFF'),
     (climate.STATE_IDLE, 'OFF'),
     (climate.STATE_FAN_ONLY, 'OFF'),
