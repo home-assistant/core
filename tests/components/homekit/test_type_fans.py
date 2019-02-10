@@ -1,14 +1,17 @@
 """Test different accessory types: Fans."""
 from collections import namedtuple
+from unittest.mock import Mock
 
 import pytest
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
-    DOMAIN, SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
+    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SPEED_HIGH, SPEED_LOW,
+    SPEED_OFF, SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.util import HomeKitSpeedMapping
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
 
 from tests.common import async_mock_service
@@ -38,6 +41,9 @@ async def test_fan_basic(hass, hk_driver, cls, events):
     assert acc.aid == 2
     assert acc.category == 3  # Fan
     assert acc.char_active.value == 0
+
+    # If there are no speed_list values, then HomeKit speed is unsupported
+    assert acc.char_speed is None
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
@@ -155,3 +161,40 @@ async def test_fan_oscillate(hass, hk_driver, cls, events):
     assert call_oscillate[1].data[ATTR_OSCILLATING] is True
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is True
+
+
+async def test_fan_speed(hass, hk_driver, cls, events):
+    """Test fan with speed."""
+    entity_id = 'fan.demo'
+    speed_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
+
+    hass.states.async_set(entity_id, STATE_ON, {
+        ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED, ATTR_SPEED: SPEED_OFF,
+        ATTR_SPEED_LIST: speed_list})
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
+    assert acc.char_speed.value == 0
+
+    await hass.async_add_job(acc.run)
+    assert acc.speed_mapping.speed_ranges == \
+        HomeKitSpeedMapping(speed_list).speed_ranges
+
+    acc.speed_mapping.speed_to_homekit = Mock(return_value=42)
+    acc.speed_mapping.speed_to_states = Mock(return_value='ludicrous')
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH})
+    await hass.async_block_till_done()
+    acc.speed_mapping.speed_to_homekit.assert_called_with(SPEED_HIGH)
+    assert acc.char_speed.value == 42
+
+    # Set from HomeKit
+    call_set_speed = async_mock_service(hass, DOMAIN, 'set_speed')
+
+    await hass.async_add_job(acc.char_speed.client_update_value, 42)
+    await hass.async_block_till_done()
+    acc.speed_mapping.speed_to_states.assert_called_with(42)
+    assert call_set_speed[0]
+    assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[0].data[ATTR_SPEED] == 'ludicrous'
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == 'ludicrous'

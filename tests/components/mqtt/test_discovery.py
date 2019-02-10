@@ -222,7 +222,15 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
         '  "stat_t": "test_topic/~",'
-        '  "cmd_t": "~/test_topic" }'
+        '  "cmd_t": "~/test_topic",'
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"Noone"'
+        '  }'
+        '}'
     )
 
     async_fire_mqtt_message(

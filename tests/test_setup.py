@@ -15,7 +15,7 @@ import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA_2 as PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers import discovery
 
 from tests.common import \
@@ -259,6 +259,7 @@ class TestSetup:
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
                     # fail: no extra keys allowed
+                    'platform': 'whatever',
                     'hello': 'world',
                     'invalid': 'extra',
                 }
@@ -278,6 +279,34 @@ class TestSetup:
                 'platform_conf 2': {
                     'platform': 'whatever',
                     'hello': 'there'
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+    def test_validate_platform_config_4(self):
+        """Test entity_namespace in PLATFORM_SCHEMA."""
+        component_schema = PLATFORM_SCHEMA_BASE
+        platform_schema = PLATFORM_SCHEMA
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       platform_schema_base=component_schema))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    # pass: entity_namespace accepted by PLATFORM_SCHEMA
+                    'platform': 'whatever',
+                    'entity_namespace': 'yummy',
                 }
             })
 
