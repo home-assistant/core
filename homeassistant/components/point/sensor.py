@@ -34,8 +34,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
         client = hass.data[POINT_DOMAIN][config_entry.entry_id]
-        async_add_entities((MinutPointSensor(client, device_id, sensor_type)
-                            for sensor_type in SENSOR_TYPES), True)
+        async_add_entities(
+            (MinutPointSensor(hass, client, device_id, sensor_type)
+             for sensor_type in SENSOR_TYPES), True)
 
     async_dispatcher_connect(
         hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN),
@@ -45,9 +46,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MinutPointSensor(MinutPointEntity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, point_client, device_id, device_class):
+    def __init__(self, hass, point_client, device_id, device_class):
         """Initialize the entity."""
         super().__init__(point_client, device_id, device_class)
+        self._hass = hass
         self._device_prop = SENSOR_TYPES[device_class]
 
     @callback
@@ -55,7 +57,8 @@ class MinutPointSensor(MinutPointEntity):
         """Update the value of the sensor."""
         if self.is_updated:
             _LOGGER.debug('Update sensor value for %s', self)
-            self._value = self.device.sensor(self.device_class)
+            self._value = self._hass.async_add_executor_job(
+                self.device.sensor(self.device_class))
             self._updated = parse_datetime(self.device.last_update)
             self.async_schedule_update_ha_state()
 

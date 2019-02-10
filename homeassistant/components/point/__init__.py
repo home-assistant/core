@@ -117,8 +117,12 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
             entry, data={
                 **entry.data,
             })
-    session.update_webhook(entry.data[CONF_WEBHOOK_URL],
-                           entry.data[CONF_WEBHOOK_ID], events=['*'])
+    await hass.async_add_executor_job(
+        session.update_webhook(
+            entry.data[CONF_WEBHOOK_URL],
+            entry.data[CONF_WEBHOOK_ID],
+            events=['*'],
+        ))
 
     hass.components.webhook.async_register(
         DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
@@ -127,8 +131,8 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    client = hass.data[DOMAIN].pop(entry.entry_id)
-    client.remove_webhook()
+    session = hass.data[DOMAIN].pop(entry.entry_id)
+    await hass.async_add_executor_job(session.remove_webhook())
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -174,7 +178,8 @@ class MinutPointClient():
 
     async def _sync(self):
         """Update local list of devices."""
-        if not self._client.update() and self._is_available:
+        if not await self._hass.async_add_executor_job(
+                self._client.update()) and self._is_available:
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             return
