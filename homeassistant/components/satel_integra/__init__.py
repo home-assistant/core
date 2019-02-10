@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['satel_integra==0.2.0']
+REQUIREMENTS = ['satel_integra==0.3.0']
 
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
@@ -104,33 +104,37 @@ async def async_setup(hass, config):
                             {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config)
         )
 
-    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
-
+#    _LOGGER.debug("Before waiting for task_control_panel")
+        
+#    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
+    
+#    _LOGGER.debug("After waiting for task_control_panel")
+        
     @callback
     def alarm_status_update_callback(status):
         """Send status update received from alarm to home assistant."""
         _LOGGER.debug("Alarm status callback, status: %s", status)
         hass_alarm_status = STATE_ALARM_DISARMED
 
-        if status == AlarmState.ARMED_MODE0:
-            hass_alarm_status = STATE_ALARM_ARMED_AWAY
+        # if status == AlarmState.ARMED_MODE0:
+        #     hass_alarm_status = STATE_ALARM_ARMED_AWAY
 
-        elif status in [
-                AlarmState.ARMED_MODE0,
-                AlarmState.ARMED_MODE1,
-                AlarmState.ARMED_MODE2,
-                AlarmState.ARMED_MODE3
-        ]:
-            hass_alarm_status = STATE_ALARM_ARMED_HOME
+        # elif status in [
+        #         AlarmState.ARMED_MODE0,
+        #         AlarmState.ARMED_MODE1,
+        #         AlarmState.ARMED_MODE2,
+        #         AlarmState.ARMED_MODE3
+        # ]:
+        #     hass_alarm_status = STATE_ALARM_ARMED_HOME
 
-        elif status in [AlarmState.TRIGGERED, AlarmState.TRIGGERED_FIRE]:
-            hass_alarm_status = STATE_ALARM_TRIGGERED
+        # elif status in [AlarmState.TRIGGERED, AlarmState.TRIGGERED_FIRE]:
+        #     hass_alarm_status = STATE_ALARM_TRIGGERED
 
-        elif status == AlarmState.DISARMED:
-            hass_alarm_status = STATE_ALARM_DISARMED
+        # elif status == AlarmState.DISARMED:
+        #     hass_alarm_status = STATE_ALARM_DISARMED
 
-        _LOGGER.debug("Sending hass_alarm_status: %s...", hass_alarm_status)
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, hass_alarm_status)
+        _LOGGER.debug("Sending request to update state, currently: %s...", controller.status)
+        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, None)
 
     @callback
     def zones_update_callback(status):

@@ -6,6 +6,9 @@ from homeassistant.components.satel_integra import (
     CONF_ARM_HOME_MODE, DATA_SATEL, SIGNAL_PANEL_MESSAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,20 +34,51 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._name = name
         self._state = None
         self._arm_home_mode = arm_home_mode
+        _LOGGER.info("Creating AlarmPanel")
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
+        """Update alarm status and register callbacks for future updates."""
+        _LOGGER.info("Starts listening for panel messages: async_dispatcher_connect")
+        self._update_alarm_status()
         async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+            self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
 
+    def _read_alarm_state(self):
+        """Read current status of the alarm device and translate it into HA alarm status"""       
+        hass_alarm_status = STATE_ALARM_DISARMED
+
+        from satel_integra.satel_integra import AlarmState
+        
+        status = self.hass.data[DATA_SATEL].status 
+
+        if status == AlarmState.ARMED_MODE0:
+            hass_alarm_status = STATE_ALARM_ARMED_AWAY
+
+        elif status in [
+                AlarmState.ARMED_MODE0,
+                AlarmState.ARMED_MODE1,
+                AlarmState.ARMED_MODE2,
+                AlarmState.ARMED_MODE3
+        ]:
+            hass_alarm_status = STATE_ALARM_ARMED_HOME
+
+        elif status in [AlarmState.TRIGGERED, AlarmState.TRIGGERED_FIRE]:
+            hass_alarm_status = STATE_ALARM_TRIGGERED
+
+        elif status == AlarmState.DISARMED:
+            hass_alarm_status = STATE_ALARM_DISARMED
+        return hass_alarm_status
+        
     @callback
-    def _message_callback(self, message):
+    def _update_alarm_status(self, message = None):
         """Handle received messages."""
-        if message != self._state:
-            self._state = message
+        state = self._read_alarm_state()
+        _LOGGER.info("Got status update, current status: %s", message)
+        if state != self._state:
+            self._state = state
             self.async_schedule_update_ha_state()
         else:
-            _LOGGER.warning("Ignoring alarm status message, same state")
+            _LOGGER.debug("Ignoring alarm status message, same state")
 
     @property
     def name(self):
