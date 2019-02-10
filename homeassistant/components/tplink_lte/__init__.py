@@ -29,7 +29,7 @@ DATA_KEY = 'tplink_lte'
 CONF_NOTIFY = "notify"
 
 # Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
-ATTR_TARGET_INVALIDATION_VERSION = '0.81.0'
+ATTR_TARGET_INVALIDATION_VERSION = '0.91.0'
 
 _NOTIFY_SCHEMA = vol.All(
     vol.Schema({
