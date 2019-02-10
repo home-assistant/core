@@ -156,8 +156,9 @@ async def test_self_no_reset_yearly(hass):
 
 async def test_reset_yearly_offset(hass):
     """Test yearly reset of meter."""
-    await _test_self_reset(hass, gen_config('yearly', timedelta(31)),
-                           "2018-01-31T23:59:00.000000+00:00")
+    await _test_self_reset(hass,
+                           gen_config('yearly', timedelta(days=1, minutes=10)),
+                           "2018-01-02T00:09:00.000000+00:00")
 
 
 async def test_no_reset_yearly_offset(hass):

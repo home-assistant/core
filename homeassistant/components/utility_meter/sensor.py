@@ -161,16 +161,16 @@ class UtilityMeterSensor(RestoreEntity):
         await super().async_added_to_hass()
 
         if self._period == HOURLY:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    minute=self._period_offset.seconds//60,
-                                    second=0)
-        elif self._period == DAILY:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    hour=self._period_offset.seconds//3600,
-                                    minute=0, second=0)
-        elif self._period in [WEEKLY, MONTHLY, YEARLY]:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    hour=0, minute=0, second=0)
+            async_track_time_change(
+                self.hass, self._async_reset_meter,
+                minute=self._period_offset.seconds // 60,
+                second=self._period_offset.seconds % 60)
+        elif self._period in [DAILY, WEEKLY, MONTHLY, YEARLY]:
+            async_track_time_change(
+                self.hass, self._async_reset_meter,
+                hour=self._period_offset.seconds // 3600,
+                minute=self._period_offset.seconds % 3600 // 60,
+                second=self._period_offset.seconds % 3600 % 60)
 
         async_dispatcher_connect(
             self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
