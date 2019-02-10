@@ -122,7 +122,7 @@ the flow from the config panel.
 import logging
 import functools
 import uuid
-from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
+from typing import Callable, Dict, List, Optional, Set  # noqa pylint: disable=unused-import
 import weakref
 
 from homeassistant import data_entry_flow
@@ -390,7 +390,7 @@ class ConfigEntry:
                               self.title, component.DOMAIN)
             return False
 
-    def add_update_listener(self, listener):
+    def add_update_listener(self, listener: Callable) -> Callable:
         """Listen for when entry is updated.
 
         Listener: Callback function(hass, entry)
@@ -516,7 +516,13 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
+<<<<<<< HEAD
     def async_update_entry(self, entry, *, data=_UNDEF, options=None):
+=======
+    def async_update_entry(
+            self, entry: ConfigEntry, *,
+            data: dict = None, options: dict = None) -> None:
+>>>>>>> Type hints
         """Update a config entry."""
         if not data and not options:
             return
@@ -676,7 +682,9 @@ class Options:
         self.active_options = {}
 
     @callback
-    def _async_create_flow(self, handler_key, *, context, data: ConfigEntry):
+    def _async_create_flow(
+            self, handler_key: str, *,
+            context: dict, data: ConfigEntry) -> data_entry_flow.FlowHandler:
         """"""
         flow = HANDLERS[handler_key].async_get_options_flow(
             data['data'], data['options'])
@@ -685,7 +693,8 @@ class Options:
         return flow
 
     @callback
-    def _async_finish_flow(self, flow, result):
+    def _async_finish_flow(
+            self, flow: data_entry_flow.FlowHandler, result: dict):
         """"""
         entry = self.active_options.pop(flow.flow_id)
         self.hass.config_entries.async_update_entry(
