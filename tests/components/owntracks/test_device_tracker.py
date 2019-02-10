@@ -5,7 +5,7 @@ from asynctest import patch
 import pytest
 
 from homeassistant.components import owntracks
-from homeassistant.const import STATE_NOT_HOME
+from homeassistant.const import STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -847,24 +847,24 @@ async def test_event_beacon_unknown_zone_no_location(hass, context):
     # that will be tracked at my current location. Except
     # in this case my Device hasn't had a location message
     # yet so it's in an odd state where it has state.state
-    # None and no GPS coords to set the beacon to.
-    hass.states.async_set(DEVICE_TRACKER_STATE, None)
+    # unknown and no GPS coords to set the beacon to.
+    hass.states.async_set(DEVICE_TRACKER_STATE, STATE_UNKNOWN)
 
     message = build_message(
         {'desc': "unknown"},
         REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
 
-    # My current state is None because I haven't seen a
+    # My current state is unknown because I haven't seen a
     # location message or a GPS or Region # Beacon event
-    # message. None is the state the test harness set for
+    # message. unknown is the state the test harness set for
     # the Device during test case setup.
-    assert_location_state(hass, 'None')
+    assert_location_state(hass, STATE_UNKNOWN)
 
-    # home is the state of a Device constructed through
+    # unknown is the state of a Device constructed through
     # the normal code path on it's first observation with
     # the conditions I pass along.
-    assert_mobile_tracker_state(hass, 'home', 'unknown')
+    assert_mobile_tracker_state(hass, STATE_UNKNOWN, 'unknown')
 
 
 async def test_event_beacon_unknown_zone(hass, context):
