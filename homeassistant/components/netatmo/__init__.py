@@ -12,7 +12,7 @@ from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_DISCOVERY,
+    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_DISCOVERY, CONF_URL,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +28,11 @@ CONF_WEBHOOKS = 'webhooks'
 
 DOMAIN = 'netatmo'
 
+SERVICE_ADDWEBHOOK = 'addwebhook'
+SERVICE_DROPWEBHOOK = 'dropwebhook'
+
 NETATMO_AUTH = None
+NETATMO_WEBHOOK_URL = None
 NETATMO_PERSONS = {}
 
 DEFAULT_PERSON = 'Unknown'
@@ -72,12 +76,18 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+SCHEMA_SERVICE_ADDWEBHOOK = vol.Schema({
+    vol.Optional(CONF_URL): cv.string,
+})
+
+SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
+
 
 def setup(hass, config):
     """Set up the Netatmo devices."""
     import pyatmo
 
-    global NETATMO_AUTH
+    global NETATMO_AUTH, NETATMO_WEBHOOK_URL
     try:
         NETATMO_AUTH = pyatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
@@ -95,13 +105,34 @@ def setup(hass, config):
 
     if config[DOMAIN][CONF_WEBHOOKS]:
         webhook_id = hass.components.webhook.async_generate_id()
-        webhook_url = hass.components.webhook.async_generate_url(
+        NETATMO_WEBHOOK_URL = hass.components.webhook.async_generate_url(
             webhook_id)
         hass.components.webhook.async_register(
             DOMAIN, 'Netatmo', webhook_id, handle_webhook)
-        NETATMO_AUTH.addwebhook(webhook_url)
+        NETATMO_AUTH.addwebhook(NETATMO_WEBHOOK_URL)
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)
+
+    def _service_addwebhook(service):
+        """Service to (re)add webhooks during runtime."""
+        url = service.data.get(CONF_URL)
+        if url is None:
+            url = NETATMO_WEBHOOK_URL
+        _LOGGER.info("Adding webhook for URL: %s", url)
+        NETATMO_AUTH.addwebhook(url)
+
+    hass.services.register(
+        DOMAIN, SERVICE_ADDWEBHOOK, _service_addwebhook,
+        schema=SCHEMA_SERVICE_ADDWEBHOOK)
+
+    def _service_dropwebhook(service):
+        """Service to drop webhooks during runtime."""
+        _LOGGER.info("Dropping webhook")
+        NETATMO_AUTH.dropwebhook()
+
+    hass.services.register(
+        DOMAIN, SERVICE_DROPWEBHOOK, _service_dropwebhook,
+        schema=SCHEMA_SERVICE_DROPWEBHOOK)
 
     return True
 
@@ -119,6 +150,7 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
+    _LOGGER.debug("Got webhook data: %s", data)
     published_data = {
         ATTR_EVENT_TYPE: data.get(ATTR_EVENT_TYPE),
         ATTR_HOME_NAME: data.get(ATTR_HOME_NAME),
@@ -141,7 +173,7 @@ async def handle_webhook(hass, webhook_id, request):
     elif data.get(ATTR_EVENT_TYPE) == EVENT_VEHICLE:
         hass.bus.async_fire(EVENT_BUS_VEHICLE, published_data)
     else:
-        hass.bus.async_fire(EVENT_BUS_OTHER, published_data)
+        hass.bus.async_fire(EVENT_BUS_OTHER, data)
 
 
 class CameraData:
