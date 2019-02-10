@@ -10,9 +10,7 @@ import time
 
 from homeassistant.util import slugify
 from .entity import ZhaEntity
-from .const import (
-    LISTENER_BATTERY, SIGNAL_STATE_ATTR, QUIRK_APPLIED, QUIRK_CLASS
-)
+from .const import LISTENER_BATTERY, SIGNAL_STATE_ATTR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,9 +88,6 @@ class ZhaDeviceEntity(ZhaEntity):
             del self._device_state_attributes['last_seen']
         self._device_state_attributes['lqi'] = device.lqi
         self._device_state_attributes['rssi'] = device.rssi
-        self._device_state_attributes[QUIRK_APPLIED] = device.quirk_applied
-        if device.quirk_applied:
-            self._device_state_attributes[QUIRK_CLASS] = device.quirk_class
         return self._device_state_attributes
 
     async def async_added_to_hass(self):
