@@ -307,7 +307,7 @@ class NetAtmoSensor(Entity):
                 elif data['wifi_status'] <= 55:
                     self._state = "Full"
         except KeyError:
-            _LOGGER.error("No %s data found for %s", self.type, 
+            _LOGGER.error("No %s data found for %s", self.type,
                           self.module_name)
             self._state = None
             return
