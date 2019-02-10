@@ -393,7 +393,7 @@ class ConfigEntry:
     def add_update_listener(self, listener):
         """Listen for when entry is updated.
 
-        Listener: Callback function(old_entry, new_entry)
+        Listener: Callback function(hass, entry)
 
         Returns function to unlisten.
         """
