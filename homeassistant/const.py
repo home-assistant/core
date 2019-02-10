@@ -147,7 +147,11 @@ CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
+
+# Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
 CONF_UPDATE_INTERVAL = 'update_interval'
+CONF_UPDATE_INTERVAL_INVALIDATION_VERSION = '0.91.0'
+
 CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
