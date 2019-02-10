@@ -1,7 +1,7 @@
 """The tests for the Dark Sky platform."""
 import re
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from datetime import timedelta
 
 from requests.exceptions import HTTPError
@@ -9,7 +9,6 @@ import requests_mock
 
 import forecastio
 
-from homeassistant.components.sensor import darksky
 from homeassistant.setup import setup_component
 
 from tests.common import (load_fixture, get_test_home_assistant,
@@ -138,9 +137,7 @@ class TestDarkSkySetup(unittest.TestCase):
         msg = '400 Client Error: Bad Request for url: {}'.format(url)
         mock_get_forecast.side_effect = HTTPError(msg,)
 
-        response = darksky.setup_platform(self.hass, VALID_CONFIG_MINIMAL,
-                                          MagicMock())
-        assert not response
+        assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)

@@ -209,7 +209,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    language = config.get(CONF_LANGUAGE)
+    language = config[CONF_LANGUAGE]
     interval = config[CONF_SCAN_INTERVAL]
 
     if CONF_UNITS in config:
