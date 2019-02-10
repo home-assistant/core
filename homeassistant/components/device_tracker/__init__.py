@@ -1,6 +1,7 @@
 """Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, List, Sequence, Callable
 
@@ -114,6 +115,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
         # Temp workaround for iOS app introduced in 0.65
         vol.Optional('battery_status'): str,
         vol.Optional('hostname'): str,
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     }))
 
 
@@ -240,7 +242,22 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         data = dict(call.data)
         data.pop('hostname', None)
         data.pop('battery_status', None)
-        await tracker.async_see(**data)
+
+        # Handle service call for EntityPlatform platforms.
+        # Replace this service handler when all platforms have been converted
+        # to EntityPlatform.
+        entity_ids = hass.helpers.service.extract_entity_ids(call)
+        data.pop(ATTR_ENTITY_ID, None)
+        entities = [
+            entity for entity in component.entities
+            if entity.entity_id in entity_ids]
+        tasks = []
+        for entity in entities:
+            tasks.append(entity.async_seen(**data))
+        if tasks:
+            await asyncio.wait(tasks)
+        else:
+            await tracker.async_see(**data)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA)
@@ -714,6 +731,14 @@ class DeviceTrackerEntity(Entity):
             return self.mac_address
         return None
 
+    def seen(self, **kwargs):
+        """Mark the device as seen."""
+        raise NotImplementedError
+
+    async def async_seen(self, **kwargs):
+        """Mark the device as seen."""
+        await self.hass.async_add_executor_job(partial(self.seen, **kwargs))
+
 
 class DeviceScanner:
     """Device scanner object."""
@@ -880,6 +905,7 @@ def update_config(path: str, dev_id: str, device: Device):
 
 # Gravatar option is legacy and deprecated and will be removed when all
 # platforms have been converted to EntityPlatform.
+
 
 def get_gravatar_for_email(email: str):
     """Return an 80px Gravatar for the given email address.
