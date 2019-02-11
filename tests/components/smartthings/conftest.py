@@ -235,7 +235,8 @@ def config_entry_fixture(hass, installed_app, location):
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(spec=Api)
-    api.post_device_command.return_value = mock_coro(return_value={})
+    api.post_device_command.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value={})
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {
