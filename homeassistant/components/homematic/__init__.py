@@ -112,7 +112,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
-    # The following line is depricated and replaced by individual attributes rssi_device and rssi_peer
+    # The following line is depricated and replaced by individual attributes
+    # rssi_device and rssi_peer
     'RSSI_DEVICE': ['rssi', {}],
     'RSSI_PEER': ['rssi_peer', {}],
     'RSSI_DEVICE': ['rssi_device', {}],
