@@ -126,6 +126,19 @@ class ZHAGateway:
             self._devices[zigpy_device.ieee] = zha_device
         return zha_device
 
+    async def async_handle_zigbee_message(
+            self, sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
+            command_id, args):
+        """Intercept messages from a zigbee devices and create tasks."""
+        self._hass.async_create_task(self.async_maybe_update_device(sender))
+
+    async def async_maybe_update_device(self, sender):
+        """Update device if it just became available."""
+        if sender.last_seen is None and not sender.initializing:
+            if sender.ieee in self.devices:
+                device = self.devices[sender.ieee]
+                device.update_available(True)
+
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
         zha_device = await self._get_or_create_device(device)
