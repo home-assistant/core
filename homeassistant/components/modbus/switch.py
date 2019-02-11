@@ -7,10 +7,12 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-from homeassistant.components import modbus
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF)
+    CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -31,6 +33,7 @@ REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 REGISTERS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_REGISTER): cv.positive_int,
@@ -46,6 +49,7 @@ REGISTERS_SCHEMA = vol.Schema({
 })
 
 COILS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
@@ -64,13 +68,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     if CONF_COILS in config:
         for coil in config.get(CONF_COILS):
+            hub_name = coil.get(CONF_HUB)
+            hub = hass.data[MODBUS_DOMAIN][hub_name]
             switches.append(ModbusCoilSwitch(
+                hub,
                 coil.get(CONF_NAME),
                 coil.get(CONF_SLAVE),
                 coil.get(CONF_COIL)))
     if CONF_REGISTERS in config:
         for register in config.get(CONF_REGISTERS):
+            hub_name = register.get(CONF_HUB)
+            hub = hass.data[MODBUS_DOMAIN][hub_name]
+
             switches.append(ModbusRegisterSwitch(
+                hub,
                 register.get(CONF_NAME),
                 register.get(CONF_SLAVE),
                 register.get(CONF_REGISTER),
@@ -84,15 +95,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class ModbusCoilSwitch(ToggleEntity):
+class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, name, slave, coil):
+    def __init__(self, hub, name, slave, coil):
         """Initialize the coil switch."""
+        self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
         self._is_on = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._is_on = state.state == STATE_ON
 
     @property
     def is_on(self):
@@ -106,20 +125,21 @@ class ModbusCoilSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Set switch on."""
-        modbus.HUB.write_coil(self._slave, self._coil, True)
+        self._hub.write_coil(self._slave, self._coil, True)
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-        modbus.HUB.write_coil(self._slave, self._coil, False)
+        self._hub.write_coil(self._slave, self._coil, False)
 
     def update(self):
         """Update the state of the switch."""
-        result = modbus.HUB.read_coils(self._slave, self._coil, 1)
+        result = self._hub.read_coils(self._slave, self._coil, 1)
         try:
             self._is_on = bool(result.bits[0])
         except AttributeError:
             _LOGGER.error(
-                'No response from modbus slave %s coil %s',
+                'No response from hub %s, slave %s, coil %s',
+                self._hub.name,
                 self._slave,
                 self._coil)
 
@@ -128,10 +148,11 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     """Representation of a Modbus register switch."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, name, slave, register, command_on,
+    def __init__(self, hub, name, slave, register, command_on,
                  command_off, verify_state, verify_register,
                  register_type, state_on, state_off):
         """Initialize the register switch."""
+        self._hub = hub
         self._name = name
         self._slave = slave
         self._register = register
@@ -156,7 +177,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
     def turn_on(self, **kwargs):
         """Set switch on."""
-        modbus.HUB.write_register(
+        self._hub.write_register(
             self._slave,
             self._register,
             self._command_on)
@@ -165,7 +186,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-        modbus.HUB.write_register(
+        self._hub.write_register(
             self._slave,
             self._register,
             self._command_off)
@@ -179,12 +200,12 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
         value = 0
         if self._register_type == REGISTER_TYPE_INPUT:
-            result = modbus.HUB.read_input_registers(
+            result = self._hub.read_input_registers(
                 self._slave,
                 self._register,
                 1)
         else:
-            result = modbus.HUB.read_holding_registers(
+            result = self._hub.read_holding_registers(
                 self._slave,
                 self._register,
                 1)
@@ -193,7 +214,8 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             value = int(result.registers[0])
         except AttributeError:
             _LOGGER.error(
-                'No response from modbus slave %s register %s',
+                'No response from hub %s, slave %s, register %s',
+                self._hub.name,
                 self._slave,
                 self._verify_register)
 
@@ -203,8 +225,9 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._is_on = False
         else:
             _LOGGER.error(
-                'Unexpected response from modbus slave %s '
+                'Unexpected response from hub %s, slave %s '
                 'register %s, got 0x%2x',
+                self._hub.name,
                 self._slave,
                 self._verify_register,
                 value)
