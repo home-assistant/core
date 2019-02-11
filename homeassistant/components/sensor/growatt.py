@@ -63,7 +63,7 @@ class GrowattPlant(Entity):
 
     @staticmethod
     def _extract_energy(plant_info_data, key):
-        """Extracts energy as float from a string"""
+        """Extract energy as float from a string."""
         kwhs = [_[key] for _ in plant_info_data]
         energies = [float(_.split(' ')[0]) for _ in kwhs]
         return sum(energies)
@@ -76,14 +76,14 @@ class GrowattPlant(Entity):
             logging.error(error)
         return self.client.plant_list()
 
-    def todays_energy_total(self, username: str, password: str):
-        """Get todays energy as float in kWh"""
-        plant_info = self._plant_info(username, password)
+    def todays_energy_total(self):
+        """Get todays energy as float in kWh."""
+        plant_info = self._plant_info(self._username, self._password)
         return self._extract_energy(plant_info['data'], 'todayEnergy')
 
-    def global_energy_total(self, username: str, password: str):
-        """Get total historic energy as float in kWh"""
-        plant_info = self._plant_info(username, password)
+    def global_energy_total(self):
+        """Get total historic energy as float in kWh."""
+        plant_info = self._plant_info(self._username, self._password)
         return self._extract_energy(plant_info['data'], 'totalEnergy')
 
 
@@ -92,7 +92,7 @@ class GrowattPlantToday(GrowattPlant):
 
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self.todays_energy_total(self._username, self._password)
+        self._state = self.todays_energy_total()
 
     @property
     def name(self):
@@ -105,7 +105,7 @@ class GrowattPlantTotal(GrowattPlant):
 
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self.global_energy_total(self._username, self._password)
+        self._state = self.global_energy_total()
 
     @property
     def name(self):

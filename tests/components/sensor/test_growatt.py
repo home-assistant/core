@@ -26,7 +26,7 @@ def test_extract_single_energy():
 
 
 def test_extract_multiple_energy():
-    """Test extracting energy fromm multiple plants"""
+    """Test extracting energy fromm multiple plants."""
     plant_info_data = [
         {'plantMoneyText': '137.9 ',
          'plantName': 'my plant',
@@ -51,7 +51,7 @@ def test_extract_multiple_energy():
 
 
 @mock.patch('growatt.GrowattApi.login',
-            return_value=json.dumps({'back': {'userId': '1'}}))
+            return_value={'userId': '1'})
 def test_login(_):
     """Test loggin in."""
     sensor = victim.GrowattPlant(None, 'foo', 'bar')
@@ -60,7 +60,7 @@ def test_login(_):
 
 
 @mock.patch('growatt.GrowattApi.plant_detail',
-            return_value=json.dumps({'back': {'data': 'some-data'}}))
+            return_value={'data': 'some-data'})
 def test_plant_list(_):
     """Test getting the list of plants."""
     sensor = victim.GrowattPlant(None, 'foo', 'bar')
@@ -85,16 +85,16 @@ dummy_plant_info = {'data': [{'plantMoneyText': '137.9 ',
 
 
 @mock.patch('growatt.GrowattApi.login',
-            return_value=json.dumps({'back': {'userId': '1'}}))
+            return_value={'userId': '1'})
 @mock.patch('growatt.GrowattApi.plant_list',
-            return_value=json.dumps(dummy_plant_info))
+            return_value=dummy_plant_info)
 def test_today_energy_total(_, __):
     """Test extracting total energy from plant."""
     with requests_mock.mock() as m:
         m.get('https://server.growatt.com/PlantListAPI.do?userId=1',
-              text=json.dumps({'back': dummy_plant_info}))
+              text=json.dumps(dummy_plant_info))
 
         energy_total = (victim
                         .GrowattPlant(None, 'foo', 'bar')
-                        .todays_energy_total('foo', 'bar'))
+                        .todays_energy_total())
         assert energy_total == 0.6

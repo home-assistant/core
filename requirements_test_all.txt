@@ -88,6 +88,9 @@ geojson_client==0.3
 # homeassistant.components.sensor.geo_rss_events
 georss_client==0.5
 
+# homeassistant.components.sensor.growatt
+growatt==0.0.2
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
 

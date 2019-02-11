@@ -54,6 +54,7 @@ TEST_REQUIREMENTS = (
     'geojson_client',
     'georss_client',
     'gTTS-token',
+    'growatt',
     'ha-ffmpeg',
     'hangups',
     'HAP-python',
