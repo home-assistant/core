@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 HMIP_COVER_OPEN = 0
 HMIP_COVER_CLOSED = 1
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud cover devices."""
