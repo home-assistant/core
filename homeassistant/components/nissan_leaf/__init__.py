@@ -144,7 +144,6 @@ async def async_setup(hass, config):
                 sys.exc_info()[0])
             return False
 
-        _LOGGER.info("Successfully logged in and fetched Leaf info")
         _LOGGER.warning(
             "WARNING: This may poll your Leaf too often, and drain the 12V"
             " battery.  If you drain your cars 12V battery it WILL NOT START"
@@ -495,7 +494,8 @@ class LeafEntity(Entity):
             'last_attempt': self.car.last_check,
             'updated_on': self.car.last_battery_response,
             'update_in_progress': self.car.request_in_progress,
-            'location_updated_on': self.car.last_location_response
+            'location_updated_on': self.car.last_location_response,
+            'vin': self.car.leaf.vin,
         }
 
     async def async_added_to_hass(self):
