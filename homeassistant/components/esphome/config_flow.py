@@ -55,7 +55,8 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, user_input: ConfigType):
         """Handle discovery."""
-        address = user_input['properties'].get('address', user_input['hostname'][:-1])
+        address = user_input['properties'].get(
+            'address', user_input['hostname'][:-1])
         for entry in self._async_current_entries():
             if entry.data['host'] == address:
                 return self.async_abort(
