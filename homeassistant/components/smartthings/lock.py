@@ -30,7 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def is_lock(device):
     """Determine if the device supports the lock capability."""
     from pysmartthings import Capability
-    # Must be able to be turned on/off.
     if Capability.lock in device.capabilities:
         return True
     return False
