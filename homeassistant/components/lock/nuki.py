@@ -25,6 +25,7 @@ DEFAULT_TIMEOUT = 5
 ATTR_BATTERY_CRITICAL = 'battery_critical'
 ATTR_NUKI_ID = 'nuki_id'
 ATTR_UNLATCH = 'unlatch'
+ATTR_LOCK_REACHABLE = "lock_reachable"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -33,6 +34,7 @@ NUKI_DATA = 'nuki'
 
 SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
 SERVICE_UNLATCH = 'nuki_unlatch'
+SERVICE_CHECK_CONNECTION = "nuki_check_connection"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -50,6 +52,9 @@ UNLATCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
+CHECK_CONNECTION_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
@@ -75,6 +80,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lock.lock_n_go(unlatch=unlatch)
             elif service.service == SERVICE_UNLATCH:
                 lock.unlatch()
+            elif service.service == SERVICE_CHECK_CONNECTION:
+                lock.check_connection()
 
     hass.services.register(
         DOMAIN, SERVICE_LOCK_N_GO, service_handler,
@@ -82,6 +89,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_UNLATCH, service_handler,
         schema=UNLATCH_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_CHECK_CONNECTION, service_handler,
+        schema=CHECK_CONNECTION_SERVICE_SCHEMA)
 
 
 class NukiLock(LockDevice):
@@ -93,6 +103,7 @@ class NukiLock(LockDevice):
         self._locked = nuki_lock.is_locked
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
+        self._lock_reachable = nuki_lock.state != 255
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -117,15 +128,20 @@ class NukiLock(LockDevice):
         """Return the device specific state attributes."""
         data = {
             ATTR_BATTERY_CRITICAL: self._battery_critical,
-            ATTR_NUKI_ID: self._nuki_lock.nuki_id}
+            ATTR_NUKI_ID: self._nuki_lock.nuki_id,
+            ATTR_LOCK_REACHABLE: self._lock_reachable}
         return data
 
     def update(self):
         """Update the nuki lock properties."""
-        self._nuki_lock.update(aggressive=False)
-        self._name = self._nuki_lock.name
-        self._locked = self._nuki_lock.is_locked
-        self._battery_critical = self._nuki_lock.battery_critical
+        try:
+            self._nuki_lock.update(aggressive=False)
+        except requests.exceptions.ConnectionError:
+            self._lock_reachable = false
+        else:
+            self._name = self._nuki_lock.name
+            self._locked = self._nuki_lock.is_locked
+            self._battery_critical = self._nuki_lock.battery_critical
 
     def lock(self, **kwargs):
         """Lock the device."""
@@ -146,3 +162,12 @@ class NukiLock(LockDevice):
     def unlatch(self, **kwargs):
         """Unlatch door."""
         self._nuki_lock.unlatch()
+
+    def check_connection(self, **kwargs):
+        """Update the nuki lock properties."""
+        try:
+            self._nuki_lock.update(aggressive=True)
+        except requests.exceptions.ConnectionError:
+            self._lock_reachable = false
+        else:
+            self._lock_reachable = self._nuki_lock.state != 255
