@@ -118,11 +118,10 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
                 **entry.data,
             })
     await hass.async_add_executor_job(
-        session.update_webhook(
-            entry.data[CONF_WEBHOOK_URL],
-            entry.data[CONF_WEBHOOK_ID],
-            events=['*'],
-        ))
+        session.update_webhook,
+        entry.data[CONF_WEBHOOK_URL],
+        entry.data[CONF_WEBHOOK_ID],
+        ['*'])
 
     hass.components.webhook.async_register(
         DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
@@ -179,7 +178,7 @@ class MinutPointClient():
     async def _sync(self):
         """Update local list of devices."""
         if not await self._hass.async_add_executor_job(
-                self._client.update()) and self._is_available:
+                self._client.update) and self._is_available:
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             return
@@ -242,7 +241,7 @@ class MinutPointEntity(Entity):
         _LOGGER.debug('Created device %s', self)
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
-        self._update_callback()
+        await self.hass.async_add_executor_job(self._update_callback)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
