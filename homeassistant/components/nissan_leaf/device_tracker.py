@@ -34,12 +34,16 @@ def setup_scanner(hass, config, see, discovery_info=None):
             _LOGGER.debug("Updating device_tracker for %s with position %s",
                           value.leaf.nickname,
                           value.data[DATA_LOCATION].__dict__)
+            attrs = {
+                'updated_on': value.last_location_response,
+            }
             see(dev_id=dev_id,
                 host_name=host_name,
                 gps=(
                     value.data[DATA_LOCATION].latitude,
                     value.data[DATA_LOCATION].longitude
                 ),
+                attributes=attrs,
                 icon=ICON_CAR)
 
     dispatcher_connect(hass, SIGNAL_UPDATE_LEAF, see_vehicle)
