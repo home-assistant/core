@@ -6,7 +6,7 @@ https://home-assistant.io/components/camera.amcrest/
 """
 import asyncio
 import logging
-from requests import RequestException, ReadTimeoutError
+from requests import RequestException
 
 import voluptuous as vol
 
@@ -289,7 +289,7 @@ class AmcrestCam(Camera):
         if self._lock.acquire(timeout=9):
             try:
                 return self._camera.snapshot(channel=self._resolution).data
-            except (RequestException, ReadTimeoutError, ValueError) as exc:
+            except (RequestException, ValueError) as exc:
                 _LOGGER.error('In camera_image: %s: %s',
                               exc.__class__.__name__, str(exc))
                 return None
@@ -667,6 +667,7 @@ class AmcrestCam(Camera):
     # Methods missing from self._camera.
 
     def check_result(self, result, data=None):
+        """ Checks the result. """
         if not result.upper().startswith('OK'):
             msg = 'Camera operation failed'
             if data:
