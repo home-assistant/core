@@ -11,15 +11,16 @@ import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-REQUIREMENTS = ['pynuki==1.3.2']
+REQUIREMENTS = ['pynuki==1.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 8080
+DEFAULT_TIMEOUT = 5
 
 ATTR_BATTERY_CRITICAL = 'battery_critical'
 ATTR_NUKI_ID = 'nuki_id'
@@ -36,7 +37,8 @@ SERVICE_UNLATCH = 'nuki_unlatch'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_TOKEN): cv.string
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
 LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
@@ -52,7 +54,8 @@ UNLATCH_SERVICE_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
-    bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
+    bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN),
+    config.get(CONF_PORT), config.get(CONF_TIMEOUT))
     add_entities([NukiLock(lock) for lock in bridge.locks])
 
     def service_handler(service):
