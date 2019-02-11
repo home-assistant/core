@@ -7,7 +7,9 @@ https://home-assistant.io/components/binary_sensor.ambient_station/
 import logging
 
 from homeassistant.components.ambient_station import (
-    SENSOR_TYPES, TYPE_BATTOUT, AmbientWeatherEntity)
+    SENSOR_TYPES, TYPE_BATT1, TYPE_BATT10, TYPE_BATT2, TYPE_BATT3, TYPE_BATT4,
+    TYPE_BATT5, TYPE_BATT6, TYPE_BATT7, TYPE_BATT8, TYPE_BATT9, TYPE_BATTOUT,
+    AmbientWeatherEntity)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_NAME
 
@@ -60,7 +62,10 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        if self._sensor_type == TYPE_BATTOUT:
+        if self._sensor_type in (TYPE_BATT1, TYPE_BATT10, TYPE_BATT2,
+                                 TYPE_BATT3, TYPE_BATT4, TYPE_BATT5,
+                                 TYPE_BATT6, TYPE_BATT7, TYPE_BATT8,
+                                 TYPE_BATT9, TYPE_BATTOUT):
             return self._state == 0
 
         return self._state == 1
