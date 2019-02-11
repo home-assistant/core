@@ -41,12 +41,12 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
-        await self._device.lock()
+        await self._device.lock(set_status=True)
         self.async_schedule_update_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        await self._device.unlock()
+        await self._device.unlock(set_status=True)
         self.async_schedule_update_ha_state()
 
     @property
