@@ -74,3 +74,8 @@ class AugustCamera(Camera):
                                                timeout=self._timeout).content
 
         return self._image_content
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the camera."""
+        return '{:s}_camera'.format(self._doorbell.device_id)
