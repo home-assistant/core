@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
 CONF_OFF_DELAY = 'off_delay'
+CONF_DISABLE_PAYLOAD_WARNING = 'disable_payload_warning'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_FORCE_UPDATE = False
@@ -49,8 +50,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
-
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema),
+    vol.Optional(CONF_DISABLE_PAYLOAD_WARNING): cv.bool
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
@@ -95,6 +96,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._state = None
         self._sub_state = None
         self._delay_listener = None
+        self._disable_payload_warning = config.get(CONF_DISABLE_PAYLOAD_WARNING)
 
         device_config = config.get(CONF_DEVICE)
 
@@ -144,10 +146,11 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             elif payload == self._config.get(CONF_PAYLOAD_OFF):
                 self._state = False
             else:  # Payload is not for this entity
-                _LOGGER.warning('No matching payload found'
-                                ' for entity: %s with state_topic: %s',
-                                self._config.get(CONF_NAME),
-                                self._config.get(CONF_STATE_TOPIC))
+                if not self._disable_payload_warning:
+                    _LOGGER.warning('No matching payload found'
+                                    ' for entity: %s with state_topic: %s',
+                                    self._config.get(CONF_NAME),
+                                    self._config.get(CONF_STATE_TOPIC))
                 return
 
             if self._delay_listener is not None:
