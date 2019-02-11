@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_USERNAME,
                                  CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/timvancann/growatt_api_client/archive/0.0.1.zip#growatt_api_client==0.0.1']
+REQUIREMENTS = ['growatt==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +47,10 @@ class GrowattPlant(Entity):
         self._unit_of_measurement = UNIT
         self._state = None
 
-        from growatt_api.growatt_api import GrowattApi
+        import growatt
         self._username = username
         self._password = password
-        self.client = GrowattApi()
+        self.client = growatt.GrowattApi()
 
     @property
     def state(self):
@@ -62,13 +62,34 @@ class GrowattPlant(Entity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
+    def _extract_energy(self, plant_info_data, key):
+        kwhs = [_[key] for _ in plant_info_data]
+        energies = [float(_.split(' ')[0]) for _ in kwhs]
+        return sum(energies)
+
+    def _plant_info(self, username: str, password: str):
+        import growatt
+        try:
+            self.client.login(username, password)
+        except growatt.LoginError as e:
+            logging.error(e)
+        return self.client.plant_list()
+
+    def todays_energy_total(self, username: str, password: str):
+        plant_info = self._plant_info(username, password)
+        return self._extract_energy(plant_info['data'], 'todayEnergy')
+
+    def global_energy_total(self, username: str, password: str):
+        plant_info = self._plant_info(username, password)
+        return self._extract_energy(plant_info['data'], 'totalEnergy')
+
 
 class GrowattPlantToday(GrowattPlant):
     """Representation of a Growatt plant daily sensor."""
 
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self.client.todays_energy_total(self._username, self._password)
+        self._state = self.todays_energy_total(self._username, self._password)
 
     @property
     def name(self):
@@ -81,7 +102,7 @@ class GrowattPlantTotal(GrowattPlant):
 
     def update(self):
         """Get the latest data from Growatt server."""
-        self._state = self.client.global_energy_total(self._username, self._password)
+        self._state = self.global_energy_total(self._username, self._password)
 
     @property
     def name(self):
