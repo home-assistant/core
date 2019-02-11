@@ -8,6 +8,7 @@ import homeassistant.components.sensor.growatt as victim
 
 
 def test_extract_single_energy():
+    """Test extracting energy from single plant."""
     plant_info_data = [
         {'plantMoneyText': '137.9 ',
          'plantName': 'my plant',
@@ -25,6 +26,7 @@ def test_extract_single_energy():
 
 
 def test_extract_multiple_energy():
+    """Test extracting energy fromm multiple plants"""
     plant_info_data = [
         {'plantMoneyText': '137.9 ',
          'plantName': 'my plant',
@@ -48,17 +50,19 @@ def test_extract_multiple_energy():
     assert energy == 1.2
 
 
-@mock.patch('growatt.GrowattPlant.login',
+@mock.patch('growatt.GrowattApi.login',
             return_value=json.dumps({'back': {'userId': '1'}}))
 def test_login(_):
+    """Test loggin in."""
     sensor = victim.GrowattPlant(None, 'foo', 'bar')
     login_res = sensor.client.login()
     assert login_res == {'userId': '1'}
 
 
-@mock.patch('growatt.GrowattPlant.plant_detail',
+@mock.patch('growatt.GrowattApi.plant_detail',
             return_value=json.dumps({'back': {'data': 'some-data'}}))
 def test_plant_list(_):
+    """Test getting the list of plants."""
     sensor = victim.GrowattPlant(None, 'foo', 'bar')
     login_res = sensor.client.plant_detail('1')
     assert login_res == {'data': 'some-data'}
@@ -80,11 +84,12 @@ dummy_plant_info = {'data': [{'plantMoneyText': '137.9 ',
                     'success': True}
 
 
-@mock.patch('growatt.GrowattPlant.login',
+@mock.patch('growatt.GrowattApi.login',
             return_value=json.dumps({'back': {'userId': '1'}}))
-@mock.patch('growatt.GrowattPlant.plant_list',
+@mock.patch('growatt.GrowattApi.plant_list',
             return_value=json.dumps(dummy_plant_info))
 def test_today_energy_total(_, __):
+    """Test extracting total energy from plant."""
     with requests_mock.mock() as m:
         m.get('https://server.growatt.com/PlantListAPI.do?userId=1',
               text=json.dumps({'back': dummy_plant_info}))

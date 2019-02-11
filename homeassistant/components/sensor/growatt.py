@@ -27,8 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Growatt Plant sensor"""
-
+    """Set up the Growatt Plant sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -62,7 +61,9 @@ class GrowattPlant(Entity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    def _extract_energy(self, plant_info_data, key):
+    @staticmethod
+    def _extract_energy(plant_info_data, key):
+        """Extracts energy as float from a string"""
         kwhs = [_[key] for _ in plant_info_data]
         energies = [float(_.split(' ')[0]) for _ in kwhs]
         return sum(energies)
@@ -71,15 +72,17 @@ class GrowattPlant(Entity):
         import growatt
         try:
             self.client.login(username, password)
-        except growatt.LoginError as e:
-            logging.error(e)
+        except growatt.LoginError as error:
+            logging.error(error)
         return self.client.plant_list()
 
     def todays_energy_total(self, username: str, password: str):
+        """Get todays energy as float in kWh"""
         plant_info = self._plant_info(username, password)
         return self._extract_energy(plant_info['data'], 'todayEnergy')
 
     def global_energy_total(self, username: str, password: str):
+        """Get total historic energy as float in kWh"""
         plant_info = self._plant_info(username, password)
         return self._extract_energy(plant_info['data'], 'totalEnergy')
 
