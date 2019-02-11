@@ -14,14 +14,13 @@ import homeassistant.helpers.config_validation as cv
 from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
-    CLIENT_COMMANDS, SERVER_COMMANDS, SERVER)
+    CLIENT_COMMANDS, SERVER_COMMANDS, SERVER, NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
 TYPE = 'type'
 CLIENT = 'client'
 ID = 'id'
-NAME = 'name'
 RESPONSE = 'response'
 DEVICE_INFO = 'device_info'
 
@@ -72,6 +71,11 @@ WS_RECONFIGURE_NODE = 'zha/nodes/reconfigure'
 SCHEMA_WS_RECONFIGURE_NODE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required(TYPE): WS_RECONFIGURE_NODE,
     vol.Required(ATTR_IEEE): str
+})
+
+WS_DEVICES = 'zha/devices'
+SCHEMA_WS_LIST_DEVICES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required(TYPE): WS_DEVICES,
 })
 
 WS_ENTITIES_BY_IEEE = 'zha/entities'
@@ -214,6 +218,29 @@ def async_load_api(hass, application_controller, zha_gateway):
                                  schema=SERVICE_SCHEMAS[
                                      SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
                                  ])
+
+    @websocket_api.async_response
+    async def websocket_get_devices(hass, connection, msg):
+        """Get ZHA devices."""
+        devices = [
+            {
+                **device.device_info,
+                'entities': [{
+                    'entity_id': entity_ref.reference_id,
+                    NAME: entity_ref.device_info[NAME]
+                } for entity_ref in zha_gateway.device_registry[device.ieee]]
+            } for device in zha_gateway.devices.values()
+        ]
+
+        connection.send_message(websocket_api.result_message(
+            msg[ID],
+            devices
+        ))
+
+    hass.components.websocket_api.async_register_command(
+        WS_DEVICES, websocket_get_devices,
+        SCHEMA_WS_LIST_DEVICES
+    )
 
     @websocket_api.async_response
     async def websocket_reconfigure_node(hass, connection, msg):

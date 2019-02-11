@@ -5,10 +5,12 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.zha.api import (
     async_load_api, WS_ENTITIES_BY_IEEE, WS_ENTITY_CLUSTERS, ATTR_IEEE, TYPE,
-    ID, NAME, WS_ENTITY_CLUSTER_ATTRIBUTES, WS_ENTITY_CLUSTER_COMMANDS
+    ID, WS_ENTITY_CLUSTER_ATTRIBUTES, WS_ENTITY_CLUSTER_COMMANDS,
+    WS_DEVICES
 )
 from homeassistant.components.zha.core.const import (
-    ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, IN
+    ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, IN, IEEE, MODEL, NAME, QUIRK_APPLIED,
+    ATTR_MANUFACTURER
 )
 from .common import async_init_zigpy_device
 
@@ -109,3 +111,29 @@ async def test_entity_cluster_commands(
         assert command[ID] is not None
         assert command[NAME] is not None
         assert command[TYPE] is not None
+
+
+async def test_list_devices(
+        hass, config_entry, zha_gateway, zha_client):
+    """Test getting entity cluster commands."""
+    await zha_client.send_json({
+        ID: 5,
+        TYPE: WS_DEVICES
+    })
+
+    msg = await zha_client.receive_json()
+
+    devices = msg['result']
+    assert len(devices) == 1
+
+    for device in devices:
+        assert device[IEEE] is not None
+        assert device[ATTR_MANUFACTURER] is not None
+        assert device[MODEL] is not None
+        assert device[NAME] is not None
+        assert device[QUIRK_APPLIED] is not None
+        assert device['entities'] is not None
+
+        for entity_reference in device['entities']:
+            assert entity_reference[NAME] is not None
+            assert entity_reference['entity_id'] is not None
