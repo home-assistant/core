@@ -66,7 +66,7 @@ def setup_platform(_hass, config, add_entities, _discovery_info=None):
 
     host = config.get(CONF_HOST)
     try:
-        bridge = lightify.Lightify(host)
+        bridge = lightify.Lightify(host, log_level=logging.DEBUG)
     except socket.error as err:
         msg = "Error connecting to bridge: {} due to: {}".format(
             host, str(err))
