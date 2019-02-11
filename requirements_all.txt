@@ -408,7 +408,7 @@ fastdotcom==0.0.3
 fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
-feedparser==5.2.1
+feedparser-homeassistant==5.2.2.dev1
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7
