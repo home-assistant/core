@@ -266,7 +266,7 @@ class AmcrestCam(Camera):
         self._stream_source = amcrest.stream_source
         self._resolution = amcrest.resolution
         self._token = self._auth = amcrest.authentication
-        self._is_streaming = None
+        self.is_streaming = None
         self._is_recording = None
         self._is_motion_detection_on = None
         self._model = None
@@ -419,7 +419,7 @@ class AmcrestCam(Camera):
     @property
     def is_streaming_on(self):
         """Return the camera streaming status."""
-        return self._is_streaming
+        return self.is_streaming
 
     @is_streaming_on.setter
     def is_streaming_on(self, enable):
@@ -430,7 +430,7 @@ class AmcrestCam(Camera):
                           exc.__class__.__name__, str(exc))
         else:
             if OPTIMISTIC:
-                self._is_streaming = enable
+                self.is_streaming = enable
                 self.schedule_update_ha_state()
 
     @property
@@ -523,7 +523,7 @@ class AmcrestCam(Camera):
             _LOGGER.error('In update: %s: %s', exc.__class__.__name__,
                           str(exc))
         else:
-            self._is_streaming = 'true' in [s.split('=')[-1]
+            self.is_streaming = 'true' in [s.split('=')[-1]
                                             for s in encode_media
                                             if '.VideoEnable=' in s]
             self._color_bw = CBW[int([s.split('=')[-1]
