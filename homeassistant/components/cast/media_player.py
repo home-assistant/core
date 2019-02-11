@@ -127,7 +127,6 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
 def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
     if info in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
         _LOGGER.debug("Discovered previous chromecast %s", info)
-        return
 
     # Either discovered completely new chromecast or a "moved" one.
     info = _fill_out_missing_chromecast_info(info)
