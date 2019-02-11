@@ -8,9 +8,9 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-import attr
 import aiohttp
+import attr
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
@@ -144,7 +144,7 @@ async def _retry_login(hass, modem_data, password):
     import eternalegypt
 
     _LOGGER.warning(
-        "Could not connect to %s. Will keep trying.", modem_data.host)
+        "Could not connect to %s. Will keep trying", modem_data.host)
 
     modem_data.connected = False
     delay = 15
