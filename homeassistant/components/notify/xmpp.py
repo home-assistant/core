@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
 
-REQUIREMENTS = ['slixmpp==1.4.1']
+REQUIREMENTS = ['slixmpp==1.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
