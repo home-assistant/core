@@ -65,95 +65,6 @@ _MOT_DET_WINDOW = {False: [{'window': 1, 'sensitive': 75, 'threshold': 12},
                            {'window': 2, 'sensitive': 75, 'threshold':  6}]}
 
 
-# @bind_hass
-# def enable_recording(hass, entity_id=None):
-#     """Enable Recording."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_ENABLE_RECORDING, data))
-
-
-# @bind_hass
-# def disable_recording(hass, entity_id=None):
-#     """Disable Recording."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_DISABLE_RECORDING, data))
-
-
-# @bind_hass
-# def goto_preset(hass, preset, entity_id=None):
-#     """Goto preset position."""
-#     data = {ATTR_PRESET: preset}
-
-#     if entity_id is not None:
-#         data[ATTR_ENTITY_ID] = entity_id
-
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_GOTO_PRESET, data))
-
-
-# @bind_hass
-# def set_color_bw(hass, cbw, entity_id=None):
-#     """Set DayNight color mode."""
-#     data = {ATTR_COLOR_BW: cbw}
-
-#     if entity_id is not None:
-#         data[ATTR_ENTITY_ID] = entity_id
-
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_SET_COLOR_BW, data))
-
-
-# @bind_hass
-# def audio_on(hass, entity_id=None):
-#     """Turn Audio On."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_AUDIO_ON, data))
-
-
-# @bind_hass
-# def audio_off(hass, entity_id=None):
-#     """Turn Audio Off."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_AUDIO_OFF, data))
-
-
-# @bind_hass
-# def mask_on(hass, entity_id=None):
-#     """Turn Mask On."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_MASK_ON, data))
-
-
-# @bind_hass
-# def mask_off(hass, entity_id=None):
-#     """Turn Mask Off."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_MASK_OFF, data))
-
-
-# @bind_hass
-# def tour_on(hass, entity_id=None):
-#     """Turn Tour On."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_TOUR_ON, data))
-
-
-# @bind_hass
-# def tour_off(hass, entity_id=None):
-#     """Turn Tour Off."""
-#     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-#     hass.async_add_job(hass.services.async_call(
-#         DOMAIN, SERVICE_TOUR_OFF, data))
-
-
-
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up an Amcrest IP Camera."""
@@ -318,7 +229,6 @@ class AmcrestCam(Camera):
 
             streaming_url = self._camera.rtsp_url(typeno=self._resolution)
             # Need to use lock here but lock is not asyncio!
-            # self._lock.acquire()
             try:
                 stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
                 await stream.open_camera(
@@ -329,7 +239,7 @@ class AmcrestCam(Camera):
                     'multipart/x-mixed-replace;boundary=ffserver')
                 await stream.close()
             finally:
-                # self._lock.release()
+                # Need to use lock here but lock is not asyncio!
                 pass
 
     # Entity property overrides
