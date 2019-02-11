@@ -26,6 +26,7 @@ ATTR_BATTERY_CRITICAL = 'battery_critical'
 ATTR_NUKI_ID = 'nuki_id'
 ATTR_UNLATCH = 'unlatch'
 ATTR_LOCK_REACHABLE = "lock_reachable"
+CONF_UNLATCH_TO_UNLOCK = "unlatch_to_unlock"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -40,7 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_UNLATCH_TO_UNLOCK, default=False): cv.boolean
 })
 
 LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
@@ -56,12 +58,15 @@ CHECK_CONNECTION_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN),
-    config.get(CONF_PORT), config.get(CONF_TIMEOUT))
-    add_entities([NukiLock(lock) for lock in bridge.locks])
+        config.get(CONF_PORT), config.get(CONF_TIMEOUT))
+    add_entities([NukiLock(lock, config.get(CONF_UNLATCH_TO_UNLOCK))
+        for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -93,17 +98,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         DOMAIN, SERVICE_CHECK_CONNECTION, service_handler,
         schema=CHECK_CONNECTION_SERVICE_SCHEMA)
 
-
 class NukiLock(LockDevice):
     """Representation of a Nuki lock."""
 
-    def __init__(self, nuki_lock):
+    def __init__(self, nuki_lock, unlatch_to_unlock):
         """Initialize the lock."""
         self._nuki_lock = nuki_lock
         self._locked = nuki_lock.is_locked
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
         self._lock_reachable = nuki_lock.state != 255
+        self._unlatch_to_unlock = unlatch_to_unlock
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -149,7 +154,10 @@ class NukiLock(LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._nuki_lock.unlock()
+        if self._unlatch_to_unlock:
+            self._nuki_lock.unlatch()
+        else:
+            self._nuki_lock.unlock()
 
     def lock_n_go(self, unlatch=False, **kwargs):
         """Lock and go.
