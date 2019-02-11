@@ -659,17 +659,19 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._target_temperature_high = \
                     kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-            if (self._config.get(CONF_SEND_IF_OFF) or 
+            if (self._config.get(CONF_SEND_IF_OFF) or
                     self._current_operation != STATE_OFF):
                 mqtt.async_publish(
-                    self.hass, 
+                    self.hass,
                     self._topic[CONF_TEMPERATURE_LOW_COMMAND_TOPIC],
-                    kwargs.get(ATTR_TARGET_TEMP_LOW), self._config.get(CONF_QOS),
+                    kwargs.get(ATTR_TARGET_TEMP_LOW),
+                    self._config.get(CONF_QOS),
                     self._config.get(CONF_RETAIN))
                 mqtt.async_publish(
-                    self.hass, 
+                    self.hass,
                     self._topic[CONF_TEMPERATURE_HIGH_COMMAND_TOPIC],
-                    kwargs.get(ATTR_TARGET_TEMP_HIGH), self._config.get(CONF_QOS),
+                    kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                    self._config.get(CONF_QOS),
                     self._config.get(CONF_RETAIN))
                     
         # Always optimistic?
