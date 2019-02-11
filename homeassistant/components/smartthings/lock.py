@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/smartthings.lock/
 """
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import STATE_LOCKED
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
