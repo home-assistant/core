@@ -44,7 +44,7 @@ def get_fake_chromecast_info(host='192.168.178.42', port=8009,
                              uuid: Optional[UUID] = FakeUUID):
     """Generate a Fake ChromecastInfo with the specified arguments."""
     return ChromecastInfo(host=host, port=port, uuid=uuid,
-                          friendly_name="Speaker")
+                          friendly_name="Speaker", service='the-service')
 
 
 async def async_setup_cast(hass, config=None, discovery_info=None):
@@ -64,9 +64,10 @@ async def async_setup_cast_internal_discovery(hass, config=None,
                                               discovery_info=None):
     """Set up the cast platform and the discovery."""
     listener = MagicMock(services={})
+    browser = MagicMock(zc={})
 
     with patch('pychromecast.start_discovery',
-               return_value=(listener, None)) as start_discovery:
+               return_value=(listener, browser)) as start_discovery:
         add_entities = await async_setup_cast(hass, config, discovery_info)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -120,8 +121,10 @@ def test_start_discovery_called_once(hass):
 @asyncio.coroutine
 def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
+    browser = MagicMock(zc={})
+
     with patch('pychromecast.start_discovery',
-               return_value=(None, 'the-browser')) as start_discovery:
+               return_value=(None, browser)) as start_discovery:
         # start_discovery should be called with empty config
         yield from async_setup_cast(hass, {})
 
@@ -132,10 +135,10 @@ def test_stop_discovery_called_on_stop(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from hass.async_block_till_done()
 
-        stop_discovery.assert_called_once_with('the-browser')
+        stop_discovery.assert_called_once_with(browser)
 
     with patch('pychromecast.start_discovery',
-               return_value=(None, 'the-browser')) as start_discovery:
+               return_value=(None, browser)) as start_discovery:
         # start_discovery should be called again on re-startup
         yield from async_setup_cast(hass)
 
