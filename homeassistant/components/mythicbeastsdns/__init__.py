@@ -6,13 +6,14 @@ https://home-assistant.io/components/mythicbeastsdns/
 """
 from datetime import timedelta
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_DOMAIN, CONF_PASSWORD, \
-    CONF_UPDATE_INTERVAL
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.const import (
+    CONF_DOMAIN, CONF_HOST, CONF_PASSWORD, CONF_UPDATE_INTERVAL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['mbddns==0.1.2']
 
@@ -24,8 +25,8 @@ DEFAULT_INTERVAL = timedelta(minutes=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_DOMAIN): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta),
