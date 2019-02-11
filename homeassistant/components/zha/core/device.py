@@ -164,7 +164,7 @@ class ZHADevice:
         await self._execute_listener_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache=False):
         """Initialize listeners."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_listener_tasks('async_initialize', from_cache)
