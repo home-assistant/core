@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         ServiceCall
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.4.2']
+REQUIREMENTS = ['aioesphomeapi==1.5.0']
 
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
