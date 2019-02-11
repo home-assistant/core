@@ -22,6 +22,7 @@ SUPPORTED_PLATFORMS = [
     'binary_sensor',
     'fan',
     'light',
+    'lock',
     'sensor',
     'switch'
 ]
