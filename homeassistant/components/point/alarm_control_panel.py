@@ -64,6 +64,10 @@ class MinutPointAlarmControl(AlarmControlPanel):
         """Send arm away command."""
         self._client.alarm_arm(self._home_id)
 
+    def alarm_arm_home(self, code=None):
+        """Send arm home command."""
+        self.alarm_arm_away()
+
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
