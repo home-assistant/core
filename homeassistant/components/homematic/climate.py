@@ -6,9 +6,10 @@ https://home-assistant.io/components/climate.homematic/
 """
 import logging
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.homematic import (
     ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS

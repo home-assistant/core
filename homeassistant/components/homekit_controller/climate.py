@@ -8,8 +8,9 @@ import logging
 
 from homeassistant.components.homekit_controller import (
     HomeKitEntity, KNOWN_ACCESSORIES)
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_HEAT, STATE_COOL, STATE_IDLE,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_COOL, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS, STATE_OFF, ATTR_TEMPERATURE
 

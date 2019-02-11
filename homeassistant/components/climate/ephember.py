@@ -8,12 +8,12 @@ import logging
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_OFF,
-    STATE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyephember==0.2.0']

@@ -4,10 +4,12 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.hive/
 """
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, STATE_HEAT, STATE_OFF, STATE_ON,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_HEAT,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 from homeassistant.components.hive import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']

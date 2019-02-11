@@ -1,5 +1,5 @@
 """Basic checks for HomeKitclimate."""
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     DOMAIN, SERVICE_SET_OPERATION_MODE, SERVICE_SET_TEMPERATURE)
 from tests.components.homekit_controller.common import (
     setup_test_component)
