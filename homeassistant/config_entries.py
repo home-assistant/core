@@ -258,7 +258,7 @@ class ConfigEntry:
             component = getattr(hass.components, self.domain)
 
         # Perform migration
-        if component == self.domain:
+        if component.DOMAIN == self.domain:
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
@@ -367,7 +367,7 @@ class ConfigEntry:
                               self.domain)
             if result:
                 # pylint: disable=protected-access
-                hass.config_entries._async_schedule_save()
+                hass.config_entries._async_schedule_save()  # type: ignore
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error migrating entry %s for %s',

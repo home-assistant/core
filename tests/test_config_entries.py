@@ -15,6 +15,14 @@ from tests.common import (
     MockPlatform, MockEntity)
 
 
+@config_entries.HANDLERS.register('test')
+@config_entries.HANDLERS.register('comp')
+class MockFlowHandler(config_entries.ConfigFlow):
+    """Define a mock flow handler"""
+
+    VERSION = 0
+
+
 @pytest.fixture
 def manager(hass):
     """Fixture of a loaded config manager."""
