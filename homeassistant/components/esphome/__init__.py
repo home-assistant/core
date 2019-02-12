@@ -330,6 +330,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
             # In the future another API will be set up so that the ESP can
             # notify HA of connectivity directly, but for new we'll use a
             # really short reconnect interval.
+            tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8**tries, 60.0)))
             _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
             await asyncio.sleep(wait_time)

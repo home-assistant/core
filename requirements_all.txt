@@ -110,7 +110,7 @@ aiofreepybox==0.0.6
 # homeassistant.components.camera.yi
 aioftp==0.12.0
 
-# homeassistant.components.remote.harmony
+# homeassistant.components.harmony.remote
 aioharmony==0.1.5
 
 # homeassistant.components.emulated_hue
@@ -535,7 +535,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190203.0
+home-assistant-frontend==20190212.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -956,7 +956,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==2.1.0
+pychromecast==2.5.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.1
@@ -1082,7 +1082,7 @@ pyirishrail==0.0.2
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
-# homeassistant.components.remote.itach
+# homeassistant.components.itach.remote
 pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
@@ -1469,7 +1469,7 @@ recollect-waste==1.0.1
 regenmaschine==1.1.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b7
+restrictedpython==4.0b8
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

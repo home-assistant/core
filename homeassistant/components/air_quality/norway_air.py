@@ -51,7 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     coordinates = {
         'lat': str(latitude),
@@ -82,7 +82,6 @@ class AirSensor(AirQualityEntity):
         import metno
         self._name = name
         self._api = metno.AirQualityData(coordinates, forecast, session)
-        self._attrs = {}
 
     @property
     def attribution(self) -> str:
