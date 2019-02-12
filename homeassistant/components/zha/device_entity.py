@@ -30,6 +30,9 @@ BATTERY_SIZES = {
     255: 'Unknown'
 }
 
+STATE_ONLINE = 'online'
+STATE_OFFLINE = 'offline'
+
 
 class ZhaDeviceEntity(ZhaEntity):
     """A base class for ZHA devices."""
@@ -116,9 +119,9 @@ class ZhaDeviceEntity(ZhaEntity):
     def async_set_available(self, available):
         """Set entity availability."""
         if available:
-            self._state = 'online'
+            self._state = STATE_ONLINE
         else:
-            self._state = 'offline'
+            self._state = STATE_OFFLINE
         super().async_set_available(available)
 
     async def _async_init_battery_values(self):
