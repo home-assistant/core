@@ -415,8 +415,7 @@ async def test_updating_entry_data(manager):
     )
     entry.add_to_manager(manager)
 
-    manager.async_update_entry(entry, state=config_entries.ENTRY_STATE_LOADED)
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    manager.async_update_entry(entry)
     assert entry.data == {
         'first': True
     }
@@ -424,7 +423,6 @@ async def test_updating_entry_data(manager):
     manager.async_update_entry(entry, data={
         'second': True
     })
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
     assert entry.data == {
         'second': True
     }
