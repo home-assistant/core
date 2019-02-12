@@ -90,7 +90,7 @@ abodepy==0.15.0
 afsapi==0.0.4
 
 # homeassistant.components.ambient_station
-aioambient==0.1.0
+aioambient==0.1.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.20
