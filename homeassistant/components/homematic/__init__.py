@@ -116,6 +116,7 @@ HM_ATTRIBUTE_SUPPORT = {
     # rssi_device and rssi_peer
     'RSSI_DEVICE': ['rssi', {}],
     'RSSI_PEER': ['rssi_peer', {}],
+    # pylint: disable=duplicate-key
     'RSSI_DEVICE': ['rssi_device', {}],
     'VALVE_STATE': ['valve', {}],
     'LEVEL': ['level', {}],
