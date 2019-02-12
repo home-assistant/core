@@ -95,3 +95,8 @@ class AugustLock(LockDevice):
         return {
             ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
         }
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the lock."""
+        return '{:s}_lock'.format(self._lock.device_id)

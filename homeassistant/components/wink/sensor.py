@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.info("Device is not a sensor")
 
 
-class WinkSensorDevice(WinkDevice, Entity):
+class WinkSensorDevice(WinkDevice):
     """Representation of a Wink sensor."""
 
     def __init__(self, wink, hass):
@@ -87,3 +86,14 @@ class WinkSensorDevice(WinkDevice, Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        super_attrs = super().device_state_attributes
+        try:
+            super_attrs['egg_times'] = self.wink.eggs()
+        except AttributeError:
+            # Ignore error, this sensor isn't an eggminder
+            pass
+        return super_attrs

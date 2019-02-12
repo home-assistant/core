@@ -4,6 +4,7 @@ Support for Zigbee Home Automation devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
+import asyncio
 import logging
 import os
 import types
@@ -17,14 +18,15 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
-from .core.gateway import ZHAGateway
-from .const import (
+from .core import ZHAGateway
+from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
-    DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS,
-    ENABLE_QUIRKS)
+    DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
+from .core.gateway import establish_device_mappings
+from .core.listeners import populate_listener_registry
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -87,9 +89,16 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    establish_device_mappings()
+    populate_listener_registry()
+
+    for component in COMPONENTS:
+        hass.data[DATA_ZHA][component] = (
+            hass.data[DATA_ZHA].get(component, {})
+        )
+
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
-
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
     if config.get(ENABLE_QUIRKS, True):
@@ -137,14 +146,30 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
-    application_controller = ControllerApplication(radio, database)
     zha_gateway = ZHAGateway(hass, config)
+
+    # Patch handle_message until zigpy can provide an event here
+    def handle_message(sender, is_reply, profile, cluster,
+                       src_ep, dst_ep, tsn, command_id, args):
+        """Handle message from a device."""
+        if sender.last_seen is None and not sender.initializing:
+            if sender.ieee in zha_gateway.devices:
+                device = zha_gateway.devices[sender.ieee]
+                device.update_available(True)
+        return sender.handle_message(
+            is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args)
+
+    application_controller = ControllerApplication(radio, database)
+    application_controller.handle_message = handle_message
     application_controller.add_listener(zha_gateway)
     await application_controller.startup(auto_form=True)
 
+    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(application_controller.ieee)
+
+    init_tasks = []
     for device in application_controller.devices.values():
-        hass.async_create_task(
-            zha_gateway.async_device_initialized(device, False))
+        init_tasks.append(zha_gateway.async_device_initialized(device, False))
+    await asyncio.gather(*init_tasks)
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
@@ -156,8 +181,6 @@ async def async_setup_entry(hass, config_entry):
         manufacturer="ZHA",
         model=radio_description,
     )
-
-    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(application_controller.ieee)
 
     for component in COMPONENTS:
         hass.async_create_task(

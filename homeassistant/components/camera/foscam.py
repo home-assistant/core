@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyfoscam==1.2']
+REQUIREMENTS = ['libpyfoscam==1.0']
 
 CONF_IP = 'ip'
 
@@ -43,7 +43,7 @@ class FoscamCam(Camera):
 
     def __init__(self, device_info):
         """Initialize a Foscam camera."""
-        from foscam import FoscamCamera
+        from libpyfoscam import FoscamCamera
 
         super(FoscamCam, self).__init__()
 

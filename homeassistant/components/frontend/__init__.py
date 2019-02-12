@@ -24,7 +24,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20190201.0']
+from .storage import async_setup_frontend_storage
+
+REQUIREMENTS = ['home-assistant-frontend==20190203.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -195,6 +197,7 @@ def add_manifest_json_key(key, val):
 
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    await async_setup_frontend_storage(hass)
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_PANELS, websocket_get_panels, SCHEMA_GET_PANELS)
     hass.components.websocket_api.async_register_command(

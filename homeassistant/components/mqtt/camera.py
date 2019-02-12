@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttDiscoveryUpdate, subscription)
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
+    subscription)
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import CONF_NAME
@@ -47,7 +48,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT camera."""
         try:
-            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
+            # state_topic is implicitly set by MQTT discovery, remove it
+            discovery_payload.pop(CONF_STATE_TOPIC, None)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(config, async_add_entities,
                                       discovery_hash)
@@ -89,6 +92,8 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
+        # state_topic is implicitly set by MQTT discovery, remove it
+        discovery_payload.pop(CONF_STATE_TOPIC, None)
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         await self._subscribe_topics()
@@ -105,7 +110,8 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
             self.hass, self._sub_state,
             {'state_topic': {'topic': self._config.get(CONF_TOPIC),
                              'msg_callback': message_received,
-                             'qos': self._qos}})
+                             'qos': self._qos,
+                             'encoding': None}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""

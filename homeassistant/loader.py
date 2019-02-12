@@ -18,7 +18,6 @@ from types import ModuleType
 from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # noqa pylint: disable=unused-import
 
 from homeassistant.const import PLATFORM_FORMAT
-from homeassistant.util import OrderedSet
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
@@ -39,15 +38,37 @@ PATH_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
+class LoaderError(Exception):
+    """Loader base error."""
+
+
+class ComponentNotFound(LoaderError):
+    """Raised when a component is not found."""
+
+    def __init__(self, domain: str) -> None:
+        """Initialize a component not found error."""
+        super().__init__("Component {} not found.".format(domain))
+        self.domain = domain
+
+
+class CircularDependency(LoaderError):
+    """Raised when a circular dependency is found when resolving components."""
+
+    def __init__(self, from_domain: str, to_domain: str) -> None:
+        """Initialize circular dependency error."""
+        super().__init__("Circular dependency detected: {} -> {}.".format(
+            from_domain, to_domain))
+        self.from_domain = from_domain
+        self.to_domain = to_domain
+
+
 def set_component(hass,  # type: HomeAssistant
                   comp_name: str, component: Optional[ModuleType]) -> None:
     """Set a component in the cache.
 
     Async friendly.
     """
-    cache = hass.data.get(DATA_KEY)
-    if cache is None:
-        cache = hass.data[DATA_KEY] = {}
+    cache = hass.data.setdefault(DATA_KEY, {})
     cache[comp_name] = component
 
 
@@ -60,13 +81,22 @@ def get_platform(hass,  # type: HomeAssistant
     platform = _load_file(hass, PLATFORM_FORMAT.format(
         domain=domain, platform=platform_name))
 
-    if platform is None:
-        # Turn it around for legacy purposes
-        platform = _load_file(hass, PLATFORM_FORMAT.format(
-            domain=platform_name, platform=domain))
+    if platform is not None:
+        return platform
+
+    # Legacy platform check: light/hue.py
+    platform = _load_file(hass, PLATFORM_FORMAT.format(
+        domain=platform_name, platform=domain))
 
     if platform is None:
         _LOGGER.error("Unable to find platform %s", platform_name)
+        return None
+
+    if platform.__name__.startswith(PATH_CUSTOM_COMPONENTS):
+        _LOGGER.warning(
+            "Integrations need to be in their own folder. Change %s/%s.py to "
+            "%s/%s.py. This will stop working soon.",
+            domain, platform_name, platform_name, domain)
 
     return platform
 
@@ -228,57 +258,46 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
     return func
 
 
-def load_order_component(hass,  # type: HomeAssistant
-                         comp_name: str) -> OrderedSet:
-    """Return an OrderedSet of components in the correct order of loading.
+def component_dependencies(hass,  # type: HomeAssistant
+                           comp_name: str) -> Set[str]:
+    """Return all dependencies and subdependencies of components.
 
-    Returns an empty list if a circular dependency is detected
-    or the component could not be loaded. In both cases, the error is
-    logged.
+    Raises CircularDependency if a circular dependency is found.
 
     Async friendly.
     """
-    return _load_order_component(hass, comp_name, OrderedSet(), set())
+    return _component_dependencies(hass, comp_name, set(), set())
 
 
-def _load_order_component(hass,  # type: HomeAssistant
-                          comp_name: str, load_order: OrderedSet,
-                          loading: Set) -> OrderedSet:
-    """Recursive function to get load order of components.
+def _component_dependencies(hass,  # type: HomeAssistant
+                            comp_name: str, loaded: Set[str],
+                            loading: Set) -> Set[str]:
+    """Recursive function to get component dependencies.
 
     Async friendly.
     """
     component = get_component(hass, comp_name)
 
-    # If None it does not exist, error already thrown by get_component.
     if component is None:
-        return OrderedSet()
+        raise ComponentNotFound(comp_name)
 
     loading.add(comp_name)
 
     for dependency in getattr(component, 'DEPENDENCIES', []):
         # Check not already loaded
-        if dependency in load_order:
+        if dependency in loaded:
             continue
 
         # If we are already loading it, we have a circular dependency.
         if dependency in loading:
-            _LOGGER.error("Circular dependency detected: %s -> %s",
-                          comp_name, dependency)
-            return OrderedSet()
+            raise CircularDependency(comp_name, dependency)
 
-        dep_load_order = _load_order_component(
-            hass, dependency, load_order, loading)
+        dep_loaded = _component_dependencies(
+            hass, dependency, loaded, loading)
 
-        # length == 0 means error loading dependency or children
-        if not dep_load_order:
-            _LOGGER.error("Error loading %s dependency: %s",
-                          comp_name, dependency)
-            return OrderedSet()
+        loaded.update(dep_loaded)
 
-        load_order.update(dep_load_order)
-
-    load_order.add(comp_name)
+    loaded.add(comp_name)
     loading.remove(comp_name)
 
-    return load_order
+    return loaded

@@ -15,9 +15,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_USERNAME
+    CONF_USERNAME,
+    CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
 
@@ -25,6 +27,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'
+DATA_UPDATED = 'transmission_data_updated'
 DATA_TRANSMISSION = 'data_transmission'
 
 DEFAULT_NAME = 'Transmission'
@@ -42,6 +45,8 @@ SENSOR_TYPES = {
     'started_torrents': ['Started Torrents', None],
 }
 
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=120)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -50,20 +55,21 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(TURTLE_MODE, default=False): cv.boolean,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_status']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SCAN_INTERVAL = timedelta(minutes=2)
-
 
 def setup(hass, config):
     """Set up the Transmission Component."""
     host = config[DOMAIN][CONF_HOST]
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
     port = config[DOMAIN][CONF_PORT]
+    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
@@ -79,21 +85,25 @@ def setup(hass, config):
 
     tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
         hass, config, api)
+
+    tm_data.update()
     tm_data.init_torrent_list()
 
     def refresh(event_time):
         """Get the latest data from Transmission."""
         tm_data.update()
 
-    track_time_interval(hass, refresh, SCAN_INTERVAL)
+    track_time_interval(hass, refresh, scan_interval)
 
     sensorconfig = {
         'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
         'client_name': config[DOMAIN][CONF_NAME]}
+
     discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
 
     if config[DOMAIN][TURTLE_MODE]:
         discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
+
     return True
 
 
@@ -122,6 +132,8 @@ class TransmissionData:
 
             self.check_completed_torrent()
             self.check_started_torrent()
+
+            dispatcher_send(self.hass, DATA_UPDATED)
 
             _LOGGER.debug("Torrent Data updated")
             self.available = True
@@ -185,4 +197,7 @@ class TransmissionData:
 
     def get_alt_speed_enabled(self):
         """Get the alternative speed flag."""
+        if self.session is None:
+            return None
+
         return self.session.alt_speed_enabled

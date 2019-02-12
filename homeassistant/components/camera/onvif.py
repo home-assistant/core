@@ -213,7 +213,8 @@ class ONVIFHassCamera(Camera):
             if not self._input:
                 return None
 
-        stream = CameraMjpeg(self.hass.data[DATA_FFMPEG].binary,
+        ffmpeg_manager = self.hass.data[DATA_FFMPEG]
+        stream = CameraMjpeg(ffmpeg_manager.binary,
                              loop=self.hass.loop)
         await stream.open_camera(
             self._input, extra_cmd=self._ffmpeg_arguments)
@@ -221,7 +222,7 @@ class ONVIFHassCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                ffmpeg_manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()
 
