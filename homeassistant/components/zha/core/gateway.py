@@ -133,7 +133,7 @@ class ZHAGateway:
         await self.async_update_device(sender)
 
     async def async_update_device(self, sender):
-        """Update device that has just became available."""
+        """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
             device.update_available(True)
