@@ -106,6 +106,7 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
+# pylint: disable=duplicate-key
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
@@ -116,7 +117,6 @@ HM_ATTRIBUTE_SUPPORT = {
     # rssi_device and rssi_peer
     'RSSI_DEVICE': ['rssi', {}],
     'RSSI_PEER': ['rssi_peer', {}],
-    # pylint: disable=duplicate-key
     'RSSI_DEVICE': ['rssi_device', {}],
     'VALVE_STATE': ['valve', {}],
     'LEVEL': ['level', {}],
