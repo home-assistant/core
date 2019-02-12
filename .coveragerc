@@ -13,6 +13,7 @@ omit =
     homeassistant/components/abode/*
     homeassistant/components/ads/*
     homeassistant/components/air_quality/nilu.py
+    homeassistant/components/air_quality/norway_air.py
     homeassistant/components/air_quality/opensensemap.py
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
