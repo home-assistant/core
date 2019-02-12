@@ -1,7 +1,7 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -544,6 +544,44 @@ async def test_updating_entry_data(manager):
     }
 
 
+async def test_update_entry_options_and_trigger_listener(hass, manager):
+    """Test that we can update entry options and trigger listener."""
+    entry = MockConfigEntry(
+        domain='test',
+        options={'first': True},
+    )
+    entry.add_to_manager(manager)
+
+    def update_listener(hass, entry):
+        """Test function."""
+        hass.data['update_listener'] = True
+
+    entry.add_update_listener(update_listener)
+
+    manager.async_update_entry(entry, options={
+        'second': True
+    })
+
+    assert entry.options == {
+        'second': True
+    }
+    assert hass.data['update_listener'] is True
+
+
+async def test_update_entry_no_change_does_not_call_save(manager):
+    """Test that we only call save when new data or options are input."""
+    entry = MockConfigEntry(
+        domain='test',
+    )
+    entry.add_to_manager(manager)
+
+    with patch('homeassistant.config_entries'
+               '.ConfigEntries._async_schedule_save') as mock_save:
+        manager.async_update_entry(entry)
+
+    assert not mock_save.mock_calls
+
+
 async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
     entry = MockConfigEntry(domain='test')
@@ -588,3 +626,43 @@ async def test_setup_retrying_during_unload(hass):
 
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(mock_call.return_value.mock_calls) == 1
+
+
+async def test_entry_options(hass, manager):
+    """Test that we can set options on an entry."""
+    entry = MockConfigEntry(
+        domain='test',
+        data={'first': True},
+        options=None
+    )
+    entry.add_to_manager(manager)
+
+    class TestConfigFlow:
+        """"""
+
+        @staticmethod
+        def async_get_options_flow(config, options):
+            """Config entry static method."""
+            class TestOptionsFlowHandler(data_entry_flow.FlowHandler):
+                """Handle a Test options flow."""
+
+                def __init__(self, config, options):
+                    """"""
+                    pass
+            return TestOptionsFlowHandler(config, options)
+
+    config_entries.HANDLERS['test'] = TestConfigFlow()
+
+    flow = manager.options._async_create_flow(
+        'test', context={'source': 'test'}, entry=entry)
+
+    result = manager.options._async_finish_flow(
+        flow, {'data': {'second': True}})
+
+    assert entry.data == {
+        'first': True
+    }
+
+    assert entry.options == {
+        'second': True
+    }
