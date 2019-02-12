@@ -83,6 +83,9 @@ ephem==3.7.6.0
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.8
 
+# homeassistant.components.feedreader
+feedparser-homeassistant==5.2.2.dev1
+
 # homeassistant.components.sensor.foobot
 foobot_async==0.3.1
 
