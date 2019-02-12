@@ -8,6 +8,7 @@ https://home-assistant.io/components/zha/
 import logging
 import time
 
+from homeassistant.core import callback
 from homeassistant.util import slugify
 from .entity import ZhaEntity
 from .const import LISTENER_BATTERY, SIGNAL_STATE_ATTR
@@ -116,6 +117,7 @@ class ZhaDeviceEntity(ZhaEntity):
                 if self._battery_listener:
                     await self.async_get_latest_battery_reading()
 
+    @callback
     def async_set_available(self, available):
         """Set entity availability."""
         if available:
