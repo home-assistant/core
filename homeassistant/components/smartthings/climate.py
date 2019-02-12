@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsThermostat(device) for device in broker.devices.values()
-         if is_climate(device)], True)
+         if is_climate(device)])
 
 
 def is_climate(device):
@@ -85,13 +85,15 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
-        self._base_supported_features = self._determine_base_features()
-        self._supported_features = 0
+        self._supported_features = self._determine_features()
 
-    def _determine_base_features(self):
+    def _determine_features(self):
         from pysmartthings import Capability
 
-        flags = SUPPORT_OPERATION_MODE
+        flags = SUPPORT_OPERATION_MODE \
+            | SUPPORT_TARGET_TEMPERATURE \
+            | SUPPORT_TARGET_TEMPERATURE_LOW \
+            | SUPPORT_TARGET_TEMPERATURE_HIGH
         if self._device.get_capability(
                 Capability.thermostat_fan_mode, Capability.thermostat):
             flags |= SUPPORT_FAN_MODE
@@ -145,17 +147,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
-        """Update the device."""
-        # Flags need to be set dynamically based on operation mode.
-        flags = self._base_supported_features
-        if self.current_operation == STATE_AUTO:
-            flags |= SUPPORT_TARGET_TEMPERATURE_LOW \
-                     | SUPPORT_TARGET_TEMPERATURE_HIGH
-        elif self.current_operation in (STATE_HEAT, STATE_COOL):
-            flags |= SUPPORT_TARGET_TEMPERATURE
-        self._supported_features = flags
-
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
@@ -204,20 +195,24 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self.current_operation == STATE_COOL:
-            return self.target_temperature_high
+            return self._device.status.cooling_setpoint
         if self.current_operation == STATE_HEAT:
-            return self.target_temperature_low
-        return self.current_temperature
+            return self._device.status.heating_setpoint
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        return self._device.status.cooling_setpoint
+        if self.current_operation == STATE_AUTO:
+            return self._device.status.cooling_setpoint
+        return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        return self._device.status.heating_setpoint
+        if self.current_operation == STATE_AUTO:
+            return self._device.status.heating_setpoint
+        return None
 
     @property
     def temperature_unit(self):

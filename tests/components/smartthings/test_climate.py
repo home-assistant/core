@@ -120,7 +120,8 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     assert state.state == STATE_AUTO
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
-        SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW
+        SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW | \
+        SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] == 'idle'
     assert state.attributes[ATTR_OPERATION_LIST] == {
         STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_OFF}
@@ -136,7 +137,9 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
     await setup_platform(hass, CLIMATE_DOMAIN, basic_thermostat)
     state = hass.states.get('climate.basic_thermostat')
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_OPERATION_MODE
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
+        SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | \
+        SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] is None
     assert state.attributes[ATTR_OPERATION_LIST] == {
         STATE_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL}
@@ -150,6 +153,7 @@ async def test_thermostat_entity_state(hass, thermostat):
     assert state.state == STATE_HEAT
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
+        SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW | \
         SUPPORT_TARGET_TEMPERATURE
     assert state.attributes[climate.ATTR_OPERATION_STATE] == 'fan only'
     assert state.attributes[ATTR_OPERATION_LIST] == {
