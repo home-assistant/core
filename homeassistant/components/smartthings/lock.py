@@ -53,14 +53,14 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
 
     @property
     def device_state_attributes(self):
-        """Return all state attributes provided by SmartThings."""
+        """Return device specific state attributes."""
         from pysmartthings import Attribute
-        state_attrs = {}
-        for attr, status in self._device.status.attributes.items():
-            if not status.value:
-                continue
-            # Convert camelCase to snake_case
-            new_attr = ''.join('_' + char.lower() if char.isupper() else char
-              for char in attr).lstrip('_')
-            state_attrs[new_attr] = status.value
-        return state_attrs
+        attrs = self._device.status.attributes[Attribute.lock] or Object()
+        lock_data = attrs.data or {}
+        raw_lock_state = attrs.value or None
+        return {
+            'method': lock_data.get('method'),
+            'code_id': lock_data.get('codeId'),
+            'timeout': lock_data.get('timeout'),
+            'lock_state': raw_lock_state
+        }
