@@ -1240,7 +1240,7 @@ pysma==0.3.1
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.0
+pysmartthings==0.6.1
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
