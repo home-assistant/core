@@ -2,7 +2,7 @@
 Support for Minut Point.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.point/
+https://home-assistant.io/components/point/
 """
 
 import logging
