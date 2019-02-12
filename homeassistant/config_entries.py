@@ -442,12 +442,10 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(self, entry, *, data=_UNDEF, state=_UNDEF):
+    def async_update_entry(self, entry, *, data=_UNDEF):
         """Update a config entry."""
         if data is not _UNDEF:
             entry.data = data
-        if state is not _UNDEF:
-            entry.state = state
         self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):
