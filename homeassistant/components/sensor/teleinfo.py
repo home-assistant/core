@@ -5,10 +5,10 @@ Teleinfo is a French specific protocol used in electricity smart meters.
 It provides real time information on power consumption, rates and current on
 a user accessible serial port.
 
-For more details about this platform, please refer to the documentation at
-https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf
-
 Work based on https://github.com/nlamirault
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.teleinfo/
 
 Sample configuration.yaml
 
@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
-    async_add_entities([sensor], True)
+    async_add_entities([sensor])
 
 
 class SerialTeleinfoSensor(Entity):
@@ -109,13 +109,7 @@ class SerialTeleinfoSensor(Entity):
                 continue
 
             if (not is_over) and ('\x03' not in line):
-                # Don't use strip() here because the checksum can be ' '.
-                if len(line.split()) == 2:
-                    # The checksum char is ' '.
-                    name, value = line.split()
-                else:
-                    name, value = line.split()[0:2]
-
+                name, value = line.split()[0:2]
                 _LOGGER.debug(" Got : [%s] =  (%s)", name, value)
                 self._attributes[name] = value
 
@@ -147,7 +141,6 @@ class SerialTeleinfoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return self._attributes
 
     @property

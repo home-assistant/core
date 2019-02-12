@@ -134,6 +134,7 @@ homeassistant/components/sensor/statistics.py @fabaff
 homeassistant/components/sensor/swiss*.py @fabaff
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tautulli.py @ludeeus
+homeassistant/components/sensor/teleinfo.py @guiguid
 homeassistant/components/sensor/time_data.py @fabaff
 homeassistant/components/sensor/version.py @fabaff
 homeassistant/components/sensor/waqi.py @andrey-git
