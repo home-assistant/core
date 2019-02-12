@@ -684,12 +684,12 @@ class Options:
     @callback
     def _async_create_flow(
             self, handler_key: str, *,
-            context: dict, data: ConfigEntry) -> data_entry_flow.FlowHandler:
+            context: dict, entry: ConfigEntry) -> data_entry_flow.FlowHandler:
         """"""
         flow = HANDLERS[handler_key].async_get_options_flow(
-            data['data'], data['options'])
+            entry.data, entry.options)
         flow.init_step = context['source']
-        self.active_options[flow.flow_id] = data
+        self.active_options[flow.flow_id] = entry
         return flow
 
     @callback
