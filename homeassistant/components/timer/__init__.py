@@ -43,11 +43,11 @@ SERVICE_CANCEL = 'cancel'
 SERVICE_FINISH = 'finish'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SERVICE_SCHEMA_DURATION = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_DURATION,
                  default=timedelta(DEFAULT_DURATION)): cv.time_period,
 })
