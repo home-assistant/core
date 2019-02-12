@@ -75,8 +75,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         if self._async_unsub_hook_dispatcher_connect:
             self._async_unsub_hook_dispatcher_connect()
 
-    @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """Update the value of the sensor."""
         if not self.is_updated:
             return
