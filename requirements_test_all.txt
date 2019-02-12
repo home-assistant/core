@@ -84,7 +84,7 @@ ephem==3.7.6.0
 evohomeclient==0.2.8
 
 # homeassistant.components.feedreader
-feedparser==5.2.1
+feedparser-homeassistant==5.2.2.dev1
 
 # homeassistant.components.sensor.foobot
 foobot_async==0.3.1
