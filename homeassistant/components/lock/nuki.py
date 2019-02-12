@@ -6,6 +6,7 @@ https://home-assistant.io/components/lock.nuki/
 """
 from datetime import timedelta
 import logging
+import requests
 
 import voluptuous as vol
 
@@ -141,8 +142,8 @@ class NukiLock(LockDevice):
         """Update the nuki lock properties."""
         try:
             self._nuki_lock.update(aggressive=False)
-        except requests.exceptions.ConnectionError:
-            self._lock_reachable = false
+        except requests.exceptions.RequestException:
+            self._lock_reachable = False
         else:
             self._name = self._nuki_lock.name
             self._locked = self._nuki_lock.is_locked
@@ -175,7 +176,7 @@ class NukiLock(LockDevice):
         """Update the nuki lock properties."""
         try:
             self._nuki_lock.update(aggressive=True)
-        except requests.exceptions.ConnectionError:
-            self._lock_reachable = false
+        except requests.exceptions.RequestException:
+            self._lock_reachable = False
         else:
             self._lock_reachable = self._nuki_lock.state != 255
