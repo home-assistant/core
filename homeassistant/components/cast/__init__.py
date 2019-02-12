@@ -4,7 +4,7 @@ from homeassistant.helpers import config_entry_flow
 
 
 DOMAIN = 'cast'
-REQUIREMENTS = ['pychromecast==2.1.0']
+REQUIREMENTS = ['pychromecast==2.5.0']
 
 
 async def async_setup(hass, config):
