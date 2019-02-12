@@ -84,6 +84,7 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/climate/zhong_hong.py
+    homeassistant/components/climate_scheduler.py
     homeassistant/components/cloudflare/*
     homeassistant/components/coinbase/*
     homeassistant/components/comfoconnect/*
