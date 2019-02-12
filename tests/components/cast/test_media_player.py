@@ -12,8 +12,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
-    async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.cast import media_player as cast
 from homeassistant.setup import async_setup_component
 
@@ -106,6 +105,19 @@ async def async_setup_media_player_cast(hass: HomeAssistantType,
 
 
 @asyncio.coroutine
+def test_start_discovery_called_once(hass):
+    """Test pychromecast.start_discovery called exactly once."""
+    with patch('pychromecast.start_discovery',
+               return_value=(None, None)) as start_discovery:
+        yield from async_setup_cast(hass)
+
+        assert start_discovery.call_count == 1
+
+        yield from async_setup_cast(hass)
+        assert start_discovery.call_count == 1
+
+
+@asyncio.coroutine
 def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
     browser = MagicMock(zc={})
@@ -130,28 +142,6 @@ def test_stop_discovery_called_on_stop(hass):
         yield from async_setup_cast(hass)
 
         assert start_discovery.call_count == 1
-
-
-async def test_internal_discovery_callback_only_generates_once(hass):
-    """Test discovery only called once per device."""
-    discover_cast, _ = await async_setup_cast_internal_discovery(hass)
-    info = get_fake_chromecast_info()
-
-    signal = MagicMock()
-    async_dispatcher_connect(hass, 'cast_discovered', signal)
-
-    with patch('pychromecast.dial.get_device_status', return_value=None):
-        # discovering a cast device should call the dispatcher
-        discover_cast('the-service', info)
-        await hass.async_block_till_done()
-        discover = signal.mock_calls[0][1][0]
-        assert discover == info
-        signal.reset_mock()
-
-        # discovering it a second time shouldn't
-        discover_cast('the-service', info)
-        await hass.async_block_till_done()
-        assert signal.call_count == 0
 
 
 async def test_internal_discovery_callback_fill_out(hass):
