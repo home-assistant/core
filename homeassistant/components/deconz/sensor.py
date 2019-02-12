@@ -1,9 +1,4 @@
-"""
-Support for deCONZ sensor.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.deconz/
-"""
+"""Support for deCONZ sensors."""
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback

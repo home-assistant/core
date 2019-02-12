@@ -1,9 +1,4 @@
-"""
-Support for deCONZ light.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.deconz/
-"""
+"""Support for deCONZ light."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,

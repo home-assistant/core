@@ -1,9 +1,4 @@
-"""
-Support for Google Calendar event device sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar/
-"""
+"""Support for Google Calendar event device sensors."""
 import logging
 from datetime import timedelta
 import re

@@ -1,9 +1,4 @@
-"""
-Support for August lock.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.august/
-"""
+"""Support for August lock."""
 import logging
 from datetime import timedelta
 

@@ -1,9 +1,4 @@
-"""
-Support for deCONZ scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.deconz/
-"""
+"""Support for deCONZ scenes."""
 from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.scene import Scene
 from homeassistant.core import callback

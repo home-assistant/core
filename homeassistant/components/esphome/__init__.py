@@ -1,4 +1,9 @@
-"""Support for esphome devices."""
+"""
+Support for esphome devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/esphome/
+"""
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
@@ -30,9 +35,11 @@ if TYPE_CHECKING:
     from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo, \
         ServiceCall
 
-DOMAIN = 'esphome'
 REQUIREMENTS = ['aioesphomeapi==1.5.0']
 
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'esphome'
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
 DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
@@ -52,8 +59,6 @@ HA_COMPONENTS = [
     'sensor',
     'switch',
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)

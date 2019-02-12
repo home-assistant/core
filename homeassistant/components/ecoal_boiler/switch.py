@@ -1,9 +1,4 @@
-"""
-Allows to configuration ecoal (esterownik.pl) pumps as switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.ecoal_boiler/
-"""
+"""Allows to configuration ecoal (esterownik.pl) pumps as switches."""
 import logging
 from typing import Optional
 

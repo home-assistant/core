@@ -1,9 +1,4 @@
-"""
-Support for Blink Alarm Control Panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.blink/
-"""
+"""Support for Blink Alarm Control Panel."""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel

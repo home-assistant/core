@@ -1,9 +1,4 @@
-"""
-Update the IP addresses of your Cloudflare DNS records.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cloudflare/
-"""
+"""Update the IP addresses of your Cloudflare DNS records."""
 from datetime import timedelta
 import logging
 
