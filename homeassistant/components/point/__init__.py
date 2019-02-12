@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -241,15 +240,14 @@ class MinutPointEntity(Entity):
         _LOGGER.debug('Created device %s', self)
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
-        await self.hass.async_add_executor_job(self._update_callback)
+        await self._update_callback()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
 
-    @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """Update the value of the sensor."""
         pass
 

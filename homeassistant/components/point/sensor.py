@@ -13,7 +13,6 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import parse_datetime
 
@@ -50,12 +49,12 @@ class MinutPointSensor(MinutPointEntity):
         super().__init__(point_client, device_id, device_class)
         self._device_prop = SENSOR_TYPES[device_class]
 
-    @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """Update the value of the sensor."""
         if self.is_updated:
             _LOGGER.debug('Update sensor value for %s', self)
-            self._value = self.device.sensor(self.device_class)
+            self._value = await self.hass.async_add_executor_job(
+                self.device.sensor, self.device_class)
             self._updated = parse_datetime(self.device.last_update)
             self.async_schedule_update_ha_state()
 
