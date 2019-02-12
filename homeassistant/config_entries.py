@@ -187,6 +187,8 @@ SAVE_DELAY = 1
 ENTRY_STATE_LOADED = 'loaded'
 # There was an error while trying to set up this config entry
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
+# There was an error while trying to migrate the config entry to a new version
+ENTRY_STATE_MIGRATION_ERROR = 'migration_error'
 # The config entry was not ready to be set up yet, but might be later
 ENTRY_STATE_SETUP_RETRY = 'setup_retry'
 # The config entry has not been loaded
@@ -258,7 +260,7 @@ class ConfigEntry:
         # Perform migration
         if component == self.domain:
             if not await self.async_migrate(hass):
-                self.state = ENTRY_STATE_SETUP_ERROR
+                self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
 
         try:
