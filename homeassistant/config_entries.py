@@ -255,6 +255,12 @@ class ConfigEntry:
         if component is None:
             component = getattr(hass.components, self.domain)
 
+        # Perform migration
+        if component == self.domain:
+            if not await self.async_migrate(hass):
+                self.state = ENTRY_STATE_SETUP_ERROR
+                return
+
         try:
             result = await component.async_setup_entry(hass, self)
 
@@ -334,24 +340,32 @@ class ConfigEntry:
     async def async_migrate(self, hass: HomeAssistant):
         """Migrate an entry.
 
-        Returns True if migration was needed and successful.
+        Returns True if config entry is up-to-date or has been migrated.
         """
-        component = getattr(hass.components, self.domain)
-        supports_migrate = hasattr(component, 'async_migrate_entry')
-        if not supports_migrate:
-            return False
-
         handler = HANDLERS.get(self.domain)
         if handler is None:
+            _LOGGER.error("Flow handler not found for entry %s for %s",
+                          self.title, self.domain)
             return False
 
         if self.version == handler.VERSION:
+            return True
+
+        component = getattr(hass.components, self.domain)
+        supports_migrate = hasattr(component, 'async_migrate_entry')
+        if not supports_migrate:
+            _LOGGER.error("Migration handler not found for entry %s for %s",
+                          self.title, self.domain)
             return False
 
         try:
-            result = await component.async_migrate_entry(
-                hass, self, handler.VERSION)
-            assert isinstance(result, bool)
+            result = await component.async_migrate_entry(hass, self)
+            if not isinstance(result, bool):
+                _LOGGER.error('%s.async_migrate_entry did not return boolean',
+                              self.domain)
+            if result:
+                # pylint: disable=protected-access
+                hass.config_entries._async_schedule_save()
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error migrating entry %s for %s',
@@ -454,9 +468,8 @@ class ConfigEntries:
             self._entries = []
             return
 
-        any_migrated = False
-        for entry in config['entries']:
-            entry = ConfigEntry(
+        self._entries = [
+            ConfigEntry(
                 version=entry['version'],
                 domain=entry['domain'],
                 entry_id=entry['entry_id'],
@@ -466,13 +479,7 @@ class ConfigEntries:
                 # New in 0.79
                 connection_class=entry.get('connection_class',
                                            CONN_CLASS_UNKNOWN))
-
-            migrated = await entry.async_migrate(self.hass)
-            any_migrated = True if migrated else any_migrated
-            self._entries.append(entry)
-
-        if any_migrated:
-            self._async_schedule_save()
+            for entry in config['entries']]
 
     @callback
     def async_update_entry(self, entry, *, data):
@@ -576,7 +583,7 @@ class ConfigEntries:
         flow.init_step = source
         return flow
 
-    def _async_schedule_save(self) -> None:
+    def _async_schedule_save(self):
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
