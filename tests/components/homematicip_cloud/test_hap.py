@@ -1,6 +1,9 @@
 """Test HomematicIP Cloud accesspoint."""
 from unittest.mock import Mock, patch
 
+import pytest
+
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.homematicip_cloud import hap as hmipc
 from homeassistant.components.homematicip_cloud import const, errors
 from tests.common import mock_coro, mock_coro_func
@@ -82,9 +85,10 @@ async def test_hap_setup_connection_error():
         hmipc.HMIPC_NAME: 'hmip',
     }
     hap = hmipc.HomematicipHAP(hass, entry)
-    with patch.object(hap, 'get_hap',
-                      side_effect=errors.HmipcConnectionError):
-        assert await hap.async_setup() is False
+    with patch.object(
+            hap, 'get_hap', side_effect=errors.HmipcConnectionError
+    ), pytest.raises(ConfigEntryNotReady):
+        await hap.async_setup()
 
     assert len(hass.async_add_job.mock_calls) == 0
     assert len(hass.config_entries.flow.async_init.mock_calls) == 0
