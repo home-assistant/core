@@ -106,19 +106,6 @@ async def async_setup_media_player_cast(hass: HomeAssistantType,
 
 
 @asyncio.coroutine
-def test_start_discovery_called_once(hass):
-    """Test pychromecast.start_discovery called exactly once."""
-    with patch('pychromecast.start_discovery',
-               return_value=(None, None)) as start_discovery:
-        yield from async_setup_cast(hass)
-
-        assert start_discovery.call_count == 1
-
-        yield from async_setup_cast(hass)
-        assert start_discovery.call_count == 1
-
-
-@asyncio.coroutine
 def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
     browser = MagicMock(zc={})
@@ -324,35 +311,6 @@ async def test_entity_media_states(hass: HomeAssistantType):
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'unknown'
-
-
-async def test_switched_host(hass: HomeAssistantType):
-    """Test cast device listens for changed hosts and disconnects old cast."""
-    info = get_fake_chromecast_info()
-    full_info = attr.evolve(info, model_name='google home',
-                            friendly_name='Speaker', uuid=FakeUUID)
-
-    with patch('pychromecast.dial.get_device_status',
-               return_value=full_info):
-        chromecast, _ = await async_setup_media_player_cast(hass, full_info)
-
-    chromecast2 = get_fake_chromecast(info)
-    with patch('pychromecast._get_chromecast_from_host',
-               return_value=chromecast2) as get_chromecast:
-        async_dispatcher_send(hass, cast.SIGNAL_CAST_DISCOVERED, full_info)
-        await hass.async_block_till_done()
-        assert get_chromecast.call_count == 0
-
-        changed = attr.evolve(full_info, friendly_name='Speaker 2')
-        async_dispatcher_send(hass, cast.SIGNAL_CAST_DISCOVERED, changed)
-        await hass.async_block_till_done()
-        assert get_chromecast.call_count == 0
-
-        changed = attr.evolve(changed, host='host2')
-        async_dispatcher_send(hass, cast.SIGNAL_CAST_DISCOVERED, changed)
-        await hass.async_block_till_done()
-        assert get_chromecast.call_count == 1
-        assert chromecast.disconnect.call_count == 1
 
 
 async def test_disconnect_on_stop(hass: HomeAssistantType):
