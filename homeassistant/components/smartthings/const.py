@@ -20,6 +20,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SUPPORTED_PLATFORMS = [
     'binary_sensor',
+    'climate',
     'fan',
     'light',
     'sensor',
