@@ -368,14 +368,18 @@ class CastDevice(MediaPlayerDevice):
         """Initialize the cast device."""
         import pychromecast  # noqa: pylint: disable=unused-import
         self._cast_info = cast_info  # type: ChromecastInfo
-        self.services = set()
-        self.services.add(cast_info.service)
+        self.services = None
+        if cast_info.service:
+            self.services = set()
+            self.services.add(cast_info.service)
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
         self._available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
+        self._add_remove_handler = None
+        self._del_remove_handler = None
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -387,6 +391,12 @@ class CastDevice(MediaPlayerDevice):
                 return
             if self._cast_info.uuid != discover.uuid:
                 # Discovered is not our device.
+                return
+            if self.services is None:
+                _LOGGER.warning(
+                    "[%s %s (%s:%s)] Received update for manually added Cast",
+                    self.entity_id, self._cast_info.friendly_name,
+                    self._cast_info.host, self._cast_info.port)
                 return
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_create_task(self.async_set_cast_info(discover))
@@ -406,10 +416,12 @@ class CastDevice(MediaPlayerDevice):
             """Disconnect socket on Home Assistant stop."""
             await self._async_disconnect()
 
-        async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
-                                 async_cast_discovered)
-        async_dispatcher_connect(self.hass, SIGNAL_CAST_REMOVED,
-                                 async_cast_removed)
+        self._add_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_CAST_DISCOVERED,
+            async_cast_discovered)
+        self._del_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_CAST_REMOVED,
+            async_cast_removed)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
 
@@ -420,19 +432,24 @@ class CastDevice(MediaPlayerDevice):
             # Remove the entity from the added casts so that it can dynamically
             # be re-added again.
             self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
+        if self._add_remove_handler:
+            self._add_remove_handler()
+        if self._del_remove_handler:
+            self._del_remove_handler()
 
     async def async_set_cast_info(self, cast_info):
         """Set the cast information and set up the chromecast object."""
         import pychromecast
         self._cast_info = cast_info
 
-        if cast_info.service not in self.services:
-            _LOGGER.debug("[%s %s (%s:%s)] Got new service: %s (%s)",
-                          self.entity_id, self._cast_info.friendly_name,
-                          self._cast_info.host, self._cast_info.port,
-                          cast_info.service, self.services)
+        if self.services is not None:
+            if cast_info.service not in self.services:
+                _LOGGER.debug("[%s %s (%s:%s)] Got new service: %s (%s)",
+                              self.entity_id, self._cast_info.friendly_name,
+                              self._cast_info.host, self._cast_info.port,
+                              cast_info.service, self.services)
 
-        self.services.add(cast_info.service)
+            self.services.add(cast_info.service)
 
         if self._chromecast is not None:
             # Only setup the chromecast once, added elements to services
@@ -440,7 +457,7 @@ class CastDevice(MediaPlayerDevice):
             return
 
         # pylint: disable=protected-access
-        if len(self.services) == 1 and None in self.services:
+        if self.services is None:
             _LOGGER.debug(
                 "[%s %s (%s:%s)] Connecting to cast device by host %s",
                 self.entity_id, self._cast_info.friendly_name,
