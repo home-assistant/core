@@ -52,3 +52,17 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
     def is_locked(self):
         """Return true if lock is locked."""
         return self._device.status.lock == STATE_LOCKED
+
+    @property
+    def device_state_attributes(self):
+        """Return all state attributes provided by SmartThings."""
+        from pysmartthings import Attribute
+        state_attrs = {}
+        for attr, status in self._device.status.attributes.items():
+            if not status.value:
+                continue
+            # Convert camelCase to snake_case
+            new_attr = ''.join('_' + char.lower() if char.isupper() else char
+              for char in attr).lstrip('_')
+            state_attrs[new_attr] = status.value
+        return state_attrs
