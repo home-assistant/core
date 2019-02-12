@@ -106,7 +106,7 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
-# pylint: disable=duplicate-key
+# noqa pylint: disable=duplicate-key
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
