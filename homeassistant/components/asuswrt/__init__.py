@@ -18,9 +18,9 @@ CONF_REQUIRE_IP = 'require_ip'
 CONF_SENSORS = 'sensors'
 CONF_SSH_KEY = 'ssh_key'
 
+DOMAIN = "asuswrt"
 DATA_ASUSWRT = DOMAIN
 DEFAULT_SSH_PORT = 22
-DOMAIN = "asuswrt"
 
 SECRET_GROUP = 'Password or SSH Key'
 SENSOR_TYPES = ['upload_speed', 'download_speed', 'download', 'upload']

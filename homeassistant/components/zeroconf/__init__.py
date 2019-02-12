@@ -1,9 +1,4 @@
-"""
-This module exposes Home Assistant via Zeroconf.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zeroconf/
-"""
+"""Support for exposing Home Assistant via Zeroconf."""
 import logging
 import socket
 
