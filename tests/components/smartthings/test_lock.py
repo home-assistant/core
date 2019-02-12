@@ -30,7 +30,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory('Lock_1', [Capability.lock],
-                            {Attribute.lock: 'on'})
+                            {Attribute.lock: 'unlocked'})
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
@@ -56,7 +56,7 @@ async def test_lock(hass, device_factory):
     await setup_platform(hass, LOCK_DOMAIN, device)
     # Act
     await hass.services.async_call(
-        'lock', 'lock', {'entity_id': 'lock.lock_1'},
+        LOCK_DOMAIN, 'lock', {'entity_id': 'lock.lock_1'},
         blocking=True)
     # Assert
     state = hass.states.get('lock.lock_1')
@@ -72,7 +72,7 @@ async def test_unlock(hass, device_factory):
     await setup_platform(hass, LOCK_DOMAIN, device)
     # Act
     await hass.services.async_call(
-        'lock', 'unlock', {'entity_id': 'lock.lock_1'},
+        LOCK_DOMAIN, 'unlock', {'entity_id': 'lock.lock_1'},
         blocking=True)
     # Assert
     state = hass.states.get('lock.lock_1')
