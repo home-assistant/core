@@ -130,9 +130,9 @@ class ZHAGateway:
             self, sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
             command_id, args):
         """Handle tasks when a device becomes available."""
-        await self.async_update_device(sender)
+        self.async_update_device(sender)
 
-    async def async_update_device(self, sender):
+    def async_update_device(self, sender):
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
