@@ -44,6 +44,7 @@ class AdsSwitch(ToggleEntity):
         self._ads_hub = ads_hub
         self._on_state = False
         self._name = name
+        self._unique_id = ads_var
         self.ads_var = ads_var
 
     async def async_added_to_hass(self):
@@ -67,6 +68,11 @@ class AdsSwitch(ToggleEntity):
     def name(self):
         """Return the name of the entity."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique identifier for this entity."""
+        return self._unique_id
 
     @property
     def should_poll(self):

@@ -55,6 +55,7 @@ class AdsSensor(Entity):
         """Initialize AdsSensor entity."""
         self._ads_hub = ads_hub
         self._name = name
+        self._unique_id = ads_var
         self._value = None
         self._unit_of_measurement = unit_of_measurement
         self.ads_var = ads_var
@@ -83,6 +84,11 @@ class AdsSensor(Entity):
     def name(self):
         """Return the name of the entity."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique identifier for this entity."""
+        return self._unique_id
 
     @property
     def state(self):
