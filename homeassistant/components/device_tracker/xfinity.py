@@ -1,3 +1,9 @@
+"""
+Support for Xfinity Gateways.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.xfinity/
+"""
 import logging
 
 from requests.exceptions import RequestException
@@ -43,8 +49,8 @@ class XfinityDeviceScanner(DeviceScanner):
             self.success_init = True
         except (RequestException, ValueError):
             self.success_init = False
-            _LOGGER.error("Unable to connect to gateway. Check host: %s",\
-                           self.gateway.host)
+            _LOGGER.error("Unable to connect to gateway. Check host: %s",
+                          self.gateway.host)
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
