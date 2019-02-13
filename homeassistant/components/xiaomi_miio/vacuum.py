@@ -73,7 +73,8 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
 SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
         vol.All(list, [vol.ExactSequence(
-            [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)])]),
+            [vol.Coerce(int), vol.Coerce(int), 
+            vol.Coerce(int), vol.Coerce(int)])]),
     vol.Required(ATTR_ZONE_REPEATER):
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
 })
