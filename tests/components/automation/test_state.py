@@ -55,7 +55,7 @@ async def test_if_fires_on_entity_change(hass, calls):
     hass.states.async_set('test.entity', 'world', context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
     assert 'state - test.entity - hello - world - None' == \
         calls[0].data['some']
 
