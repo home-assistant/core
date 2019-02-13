@@ -139,7 +139,6 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     # pylint: disable=arguments-differ
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        print('ConfigManagerFlowResourceView post', request)
         if not request['hass_user'].is_admin:
             raise Unauthorized(
                 perm_category=CAT_CONFIG_ENTRIES, permission='add')
@@ -171,7 +170,6 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
 
         handler in request is entry_id.
         """
-        print('ConfigManagerFlowIndexView post', request)
         if not request['hass_user'].is_admin:
             raise Unauthorized(
                 perm_category=CAT_CONFIG_ENTRIES, permission='add')
