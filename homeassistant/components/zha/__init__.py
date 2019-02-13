@@ -152,10 +152,14 @@ async def async_setup_entry(hass, config_entry):
     def handle_message(sender, is_reply, profile, cluster,
                        src_ep, dst_ep, tsn, command_id, args):
         """Handle message from a device."""
-        if sender.last_seen is None and not sender.initializing:
-            if sender.ieee in zha_gateway.devices:
-                device = zha_gateway.devices[sender.ieee]
-                device.update_available(True)
+        if not sender.initializing and sender.ieee in zha_gateway.devices and \
+                not zha_gateway.devices[sender.ieee].available:
+            hass.async_create_task(
+                zha_gateway.async_device_became_available(
+                    sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
+                    command_id, args
+                )
+            )
         return sender.handle_message(
             is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args)
 
