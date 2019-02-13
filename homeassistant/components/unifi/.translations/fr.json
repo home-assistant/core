@@ -14,9 +14,12 @@
                     "password": "Mot de passe",
                     "port": "Port",
                     "site": "ID du site",
-                    "username": "Nom d'utilisateur"
-                }
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "Contr\u00f4leur utilisant un certificat appropri\u00e9"
+                },
+                "title": "Configurer le contr\u00f4leur UniFi"
             }
-        }
+        },
+        "title": "Contr\u00f4leur UniFi"
     }
 }
