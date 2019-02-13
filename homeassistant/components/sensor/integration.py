@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_TIME, default='h'): vol.In(UNIT_TIME),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_INTEGRATION_METHOD, default=TRAPEZOIDAL_METHOD):
-        vol.In(INTEGRATION_METHOD)
+        vol.In(INTEGRATION_METHOD),
 })
 
 
