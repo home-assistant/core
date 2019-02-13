@@ -75,8 +75,7 @@ async def test_call_async_migrate_entry(hass):
 
 
 async def test_call_async_migrate_entry_failure_false(hass):
-    """Test we call <component>.async_migrate_entry when version mismatch
-       and fail migration if returned false."""
+    """Test migration fails if returns false."""
     entry = MockConfigEntry(domain='comp')
     entry.version = 2
     entry.add_to_hass(hass)
@@ -97,8 +96,7 @@ async def test_call_async_migrate_entry_failure_false(hass):
 
 
 async def test_call_async_migrate_entry_failure_exception(hass):
-    """Test we call <component>.async_migrate_entry when version mismatch
-       and fail migration if exception raised."""
+    """Test migration fails if exception raised."""
     entry = MockConfigEntry(domain='comp')
     entry.version = 2
     entry.add_to_hass(hass)
@@ -120,8 +118,7 @@ async def test_call_async_migrate_entry_failure_exception(hass):
 
 
 async def test_call_async_migrate_entry_failure_not_bool(hass):
-    """Test we call <component>.async_migrate_entry when version mismatch
-       and fail migration if boolean not returned."""
+    """Test migration fails if boolean not returned."""
     entry = MockConfigEntry(domain='comp')
     entry.version = 2
     entry.add_to_hass(hass)
@@ -143,8 +140,7 @@ async def test_call_async_migrate_entry_failure_not_bool(hass):
 
 
 async def test_call_async_migrate_entry_failure_not_supported(hass):
-    """Test we call <component>.async_migrate_entry when version mismatch
-       and fail migration if async_migrate_entry not implemented."""
+    """Test migration fails if async_migrate_entry not implemented."""
     entry = MockConfigEntry(domain='comp')
     entry.version = 2
     entry.add_to_hass(hass)
