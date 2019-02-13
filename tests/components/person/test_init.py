@@ -427,7 +427,9 @@ async def test_create_invalid_user_id(hass):
 
 async def test_create_duplicate_user_id(hass, hass_admin_user):
     """Test we do not allow duplicate user ID during creation."""
-    manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
     await manager.async_initialize()
     await manager.async_create_person(
         name='Hello',
@@ -443,7 +445,9 @@ async def test_create_duplicate_user_id(hass, hass_admin_user):
 
 async def test_update_double_user_id(hass, hass_admin_user):
     """Test we do not allow double user ID during update."""
-    manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
     await manager.async_initialize()
     await manager.async_create_person(
         name='Hello',
@@ -462,7 +466,9 @@ async def test_update_double_user_id(hass, hass_admin_user):
 
 async def test_update_invalid_user_id(hass):
     """Test updating to invalid user ID."""
-    manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
     await manager.async_initialize()
     person = await manager.async_create_person(
         name='Hello',
@@ -477,7 +483,9 @@ async def test_update_invalid_user_id(hass):
 
 async def test_update_person_when_user_removed(hass, hass_read_only_user):
     """Update person when user is removed."""
-    manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
     await manager.async_initialize()
     person = await manager.async_create_person(
         name='Hello',
