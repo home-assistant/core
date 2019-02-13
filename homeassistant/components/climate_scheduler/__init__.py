@@ -12,9 +12,10 @@ Example component configuration:
 climate_scheduler:
   target_climate: climate.home
 """
-import logging
-import voluptuous as vol
 import json
+import logging
+
+import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
@@ -92,12 +93,12 @@ class ClimateScheduler(Entity):
             unsub()
         self.unsubs = []
 
-        for x in range(len(self.rules)):
-            rule = self.rules[x]
+        for rule_pos in range(len(self.rules)):
+            rule = self.rules[rule_pos]
             r_time = tuple(map(int, rule['time'].split(':')))
             self.unsubs.append(
                 async_track_time_change(self.hass,
-                                        self.run_schecule(x),
+                                        self.run_schecule(rule_pos),
                                         hour=r_time[0],
                                         minute=r_time[1],
                                         second=0))
