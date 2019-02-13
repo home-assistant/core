@@ -18,9 +18,9 @@ from tests.common import (
 @config_entries.HANDLERS.register('test')
 @config_entries.HANDLERS.register('comp')
 class MockFlowHandler(config_entries.ConfigFlow):
-    """Define a mock flow handler"""
+    """Define a mock flow handler."""
 
-    VERSION = 0
+    VERSION = 1
 
 
 @pytest.fixture
@@ -33,10 +33,121 @@ def manager(hass):
     return manager
 
 
-@asyncio.coroutine
-def test_call_setup_entry(hass):
+async def test_call_setup_entry(hass):
     """Test we call <component>.setup_entry."""
-    MockConfigEntry(domain='comp').add_to_hass(hass)
+    entry = MockConfigEntry(domain='comp')
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'comp',
+        MockModule('comp', async_setup_entry=mock_setup_entry,
+                   async_migrate_entry=mock_migrate_entry))
+
+    result = await async_setup_component(hass, 'comp', {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_call_async_migrate_entry(hass):
+    """Test we call <component>.async_migrate_entry when version mismatch."""
+    entry = MockConfigEntry(domain='comp')
+    entry.version = 2
+    entry.add_to_hass(hass)
+
+    mock_migrate_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'comp',
+        MockModule('comp', async_setup_entry=mock_setup_entry,
+                   async_migrate_entry=mock_migrate_entry))
+
+    result = await async_setup_component(hass, 'comp', {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_call_async_migrate_entry_failure_false(hass):
+    """Test we call <component>.async_migrate_entry when version mismatch
+       and fail migration if returned false."""
+    entry = MockConfigEntry(domain='comp')
+    entry.version = 2
+    entry.add_to_hass(hass)
+
+    mock_migrate_entry = MagicMock(return_value=mock_coro(False))
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'comp',
+        MockModule('comp', async_setup_entry=mock_setup_entry,
+                   async_migrate_entry=mock_migrate_entry))
+
+    result = await async_setup_component(hass, 'comp', {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+
+
+async def test_call_async_migrate_entry_failure_exception(hass):
+    """Test we call <component>.async_migrate_entry when version mismatch
+       and fail migration if exception raised."""
+    entry = MockConfigEntry(domain='comp')
+    entry.version = 2
+    entry.add_to_hass(hass)
+
+    mock_migrate_entry = MagicMock(
+        return_value=mock_coro(exception=Exception))
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'comp',
+        MockModule('comp', async_setup_entry=mock_setup_entry,
+                   async_migrate_entry=mock_migrate_entry))
+
+    result = await async_setup_component(hass, 'comp', {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+
+
+async def test_call_async_migrate_entry_failure_not_bool(hass):
+    """Test we call <component>.async_migrate_entry when version mismatch
+       and fail migration if boolean not returned."""
+    entry = MockConfigEntry(domain='comp')
+    entry.version = 2
+    entry.add_to_hass(hass)
+
+    mock_migrate_entry = MagicMock(
+        return_value=mock_coro())
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'comp',
+        MockModule('comp', async_setup_entry=mock_setup_entry,
+                   async_migrate_entry=mock_migrate_entry))
+
+    result = await async_setup_component(hass, 'comp', {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
+
+
+async def test_call_async_migrate_entry_failure_not_supported(hass):
+    """Test we call <component>.async_migrate_entry when version mismatch
+       and fail migration if async_migrate_entry not implemented."""
+    entry = MockConfigEntry(domain='comp')
+    entry.version = 2
+    entry.add_to_hass(hass)
 
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
@@ -44,9 +155,10 @@ def test_call_setup_entry(hass):
         hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
-    result = yield from async_setup_component(hass, 'comp', {})
+    result = await async_setup_component(hass, 'comp', {})
     assert result
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_MIGRATION_ERROR
 
 
 async def test_remove_entry(hass, manager):

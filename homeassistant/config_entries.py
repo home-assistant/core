@@ -7,7 +7,11 @@ component.
 During startup, Home Assistant will setup the entries during the normal setup
 of a component. It will first call the normal setup and then call the method
 `async_setup_entry(hass, entry)` for each entry. The same method is called when
-Home Assistant is running while a config entry is created.
+Home Assistant is running while a config entry is created.  If the version of
+the config entry does not match that of the flow handler, setup will
+call the method `async_migrate_entry(hass, entry)` with the expectation that
+the entry be brought to the current version.  Return `True` to indicate
+migration was successful, otherwise `False`.
 
 ## Config Flows
 
@@ -116,6 +120,7 @@ If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
 import logging
+import functools
 import uuid
 from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
 
@@ -339,7 +344,7 @@ class ConfigEntry:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
-    async def async_migrate(self, hass: HomeAssistant):
+    async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
 
         Returns True if config entry is up-to-date or has been migrated.
@@ -349,6 +354,9 @@ class ConfigEntry:
             _LOGGER.error("Flow handler not found for entry %s for %s",
                           self.title, self.domain)
             return False
+        # Handler may be a partial
+        while isinstance(handler, functools.partial):
+            handler = handler.func
 
         if self.version == handler.VERSION:
             return True
@@ -365,6 +373,7 @@ class ConfigEntry:
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_migrate_entry did not return boolean',
                               self.domain)
+                return False
             if result:
                 # pylint: disable=protected-access
                 hass.config_entries._async_schedule_save()  # type: ignore

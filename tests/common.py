@@ -451,7 +451,8 @@ class MockModule:
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
                  platform_schema_base=None, async_setup=None,
-                 async_setup_entry=None, async_unload_entry=None):
+                 async_setup_entry=None, async_unload_entry=None,
+                 async_migrate_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -481,6 +482,9 @@ class MockModule:
 
         if async_unload_entry is not None:
             self.async_unload_entry = async_unload_entry
+
+        if async_migrate_entry is not None:
+            self.async_migrate_entry = async_migrate_entry
 
 
 class MockPlatform:
@@ -602,7 +606,7 @@ class MockToggleDevice(entity.ToggleEntity):
 class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
-    def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
+    def __init__(self, *, domain='test', data=None, version=1, entry_id=None,
                  source=config_entries.SOURCE_USER, title='Mock Title',
                  state=None,
                  connection_class=config_entries.CONN_CLASS_UNKNOWN):
