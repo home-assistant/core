@@ -16,7 +16,8 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
     EVENT_HOMEASSISTANT_START)
-from homeassistant.core import callback
+from homeassistant.core import callback, Event
+from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_component import EntityComponent
@@ -156,6 +157,8 @@ class PersonManager:
         if entities:
             await self.component.async_add_entities(entities)
 
+        self.hass.bus.async_listen(EVENT_USER_REMOVED, self._user_removed)
+
     async def async_create_person(self, *, name, device_trackers=None,
                                   user_id=None):
         """Create a new person."""
@@ -243,6 +246,16 @@ class PersonManager:
                          self.config_data.values())
                 if person[CONF_USER_ID] == user_id):
             raise ValueError("User already taken")
+
+    async def _user_removed(self, event: Event):
+        """Fired when a person is removed."""
+        user_id = event.data['user_id']
+        for person in self.storage_data.values():
+            if person[CONF_USER_ID] == user_id:
+                await self.async_update_person(
+                    person_id=person[CONF_ID],
+                    user_id=None
+                )
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):

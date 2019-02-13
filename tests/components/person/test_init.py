@@ -425,7 +425,7 @@ async def test_create_invalid_user_id(hass):
         )
 
 
-async def test_create_invalid_user_id(hass, hass_admin_user):
+async def test_create_duplicate_user_id(hass, hass_admin_user):
     """Test we do not allow duplicate user ID during creation."""
     manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
     await manager.async_initialize()
@@ -473,3 +473,17 @@ async def test_update_invalid_user_id(hass):
             person_id=person['id'],
             user_id='non-existing'
         )
+
+
+async def test_update_person_when_user_removed(hass, hass_read_only_user):
+    """Update person when user is removed."""
+    manager = PersonManager(hass, Mock(async_add_entities=mock_coro_func()), [])
+    await manager.async_initialize()
+    person = await manager.async_create_person(
+        name='Hello',
+        user_id=hass_read_only_user.id
+    )
+
+    await hass.auth.async_remove_user(hass_read_only_user)
+    await hass.async_block_till_done()
+    assert person['user_id'] is None
