@@ -61,7 +61,6 @@ ATTR_RC_VELOCITY = 'velocity'
 ATTR_STATUS = 'status'
 ATTR_ZONE_ARRAY = 'zone'
 ATTR_ZONE_REPEATER = 'repeats'
-ATTR_ZONE_REPEATER_TEMPLATE = 'repeats_template'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -70,12 +69,13 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Clamp(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
+
 SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
-        vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeToRepeats'):
+        vol.All(list, [vol.ExactSequence(
+            [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)])]),
+    vol.Required(ATTR_ZONE_REPEATER):
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
-    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeToRepeats'): cv.template,
 })
 
 SERVICE_TO_METHOD = {
@@ -141,6 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
+
         if entity_ids:
             target_vacuums = [vac for vac in hass.data[DATA_KEY].values()
                               if vac.entity_id in entity_ids]
@@ -393,19 +394,9 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
     async def async_clean_zone(self,
-                               zone,
-                               repeats: int = 1,
-                               repeats_template: str = None):
+                               zone: list,
+                               repeats: int = 1):
         """Clean selected area for the number of repeats indicated."""
-        if repeats_template is not None:
-            _LOGGER.debug("Using template repeats")
-            repeats_template.hass = self.hass
-            repeats = repeats_template.async_render()
-            try:
-                repeats = int(repeats)
-            except ValueError:
-                repeats = 1
-                _LOGGER.debug("Failed to cast template. Set default > 1")
         repeats = max(1, min(3, repeats))
         _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
@@ -414,8 +405,10 @@ class MiroboVacuum(StateVacuumDevice):
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)
         try:
-            self._vacuum.zoned_clean(zone)
+            await self.hass.async_add_executor_job(self._vacuum.zoned_clean(zone))
+            return True
         except (OSError, DeviceException) as exc:
             _LOGGER.error(
                 "Unable to send zoned_clean command to the vacuum: %s",
                 exc)
+            return False
