@@ -187,6 +187,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
 
         self._attributes = {}
 
+    
     @property
     def state_attributes(self):
         """Return the state attributes."""
