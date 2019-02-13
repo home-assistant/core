@@ -55,17 +55,11 @@ class LWRFSwitch(SwitchDevice):
     async def async_turn_on(self, **kwargs):
         """Turn the LightWave switch on."""
         self._state = True
-        if self._device_id == "registration":
-            self._lwlink.register()
-        else:
-            self._lwlink.turn_on_switch(self._device_id, self._name)
+        self._lwlink.turn_on_switch(self._device_id, self._name)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the LightWave switch off."""
         self._state = False
-        if self._device_id == "registration":
-            self._lwlink.deregister_all()
-        else:
-            self._lwlink.turn_off(self._device_id, self._name)
+        self._lwlink.turn_off(self._device_id, self._name)
         self.async_schedule_update_ha_state()

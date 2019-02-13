@@ -1,0 +1,4 @@
+lightwave_registration:
+  description: Register home assistant with Lightwave WiFi Link hub.
+lightwave_deregistration:
+  description: De-register all devices from Lightwave WiFi Link hub.

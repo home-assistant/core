@@ -13,6 +13,8 @@ from homeassistant.helpers.discovery import async_load_platform
 REQUIREMENTS = ['lightwave==0.17']
 LIGHTWAVE_LINK = 'lightwave_link'
 DOMAIN = 'lightwave'
+SERVICE_REGISTER = 'lightwave_registration'
+SERVICE_DEREGISTER = 'lightwave_deregistration'
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -28,6 +30,10 @@ CONFIG_SCHEMA = vol.Schema({
         })
 }, extra=vol.ALLOW_EXTRA)
 
+# Currently no attributes but it might change later
+LIGHTWAVE_REGISTRATION_SCHEMA = vol.Schema({})
+LIGHTWAVE_DEREGISTRATION_SCHEMA = vol.Schema({})
+
 
 async def async_setup(hass, config):
     """Try to start embedded Lightwave broker."""
@@ -35,6 +41,16 @@ async def async_setup(hass, config):
 
     host = config[DOMAIN][CONF_HOST]
     hass.data[LIGHTWAVE_LINK] = LWLink(host)
+
+    """Provide service to register with Lightwave Wifi Link"""
+    async def async_registration_service_handler(service):
+        lwlink = hass.data[LIGHTWAVE_LINK]
+        lwlink.register()
+
+    """Provide service to deregister with Lightwave Wifi Link"""
+    async def async_deregistration_service_handler(service):
+        lwlink = hass.data[LIGHTWAVE_LINK]
+        lwlink.deregister_all()
 
     lights = config[DOMAIN][CONF_LIGHTS]
     if lights:
@@ -45,5 +61,13 @@ async def async_setup(hass, config):
     if switches:
         hass.async_create_task(async_load_platform(
             hass, 'switch', DOMAIN, switches, config))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_REGISTER, async_registration_service_handler,
+        schema=LIGHTWAVE_REGISTRATION_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_DEREGISTER, async_deregistration_service_handler,
+        schema=LIGHTWAVE_DEREGISTRATION_SCHEMA)
 
     return True
