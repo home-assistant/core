@@ -64,12 +64,9 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
         status = self._device.status.attributes[Attribute.lock]
         if status.value:
             state_attrs['lock_state'] = status.value
-        if status.data:
-            for attr, data_val in status.data.items():
-                if not data_val:
-                    continue
-                # Convert camelCase to snake_case
-                new_attr = ''.join('_' + ch.lower() if ch.isupper() else ch
-                                   for ch in attr).lstrip('_')
-                state_attrs[new_attr] = data_val
+        if type(status.data) is dict:
+            for st_attr, ha_attr in ST_LOCK_ATTR_MAP.items():
+                data_val = status.data.get(st_attr)
+                if data_val:
+                    state_attrs[ha_attr] = data_val
         return state_attrs
