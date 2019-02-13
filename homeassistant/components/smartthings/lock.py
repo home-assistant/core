@@ -18,6 +18,7 @@ ST_LOCK_ATTR_MAP = {
     'timeout': 'timeout'
 }
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Platform uses config entry setup."""
