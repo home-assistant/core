@@ -406,7 +406,8 @@ class MiroboVacuum(StateVacuumDevice):
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)
         try:
-            await self.hass.async_add_executor_job(self._vacuum.zoned_clean(zone))
+            await self.hass.async_add_executor_job(
+                self._vacuum.zoned_clean(zone))
             return True
         except (OSError, DeviceException) as exc:
             _LOGGER.error(
