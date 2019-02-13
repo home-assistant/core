@@ -10,16 +10,22 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-# TODO: Add attributes
 from homeassistant.const import (
-    ATTR_NAME, ATTR_USERNAME,
-    CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_NAME, CONF_PATH)
+    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['TwitterAPI==2.5.9']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_USERNAME = 'username'
+ATTR_LATEST_TWEET_DATE = 'latest_tweet_date'
+ATTR_LATEST_TWEET_TEXT = 'latest_tweet_text'
+ATTR_LATEST_TWEET_RETWEETS = 'latest_tweet_retweets'
+ATTR_LATEST_TWEET_LIKES = 'latest_tweet_likes'
+ATTR_LATEST_TWEET_HASHTAGS = 'latest_tweet_hashtags'
+ATTR_LATEST_TWEET_MENTIONS = 'latest_tweet_mentions'
 
 CONF_CONSUMER_KEY = 'consumer_key'
 CONF_CONSUMER_SECRET = 'consumer_secret'
@@ -102,8 +108,14 @@ class TwitterSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_USERNAME: self._username
-            # TODO: Add attributes
+            ATTR_NAME: self._name,
+            ATTR_USERNAME: self._username,
+            ATTR_LATEST_TWEET_DATE: self._latest_tweet_date,
+            ATTR_LATEST_TWEET_TEXT: self._latest_tweet_text,
+            ATTR_LATEST_TWEET_RETWEETS: self._latest_tweet_retweets,
+            ATTR_LATEST_TWEET_LIKES: self._latest_tweet_likes,
+            ATTR_LATEST_TWEET_HASHTAGS: self._latest_tweet_hashtags,
+            ATTR_LATEST_TWEET_MENTIONS: self._latest_tweet_mentions
         }
 
     @property
