@@ -1,9 +1,4 @@
-"""
-Support for Volvo On Call.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/volvooncall/
-"""
+"""Support for Volvo On Call."""
 from datetime import timedelta
 import logging
 
@@ -45,7 +40,7 @@ COMPONENTS = {
     'binary_sensor': 'binary_sensor',
     'lock': 'lock',
     'device_tracker': 'device_tracker',
-    'switch': 'switch'
+    'switch': 'switch',
 }
 
 RESOURCES = [

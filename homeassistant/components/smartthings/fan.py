@@ -1,10 +1,4 @@
-"""
-Support for fans through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.fan/
-"""
-
+"""Support for fans through the SmartThings cloud API."""
 from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)

@@ -1,9 +1,4 @@
-"""
-Interfaces with Verisure locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/verisure/
-"""
+"""Support for Verisure locks."""
 import logging
 from time import sleep
 from time import time
@@ -18,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure platform."""
+    """Set up the Verisure lock platform."""
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
         hub.update_overview()

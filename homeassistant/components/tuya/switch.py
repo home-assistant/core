@@ -1,4 +1,4 @@
-"""Support for Tuya switch."""
+"""Support for Tuya switches."""
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 

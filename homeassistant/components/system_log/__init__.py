@@ -1,9 +1,4 @@
-"""
-Support for system log.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
+"""Support for system log."""
 from collections import OrderedDict
 import logging
 import re

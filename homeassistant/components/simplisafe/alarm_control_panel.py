@@ -1,9 +1,4 @@
-"""
-This platform provides alarm control functionality for SimpliSafe.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.simplisafe/
-"""
+"""Support for SimpliSafe alarm control panels."""
 import logging
 import re
 

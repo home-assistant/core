@@ -1,12 +1,4 @@
-"""
-Support for controlling a Raspberry Pi cover.
-
-Instructions for building the controller can be found here
-https://github.com/andrewshilliday/garage-door-controller
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.rpi_gpio/
-"""
+"""Support for controlling a Raspberry Pi cover."""
 import logging
 from time import sleep
 

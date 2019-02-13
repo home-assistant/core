@@ -1,9 +1,4 @@
-"""
-Support for Satel Integra zone states- represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.satel_integra/
-"""
+"""Support for Satel Integra zone states- represented as binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -21,8 +16,8 @@ DEPENDENCIES = ['satel_integra']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Satel Integra binary sensor devices."""
     if not discovery_info:
         return
@@ -34,8 +29,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     for zone_num, device_config_data in configured_zones.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        device = SatelIntegraBinarySensor(zone_num, zone_name, zone_type,
-                                          SIGNAL_ZONES_UPDATED)
+        device = SatelIntegraBinarySensor(
+            zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED)
         devices.append(device)
 
     configured_outputs = discovery_info[CONF_OUTPUTS]
@@ -43,8 +38,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     for zone_num, device_config_data in configured_outputs.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        device = SatelIntegraBinarySensor(zone_num, zone_name, zone_type,
-                                          SIGNAL_OUTPUTS_UPDATED)
+        device = SatelIntegraBinarySensor(
+            zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED)
         devices.append(device)
 
     async_add_entities(devices)

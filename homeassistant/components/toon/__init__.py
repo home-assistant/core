@@ -1,9 +1,4 @@
-"""
-Toon van Eneco Support.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/toon/
-"""
+"""Support for Toon van Eneco devices."""
 from datetime import datetime, timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Z-Wave platform that handles simple binary switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.zwave/
-"""
+"""Support for Z-Wave switches."""
 import logging
 import time
 from homeassistant.core import callback

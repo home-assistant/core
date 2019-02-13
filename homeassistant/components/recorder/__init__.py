@@ -1,12 +1,4 @@
-"""
-Support for recording details.
-
-Component that records all events and state changes. Allows other components
-to query this database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/recorder/
-"""
+"""Support for recording details."""
 import asyncio
 from collections import namedtuple
 import concurrent.futures

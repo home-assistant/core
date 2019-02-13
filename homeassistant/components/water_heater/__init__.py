@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with water heater devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/water_heater/
-"""
+"""Support for water heater devices."""
 from datetime import timedelta
 import logging
 import functools as ft

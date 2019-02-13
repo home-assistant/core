@@ -1,9 +1,4 @@
-"""
-Support for Vera locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.vera/
-"""
+"""Support for Vera locks."""
 import logging
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice

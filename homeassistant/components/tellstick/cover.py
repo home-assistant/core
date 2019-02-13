@@ -1,11 +1,4 @@
-"""
-Support for Tellstick covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tellstick/
-"""
-
-
+"""Support for Tellstick covers."""
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.tellstick import (
     DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG,

@@ -1,9 +1,4 @@
-"""
-Support for SCSGate switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.scsgate/
-"""
+"""Support for SCSGate switches."""
 import logging
 
 import voluptuous as vol

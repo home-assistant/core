@@ -1,10 +1,4 @@
-"""
-Support for Wink lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.wink/
-"""
-
+"""Support for Wink lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
