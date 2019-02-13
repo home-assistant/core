@@ -108,10 +108,14 @@ class ClimateScheduler(Entity):
             temp = self.rules[rule_id]['temp']
             days = self.rules[rule_id]['days']
             if days[dt.as_local(now).weekday()]:
-                self.hass.services.async_call('climate', 'set_temperature', {
-                    "entity_id": self.climate,
-                    "temperature": temp
-                })
+                self.hass.loop.create_task(
+                    self.hass.services.async_call(
+                        'climate',
+                        'set_temperature',
+                        {
+                            "entity_id": self.climate,
+                            "temperature": temp
+                        }))
         return run_id
 
     @callback
