@@ -68,6 +68,6 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
         if isinstance(status.data, dict):
             for st_attr, ha_attr in ST_LOCK_ATTR_MAP.items():
                 data_val = status.data.get(st_attr)
-                if data_val:
+                if data_val is not None:
                     state_attrs[ha_attr] = data_val
         return state_attrs
