@@ -106,10 +106,14 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
+# pylint: disable=duplicate-key
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
-    'ERROR': ['error', {0: 'No'}],
+    'ERROR': ['error', {0: 'No'}], # noqa
+    # The following line is depricated and will be replaced by the line 
+    # above ("error")
+    'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}], # noqa
     'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi', {}],
