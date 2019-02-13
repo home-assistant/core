@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.config_entries import HANDLERS
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
 from homeassistant.loader import set_component
@@ -485,7 +486,6 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
 
     assert resp2.status == 401
 
-from homeassistant.core import callback
 
 async def test_options_flow(hass, client):
     """Test we can change options."""
@@ -543,7 +543,6 @@ async def test_options_flow(hass, client):
         },
         'errors': None
     }
-
 
 
 async def test_two_step_options_flow(hass, client):
@@ -604,6 +603,7 @@ async def test_two_step_options_flow(hass, client):
             'description_placeholders': None,
             'errors': None
         }
+
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = await client.post(
