@@ -42,11 +42,11 @@ OVERVIEW_SENSOR_TYPES = {
     'current_power': ['currentPower', "Current Power", 'W',
                       'mdi:solar-power'],
     'site_details': [None, 'Site details', None, None],
-    'inventory_meters': ['meters', 'Meters', None, None],
-    'inventory_sensors': ['sensors', 'Sensors', None, None],
-    'inventory_gateways': ['gateways', 'Gateways', None, None],
-    'inventory_batteries': ['batteries', 'Batteries', None, None],
-    'inventory_inverters': ['inverters', 'Inverters', None, None]
+    'meters': ['meters', 'Meters', None, None],
+    'sensors': ['sensors', 'Sensors', None, None],
+    'gateways': ['gateways', 'Gateways', None, None],
+    'batteries': ['batteries', 'Batteries', None, None],
+    'inverters': ['inverters', 'Inverters', None, None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
+    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,7 +118,8 @@ class SolarEdgeSensorFactory:
         if sensor_key == 'site_details':
             sensor = SolarEdgeDetailsSensor(self.platform_name, sensor_key,
                                             self.details_data_service)
-        elif sensor_key.startswith('inventory'):
+        elif sensor_key in ['meters', 'sensors', 'gateways',
+                            'batteries', 'inverters']:
             sensor = SolarEdgeInventorySensor(self.platform_name, sensor_key,
                                               self.inventory_data_service)
         else:
@@ -138,14 +139,14 @@ class SolarEdgeSensor(Entity):
 
         self._state = None
 
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
-        self._icon = SENSOR_TYPES[self.sensor_key][3]
+        self._unit_of_measurement = OVERVIEW_SENSOR_TYPES[self.sensor_key][2]
+        self._icon = OVERVIEW_SENSOR_TYPES[self.sensor_key][3]
 
     @property
     def name(self):
         """Return the name."""
         return "{} ({})".format(self.platform_name,
-                                SENSOR_TYPES[self.sensor_key][1])
+                                OVERVIEW_SENSOR_TYPES[self.sensor_key][1])
 
     @property
     def unit_of_measurement(self):
@@ -170,7 +171,7 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
         """Initialize the overview sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
@@ -187,7 +188,6 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
 
         self._attributes = {}
 
-    
     @property
     def state_attributes(self):
         """Return the state attributes."""
@@ -207,7 +207,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         """Initialize the inventory sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
 
         self._attributes = {}
 
