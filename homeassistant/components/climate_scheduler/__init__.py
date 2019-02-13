@@ -73,10 +73,11 @@ class ClimateScheduler(Entity):
         hass.services.async_register(DOMAIN, 'update', self.handle_update)
 
     async def async_save_rules(self):
-        """Save rules to persistence file."""
+        """Save rules to storage."""
         await self.store.async_save(self.rules)
 
     async def async_load_rules(self):
+        """Load rules from storage."""
         loaded_rules = await self.store.async_load()
         if loaded_rules is None:
             await self.async_save_rules()
