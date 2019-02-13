@@ -1,9 +1,4 @@
-"""
-Support for Belkin WeMo lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.wemo/
-"""
+"""Support for Belkin WeMo lights."""
 import asyncio
 import logging
 from datetime import timedelta

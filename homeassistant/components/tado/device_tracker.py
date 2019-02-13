@@ -1,9 +1,4 @@
-"""
-Support for Tado Smart Thermostat.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tado/
-"""
+"""Support for Tado Smart device trackers."""
 import logging
 from datetime import timedelta
 from collections import namedtuple
@@ -29,7 +24,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HOME_ID): cv.string
+    vol.Optional(CONF_HOME_ID): cv.string,
 })
 
 

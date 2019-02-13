@@ -1,9 +1,4 @@
-"""
-Configure a binary_sensor using a digital input from a raspihats board.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.raspihats/
-"""
+"""Support for raspihats board binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -34,7 +29,7 @@ _CHANNELS_SCHEMA = vol.Schema([{
 _I2C_HATS_SCHEMA = vol.Schema([{
     vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
     vol.Required(CONF_ADDRESS): vol.Coerce(int),
-    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
+    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA,
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

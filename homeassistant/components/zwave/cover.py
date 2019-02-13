@@ -1,9 +1,4 @@
-"""
-Support for Z-Wave cover components.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.zwave/
-"""
+"""Support for Z-Wave covers."""
 import logging
 from homeassistant.core import callback
 from homeassistant.components.cover import (
@@ -19,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave covers."""
     pass
 

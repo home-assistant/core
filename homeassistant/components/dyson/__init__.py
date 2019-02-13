@@ -1,29 +1,25 @@
-"""Parent component for Dyson Pure Cool Link devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/dyson/
-"""
-
+"""Support for Dyson Pure Cool Link devices."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
-    CONF_DEVICES
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['libpurecoollink==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LANGUAGE = "language"
-CONF_RETRY = "retry"
+CONF_LANGUAGE = 'language'
+CONF_RETRY = 'retry'
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
+DYSON_DEVICES = 'dyson_devices'
 
-DOMAIN = "dyson"
+DOMAIN = 'dyson'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -36,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [dict]),
     })
 }, extra=vol.ALLOW_EXTRA)
-
-DYSON_DEVICES = "dyson_devices"
 
 
 def setup(hass, config):

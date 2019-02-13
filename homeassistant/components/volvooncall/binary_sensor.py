@@ -1,9 +1,4 @@
-"""
-Support for VOC.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.volvooncall/
-"""
+"""Support for VOC."""
 import logging
 
 from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
@@ -13,8 +8,8 @@ from homeassistant.components.binary_sensor import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return

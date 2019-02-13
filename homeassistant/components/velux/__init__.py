@@ -1,9 +1,4 @@
-"""
-Connects to VELUX KLF 200 interface.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/velux/
-"""
+"""Support for VELUX KLF 200 devices."""
 import logging
 
 import voluptuous as vol

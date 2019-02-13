@@ -1,9 +1,4 @@
-"""
-Support for Tesla binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tesla/
-"""
+"""Support for Tesla binary sensor."""
 import logging
 
 from homeassistant.components.binary_sensor import (

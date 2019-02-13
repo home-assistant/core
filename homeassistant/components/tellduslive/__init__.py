@@ -1,9 +1,4 @@
-"""
-Support for Telldus Live.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tellduslive/
-"""
+"""Support for Telldus Live."""
 import asyncio
 from functools import partial
 import logging
@@ -32,8 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
         vol.Schema({
-            vol.Optional(CONF_HOST, default=DOMAIN):
-            cv.string,
+            vol.Optional(CONF_HOST, default=DOMAIN): cv.string,
             vol.Optional(CONF_UPDATE_INTERVAL, default=SCAN_INTERVAL):
             (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
         }),

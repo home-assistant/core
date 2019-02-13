@@ -1,9 +1,4 @@
-"""
-Support for Spider Smart devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/spider/
-"""
+"""Support for Spider Smart devices."""
 from datetime import timedelta
 import logging
 

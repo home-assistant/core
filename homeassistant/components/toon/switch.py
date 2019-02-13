@@ -1,9 +1,4 @@
-"""
-Support for Eneco Slimmer stekkers (Smart Plugs).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.toon/
-"""
+"""Support for Eneco Slimmer stekkers (Smart Plugs)."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice

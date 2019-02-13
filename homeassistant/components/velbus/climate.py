@@ -1,9 +1,4 @@
-"""
-Support for Velbus thermostat.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.velbus/
-"""
+"""Support for Velbus thermostat."""
 import logging
 
 from homeassistant.components.climate import (

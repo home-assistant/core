@@ -1,9 +1,4 @@
-"""
-Support for switches through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.switch/
-"""
+"""Support for switches through the SmartThings cloud API."""
 from homeassistant.components.switch import SwitchDevice
 
 from . import SmartThingsEntity
@@ -12,8 +7,8 @@ from .const import DATA_BROKERS, DOMAIN
 DEPENDENCIES = ['smartthings']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 

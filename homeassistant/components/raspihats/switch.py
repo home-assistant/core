@@ -1,9 +1,4 @@
-"""
-Configure a switch using a digital output from a raspihats board.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.raspihats/
-"""
+"""Support for raspihats board switches."""
 import logging
 
 import voluptuous as vol

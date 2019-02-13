@@ -1,9 +1,4 @@
-"""
-Support for climate entities/thermostats through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.climate/
-"""
+"""Support for climate devices through the SmartThings cloud API."""
 import asyncio
 
 from homeassistant.components.climate import (

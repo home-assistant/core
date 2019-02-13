@@ -1,9 +1,4 @@
-"""
-Support for Ring Doorbell/Chimes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ring/
-"""
+"""Support for Ring Doorbell/Chimes."""
 import logging
 from requests.exceptions import HTTPError, ConnectTimeout
 

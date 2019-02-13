@@ -1,9 +1,4 @@
-"""
-Support for tracking a Volvo.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.volvooncall/
-"""
+"""Support for tracking a Volvo."""
 import logging
 
 from homeassistant.util import slugify

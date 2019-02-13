@@ -1,9 +1,4 @@
-"""
-Support for Wink locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.wink/
-"""
+"""Support for Wink locks."""
 import logging
 
 import voluptuous as vol

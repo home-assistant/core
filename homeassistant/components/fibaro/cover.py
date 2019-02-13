@@ -1,9 +1,4 @@
-"""
-Support for Fibaro cover - curtains, rollershutters etc.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.fibaro/
-"""
+"""Support for Fibaro cover - curtains, rollershutters etc."""
 import logging
 
 from homeassistant.components.cover import (

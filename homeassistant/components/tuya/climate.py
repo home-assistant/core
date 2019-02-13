@@ -1,10 +1,4 @@
-"""
-Support for the Tuya climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.tuya/
-"""
-
+"""Support for the Tuya climate devices."""
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, ENTITY_ID_FORMAT, STATE_AUTO, STATE_COOL, STATE_ECO,
     STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,

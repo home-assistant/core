@@ -1,9 +1,4 @@
-"""
-Support for controlling raspihats boards.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/raspihats/
-"""
+"""Support for controlling raspihats boards."""
 import logging
 import threading
 import time

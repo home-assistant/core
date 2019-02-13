@@ -1,9 +1,4 @@
-"""
-Support for monitoring a Sense energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sense/
-"""
+"""Support for monitoring a Sense energy sensor."""
 from datetime import timedelta
 import logging
 

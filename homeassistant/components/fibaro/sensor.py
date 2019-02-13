@@ -1,9 +1,4 @@
-"""
-Support for Fibaro sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fibaro/
-"""
+"""Support for Fibaro sensors."""
 import logging
 
 from homeassistant.const import (

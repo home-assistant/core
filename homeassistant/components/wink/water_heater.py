@@ -1,9 +1,4 @@
-"""
-Support for Wink water heaters.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/water_heater.wink/
-"""
+"""Support for Wink water heaters."""
 import logging
 
 from homeassistant.components.water_heater import (

@@ -1,9 +1,4 @@
-"""
-Interfaces with Verisure alarm control panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.verisure/
-"""
+"""Support for Verisure alarm control panels."""
 import logging
 from time import sleep
 

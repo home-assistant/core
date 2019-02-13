@@ -1,9 +1,4 @@
-"""
-Support for Tesla HVAC system.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.tesla/
-"""
+"""Support for Tesla HVAC system."""
 import logging
 
 from homeassistant.components.climate import (

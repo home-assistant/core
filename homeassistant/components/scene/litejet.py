@@ -1,9 +1,4 @@
-"""
-Support for LiteJet scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.litejet/
-"""
+"""Support for LiteJet scenes."""
 import logging
 
 from homeassistant.components import litejet

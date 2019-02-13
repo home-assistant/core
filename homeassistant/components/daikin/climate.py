@@ -1,9 +1,4 @@
-"""
-Support for the Daikin HVAC.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.daikin/
-"""
+"""Support for the Daikin HVAC."""
 import logging
 import re
 
@@ -21,7 +16,6 @@ from homeassistant.components.daikin.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 

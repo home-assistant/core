@@ -1,9 +1,4 @@
-"""
-Platform for Ecobee Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.ecobee/
-"""
+"""Support for Ecobee Thermostats."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Daikin AC Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.daikin/
-"""
+"""Support for Daikin AC sensors."""
 import logging
 
 from homeassistant.components.daikin import DOMAIN as DAIKIN_DOMAIN

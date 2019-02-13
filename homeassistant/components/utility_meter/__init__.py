@@ -1,10 +1,4 @@
-"""
-Component to track utility consumption over given periods of time.
-
-For more details about this component, please refer to the documentation
-at https://www.home-assistant.io/components/utility_meter/
-"""
-
+"""Support for tracking consumption over given periods of time."""
 import logging
 
 import voluptuous as vol
@@ -25,7 +19,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TARIFF_ICON = "mdi:clock-outline"
+TARIFF_ICON = 'mdi:clock-outline'
 
 ATTR_TARIFFS = 'tariffs'
 
