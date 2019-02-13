@@ -43,7 +43,8 @@ class XfinityDeviceScanner(DeviceScanner):
             self.success_init = True
         except (RequestException, ValueError):
             self.success_init = False
-            _LOGGER.error("Unable to connect to gateway. Check host: " + self.gateway.host)
+            _LOGGER.error("Unable to connect to gateway. Check host: %s",\
+                           self.gateway.host)
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
@@ -51,7 +52,8 @@ class XfinityDeviceScanner(DeviceScanner):
         try:
             connected_devices = self.gateway.scan_devices()
         except (RequestException, ValueError):
-            _LOGGER.error("Unable to scan devices. Check connection to gateway")
+            _LOGGER.error("Unable to scan devices. "
+                          "Check connection to gateway")
         return connected_devices
 
     def get_device_name(self, device):
