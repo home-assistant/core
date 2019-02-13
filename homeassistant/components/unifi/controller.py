@@ -5,7 +5,6 @@ import async_timeout
 
 from aiohttp import CookieJar
 
-from homeassistant import config_entries
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
