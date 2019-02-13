@@ -681,22 +681,28 @@ class Options:
             hass, self._async_create_flow, self._async_finish_flow)
         self.active_options = {}
 
-    @callback
-    def _async_create_flow(
-            self, handler_key: str, *,
-            context: dict, entry: ConfigEntry) -> data_entry_flow.FlowHandler:
+    async def _async_create_flow(
+            self, entry_id: str, *,
+            context: dict, data) -> data_entry_flow.FlowHandler:
         """"""
-        flow = HANDLERS[handler_key].async_get_options_flow(
+        entry = None
+        for ent in self.hass.config_entries.async_entries():
+            if entry_id == ent.entry_id:
+                entry = ent
+                break
+
+        flow = HANDLERS[entry.domain].async_get_options_flow(
             entry.data, entry.options)
         flow.init_step = context['source']
-        self.active_options[flow.flow_id] = entry
+        self.active_options[entry_id] = entry
         return flow
 
-    @callback
-    def _async_finish_flow(
+    async def _async_finish_flow(
             self, flow: data_entry_flow.FlowHandler, result: dict):
         """"""
-        entry = self.active_options.pop(flow.flow_id)
+        entry = self.active_options.pop(flow.handler)
         self.hass.config_entries.async_update_entry(
             entry, options=result['data'])
+
+        result['result'] = True
         return result

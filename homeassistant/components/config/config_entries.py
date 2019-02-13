@@ -18,7 +18,9 @@ async def async_setup(hass):
         ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
     hass.http.register_view(
-        OptionsManagerFlowResourceView(hass.config_entries.options.flow))
+        OptionManagerFlowIndexView(hass.config_entries.options.flow))
+    hass.http.register_view(
+        OptionManagerFlowResourceView(hass.config_entries.options.flow))
     return True
 
 
@@ -47,11 +49,11 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
     name = 'api:config:config_entries:entry'
 
     async def get(self, request):
-        """List flows in progress."""
+        """List available config entries."""
         hass = request.app['hass']
 
         def supports_options(domain):
-            """"""
+            """Check if config entry supports options."""
             return hasattr(
                 config_entries.HANDLERS[domain], 'async_get_options_flow')
 
@@ -137,6 +139,7 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     # pylint: disable=arguments-differ
     async def post(self, request, flow_id):
         """Handle a POST request."""
+        print('ConfigManagerFlowResourceView post', request)
         if not request['hass_user'].is_admin:
             raise Unauthorized(
                 perm_category=CAT_CONFIG_ENTRIES, permission='add')
@@ -156,26 +159,31 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
         return self.json(config_entries.FLOWS)
 
 
-class OptionsManagerFlowResourceView(FlowManagerResourceView):
-    """View to interact with the options flow manager."""
 
-    url = '/api/config/config_entries/options/flow/{flow_id}'
-    name = 'api:config:config_entries:options:flow:resource'
 
-    async def get(self, request, flow_id):
-        """Get the current state of a data_entry_flow."""
-        if not request['hass_user'].is_admin:
-            raise Unauthorized(
-                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+class OptionManagerFlowIndexView(FlowManagerIndexView):
+    """View to create config flows."""
 
-        return await super().get(request, flow_id)
+    url = '/api/config/config_entries/entry/option/flow'
+    name = 'api:config:config_entries:entry:resource:option:flow'
 
     # pylint: disable=arguments-differ
-    async def post(self, request, flow_id):
-        """Handle a POST request."""
+    async def post(self, request):
+        """Handle a POST request.
+
+        handler in request is entry_id.
+        """
+        print('ConfigManagerFlowIndexView post', request)
         if not request['hass_user'].is_admin:
             raise Unauthorized(
                 perm_category=CAT_CONFIG_ENTRIES, permission='add')
 
         # pylint: disable=no-value-for-parameter
-        return await super().post(request, flow_id)
+        return await super().post(request)
+
+
+class OptionManagerFlowResourceView(ConfigManagerFlowResourceView):
+    """View to interact with the flow manager."""
+
+    url = '/api/config/config_entries/options/flow/{flow_id}'
+    name = 'api:config:config_entries:options:flow:resource'
