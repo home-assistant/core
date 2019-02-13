@@ -138,7 +138,7 @@ class ZHAGateway:
             ))
         await asyncio.gather(*endpoint_tasks)
 
-        await zha_device.async_initialize(not is_new_join)
+        await zha_device.async_initialize(from_cache=(not is_new_join))
 
         discovery_tasks = []
         for discovery_info in discovery_infos:
