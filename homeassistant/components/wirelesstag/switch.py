@@ -1,4 +1,4 @@
-"""Switch implementation for Wireless Sensor Tags (wirelesstag.net) platform."""
+"""Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 import logging
 
 import voluptuous as vol

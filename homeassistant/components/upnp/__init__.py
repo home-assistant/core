@@ -1,4 +1,4 @@
-"""Will open a port in your router for Home Assistant and provide statistics."""
+"""Open ports in your router for Home Assistant and provide statistics."""
 from ipaddress import ip_address
 
 import voluptuous as vol

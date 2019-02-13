@@ -1,4 +1,4 @@
-"""Support for climate devices/thermostats through the SmartThings cloud API."""
+"""Support for climate devices through the SmartThings cloud API."""
 import asyncio
 
 from homeassistant.components.climate import (

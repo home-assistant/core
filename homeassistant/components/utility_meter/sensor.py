@@ -53,7 +53,8 @@ async def async_setup_platform(
 
         meters.append(UtilityMeterSensor(
             conf_meter_source, conf.get(CONF_NAME), conf_meter_type,
-            conf_meter_offset, conf.get(CONF_TARIFF), conf_meter_tariff_entity))
+            conf_meter_offset, conf.get(CONF_TARIFF),
+            conf_meter_tariff_entity))
 
     async_add_entities(meters)
 

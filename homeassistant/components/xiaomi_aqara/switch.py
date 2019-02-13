@@ -46,7 +46,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     device, 'Wall Switch Right', 'channel_1', False, gateway))
             elif model in ['ctrl_ln2', 'ctrl_ln2.aq1']:
                 devices.append(XiaomiGenericSwitch(
-                    device, 'Wall Switch LN Left', 'channel_0', False, gateway))
+                    device, 'Wall Switch LN Left', 'channel_0', False,
+                    gateway))
                 devices.append(XiaomiGenericSwitch(
                     device, 'Wall Switch LN Right', 'channel_1',
                     False, gateway))
