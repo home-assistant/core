@@ -5,12 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/smartthings.lock/
 """
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 DEPENDENCIES = ['smartthings']
+
+ST_STATE_LOCKED = 'locked'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -49,7 +50,7 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._device.status.lock == STATE_LOCKED
+        return self._device.status.lock == ST_STATE_LOCKED
 
     @property
     def device_state_attributes(self):
