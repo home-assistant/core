@@ -95,3 +95,16 @@ async def test_update_from_signal(hass, device_factory):
     state = hass.states.get('lock.lock_1')
     assert state is not None
     assert state.state == 'locked'
+
+
+async def test_unload_config_entry(hass, device_factory):
+    """Test the lock is removed when the config entry is unloaded."""
+    # Arrange
+    device = device_factory('Lock_1', [Capability.lock],
+                            {Attribute.lock: 'locked'})
+    config_entry = await setup_platform(hass, LOCK_DOMAIN, device)
+    # Act
+    await hass.config_entries.async_forward_entry_unload(
+        config_entry, 'lock')
+    # Assert
+    assert not hass.states.get('lock.lock_1')
