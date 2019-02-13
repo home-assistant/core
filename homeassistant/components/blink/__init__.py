@@ -29,7 +29,7 @@ DEFAULT_BRAND = 'Blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 SIGNAL_UPDATE_BLINK = "blink_update"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 TYPE_CAMERA_ARMED = 'motion_enabled'
 TYPE_MOTION_DETECTED = 'motion_detected'
