@@ -1,9 +1,4 @@
-"""
-Support for monitoring OctoPrint 3D printers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/octoprint/
-"""
+"""Support for monitoring OctoPrint 3D printers."""
 import logging
 import time
 
@@ -23,10 +18,11 @@ from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'octoprint'
-CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
+CONF_NUMBER_OF_TOOLS = 'number_of_tools'
+
 DEFAULT_NAME = 'OctoPrint'
+DOMAIN = 'octoprint'
 
 
 def has_all_unique_names(value):

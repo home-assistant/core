@@ -1,10 +1,4 @@
-"""
-KNX/IP notification service.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/notify.knx/
-"""
-
+"""Support for KNX/IP notification services."""
 import voluptuous as vol
 
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
@@ -16,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
 DEFAULT_NAME = 'KNX Notify'
+
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -1,10 +1,4 @@
-"""
-Support for KNX/IP climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.knx/
-"""
-
+"""Support for KNX/IP climate devices."""
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (

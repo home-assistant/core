@@ -1,9 +1,4 @@
-"""
-Component to offer a way to select a date and / or a time.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_datetime/
-"""
+"""Support to select a date and/or a time."""
 import logging
 import datetime
 

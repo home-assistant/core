@@ -1,10 +1,4 @@
-"""
-Support for KNX/IP binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.knx/
-"""
-
+"""Support for KNX/IP binary sensors."""
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -35,7 +29,7 @@ DEPENDENCIES = ['knx']
 AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
     vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA
+    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 AUTOMATIONS_SCHEMA = vol.All(

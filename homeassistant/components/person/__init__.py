@@ -1,15 +1,11 @@
-"""
-Support for tracking people.
-
-For more details about this component, please refer to the documentation.
-https://home-assistant.io/components/person/
-"""
+"""Support for tracking people."""
 from collections import OrderedDict
 import logging
 import uuid
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import (
@@ -17,21 +13,24 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.components import websocket_api
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_EDITABLE = 'editable'
 ATTR_SOURCE = 'source'
 ATTR_USER_ID = 'user_id'
+
 CONF_DEVICE_TRACKERS = 'device_trackers'
 CONF_USER_ID = 'user_id'
+
 DOMAIN = 'person'
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -67,8 +66,8 @@ class PersonManager:
             person_id = conf[CONF_ID]
 
             if person_id in config_data:
-                _LOGGER.error("Found config user with duplicate ID: %s",
-                              person_id)
+                _LOGGER.error(
+                    "Found config user with duplicate ID: %s", person_id)
                 continue
 
             config_data[person_id] = conf
@@ -123,8 +122,8 @@ class PersonManager:
         if entities:
             await self.component.async_add_entities(entities)
 
-    async def async_create_person(self, *, name, device_trackers=None,
-                                  user_id=None):
+    async def async_create_person(
+            self, *, name, device_trackers=None, user_id=None):
         """Create a new person."""
         person = {
             CONF_ID: uuid.uuid4().hex,
@@ -269,8 +268,8 @@ class Person(RestoreEntity):
         def person_start_hass(now):
             self.person_updated()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        person_start_hass)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, person_start_hass)
 
     @callback
     def person_updated(self):

@@ -1,9 +1,4 @@
-"""
-MySensors platform that offers a Climate (MySensors-HVAC) component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.mysensors/
-"""
+"""MySensors platform that offers a Climate (MySensors-HVAC) component."""
 from homeassistant.components import mysensors
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,

@@ -1,9 +1,4 @@
-"""
-This component provides HA switch support for Lupusec Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lupusec/
-"""
+"""Support for Lupusec Security System switches."""
 import logging
 from datetime import timedelta
 

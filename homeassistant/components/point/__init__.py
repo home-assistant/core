@@ -1,9 +1,4 @@
-"""
-Support for Minut Point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/point/
-"""
+"""Support for Minut Point."""
 import asyncio
 import logging
 
@@ -26,9 +21,10 @@ from .const import (
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
 REQUIREMENTS = ['pypoint==1.0.7']
-DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['webhook']
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'

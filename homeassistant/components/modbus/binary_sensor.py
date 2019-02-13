@@ -1,9 +1,4 @@
-"""
-Support for Modbus Coil sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.modbus/
-"""
+"""Support for Modbus Coil sensors."""
 import logging
 import voluptuous as vol
 
@@ -25,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_SLAVE): cv.positive_int
+        vol.Optional(CONF_SLAVE): cv.positive_int,
     }]
 })
 
@@ -36,9 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for coil in config.get(CONF_COILS):
         hub = hass.data[MODBUS_DOMAIN][coil.get(CONF_HUB)]
         sensors.append(ModbusCoilSensor(
-            hub,
-            coil.get(CONF_NAME),
-            coil.get(CONF_SLAVE),
+            hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE),
             coil.get(CONF_COIL)))
     add_entities(sensors)
 
@@ -70,5 +63,5 @@ class ModbusCoilSensor(BinarySensorDevice):
         try:
             self._value = result.bits[0]
         except AttributeError:
-            _LOGGER.error('No response from hub %s, slave %s, coil %s',
+            _LOGGER.error("No response from hub %s, slave %s, coil %s",
                           self._hub.name, self._slave, self._coil)

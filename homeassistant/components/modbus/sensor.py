@@ -1,9 +1,4 @@
-"""
-Support for Modbus Register sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.modbus/
-"""
+"""Support for Modbus Register sensors."""
 import logging
 import struct
 
@@ -56,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT,
                     DATA_TYPE_CUSTOM]),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }]
 })
 
@@ -76,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     CONF_DATA_TYPE)][register.get(CONF_COUNT)])
             except KeyError:
                 _LOGGER.error("Unable to detect data type for %s sensor, "
-                              "try a custom type.", register.get(CONF_NAME))
+                              "try a custom type", register.get(CONF_NAME))
                 continue
         else:
             structure = register.get(CONF_STRUCTURE)

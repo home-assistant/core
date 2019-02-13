@@ -1,18 +1,13 @@
-"""
-Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors.
-
-For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/sensor.juicenet/
-"""
-
+"""Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.juicenet import JuicenetDevice, DOMAIN
 
-DEPENDENCIES = ['juicenet']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['juicenet']
 
 SENSOR_TYPES = {
     'status': ['Charging Status', None],
