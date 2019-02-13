@@ -1,7 +1,7 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -638,25 +638,19 @@ async def test_entry_options(hass, manager):
     entry.add_to_manager(manager)
 
     class TestConfigFlow:
-        """"""
-
         @staticmethod
         def async_get_options_flow(config, options):
-            """Config entry static method."""
             class TestOptionsFlowHandler(data_entry_flow.FlowHandler):
-                """Handle a Test options flow."""
-
                 def __init__(self, config, options):
-                    """"""
                     pass
             return TestOptionsFlowHandler(config, options)
 
     config_entries.HANDLERS['test'] = TestConfigFlow()
 
     flow = manager.options._async_create_flow(
-        'test', context={'source': 'test'}, entry=entry)
+        entry.entry_id, context={'source': 'test'}, data=None)
 
-    result = manager.options._async_finish_flow(
+    manager.options._async_finish_flow(
         flow, {'data': {'second': True}})
 
     assert entry.data == {
