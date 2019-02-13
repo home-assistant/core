@@ -12,7 +12,11 @@ from .const import DATA_BROKERS, DOMAIN
 DEPENDENCIES = ['smartthings']
 
 ST_STATE_LOCKED = 'locked'
-
+ST_LOCK_ATTR_MAP = {
+    'method': 'method',
+    'codeId': 'code_id',
+    'timeout': 'timeout'
+}
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -56,11 +60,16 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         from pysmartthings import Attribute
+        state_attrs = {}
         status = self._device.status.attributes[Attribute.lock]
-        status_data = status.data or {}
-        return {
-            'method': status_data.get('method'),
-            'code_id': status_data.get('codeId'),
-            'timeout': status_data.get('timeout'),
-            'lock_state': status.value
-        }
+        if status.value:
+            state_attrs['lock_state'] = status.value
+        if status.data:
+            for attr, data_val in status.data.items():
+                if not data_val:
+                    continue
+                # Convert camelCase to snake_case
+                new_attr = ''.join('_' + ch.lower() if ch.isupper() else ch
+                                   for ch in attr).lstrip('_')
+                state_attrs[new_attr] = data_val
+        return state_attrs
