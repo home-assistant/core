@@ -15,7 +15,6 @@ climate_scheduler:
 import logging
 import voluptuous as vol
 import json
-import os
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
