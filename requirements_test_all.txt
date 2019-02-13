@@ -275,8 +275,6 @@ smhi-pkg==1.0.8
 somecomfort==0.5.2
 
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.16
-
 # homeassistant.components.recorder
 sqlalchemy==1.2.17
 
