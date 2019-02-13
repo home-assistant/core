@@ -20,7 +20,7 @@ from .const import (
     ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
-REQUIREMENTS = ['aioambient==0.1.0']
+REQUIREMENTS = ['aioambient==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -253,7 +253,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the Ambient PWS as config entry."""
     from aioambient import Client
-    from aioambient.errors import WebsocketConnectionError
+    from aioambient.errors import WebsocketError
 
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -266,7 +266,7 @@ async def async_setup_entry(hass, config_entry):
             hass.data[DOMAIN][DATA_CONFIG].get(CONF_MONITORED_CONDITIONS, []))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
-    except WebsocketConnectionError as err:
+    except WebsocketError as err:
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
