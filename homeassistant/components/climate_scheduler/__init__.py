@@ -24,6 +24,7 @@ from homeassistant.helpers.event import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ ENTITY_ID = "climate_scheduler.main"
 CONF_CLIMATE = 'target_climate'
 ATTR_TIMES = "timetable"
 DEFAULT_TIMES = "[]"
-PERISSTENCE_FILE = 'schedule_persistance.json'
+STORAGE_VERSION = 1
+STORAGE_KEY = 'schedule_persistance'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -65,25 +67,24 @@ class ClimateScheduler(Entity):
         self.climate = climate
         self.rules = []
         self.unsubs = []
-        self.persistence_file = hass.config.path(PERISSTENCE_FILE)
-
-        try:
-            with open(self.persistence_file, 'r') as file_handle:
-                self.rules = json.load(file_handle)
-        except FileNotFoundError:
-            self.saveRules()
-
-        self.update_rules()
+        self.store = Store(hass, STORAGE_VERSION,
+                           STORAGE_KEY)
+        self.hass.loop.create_task(self.async_load_rules())
 
         hass.services.async_register(DOMAIN, 'update', self.handle_update)
-        self.async_schedule_update_ha_state()
 
-    def saveRules(self):
+    async def async_save_rules(self):
         """Save rules to persistence file."""
-        with open(self.persistence_file, 'w') as file_handle:
-            json.dump(self.rules, file_handle, indent=4)
-            file_handle.flush()
-            os.fsync(file_handle.fileno())
+        await self.store.async_save(self.rules)
+
+    async def async_load_rules(self):
+        loaded_rules = await self.store.async_load()
+        if loaded_rules is None:
+            await self.async_save_rules()
+        else:
+            self.rules = loaded_rules
+        self.update_rules()
+        self.async_schedule_update_ha_state()
 
     def update_rules(self):
         """Update the trackers for all rules."""
@@ -123,7 +124,7 @@ class ClimateScheduler(Entity):
         """Update the rule list."""
         new_rules = call.data.get(ATTR_TIMES, DEFAULT_TIMES)
         self.rules = json.loads(new_rules)
-        self.saveRules()
+        self.hass.loop.create_task(self.async_save_rules())
         self.update_rules()
         self.async_schedule_update_ha_state()
 
