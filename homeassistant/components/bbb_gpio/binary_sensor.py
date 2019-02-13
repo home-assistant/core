@@ -1,9 +1,4 @@
-"""
-Support for binary sensor using Beaglebone Black GPIO.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.bbb_gpio/
-"""
+"""Support for binary sensor using Beaglebone Black GPIO."""
 import logging
 
 import voluptuous as vol

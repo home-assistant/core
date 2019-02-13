@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor for Netgear Arlo IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arlo/
-"""
+"""Sensor support for Netgear Arlo IP cameras."""
 import logging
 
 import voluptuous as vol

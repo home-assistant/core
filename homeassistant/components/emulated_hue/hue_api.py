@@ -1,4 +1,4 @@
-"""Provides a Hue API to control Home Assistant."""
+"""Support for a Hue API to control Home Assistant."""
 import logging
 
 from aiohttp import web
@@ -32,7 +32,6 @@ from homeassistant.components import (
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.util.network import is_local
-
 
 _LOGGER = logging.getLogger(__name__)
 

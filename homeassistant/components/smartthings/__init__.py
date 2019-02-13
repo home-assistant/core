@@ -1,5 +1,4 @@
-"""SmartThings Cloud integration for Home Assistant."""
-
+"""Support for SmartThings Cloud."""
 import asyncio
 import logging
 from typing import Iterable

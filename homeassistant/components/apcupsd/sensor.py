@@ -1,9 +1,4 @@
-"""
-Provides a sensor to track various status aspects of a UPS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.apcupsd/
-"""
+"""Support for APCUPSd sensors."""
 import logging
 
 import voluptuous as vol

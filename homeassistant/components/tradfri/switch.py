@@ -1,9 +1,4 @@
-"""
-Support for the IKEA Tradfri platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tradfri/
-"""
+"""Support for IKEA Tradfri switches."""
 import logging
 
 from homeassistant.core import callback

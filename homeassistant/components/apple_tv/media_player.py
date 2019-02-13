@@ -1,9 +1,4 @@
-"""
-Support for Apple TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.apple_tv/
-"""
+"""Support for Apple TV media player."""
 import logging
 
 from homeassistant.components.apple_tv import (

@@ -1,9 +1,4 @@
-"""
-Support for Abode Security System sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.abode/
-"""
+"""Support for Abode Security System sensors."""
 import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN

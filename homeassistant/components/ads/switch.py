@@ -1,9 +1,4 @@
-"""
-Support for ADS switch platform.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/switch.ads/
-"""
+"""Support for ADS switch platform."""
 import logging
 
 import voluptuous as vol
@@ -37,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class AdsSwitch(ToggleEntity):
-    """Representation of an Ads switch device."""
+    """Representation of an ADS switch device."""
 
     def __init__(self, ads_hub, name, ads_var):
         """Initialize the AdsSwitch entity."""
@@ -51,7 +46,7 @@ class AdsSwitch(ToggleEntity):
         """Register device notification."""
         def update(name, value):
             """Handle device notification."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
             self.schedule_update_ha_state()
 

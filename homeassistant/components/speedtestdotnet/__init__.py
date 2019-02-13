@@ -1,9 +1,4 @@
-"""
-Support for testing internet speed via Speedtest.net.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/speedtestdotnet/
-"""
+"""Support for testing internet speed via Speedtest.net."""
 import logging
 from datetime import timedelta
 

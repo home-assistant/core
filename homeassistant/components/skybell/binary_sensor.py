@@ -1,9 +1,4 @@
-"""
-Binary sensor support for the Skybell HD Doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.skybell/
-"""
+"""Binary sensor support for the Skybell HD Doorbell."""
 from datetime import timedelta
 import logging
 

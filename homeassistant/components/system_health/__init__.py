@@ -1,9 +1,4 @@
-"""
-System health component.
-
-For more details about this component, please refer to the documentation at
-https://www.home-assistant.io/components/system_health/
-"""
+"""Support for System health ."""
 import asyncio
 from collections import OrderedDict
 import logging

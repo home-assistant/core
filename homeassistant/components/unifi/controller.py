@@ -1,5 +1,4 @@
 """UniFi Controller abstraction."""
-
 import asyncio
 import async_timeout
 

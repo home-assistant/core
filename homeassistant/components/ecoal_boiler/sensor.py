@@ -1,9 +1,4 @@
-"""
-Allows reading temperatures from ecoal/esterownik.pl controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ecoal_boiler/
-"""
+"""Allows reading temperatures from ecoal/esterownik.pl controller."""
 import logging
 
 from homeassistant.components.ecoal_boiler import (

@@ -1,10 +1,4 @@
-"""
-Support for ADS light sources.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/light.ads/
-
-"""
+"""Support for ADS light sources."""
 import logging
 import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \

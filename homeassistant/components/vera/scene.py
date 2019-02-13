@@ -1,9 +1,4 @@
-"""
-Support for Vera scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.vera/
-"""
+"""Support for Vera scenes."""
 import logging
 
 from homeassistant.util import slugify
@@ -11,9 +6,9 @@ from homeassistant.components.scene import Scene
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_SCENES, VERA_ID_FORMAT)
 
-DEPENDENCIES = ['vera']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['vera']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

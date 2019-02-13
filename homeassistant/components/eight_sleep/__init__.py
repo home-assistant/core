@@ -1,9 +1,4 @@
-"""
-Support for Eight smart mattress covers and mattresses.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/eight_sleep/
-"""
+"""Support for Eight smart mattress covers and mattresses."""
 import logging
 from datetime import timedelta
 

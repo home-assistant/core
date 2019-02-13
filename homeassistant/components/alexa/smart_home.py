@@ -1,10 +1,4 @@
-"""Support for alexa Smart Home Skill API.
-
-API documentation:
-https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
-https://developer.amazon.com/docs/device-apis/message-guide.html
-"""
-
+"""Support for alexa Smart Home Skill API."""
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
@@ -67,7 +61,7 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_OFF, 'OFF'),
     (climate.STATE_IDLE, 'OFF'),
     (climate.STATE_FAN_ONLY, 'OFF'),
-    (climate.STATE_DRY, 'OFF')
+    (climate.STATE_DRY, 'OFF'),
 ])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'

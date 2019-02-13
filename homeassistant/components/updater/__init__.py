@@ -1,9 +1,4 @@
-"""
-Support to check for available updates.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/updater/
-"""
+"""Support to check for available updates."""
 import asyncio
 from datetime import timedelta
 # pylint: disable=import-error,no-name-in-module

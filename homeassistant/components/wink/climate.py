@@ -1,9 +1,4 @@
-"""
-Support for Wink thermostats and Air Conditioners.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.wink/
-"""
+"""Support for Wink thermostats and Air Conditioners."""
 import logging
 
 from homeassistant.components.climate import (
