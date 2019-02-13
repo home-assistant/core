@@ -1,9 +1,4 @@
-"""
-Support for Ambient Weather Station Service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ambient_station/
-"""
+"""Support for Ambient Weather Station Service."""
 import logging
 
 import voluptuous as vol
@@ -26,6 +21,7 @@ from .const import (
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
 REQUIREMENTS = ['aioambient==0.1.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'

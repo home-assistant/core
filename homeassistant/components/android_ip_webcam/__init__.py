@@ -1,9 +1,4 @@
-"""
-Support for IP Webcam, an Android app that acts as a full-featured webcam.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/android_ip_webcam/
-"""
+"""Support for Android IP Webcam."""
 import asyncio
 import logging
 from datetime import timedelta

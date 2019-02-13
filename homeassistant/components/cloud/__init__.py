@@ -1,9 +1,4 @@
-"""
-Component to integrate the Home Assistant cloud.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cloud/
-"""
+"""Component to integrate the Home Assistant cloud."""
 from datetime import datetime, timedelta
 import json
 import logging
