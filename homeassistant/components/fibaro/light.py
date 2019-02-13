@@ -1,10 +1,4 @@
-"""
-Support for Fibaro lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.fibaro/
-"""
-
+"""Support for Fibaro lights."""
 import logging
 import asyncio
 from functools import partial

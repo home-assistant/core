@@ -1,9 +1,4 @@
-"""
-Support for RSS/Atom feeds.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/feedreader/
-"""
+"""Support for RSS/Atom feeds."""
 from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists

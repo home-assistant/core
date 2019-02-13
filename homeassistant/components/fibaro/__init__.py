@@ -95,7 +95,7 @@ class FibaroController():
         from fiblary3.client.v4.client import Client as FibaroClient
 
         self._client = FibaroClient(
-            config[CONF_URL],  config[CONF_USERNAME], config[CONF_PASSWORD])
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD])
         self._scene_map = None
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_PLUGINS]
