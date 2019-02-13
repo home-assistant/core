@@ -69,12 +69,13 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Clamp(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
+
 SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_ZONE_ARRAY):
-        vol.All(list, [vol.ExactSequence([int, int, int, int])]),
-    vol.Exclusive(ATTR_ZONE_REPEATER, 'TimeToRepeats'):
+        vol.All(list, [vol.ExactSequence(
+            [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)])]),
+    vol.Required(ATTR_ZONE_REPEATER):
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3)),
-    vol.Exclusive(ATTR_ZONE_REPEATER_TEMPLATE, 'TimeToRepeats'): cv.template,
 })
 
 SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend({
@@ -418,3 +419,4 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.error(
                 "Unable to send zoned_clean command to the vacuum: %s",
                 exc)
+            return False
