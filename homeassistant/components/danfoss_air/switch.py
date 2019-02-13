@@ -13,6 +13,7 @@ from homeassistant.components.danfoss_air import DOMAIN \
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Danfoss Air HRV switch platform."""
     from pydanfossair.commands import ReadCommand, UpdateCommand
@@ -29,7 +30,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
 
     for switch in switches:
-        dev.append(DanfossAir(data, switch[0], switch[1], switch[2], switch[3]))
+        dev.append(DanfossAir(data,
+                              switch[0],
+                              switch[1],
+                              switch[2],
+                              switch[3]))
 
     add_entities(dev)
 
