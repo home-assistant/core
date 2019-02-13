@@ -10,8 +10,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+# TODO: Add attributes
 from homeassistant.const import (
-    ATTR_NAME, ATTR_USERNAME,# TODO: Add attributes 
+    ATTR_NAME, ATTR_USERNAME,
     CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_NAME, CONF_PATH)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -23,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CONSUMER_KEY = 'consumer_key'
 CONF_CONSUMER_SECRET = 'consumer_secret'
 CONF_ACCESS_TOKEN_SECRET = 'access_token_secret'
-CONF_USERNAMES = 'usernames'
+CONF_USERS = 'users'
 
 DEFAULT_NAME = 'Twitter'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
-USERNAMES_SCHEMA = vol.Schema({
+USERS_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
@@ -39,18 +40,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
     vol.Required(CONF_CONSUMER_KEY): cv.string,
     vol.Required(CONF_CONSUMER_SECRET): cv.string,
-    vol.Required(CONF_REPOS):
-        vol.All(cv.ensure_list, [USERNAMES_SCHEMA])
+    vol.Required(CONF_USERS):
+        vol.All(cv.ensure_list, [USERS_SCHEMA])
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitter sensor platform."""
     sensors = []
-    for username in config.get(CONF_USERNAMES):
+    for user in config.get(USERS_SCHEMA):
         data = TwitterData(
-            name=config.get(CONF_NAME),
-            username=config.get(CONF_USERNAME),
+            name=config.get(user, CONF_NAME),
+            username=config.get(user, CONF_USERNAME),
             consumer_key=config.get(CONF_CONSUMER_KEY),
             consumer_secret=config.get(CONF_CONSUMER_SECRET),
             access_token_key=config.get(CONF_ACCESS_TOKEN),
@@ -101,7 +102,8 @@ class TwitterSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_USERNAME: self._username# TODO: Add attributes
+            ATTR_USERNAME: self._username
+            # TODO: Add attributes
         }
 
     @property
@@ -124,16 +126,17 @@ class TwitterSensor(Entity):
         self._latest_tweet_hashtags = self._twitter_data.latest_tweet_hashtags
         self._latest_tweet_mentions = self._twitter_data.latest_tweet_mentions
 
+
 class TwitterData():
     """Twitter Data object."""
 
-    def __init__(self, name, username, consumer_key, consumer_secret, 
+    def __init__(self, name, username, consumer_key, consumer_secret,
                  access_token_key, access_token_secret):
         """Set up Twitter."""
         from TwitterAPI import TwitterAPI
 
         self._api = TwitterAPI(consumer_key, consumer_secret,
-                                   access_token_key, access_token_secret)
+                               access_token_key, access_token_secret)
 
         self.name = name
         self.username = username
@@ -148,9 +151,11 @@ class TwitterData():
 
     def update(self):
         """Update Twitter Sensor."""
+        from TwitterAPI import TwitterPager
+
         pager = TwitterPager(self._api,
                              'statuses/user_timeline',
-                             { 'screen_name': self.username, 'count': 1 })
+                             {'screen_name': self.username, 'count': 1})
 
         tweet = pager.get_iterator(wait=3.5)[0]
 
