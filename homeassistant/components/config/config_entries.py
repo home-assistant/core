@@ -159,10 +159,8 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
         return self.json(config_entries.FLOWS)
 
 
-
-
 class OptionManagerFlowIndexView(FlowManagerIndexView):
-    """View to create config flows."""
+    """View to create option flows."""
 
     url = '/api/config/config_entries/entry/option/flow'
     name = 'api:config:config_entries:entry:resource:option:flow'
@@ -183,7 +181,7 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
 
 
 class OptionManagerFlowResourceView(ConfigManagerFlowResourceView):
-    """View to interact with the flow manager."""
+    """View to interact with the option flow manager."""
 
     url = '/api/config/config_entries/options/flow/{flow_id}'
     name = 'api:config:config_entries:options:flow:resource'

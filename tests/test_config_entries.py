@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, loader, data_entry_flow
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -637,20 +638,23 @@ async def test_entry_options(hass, manager):
     )
     entry.add_to_manager(manager)
 
-    class TestConfigFlow:
+    class TestFlow:
         @staticmethod
+        @callback
         def async_get_options_flow(config, options):
-            class TestOptionsFlowHandler(data_entry_flow.FlowHandler):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 def __init__(self, config, options):
                     pass
-            return TestOptionsFlowHandler(config, options)
+            return OptionsFlowHandler(config, options)
 
-    config_entries.HANDLERS['test'] = TestConfigFlow()
-
-    flow = manager.options._async_create_flow(
+    config_entries.HANDLERS['test'] = TestFlow()
+    print(entry)
+    flow = await manager.options._async_create_flow(
         entry.entry_id, context={'source': 'test'}, data=None)
 
-    manager.options._async_finish_flow(
+    flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+    await manager.options._async_finish_flow(
         flow, {'data': {'second': True}})
 
     assert entry.data == {

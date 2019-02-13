@@ -454,6 +454,14 @@ class ConfigEntries:
         return result
 
     @callback
+    def async_get_entry(self, entry_id: str) -> ConfigEntry:
+        """Return entry with matching entry_id."""
+        for entry in self._entries:
+            if entry_id == entry.entry_id:
+                return entry
+        return None
+
+    @callback
     def async_entries(self, domain: Optional[str] = None) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
@@ -672,35 +680,34 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
 
 class Options:
-    """"""
+    """Flow to set options for a configuration entry."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """"""
+        """Initialize the options manager."""
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
-        self.active_options = {}
 
     async def _async_create_flow(
             self, entry_id: str, *,
             context: dict, data) -> data_entry_flow.FlowHandler:
-        """"""
-        entry = None
-        for ent in self.hass.config_entries.async_entries():
-            if entry_id == ent.entry_id:
-                entry = ent
-                break
+        """Create an options flow for a config entry.
 
+        Entry_id and flow.handler is the same thing to map entry with flow.
+        """
+        entry = self.hass.config_entries.async_get_entry(entry_id)
         flow = HANDLERS[entry.domain].async_get_options_flow(
             entry.data, entry.options)
         flow.init_step = context['source']
-        self.active_options[entry_id] = entry
         return flow
 
     async def _async_finish_flow(
             self, flow: data_entry_flow.FlowHandler, result: dict):
-        """"""
-        entry = self.active_options.pop(flow.handler)
+        """Finish an options flow and update options for configuration entry.
+
+        Flow.handler and entry_id is the same thing to map flow with entry.
+        """
+        entry = self.hass.config_entries.async_get_entry(flow.handler)
         self.hass.config_entries.async_update_entry(
             entry, options=result['data'])
 

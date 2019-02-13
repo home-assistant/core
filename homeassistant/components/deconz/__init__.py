@@ -163,11 +163,6 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_options_updated(hass, config_entry):
-    """Options have changed."""
-    pass
-
-
 async def async_unload_entry(hass, config_entry):
     """Unload deCONZ config entry."""
     gateway = hass.data.pop(DOMAIN)
