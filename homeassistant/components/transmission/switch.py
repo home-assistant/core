@@ -1,9 +1,4 @@
-"""
-Support for setting the Transmission BitTorrent client Turtle Mode.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.transmission/
-"""
+"""Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 
 from homeassistant.components.transmission import (
@@ -22,10 +17,7 @@ DEFAULT_NAME = 'Transmission Turtle Mode'
 
 
 async def async_setup_platform(
-        hass,
-        config,
-        async_add_entities,
-        discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return

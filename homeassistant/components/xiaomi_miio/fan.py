@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/fan.xiaomi_miio/
-"""
+"""Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 import asyncio
 from enum import Enum
 from functools import partial

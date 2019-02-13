@@ -1,9 +1,4 @@
-"""
-Support the binary sensors of a BloomSky weather station.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.bloomsky/
-"""
+"""Support the binary sensors of a BloomSky weather station."""
 import logging
 
 import voluptuous as vol

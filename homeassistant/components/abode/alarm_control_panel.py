@@ -1,9 +1,4 @@
-"""
-This component provides HA alarm_control_panel support for Abode System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.abode/
-"""
+"""Support for Abode Security System alarm control panels."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm

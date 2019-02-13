@@ -1,21 +1,15 @@
-"""
-Timer component.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/timer/
-"""
-import logging
+"""Support for Timers."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
-
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

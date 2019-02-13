@@ -1,9 +1,4 @@
-"""
-Support for monitoring a Smappee energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.smappee/
-"""
+"""Support for monitoring a Smappee energy sensor."""
 import logging
 from datetime import timedelta
 

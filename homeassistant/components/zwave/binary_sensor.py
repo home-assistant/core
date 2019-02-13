@@ -1,9 +1,4 @@
-"""
-Interfaces with Z-Wave sensors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/binary_sensor.zwave/
-"""
+"""Support for Z-Wave binary sensors."""
 import logging
 import datetime
 import homeassistant.util.dt as dt_util
@@ -17,11 +12,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = []
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave binary sensors."""
     pass
 
@@ -33,8 +27,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add Z-Wave  binary sensor."""
         async_add_entities([binary_sensor])
 
-    async_dispatcher_connect(hass, 'zwave_new_binary_sensor',
-                             async_add_binary_sensor)
+    async_dispatcher_connect(
+        hass, 'zwave_new_binary_sensor', async_add_binary_sensor)
 
 
 def get_device(values, **kwargs):

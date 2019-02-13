@@ -1,9 +1,4 @@
-"""
-Support for interacting with UpCloud servers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.upcloud/
-"""
+"""Support for interacting with UpCloud servers."""
 import logging
 
 import voluptuous as vol

@@ -1,16 +1,11 @@
-"""
-Support for Zigbee devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zigbee/
-"""
+"""Support for Zigbee devices."""
 import logging
 from binascii import hexlify, unhexlify
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
+    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN, CONF_ADDRESS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -24,7 +19,6 @@ DOMAIN = 'zigbee'
 
 SIGNAL_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
 
-CONF_ADDRESS = 'address'
 CONF_BAUD = 'baud'
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'

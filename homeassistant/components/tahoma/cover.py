@@ -1,9 +1,4 @@
-"""
-Support for Tahoma cover - shutters etc.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tahoma/
-"""
+"""Support for Tahoma cover - shutters etc."""
 from datetime import timedelta
 import logging
 

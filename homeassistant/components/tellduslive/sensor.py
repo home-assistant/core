@@ -1,9 +1,4 @@
-"""
-Support for Tellstick Net/Telstick Live.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tellduslive/
-"""
+"""Support for Tellstick Net/Telstick Live sensors."""
 import logging
 
 from homeassistant.components import sensor, tellduslive

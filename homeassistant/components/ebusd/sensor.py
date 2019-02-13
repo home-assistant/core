@@ -1,10 +1,4 @@
-"""
-Support for Ebusd daemon for communication with eBUS heating systems.
-
-For more details about ebusd deamon, please refer to the documentation at
-https://github.com/john30/ebusd
-"""
-
+"""Support for Ebusd sensors."""
 import logging
 import datetime
 

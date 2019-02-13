@@ -1,9 +1,4 @@
-"""
-Support for Vera cover - curtains, rollershutters etc.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.vera/
-"""
+"""Support for Vera cover - curtains, rollershutters etc."""
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT, \

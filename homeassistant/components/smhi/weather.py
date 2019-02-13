@@ -1,9 +1,4 @@
-"""
-Support for the Swedish weather institute weather service.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/weather.smhi/
-"""
+"""Support for the Swedish weather institute weather service."""
 import asyncio
 from datetime import timedelta
 import logging

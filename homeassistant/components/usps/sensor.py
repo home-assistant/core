@@ -1,9 +1,4 @@
-"""
-Sensor for USPS packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.usps/
-"""
+"""Sensor for USPS packages."""
 from collections import defaultdict
 import logging
 

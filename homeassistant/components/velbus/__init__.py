@@ -1,9 +1,4 @@
-"""
-Support for Velbus platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/velbus/
-"""
+"""Support for Velbus devices."""
 import logging
 import voluptuous as vol
 
@@ -17,7 +12,6 @@ REQUIREMENTS = ['python-velbus==2.0.21']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'velbus'
-
 
 VELBUS_MESSAGE = 'velbus.message'
 

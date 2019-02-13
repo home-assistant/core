@@ -1,9 +1,4 @@
-"""
-Handle the frontend for Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/frontend/
-"""
+"""Handle the frontend for Home Assistant."""
 import asyncio
 import json
 import logging

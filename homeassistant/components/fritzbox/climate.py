@@ -1,9 +1,4 @@
-"""
-Support for AVM Fritz!Box smarthome thermostate devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/climate.fritzbox/
-"""
+"""Support for AVM Fritz!Box smarthome thermostate devices."""
 import logging
 
 import requests
@@ -19,6 +14,7 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
+
 DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)

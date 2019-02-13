@@ -1,9 +1,4 @@
-"""
-Support for Zabbix.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zabbix/
-"""
+"""Support for Zabbix."""
 import logging
 from urllib.parse import urljoin
 
@@ -19,17 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
 DEFAULT_PATH = 'zabbix'
-
 DOMAIN = 'zabbix'
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 

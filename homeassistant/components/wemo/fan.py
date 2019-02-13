@@ -1,9 +1,4 @@
-"""
-Support for WeMo humidifier.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.wemo/
-"""
+"""Support for WeMo humidifier."""
 import asyncio
 import logging
 from datetime import timedelta

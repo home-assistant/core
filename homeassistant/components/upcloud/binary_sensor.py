@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of UpCloud servers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.upcloud/
-"""
+"""Support for monitoring the state of UpCloud servers."""
 import logging
 
 import voluptuous as vol

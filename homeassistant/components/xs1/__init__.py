@@ -1,10 +1,4 @@
-"""
-Support for the EZcontrol XS1 gateway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xs1/
-"""
-
+"""Support for the EZcontrol XS1 gateway."""
 import asyncio
 from functools import partial
 import logging
@@ -29,17 +23,17 @@ SENSORS = 'sensors'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 XS1_COMPONENTS = [
-    'switch',
+    'climate',
     'sensor',
-    'climate'
+    'switch',
 ]
 
 # Lock used to limit the amount of concurrent update requests
@@ -54,13 +48,9 @@ def _create_controller_api(host, port, ssl, user, password):
 
     try:
         return xs1_api_client.XS1(
-            host=host,
-            port=port,
-            ssl=ssl,
-            user=user,
-            password=password)
+            host=host, port=port, ssl=ssl, user=user, password=password)
     except ConnectionError as error:
-        _LOGGER.error("Failed to create XS1 api client "
+        _LOGGER.error("Failed to create XS1 API client "
                       "because of a connection error: %s", error)
         return None
 
@@ -77,8 +67,7 @@ async def async_setup(hass, config):
 
     # initialize XS1 API
     xs1 = await hass.async_add_executor_job(
-        partial(_create_controller_api,
-                host, port, ssl, user, password))
+        partial(_create_controller_api, host, port, ssl, user, password))
     if xs1 is None:
         return False
 
@@ -96,7 +85,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][SENSORS] = sensors
 
     _LOGGER.debug("Loading components for XS1 platform...")
-    # load components for supported devices
+    # Load components for supported devices
     for component in XS1_COMPONENTS:
         hass.async_create_task(
             discovery.async_load_platform(

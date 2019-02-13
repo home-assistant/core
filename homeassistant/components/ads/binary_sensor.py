@@ -1,9 +1,4 @@
-"""
-Support for ADS binary sensors.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/binary_sensor.ads/
-"""
+"""Support for ADS binary sensors."""
 import logging
 
 import voluptuous as vol

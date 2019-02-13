@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Aqara Lock.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.xiaomi_aqara/
-"""
+"""Support for Xiaomi Aqara locks."""
 import logging
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
@@ -24,8 +19,8 @@ ATTR_VERIFIED_WRONG_TIMES = 'verified_wrong_times'
 UNLOCK_MAINTAIN_TIME = 5
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
 

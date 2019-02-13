@@ -1,9 +1,4 @@
-"""
-Offer MQTT listening automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#mqtt-trigger
-"""
+"""Offer MQTT listening automation rules."""
 import json
 
 import voluptuous as vol

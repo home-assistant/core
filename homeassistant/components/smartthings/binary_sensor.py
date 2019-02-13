@@ -1,9 +1,4 @@
-"""
-Support for binary sensors through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.binary_sensor/
-"""
+"""Support for binary sensors through the SmartThings cloud API."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import SmartThingsEntity
@@ -20,7 +15,7 @@ CAPABILITY_TO_ATTRIB = {
     'soundSensor': 'sound',
     'tamperAlert': 'tamper',
     'valve': 'valve',
-    'waterSensor': 'water'
+    'waterSensor': 'water',
 }
 ATTRIB_TO_CLASS = {
     'acceleration': 'moving',
@@ -31,7 +26,7 @@ ATTRIB_TO_CLASS = {
     'sound': 'sound',
     'tamper': 'problem',
     'valve': 'opening',
-    'water': 'moisture'
+    'water': 'moisture',
 }
 
 
