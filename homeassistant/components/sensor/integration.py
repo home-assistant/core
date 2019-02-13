@@ -26,7 +26,7 @@ CONF_ROUND_DIGITS = 'round'
 CONF_UNIT_PREFIX = 'unit_prefix'
 CONF_UNIT_TIME = 'unit_time'
 CONF_UNIT_OF_MEASUREMENT = 'unit'
-CONF_INTEGRATION_METHOD = 'method'
+CONF_METHOD = 'method'
 
 TRAPEZOIDAL_METHOD = 'trapezoidal'
 LEFT_METHOD = 'left'
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
     vol.Optional(CONF_UNIT_TIME, default='h'): vol.In(UNIT_TIME),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_INTEGRATION_METHOD, default=TRAPEZOIDAL_METHOD):
+    vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD):
         vol.In(INTEGRATION_METHOD),
 })
 
@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                  config[CONF_UNIT_PREFIX],
                                  config[CONF_UNIT_TIME],
                                  config.get(CONF_UNIT_OF_MEASUREMENT),
-                                 config[CONF_INTEGRATION_METHOD])
+                                 config[CONF_METHOD])
 
     async_add_entities([integral])
 
