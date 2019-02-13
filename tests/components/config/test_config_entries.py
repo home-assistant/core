@@ -604,7 +604,6 @@ async def test_two_step_options_flow(hass, client):
             'errors': None
         }
 
-
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = await client.post(
             '/api/config/config_entries/options/flow/{}'.format(flow_id),
