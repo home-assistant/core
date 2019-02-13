@@ -13,8 +13,8 @@ DEPENDENCIES = ['edp_redy']
 ATTR_ACTIVE_POWER = 'active_power'
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for re:dy devices."""
     from edp_redy.session import ACTIVE_POWER_ID
 

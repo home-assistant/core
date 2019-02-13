@@ -1,8 +1,4 @@
-"""Webhooks for Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/webhook/
-"""
+"""Webhooks for Home Assistant."""
 import logging
 
 from aiohttp.web import Response
@@ -14,13 +10,16 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 
-DOMAIN = 'webhook'
-DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['http']
+
+DOMAIN = 'webhook'
 
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
+
 WS_TYPE_LIST = 'webhook/list'
+
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_LIST,
 })

@@ -1,9 +1,4 @@
-"""
-Support for Tesla door locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.tesla/
-"""
+"""Support for Tesla door locks."""
 import logging
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice

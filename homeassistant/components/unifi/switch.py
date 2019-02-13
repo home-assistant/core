@@ -1,10 +1,4 @@
-"""
-Support for devices connected to UniFi POE.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.unifi/
-"""
-
+"""Support for devices connected to UniFi POE."""
 import asyncio
 import logging
 
@@ -39,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
     controller_id = CONTROLLER_ID.format(
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
     switches = {}

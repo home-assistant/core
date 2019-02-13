@@ -1,9 +1,4 @@
-"""
-Support for Arlo Alarm Control Panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.arlo/
-"""
+"""Support for Arlo Alarm Control Panels."""
 import logging
 
 import voluptuous as vol

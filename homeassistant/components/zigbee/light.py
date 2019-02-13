@@ -1,9 +1,4 @@
-"""
-Functionality to use a ZigBee device as a light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.zigbee/
-"""
+"""Support for Zigbee lights."""
 import voluptuous as vol
 
 from homeassistant.components.light import Light

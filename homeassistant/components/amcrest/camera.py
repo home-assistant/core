@@ -1,9 +1,4 @@
-"""
-This component provides basic support for Amcrest IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.amcrest/
-"""
+"""Support for Amcrest IP cameras."""
 import logging
 
 from homeassistant.components.amcrest import (

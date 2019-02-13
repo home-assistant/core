@@ -1,9 +1,4 @@
-"""
-Support for TP-Link LTE modems.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tplink_lte/
-"""
+"""Support for TP-Link LTE modems."""
 import asyncio
 import logging
 
@@ -26,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'tplink_lte'
 DATA_KEY = 'tplink_lte'
 
-CONF_NOTIFY = "notify"
+CONF_NOTIFY = 'notify'
 
 # Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
 ATTR_TARGET_INVALIDATION_VERSION = '0.91.0'
@@ -49,8 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NOTIFY):
-            vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
+        vol.Optional(CONF_NOTIFY): vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
     })])
 }, extra=vol.ALLOW_EXTRA)
 

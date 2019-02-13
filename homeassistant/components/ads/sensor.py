@@ -1,9 +1,4 @@
-"""
-Support for ADS sensors.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/sensor.ads/
-"""
+"""Support for ADS sensors."""
 import logging
 
 import voluptuous as vol

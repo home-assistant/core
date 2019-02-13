@@ -1,9 +1,4 @@
-"""
-Support for Blink Home Camera System.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/blink/
-"""
+"""Support for Blink Home Camera System."""
 import logging
 from datetime import timedelta
 import voluptuous as vol

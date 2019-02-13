@@ -1,9 +1,4 @@
-"""
-Support for SleepIQ from SleepNumber.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sleepiq/
-"""
+"""Support for SleepIQ from SleepNumber."""
 import logging
 from datetime import timedelta
 from requests.exceptions import HTTPError

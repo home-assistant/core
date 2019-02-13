@@ -1,9 +1,4 @@
-"""
-Support for Tuya cover.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tuya/
-"""
+"""Support for Tuya covers."""
 from homeassistant.components.cover import (
     CoverDevice, ENTITY_ID_FORMAT, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
 from homeassistant.components.tuya import DATA_TUYA, TuyaDevice

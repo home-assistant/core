@@ -1,9 +1,4 @@
-"""
-Z-Wave platform that handles simple door locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.zwave/
-"""
+"""Support for Z-Wave door locks."""
 import logging
 
 import voluptuous as vol

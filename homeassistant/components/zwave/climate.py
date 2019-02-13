@@ -1,9 +1,4 @@
-"""
-Support for Z-Wave climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.zwave/
-"""
+"""Support for Z-Wave climate devices."""
 # Because we do not compile openzwave on CI
 import logging
 from homeassistant.core import callback
@@ -43,8 +38,8 @@ STATE_MAPPINGS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave climate devices."""
     pass
 

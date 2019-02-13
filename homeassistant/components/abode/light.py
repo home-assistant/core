@@ -1,9 +1,4 @@
-"""
-This component provides HA light support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.abode/
-"""
+"""Support for Abode Security System lights."""
 import logging
 from math import ceil
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN

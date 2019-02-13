@@ -1,9 +1,4 @@
-"""
-Support for functionality to use a ZigBee device as a sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zigbee/
-"""
+"""Support for Zigbee sensors."""
 import logging
 from binascii import hexlify
 

@@ -1,12 +1,4 @@
-"""
-Toon van Eneco Thermostat Support.
-
-This provides a component for the rebranded Quby thermostat as provided by
-Eneco.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.toon/
-"""
+"""Support for Toon van Eneco Thermostats."""
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)

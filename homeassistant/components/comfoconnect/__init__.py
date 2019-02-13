@@ -1,9 +1,4 @@
-"""
-Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/comfoconnect/
-"""
+"""Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
 import voluptuous as vol

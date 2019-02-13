@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Gateways.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/xiaomi_aqara/
-"""
+"""Support for Xiaomi Gateways."""
 import logging
 
 from datetime import timedelta

@@ -1,9 +1,4 @@
-"""
-Support for Spider thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.spider/
-"""
+"""Support for Spider thermostats."""
 
 import logging
 
@@ -23,7 +18,7 @@ FAN_LIST = [
     'High',
     'Boost 10',
     'Boost 20',
-    'Boost 30'
+    'Boost 30',
 ]
 
 OPERATION_LIST = [
@@ -34,7 +29,7 @@ OPERATION_LIST = [
 HA_STATE_TO_SPIDER = {
     STATE_COOL: 'Cool',
     STATE_HEAT: 'Heat',
-    STATE_IDLE: 'Idle'
+    STATE_IDLE: 'Idle',
 }
 
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}

@@ -1,9 +1,4 @@
-"""
-Support for Verisure Smartplugs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.verisure/
-"""
+"""Support for Verisure Smartplugs."""
 import logging
 from time import time
 

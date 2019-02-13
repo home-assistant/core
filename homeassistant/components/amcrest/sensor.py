@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor support for Amcrest IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.amcrest/
-"""
+"""Suppoort for Amcrest IP camera sensors."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up a sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -45,8 +40,8 @@ class AmcrestSensor(Entity):
         self._attrs = {}
         self._camera = camera
         self._sensor_type = sensor_type
-        self._name = '{0}_{1}'.format(name,
-                                      SENSORS.get(self._sensor_type)[0])
+        self._name = '{0}_{1}'.format(
+            name, SENSORS.get(self._sensor_type)[0])
         self._icon = 'mdi:{}'.format(SENSORS.get(self._sensor_type)[2])
         self._state = None
 

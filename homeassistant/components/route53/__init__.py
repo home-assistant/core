@@ -1,9 +1,4 @@
-"""
-Update the IP addresses of your Route53 DNS records.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/route53/
-"""
+"""Update the IP addresses of your Route53 DNS records."""
 from datetime import timedelta
 import logging
 from typing import List

@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to StatsD.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/statsd/
-"""
+"""Support for sending data to StatsD."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for interacting with Digital Ocean droplets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.digital_ocean/
-"""
+"""Support for interacting with Digital Ocean droplets."""
 import logging
 
 import voluptuous as vol

@@ -1,10 +1,4 @@
-"""
-Support for Satel Integra devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/satel_integra/
-"""
-
+"""Support for Satel Integra devices."""
 import asyncio
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Allow to set up simple automation rules via the config file.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/automation/
-"""
+"""Allow to set up simple automation rules via the config file."""
 import asyncio
 from functools import partial
 import importlib

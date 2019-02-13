@@ -1,9 +1,4 @@
-"""
-Support for Vera sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.vera/
-"""
+"""Support for Vera sensors."""
 import logging
 from datetime import timedelta
 
@@ -15,9 +10,9 @@ from homeassistant.util import convert
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
-DEPENDENCIES = ['vera']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['vera']
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

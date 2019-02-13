@@ -1,10 +1,4 @@
-"""
-Support for Ebusd daemon for communication with eBUS heating systems.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ebus/
-"""
-
+"""Support for Ebusd daemon for communication with eBUS heating systems."""
 from datetime import timedelta
 import logging
 import socket
@@ -53,13 +47,13 @@ def setup(hass, config):
         conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-        _LOGGER.debug("Ebusd component setup started.")
+        _LOGGER.debug("Ebusd component setup started")
         import ebusdpy
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
 
         sensor_config = {
-            'monitored_conditions': monitored_conditions,
+            CONF_MONITORED_CONDITIONS: monitored_conditions,
             'client_name': name,
             'sensor_types': SENSOR_TYPES[circuit]
         }
@@ -68,7 +62,7 @@ def setup(hass, config):
         hass.services.register(
             DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
 
-        _LOGGER.debug("Ebusd component setup completed.")
+        _LOGGER.debug("Ebusd component setup completed")
         return True
     except (socket.timeout, socket.error):
         return False

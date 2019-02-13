@@ -1,9 +1,4 @@
-"""
-Support for lights through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.light/
-"""
+"""Support for lights through the SmartThings cloud API."""
 import asyncio
 
 from homeassistant.components.light import (
