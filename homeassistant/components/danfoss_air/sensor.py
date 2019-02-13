@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand

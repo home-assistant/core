@@ -73,7 +73,6 @@ class DanfossAir(SwitchDevice):
 
     def update(self):
         """Update the switch's state."""
-
         self._data.update()
 
         self._state = self._data.get_value(self._state_command)
