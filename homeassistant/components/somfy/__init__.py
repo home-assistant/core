@@ -22,7 +22,7 @@ API = 'api'
 
 DEVICES = 'devices'
 
-REQUIREMENTS = ['pymfy==0.5.0']
+REQUIREMENTS = ['pymfy==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,16 +33,8 @@ DOMAIN = 'somfy'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
-NOTIFICATION_ID = 'somfy_notification'
-NOTIFICATION_TITLE = 'Somfy Setup'
-
-ATTR_CLIENT_ID = 'client_id'
-ATTR_CLIENT_SECRET = 'client_secret'
-
 SOMFY_AUTH_CALLBACK_PATH = '/auth/somfy/callback'
 SOMFY_AUTH_START = '/auth/somfy'
-
-DEFAULT_CACHE_PATH = '.somfy'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -82,7 +74,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.config_entries.async_update_entry(entry, data={**entry.data})
 
     # Force token update.
-    entry.data[CONF_TOKEN]['expires_in'] = -1
     from pymfy.api.somfy_api import SomfyApi
     hass.data[DOMAIN][API] = SomfyApi(
         entry.data['refresh_args']['client_id'],
@@ -97,6 +88,19 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(
                 entry, component))
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
+
+    for component in SOMFY_COMPONENTS:
+        await hass.config_entries.async_forward_entry_unload(
+            entry, component)
 
     return True
 
