@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.firetv/
 """
 import functools
 import logging
-import threading
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
