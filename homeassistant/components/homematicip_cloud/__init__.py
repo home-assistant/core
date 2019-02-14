@@ -10,15 +10,13 @@ import homeassistant.helpers.config_validation as cv
 from .config_flow import configured_haps
 from .const import (
     CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_ENABLE_GROUP_SEC_SENSORS,
-    CONF_ENABLE_GROUP_SWITCHES, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID,
+    CONF_ENABLE_GROUP_SWITCHES, DEFAULT_ENABLE_GROUP_SEC_SENSORS,
+    DEFAULT_ENABLE_GROUP_SWITCHES, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID,
     HMIPC_NAME, HMIPCS_ENABLE_GROUP_SEC_SENSORS, HMIPCS_ENABLE_GROUP_SWITCHES)
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
 REQUIREMENTS = ['homematicip==0.10.5']
-
-DEFAULT_ENABLE_GROUP_SWITCHES = False
-DEFAULT_ENABLE_GROUP_SEC_SENSORS = False
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -15,6 +15,9 @@ COMPONENTS = [
     'switch',
 ]
 
+DEFAULT_ENABLE_GROUP_SWITCHES = False
+DEFAULT_ENABLE_GROUP_SEC_SENSORS = False
+
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
 CONF_ENABLE_GROUP_SWITCHES = 'enable_group_switches'

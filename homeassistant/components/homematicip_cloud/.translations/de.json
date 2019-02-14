@@ -16,9 +16,7 @@
                 "data": {
                     "hapid": "Accesspoint ID (SGTIN)",
                     "name": "Name (optional, wird als Pr\u00e4fix f\u00fcr alle Ger\u00e4te verwendet)",
-                    "pin": "PIN Code (optional)",
-                    "enable_group_switches": "Aktiviere Gruppen-Schalter",
-                    "enable_group_sec_sensors": "Aktiviere Sicherheitsgruppen-Sensoren"
+                    "pin": "PIN Code (optional)"
                 },
                 "title": "HometicIP Accesspoint ausw\u00e4hlen"
             },
