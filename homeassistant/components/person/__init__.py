@@ -45,7 +45,7 @@ PERSON_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_USER_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
-        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -417,7 +417,7 @@ def ws_list_person(hass: HomeAssistantType,
     vol.Required('name'): str,
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional('device_trackers', default=[]): vol.All(
-        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -439,7 +439,7 @@ async def ws_create_person(hass: HomeAssistantType,
     vol.Optional('name'): str,
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
-        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 @websocket_api.require_admin
 @websocket_api.async_response
