@@ -5,7 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONTENT_TYPE_TEXT_PLAIN,
