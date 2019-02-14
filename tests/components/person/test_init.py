@@ -287,6 +287,35 @@ async def test_load_person_storage(hass, hass_admin_user, storage_setup):
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
 
+async def test_load_person_storage_two_nonlinked(hass, hass_storage):
+    """Test loading two users with both not having a user linked."""
+    hass_storage[DOMAIN] = {
+        'key': DOMAIN,
+        'version': 1,
+        'data': {
+            'persons': [
+                {
+                    'id': '1234',
+                    'name': 'tracked person 1',
+                    'user_id': None,
+                    'device_trackers': []
+                },
+                {
+                    'id': '5678',
+                    'name': 'tracked person 2',
+                    'user_id': None,
+                    'device_trackers': []
+                },
+            ]
+        }
+    }
+    await async_setup_component(hass, DOMAIN, {})
+
+    assert len(hass.states.async_entity_ids('person')) == 2
+    assert hass.states.get('person.tracked_person_1') is not None
+    assert hass.states.get('person.tracked_person_2') is not None
+
+
 async def test_ws_list(hass, hass_ws_client, storage_setup):
     """Test listing via WS."""
     manager = hass.data[DOMAIN]
