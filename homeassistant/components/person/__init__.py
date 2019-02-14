@@ -24,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components import websocket_api
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_EDITABLE = 'editable'
@@ -49,6 +50,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
+
+
+@bind_hass
+async def async_create_person(hass, name, *, user_id=None,
+                              device_trackers=None):
+    """Create a new person."""
+    await hass.data[DOMAIN].async_create_person(
+        name=name,
+        user_id=user_id,
+        device_trackers=device_trackers,
+    )
 
 
 class PersonManager:

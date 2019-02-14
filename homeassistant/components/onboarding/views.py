@@ -94,6 +94,10 @@ class UserOnboardingView(_BaseOnboardingView):
             })
             await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
+            if 'person' in hass.config.components:
+                await hass.components.person.async_create_person(
+                    data['name'], user_id=user.id
+                )
             await self._async_mark_done(hass)
 
 
