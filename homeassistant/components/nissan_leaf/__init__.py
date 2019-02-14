@@ -273,12 +273,24 @@ class LeafDataStore:
 
             if server_response.answer['status'] == 200:
                 self.data[DATA_BATTERY] = server_response.battery_percent
-                self.data[DATA_RANGE_AC] = (
-                    server_response.cruising_range_ac_on_km
-                )
-                self.data[DATA_RANGE_AC_OFF] = (
-                    server_response.cruising_range_ac_off_km
-                )
+
+                # pycarwings2 library doesn't always provide cruising rnages
+                # so we have to check if they exist before we can use them.
+                # Root cause: the nissan servers don't always send the data.
+                if hasattr(server_response, 'cruising_range_ac_on_km'):
+                    self.data[DATA_RANGE_AC] = (
+                        server_response.cruising_range_ac_on_km
+                    )
+                else:
+                    self.data[DATA_RANGE_AC] = None
+
+                if hasattr(server_response, 'cruising_range_ac_off_km'):
+                    self.data[DATA_RANGE_AC_OFF] = (
+                        server_response.cruising_range_ac_off_km
+                    )
+                else:
+                    self.data[DATA_RANGE_AC_OFF] = None
+
                 self.data[DATA_PLUGGED_IN] = (
                     server_response.is_connected
                 )
