@@ -1,15 +1,9 @@
-"""
-Support for HomematicIP Cloud cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud cover devices."""
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, CoverDevice)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN)
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 
 DEPENDENCIES = ['homematicip_cloud']
 

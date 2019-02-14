@@ -1,14 +1,4 @@
-"""
-Support for Google - Calendar Event Devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/google/
-
-NOTE TO OTHER DEVELOPERS: IF YOU ADD MORE SCOPES TO THE OAUTH THAN JUST
-CALENDAR THEN USERS WILL NEED TO DELETE THEIR TOKEN_FILE. THEY WILL LOSE THEIR
-REFRESH_TOKEN PIECE WHEN RE-AUTHENTICATING TO ADD MORE API ACCESS
-IT'S BEST TO JUST HAVE SEPARATE OAUTH FOR DIFFERENT PIECES OF GOOGLE
-"""
+"""Support for Google - Calendar Event Devices."""
 import logging
 import os
 import yaml
@@ -75,10 +65,10 @@ CONFIG_SCHEMA = vol.Schema({
 _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Optional(CONF_TRACK): cv.boolean,
-    vol.Optional(CONF_SEARCH): cv.string,
-    vol.Optional(CONF_OFFSET): cv.string,
     vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
+    vol.Optional(CONF_OFFSET): cv.string,
+    vol.Optional(CONF_SEARCH): cv.string,
+    vol.Optional(CONF_TRACK): cv.boolean,
 })
 
 DEVICE_SCHEMA = vol.Schema({
@@ -95,10 +85,7 @@ def do_authentication(hass, hass_config, config):
     until we have an access token.
     """
     from oauth2client.client import (
-        OAuth2WebServerFlow,
-        OAuth2DeviceCodeError,
-        FlowExchangeError
-    )
+        OAuth2WebServerFlow, OAuth2DeviceCodeError, FlowExchangeError)
     from oauth2client.file import Storage
 
     oauth = OAuth2WebServerFlow(
@@ -152,8 +139,8 @@ def do_authentication(hass, hass_config, config):
             'been found'.format(YAML_DEVICES),
             title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
 
-    listener = track_time_change(hass, step2_exchange,
-                                 second=range(0, 60, dev_flow.interval))
+    listener = track_time_change(
+        hass, step2_exchange, second=range(0, 60, dev_flow.interval))
 
     return True
 

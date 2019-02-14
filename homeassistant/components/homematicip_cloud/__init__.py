@@ -1,9 +1,4 @@
-"""
-Support for HomematicIP Cloud components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud devices."""
 import logging
 
 import voluptuous as vol

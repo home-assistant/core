@@ -1,9 +1,4 @@
-"""
-Support for HomeMatic devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematic/
-"""
+"""Support for HomeMatic devices."""
 from datetime import timedelta
 from functools import partial
 import logging
@@ -13,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
-    CONF_PLATFORM, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL,
+    CONF_PLATFORM, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
