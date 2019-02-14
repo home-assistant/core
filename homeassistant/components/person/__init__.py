@@ -247,7 +247,7 @@ class PersonManager:
             raise ValueError("User already taken")
 
     async def _user_removed(self, event: Event):
-        """Fired when a person is removed."""
+        """Handle event that a person is removed."""
         user_id = event.data['user_id']
         for person in self.storage_data.values():
             if person[CONF_USER_ID] == user_id:
