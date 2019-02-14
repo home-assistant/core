@@ -26,6 +26,12 @@ CONF_ROUND_DIGITS = 'round'
 CONF_UNIT_PREFIX = 'unit_prefix'
 CONF_UNIT_TIME = 'unit_time'
 CONF_UNIT_OF_MEASUREMENT = 'unit'
+CONF_METHOD = 'method'
+
+TRAPEZOIDAL_METHOD = 'trapezoidal'
+LEFT_METHOD = 'left'
+RIGHT_METHOD = 'right'
+INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1,
@@ -49,7 +55,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
     vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
     vol.Optional(CONF_UNIT_TIME, default='h'): vol.In(UNIT_TIME),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD):
+        vol.In(INTEGRATION_METHOD),
 })
 
 
@@ -61,7 +69,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                                  config[CONF_ROUND_DIGITS],
                                  config[CONF_UNIT_PREFIX],
                                  config[CONF_UNIT_TIME],
-                                 config.get(CONF_UNIT_OF_MEASUREMENT))
+                                 config.get(CONF_UNIT_OF_MEASUREMENT),
+                                 config[CONF_METHOD])
 
     async_add_entities([integral])
 
@@ -70,11 +79,12 @@ class IntegrationSensor(RestoreEntity):
     """Representation of an integration sensor."""
 
     def __init__(self, source_entity, name, round_digits, unit_prefix,
-                 unit_time, unit_of_measurement):
+                 unit_time, unit_of_measurement, integration_method):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
+        self._method = integration_method
 
         self._name = name if name is not None\
             else '{} integral'.format(source_entity)
@@ -117,12 +127,19 @@ class IntegrationSensor(RestoreEntity):
 
             try:
                 # integration as the Riemann integral of previous measures.
+                area = 0
                 elapsed_time = (new_state.last_updated
                                 - old_state.last_updated).total_seconds()
-                area = (Decimal(new_state.state)
-                        + Decimal(old_state.state))*Decimal(elapsed_time)/2
-                integral = area / (self._unit_prefix * self._unit_time)
 
+                if self._method == TRAPEZOIDAL_METHOD:
+                    area = (Decimal(new_state.state)
+                            + Decimal(old_state.state))*Decimal(elapsed_time)/2
+                elif self._method == LEFT_METHOD:
+                    area = Decimal(old_state.state)*Decimal(elapsed_time)
+                elif self._method == RIGHT_METHOD:
+                    area = Decimal(new_state.state)*Decimal(elapsed_time)
+
+                integral = area / (self._unit_prefix * self._unit_time)
                 assert isinstance(integral, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating integration: %s", err)

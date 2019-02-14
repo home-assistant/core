@@ -1,9 +1,4 @@
-"""
-Support for esphome devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/esphome/
-"""
+"""Support for esphome devices."""
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Callable
