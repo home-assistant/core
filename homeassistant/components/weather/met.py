@@ -1,21 +1,16 @@
-"""
-Support for Met.no weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.met/
-"""
+"""Support for Met.no weather service."""
 import logging
 from random import randrange
 
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
-from homeassistant.const import (CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_NAME, TEMP_CELSIUS)
+from homeassistant.const import (
+    CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import (async_track_utc_time_change,
-                                         async_call_later)
+from homeassistant.helpers.event import (
+    async_call_later, async_track_utc_time_change)
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pyMetno==0.4.5']

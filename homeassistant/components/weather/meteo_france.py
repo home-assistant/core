@@ -1,19 +1,12 @@
-"""
-Support for Meteo france weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.meteo_france/
-"""
-import logging
+"""Support for Meteo france weather service."""
 from datetime import datetime, timedelta
+import logging
 
-from homeassistant.components.meteo_france import (DATA_METEO_FRANCE,
-                                                   CONDITION_CLASSES,
-                                                   CONF_CITY,
-                                                   ATTRIBUTION)
+from homeassistant.components.meteo_france import (
+    ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE)
 from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, WeatherEntity)
 from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
