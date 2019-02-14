@@ -96,7 +96,7 @@ class IrishRailTransportSensor(Entity):
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {
-                ATTR_ATTRIBUTION: ATTR_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_STATION: self._station,
                 ATTR_ORIGIN: self._times[0][ATTR_ORIGIN],
                 ATTR_DESTINATION: self._times[0][ATTR_DESTINATION],
