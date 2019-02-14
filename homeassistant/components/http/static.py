@@ -10,6 +10,7 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 
 
+# pylint: disable=E0241
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
