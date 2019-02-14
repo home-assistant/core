@@ -1,9 +1,4 @@
-"""
-Support for the OpenWeatherMap (OWM) service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.openweathermap/
-"""
+"""Support for the OpenWeatherMap (OWM) service."""
 from datetime import timedelta
 import logging
 
@@ -11,12 +6,11 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_SPEED,
-    ATTR_FORECAST_WIND_BEARING,
-    PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
-    CONF_API_KEY, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
-    CONF_NAME, STATE_UNKNOWN)
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME,
+    STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
