@@ -20,7 +20,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.1.0']
+REQUIREMENTS = ['pypoint==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
