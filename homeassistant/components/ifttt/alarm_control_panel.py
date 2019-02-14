@@ -1,9 +1,4 @@
-"""
-Interfaces with alarm control panels that have to be controlled through IFTTT.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ifttt/
-"""
+"""Support for alarm control panels that can be controlled through IFTTT."""
 import logging
 import re
 

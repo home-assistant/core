@@ -1,10 +1,4 @@
-"""
-Support for iTach IR Devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.itach/
-"""
-
+"""Support for iTach IR devices."""
 import logging
 
 import voluptuous as vol
@@ -38,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_CONNADDR): vol.Coerce(int),
         vol.Required(CONF_COMMANDS): vol.All(cv.ensure_list, [{
             vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_DATA): cv.string
+            vol.Required(CONF_DATA): cv.string,
         }])
     }])
 })

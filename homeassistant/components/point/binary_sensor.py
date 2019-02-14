@@ -1,10 +1,4 @@
-"""
-Support for Minut Point.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.point/
-"""
-
+"""Support for Minut Point binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
@@ -56,7 +50,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):
-        """Initialize the entity."""
+        """Initialize the binary sensor."""
         super().__init__(point_client, device_id, device_class)
 
         self._async_unsub_hook_dispatcher_connect = None
@@ -64,7 +58,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         self._is_on = None
 
     async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
+        """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
         self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_WEBHOOK, self._webhook_event)

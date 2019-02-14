@@ -1,19 +1,11 @@
-"""
-Support for tracking the proximity of a device.
-
-Component to monitor the proximity of devices to a particular zone and the
-direction of travel.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/proximity/
-"""
+"""Support for tracking the proximity of a device."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_ZONE, CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT)
+    CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert

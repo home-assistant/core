@@ -1,13 +1,4 @@
-"""
-Platform for a Generic Modbus Thermostat.
-
-This uses a setpoint and process
-value within the controller, so both the current temperature register and the
-target temperature register need to be configured.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.modbus/
-"""
+"""Support for Generic Modbus Thermostats."""
 import logging
 import struct
 
@@ -20,6 +11,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['modbus']
 
@@ -46,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PRECISION, default=1): cv.positive_int
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
@@ -63,9 +54,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hub_name = config.get(CONF_HUB)
     hub = hass.data[MODBUS_DOMAIN][hub_name]
 
-    add_entities([ModbusThermostat(hub, name, modbus_slave,
-                                   target_temp_register, current_temp_register,
-                                   data_type, count, precision)], True)
+    add_entities([ModbusThermostat(
+        hub, name, modbus_slave, target_temp_register, current_temp_register,
+        data_type, count, precision)], True)
 
 
 class ModbusThermostat(ClimateDevice):

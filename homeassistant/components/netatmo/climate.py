@@ -1,9 +1,4 @@
-"""
-Support for Netatmo Smart Thermostat.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.netatmo/
-"""
+"""Support for Netatmo Smart thermostats."""
 import logging
 from datetime import timedelta
 import voluptuous as vol

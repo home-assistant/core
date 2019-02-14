@@ -1,9 +1,4 @@
-"""
-Support for wired binary sensors attached to a Konnected device.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.konnected/
-"""
+"""Support for wired binary sensors attached to a Konnected device."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -20,8 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up binary sensors attached to a Konnected device."""
     if discovery_info is None:
         return
@@ -38,7 +33,7 @@ class KonnectedBinarySensor(BinarySensorDevice):
     """Representation of a Konnected binary sensor."""
 
     def __init__(self, device_id, pin_num, data):
-        """Initialize the binary sensor."""
+        """Initialize the Konnected binary sensor."""
         self._data = data
         self._device_id = device_id
         self._pin_num = pin_num
@@ -46,7 +41,7 @@ class KonnectedBinarySensor(BinarySensorDevice):
         self._device_class = self._data.get(CONF_TYPE)
         self._name = self._data.get(CONF_NAME, 'Konnected {} Zone {}'.format(
             device_id, PIN_TO_ZONE[pin_num]))
-        _LOGGER.debug('Created new Konnected sensor: %s', self._name)
+        _LOGGER.debug("Created new Konnected sensor: %s", self._name)
 
     @property
     def name(self):

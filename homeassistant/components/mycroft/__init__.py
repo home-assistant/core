@@ -1,10 +1,4 @@
-"""
-Support for Mycroft AI.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mycroft
-"""
-
+"""Support for Mycroft AI."""
 import logging
 
 import voluptuous as vol
@@ -17,9 +11,7 @@ REQUIREMENTS = ['mycroftapi==2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DOMAIN = 'mycroft'
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

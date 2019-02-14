@@ -1,9 +1,4 @@
-"""
-Support for the Netatmo cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.netatmo/.
-"""
+"""Support for the Netatmo cameras."""
 import logging
 
 import requests

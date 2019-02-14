@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor support for Logi Circle cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.logi_circle/
-"""
+"""Support for Logi Circle sensors."""
 import logging
 
 import voluptuous as vol
@@ -26,26 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, unit of measure, icon per sensor key.
 SENSOR_TYPES = {
-    'battery_level': [
-        'Battery', '%', 'battery-50'],
-
-    'last_activity_time': [
-        'Last Activity', None, 'history'],
-
-    'privacy_mode': [
-        'Privacy Mode', None, 'eye'],
-
-    'signal_strength_category': [
-        'WiFi Signal Category', None, 'wifi'],
-
-    'signal_strength_percentage': [
-        'WiFi Signal Strength', '%', 'wifi'],
-
-    'speaker_volume': [
-        'Volume', '%', 'volume-high'],
-
-    'streaming_mode': [
-        'Streaming Mode', None, 'camera'],
+    'battery_level': ['Battery', '%', 'battery-50'],
+    'last_activity_time': ['Last Activity', None, 'history'],
+    'privacy_mode': ['Privacy Mode', None, 'eye'],
+    'signal_strength_category': ['WiFi Signal Category', None, 'wifi'],
+    'signal_strength_percentage': ['WiFi Signal Strength', '%', 'wifi'],
+    'speaker_volume': ['Volume', '%', 'volume-high'],
+    'streaming_mode': ['Streaming Mode', None, 'camera'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

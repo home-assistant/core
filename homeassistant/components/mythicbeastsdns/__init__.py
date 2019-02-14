@@ -1,9 +1,4 @@
-"""
-Integrate with Mythic Beasts Dynamic DNS service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mythicbeastsdns/
-"""
+"""Support for Mythic Beasts Dynamic DNS service."""
 from datetime import timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Support for Lutron Caseta shades.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.lutron_caseta/
-"""
+"""Support for Lutron Caseta shades."""
 import logging
 
 from homeassistant.components.cover import (
@@ -17,8 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron_caseta']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
