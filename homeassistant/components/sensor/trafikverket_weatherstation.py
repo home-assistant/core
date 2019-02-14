@@ -24,12 +24,13 @@ REQUIREMENTS = ['pytrafikverket==0.1.5.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=300)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+ATTRIBUTION = "Data provided by Trafikverket API"
 
-CONF_ATTRIBUTION = "Data provided by Trafikverket API"
 CONF_STATION = 'station'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'air_temp': ['Air temperature', '°C', 'air_temp'],
@@ -50,8 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Trafikverket sensor platform."""
     from pytrafikverket.trafikverket_weather import TrafikverketWeather
 
@@ -85,7 +86,7 @@ class TrafikverketWeatherStation(Entity):
         self._station = sensor_station
         self._weather_api = weather_api
         self._attributes = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         self._weather = None
 

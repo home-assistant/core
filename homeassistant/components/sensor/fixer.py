@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXCHANGE_RATE = 'Exchange rate'
 ATTR_TARGET = 'Target currency'
+ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
 
-CONF_ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
 CONF_TARGET = 'target'
 
 DEFAULT_BASE = 'USD'
@@ -86,7 +86,7 @@ class ExchangeRateSensor(Entity):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target],
                 ATTR_TARGET: self._target,
             }
