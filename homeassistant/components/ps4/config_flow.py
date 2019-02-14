@@ -12,6 +12,10 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+UDP_PORT = 987
+TCP_PORT = 997
+PORT_MSG = {UDP_PORT: 'port_987_bind_error', TCP_PORT: 'port_997_bind_error'}
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class PlayStation4FlowHandler(config_entries.ConfigFlow):
@@ -20,33 +24,40 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self, helper):
+    def __init__(self):
         """Initialize the config flow."""
         self.creds = None
         self.name = None
         self.host = None
         self.region = None
         self.pin = None
-        self.helper = helper
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
+        from pyps4_homeassistant import Helper
+        helper = Helper()
+
         # Abort if device is configured.
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='devices_configured')
 
         # Check if able to bind to ports: UDP 987, TCP 997.
-        failed = await self.hass.async_add_executor_job(self.helper.port_bind)
-        if failed is not None:
-            reason = 'port_{}_bind_error'.format(failed)
+        ports = PORT_MSG.keys()
+        failed = await self.hass.async_add_executor_job(
+            helper.port_bind, ports)
+        if failed in ports:
+            reason = PORT_MSG[failed]
             return self.async_abort(reason=reason)
         return await self.async_step_creds(user_input)
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
+        from pyps4_homeassistant import Helper
+        helper = Helper()
+
         if user_input is not None:
             self.creds = await self.hass.async_add_executor_job(
-                self.helper.get_creds)
+                helper.get_creds)
 
             if self.creds is not None:
                 return await self.async_step_link()
@@ -57,12 +68,14 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
+        from pyps4_homeassistant import Helper
+        helper = Helper()
+
         errors = {}
         device_list = []
 
         # Search for device.
-        devices = await self.hass.async_add_executor_job(
-            self.helper.has_devices)
+        devices = await self.hass.async_add_executor_job(helper.has_devices)
 
         # Abort if can't find device.
         if not devices:
@@ -79,7 +92,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin)
+                helper.link, self.host, self.creds, self.pin)
 
             if is_ready is False:
                 errors['base'] = 'not_ready'
