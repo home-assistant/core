@@ -398,7 +398,6 @@ class MiroboVacuum(StateVacuumDevice):
                                zone: list,
                                repeats: int = 1):
         """Clean selected area for the number of repeats indicated."""
-        repeats = max(1, min(3, repeats))
         _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
         _LOGGER.debug("Original zone: %s", zone)
@@ -407,10 +406,8 @@ class MiroboVacuum(StateVacuumDevice):
         _LOGGER.debug("Zone with repeats: %s", zone)
         try:
             await self.hass.async_add_executor_job(
-                self._vacuum.zoned_clean(zone))
-            return True
+                self._vacuum.zoned_clean, zone)
         except (OSError, DeviceException) as exc:
             _LOGGER.error(
                 "Unable to send zoned_clean command to the vacuum: %s",
                 exc)
-            return False
