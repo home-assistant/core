@@ -1,4 +1,4 @@
-"""Demo platform that offers a fake water_heater device."""
+"""Demo platform that offers a fake water heater device."""
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
     SUPPORT_TARGET_TEMPERATURE,
