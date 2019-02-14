@@ -134,22 +134,26 @@ class PersonManager:
 
             entities.append(Person(person_conf, False))
 
+        # To make sure IDs don't overlap between config/storage
+        seen_persons = set(self.config_data)
+
         for person_conf in storage_data.values():
             person_id = person_conf[CONF_ID]
             user_id = person_conf[CONF_USER_ID]
 
-            if user_id in self.config_data:
+            if person_id in seen_persons:
                 _LOGGER.error(
                     "Skipping adding person from storage with same ID as"
                     " configuration.yaml entry: %s", person_id)
                 continue
 
-            if user_id in seen_users:
+            if user_id is not None and user_id in seen_users:
                 _LOGGER.error(
                     "Duplicate user_id %s detected for person %s",
                     user_id, person_id)
                 continue
 
+            # To make sure all users have just 1 person linked.
             seen_users.add(user_id)
 
             entities.append(Person(person_conf, True))
