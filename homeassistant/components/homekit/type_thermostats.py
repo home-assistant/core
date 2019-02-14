@@ -3,7 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE, ATTR_MAX_TEMP, ATTR_MIN_TEMP,
     ATTR_OPERATION_LIST, ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,

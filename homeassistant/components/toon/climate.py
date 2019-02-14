@@ -1,9 +1,10 @@
 """Support for Toon van Eneco Thermostats."""
-from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 import homeassistant.components.toon as toon_main
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
