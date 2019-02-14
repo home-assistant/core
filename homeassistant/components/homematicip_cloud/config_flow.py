@@ -6,7 +6,7 @@ from homeassistant.core import callback
 
 from .const import (
     _LOGGER, DOMAIN as HMIPC_DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME,
-    HMIPC_PIN)
+    HMIPC_PIN, HMIPCS_ENABLE_GROUP_SEC_SENSORS, HMIPCS_ENABLE_GROUP_SWITCHES)
 from .hap import HomematicipAuth
 
 
@@ -54,6 +54,8 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                 vol.Required(HMIPC_HAPID): str,
                 vol.Optional(HMIPC_NAME): str,
                 vol.Optional(HMIPC_PIN): str,
+                vol.Required(HMIPCS_ENABLE_GROUP_SWITCHES): bool,
+                vol.Required(HMIPCS_ENABLE_GROUP_SEC_SENSORS): bool,
             }),
             errors=errors
         )
@@ -72,7 +74,12 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                     data={
                         HMIPC_HAPID: self.auth.config.get(HMIPC_HAPID),
                         HMIPC_AUTHTOKEN: authtoken,
-                        HMIPC_NAME: self.auth.config.get(HMIPC_NAME)
+                        HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
+                        HMIPCS_ENABLE_GROUP_SWITCHES:
+                            self.auth.config.get(HMIPCS_ENABLE_GROUP_SWITCHES),
+                        HMIPCS_ENABLE_GROUP_SEC_SENSORS:
+                            self.auth.config.get(
+                                HMIPCS_ENABLE_GROUP_SEC_SENSORS),
                     })
             return self.async_abort(reason='connection_aborted')
         errors['base'] = 'press_the_button'
@@ -84,6 +91,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         hapid = import_info[HMIPC_HAPID]
         authtoken = import_info[HMIPC_AUTHTOKEN]
         name = import_info[HMIPC_NAME]
+        enable_group_switches = import_info[HMIPCS_ENABLE_GROUP_SWITCHES]
+        enable_group_sec_sensors = import_info[
+            HMIPCS_ENABLE_GROUP_SEC_SENSORS]
 
         hapid = hapid.replace('-', '').upper()
         if hapid in configured_haps(self.hass):
@@ -97,5 +107,7 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                 HMIPC_AUTHTOKEN: authtoken,
                 HMIPC_HAPID: hapid,
                 HMIPC_NAME: name,
+                HMIPCS_ENABLE_GROUP_SWITCHES: enable_group_switches,
+                HMIPCS_ENABLE_GROUP_SEC_SENSORS: enable_group_sec_sensors,
             }
         )

@@ -9,12 +9,16 @@ import homeassistant.helpers.config_validation as cv
 
 from .config_flow import configured_haps
 from .const import (
-    CONF_ACCESSPOINT, CONF_AUTHTOKEN, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID,
-    HMIPC_NAME)
+    CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_ENABLE_GROUP_SEC_SENSORS,
+    CONF_ENABLE_GROUP_SWITCHES, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID,
+    HMIPC_NAME, HMIPCS_ENABLE_GROUP_SEC_SENSORS, HMIPCS_ENABLE_GROUP_SWITCHES)
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
 REQUIREMENTS = ['homematicip==0.10.5']
+
+DEFAULT_ENABLE_GROUP_SWITCHES = False
+DEFAULT_ENABLE_GROUP_SEC_SENSORS = False
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +27,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME, default=''): vol.Any(cv.string),
         vol.Required(CONF_ACCESSPOINT): cv.string,
         vol.Required(CONF_AUTHTOKEN): cv.string,
+        vol.Required(CONF_ENABLE_GROUP_SWITCHES,
+                     default=DEFAULT_ENABLE_GROUP_SWITCHES): cv.boolean,
+        vol.Required(CONF_ENABLE_GROUP_SEC_SENSORS,
+                     default=DEFAULT_ENABLE_GROUP_SEC_SENSORS): cv.boolean,
     })]),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,6 +49,10 @@ async def async_setup(hass, config):
                     HMIPC_HAPID: conf[CONF_ACCESSPOINT],
                     HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
                     HMIPC_NAME: conf[CONF_NAME],
+                    HMIPCS_ENABLE_GROUP_SWITCHES:
+                        conf[CONF_ENABLE_GROUP_SWITCHES],
+                    HMIPCS_ENABLE_GROUP_SEC_SENSORS:
+                        conf[CONF_ENABLE_GROUP_SEC_SENSORS],
                 }
             ))
 

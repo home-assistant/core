@@ -16,7 +16,9 @@
                 "data": {
                     "hapid": "Access point ID (SGTIN)",
                     "name": "Name (optional, used as name prefix for all devices)",
-                    "pin": "Pin Code (optional)"
+                    "pin": "Pin Code (optional)",
+                    "enable_group_switches": "Enable group switches",
+                    "enable_group_sec_sensors": "Enable group security sensors"
                 },
                 "title": "Pick HomematicIP Access point"
             },

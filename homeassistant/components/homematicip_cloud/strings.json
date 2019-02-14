@@ -7,7 +7,9 @@
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "Pin Code (optional)",
-          "name": "Name (optional, used as name prefix for all devices)"
+          "name": "Name (optional, used as name prefix for all devices)",
+          "enable_group_switches": "Enable group switches",
+          "enable_group_sec_sensors": "Enable group security sensors"
         }
       },
       "link": {

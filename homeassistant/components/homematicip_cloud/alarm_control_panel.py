@@ -42,7 +42,7 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     def __init__(self, home, device):
         """Initialize the security zone group."""
         device.modelType = 'Group-SecurityZone'
-        device.windowState = ''
+        device.windowState = None
         super().__init__(home, device)
 
     @property
@@ -52,7 +52,8 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
 
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == WindowState.OPEN):
+                    self._device.windowState == WindowState.OPEN or
+                    self._device.windowState == WindowState.TILTED):
                 return STATE_ALARM_TRIGGERED
 
             active = self._home.get_security_zones_activation()

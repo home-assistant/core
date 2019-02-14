@@ -29,6 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         FullFlushSwitchMeasuring,
     )
 
+    from homematicip.group import SwitchingGroup
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -42,6 +44,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipSwitchMeasuring(home, device))
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))
+
+    if home.enable_group_switches is True:
+        for group in home.groups:
+            if isinstance(group, SwitchingGroup):
+                devices.append(
+                    HomematicipGroupSwitch(home, group))
 
     if devices:
         async_add_entities(devices)
@@ -65,6 +73,28 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        await self._device.turn_off()
+
+
+class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
+    """representation of a HomematicIP Cloud switch group."""
+
+    def __init__(self, home, device, post='Group'):
+        """Initialize heating group."""
+        device.modelType = 'HmIP-{}'.format(post)
+        super().__init__(home, device, post)
+
+    @property
+    def is_on(self):
+        """Return true if group is on."""
+        return self._device.on
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the group on."""
+        await self._device.turn_on()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the group off."""
         await self._device.turn_off()
 
 
