@@ -1,9 +1,4 @@
-"""
-Support for Huawei LTE routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.huawei_lte/
-"""
+"""Support for device tracking of Huawei LTE routers."""
 from typing import Any, Dict, List, Optional
 
 import attr
@@ -15,7 +10,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_URL
 from ..huawei_lte import DATA_KEY, RouterData
-
 
 DEPENDENCIES = ['huawei_lte']
 

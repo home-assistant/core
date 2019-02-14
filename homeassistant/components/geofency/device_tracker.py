@@ -6,10 +6,10 @@ https://home-assistant.io/components/device_tracker.geofency/
 """
 import logging
 
-from homeassistant.components.device_tracker import DOMAIN as \
-    DEVICE_TRACKER_DOMAIN
-from homeassistant.components.geofency import TRACKER_UPDATE, \
-    DOMAIN as GEOFENCY_DOMAIN
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
+from homeassistant.components.geofency import (
+    DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)

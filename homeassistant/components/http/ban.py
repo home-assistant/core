@@ -9,11 +9,12 @@ from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
-from homeassistant.core import callback, HomeAssistant
 from homeassistant.config import load_yaml_config_file
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
+
 from .const import KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
 IP_BANS_FILE = 'ip_bans.yaml'
-ATTR_BANNED_AT = "banned_at"
+ATTR_BANNED_AT = 'banned_at'
 
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
@@ -52,7 +53,7 @@ def setup_bans(hass, app, login_threshold):
 async def ban_middleware(request, handler):
     """IP Ban middleware."""
     if KEY_BANNED_IPS not in request.app:
-        _LOGGER.error('IP Ban middleware loaded but banned IPs not loaded')
+        _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
     # Verify if IP is not banned

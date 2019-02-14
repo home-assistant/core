@@ -1,9 +1,4 @@
-"""
-Support for Homekit device discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homekit_controller/
-"""
+"""Support for Homekit device discovery."""
 import json
 import logging
 import os
@@ -35,7 +30,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 HOMEKIT_IGNORE = [
     'BSB002',
     'Home Assistant Bridge',
-    'TRADFRI gateway'
+    'TRADFRI gateway',
 ]
 
 KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)

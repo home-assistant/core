@@ -1,9 +1,4 @@
-"""
-The HomeMatic cover platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.homematic/
-"""
+"""Support for  HomeMatic covers."""
 import logging
 
 from homeassistant.components.cover import (

@@ -1,9 +1,4 @@
-"""
-Component for the Portuguese weather service - IPMA.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ipma/
-"""
+"""Component for the Portuguese weather service - IPMA."""
 from homeassistant.core import Config, HomeAssistant
 from .config_flow import IpmaFlowHandler  # noqa
 from .const import DOMAIN # noqa
@@ -13,7 +8,6 @@ DEFAULT_NAME = 'ipma'
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured IPMA."""
-    # No support for component configuration
     return True
 
 

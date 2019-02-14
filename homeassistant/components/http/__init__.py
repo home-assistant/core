@@ -1,9 +1,4 @@
-"""
-This module provides WSGI application to serve the Home Assistant API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/http/
-"""
+"""Support to serve the Home Assistant API as WSGI application."""
 from ipaddress import ip_network
 import logging
 import os
@@ -18,17 +13,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as hass_util
-from homeassistant.util.logging import HideSensitiveDataFilter
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.logging import HideSensitiveDataFilter
 
+# Import as alias
 from .auth import setup_auth
 from .ban import setup_bans
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CachingFileResponse, CachingStaticResource
-
-# Import as alias
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.7.0']

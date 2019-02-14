@@ -1,17 +1,11 @@
-"""
-Support for HomeKit Controller locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.homekit_controller/
-"""
-
+"""Support for HomeKit Controller locks."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
+from homeassistant.components.homekit_controller import (
+    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
-                                 ATTR_BATTERY_LEVEL)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -28,7 +22,7 @@ CURRENT_STATE_MAP = {
 
 TARGET_STATE_MAP = {
     STATE_UNLOCKED: 0,
-    STATE_LOCKED: 1
+    STATE_LOCKED: 1,
 }
 
 
@@ -37,8 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-    add_entities([HomeKitLock(accessory, discovery_info)],
-                 True)
+    add_entities([HomeKitLock(accessory, discovery_info)], True)
 
 
 class HomeKitLock(HomeKitEntity, LockDevice):

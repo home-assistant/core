@@ -1,9 +1,4 @@
-"""
-Support for Homematic lock.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.homematic/
-"""
+"""Support for Homematic locks."""
 import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
