@@ -75,9 +75,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if not devices:
             return self.async_abort(reason='no_devices_found')
 
-        for device in devices:
-            ip_addr = device['host-ip']
-            device_list.append(ip_addr)
+        device_list = [
+            device['host-ip'] for device in devices]
 
         # Login to PS4 with user data.
         if user_input is not None:
