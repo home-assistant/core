@@ -1,18 +1,9 @@
-"""
-Support for Meteo France raining forecast.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.meteo_france/
-"""
+"""Support for Meteo France raining forecast sensor."""
 import logging
 
-
-from homeassistant.components.meteo_france import (SENSOR_TYPES,
-                                                   DATA_METEO_FRANCE,
-                                                   CONF_CITY,
-                                                   ATTRIBUTION)
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+from homeassistant.components.meteo_france import (
+    ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

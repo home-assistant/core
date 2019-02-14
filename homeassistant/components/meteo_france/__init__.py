@@ -1,19 +1,13 @@
-"""
-Support for Meteo France weather forecast.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/meteo_france/
-"""
-import logging
+"""Support for Meteo France weather forecast."""
 import datetime
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
-from homeassistant.util import Throttle
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['meteofrance==0.3.4']
 _LOGGER = logging.getLogger(__name__)
