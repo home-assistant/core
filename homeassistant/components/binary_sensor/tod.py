@@ -7,15 +7,14 @@ https://home-assistant.io/components/binary_sensor.tod/
 """
 from datetime import datetime, timedelta
 import logging
-import pytz
 
+import pytz
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import (
-    CONF_NAME, CONF_AFTER, CONF_BEFORE,
-    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+    CONF_AFTER, CONF_BEFORE, CONF_NAME, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -25,24 +24,21 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_BEFORE = "before"
+ATTR_AFTER = "after"
+ATTR_NEXT_UPDATE = 'next_update'
+
 CONF_AFTER_OFFSET = 'after_offset'
 CONF_BEFORE_OFFSET = 'before_offset'
 
-ATTR_NEXT_UPDATE = 'next_update'
-
-
-SENSOR_SCHEMA = vol.Schema({
-
-})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(
         vol.Lower, cv.sun_event)),
     vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
     vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(
         vol.Lower, cv.sun_event)),
-    vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-    vol.Required(CONF_NAME): cv.string
+    vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period
 })
 
 
@@ -101,7 +97,7 @@ class TodSensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return True is senso is on."""
+        """Return True is sensor is on."""
         if self.after < self.before:
             return self.after <= self.current_datetime < self.before
         return False
@@ -117,12 +113,12 @@ class TodSensor(BinarySensorDevice):
         return self._next_update
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the sun."""
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
         return {
-            CONF_AFTER: self.after.astimezone(
+            ATTR_AFTER: self.after.astimezone(
                 self.hass.config.time_zone).isoformat(),
-            CONF_BEFORE: self.before.astimezone(
+            ATTR_BEFORE: self.before.astimezone(
                 self.hass.config.time_zone).isoformat(),
             ATTR_NEXT_UPDATE: self.next_update.astimezone(
                 self.hass.config.time_zone).isoformat(),
