@@ -11,7 +11,7 @@ from homeassistant.components.ps4.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyps4-homeassistant==0.2.7']
+REQUIREMENTS = ['pyps4-homeassistant==0.2.8']
 
 
 async def async_setup(hass, config):
