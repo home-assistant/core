@@ -1,5 +1,8 @@
 """The tests for the person component."""
-from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
+from unittest.mock import Mock
+
+from homeassistant.components.person import (
+    ATTR_SOURCE, ATTR_USER_ID, DOMAIN, PersonManager)
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
     EVENT_HOMEASSISTANT_START)
@@ -8,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 import pytest
 
-from tests.common import mock_component, mock_restore_cache
+from tests.common import mock_component, mock_restore_cache, mock_coro_func
 
 DEVICE_TRACKER = 'device_tracker.test_tracker'
 DEVICE_TRACKER_2 = 'device_tracker.test_tracker_2'
@@ -409,3 +412,86 @@ async def test_ws_delete_require_admin(hass, hass_ws_client, storage_setup,
 
     persons = manager.storage_persons
     assert len(persons) == 1
+
+
+async def test_create_invalid_user_id(hass):
+    """Test we do not allow invalid user ID during creation."""
+    manager = PersonManager(hass, Mock(), [])
+    await manager.async_initialize()
+    with pytest.raises(ValueError):
+        await manager.async_create_person(
+            name='Hello',
+            user_id='non-existing'
+        )
+
+
+async def test_create_duplicate_user_id(hass, hass_admin_user):
+    """Test we do not allow duplicate user ID during creation."""
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
+    await manager.async_initialize()
+    await manager.async_create_person(
+        name='Hello',
+        user_id=hass_admin_user.id
+    )
+
+    with pytest.raises(ValueError):
+        await manager.async_create_person(
+            name='Hello',
+            user_id=hass_admin_user.id
+        )
+
+
+async def test_update_double_user_id(hass, hass_admin_user):
+    """Test we do not allow double user ID during update."""
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
+    await manager.async_initialize()
+    await manager.async_create_person(
+        name='Hello',
+        user_id=hass_admin_user.id
+    )
+    person = await manager.async_create_person(
+        name='Hello',
+    )
+
+    with pytest.raises(ValueError):
+        await manager.async_update_person(
+            person_id=person['id'],
+            user_id=hass_admin_user.id
+        )
+
+
+async def test_update_invalid_user_id(hass):
+    """Test updating to invalid user ID."""
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
+    await manager.async_initialize()
+    person = await manager.async_create_person(
+        name='Hello',
+    )
+
+    with pytest.raises(ValueError):
+        await manager.async_update_person(
+            person_id=person['id'],
+            user_id='non-existing'
+        )
+
+
+async def test_update_person_when_user_removed(hass, hass_read_only_user):
+    """Update person when user is removed."""
+    manager = PersonManager(
+        hass, Mock(async_add_entities=mock_coro_func()), []
+    )
+    await manager.async_initialize()
+    person = await manager.async_create_person(
+        name='Hello',
+        user_id=hass_read_only_user.id
+    )
+
+    await hass.auth.async_remove_user(hass_read_only_user)
+    await hass.async_block_till_done()
+    assert person['user_id'] is None
