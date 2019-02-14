@@ -346,8 +346,8 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, TEMP_LOW_HIGH_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        assert 21 == state.attributes.get('temperature_low')
-        assert 21 == state.attributes.get('temperature_high')
+        assert 21 == state.attributes.get('target_temperature_low')
+        assert 21 == state.attributes.get('target_temperature_high')
         common.set_operation_mode(self.hass, 'auto', ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
@@ -355,13 +355,13 @@ class TestMQTTClimate(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'mode-topic', 'auto', 0, False)
         self.mock_publish.async_publish.reset_mock()
-        common.set_temperature(self.hass, temperature_low=47,
-                               temperature_high=49,
+        common.set_temperature(self.hass, target_temperature_low=47,
+                               target_temperature_high=49,
                                entity_id=ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        assert 47 == state.attributes.get('temperature_low')
-        assert 49 == state.attributes.get('temperature_high')
+        assert 47 == state.attributes.get('target_temperature_low')
+        assert 49 == state.attributes.get('target_temperature_high')
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('temperature-low-topic', 47, 0, False),
             unittest.mock.call('temperature-high-topic', 49, 0, False)
@@ -369,15 +369,15 @@ class TestMQTTClimate(unittest.TestCase):
 
         # also test directly supplying the operation mode to set_temperature
         self.mock_publish.async_publish.reset_mock()
-        common.set_temperature(self.hass, temperature_low=21,
-                               temperature_high=23,
+        common.set_temperature(self.hass, target_temperature_low=21,
+                               target_temperature_high=23,
                                operation_mode="auto",
                                entity_id=ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'auto' == state.attributes.get('operation_mode')
-        assert 21 == state.attributes.get('temperature_low')
-        assert 23 == state.attributes.get('temperature_high')
+        assert 21 == state.attributes.get('target_temperature_low')
+        assert 23 == state.attributes.get('target_temperature_high')
         self.mock_publish.async_publish.assert_has_calls([
             unittest.mock.call('mode-topic', 'auto', 0, False),
             unittest.mock.call('temperature-low-topic', 21, 0, False),
