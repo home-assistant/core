@@ -1,9 +1,4 @@
-"""
-Support for the google speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.google/
-"""
+"""Support for the Google speech service."""
 import asyncio
 import logging
 import re
@@ -101,16 +96,16 @@ class GoogleProvider(Provider):
                     )
 
                     if request.status != 200:
-                        _LOGGER.error("Error %d on load url %s",
+                        _LOGGER.error("Error %d on load URL %s",
                                       request.status, request.url)
-                        return (None, None)
+                        return None, None
                     data += await request.read()
 
             except (asyncio.TimeoutError, aiohttp.ClientError):
-                _LOGGER.error("Timeout for google speech.")
-                return (None, None)
+                _LOGGER.error("Timeout for google speech")
+                return None, None
 
-        return ("mp3", data)
+        return 'mp3', data
 
     @staticmethod
     def _split_message_to_parts(message):

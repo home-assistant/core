@@ -1,16 +1,11 @@
-"""
-Support for HomematicIP Cloud sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud sensors."""
 import logging
 
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
