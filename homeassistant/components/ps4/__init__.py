@@ -16,7 +16,6 @@ REQUIREMENTS = ['pyps4-homeassistant==0.3.0']
 
 async def async_setup(hass, config):
     """Set up the PS4 Component."""
-    hass.data[DOMAIN] = {}
     return True
 
 
