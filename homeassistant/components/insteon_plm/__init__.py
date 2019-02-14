@@ -1,5 +1,4 @@
-"""Support for INSTEON PowerLinc Modem.
-"""
+"""Support for INSTEON PowerLinc Modem."""
 import logging
 
 _LOGGER = logging.getLogger(__name__)
