@@ -24,8 +24,8 @@ ATTR_ACCESSIBILITY = 'accessibility'
 ATTR_DIRECTION = 'direction'
 ATTR_LINE = 'line'
 ATTR_TRACK = 'track'
+ATTRIBUTION = "Data provided by Västtrafik"
 
-CONF_ATTRIBUTION = "Data provided by Västtrafik"
 CONF_DELAY = 'delay'
 CONF_DEPARTURES = 'departures'
 CONF_FROM = 'from'
@@ -137,7 +137,7 @@ class VasttrafikDepartureSensor(Entity):
 
                     params = {
                         ATTR_ACCESSIBILITY: departure.get('accessibility'),
-                        ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                        ATTR_ATTRIBUTION: ATTRIBUTION,
                         ATTR_DIRECTION: departure.get('direction'),
                         ATTR_LINE: departure.get('sname'),
                         ATTR_TRACK: departure.get('track'),

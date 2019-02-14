@@ -35,7 +35,7 @@ ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_CLOCK_FORMAT = 'clock_format'
-CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
+ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
 
@@ -423,8 +423,8 @@ class FitbitSensor(Entity):
         """Icon to use in the frontend, if any."""
         if self.resource_type == 'devices/battery' and self.extra:
             battery_level = BATTERY_LEVELS[self.extra.get('battery')]
-            return icon_for_battery_level(battery_level=battery_level,
-                                          charging=None)
+            return icon_for_battery_level(
+                battery_level=battery_level, charging=None)
         return 'mdi:{}'.format(FITBIT_RESOURCES_LIST[self.resource_type][2])
 
     @property
@@ -432,7 +432,7 @@ class FitbitSensor(Entity):
         """Return the state attributes."""
         attrs = {}
 
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self.extra:
             attrs['model'] = self.extra.get('deviceVersion')
