@@ -396,7 +396,7 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_clean_zone(self,
                                zone,
-                               repeats: int = 1):
+                               repeats=1):
         """Clean selected area for the number of repeats indicated."""
         _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
