@@ -29,7 +29,7 @@ def storage_setup(hass, hass_storage, hass_admin_user):
                     'id': '1234',
                     'name': 'tracked person',
                     'user_id': hass_admin_user.id,
-                    'device_trackers': DEVICE_TRACKER
+                    'device_trackers': [DEVICE_TRACKER]
                 }
             ]
         }
@@ -187,6 +187,43 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_LONGITUDE) == 13.12346
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+
+
+async def test_ignore_unavailable_states(hass, hass_admin_user):
+    """Test set up person with two device trackers, one unavailable."""
+    user_id = hass_admin_user.id
+    config = {DOMAIN: {
+        'id': '1234', 'name': 'tracked person', 'user_id': user_id,
+        'device_trackers': [DEVICE_TRACKER, DEVICE_TRACKER_2]}}
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.states.async_set(DEVICE_TRACKER, 'home')
+    await hass.async_block_till_done()
+    hass.states.async_set(DEVICE_TRACKER, 'unavailable')
+    await hass.async_block_till_done()
+
+    # Unknown, as only 1 device tracker has a state, but we ignore that one
+    state = hass.states.get('person.tracked_person')
+    assert state.state == STATE_UNKNOWN
+
+    hass.states.async_set(DEVICE_TRACKER_2, 'not_home')
+    await hass.async_block_till_done()
+
+    # Take state of tracker 2
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'not_home'
+
+    # state 1 is newer but ignored, keep tracker 2 state
+    hass.states.async_set(DEVICE_TRACKER, 'unknown')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'not_home'
 
 
 async def test_restore_home_state(hass, hass_admin_user):
