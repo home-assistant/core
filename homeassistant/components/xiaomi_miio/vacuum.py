@@ -420,4 +420,3 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.error(
                 "Unable to send zoned_clean command to the vacuum: %s",
                 exc)
-            return False
