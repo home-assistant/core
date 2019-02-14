@@ -1,9 +1,4 @@
-"""
-Support for Hydrawise sprinkler.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.hydrawise/
-"""
+"""Support for Hydrawise sprinkler binary sensors."""
 import logging
 
 import voluptuous as vol

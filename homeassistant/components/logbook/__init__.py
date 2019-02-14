@@ -1,9 +1,4 @@
-"""
-Event parser and human readable log generator.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/logbook/
-"""
+"""Event parser and human readable log generator."""
 from datetime import timedelta
 from itertools import groupby
 import logging
@@ -47,12 +42,12 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_EXCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+                vol.All(cv.ensure_list, [cv.string]),
         }),
         CONF_INCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+                vol.All(cv.ensure_list, [cv.string]),
         })
     }),
 }, extra=vol.ALLOW_EXTRA)

@@ -1,9 +1,4 @@
-"""
-Support for Logi Circle cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/logi_circle/
-"""
+"""Support for Logi Circle devices."""
 import logging
 import asyncio
 

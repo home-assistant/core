@@ -1,9 +1,4 @@
-"""
-Support for the NetAtmo Weather Service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netatmo/
-"""
+"""Support for the NetAtmo Weather Service."""
 import logging
 from time import time
 import threading
@@ -55,8 +50,7 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(cv.string): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

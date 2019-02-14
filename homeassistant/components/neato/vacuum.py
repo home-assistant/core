@@ -1,9 +1,4 @@
-"""
-Support for Neato Connected Vacuums.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/vacuum.neato/
-"""
+"""Support for Neato Connected Vacuums."""
 import logging
 from datetime import timedelta
 import requests

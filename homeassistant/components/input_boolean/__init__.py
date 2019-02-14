@@ -1,9 +1,4 @@
-"""
-Component to keep track of user controlled booleans for within automation.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_boolean/
-"""
+"""Support to keep track of user controlled booleans for within automation."""
 import logging
 
 import voluptuous as vol

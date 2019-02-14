@@ -1,10 +1,4 @@
-"""
-Support for KNX/IP switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.knx/
-"""
-
+"""Support for KNX/IP switches."""
 import voluptuous as vol
 
 from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX

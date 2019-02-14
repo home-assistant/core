@@ -1,9 +1,4 @@
-"""
-The Netgear LTE platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.netgear_lte/
-"""
+"""Suport for Netgear LTE notifications."""
 import logging
 
 import attr
