@@ -326,6 +326,7 @@ omit =
     homeassistant/components/nest/*
     homeassistant/components/netatmo/*
     homeassistant/components/netgear_lte/*
+    homeassistant/components/meteo_france.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
@@ -650,6 +651,7 @@ omit =
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
     homeassistant/components/weather/met.py
+    homeassistant/components/weather/meteo_france.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py

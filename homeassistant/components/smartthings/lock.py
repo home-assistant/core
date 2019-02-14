@@ -1,9 +1,4 @@
-"""
-Support for locks through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.lock/
-"""
+"""Support for locks through the SmartThings cloud API."""
 from homeassistant.components.lock import LockDevice
 
 from . import SmartThingsEntity
@@ -15,12 +10,12 @@ ST_STATE_LOCKED = 'locked'
 ST_LOCK_ATTR_MAP = {
     'method': 'method',
     'codeId': 'code_id',
-    'timeout': 'timeout'
+    'timeout': 'timeout',
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 

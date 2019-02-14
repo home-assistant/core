@@ -1,9 +1,4 @@
-"""
-This component provides basic support for the Philips Hue system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hue/
-"""
+"""Support for the Philips Hue system."""
 import ipaddress
 import logging
 

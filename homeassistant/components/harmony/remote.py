@@ -1,9 +1,4 @@
-"""
-Support for Harmony Hub devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.harmony/
-"""
+"""Support for Harmony Hub devices."""
 import asyncio
 import json
 import logging
@@ -51,12 +46,12 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 
 HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_CHANNEL): cv.positive_int
+    vol.Required(ATTR_CHANNEL): cv.positive_int,
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Harmony platform."""
     activity = None
 

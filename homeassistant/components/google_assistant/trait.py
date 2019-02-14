@@ -1,4 +1,4 @@
-"""Implement the Smart Home traits."""
+"""Implement the Google Smart Home traits."""
 import logging
 
 from homeassistant.components import (

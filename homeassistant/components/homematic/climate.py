@@ -1,9 +1,4 @@
-"""
-Support for Homematic thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.homematic/
-"""
+"""Support for Homematic thermostats."""
 import logging
 
 from homeassistant.components.climate import ClimateDevice
