@@ -165,6 +165,7 @@ FLOWS = [
     'openuv',
     'owntracks',
     'point',
+    'ps4',
     'rainmachine',
     'simplisafe',
     'smartthings',
