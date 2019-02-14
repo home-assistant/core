@@ -126,7 +126,7 @@ async def test_update_from_signal(hass, device_factory):
 async def test_unload_config_entry(hass, device_factory):
     """Test the switch is removed when the config entry is unloaded."""
     # Arrange
-    device = device_factory('Switch', [Capability.switch],
+    device = device_factory('Switch 1', [Capability.switch],
                             {Attribute.switch: 'on'})
     config_entry = await _setup_platform(hass, device)
     # Act
