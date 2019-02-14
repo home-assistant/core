@@ -1,9 +1,4 @@
-"""
-Camera that loads a picture from Neato.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.neato/
-"""
+"""Support for loading picture from Neato."""
 import logging
 
 from datetime import timedelta

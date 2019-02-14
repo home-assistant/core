@@ -1,9 +1,4 @@
-"""
-Support for Lutron lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lutron/
-"""
+"""Support for Lutron lights."""
 import logging
 
 from homeassistant.components.light import (

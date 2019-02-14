@@ -1,9 +1,4 @@
-"""
-Support for Locative.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/locative/
-"""
+"""Support for Locative."""
 import logging
 from typing import Dict
 

@@ -1,9 +1,4 @@
-"""
-Support for MAX! Window Shutter via MAX! Cube.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/maxcube/
-"""
+"""Support for MAX! binary sensors via MAX! Cube."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

@@ -1,9 +1,4 @@
-"""
-Integrate with namecheap DNS services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/namecheapdns/
-"""
+"""Support for namecheap DNS services."""
 import logging
 from datetime import timedelta
 

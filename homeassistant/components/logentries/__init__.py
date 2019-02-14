@@ -1,9 +1,4 @@
-"""
-Support for sending data to Logentries webhook endpoint.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/logentries/
-"""
+"""Support for sending data to Logentries webhook endpoint."""
 import json
 import logging
 import requests
@@ -42,19 +37,17 @@ def setup(hass, config):
             _state = state_helper.state_as_number(state)
         except ValueError:
             _state = state.state
-        json_body = [
-            {
-                'domain': state.domain,
-                'entity_id': state.object_id,
-                'attributes': dict(state.attributes),
-                'time': str(event.time_fired),
-                'value': _state,
-            }
-        ]
+        json_body = [{
+            'domain': state.domain,
+            'entity_id': state.object_id,
+            'attributes': dict(state.attributes),
+            'time': str(event.time_fired),
+            'value': _state,
+        }]
         try:
             payload = {
-                "host": le_wh,
-                "event": json_body
+                'host': le_wh,
+                'event': json_body
             }
             requests.post(le_wh, data=json.dumps(payload), timeout=10)
         except requests.exceptions.RequestException as error:

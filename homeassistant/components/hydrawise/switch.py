@@ -1,9 +1,4 @@
-"""
-Support for Hydrawise cloud.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hydrawise/
-"""
+"""Support for Hydrawise cloud switches."""
 import logging
 
 import voluptuous as vol
@@ -36,12 +31,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        # create a switch for each zone
+        # Create a switch for each zone
         for zone in hydrawise.relays:
             sensors.append(
-                HydrawiseSwitch(default_watering_timer,
-                                zone,
-                                sensor_type))
+                HydrawiseSwitch(default_watering_timer, zone, sensor_type))
 
     add_entities(sensors, True)
 

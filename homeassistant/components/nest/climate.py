@@ -1,9 +1,4 @@
-"""
-Support for Nest thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.nest/
-"""
+"""Support for Nest thermostats."""
 import logging
 
 import voluptuous as vol

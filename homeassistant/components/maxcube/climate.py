@@ -1,9 +1,4 @@
-"""
-Support for MAX! Thermostats via MAX! Cube.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/maxcube/
-"""
+"""Support for MAX! Thermostats via MAX! Cube."""
 import socket
 import logging
 
