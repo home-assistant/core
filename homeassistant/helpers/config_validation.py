@@ -25,6 +25,8 @@ from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
@@ -632,8 +634,55 @@ def key_dependency(key, dependency):
 
 
 # Schemas
+class HASchema(vol.Schema):
+    """Schema class that allows us to mark PREVENT_EXTRA errors as warnings."""
+    def __call__(self, data):
+        try:
+            return super().__call__(data)
+        except vol.Invalid as orig_err:
+            if self.extra != vol.PREVENT_EXTRA:
+                raise
 
-PLATFORM_SCHEMA = vol.Schema({
+            # orig_error is of type vol.MultipleInvalid (see super __call__)
+            assert isinstance(orig_err, vol.MultipleInvalid)
+            # If it fails with PREVENT_EXTRA, try with ALLOW_EXTRA
+            self.extra = vol.ALLOW_EXTRA
+            # In case it still fails the following will raise
+            try:
+                validated = super().__call__(data)
+            finally:
+                self.extra = vol.PREVENT_EXTRA
+
+            # This is a legacy config, print warning
+            extra_key_errs = [err for err in orig_err.errors
+                              if err.error_message == 'extra keys not allowed']
+            if extra_key_errs:
+                msg = "Your configuration contains extra keys " \
+                      "that the platform does not support. The keys "
+                msg += ', '.join('[{}]'.format(err.path[-1]) for err in
+                                 extra_key_errs)
+                msg += ' are 42.'
+                if hasattr(data, '__config_file__'):
+                    msg += " (See {}, line {}). ".format(data.__config_file__,
+                                                         data.__line__)
+                _LOGGER.warning(msg)
+            else:
+                # This should not happen (all errors should be extra key
+                # errors). Let's raise the original error anyway.
+                raise orig_err
+
+            # Return legacy validated config
+            return validated
+
+    def extend(self, schema, required=None, extra=None):
+        """Extend this schema and convert it to HASchema if necessary"""
+        ret = super().extend(schema, required=required, extra=extra)
+        if extra is not None:
+            return ret
+        return HASchema(ret.schema, required=required, extra=self.extra)
+
+
+PLATFORM_SCHEMA = HASchema({
     vol.Required(CONF_PLATFORM): string,
     vol.Optional(CONF_ENTITY_NAMESPACE): string,
     vol.Optional(CONF_SCAN_INTERVAL): time_period
