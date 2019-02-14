@@ -20,25 +20,23 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self, helper):
         """Initialize the config flow."""
         self.creds = None
         self.name = None
         self.host = None
         self.region = None
         self.pin = None
+        self.helper = helper
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
-        from pyps4_homeassistant import Helper
-        helper = Helper()
-
         # Abort if device is configured.
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='devices_configured')
 
         # Check if able to bind to ports: UDP 987, TCP 997.
-        failed = await self.hass.async_add_executor_job(helper.port_bind)
+        failed = await self.hass.async_add_executor_job(self.helper.port_bind)
         if failed is not None:
             reason = 'port_{}_bind_error'.format(failed)
             return self.async_abort(reason=reason)
@@ -46,12 +44,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
-        from pyps4_homeassistant import Helper
-        helper = Helper()
-
         if user_input is not None:
             self.creds = await self.hass.async_add_executor_job(
-                helper.get_creds)
+                self.helper.get_creds)
 
             if self.creds is not None:
                 return await self.async_step_link()
@@ -62,14 +57,12 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
-        from pyps4_homeassistant import Helper
-        helper = Helper()
-
         errors = {}
         device_list = []
 
         # Search for device.
-        devices = await self.hass.async_add_executor_job(helper.has_devices)
+        devices = await self.hass.async_add_executor_job(
+            self.helper.has_devices)
 
         # Abort if can't find device.
         if not devices:
@@ -86,7 +79,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                helper.link, self.host, self.creds, self.pin)
+                self.helper.link, self.host, self.creds, self.pin)
 
             if is_ready is False:
                 errors['base'] = 'not_ready'
