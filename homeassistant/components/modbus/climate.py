@@ -6,8 +6,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE)
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv

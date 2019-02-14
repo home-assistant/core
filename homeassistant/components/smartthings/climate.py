@@ -1,13 +1,14 @@
 """Support for climate devices through the SmartThings cloud API."""
 import asyncio
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_OFF,
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    ClimateDevice)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN

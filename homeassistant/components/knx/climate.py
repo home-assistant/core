@@ -1,11 +1,12 @@
 """Support for KNX/IP climate devices."""
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, STATE_HEAT,
     STATE_IDLE, STATE_MANUAL, STATE_DRY,
-    STATE_FAN_ONLY, STATE_ECO, ClimateDevice)
+    STATE_FAN_ONLY, STATE_ECO)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import callback
