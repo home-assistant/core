@@ -1,9 +1,4 @@
-"""
-Support for Minut Point.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.point/
-"""
+"""Support for Minut Point sensors."""
 import logging
 
 from homeassistant.components.point import MinutPointEntity
@@ -45,14 +40,14 @@ class MinutPointSensor(MinutPointEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):
-        """Initialize the entity."""
+        """Initialize the sensor."""
         super().__init__(point_client, device_id, device_class)
         self._device_prop = SENSOR_TYPES[device_class]
 
     async def _update_callback(self):
         """Update the value of the sensor."""
         if self.is_updated:
-            _LOGGER.debug('Update sensor value for %s', self)
+            _LOGGER.debug("Update sensor value for %s", self)
             self._value = await self.hass.async_add_executor_job(
                 self.device.sensor, self.device_class)
             self._updated = parse_datetime(self.device.last_update)

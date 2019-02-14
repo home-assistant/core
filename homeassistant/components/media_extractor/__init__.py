@@ -1,9 +1,4 @@
-"""
-Decorator service for the media_player.play_media service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/media_extractor/
-"""
+"""Decorator service for the media_player.play_media service."""
 import logging
 
 import voluptuous as vol
