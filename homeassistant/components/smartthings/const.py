@@ -23,6 +23,7 @@ SUPPORTED_PLATFORMS = [
     'climate',
     'fan',
     'light',
+    'lock',
     'sensor',
     'switch'
 ]
