@@ -128,9 +128,6 @@ class FireTVDevice(MediaPlayerDevice):
         self._get_source = get_source
         self._get_sources = get_sources
 
-        # whether or not the ADB connection is currently in use
-        self.adb_lock = threading.Lock()
-
         # ADB exceptions to catch
         self.exceptions = (
             AttributeError, BrokenPipeError, TypeError, ValueError,
