@@ -1,16 +1,11 @@
-"""
-Support for LED lights that can be controlled using PWM.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.pwm/
-"""
+"""Support for LED lights that can be controlled using PWM."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION,
+    Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -24,7 +19,6 @@ CONF_LEDS = 'leds'
 CONF_DRIVER = 'driver'
 CONF_PINS = 'pins'
 CONF_FREQUENCY = 'frequency'
-CONF_ADDRESS = 'address'
 
 CONF_DRIVER_GPIO = 'gpio'
 CONF_DRIVER_PCA9685 = 'pca9685'
@@ -46,11 +40,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         {
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
-            vol.Required(CONF_PINS): vol.All(cv.ensure_list,
-                                             [cv.positive_int]),
+            vol.Required(CONF_PINS):
+                vol.All(cv.ensure_list, [cv.positive_int]),
             vol.Required(CONF_TYPE): vol.In(CONF_LED_TYPES),
             vol.Optional(CONF_FREQUENCY): cv.positive_int,
-            vol.Optional(CONF_ADDRESS): cv.byte
+            vol.Optional(CONF_ADDRESS): cv.byte,
         }
     ])
 })
