@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL)
+    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
+    CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -39,6 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=8082): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): 
+            cv.time_period,
 })
 
 
@@ -50,15 +53,16 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     api = API(hass.loop, session, config[CONF_USERNAME], config[CONF_PASSWORD],
               config[CONF_HOST], config[CONF_PORT], config[CONF_SSL])
-    scanner = TraccarScanner(api, hass, async_see)
+    scanner = TraccarScanner(api, hass, async_see, config[CONF_SCAN_INTERVAL])
     return await scanner.async_init()
 
 
 class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
-    def __init__(self, api, hass, async_see):
+    def __init__(self, api, hass, async_see, scan_interval):
         """Initialize."""
+        self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
         self._hass = hass
@@ -70,7 +74,7 @@ class TraccarScanner:
             await self._async_update()
             async_track_time_interval(self._hass,
                                       self._async_update,
-                                      DEFAULT_SCAN_INTERVAL)
+                                      self._scan_interval)
 
         return self._api.authenticated
 
