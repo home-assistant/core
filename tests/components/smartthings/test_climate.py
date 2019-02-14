@@ -8,18 +8,18 @@ from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 import pytest
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST,
     ATTR_FAN_MODE, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE, SERVICE_SET_OPERATION_MODE, SERVICE_SET_TEMPERATURE,
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_OFF)
 
 from .conftest import setup_platform
 

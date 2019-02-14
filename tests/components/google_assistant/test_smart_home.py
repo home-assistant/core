@@ -3,7 +3,9 @@ from homeassistant.core import State
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
-from homeassistant.components import climate
+from homeassistant.components.climate.const import (
+    ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
+)
 from homeassistant.components.google_assistant import (
     const, trait, helpers, smart_home as sh)
 from homeassistant.components.light.demo import DemoLight
@@ -210,10 +212,10 @@ async def test_execute(hass):
 
 async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
-    hass.states.async_set('climate.bla', climate.STATE_HEAT, {
-        climate.ATTR_MIN_TEMP: 15,
-        climate.ATTR_MAX_TEMP: 30,
-        ATTR_SUPPORTED_FEATURES: climate.SUPPORT_OPERATION_MODE,
+    hass.states.async_set('climate.bla', STATE_HEAT, {
+        ATTR_MIN_TEMP: 15,
+        ATTR_MAX_TEMP: 30,
+        ATTR_SUPPORTED_FEATURES: SUPPORT_OPERATION_MODE,
         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
     })
     result = await sh.async_handle_message(hass, BASIC_CONFIG, {
