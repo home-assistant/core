@@ -17,8 +17,8 @@ REQUIREMENTS = ['pyMetno==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Weather forecast from met.no, delivered " \
-                   "by the Norwegian Meteorological Institute."
+ATTRIBUTION = "Weather forecast from met.no, delivered by the Norwegian " \
+              "Meteorological Institute."
 DEFAULT_NAME = "Met.no"
 
 URL = 'https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/'
@@ -50,8 +50,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         'msl': str(elevation),
     }
 
-    async_add_entities([MetWeather(name, coordinates,
-                                   async_get_clientsession(hass))])
+    async_add_entities([MetWeather(
+        name, coordinates, async_get_clientsession(hass))])
 
 
 class MetWeather(WeatherEntity):
@@ -61,18 +61,16 @@ class MetWeather(WeatherEntity):
         """Initialise the platform with a data instance and site."""
         import metno
         self._name = name
-        self._weather_data = metno.MetWeatherData(coordinates,
-                                                  clientsession,
-                                                  URL
-                                                  )
+        self._weather_data = metno.MetWeatherData(
+            coordinates, clientsession, URL)
         self._current_weather_data = {}
         self._forecast_data = None
 
     async def async_added_to_hass(self):
         """Start fetching data."""
         await self._fetch_data()
-        async_track_utc_time_change(self.hass, self._update,
-                                    minute=31, second=0)
+        async_track_utc_time_change(
+            self.hass, self._update, minute=31, second=0)
 
     async def _fetch_data(self, *_):
         """Get the latest data from met.no."""
@@ -141,7 +139,7 @@ class MetWeather(WeatherEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return CONF_ATTRIBUTION
+        return ATTRIBUTION
 
     @property
     def forecast(self):

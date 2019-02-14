@@ -26,7 +26,8 @@ ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
-CONF_ATTRIBUTION = "Powered by Waze"
+ATTRIBUTION = "Powered by Waze"
+
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
@@ -138,7 +139,7 @@ class WazeTravelTime(Entity):
         if self._state is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
         if 'distance' in self._state:

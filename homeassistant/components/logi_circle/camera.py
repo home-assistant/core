@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.logi_circle import (
-    DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
+    DOMAIN as LOGI_CIRCLE_DOMAIN, ATTRIBUTION)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
     ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
@@ -128,7 +128,7 @@ class LogiCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'battery_saving_mode': (
                 STATE_ON if self._camera.battery_saving else STATE_OFF),
             'ip_address': self._camera.ip_address,

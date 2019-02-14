@@ -25,7 +25,8 @@ ATTR_REMOTE_HOST = 'Remote Server'
 ATTR_REMOTE_PORT = 'Remote Port'
 ATTR_VERSION = 'Version'
 
-CONF_ATTRIBUTION = 'Data retrieved using Iperf3'
+ATTRIBUTION = 'Data retrieved using Iperf3'
+
 CONF_DURATION = 'duration'
 CONF_PARALLEL = 'parallel'
 
@@ -106,11 +107,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Iperf3Sensor(Entity):
     """A Iperf3 sensor implementation."""
 
-    def __init__(self, server, port, duration, streams,
-                 protocol, sensor_type):
+    def __init__(self, server, port, duration, streams, protocol, sensor_type):
         """Initialize the sensor."""
         self._attrs = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_PROTOCOL: protocol,
         }
         self._name = \
@@ -144,7 +144,7 @@ class Iperf3Sensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.result is not None:
-            self._attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+            self._attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             self._attrs[ATTR_REMOTE_HOST] = self.result.remote_host
             self._attrs[ATTR_REMOTE_PORT] = self.result.remote_port
             self._attrs[ATTR_VERSION] = self.result.version

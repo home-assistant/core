@@ -31,7 +31,8 @@ ATTR_DUE_IN = 'Due in'
 ATTR_DUE_AT = 'Due at'
 ATTR_NEXT_UP = 'Later departure'
 
-CONF_ATTRIBUTION = "Data provided by rejseplanen.dk"
+ATTRIBUTION = "Data provided by rejseplanen.dk"
+
 CONF_STOP_ID = 'stop_id'
 CONF_ROUTE = 'route'
 CONF_DIRECTION = 'direction'
@@ -50,8 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DIRECTION, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
-        vol.All(cv.ensure_list, [vol.In(list(['BUS', 'EXB', 'M',
-                                              'S', 'REG']))])
+        vol.All(cv.ensure_list,
+                [vol.In(list(['BUS', 'EXB', 'M', 'S', 'REG']))])
 })
 
 
@@ -75,12 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     departure_type = config[CONF_DEPARTURE_TYPE]
 
     data = PublicTransportData(stop_id, route, direction, departure_type)
-    add_devices([RejseplanenTransportSensor(data,
-                                            stop_id,
-                                            route,
-                                            direction,
-                                            name)],
-                True)
+    add_devices([RejseplanenTransportSensor(
+        data, stop_id, route, direction, name)], True)
 
 
 class RejseplanenTransportSensor(Entity):
@@ -111,13 +108,11 @@ class RejseplanenTransportSensor(Entity):
         if self._times is not None:
             next_up = None
             if len(self._times) > 1:
-                next_up = ('{} towards '
-                           '{} in '
-                           '{} from '
-                           '{}'.format(self._times[1][ATTR_ROUTE],
-                                       self._times[1][ATTR_DIRECTION],
-                                       str(self._times[1][ATTR_DUE_IN]),
-                                       self._times[1][ATTR_STOP_NAME]))
+                next_up = ('{} towards {} in {} from {}'.format(
+                    self._times[1][ATTR_ROUTE],
+                    self._times[1][ATTR_DIRECTION],
+                    str(self._times[1][ATTR_DUE_IN]),
+                    self._times[1][ATTR_STOP_NAME]))
             params = {
                 ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
                 ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
@@ -126,9 +121,9 @@ class RejseplanenTransportSensor(Entity):
                 ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
                 ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
                 ATTR_STOP_ID: self._stop_id,
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_NEXT_UP: next_up
-                }
+            }
             return {k: v for k, v in params.items() if v}
 
     @property
