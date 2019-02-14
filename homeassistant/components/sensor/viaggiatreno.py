@@ -18,7 +18,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Powered by ViaggiaTreno Data"
+ATTRIBUTION = "Powered by ViaggiaTreno Data"
+
 VIAGGIATRENO_ENDPOINT = ("http://www.viaggiatreno.it/viaggiatrenonew/"
                          "resteasy/viaggiatreno/andamentoTreno/"
                          "{station_id}/{train_id}")
@@ -35,7 +36,7 @@ MONITORED_INFO = [
     'orarioPartenza',
     'origine',
     'subTitle',
-    ]
+]
 
 DEFAULT_NAME = "Train {}"
 
@@ -121,7 +122,7 @@ class ViaggiaTrenoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
 
     @staticmethod
