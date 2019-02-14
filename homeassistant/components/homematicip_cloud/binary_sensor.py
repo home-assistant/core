@@ -1,15 +1,9 @@
-"""
-Support for HomematicIP Cloud binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud binary sensor."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 
 DEPENDENCIES = ['homematicip_cloud']
 

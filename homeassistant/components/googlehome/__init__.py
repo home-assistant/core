@@ -1,9 +1,4 @@
-"""
-Support Google Home units.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/googlehome/
-"""
+"""Support Google Home units."""
 import logging
 
 import asyncio
@@ -31,11 +26,10 @@ DEFAULT_RSSI_THRESHOLD = -70
 
 DEVICE_CONFIG = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_DEVICE_TYPES,
-                 default=DEVICE_TYPES): vol.All(cv.ensure_list,
-                                                [vol.In(DEVICE_TYPES)]),
-    vol.Optional(CONF_RSSI_THRESHOLD,
-                 default=DEFAULT_RSSI_THRESHOLD): vol.Coerce(int),
+    vol.Optional(CONF_DEVICE_TYPES, default=DEVICE_TYPES):
+        vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
+    vol.Optional(CONF_RSSI_THRESHOLD, default=DEFAULT_RSSI_THRESHOLD):
+        vol.Coerce(int),
     vol.Optional(CONF_TRACK_ALARMS, default=False): cv.boolean,
 })
 
