@@ -1,4 +1,4 @@
-"""Support for Meteo France raining forecast sensor."""
+"""Support for Meteo-France raining forecast sensor."""
 import logging
 
 from homeassistant.components.meteo_france import (
@@ -18,19 +18,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     city = discovery_info[CONF_CITY]
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
-
     client = hass.data[DATA_METEO_FRANCE][city]
 
     add_entities([MeteoFranceSensor(variable, client)
-                  for variable in monitored_conditions],
-                 True)
+                  for variable in monitored_conditions], True)
 
 
 class MeteoFranceSensor(Entity):
-    """Representation of a Sensor."""
+    """Representation of a Meteo-France sensor."""
 
     def __init__(self, condition, client):
-        """Initialize the sensor."""
+        """Initialize the Meteo-France sensor."""
         self._condition = condition
         self._client = client
         self._state = None
@@ -39,8 +37,8 @@ class MeteoFranceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data["name"],
-                              SENSOR_TYPES[self._condition][0])
+        return "{} {}".format(
+            self._data['name'], SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
@@ -50,15 +48,11 @@ class MeteoFranceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._condition == 'next_rain' and "rain_forecast" in self._data:
+        if self._condition == 'next_rain' and 'rain_forecast' in self._data:
             return {
-                **{
-                    STATE_ATTR_FORECAST: self._data["rain_forecast"],
-                },
-                ** self._data["next_rain_intervals"],
-                **{
-                    ATTR_ATTRIBUTION: ATTRIBUTION
-                }
+                **{STATE_ATTR_FORECAST: self._data['rain_forecast']},
+                ** self._data['next_rain_intervals'],
+                **{ATTR_ATTRIBUTION: ATTRIBUTION}
             }
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -74,6 +68,6 @@ class MeteoFranceSensor(Entity):
             self._data = self._client.get_data()
             self._state = self._data[self._condition]
         except KeyError:
-            _LOGGER.error("No condition `%s` for location `%s`",
-                          self._condition, self._data["name"])
+            _LOGGER.error("No condition %s for location %s",
+                          self._condition, self._data['name'])
             self._state = None

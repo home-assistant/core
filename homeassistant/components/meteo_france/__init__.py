@@ -1,4 +1,4 @@
-"""Support for Meteo France weather forecast."""
+"""Support for Meteo-France weather data."""
 import datetime
 import logging
 
@@ -10,14 +10,18 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['meteofrance==0.3.4']
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'meteo_france'
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
 ATTRIBUTION = "Data provided by Météo-France"
+
 CONF_CITY = 'city'
-DEFAULT_WEATHER_CARD = True
+
 DATA_METEO_FRANCE = 'data_meteo_france'
+DEFAULT_WEATHER_CARD = True
+DOMAIN = 'meteo_france'
+
+SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
 SENSOR_TYPES = {
     'rain_chance': ['Rain chance', '%'],
@@ -87,9 +91,9 @@ def setup(hass, config):
             _LOGGER.error(exp)
             return
 
-        client.need_rain_forecast = bool(CONF_MONITORED_CONDITIONS in location
-                                         and 'next_rain' in
-                                         location[CONF_MONITORED_CONDITIONS])
+        client.need_rain_forecast = bool(
+            CONF_MONITORED_CONDITIONS in location and 'next_rain' in
+            location[CONF_MONITORED_CONDITIONS])
 
         hass.data[DATA_METEO_FRANCE][city] = MeteoFranceUpdater(client)
         hass.data[DATA_METEO_FRANCE][city].update()
@@ -97,19 +101,11 @@ def setup(hass, config):
         if CONF_MONITORED_CONDITIONS in location:
             monitored_conditions = location[CONF_MONITORED_CONDITIONS]
             load_platform(
-                hass,
-                'sensor',
-                DOMAIN,
-                {CONF_CITY: city,
-                 CONF_MONITORED_CONDITIONS: monitored_conditions},
-                config)
+                hass, 'sensor', DOMAIN, {
+                    CONF_CITY: city,
+                    CONF_MONITORED_CONDITIONS: monitored_conditions}, config)
 
-        load_platform(
-            hass,
-            'weather',
-            DOMAIN,
-            {CONF_CITY: city},
-            config)
+        load_platform(hass, 'weather', DOMAIN, {CONF_CITY: city}, config)
 
     return True
 
