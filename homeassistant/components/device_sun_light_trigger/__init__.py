@@ -1,9 +1,4 @@
-"""
-Provides functionality to turn on lights based on the states.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_sun_light_trigger/
-"""
+"""Support to turn on lights based on the states."""
 import logging
 from datetime import timedelta
 

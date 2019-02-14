@@ -1,17 +1,11 @@
-"""
-Support for HomematicIP Cloud climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud climate devices."""
 import logging
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
     ClimateDevice)
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)

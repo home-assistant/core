@@ -1,9 +1,4 @@
-"""
-Provide the functionality to group entities.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/group/
-"""
+"""Provide the functionality to group entities."""
 import asyncio
 import logging
 
