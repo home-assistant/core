@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation.
 https://home-assistant.io/components/person/
 """
 from collections import OrderedDict
+from itertools import chain
 import logging
 import uuid
 
@@ -15,7 +16,8 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
     EVENT_HOMEASSISTANT_START)
-from homeassistant.core import callback
+from homeassistant.core import callback, Event
+from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_component import EntityComponent
@@ -110,34 +112,62 @@ class PersonManager:
             storage_data[person[CONF_ID]] = person
 
         entities = []
+        seen_users = set()
 
         for person_conf in self.config_data.values():
             person_id = person_conf[CONF_ID]
             user_id = person_conf.get(CONF_USER_ID)
 
-            if (user_id is not None
-                    and await self.hass.auth.async_get_user(user_id) is None):
-                _LOGGER.error(
-                    "Invalid user_id detected for person %s", person_id)
-                continue
+            if user_id is not None:
+                if await self.hass.auth.async_get_user(user_id) is None:
+                    _LOGGER.error(
+                        "Invalid user_id detected for person %s", person_id)
+                    continue
+
+                if user_id in seen_users:
+                    _LOGGER.error(
+                        "Duplicate user_id %s detected for person %s",
+                        user_id, person_id)
+                    continue
+
+                seen_users.add(user_id)
 
             entities.append(Person(person_conf, False))
 
         for person_conf in storage_data.values():
-            if person_conf[CONF_ID] in self.config_data:
+            person_id = person_conf[CONF_ID]
+            user_id = person_conf[CONF_USER_ID]
+
+            if user_id in self.config_data:
                 _LOGGER.error(
                     "Skipping adding person from storage with same ID as"
                     " configuration.yaml entry: %s", person_id)
                 continue
+
+            if user_id in seen_users:
+                _LOGGER.error(
+                    "Duplicate user_id %s detected for person %s",
+                    user_id, person_id)
+                continue
+
+            seen_users.add(user_id)
 
             entities.append(Person(person_conf, True))
 
         if entities:
             await self.component.async_add_entities(entities)
 
+        self.hass.bus.async_listen(EVENT_USER_REMOVED, self._user_removed)
+
     async def async_create_person(self, *, name, device_trackers=None,
                                   user_id=None):
         """Create a new person."""
+        if not name:
+            raise ValueError("Name is required")
+
+        if user_id is not None:
+            await self._validate_user_id(user_id)
+
         person = {
             CONF_ID: uuid.uuid4().hex,
             CONF_NAME: name,
@@ -152,16 +182,21 @@ class PersonManager:
     async def async_update_person(self, person_id, *, name=_UNDEF,
                                   device_trackers=_UNDEF, user_id=_UNDEF):
         """Update person."""
-        if person_id not in self.storage_data:
+        current = self.storage_data.get(person_id)
+
+        if current is None:
             raise ValueError("Invalid person specified.")
 
         changes = {
             key: value for key, value in (
-                ('name', name),
-                ('device_trackers', device_trackers),
-                ('user_id', user_id)
-            ) if value is not _UNDEF
+                (CONF_NAME, name),
+                (CONF_DEVICE_TRACKERS, device_trackers),
+                (CONF_USER_ID, user_id)
+            ) if value is not _UNDEF and current[key] != value
         }
+
+        if CONF_USER_ID in changes and user_id is not None:
+            await self._validate_user_id(user_id)
 
         self.storage_data[person_id].update(changes)
         self._async_schedule_save()
@@ -199,6 +234,27 @@ class PersonManager:
         return {
             'persons': list(self.storage_data.values())
         }
+
+    async def _validate_user_id(self, user_id):
+        """Validate the used user_id."""
+        if await self.hass.auth.async_get_user(user_id) is None:
+            raise ValueError("User does not exist")
+
+        if any(person for person
+               in chain(self.storage_data.values(),
+                        self.config_data.values())
+               if person[CONF_USER_ID] == user_id):
+            raise ValueError("User already taken")
+
+    async def _user_removed(self, event: Event):
+        """Handle event that a person is removed."""
+        user_id = event.data['user_id']
+        for person in self.storage_data.values():
+            if person[CONF_USER_ID] == user_id:
+                await self.async_update_person(
+                    person_id=person[CONF_ID],
+                    user_id=None
+                )
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
