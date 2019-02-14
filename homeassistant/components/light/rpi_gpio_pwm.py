@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION
+    Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
