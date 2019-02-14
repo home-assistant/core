@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from homeassistant import config_entries
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -84,7 +84,6 @@ class HomematicipHAP:
         self._retry_task = None
         self._tries = 0
         self._accesspoint_connected = True
-        self._retry_setup = None
 
     async def async_setup(self, tries=0):
         """Initialize connection."""
@@ -96,20 +95,7 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_NAME)
             )
         except HmipcConnectionError:
-            retry_delay = 2 ** min(tries, 8)
-            _LOGGER.error("Error connecting to HomematicIP with HAP %s. "
-                          "Retrying in %d seconds",
-                          self.config_entry.data.get(HMIPC_HAPID), retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._retry_setup = self.hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
+            raise ConfigEntryNotReady
 
         _LOGGER.info("Connected to HomematicIP with HAP %s",
                      self.config_entry.data.get(HMIPC_HAPID))
@@ -209,8 +195,6 @@ class HomematicipHAP:
     async def async_reset(self):
         """Close the websocket connection."""
         self._ws_close_requested = True
-        if self._retry_setup is not None:
-            self._retry_setup.cancel()
         if self._retry_task is not None:
             self._retry_task.cancel()
         await self.home.disable_events()
