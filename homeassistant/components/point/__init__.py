@@ -20,7 +20,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.0.8']
+REQUIREMENTS = ['pypoint==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,11 +225,11 @@ class MinutPointClient():
 
     def alarm_disarm(self, home_id):
         """Send alarm disarm command."""
-        self._client.alarm_disarm(home_id)
+        return self._client.alarm_disarm(home_id)
 
     def alarm_arm(self, home_id):
         """Send alarm arm command."""
-        self._client.alarm_arm(home_id)
+        return self._client.alarm_arm(home_id)
 
 
 class MinutPointEntity(Entity):
@@ -304,7 +304,7 @@ class MinutPointEntity(Entity):
             'model': 'Point v{}'.format(device['hardware_version']),
             'name': device['description'],
             'sw_version': device['firmware']['installed'],
-            'via_hub': device['home'],
+            'via_hub': (DOMAIN, device['home']),
         }
 
     @property

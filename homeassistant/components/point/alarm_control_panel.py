@@ -19,13 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Point's alarm_control_panel based on a config entry."""
-    async def async_discover_home(device_id):
+    async def async_discover_home(home_id):
         """Discover and add a discovered home."""
         client = hass.data[POINT_DOMAIN][config_entry.entry_id]
-        homes = client.homes
-        async_add_entities(
-            (MinutPointAlarmControl(client, home)
-             for home in homes), True)
+        async_add_entities([MinutPointAlarmControl(client, home_id)], True)
 
     async_dispatcher_connect(
         hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN),
@@ -58,11 +55,15 @@ class MinutPointAlarmControl(AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.alarm_disarm(self._home_id)
+        status = self._client.alarm_disarm(self._home_id)
+        if status:
+            self._home['alarm_status'] = 'off'
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.alarm_arm(self._home_id)
+        status = self._client.alarm_arm(self._home_id)
+        if status:
+            self._home['alarm_status'] = 'on'
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -77,7 +78,7 @@ class MinutPointAlarmControl(AlarmControlPanel):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            'identifieres': self._home_id,
-            'manufacturer': 'Minut',
+            'identifiers': {(POINT_DOMAIN, self._home_id)},
             'name': self.name,
+            'manufacturer': 'Minut',
         }
