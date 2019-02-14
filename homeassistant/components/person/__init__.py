@@ -236,15 +236,14 @@ class PersonManager:
         }
 
     async def _validate_user_id(self, user_id):
-        """Test if a user_id is used."""
+        """Validate the used user_id."""
         if await self.hass.auth.async_get_user(user_id) is None:
             raise ValueError("User does not exist")
 
-        if any(
-                person for person
-                in chain(self.storage_data.values(),
-                         self.config_data.values())
-                if person[CONF_USER_ID] == user_id):
+        if any(person for person
+               in chain(self.storage_data.values(),
+                        self.config_data.values())
+               if person[CONF_USER_ID] == user_id):
             raise ValueError("User already taken")
 
     async def _user_removed(self, event: Event):
