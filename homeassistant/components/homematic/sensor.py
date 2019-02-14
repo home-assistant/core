@@ -15,7 +15,7 @@ HM_STATE_HA_CAST = {
     'CO2Sensor': {0: 'normal', 1: 'added', 2: 'strong'},
     'IPSmoke': {0: 'off', 1: 'primary', 2: 'intrusion', 3: 'secondary'},
     'RFSiren': {
-        0: 'disarmed',  1: 'extsens_armed', 2: 'allsens_armed',
+        0: 'disarmed', 1: 'extsens_armed', 2: 'allsens_armed',
         3: 'alarm_blocked'},
 }
 
