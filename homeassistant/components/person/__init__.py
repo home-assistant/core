@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import callback, Event
 from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,6 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components import websocket_api
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.util import dt as dt_util
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,13 +37,15 @@ DOMAIN = 'person'
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
+# Device tracker states to ignore
+IGNORE_STATES = (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
 PERSON_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_USER_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
-        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -350,30 +351,31 @@ class Person(RestoreEntity):
         trackers = self._config.get(CONF_DEVICE_TRACKERS)
 
         if trackers:
-            def sort_key(state):
-                if state:
-                    return state.last_updated
-                return dt_util.utc_from_timestamp(0)
-
-            latest = max(
-                [self.hass.states.get(entity_id) for entity_id in trackers],
-                key=sort_key
-            )
-
-            @callback
-            def async_handle_tracker_update(entity, old_state, new_state):
-                """Handle the device tracker state changes."""
-                self._parse_source_state(new_state)
-                self.async_schedule_update_ha_state()
-
             _LOGGER.debug(
                 "Subscribe to device trackers for %s", self.entity_id)
 
             self._unsub_track_device = async_track_state_change(
-                self.hass, trackers, async_handle_tracker_update)
+                self.hass, trackers, self._async_handle_tracker_update)
 
-        else:
-            latest = None
+        self._update_state()
+
+    @callback
+    def _async_handle_tracker_update(self, entity, old_state, new_state):
+        """Handle the device tracker state changes."""
+        self._update_state()
+
+    @callback
+    def _update_state(self):
+        """Update the state."""
+        latest = None
+        for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
+            state = self.hass.states.get(entity_id)
+
+            if not state or state.state in IGNORE_STATES:
+                continue
+
+            if latest is None or state.last_updated > latest.last_updated:
+                latest = state
 
         if latest:
             self._parse_source_state(latest)
@@ -415,7 +417,7 @@ def ws_list_person(hass: HomeAssistantType,
     vol.Required('name'): str,
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional('device_trackers', default=[]): vol.All(
-        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -437,7 +439,7 @@ async def ws_create_person(hass: HomeAssistantType,
     vol.Optional('name'): str,
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
-        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
+        cv.entity_ids, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
 })
 @websocket_api.require_admin
 @websocket_api.async_response
