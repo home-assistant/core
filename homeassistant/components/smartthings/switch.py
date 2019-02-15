@@ -1,4 +1,6 @@
 """Support for switches through the SmartThings cloud API."""
+from typing import Optional, Sequence
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import SmartThingsEntity
@@ -18,28 +20,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsSwitch(device) for device in broker.devices.values()
-         if is_switch(device)])
+         if broker.any_assigned(device.device_id, 'switch')])
 
 
-def is_switch(device):
-    """Determine if the device should be represented as a switch."""
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
     from pysmartthings import Capability
 
     # Must be able to be turned on/off.
-    if Capability.switch not in device.capabilities:
-        return False
-    # Must not have a capability represented by other types.
-    non_switch_capabilities = [
-        Capability.color_control,
-        Capability.color_temperature,
-        Capability.fan_speed,
-        Capability.switch_level
-    ]
-    if any(capability in device.capabilities
-           for capability in non_switch_capabilities):
-        return False
-
-    return True
+    if Capability.switch in capabilities:
+        return [Capability.switch]
+    return None
 
 
 class SmartThingsSwitch(SmartThingsEntity, SwitchDevice):

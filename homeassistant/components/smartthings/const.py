@@ -18,14 +18,16 @@ SIGNAL_SMARTAPP_PREFIX = 'smartthings_smartap_'
 SETTINGS_INSTANCE_ID = "hassInstanceId"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+# Ordered 'specific to least-specific platform' in order for capabilities
+# to be drawn-down and represented by the appropriate platform.
 SUPPORTED_PLATFORMS = [
-    'binary_sensor',
     'climate',
     'fan',
     'light',
     'lock',
-    'sensor',
-    'switch'
+    'switch',
+    'binary_sensor',
+    'sensor'
 ]
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
