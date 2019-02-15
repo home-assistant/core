@@ -1,5 +1,4 @@
 """Static file handling for HTTP component."""
-#pylint: skip-file
 from pathlib import Path
 
 from aiohttp import hdrs
