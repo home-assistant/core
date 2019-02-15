@@ -9,17 +9,13 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-
-ATTR_SAFETYISSUES = 'safety issues'
-ATTR_SECURITYISSUES = 'security issues'
-
-ISSUE_MOTIONDETECTED = 'motion detected'
-ISSUE_PRESENCEDETECTED = 'presence detected'
-ISSUE_POWERMAINSFAILURE = 'power mains failure'
-ISSUE_WINDOWOPEN = 'window open'
-ISSUE_MOISTUREDETECTED = 'moisture detected'
-ISSUE_WATERLEVELDETECTED = 'water level detected'
-ISSUE_SMOKEDETECTORALARM = 'smoke detector alarm'
+ATTR_MOTIONDETECTED = 'motion detected'
+ATTR_PRESENCEDETECTED = 'presence detected'
+ATTR_POWERMAINSFAILURE = 'power mains failure'
+ATTR_WINDOWSTATE = 'window state'
+ATTR_MOISTUREDETECTED = 'moisture detected'
+ATTR_WATERLEVELDETECTED = 'water level detected'
+ATTR_SMOKEDETECTORALARM = 'smoke detector alarm'
 
 
 async def async_setup_platform(
@@ -146,28 +142,24 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
 
-        security_issues = []
-        if self._device.motionDetected is True:
-            security_issues.append(ISSUE_MOTIONDETECTED)
-        if self._device.presenceDetected is True:
-            security_issues.append(ISSUE_PRESENCEDETECTED)
+        if self._device.motionDetected:
+            attr.update({ATTR_MOTIONDETECTED: True})
+        if self._device.presenceDetected:
+            attr.update({ATTR_PRESENCEDETECTED: True})
         from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
-            security_issues.append(ISSUE_WINDOWOPEN)
-
-        if security_issues.__len__() > 0:
-            attr.update({ATTR_SECURITYISSUES: ', '.join(security_issues)})
+            attr.update({ATTR_WINDOWSTATE: str(self._device.windowState)})
 
         return attr
 
     @property
     def is_on(self):
         """Return true if security issue detected."""
-        from homematicip.base.enums import WindowState
-        if self._device.motionDetected is True or \
-                self._device.presenceDetected is True:
+        if self._device.motionDetected or \
+                self._device.presenceDetected:
             return True
+        from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
             return True
@@ -187,21 +179,18 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
 
-        safety_issues = []
-        if self._device.powerMainsFailure is True:
-            safety_issues.append(ISSUE_POWERMAINSFAILURE)
-        if self._device.moistureDetected is True:
-            safety_issues.append(ISSUE_MOISTUREDETECTED)
-        if self._device.waterlevelDetected is True:
-            safety_issues.append(ISSUE_WATERLEVELDETECTED)
+        if self._device.powerMainsFailure:
+            attr.update({ATTR_POWERMAINSFAILURE: True})
+        if self._device.moistureDetected:
+            attr.update({ATTR_MOISTUREDETECTED: True})
+        if self._device.waterlevelDetected:
+            attr.update({ATTR_WATERLEVELDETECTED: True})
         from homematicip.base.enums import SmokeDetectorAlarmType
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:
-            safety_issues.append(ISSUE_SMOKEDETECTORALARM)
-
-        if safety_issues.__len__() > 0:
-            attr.update({ATTR_SAFETYISSUES: ', '.join(safety_issues)})
+            attr.update({ATTR_SMOKEDETECTORALARM: str(
+                self._device.smokeDetectorAlarmType)})
 
         return attr
 
@@ -211,9 +200,9 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
         parent_is_on = super().is_on
         from homematicip.base.enums import SmokeDetectorAlarmType
         if parent_is_on is True or \
-                self._device.powerMainsFailure is True or \
-                self._device.moistureDetected is True or \
-                self._device.waterlevelDetected is True:
+                self._device.powerMainsFailure or \
+                self._device.moistureDetected or \
+                self._device.waterlevelDetected:
             return True
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
