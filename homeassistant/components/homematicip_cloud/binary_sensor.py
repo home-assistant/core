@@ -125,10 +125,10 @@ class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
                                          BinarySensorDevice):
-    """Representation of a HomematicIP Cloud water detector."""
+    """Representation of a HomematicIP Cloud security zone group."""
 
     def __init__(self, home, device, post='SecurityZone'):
-        """Initialize heating group."""
+        """Initialize security zone group."""
         device.modelType = 'HmIP-{}'.format(post)
         super().__init__(home, device, post)
 
@@ -139,7 +139,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the security zone group."""
         attr = super().device_state_attributes
 
         if self._device.motionDetected:
@@ -168,15 +168,15 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
 
 class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
                                      BinarySensorDevice):
-    """Representation of a HomematicIP Cloud water detector."""
+    """Representation of a HomematicIP security group."""
 
     def __init__(self, home, device):
-        """Initialize heating group."""
-        super().__init__(home, device, 'SecuritySensors')
+        """Initialize security group."""
+        super().__init__(home, device, 'Sensors')
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the security group."""
         attr = super().device_state_attributes
 
         if self._device.powerMainsFailure:

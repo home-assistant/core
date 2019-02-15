@@ -76,10 +76,10 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 
 
 class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
-    """representation of a HomematicIP Cloud switch group."""
+    """representation of a HomematicIP switching group."""
 
     def __init__(self, home, device, post='Group'):
-        """Initialize heating group."""
+        """Initialize switching group."""
         device.modelType = 'HmIP-{}'.format(post)
         super().__init__(home, device, post)
 
