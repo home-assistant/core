@@ -1,6 +1,7 @@
 """Config flow to configure SmartThings."""
 import logging
 
+from aiohttp import ClientResponseError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -87,16 +88,21 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             setup_smartapp(self.hass, app)
             self.app_id = app.app_id
         except APIResponseError as ex:
+            if ex.is_target_error():
+                errors['base'] = 'webhook_error'
+            else:
+                errors['base'] = "app_setup_error"
+            _LOGGER.exception("API error setting up the SmartApp: %s",
+                              ex.raw_error_response)
+            return self._show_step_user(errors)
+        except ClientResponseError as ex:
             if ex.status == 401:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
             elif ex.status == 403:
                 errors[CONF_ACCESS_TOKEN] = "token_forbidden"
-            elif ex.is_target_error():
-                errors['base'] = 'webhook_error'
             else:
                 errors['base'] = "app_setup_error"
-            _LOGGER.exception("Unexpected error setting up the SmartApp: %s",
-                              ex.raw_error_response)
+                _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_user(errors)
         except Exception:  # pylint:disable=broad-except
             errors['base'] = "app_setup_error"

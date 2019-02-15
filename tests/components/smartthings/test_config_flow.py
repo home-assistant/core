@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
+from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
@@ -78,9 +79,8 @@ async def test_token_unauthorized(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    data = {'error': {}}
     smartthings_mock.return_value.apps.return_value = mock_coro(
-        exception=APIResponseError(None, None, data=data, status=401))
+        exception=ClientResponseError(None, None, status=401))
 
     result = await flow.async_step_user({'access_token': str(uuid4())})
 
@@ -94,9 +94,8 @@ async def test_token_forbidden(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    data = {'error': {}}
     smartthings_mock.return_value.apps.return_value = mock_coro(
-        exception=APIResponseError(None, None, data=data, status=403))
+        exception=ClientResponseError(None, None, status=403))
 
     result = await flow.async_step_user({'access_token': str(uuid4())})
 
@@ -106,7 +105,7 @@ async def test_token_forbidden(hass, smartthings_mock):
 
 
 async def test_webhook_error(hass, smartthings_mock):
-    """Test an error is shown when the token is forbidden."""
+    """Test an error is when there's an error with the webhook endpoint."""
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
@@ -124,14 +123,31 @@ async def test_webhook_error(hass, smartthings_mock):
     assert result['errors'] == {'base': 'webhook_error'}
 
 
+async def test_api_error(hass, smartthings_mock):
+    """Test an error is shown when other API errors occur."""
+    flow = SmartThingsFlowHandler()
+    flow.hass = hass
+
+    data = {'error': {}}
+    error = APIResponseError(None, None, data=data, status=400)
+
+    smartthings_mock.return_value.apps.return_value = mock_coro(
+        exception=error)
+
+    result = await flow.async_step_user({'access_token': str(uuid4())})
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
+    assert result['errors'] == {'base': 'app_setup_error'}
+
+
 async def test_unknown_api_error(hass, smartthings_mock):
     """Test an error is shown when there is an unknown API error."""
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    data = {'error': {}}
     smartthings_mock.return_value.apps.return_value = mock_coro(
-        exception=APIResponseError(None, None, data=data, status=500))
+        exception=ClientResponseError(None, None, status=404))
 
     result = await flow.async_step_user({'access_token': str(uuid4())})
 

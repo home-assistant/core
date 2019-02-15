@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
-    """Get the supported capabilities from the supplied list."""
+    """Return all capabilities supported if minimum required are present."""
     return [capability for capability in CAPABILITY_TO_ATTRIB
             if capability in capabilities]
 
