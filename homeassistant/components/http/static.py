@@ -1,18 +1,29 @@
 """Static file handling for HTTP component."""
+from pathlib import Path
+
 from aiohttp import hdrs
 from aiohttp.web import FileResponse
-from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
 from aiohttp.web_urldispatcher import StaticResource
-from yarl import URL
+
+CACHE_TIME = 31 * 86400  # = 1 month
+CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 
 
+# https://github.com/PyCQA/astroid/issues/633
+# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
     async def _handle(self, request):
-        filename = URL(request.match_info['filename']).path
+        rel_url = request.match_info['filename']
         try:
-            # PyLint is wrong about resolve not being a member.
+            filename = Path(rel_url)
+            if filename.anchor:
+                # rel_url is an absolute name like
+                # /static/\\machine_name\c$ or /static/D:\path
+                # where the static dir is totally different
+                raise HTTPForbidden()
             filepath = self._directory.joinpath(filename).resolve()
             if not self._follow_symlinks:
                 filepath.relative_to(self._directory)
@@ -24,30 +35,10 @@ class CachingStaticResource(StaticResource):
             request.app.logger.exception(error)
             raise HTTPNotFound() from error
 
+        # on opening a dir, load its contents if allowed
         if filepath.is_dir():
             return await super()._handle(request)
         if filepath.is_file():
-            return CachingFileResponse(filepath, chunk_size=self._chunk_size)
+            return FileResponse(
+                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS)
         raise HTTPNotFound
-
-
-# pylint: disable=too-many-ancestors
-class CachingFileResponse(FileResponse):
-    """FileSender class that caches output if not in dev mode."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialize the hass file sender."""
-        super().__init__(*args, **kwargs)
-
-        orig_sendfile = self._sendfile
-
-        async def sendfile(request, fobj, count):
-            """Sendfile that includes a cache header."""
-            cache_time = 31 * 86400  # = 1 month
-            self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                cache_time)
-
-            await orig_sendfile(request, fobj, count)
-
-        # Overwriting like this because __init__ can change implementation.
-        self._sendfile = sendfile
