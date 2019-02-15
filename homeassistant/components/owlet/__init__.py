@@ -1,8 +1,5 @@
 """
 Support for Owlet baby monitors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/owlet/
 """
 import logging
 
@@ -11,7 +8,6 @@ import voluptuous as vol
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-
 
 REQUIREMENTS = ['pyowlet==1.0.2']
 
@@ -39,11 +35,15 @@ def setup(hass, config):
     """Set up owlet component."""
     from pyowlet.PyOwlet import PyOwlet
 
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
     name = config[DOMAIN].get(CONF_NAME)
 
-    device = PyOwlet(username, password)
+    try:
+        device = PyOwlet(username, password)
+    except KeyError:
+        _LOGGER.error('Owlet authentication failed.  Please verify your credentials are correct.')
+        return False
 
     device.update_properties()
 
@@ -52,8 +52,8 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = OwletDevice(device, name, SENSOR_TYPES)
 
-    load_platform(hass, 'sensor', DOMAIN, None, config)
-    load_platform(hass, 'binary_sensor', DOMAIN, None, config)
+    load_platform(hass, 'sensor', DOMAIN, {}, config)
+    load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     return True
 
@@ -63,21 +63,6 @@ class OwletDevice():
 
     def __init__(self, device, name, monitor):
         """Initialize device."""
-        self._name = name
-        self._monitor = monitor
-        self._device = device
-
-    @property
-    def name(self):
-        """Get the name of the device."""
-        return self._name
-
-    @property
-    def monitor(self):
-        """Get monitored conditions."""
-        return self._monitor
-
-    @property
-    def device(self):
-        """Get device."""
-        return self._device
+        self.name = name
+        self.monitor = monitor
+        self.device = device

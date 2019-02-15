@@ -376,9 +376,7 @@ omit =
     homeassistant/components/openuv/__init__.py
     homeassistant/components/openuv/binary_sensor.py
     homeassistant/components/openuv/sensor.py
-    homeassistant/components/owlet/__init__.py
-    homeassistant/components/owlet/binary_sensor.py
-    homeassistant/components/owlet/sensor.py
+    homeassistant/components/owlet/*
     homeassistant/components/pilight/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/point/*
