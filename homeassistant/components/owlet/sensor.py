@@ -1,6 +1,4 @@
-"""
-Support for Owlet sensors.
-"""
+"""Support for Owlet sensors."""
 from datetime import timedelta
 
 from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN

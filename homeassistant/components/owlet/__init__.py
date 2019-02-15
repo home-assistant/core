@@ -1,6 +1,4 @@
-"""
-Support for Owlet baby monitors.
-"""
+"""Support for Owlet baby monitors."""
 import logging
 
 import voluptuous as vol
