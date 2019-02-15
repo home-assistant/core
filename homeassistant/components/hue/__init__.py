@@ -101,11 +101,11 @@ async def async_setup_entry(hass, entry):
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
 
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
-    hass.data[DOMAIN][host] = bridge
 
     if not await bridge.async_setup():
         return False
 
+    hass.data[DOMAIN][host] = bridge
     config = bridge.api.config
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
