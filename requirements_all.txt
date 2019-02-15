@@ -956,7 +956,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==2.5.0
+pychromecast==2.5.1
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.1
