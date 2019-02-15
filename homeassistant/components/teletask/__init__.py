@@ -8,7 +8,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyteletask==0.0.1']
+#REQUIREMENTS = ['pyteletask==0.0.2']
 
 DOMAIN = "teletask"
 
