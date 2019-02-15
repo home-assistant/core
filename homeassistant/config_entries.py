@@ -259,7 +259,7 @@ class ConfigEntry:
         self.state = state
 
         # Listeners to call on update
-        self.update_listeners = []  # type: ignore
+        self.update_listeners = []  # type: list
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup = None
