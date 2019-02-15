@@ -87,7 +87,8 @@ def valid_state(state: str) -> bool:
 
 
 def callback(func: CALLABLE_T) -> CALLABLE_T:
-    """Annotation to mark method as safe to call from within the event loop."""
+    """Annotation to mark method as safe to 
+    call from within the event loop."""
     setattr(func, '_hass_callback', True)
     return func
 
@@ -174,6 +175,8 @@ class HomeAssistant:
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
+        except:
+            continue
         finally:
             self.loop.close()
         return self.exit_code
