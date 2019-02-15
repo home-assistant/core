@@ -3,8 +3,18 @@ import json
 from unittest import mock
 
 import requests_mock
+import growatt
 
 import homeassistant.components.sensor.growatt as victim
+
+
+@mock.patch('growatt.GrowattApi.login',
+            return_value={'userId': '1'})
+def test_login(_):
+    """Test logging in."""
+    client = growatt.GrowattApi()
+    login_res = victim.login(client, 'foo', 'bar')
+    assert login_res == {'userId': '1'}
 
 
 def test_extract_single_energy():
@@ -20,7 +30,7 @@ def test_extract_single_energy():
     ]
 
     energy = (victim
-              .GrowattPlant(None, None, None)
+              .GrowattPlant(None, None)
               ._extract_energy(plant_info_data, 'todayEnergy'))
     assert energy == 0.6
 
@@ -45,26 +55,17 @@ def test_extract_multiple_energy():
     ]
 
     energy = (victim
-              .GrowattPlant(None, None, None)
+              .GrowattPlant(None, None)
               ._extract_energy(plant_info_data, 'todayEnergy'))
     assert energy == 1.2
-
-
-@mock.patch('growatt.GrowattApi.login',
-            return_value={'userId': '1'})
-def test_login(_):
-    """Test loggin in."""
-    sensor = victim.GrowattPlant(None, 'foo', 'bar')
-    login_res = sensor.client.login()
-    assert login_res == {'userId': '1'}
 
 
 @mock.patch('growatt.GrowattApi.plant_detail',
             return_value={'data': 'some-data'})
 def test_plant_list(_):
     """Test getting the list of plants."""
-    sensor = victim.GrowattPlant(None, 'foo', 'bar')
-    login_res = sensor.client.plant_detail('1')
+    sensor = victim.GrowattPlant(None, growatt.GrowattApi())
+    login_res = sensor._client.plant_detail('1')
     assert login_res == {'data': 'some-data'}
 
 
@@ -95,6 +96,6 @@ def test_today_energy_total(_, __):
               text=json.dumps(dummy_plant_info))
 
         energy_total = (victim
-                        .GrowattPlant(None, 'foo', 'bar')
+                        .GrowattPlant(None, growatt.GrowattApi())
                         .todays_energy_total())
         assert energy_total == 0.6

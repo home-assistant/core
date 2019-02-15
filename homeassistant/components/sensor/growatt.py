@@ -10,15 +10,14 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_USERNAME,
-                                 CONF_PASSWORD)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['growatt==0.0.2']
+REQUIREMENTS = ["growatt==0.0.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
-UNIT = 'kWh'
+UNIT = "kWh"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -28,28 +27,46 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Growatt Plant sensor."""
+    import growatt
+
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    sensor_today = GrowattPlantToday(hass, username, password)
-    sensor_total = GrowattPlantTotal(hass, username, password)
+    growatt_client = growatt.GrowattApi()
 
-    add_entities([sensor_today, sensor_total])
+    is_login_success = login(growatt_client, username, password)
+    if is_login_success:
+        sensor_today = GrowattPlantToday(hass, growatt_client, username, password)
+        sensor_total = GrowattPlantTotal(hass, growatt_client, username, password)
+        add_entities([sensor_today, sensor_total])
+        return True
+
+    return False
+
+
+def login(client, username, password):
+    """Login to the growatt server."""
+    import growatt
+
+    try:
+        client.login(username, password)
+        return True
+    except growatt.LoginError as error:
+        logging.error(error)
+        return False
 
 
 class GrowattPlant(Entity):
     """Representation of a Growatt plant sensor."""
 
-    def __init__(self, hass, username, password):
+    def __init__(self, hass, client, username, password):
         """Initialize the sensor."""
         self._hass = hass
         self._unit_of_measurement = UNIT
         self._state = None
-
-        import growatt
+        self._client = client
         self._username = username
         self._password = password
-        self.client = growatt.GrowattApi()
 
     @property
     def state(self):
@@ -65,26 +82,26 @@ class GrowattPlant(Entity):
     def _extract_energy(plant_info_data, key):
         """Extract energy as float from a string."""
         kwhs = [_[key] for _ in plant_info_data]
-        energies = [float(_.split(' ')[0]) for _ in kwhs]
+        energies = [float(_.split(" ")[0]) for _ in kwhs]
         return sum(energies)
 
-    def _plant_info(self, username: str, password: str):
-        import growatt
-        try:
-            self.client.login(username, password)
-        except growatt.LoginError as error:
-            logging.error(error)
-        return self.client.plant_list()
-
     def todays_energy_total(self):
-        """Get todays energy as float in kWh."""
-        plant_info = self._plant_info(self._username, self._password)
-        return self._extract_energy(plant_info['data'], 'todayEnergy')
+        """Get todays energy as float in kWh.
+
+        Refreshes login to update the session.
+        """
+        login(self._client, self._username, self._password)
+        plant_info = self._client.plant_list()
+        return self._extract_energy(plant_info["data"], "todayEnergy")
 
     def global_energy_total(self):
-        """Get total historic energy as float in kWh."""
-        plant_info = self._plant_info(self._username, self._password)
-        return self._extract_energy(plant_info['data'], 'totalEnergy')
+        """Get total historic energy as float in kWh.
+
+        Refreshes login to update the session.
+        """
+        login(self._client, self._username, self._password)
+        plant_info = self._client.plant_list()
+        return self._extract_energy(plant_info["data"], "totalEnergy")
 
 
 class GrowattPlantToday(GrowattPlant):
@@ -97,7 +114,7 @@ class GrowattPlantToday(GrowattPlant):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Growatt plant today'
+        return "Growatt plant today"
 
 
 class GrowattPlantTotal(GrowattPlant):
@@ -110,4 +127,4 @@ class GrowattPlantTotal(GrowattPlant):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Growatt plant total'
+        return "Growatt plant total"
