@@ -1,9 +1,4 @@
-"""
-Support for the for Danfoss Air HRV sswitch platform.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.danfoss_air/
-"""
+"""Support for the for Danfoss Air HRV sswitches."""
 import logging
 
 from homeassistant.components.switch import (
@@ -24,17 +19,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ["Danfoss Air Boost",
          ReadCommand.boost,
          UpdateCommand.boost_activate,
-         UpdateCommand.boost_deactivate]
+         UpdateCommand.boost_deactivate],
     ]
 
     dev = []
 
     for switch in switches:
-        dev.append(DanfossAir(data,
-                              switch[0],
-                              switch[1],
-                              switch[2],
-                              switch[3]))
+        dev.append(DanfossAir(
+            data, switch[0], switch[1], switch[2], switch[3]))
 
     add_entities(dev)
 
@@ -63,7 +55,7 @@ class DanfossAir(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        _LOGGER.debug("Turning on switch with command %s.", self._on_command)
+        _LOGGER.debug("Turning on switch with command %s", self._on_command)
         self._data.update_state(self._on_command, self._state_command)
 
     def turn_off(self, **kwargs):
@@ -77,4 +69,4 @@ class DanfossAir(SwitchDevice):
 
         self._state = self._data.get_value(self._state_command)
         if self._state is None:
-            _LOGGER.debug("Could not get data for %s.", self._state_command)
+            _LOGGER.debug("Could not get data for %s", self._state_command)
