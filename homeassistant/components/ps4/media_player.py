@@ -276,16 +276,12 @@ class PS4Device(MediaPlayerDevice):
     @property
     def entity_picture(self):
         """Return picture."""
-        if self._state == STATE_OFF:
-            return None
-
-        image_hash = self.media_image_hash
-        if image_hash is not None:
-            return ENTITY_IMAGE_URL.format(
-                self.entity_id, self.access_token, image_hash)
-
-        if self._media_content_id is None:
-            return None
+        if self._state == STATE_PLAYING and self._media_content_id is not None:
+            image_hash = self.media_image_hash
+            if image_hash is not None:
+                return ENTITY_IMAGE_URL.format(
+                    self.entity_id, self.access_token, image_hash)
+        return MEDIA_IMAGE_DEFAULT
 
     @property
     def name(self):
