@@ -16,13 +16,12 @@ import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
-# Import as alias
 from .auth import setup_auth
 from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import CachingFileResponse, CachingStaticResource
+from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.7.0']
@@ -272,7 +271,7 @@ class HomeAssistantHTTP:
         if cache_headers:
             async def serve_file(request):
                 """Serve file from disk."""
-                return CachingFileResponse(path)
+                return web.FileResponse(path, headers=CACHE_HEADERS)
         else:
             async def serve_file(request):
                 """Serve file from disk."""
