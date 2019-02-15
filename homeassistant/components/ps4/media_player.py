@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4(host, creds)
         device_list.append(PS4Device(
-            name, config, host, region, ps4, games_file))
+            name, host, region, ps4, games_file))
     add_entities(device_list, True)
 
 
@@ -117,9 +117,8 @@ class PS4Data():
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, name, config, host, region, ps4, games_file):
+    def __init__(self, name, host, region, ps4, games_file):
         """Initialize the ps4 device."""
-        self._config = config
         self._ps4 = ps4
         self._host = host
         self._name = name
