@@ -9,11 +9,11 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydanfossair==0.0.6']
+REQUIREMENTS = ['pydanfossair==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor']
+DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor', 'switch']
 DOMAIN = 'danfoss_air'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -52,6 +52,10 @@ class DanfossAir:
         """Get value for sensor."""
         return self._data.get(item)
 
+    def update_state(self, command, state_command):
+        """Send update command to Danfoss Air CCM."""
+        self._data[state_command] = self._client.command(command)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Use the data from Danfoss Air API."""
@@ -71,5 +75,17 @@ class DanfossAir:
             = round(self._client.command(ReadCommand.filterPercent), 2)
         self._data[ReadCommand.bypass] \
             = self._client.command(ReadCommand.bypass)
+        self._data[ReadCommand.fan_step] \
+            = self._client.command(ReadCommand.fan_step)
+        self._data[ReadCommand.supply_fan_speed] \
+            = self._client.command(ReadCommand.supply_fan_speed)
+        self._data[ReadCommand.exhaust_fan_speed] \
+            = self._client.command(ReadCommand.exhaust_fan_speed)
+        self._data[ReadCommand.away_mode] \
+            = self._client.command(ReadCommand.away_mode)
+        self._data[ReadCommand.boost] \
+            = self._client.command(ReadCommand.boost)
+        self._data[ReadCommand.battery_percent] \
+            = self._client.command(ReadCommand.battery_percent)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
