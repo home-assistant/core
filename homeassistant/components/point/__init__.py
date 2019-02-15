@@ -20,7 +20,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.0.8']
+REQUIREMENTS = ['pypoint==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,6 +159,7 @@ class MinutPointClient():
                  session):
         """Initialize the Minut data object."""
         self._known_devices = set()
+        self._known_homes = set()
         self._hass = hass
         self._config_entry = config_entry
         self._is_available = True
@@ -194,6 +195,10 @@ class MinutPointClient():
                 device_id)
 
         self._is_available = True
+        for home_id in self._client.homes:
+            if home_id not in self._known_homes:
+                await new_device(home_id, 'alarm_control_panel')
+                self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
                 for component in ('sensor', 'binary_sensor'):
@@ -212,6 +217,19 @@ class MinutPointClient():
     def remove_webhook(self):
         """Remove the session webhook."""
         return self._client.remove_webhook()
+
+    @property
+    def homes(self):
+        """Return known homes."""
+        return self._client.homes
+
+    def alarm_disarm(self, home_id):
+        """Send alarm disarm command."""
+        return self._client.alarm_disarm(home_id)
+
+    def alarm_arm(self, home_id):
+        """Send alarm arm command."""
+        return self._client.alarm_arm(home_id)
 
 
 class MinutPointEntity(Entity):
@@ -286,6 +304,7 @@ class MinutPointEntity(Entity):
             'model': 'Point v{}'.format(device['hardware_version']),
             'name': device['description'],
             'sw_version': device['firmware']['installed'],
+            'via_hub': (DOMAIN, device['home']),
         }
 
     @property
