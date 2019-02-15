@@ -172,7 +172,7 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
         """
         if not request['hass_user'].is_admin:
             raise Unauthorized(
-                perm_category=CAT_CONFIG_ENTRIES, permission='add')
+                perm_category=CAT_CONFIG_ENTRIES, permission='edit')
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
@@ -183,3 +183,21 @@ class OptionManagerFlowResourceView(ConfigManagerFlowResourceView):
 
     url = '/api/config/config_entries/options/flow/{flow_id}'
     name = 'api:config:config_entries:options:flow:resource'
+
+    async def get(self, request, flow_id):
+        """Get the current state of a data_entry_flow."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='edit')
+
+        return await super().get(request, flow_id)
+
+    # pylint: disable=arguments-differ
+    async def post(self, request, flow_id):
+        """Handle a POST request."""
+        if not request['hass_user'].is_admin:
+            raise Unauthorized(
+                perm_category=CAT_CONFIG_ENTRIES, permission='edit')
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)
