@@ -8,7 +8,7 @@
             "token_forbidden": "The token does not have the required OAuth scopes.",
             "token_invalid_format": "The token must be in the UID/GUID format",
             "token_unauthorized": "The token is invalid or no longer authorized.",
-            "webhook_error": "SmartThings could not validate the endpoint configured in `base_url`. Please review the [component requirements]({component_url})."
+            "webhook_error": "SmartThings could not validate the endpoint configured in `base_url`. Please review the component requirements."
         },
         "step": {
             "user": {
