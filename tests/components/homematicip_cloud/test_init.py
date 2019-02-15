@@ -79,6 +79,8 @@ async def test_setup_defined_accesspoint(hass):
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
         hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPCS_ENABLE_GROUP_SWITCHES: False,
+        hmipc.HMIPCS_ENABLE_GROUP_SEC_SENSORS: False
     }
 
 
