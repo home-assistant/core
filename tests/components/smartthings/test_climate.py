@@ -100,19 +100,6 @@ async def test_async_setup_platform():
     await climate.async_setup_platform(None, None, None)
 
 
-def test_is_climate(device_factory, legacy_thermostat,
-                    basic_thermostat, thermostat):
-    """Test climate devices are correctly identified."""
-    other_devices = [
-        device_factory('Unknown', ['Unknown']),
-        device_factory("Switch 1", [Capability.switch])
-    ]
-    for device in [legacy_thermostat, basic_thermostat, thermostat]:
-        assert climate.is_climate(device), device.name
-    for device in other_devices:
-        assert not climate.is_climate(device), device.name
-
-
 async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     """Tests the state attributes properly match the thermostat type."""
     await setup_platform(hass, CLIMATE_DOMAIN, legacy_thermostat)
