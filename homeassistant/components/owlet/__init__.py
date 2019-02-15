@@ -5,6 +5,8 @@ import logging
 
 import voluptuous as vol
 
+from .const import SENSOR_MOVEMENT, SENSOR_BASE_STATION, SENSOR_HEART_RATE, \
+    SENSOR_OXYGEN_LEVEL
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -16,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'owlet'
 
 SENSOR_TYPES = [
-    'oxygen_level',
-    'heart_rate',
-    'base_station_on',
-    'movement'
+    SENSOR_OXYGEN_LEVEL,
+    SENSOR_HEART_RATE,
+    SENSOR_BASE_STATION,
+    SENSOR_MOVEMENT
 ]
 
 CONFIG_SCHEMA = vol.Schema({
