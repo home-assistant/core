@@ -200,10 +200,18 @@ class DeviceBroker:
                 }
                 self._hass.bus.async_fire(EVENT_BUTTON, data)
                 _LOGGER.debug("Fired button event: %s", data)
+            else:
+                data = {
+                    'location_id': evt.location_id,
+                    'device_id': evt.device_id,
+                    'component_id': evt.component_id,
+                    'capability': evt.capability,
+                    'attribute': evt.attribute,
+                    'value': evt.value,
+                }
+                _LOGGER.debug("Push update received: %s", data)
 
             updated_devices.add(device.device_id)
-        _LOGGER.debug("Update received with %s events and updated %s devices",
-                      len(req.events), len(updated_devices))
 
         async_dispatcher_send(self._hass, SIGNAL_SMARTTHINGS_UPDATE,
                               updated_devices)
