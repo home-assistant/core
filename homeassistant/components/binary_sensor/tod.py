@@ -1,10 +1,4 @@
-"""
-Support for showing the binary sensors represending current time of the day.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tod/
-
-"""
+"""Support for representing current time of the day as binary sensors."""
 from datetime import datetime, timedelta
 import logging
 
@@ -24,36 +18,38 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BEFORE = "before"
-ATTR_AFTER = "after"
+ATTR_AFTER = 'after'
+ATTR_BEFORE = 'before'
 ATTR_NEXT_UPDATE = 'next_update'
 
 CONF_AFTER_OFFSET = 'after_offset'
 CONF_BEFORE_OFFSET = 'before_offset'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_AFTER):
+        vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
+    vol.Required(CONF_BEFORE):
+        vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(
-        vol.Lower, cv.sun_event)),
     vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
-    vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(
-        vol.Lower, cv.sun_event)),
-    vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period
+    vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the ToD sensors."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return
+
     after = config[CONF_AFTER]
     after_offset = config[CONF_AFTER_OFFSET]
     before = config[CONF_BEFORE]
     before_offset = config[CONF_BEFORE_OFFSET]
     name = config[CONF_NAME]
     sensor = TodSensor(name, after, after_offset, before, before_offset)
+
     async_add_entities([sensor])
 
 
@@ -65,8 +61,7 @@ def is_sun_event(event):
 class TodSensor(BinarySensorDevice):
     """Time of the Day Sensor."""
 
-    def __init__(self, name, after, after_offset,
-                 before, before_offset):
+    def __init__(self, name, after, after_offset, before, before_offset):
         """Init the ToD Sensor..."""
         self._name = name
         self._time_before = self._time_after = self._next_update = None
@@ -127,17 +122,15 @@ class TodSensor(BinarySensorDevice):
     def _calculate_initial_boudary_time(self):
         """Calculate internal absolute time boudaries."""
         nowutc = self.current_datetime
-        # if after value is a sun event instead of absolut time
+        # If after value is a sun event instead of absolute time
         if is_sun_event(self._after):
-            # calculate the today's event utc time or
+            # Calculate the today's event utc time or
             # if not available take next
             after_event_date = \
-                get_astral_event_date(
-                    self.hass, self._after, nowutc) or \
-                get_astral_event_next(
-                    self.hass, self._after, nowutc)
+                get_astral_event_date(self.hass, self._after, nowutc) or \
+                get_astral_event_next(self.hass, self._after, nowutc)
         else:
-            # convert local time provided to UTC today
+            # Convert local time provided to UTC today 
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
@@ -147,36 +140,31 @@ class TodSensor(BinarySensorDevice):
 
         self._time_after = after_event_date
 
-        # if before value is a sun event instead of absolut time
+        # If before value is a sun event instead of absolute time
         if is_sun_event(self._before):
-            # calculate the today's event utc time or
-            # if not available take next
+            # Calculate the today's event utc time or  if not available take
+            # next
             before_event_date = \
-                get_astral_event_date(
-                    self.hass, self._before, nowutc) or \
-                get_astral_event_next(
-                    self.hass, self._before, nowutc)
-            # before is earler than after
+                get_astral_event_date(self.hass, self._before, nowutc) or \
+                get_astral_event_next(self.hass, self._before, nowutc)
+            # Before is earlier than after
             if before_event_date < after_event_date:
-                # take next day for before
+                # Take next day for before
                 before_event_date = get_astral_event_next(
                     self.hass, self._before, after_event_date)
         else:
-            # convert local time provided to UTC today,
-            # datetime.combine(date, time, tzinfo) is not supported
-            # in python 3.5. The self._after is provided
-            # with hass configured TZ not system wide
+            # Convert local time provided to UTC today, see above
             before_event_date = datetime.combine(
                 nowutc, self._before.replace(
                     tzinfo=self.hass.config.time_zone)).astimezone(tz=pytz.UTC)
 
-            # it is safe to add timedelta days=1 to UTC as there is no DST
+            # It is safe to add timedelta days=1 to UTC as there is no DST
             if before_event_date < after_event_date + self._after_offset:
                 before_event_date += timedelta(days=1)
 
         self._time_before = before_event_date
 
-        # add offset to utc boundries according to the configuration
+        # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset
         self._time_before += self._before_offset
 
@@ -188,7 +176,7 @@ class TodSensor(BinarySensorDevice):
                 self._time_after - self._after_offset)
             self._time_after += self._after_offset
         else:
-            # offset is already there
+            # Offset is already there
             self._time_after += timedelta(days=1)
 
         if is_sun_event(self._before):
@@ -197,7 +185,7 @@ class TodSensor(BinarySensorDevice):
                 self._time_before - self._before_offset)
             self._time_before += self._before_offset
         else:
-            # offset is already there
+            # Offset is already there
             self._time_before += timedelta(days=1)
 
     async def async_added_to_hass(self):
@@ -226,5 +214,4 @@ class TodSensor(BinarySensorDevice):
         self.async_schedule_update_ha_state()
 
         async_track_point_in_utc_time(
-            self.hass, self._point_in_time_listener,
-            self.next_update)
+            self.hass, self._point_in_time_listener, self.next_update)
