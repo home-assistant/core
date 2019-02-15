@@ -24,10 +24,10 @@ BINARY_CONDITIONS = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up owlet binary sensor."""
-    device = hass.data[OWLET_DOMAIN]
-
     if discovery_info is None:
         return
+
+    device = hass.data[OWLET_DOMAIN]
 
     entities = []
     for condition in BINARY_CONDITIONS:
