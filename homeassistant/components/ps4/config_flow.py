@@ -66,7 +66,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
         errors = {}
-        device_list = []
 
         # Search for device.
         devices = await self.hass.async_add_executor_job(
