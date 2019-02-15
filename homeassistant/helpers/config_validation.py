@@ -25,8 +25,6 @@ from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
-_LOGGER = logging.getLogger(__name__)
-
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
@@ -36,6 +34,7 @@ OLD_ENTITY_ID_VALIDATION = r"^(\w+)\.(\w+)$"
 # persistent notification. Rare temporary exception to use a global.
 INVALID_SLUGS_FOUND = {}
 INVALID_ENTITY_IDS_FOUND = {}
+INVALID_EXTRA_KEYS_FOUND = []
 
 
 # Home Assistant types
@@ -662,14 +661,17 @@ class HASchema(vol.Schema):
                               if err.error_message == 'extra keys not allowed']
             if extra_key_errs:
                 msg = "Your configuration contains extra keys " \
-                      "that the platform does not support. The keys "
-                msg += ', '.join('[{}]'.format(err.path[-1]) for err in
-                                 extra_key_errs)
-                msg += ' are 42.'
+                      "that the platform does not support.\n" \
+                      "Please remove "
+                submsg = ', '.join('[{}]'.format(err.path[-1]) for err in
+                                   extra_key_errs)
+                submsg += '. '
                 if hasattr(data, '__config_file__'):
-                    msg += " (See {}, line {}). ".format(data.__config_file__,
-                                                         data.__line__)
-                _LOGGER.warning(msg)
+                    submsg += " (See {}, line {}). ".format(
+                        data.__config_file__, data.__line__)
+                msg += submsg
+                logging.getLogger(__name__).warning(msg)
+                INVALID_EXTRA_KEYS_FOUND.append(submsg)
             else:
                 # This should not happen (all errors should be extra key
                 # errors). Let's raise the original error anyway.
