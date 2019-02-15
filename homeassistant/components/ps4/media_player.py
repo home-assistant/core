@@ -75,8 +75,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_service_handle(hass):
         """Handle for services."""
         def service_command(call):
-            entity_ids = call.data.[ATTR_ENTITY_ID]
-            command = call.data.get[ATTR_COMMAND]
+            entity_ids = call.data[ATTR_ENTITY_ID]
+            command = call.data[ATTR_COMMAND]
             for device in hass.data[PS4_DATA].devices:
                 device = device
                 if device.entity_id in entity_ids:
