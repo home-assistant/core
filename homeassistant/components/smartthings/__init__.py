@@ -1,5 +1,6 @@
 """Support for SmartThings Cloud."""
 import asyncio
+import importlib
 import logging
 from typing import Iterable
 
@@ -132,8 +133,40 @@ class DeviceBroker:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._installed_app_id = installed_app_id
+        self.assignments = self._assign_capabilities(devices)
         self.devices = {device.device_id: device for device in devices}
         self.event_handler_disconnect = None
+
+    def _assign_capabilities(self, devices: Iterable):
+        """Assign platforms to capabilities."""
+        assignments = {}
+        for device in devices:
+            capabilities = device.capabilities.copy()
+            slots = {}
+            for platform_name in SUPPORTED_PLATFORMS:
+                platform = importlib.import_module(
+                    '.' + platform_name, self.__module__)
+                assigned = platform.get_capabilities(capabilities)
+                if not assigned:
+                    continue
+                # Draw-down capabilities and set slot assignment
+                for capability in assigned:
+                    if capability not in capabilities:
+                        continue
+                    capabilities.remove(capability)
+                    slots[capability] = platform_name
+            assignments[device.device_id] = slots
+        return assignments
+
+    def get_assigned(self, device_id: str, platform: str):
+        """Get the capabilities assigned to the platform."""
+        slots = self.assignments.get(device_id, {})
+        return [key for key, value in slots.items() if value == platform]
+
+    def any_assigned(self, device_id: str, platform: str):
+        """Return True if the platform has any assigned capabilities."""
+        slots = self.assignments.get(device_id, {})
+        return any(value for value in slots.values() if value == platform)
 
     async def event_handler(self, req, resp, app):
         """Broker for incoming events."""

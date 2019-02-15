@@ -20,12 +20,6 @@ async def test_async_setup_platform():
     await lock.async_setup_platform(None, None, None)
 
 
-def test_is_lock(device_factory):
-    """Test locks are correctly identified."""
-    lock_device = device_factory('Lock', [Capability.lock])
-    assert lock.is_lock(lock_device)
-
-
 async def test_entity_and_device_attributes(hass, device_factory):
     """Test the attributes of the entity are correct."""
     # Arrange
