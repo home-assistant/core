@@ -164,6 +164,9 @@ class ZHAGateway:
         device_entity = _create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
 
+        if is_new_join:
+            zha_device.update_available(True)
+
     async def _async_process_endpoint(
             self, endpoint_id, endpoint, discovery_infos, device, zha_device,
             is_new_join):
