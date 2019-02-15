@@ -1,9 +1,4 @@
-"""
-Plugged In Status Support for the Nissan Leaf.
-
-Please refer to the main platform component for configuration details
-"""
-
+"""Plugged In Status Support for the Nissan Leaf."""
 import logging
 
 from homeassistant.components.nissan_leaf import (
@@ -15,14 +10,14 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Nissan Leaf binary_sensor setup."""
-    _LOGGER.debug("binary_sensor setup_platform, discovery_info=%s",
-                  discovery_info)
+    """Set up of a Nissan Leaf binary sensor."""
+    _LOGGER.debug(
+        "binary_sensor setup_platform, discovery_info=%s", discovery_info)
 
     devices = []
     for key, value in hass.data[DATA_LEAF].items():
-        _LOGGER.debug("binary_sensor setup_platform, key=%s, value=%s",
-                      key, value)
+        _LOGGER.debug(
+            "binary_sensor setup_platform, key=%s, value=%s", key, value)
         devices.append(LeafPluggedInSensor(value))
 
     add_devices(devices, True)
@@ -34,7 +29,7 @@ class LeafPluggedInSensor(LeafEntity):
     @property
     def name(self):
         """Sensor name."""
-        return self.car.leaf.nickname + " Plug Status"
+        return "{} {}".format(self.car.leaf.nickname, "Plug Status")
 
     @property
     def state(self):
