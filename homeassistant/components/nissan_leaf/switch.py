@@ -1,15 +1,9 @@
-"""
-Charge and Climate Control Support for the Nissan Leaf.
-
-Please refer to the main platform component for configuration details
-"""
-
+"""Charge and Climate Control Support for the Nissan Leaf."""
 import logging
-from homeassistant.components.nissan_leaf import (
-    DATA_CHARGING, DATA_CLIMATE, DATA_LEAF, LeafEntity
-)
-from homeassistant.helpers.entity import ToggleEntity
 
+from homeassistant.components.nissan_leaf import (
+    DATA_CHARGING, DATA_CLIMATE, DATA_LEAF, LeafEntity)
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +12,8 @@ DEPENDENCIES = ['nissan_leaf']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Nissan Leaf switch platform setup."""
-    _LOGGER.debug("In switch setup platform, discovery_info=%s",
-                  discovery_info)
+    _LOGGER.debug(
+        "In switch setup platform, discovery_info=%s", discovery_info)
 
     devices = []
     for value in hass.data[DATA_LEAF].values():
@@ -35,7 +29,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def name(self):
         """Switch name."""
-        return self.car.leaf.nickname + " Climate Control"
+        return "{} {}".format(self.car.leaf.nickname, "Climate Control")
 
     def log_registration(self):
         """Log registration."""
@@ -79,7 +73,7 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
     @property
     def name(self):
         """Switch name."""
-        return self.car.leaf.nickname + " Charging Status"
+        return "{} {}".format(self.car.leaf.nickname, "Charging Status")
 
     @property
     def icon(self):
@@ -101,5 +95,5 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
     def turn_off(self, **kwargs):
         """Nissan API doesn't allow stopping of charge remotely."""
         _LOGGER.info(
-            "Cannot turn off Leaf charging -"
-            " Nissan API does not support stopping charge remotely.")
+            "Cannot turn off Leaf charging."
+            " Nissan API does not support stopping charge remotely")
