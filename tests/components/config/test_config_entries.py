@@ -48,17 +48,14 @@ async def test_get_entries(hass, client):
     ).add_to_hass(hass)
 
     class CompConfigFlow:
-        """"""
         @staticmethod
+        @callback
         def async_get_options_flow(config, options):
-            """"""
             pass
     HANDLERS['comp'] = CompConfigFlow()
 
     class Comp2ConfigFlow:
-        """"""
         def __init__(self):
-            """"""
             pass
     HANDLERS['comp2'] = Comp2ConfigFlow()
 
