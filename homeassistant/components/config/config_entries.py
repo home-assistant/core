@@ -52,11 +52,6 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         """List available config entries."""
         hass = request.app['hass']
 
-        def supports_options(domain):
-            """Check if config entry supports options."""
-            return hasattr(
-                config_entries.HANDLERS[domain], 'async_get_options_flow')
-
         return self.json([{
             'entry_id': entry.entry_id,
             'domain': entry.domain,
@@ -64,7 +59,9 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'source': entry.source,
             'state': entry.state,
             'connection_class': entry.connection_class,
-            'supports_options': supports_options(entry.domain),
+            'supports_options': hasattr(
+                config_entries.HANDLERS[entry.domain],
+                'async_get_options_flow'),
         } for entry in hass.config_entries.async_entries()])
 
 
