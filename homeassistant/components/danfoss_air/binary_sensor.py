@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for sensor in sensors:
         dev.append(DanfossAirBinarySensor(
-             data, sensor[0], sensor[1], sensor[2]))
+            data, sensor[0], sensor[1], sensor[2]))
 
     add_entities(dev, True)
 
