@@ -39,7 +39,7 @@ async def test_setup_defined_hosts_known_auth(hass):
     assert len(mock_config_entries.flow.mock_calls) == 0
 
     # Config stored for domain.
-    assert hass.data[hue.DOMAIN] == {
+    assert hass.data[hue.DATA_CONFIGS] == {
         '0.0.0.0': {
             hue.CONF_HOST: '0.0.0.0',
             hue.CONF_FILENAME: 'bla.conf',
@@ -73,7 +73,7 @@ async def test_setup_defined_hosts_no_known_auth(hass):
     }
 
     # Config stored for domain.
-    assert hass.data[hue.DOMAIN] == {
+    assert hass.data[hue.DATA_CONFIGS] == {
         '0.0.0.0': {
             hue.CONF_HOST: '0.0.0.0',
             hue.CONF_FILENAME: 'bla.conf',
