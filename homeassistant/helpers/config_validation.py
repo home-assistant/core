@@ -637,7 +637,9 @@ def key_dependency(key, dependency):
 # Schemas
 class HASchema(vol.Schema):
     """Schema class that allows us to mark PREVENT_EXTRA errors as warnings."""
+
     def __call__(self, data):
+        """Override __call__ to mark PREVENT_EXTRA as warning."""
         try:
             return super().__call__(data)
         except vol.Invalid as orig_err:
@@ -646,6 +648,7 @@ class HASchema(vol.Schema):
 
             # orig_error is of type vol.MultipleInvalid (see super __call__)
             assert isinstance(orig_err, vol.MultipleInvalid)
+            # pylint: disable=no-member
             # If it fails with PREVENT_EXTRA, try with ALLOW_EXTRA
             self.extra = vol.ALLOW_EXTRA
             # In case it still fails the following will raise
@@ -676,7 +679,7 @@ class HASchema(vol.Schema):
             return validated
 
     def extend(self, schema, required=None, extra=None):
-        """Extend this schema and convert it to HASchema if necessary"""
+        """Extend this schema and convert it to HASchema if necessary."""
         ret = super().extend(schema, required=required, extra=extra)
         if extra is not None:
             return ret
