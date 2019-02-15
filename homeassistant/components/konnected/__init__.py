@@ -59,6 +59,8 @@ _SENSOR_SCHEMA = vol.All(
     vol.Schema({
         vol.Exclusive(CONF_PIN, 's_pin'): vol.Any(*PIN_TO_ZONE),
         vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
+        vol.Required(CONF_TYPE):
+            vol.All(vol.Lower, vol.In(['dht', 'ds18b20'])),
         vol.Optional(CONF_NAME): cv.string,
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
@@ -230,22 +232,26 @@ class ConfiguredDevice:
             actuators.append(act)
             _LOGGER.debug('Set up switch %s', act)
 
-        sensors = {}
+        sensors = []
         for entity in self.config.get(CONF_SENSORS) or []:
             if CONF_ZONE in entity:
                 pin = ZONE_TO_PIN[entity[CONF_ZONE]]
             else:
                 pin = entity[CONF_PIN]
 
-            sensors[pin] = {
+            sensor = {
+                CONF_PIN: pin,
                 CONF_NAME: entity.get(
                     CONF_NAME, 'Konnected {} Sensor {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
+                CONF_TYPE: entity[CONF_TYPE],
                 ATTR_STATE: None
             }
-            _LOGGER.debug('Set up sensor %s (initial state: %s)',
-                          sensors[pin].get('name'),
-                          sensors[pin].get(ATTR_STATE))
+            sensors.append(sensor)
+            _LOGGER.debug('Set up %s sensor %s (initial state: %s)',
+                          sensor.get(CONF_TYPE),
+                          sensor.get(CONF_NAME),
+                          sensor.get(ATTR_STATE))
 
         device_data = {
             CONF_BINARY_SENSORS: binary_sensors,
@@ -329,9 +335,10 @@ class DiscoveredDevice:
                 for data in self.stored_configuration[CONF_SWITCHES]]
 
     def dht_sensor_configuration(self):
-        """Return the configuration map for syncing DHT sensors"""
-        return [{'pin': p} for p in
-                self.stored_configuration[CONF_SENSORS]]
+        """Return the configuration map for syncing DHT sensors."""
+        return [{'pin': sensor[CONF_PIN]} for sensor in
+                filter(lambda s: s[CONF_TYPE] == 'dht',
+                       self.stored_configuration[CONF_SENSORS])]
 
     def update_initial_states(self):
         """Update the initial state of each sensor from status poll."""
@@ -478,17 +485,15 @@ class KonnectedView(HomeAssistantView):
             return self.json_message('unregistered device',
                                      status_code=HTTP_BAD_REQUEST)
         pin_data = device[CONF_BINARY_SENSORS].get(pin_num) or \
-            device[CONF_SENSORS].get(pin_num)
+            next((s for s in device[CONF_SENSORS] if s[CONF_PIN] == pin_num),
+                 None)
 
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',
                                      status_code=HTTP_BAD_REQUEST)
 
-        entity_id = pin_data.get(ATTR_ENTITY_ID)
-        if entity_id is None:
-            return self.json_message('uninitialized sensor/actuator',
-                                     status_code=HTTP_NOT_FOUND)
         if state:
+            entity_id = pin_data.get(ATTR_ENTITY_ID)
             state = bool(int(state))
             if pin_data.get(CONF_INVERSE):
                 state = not state
@@ -498,7 +503,12 @@ class KonnectedView(HomeAssistantView):
 
         temp, humi = payload.get('temp'), payload.get('humi')
         if temp:
+            entity_id = pin_data.get('temperature')
             async_dispatcher_send(
                 hass, SIGNAL_SENSOR_UPDATE.format(entity_id), temp)
+        if humi:
+            entity_id = pin_data.get('humidity')
+            async_dispatcher_send(
+                hass, SIGNAL_SENSOR_UPDATE.format(entity_id), humi)
 
         return self.json_message('ok')
