@@ -1,10 +1,6 @@
-"""
-Support for the for Danfoss Air HRV sensor platform.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.danfoss_air/
-"""
+"""Support for the for Danfoss Air HRV sensors."""
 import logging
+
 from homeassistant.components.danfoss_air import DOMAIN \
      as DANFOSS_AIR_DOMAIN
 from homeassistant.const import (
@@ -47,11 +43,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
 
     for sensor in sensors:
-        dev.append(DanfossAir(data,
-                              sensor[0],
-                              sensor[1],
-                              sensor[2],
-                              sensor[3]))
+        dev.append(DanfossAir(
+             data, sensor[0], sensor[1], sensor[2], sensor[3]))
 
     add_entities(dev, True)
 
