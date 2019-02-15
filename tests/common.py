@@ -453,6 +453,7 @@ class MockModule:
                  platform_schema_base=None, async_setup=None,
                  async_setup_entry=None, async_unload_entry=None):
         """Initialize the mock module."""
+        self.__name__ = 'homeassistant.components.{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
