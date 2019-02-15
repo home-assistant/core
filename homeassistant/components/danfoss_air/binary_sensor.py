@@ -1,9 +1,4 @@
-"""
-Support for the for Danfoss Air HRV binary sensor platform.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.danfoss_air/
-"""
+"""Support for the for Danfoss Air HRV binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.danfoss_air import DOMAIN \
      as DANFOSS_AIR_DOMAIN
@@ -16,16 +11,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = [
         ["Danfoss Air Bypass Active", ReadCommand.bypass, "opening"],
-        ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None]
+        ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None],
     ]
 
     dev = []
 
     for sensor in sensors:
-        dev.append(DanfossAirBinarySensor(data,
-                                          sensor[0],
-                                          sensor[1],
-                                          sensor[2]))
+        dev.append(DanfossAirBinarySensor(
+             data, sensor[0], sensor[1], sensor[2]))
 
     add_entities(dev, True)
 
