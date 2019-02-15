@@ -1,15 +1,10 @@
-"""
-Support for tracking a Nissan Leaf.
-
-For more details about this platform, please refer to the documentation
-of the main platform component.
-"""
+"""Support for tracking a Nissan Leaf."""
 import logging
-from homeassistant.util import slugify
-from homeassistant.helpers.dispatcher import dispatcher_connect
+
 from homeassistant.components.nissan_leaf import (
-    DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF
-)
+    DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF)
+from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
