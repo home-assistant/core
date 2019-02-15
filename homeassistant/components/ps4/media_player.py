@@ -183,7 +183,7 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state unknown."""
         self.reset_title()
         self._state = None
-        _LOGGER.debug("PS4 could not be reached")
+        _LOGGER.warning("PS4 could not be reached")
         self._retry = 0
 
     def reset_title(self):
@@ -225,11 +225,12 @@ class PS4Device(MediaPlayerDevice):
         g_file = self._games_filename
         try:
             games = load_json(g_file)
-            return games
+
+        # If file does not exist, create empty file.
         except FileNotFoundError:
             games = {}
             self.save_games(games)
-            self.load_games()
+        return games
 
     def save_games(self, games):
         """Save games to file."""
@@ -238,6 +239,10 @@ class PS4Device(MediaPlayerDevice):
             save_json(g_file, games)
         except OSError as error:
             _LOGGER.error("Could not save game list, %s", error)
+
+        # Retry loading file
+        if games is None:
+            self.load_games()
 
     def add_games(self, title_id, app_name):
         """Add games to list."""
