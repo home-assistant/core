@@ -579,8 +579,7 @@ async def test_update_entry_no_change_does_not_call_save(manager):
     with patch('homeassistant.config_entries'
                '.ConfigEntries._async_schedule_save') as mock_save:
         manager.async_update_entry(entry)
-
-    assert not mock_save.mock_calls
+        assert not mock_save.mock_calls
 
 
 async def test_setup_raise_not_ready(hass, caplog):
