@@ -19,10 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 UNIT = "kWh"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,8 +38,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     is_login_success = login(growatt_client, username, password)
     if is_login_success:
-        sensor_today = GrowattPlantToday(hass, growatt_client, username, password)
-        sensor_total = GrowattPlantTotal(hass, growatt_client, username, password)
+        sensor_today = GrowattPlantToday(
+            hass, growatt_client, username, password
+        )
+        sensor_total = GrowattPlantTotal(
+            hass, growatt_client, username, password
+        )
         add_entities([sensor_today, sensor_total])
         return True
 
