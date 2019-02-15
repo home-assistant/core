@@ -3,10 +3,11 @@ Support for Owlet binary sensors.
 """
 from datetime import timedelta
 
-from .const import SENSOR_BASE_STATION, SENSOR_MOVEMENT
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
 from homeassistant.util import dt as dt_util
+
+from .const import SENSOR_BASE_STATION, SENSOR_MOVEMENT
 
 SCAN_INTERVAL = timedelta(seconds=120)
 

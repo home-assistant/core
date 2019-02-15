@@ -3,10 +3,11 @@ Support for Owlet sensors.
 """
 from datetime import timedelta
 
-from .const import SENSOR_HEART_RATE, SENSOR_OXYGEN_LEVEL
 from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
+
+from .const import SENSOR_HEART_RATE, SENSOR_OXYGEN_LEVEL
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -95,7 +96,7 @@ class OwletSensor(Entity):
             self._state = min(100, value)
             return
 
-        elif not self._device.device.base_station_on \
+        if not self._device.device.base_station_on \
                 or self._device.device.charge_status > 0 \
                 or self._prop_expiration < dt_util.now().timestamp() \
                 or self._movement:

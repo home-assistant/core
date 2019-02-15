@@ -5,11 +5,12 @@ import logging
 
 import voluptuous as vol
 
-from .const import SENSOR_MOVEMENT, SENSOR_BASE_STATION, SENSOR_HEART_RATE, \
-    SENSOR_OXYGEN_LEVEL
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+
+from .const import SENSOR_MOVEMENT, SENSOR_BASE_STATION, SENSOR_HEART_RATE, \
+    SENSOR_OXYGEN_LEVEL
 
 REQUIREMENTS = ['pyowlet==1.0.2']
 
