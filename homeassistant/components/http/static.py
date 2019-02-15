@@ -1,4 +1,5 @@
 """Static file handling for HTTP component."""
+#pylint: skip-file
 from pathlib import Path
 
 from aiohttp import hdrs
@@ -10,7 +11,6 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 
 
-# pylint: disable=E0241
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
