@@ -226,7 +226,7 @@ class ConfigEntry:
                  'update_listeners', '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, connection_class: str, options: dict = None,
+                 source: str, connection_class: str, options: Optional[dict] = None,
                  entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
@@ -258,7 +258,7 @@ class ConfigEntry:
         self.state = state
 
         # Listeners to call on update
-        self.update_listeners = []
+        self.update_listeners: list = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup = None
@@ -454,7 +454,7 @@ class ConfigEntries:
         return result
 
     @callback
-    def async_get_entry(self, entry_id: str) -> ConfigEntry:
+    def async_get_entry(self, entry_id: str) -> Optional[ConfigEntry]:
         """Return entry with matching entry_id."""
         for entry in self._entries:
             if entry_id == entry.entry_id:
@@ -524,15 +524,12 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-<<<<<<< HEAD
-    def async_update_entry(self, entry, *, data=_UNDEF, options=None):
-=======
     def async_update_entry(
             self, entry: ConfigEntry, *,
-            data: dict = None, options: dict = None) -> None:
->>>>>>> Type hints
+            data: Optional[dict] = _UNDEF,
+            options: Optional[dict] = None) -> None:
         """Update a config entry."""
-        if not data and not options:
+        if data is _UNDEF and not options:
             return
 
         if data is not _UNDEF:
@@ -594,7 +591,7 @@ class ConfigEntries:
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            options=None,
+            options={},
             source=flow.context['source'],
             connection_class=flow.CONNECTION_CLASS,
         )
@@ -644,7 +641,7 @@ class ConfigEntries:
         flow.init_step = source
         return flow
 
-    def _async_schedule_save(self):
+    def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
@@ -696,6 +693,8 @@ class Options:
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
         entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return
         flow = HANDLERS[entry.domain].async_get_options_flow(
             entry.data, entry.options)
         flow.init_step = context['source']
@@ -708,6 +707,8 @@ class Options:
         Flow.handler and entry_id is the same thing to map flow with entry.
         """
         entry = self.hass.config_entries.async_get_entry(flow.handler)
+        if entry is None:
+            return
         self.hass.config_entries.async_update_entry(
             entry, options=result['data'])
 
