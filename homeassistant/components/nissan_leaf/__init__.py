@@ -1,19 +1,14 @@
-"""
-Support for the Nissan Leaf Carwings/Nissan Connect API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/nissan_leaf
-"""
-
-import logging
-from datetime import timedelta, datetime
-import urllib
+"""Support for the Nissan Leaf Carwings/Nissan Connect API."""
 import asyncio
+from datetime import datetime, timedelta
+import logging
 import sys
+import urllib
+
 import voluptuous as vol
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -67,13 +62,11 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CHARGING_INTERVAL,
                      default=DEFAULT_CHARGING_INTERVAL): (
                          vol.All(cv.time_period,
-                                 vol.Clamp(
-                                     min=MIN_UPDATE_INTERVAL))),
+                                 vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_CLIMATE_INTERVAL,
                      default=DEFAULT_CLIMATE_INTERVAL): (
                          vol.All(cv.time_period,
-                                 vol.Clamp(
-                                     min=MIN_UPDATE_INTERVAL))),
+                                 vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
     })])
 }, extra=vol.ALLOW_EXTRA)
@@ -88,12 +81,12 @@ SERVICE_UPDATE_LEAF = 'update'
 ATTR_VIN = 'vin'
 
 UPDATE_LEAF_SCHEMA = vol.Schema({
-    vol.Required(ATTR_VIN): cv.string
+    vol.Required(ATTR_VIN): cv.string,
 })
 
 
 async def async_setup(hass, config):
-    """Set-up the Nissan Leaf component."""
+    """Set up the Nissan Leaf component."""
     import pycarwings2
 
     async def handle_update(service):
@@ -103,15 +96,15 @@ async def async_setup(hass, config):
 
         if vin in hass.data[DATA_LEAF]:
             data_store = hass.data[DATA_LEAF][vin]
-            async_track_point_in_utc_time(hass, data_store.async_update_data,
-                                          utcnow())
+            async_track_point_in_utc_time(
+                hass, data_store.async_update_data, utcnow())
             return True
 
-        _LOGGER.debug("Vin %s not recognised for update.", vin)
+        _LOGGER.debug("Vin %s not recognised for update", vin)
         return False
 
     async def async_setup_leaf(car_config):
-        """Set-up a car."""
+        """Set up a car."""
         _LOGGER.debug("Logging into You+Nissan...")
 
         username = car_config[CONF_USERNAME]
@@ -125,7 +118,7 @@ async def async_setup(hass, config):
             leaf = sess.get_leaf()
 
         try:
-            # this might need to be made async (somehow) causes
+            # This might need to be made async (somehow) causes
             # homeassistant to be slow to start
             await hass.async_add_job(leaf_login)
         except(RuntimeError, urllib.error.HTTPError):
@@ -244,8 +237,8 @@ class LeafDataStore:
 
             if self.data[DATA_CLIMATE]:
                 intervals.append(climate_interval)
-                _LOGGER.debug("Could use climate interval=%s",
-                              climate_interval)
+                _LOGGER.debug(
+                    "Could use climate interval=%s", climate_interval)
 
             interval = min(intervals)
             _LOGGER.debug("Resulting interval=%s", interval)
