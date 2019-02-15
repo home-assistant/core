@@ -124,16 +124,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
-            key = target_device.KEYS.get(cmd)
-            if key:
-                output = target_device.firetv.adb_shell(
-                    'input keyevent {}'.format(key))
-            else:
-                output = target_device.firetv.adb_shell(cmd)
+            output = target_device.adb_cmd(cmd)
 
-            # log the output (key commands have no output)
-            if output and not key:
-                _LOGGER.info("Output of command '%s' from '%s': '%s'",
+            # log the output if there is any
+            if output:
+                _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
     hass.services.register(DOMAIN, SERVICE_ADB_CMD, service_adb_cmd,
@@ -320,3 +315,11 @@ class FireTVDevice(MediaPlayerDevice):
                 self.firetv.launch_app(source)
             else:
                 self.firetv.stop_app(source[1:].lstrip())
+
+    @adb_decorator()
+    def adb_cmd(self, cmd):
+        """Send an ADB command to a Fire TV device."""
+        key = self.KEYS.get(cmd)
+        if key:
+            return self.firetv.adb_shell('input keyevent {}'.format(key))
+        return self.firetv.adb_shell(cmd)
