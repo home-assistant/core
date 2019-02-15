@@ -133,6 +133,3 @@ async def test_register_static_path(hass, hass_client, aiohttp_client):
         with pytest.raises(ValueError):
             hass.http.register_static_path(
                 '/invalid', secure_dir + '/not-exist', False, True)
-
-
-
