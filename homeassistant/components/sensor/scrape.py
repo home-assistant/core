@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
     vol.Required(CONF_SELECT): cv.string,
     vol.Optional(CONF_ATTR): cv.string,
-    vol.Optional(CONF_INDEX): cv.positive_int,
+    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
@@ -121,9 +121,6 @@ class ScrapeSensor(Entity):
 
         raw_data = BeautifulSoup(self.rest.data, 'html.parser')
         _LOGGER.debug(raw_data)
-
-        if self._index is None:
-            self._index = 0
 
         try:
             if self._attr is not None:
