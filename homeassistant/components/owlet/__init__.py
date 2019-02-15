@@ -42,7 +42,8 @@ def setup(hass, config):
     try:
         device = PyOwlet(username, password)
     except KeyError:
-        _LOGGER.error('Owlet authentication failed.  Please verify your credentials are correct.')
+        _LOGGER.error('Owlet authentication failed.  Please verify your '
+                      'credentials are correct.')
         return False
 
     device.update_properties()
