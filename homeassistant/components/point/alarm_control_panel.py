@@ -1,10 +1,4 @@
-"""
-Support for Minut Point.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/point/
-"""
-
+"""Support for Minut Point."""
 import logging
 
 from homeassistant.components.alarm_control_panel import (DOMAIN,
@@ -65,14 +59,10 @@ class MinutPointAlarmControl(AlarmControlPanel):
         if status:
             self._home['alarm_status'] = 'on'
 
-    def alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        self.alarm_arm_away()
-
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return 'point.{}-{}'.format(DOMAIN, self._home_id)
+        return 'point.{}'.format(self._home_id)
 
     @property
     def device_info(self):
