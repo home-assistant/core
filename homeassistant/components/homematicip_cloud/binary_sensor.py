@@ -199,7 +199,7 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
         """Return true if security issue detected."""
         parent_is_on = super().is_on
         from homematicip.base.enums import SmokeDetectorAlarmType
-        if parent_is_on is True or \
+        if parent_is_on or \
                 self._device.powerMainsFailure or \
                 self._device.moistureDetected or \
                 self._device.waterlevelDetected:
