@@ -1,7 +1,6 @@
 """Common test objects."""
 import time
 from unittest.mock import patch, Mock
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.components.zha.core.const import (
     DATA_ZHA, DATA_ZHA_CONFIG, DATA_ZHA_DISPATCHERS, DATA_ZHA_BRIDGE_ID
@@ -191,4 +190,4 @@ async def async_test_device_join(
             cluster = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
             entity_id = make_entity_id(
                 domain, zigpy_device, cluster, use_suffix=device_type is None)
-            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            assert hass.states.get(entity_id) is not None
