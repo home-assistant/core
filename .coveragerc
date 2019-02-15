@@ -317,6 +317,7 @@ omit =
     homeassistant/components/media_player/yamaha_musiccast.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/ziggo_mediabox_xl.py
+    homeassistant/components/meteo_france/*
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
     homeassistant/components/mychevy/*
@@ -326,7 +327,6 @@ omit =
     homeassistant/components/nest/*
     homeassistant/components/netatmo/*
     homeassistant/components/netgear_lte/*
-    homeassistant/components/meteo_france.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
@@ -483,7 +483,6 @@ omit =
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/magicseaweed.py
-    homeassistant/components/sensor/meteo_france.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py
@@ -651,7 +650,6 @@ omit =
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
     homeassistant/components/weather/met.py
-    homeassistant/components/weather/meteo_france.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py

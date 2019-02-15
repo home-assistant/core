@@ -1,4 +1,4 @@
-"""Support for Meteo france weather service."""
+"""Support for Meteo-France weather service."""
 from datetime import datetime, timedelta
 import logging
 
@@ -18,7 +18,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     city = discovery_info[CONF_CITY]
-
     client = hass.data[DATA_METEO_FRANCE][city]
 
     add_entities([MeteoFranceWeather(client)], True)
@@ -40,21 +39,21 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._data["name"]
+        return self._data['name']
 
     @property
     def condition(self):
         """Return the current condition."""
-        return self.format_condition(self._data["weather"])
+        return self.format_condition(self._data['weather'])
 
     @property
     def temperature(self):
-        """Return the platform temperature."""
-        return self._data["temperature"]
+        """Return the temperature."""
+        return self._data['temperature']
 
     @property
     def humidity(self):
-        """Return the platform temperature."""
+        """Return the humidity."""
         return None
 
     @property
@@ -65,12 +64,12 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._data["wind_speed"]
+        return self._data['wind_speed']
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self._data["wind_bearing"]
+        return self._data['wind_bearing']
 
     @property
     def attribution(self):
@@ -83,14 +82,14 @@ class MeteoFranceWeather(WeatherEntity):
         reftime = datetime.now().replace(hour=12, minute=00)
         reftime += timedelta(hours=24)
         forecast_data = []
-        for key in self._data["forecast"]:
-            value = self._data["forecast"][key]
+        for key in self._data['forecast']:
+            value = self._data['forecast'][key]
             data_dict = {
                 ATTR_FORECAST_TIME: reftime.isoformat(),
                 ATTR_FORECAST_TEMP: int(value['max_temp']),
                 ATTR_FORECAST_TEMP_LOW: int(value['min_temp']),
                 ATTR_FORECAST_CONDITION:
-                    self.format_condition(value["weather"])
+                    self.format_condition(value['weather'])
             }
             reftime = reftime + timedelta(hours=24)
             forecast_data.append(data_dict)
