@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter, realtime)
 
-    add_entities([sensor], True)
+    add_entities([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(
