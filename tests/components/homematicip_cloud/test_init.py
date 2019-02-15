@@ -78,7 +78,7 @@ async def test_setup_defined_accesspoint(hass):
     assert mock_config_entries.flow.mock_calls[0][2]['data'] == {
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip'
+        hmipc.HMIPC_NAME: 'hmip',
     }
 
 
@@ -87,7 +87,7 @@ async def test_unload_entry(hass):
     entry = MockConfigEntry(domain=hmipc.DOMAIN, data={
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip'
+        hmipc.HMIPC_NAME: 'hmip',
     })
     entry.add_to_hass(hass)
 

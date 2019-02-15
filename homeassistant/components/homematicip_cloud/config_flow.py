@@ -72,7 +72,7 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                     data={
                         HMIPC_HAPID: self.auth.config.get(HMIPC_HAPID),
                         HMIPC_AUTHTOKEN: authtoken,
-                        HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
+                        HMIPC_NAME: self.auth.config.get(HMIPC_NAME)
                     })
             return self.async_abort(reason='connection_aborted')
         errors['base'] = 'press_the_button'
