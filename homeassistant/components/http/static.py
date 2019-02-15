@@ -10,6 +10,8 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 
 
+# https://github.com/PyCQA/astroid/issues/633
+# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
@@ -28,8 +30,6 @@ class CachingStaticResource(StaticResource):
         except (ValueError, FileNotFoundError) as error:
             # relatively safe
             raise HTTPNotFound() from error
-        except HTTPForbidden:
-            raise
         except Exception as error:
             # perm error or other kind!
             request.app.logger.exception(error)
@@ -38,8 +38,7 @@ class CachingStaticResource(StaticResource):
         # on opening a dir, load its contents if allowed
         if filepath.is_dir():
             return await super()._handle(request)
-        elif filepath.is_file():
+        if filepath.is_file():
             return FileResponse(
                 filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS)
-        else:
-            raise HTTPNotFound
+        raise HTTPNotFound
