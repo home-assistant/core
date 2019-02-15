@@ -117,7 +117,8 @@ class TestSetup:
                     'invalid': 'extra',
                 }
             })
-            assert caplog.text.count('Your configuration contains extra keys') == 1
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
 
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
@@ -133,7 +134,8 @@ class TestSetup:
                     'invalid': True
                 }
             })
-            assert caplog.text.count('Your configuration contains extra keys') == 2
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 2
 
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
@@ -215,7 +217,8 @@ class TestSetup:
                     'invalid': 'extra',
                 }
             })
-            assert caplog.text.count('Your configuration contains extra keys') == 1
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
 
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
@@ -266,7 +269,8 @@ class TestSetup:
                     'invalid': 'extra',
                 }
             })
-            assert caplog.text.count('Your configuration contains extra keys') == 1
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
 
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
