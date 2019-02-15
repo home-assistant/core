@@ -1,13 +1,15 @@
 """Support for climate devices through the SmartThings cloud API."""
 import asyncio
+from typing import Optional, Sequence
 
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_OFF,
-    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     ClimateDevice)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -48,30 +50,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsThermostat(device) for device in broker.devices.values()
-         if is_climate(device)])
+         if broker.any_assigned(device.device_id, 'climate')])
 
 
-def is_climate(device):
-    """Determine if the device should be represented as a climate entity."""
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
     from pysmartthings import Capability
 
+    supported = [
+        Capability.thermostat,
+        Capability.temperature_measurement,
+        Capability.thermostat_cooling_setpoint,
+        Capability.thermostat_heating_setpoint,
+        Capability.thermostat_mode,
+        Capability.relative_humidity_measurement,
+        Capability.thermostat_operating_state,
+        Capability.thermostat_fan_mode
+    ]
     # Can have this legacy/deprecated capability
-    if Capability.thermostat in device.capabilities:
-        return True
+    if Capability.thermostat in capabilities:
+        return supported
     # Or must have all of these
     climate_capabilities = [
         Capability.temperature_measurement,
         Capability.thermostat_cooling_setpoint,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode]
-    if all(capability in device.capabilities
+    if all(capability in capabilities
            for capability in climate_capabilities):
-        return True
-    # Optional capabilities:
-    # relative_humidity_measurement -> state attribs
-    # thermostat_operating_state -> state attribs
-    # thermostat_fan_mode -> SUPPORT_FAN_MODE
-    return False
+        return supported
+
+    return None
 
 
 class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
