@@ -130,7 +130,7 @@ class TodSensor(BinarySensorDevice):
                 get_astral_event_date(self.hass, self._after, nowutc) or \
                 get_astral_event_next(self.hass, self._after, nowutc)
         else:
-            # Convert local time provided to UTC today 
+            # Convert local time provided to UTC today
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
