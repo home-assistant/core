@@ -21,7 +21,7 @@ from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import CACHE_HEADERS, CachingStaticResource
+from .static import CACHE_HEADERS, CachingStaticResource, SecureStaticResource
 from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.7.0']
@@ -258,15 +258,26 @@ class HomeAssistantHTTP:
 
         self.app.router.add_route('GET', url, redirect)
 
-    def register_static_path(self, url_path, path, cache_headers=True):
+    def register_static_path(self, url_path, path, cache_headers=True,
+                             requires_auth=False):
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
-            if cache_headers:
+            if requires_auth:
+                resource = SecureStaticResource
+                if cache_headers:
+                    _LOGGER.warning('cache_headers is ignored on {} since'
+                                    ' requires_auth=True'.format(path))
+            elif cache_headers:
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
             self.app.router.register_resource(resource(url_path, path))
             return
+
+        if requires_auth:
+            raise ValueError(
+                '{} is not allowed to register as static path. Only existing'
+                ' directory is supported when requires_auth=True'.format(path))
 
         if cache_headers:
             async def serve_file(request):

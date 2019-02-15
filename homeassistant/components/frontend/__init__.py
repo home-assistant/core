@@ -236,6 +236,12 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
+    secure = hass.config.path('www_secure')
+    if os.path.isdir(secure):
+        # we do not want browser cache files under secure folder
+        hass.http.register_static_path("/secure", secure, False,
+                                       requires_auth=True)
+
     index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
     hass.http.register_view(AuthorizeView(repo_path, js_version))
