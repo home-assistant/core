@@ -10,8 +10,8 @@ DEPENDENCIES = ['homematicip_cloud']
 _LOGGER = logging.getLogger(__name__)
 
 
-ATTR_SAFETYISSUE = 'safety issue'
-ATTR_SECURITYISSUE = 'security issue'
+ATTR_SAFETYISSUES = 'safety issues'
+ATTR_SECURITYISSUES = 'security issues'
 
 ISSUE_MOTIONDETECTED = 'motion detected'
 ISSUE_PRESENCEDETECTED = 'presence detected'
@@ -51,12 +51,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(device, AsyncWaterSensor):
             devices.append(HomematicipWaterDetector(home, device))
 
-    if home.enable_group_sec_sensors is True:
-        for group in home.groups:
-            if isinstance(group, SecurityGroup):
-                devices.append(HomematicipSecuritySensorGroup(home, group))
-            elif isinstance(group, SecurityZoneGroup):
-                devices.append(HomematicipSecurityZoneSensorGroup(home, group))
+    for group in home.groups:
+        if isinstance(group, SecurityGroup):
+            devices.append(HomematicipSecuritySensorGroup(home, group))
+        elif isinstance(group, SecurityZoneGroup):
+            devices.append(HomematicipSecurityZoneSensorGroup(home, group))
 
     if devices:
         async_add_entities(devices)
@@ -158,7 +157,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
             security_issues.append(ISSUE_WINDOWOPEN)
 
         if security_issues.__len__() > 0:
-            attr.update({ATTR_SECURITYISSUE: ','.join(security_issues)})
+            attr.update({ATTR_SECURITYISSUES: ', '.join(security_issues)})
 
         return attr
 
@@ -202,7 +201,7 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
             safety_issues.append(ISSUE_SMOKEDETECTORALARM)
 
         if safety_issues.__len__() > 0:
-            attr.update({ATTR_SAFETYISSUE: ','.join(safety_issues)})
+            attr.update({ATTR_SAFETYISSUES: ', '.join(safety_issues)})
 
         return attr
 

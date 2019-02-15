@@ -122,9 +122,7 @@ async def test_import_config(hass):
     result = await flow.async_step_import({
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip',
-        hmipc.HMIPCS_ENABLE_GROUP_SWITCHES: False,
-        hmipc.HMIPCS_ENABLE_GROUP_SEC_SENSORS: False
+        hmipc.HMIPC_NAME: 'hmip'
     })
 
     assert result['type'] == 'create_entry'
@@ -132,9 +130,7 @@ async def test_import_config(hass):
     assert result['data'] == {
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip',
-        hmipc.HMIPCS_ENABLE_GROUP_SWITCHES: False,
-        hmipc.HMIPCS_ENABLE_GROUP_SEC_SENSORS: False
+        hmipc.HMIPC_NAME: 'hmip'
     }
 
 
@@ -150,9 +146,7 @@ async def test_import_existing_config(hass):
     result = await flow.async_step_import({
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip',
-        hmipc.HMIPCS_ENABLE_GROUP_SWITCHES: False,
-        hmipc.HMIPCS_ENABLE_GROUP_SEC_SENSORS: False
+        hmipc.HMIPC_NAME: 'hmip'
     })
 
     assert result['type'] == 'abort'

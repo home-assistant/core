@@ -7,8 +7,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    COMPONENTS, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN,
-    HMIPCS_ENABLE_GROUP_SEC_SENSORS, HMIPCS_ENABLE_GROUP_SWITCHES)
+    COMPONENTS, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN)
 from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,9 +92,7 @@ class HomematicipHAP:
                 self.hass,
                 self.config_entry.data.get(HMIPC_HAPID),
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
-                self.config_entry.data.get(HMIPC_NAME),
-                self.config_entry.data.get(HMIPCS_ENABLE_GROUP_SWITCHES),
-                self.config_entry.data.get(HMIPCS_ENABLE_GROUP_SEC_SENSORS)
+                self.config_entry.data.get(HMIPC_NAME)
             )
         except HmipcConnectionError:
             raise ConfigEntryNotReady
@@ -207,8 +204,7 @@ class HomematicipHAP:
                 self.config_entry, component)
         return True
 
-    async def get_hap(self, hass, hapid, authtoken, name,
-                      enable_group_switches, enable_group_sec_sensors):
+    async def get_hap(self, hass, hapid, authtoken, name):
         """Create a HomematicIP access point object."""
         from homematicip.aio.home import AsyncHome
         from homematicip.base.base_connection import HmipConnectionError
@@ -218,8 +214,6 @@ class HomematicipHAP:
         home.name = name
         home.label = 'Access Point'
         home.modelType = 'HmIP-HAP'
-        home.enable_group_switches = bool(enable_group_switches)
-        home.enable_group_sec_sensors = bool(enable_group_sec_sensors)
 
         home.set_auth_token(authtoken)
         try:

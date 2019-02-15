@@ -45,11 +45,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))
 
-    if home.enable_group_switches is True:
-        for group in home.groups:
-            if isinstance(group, SwitchingGroup):
-                devices.append(
-                    HomematicipGroupSwitch(home, group))
+    for group in home.groups:
+        if isinstance(group, SwitchingGroup):
+            devices.append(
+                HomematicipGroupSwitch(home, group))
 
     if devices:
         async_add_entities(devices)
