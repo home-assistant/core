@@ -1,5 +1,6 @@
 """Support for sensors through the SmartThings cloud API."""
 from collections import namedtuple
+from typing import Optional, Sequence
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
@@ -164,14 +165,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
-        for capability, maps in CAPABILITY_TO_SENSORS.items():
-            if capability in device.capabilities:
-                sensors.extend([
-                    SmartThingsSensor(
-                        device, m.attribute, m.name, m.default_unit,
-                        m.device_class)
-                    for m in maps])
+        for capability in broker.get_assigned(device.device_id, 'sensor'):
+            maps = CAPABILITY_TO_SENSORS[capability]
+            sensors.extend([
+                SmartThingsSensor(
+                    device, m.attribute, m.name, m.default_unit,
+                    m.device_class)
+                for m in maps])
     async_add_entities(sensors)
+
+
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
+    return [capability for capability in CAPABILITY_TO_SENSORS
+            if capability in capabilities]
 
 
 class SmartThingsSensor(SmartThingsEntity):
