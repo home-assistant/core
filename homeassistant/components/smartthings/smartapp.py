@@ -13,15 +13,16 @@ from uuid import uuid4
 from aiohttp import web
 
 from homeassistant.components import webhook
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
-    CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
+    APP_NAME_PREFIX, APP_OAUTH_CLIENT_NAME, APP_OAUTH_SCOPES, CONF_APP_ID,
+    CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_INSTANCE_ID,
+    CONF_LOCATION_ID, CONF_REFRESH_TOKEN, DATA_BROKERS, DATA_MANAGER, DOMAIN,
     SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, STORAGE_KEY, STORAGE_VERSION)
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ async def create_app(hass: HomeAssistantType, api):
     app = App()
     for key, value in template.items():
         setattr(app, key, value)
-    app = (await api.create_app(app))[0]
+    app, client = await api.create_app(app)
     _LOGGER.debug("Created SmartApp '%s' (%s)", app.app_name, app.app_id)
 
     # Set unique hass id in settings
@@ -97,12 +98,12 @@ async def create_app(hass: HomeAssistantType, api):
 
     # Set oauth scopes
     oauth = AppOAuth(app.app_id)
-    oauth.client_name = 'Home Assistant'
+    oauth.client_name = APP_OAUTH_CLIENT_NAME
     oauth.scope.extend(APP_OAUTH_SCOPES)
     await api.update_app_oauth(oauth)
     _LOGGER.debug("Updated App OAuth for SmartApp '%s' (%s)",
                   app.app_name, app.app_id)
-    return app
+    return app, client
 
 
 async def update_app(hass: HomeAssistantType, app):
@@ -185,7 +186,8 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         DATA_MANAGER: manager,
         CONF_INSTANCE_ID: config[CONF_INSTANCE_ID],
         DATA_BROKERS: {},
-        CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID]
+        CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID],
+        CONF_INSTALLED_APPS: []
     }
 
 
@@ -245,21 +247,27 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     # The permanent access token is copied from another config flow with the
     # same parent app_id.  If one is not found, that means the user is within
     # the initial config flow and the entry at the conclusion.
-    access_token = next((
-        entry.data.get(CONF_ACCESS_TOKEN) for entry
+    entry = next((
+        entry for entry
         in hass.config_entries.async_entries(DOMAIN)
         if entry.data[CONF_APP_ID] == app.app_id), None)
-    if access_token:
+    if entry:
         # Add as job not needed because the current coroutine was invoked
         # from the dispatcher and is not being awaited.
+        data = entry.data.copy()
+        data[CONF_INSTALLED_APP_ID] = req.installed_app_id
+        data[CONF_LOCATION_ID] = req.location_id
+        data[CONF_REFRESH_TOKEN] = req.refresh_token
         await hass.config_entries.flow.async_init(
             DOMAIN, context={'source': 'install'},
-            data={
-                CONF_APP_ID: app.app_id,
-                CONF_INSTALLED_APP_ID: req.installed_app_id,
-                CONF_LOCATION_ID: req.location_id,
-                CONF_ACCESS_TOKEN: access_token
-            })
+            data=data)
+    else:
+        # Store the data where the flow can find it
+        hass.data[DOMAIN][CONF_INSTALLED_APPS].append({
+            CONF_INSTALLED_APP_ID: req.installed_app_id,
+            CONF_LOCATION_ID: req.location_id,
+            CONF_REFRESH_TOKEN: req.refresh_token,
+        })
 
 
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):
@@ -268,6 +276,16 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
 
     Synchronize subscriptions to ensure we're up-to-date.
     """
+    # Update refresh token in config entry
+    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)
+                  if entry.data.get(CONF_INSTALLED_APP_ID) ==
+                  req.installed_app_id),
+                 None)
+    if entry:
+        entry.data[CONF_REFRESH_TOKEN] = req.refresh_token
+        hass.config_entries.async_update_entry(entry)
+
+    # Synchronize subscriptions
     await smartapp_sync_subscriptions(
         hass, req.auth_token, req.location_id, req.installed_app_id)
 

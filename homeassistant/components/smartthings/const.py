@@ -1,14 +1,19 @@
 """Constants used by the SmartThings component and platforms."""
 import re
 
+APP_OAUTH_CLIENT_NAME = "Home Assistant"
 APP_OAUTH_SCOPES = [
     'r:devices:*'
 ]
 APP_NAME_PREFIX = 'homeassistant.'
 CONF_APP_ID = 'app_id'
 CONF_INSTALLED_APP_ID = 'installed_app_id'
+CONF_INSTALLED_APPS = 'installed_apps'
 CONF_INSTANCE_ID = 'instance_id'
 CONF_LOCATION_ID = 'location_id'
+CONF_OAUTH_CLIENT_ID = 'client_id'
+CONF_OAUTH_CLIENT_SECRET = 'client_secret'
+CONF_REFRESH_TOKEN = 'refresh_token'
 DATA_MANAGER = 'manager'
 DATA_BROKERS = 'brokers'
 DOMAIN = 'smartthings'

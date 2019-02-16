@@ -108,7 +108,14 @@ async def test_config_entry_loads_platforms(
     api = smartthings_mock.return_value
     api.app.return_value = mock_coro(return_value=app)
     api.installed_app.return_value = mock_coro(return_value=installed_app)
-    api.devices.return_value = mock_coro(return_value=[device])
+    api.devices.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value=[device])
+    mock_token = Mock()
+    mock_token.access_token.return_value = str(uuid4())
+    mock_token.refresh_token.return_value = str(uuid4())
+    api.generate_tokens.return_value = mock_coro(return_value=mock_token)
+    api.delete_subscriptions.return_value = mock_coro()
+    api.create_subscription.side_effect = lambda *args, **kwargs: mock_coro()
 
     with patch.object(hass.config_entries, 'async_forward_entry_setup',
                       return_value=mock_coro()) as forward_mock:

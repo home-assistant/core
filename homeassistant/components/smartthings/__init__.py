@@ -18,10 +18,12 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .config_flow import SmartThingsFlowHandler  # noqa
 from .const import (
-    CONF_APP_ID, CONF_INSTALLED_APP_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
-    EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET, CONF_REFRESH_TOKEN, DATA_BROKERS, DATA_MANAGER,
+    DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
 from .smartapp import (
-    setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
+    setup_smartapp, setup_smartapp_endpoint, smartapp_sync_subscriptions,
+    validate_installed_app)
 
 REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.2']
 DEPENDENCIES = ['webhook']
@@ -61,6 +63,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         # Validate and retrieve the installed app.
         installed_app = await validate_installed_app(
             api, entry.data[CONF_INSTALLED_APP_ID])
+
+        # Get SmartApp token to sync subscriptions
+        token = await api.generate_tokens(
+            entry.data[CONF_OAUTH_CLIENT_ID],
+            entry.data[CONF_OAUTH_CLIENT_SECRET],
+            entry.data[CONF_REFRESH_TOKEN])
+        entry.data[CONF_REFRESH_TOKEN] = token.refresh_token
+        hass.config_entries.async_update_entry(entry)
+        await smartapp_sync_subscriptions(
+            hass, token.access_token, installed_app.location_id,
+            installed_app.installed_app_id)
 
         # Get devices and their current status
         devices = await api.devices(
