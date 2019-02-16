@@ -57,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     offpeak_hours_cost = config.get(OFFPEAK_HOURS_COST)
 
     linky_data = LinkyData(username, password, timeout)
+    linky_data.update()
 
     add_entities([LinkySensor(name, linky_data, peak_hours,
                               peak_hours_cost, offpeak_hours_cost)])
@@ -202,15 +203,15 @@ class LinkyData:
             self.compare_month = sum([d[CONSUMPTION]
                                       for d in self.client
                                       .get_data_per_period
-                                          (pylinky.MONTHLY,
-                                           today.replace(day=1) -
+                                          ("monthly",
+                                          (today.replace(day=1) -
                                            relativedelta(months=12))
-                                          .strftime("%d/%m/%Y"),
+                                           .strftime("%d/%m/%Y"),
                                           (today - relativedelta
                                            (months=12))
-                                          .strftime("%d/%m/%Y"))])
+                                           .strftime("%d/%m/%Y"))])
             _LOGGER.info("Same month last year (from 1st to same day): %s",
-                         str(self.compare_month))
+                str(self.compare_month))
         except PyLinkyError as exp:
             reason = "(maybe due to night maintenance downtime schedule):"
             _LOGGER.warning("Unable to fetch Linky data %s %s", reason, exp)
