@@ -30,7 +30,7 @@ NEW_DEVICE = {
 ATTR_DARK = 'dark'
 ATTR_OFFSET = 'offset'
 ATTR_ON = 'on'
-ATTR_SCHEDULER = 'scheduler'
+ATTR_VALVE = 'valve'
 
 DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]

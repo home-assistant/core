@@ -17,8 +17,8 @@ SENSOR = {
         "name": "Climate 1 name",
         "type": "ZHAThermostat",
         "state": {"on": True, "temperature": 2260},
-        "config": {"battery": 100, "heatsetpoint": 2200, "offset": 10,
-                   "reachable": True, "scheduleron": True},
+        "config": {"battery": 100, "heatsetpoint": 2200, "mode": "auto",
+                   "offset": 10, "valve": 30},
         "uniqueid": "00:00:00:00:00:00:00:00-00"
     },
     "2": {

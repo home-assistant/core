@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_OFFSET, ATTR_ON, ATTR_SCHEDULER, CONF_ALLOW_CLIP_SENSOR,
+    ATTR_OFFSET, ATTR_VALVE, CONF_ALLOW_CLIP_SENSOR,
     DOMAIN as DECONZ_DOMAIN, NEW_SENSOR)
 from .deconz_device import DeconzDevice
 
@@ -62,18 +62,18 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
     async def async_turn_on(self):
         """Turn on switch."""
-        data = {'on': True}
+        data = {'mode': 'auto'}
         await self._device.async_set_config(data)
 
     async def async_turn_off(self):
         """Turn off switch."""
-        data = {'on': False}
+        data = {'mode': 'off'}
         await self._device.async_set_config(data)
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._device.state
+        return self._device.temperature
 
     @property
     def target_temperature(self):
@@ -105,10 +105,7 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         if self._device.offset:
             attr[ATTR_OFFSET] = self._device.offset
 
-        if self._device.on is not None:
-            attr[ATTR_ON] = self._device.on
-
-        if self._device.scheduleron is not None:
-            attr[ATTR_SCHEDULER] = self._device.scheduleron
+        if self._device.valve is not None:
+            attr[ATTR_VALVE] = self._device.valve
 
         return attr
