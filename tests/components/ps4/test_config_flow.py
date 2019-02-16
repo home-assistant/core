@@ -10,7 +10,6 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry, mock_coro
 
-
 MOCK_TITLE = 'PlayStation 4'
 MOCK_CODE = '12345678'
 MOCK_CREDS = '000aa000'
