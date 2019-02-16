@@ -22,7 +22,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             dev_id = 'nissan_leaf_{}'.format(slugify(host_name))
             if not value.data[DATA_LOCATION]:
                 _LOGGER.debug("No position found for vehicle %s", key)
-                return False
+                return
             _LOGGER.debug("Updating device_tracker for %s with position %s",
                           value.leaf.nickname,
                           value.data[DATA_LOCATION].__dict__)
@@ -39,5 +39,3 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 icon=ICON_CAR)
 
     dispatcher_connect(hass, SIGNAL_UPDATE_LEAF, see_vehicle)
-
-    return True
