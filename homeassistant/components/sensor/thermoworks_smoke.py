@@ -17,7 +17,7 @@ from homeassistant.const import TEMP_FAHRENHEIT, CONF_EMAIL, CONF_PASSWORD,\
     CONF_MONITORED_CONDITIONS, CONF_EXCLUDE, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['thermoworks_smoke==0.1.7', 'stringcase==1.2.0']
+REQUIREMENTS = ['thermoworks_smoke==0.1.8', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
