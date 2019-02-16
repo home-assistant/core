@@ -1,12 +1,13 @@
 """Logging utilities."""
 import asyncio
 from asyncio.events import AbstractEventLoop
-from functools import partial, wraps
+from functools import partial, wraps, update_wrapper
 import inspect
 import logging
 import threading
 import traceback
-from typing import Any, Callable, Optional
+from types import (MethodType, FunctionType, GeneratorType)
+from typing import Any, Callable, Optional, Union
 
 from .async_ import run_coroutine_threadsafe
 
@@ -164,3 +165,137 @@ def catch_log_exception(
                 log_exception(*args)
         wrapper_func = wrapper
     return wrapper_func
+
+
+def log_it(
+    func: Union(MethodType, FunctionType, GeneratorType),
+    level: int=logging.DEBUG
+) -> Union(MethodType, FunctionType, GeneratorType):
+    """
+    Logs the function call if the supplied level is set.
+
+    :param func: callable object.
+    :type func: Union(MethodType, FunctionType, GeneratorType)
+    :param level: log level, if the log level is set to the supplied level
+    then log the calls.
+    :type level: int
+    :return: either the callable object or a wrapper.
+    :rtype: Union(MethodType, FunctionType, GeneratorType)
+    """
+    if func.__code__.co_flags & 0x20:
+        return func
+
+    logger = logging.getLogger(func.__module__)
+
+    if logger.getEffectiveLevel() != level:
+        return func
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        func_name, arg_string = _func_arg_string(func, args, kwargs)
+        logger.log(level, func_name + arg_string)
+
+        return func(*args, **kwargs)
+
+    return update_wrapper(wrapper, func)
+
+
+def log_it_with_return(
+    func: Union(MethodType, FunctionType, GeneratorType),
+    level: int=logging.DEBUG
+) -> Union(MethodType, FunctionType, GeneratorType):
+    """
+    Logs the function call abd return data if the supplied level is set.
+
+    :param func: callable object
+    :type func: Union(MethodType, FunctionType, GeneratorType)
+    :param level: log level, if the log level is set to the supplied level
+    then log the calls and return data.
+    :type level: int
+    :return: either the callable object or a wrapper
+    :rtype: Union(MethodType, FunctionType, GeneratorType)
+    """
+
+    if func.__code__.co_flags & 0x20:
+        return func
+
+    logger = logging.getLogger(func.__module__)
+
+    if logger.getEffectiveLevel() != level:
+        return func
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        func_name, arg_string = _func_arg_string(func, args, kwargs)
+        
+        logger.log(level, func_name + arg_string)
+        result = func(*args, **kwargs)
+        logger.log(level, func_name + " => " + repr(result))
+
+        return result
+
+    return update_wrapper(wrapper, func)
+
+
+def _func_arg_string(
+    func: Union(MethodType, FunctionType),
+    args: tuple,
+    kwargs: dict
+) -> (str, str):
+    """
+    Creates a string representation of a function/method call with 
+    supplied/default positional and keyword arguments.
+    example:
+        module_name.ClassName.method_name(arg_name=arg_value, keyword_name=keyword_value)
+        module_name.function_name(arg_name=arg_value, keyword_name=keyword_value)
+    
+    :param func: wrapped function or method.
+    :type func: Union(MethodType, FunctionType) 
+    :param args: tuple of positional arguments.
+    :type args: tuple
+    :param kwargs: dict of keyword arguments.
+    :type kwargs: dict 
+    :return: string representation of the function and supplied arguments 
+    :rtype: (str, str)
+    """
+    class_name = ""
+    arg_names = inspect.getfullargspec(func)[0]
+    start = 0
+    if arg_names:
+        if arg_names[0] == "self":
+            class_name = args[0].__class__.__name__ + "."
+            start = 1
+
+    res = []
+    append = res.append
+
+    stack = inspect.stack()
+    # reverse the stack and cut off the module level. 
+    stack = list(stack[i] for i in range(len(stack) - 1, -1, -1))[1:]
+    func_path = []
+
+    # iterate over the stack to check for functions being 
+    # nested inside of functions or methods.
+    for item in stack:
+        if item.function == 'func_arg_string':
+            break
+        if item.function == 'wrapper':
+            continue
+        # this is where the check gets done to see if a function 
+        # is nested inside of a method. and if it is this is 
+        # where we obtain the class name
+        if 'self' in item.frame.f_locals:
+            func_path += [item.frame.f_locals['self'].__class__.__name__]
+
+        func_path += [item.function]
+
+    func_path += [func.__name__]
+
+    for key, value in list(zip(arg_names, args))[start:]:
+        append(str(key) + "=" + repr(value))
+
+    for key, value in kwargs.items():
+        append(str(key) + "=" + repr(value))
+
+    f_name = func.__module__ + '.' + class_name + '.'.join(func_path)
+    return f_name, "(" + ", ".join(res) + ")"
+
+
