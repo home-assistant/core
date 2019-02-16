@@ -8,6 +8,7 @@ import urllib
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -509,6 +510,7 @@ class LeafEntity(Entity):
         async_dispatcher_connect(
             self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Update the state."""
         self.schedule_update_ha_state(True)
