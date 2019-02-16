@@ -14,6 +14,8 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
 
+import shlex
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UNRECOGNIZED = 'unrecognized'
@@ -24,25 +26,27 @@ CONF_ROTATE = 'rotate'
 CONF_GOCR_BIN = 'gocr_bin'
 CONF_THRESHOLD = 'threshold'
 CONF_WIDTH = 'width'
-CONF_X_POS = 'x_position'
-CONF_Y_POS = 'y_position'
+CONF_X_POSITION = 'x_position'
+CONF_Y_POSITION = 'y_position'
 CONF_NEGATE = 'negate'
 
 DEFAULT_BINARY = 'gocr'
-DEFAULT_UNRECOGNIZED = '_'
+
+_KEY_GEOMETRY = 'geometry'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=''): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
-    vol.Optional(CONF_UNRECOGNIZED, default=DEFAULT_UNRECOGNIZED): cv.string,
-    vol.Optional(CONF_CHARS, default=''): cv.string,
-    vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
+    vol.Optional(CONF_UNRECOGNIZED): cv.string,
+    vol.Optional(CONF_CHARS): cv.string,
+    vol.Inclusive(CONF_HEIGHT, _KEY_GEOMETRY): cv.positive_int,
+    vol.Inclusive(CONF_X_POSITION, _KEY_GEOMETRY): cv.positive_int,
+    vol.Inclusive(CONF_WIDTH, _KEY_GEOMETRY): cv.positive_int,
+    vol.Inclusive(CONF_Y_POSITION, _KEY_GEOMETRY): cv.positive_int,
     vol.Optional(CONF_GOCR_BIN, default=DEFAULT_BINARY): cv.string,
-    vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
-    vol.Optional(CONF_ROTATE, default=0): cv.positive_int,
-    vol.Optional(CONF_WIDTH, default=0): cv.positive_int,
-    vol.Optional(CONF_X_POS, default=0): cv.positive_int,
-    vol.Optional(CONF_Y_POS, default=0): cv.positive_int,
+    vol.Optional(CONF_THRESHOLD): cv.positive_int,
+    vol.Optional(CONF_ROTATE): cv.positive_int,
+
     vol.Optional(CONF_NEGATE, default=False): cv.boolean,
 })
 
@@ -64,9 +68,8 @@ class ImageProcessingGocr(ImageProcessingEntity):
 
     def __init__(self, hass, camera_entity, config, name):
         """Initialize text processing."""
-        self.hass = hass
         self._camera_entity = camera_entity
-        if name:
+        if name is not None:
             self._name = name
         else:
             self._name = ("GOCR {0}".format(
@@ -74,28 +77,36 @@ class ImageProcessingGocr(ImageProcessingEntity):
                 if config[CONF_NAME] == '' else
                 config[CONF_NAME])
         self._state = None
-        if config[CONF_WIDTH] != 0 and config[CONF_HEIGHT] != 0:
-            self.crop = (config[CONF_X_POS], config[CONF_Y_POS],
-                         config[CONF_X_POS] + config[CONF_WIDTH],
-                         config[CONF_Y_POS] + config[CONF_HEIGHT])
+        if config[CONF_X_POSITION] is not None:
+            self.crop = (config[CONF_X_POSITION], config[CONF_Y_POSITION],
+                         config[CONF_X_POSITION] + config[CONF_WIDTH],
+                         config[CONF_Y_POSITION] + config[CONF_HEIGHT])
+        else:
+            self.crop = None
         self.rotate = config[CONF_ROTATE]
         self.negate = config[CONF_NEGATE]
-        if config.get(CONF_CHARS) != '':
-            digits = ['-C', str(config.get(CONF_CHARS))]
+        if config.get(CONF_CHARS) is not None:
+            digits = ['-C', config.get(CONF_CHARS)]
         else:
             digits = []
-        if config.get(CONF_UNRECOGNIZED) != DEFAULT_UNRECOGNIZED:
-            unrecognized = ['-u', str(config.get(CONF_UNRECOGNIZED))]
+        if config.get(CONF_UNRECOGNIZED) is not None:
+            unrecognized = ['-u', config.get(CONF_UNRECOGNIZED)]
         else:
             unrecognized = []
-        threshold = ['-l', str(config[CONF_THRESHOLD])]
-        extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(' ')
+        if config[CONF_THRESHOLD] is not None:
+            threshold = ['-l', str(config[CONF_THRESHOLD])]
+        else:
+            threshold = []
+        if config[CONF_EXTRA_ARGUMENTS] is not None:
+            extra_arguments = shlex.split(config[CONF_EXTRA_ARGUMENTS])
+        else:
+            extra_arguments = []
 
         self._command = ([config[CONF_GOCR_BIN],
                          '-e', '/dev/null', '-f', 'UTF8'] +
                          digits + unrecognized + threshold +
                          extra_arguments)
-        _LOGGER.info("Command : " + ' '.join(self._command) + " -i <tmpfile>")
+        _LOGGER.info("Command : %s -i <tmpfile>", shlex.quote(' '.join(self._command)))
 
     @property
     def device_class(self):
@@ -129,11 +140,11 @@ class ImageProcessingGocr(ImageProcessingEntity):
 
         stream = io.BytesIO(image)
         img = Image.open(stream)
-        if hasattr(self, 'crop'):
+        if self.crop is not None:
             img = img.crop(self.crop)
         if self.negate:
             img = PIL.ImageOps.invert(img)
-        if self.rotate != 0:
+        if self.rotate not None:
             img = img.rotate(self.rotate, expand=1)
         tmp = NamedTemporaryFile(suffix='.ppm')
         self._state = None
