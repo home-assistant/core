@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.nissan_leaf import (
     DATA_LEAF, DATA_PLUGGED_IN, LeafEntity)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,13 +15,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug(
-            "binary_sensor setup_platform, vin=%s, datastore=%s", vin, datastore)
+            "binary_sensor setup_platform, vin=%s, datastore=%s",
+            vin, datastore)
         devices.append(LeafPluggedInSensor(datastore))
 
     add_devices(devices, True)
 
 
-class LeafPluggedInSensor(LeafEntity):
+class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
     """Plugged In Sensor class."""
 
     @property
@@ -29,7 +31,7 @@ class LeafPluggedInSensor(LeafEntity):
         return "{} {}".format(self.car.leaf.nickname, "Plug Status")
 
     @property
-    def state(self):
+    def is_on(self):
         """Return true if plugged in."""
         return self.car.data[DATA_PLUGGED_IN]
 
