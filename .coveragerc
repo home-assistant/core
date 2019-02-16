@@ -381,7 +381,6 @@ omit =
     homeassistant/components/plum_lightpad/*
     homeassistant/components/point/*
     homeassistant/components/prometheus/*
-    homeassistant/components/ps4/__init__.py
     homeassistant/components/ps4/media_player.py    
     homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
