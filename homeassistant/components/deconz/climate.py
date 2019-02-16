@@ -1,12 +1,7 @@
-"""
-Support for deCONZ climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.deconz/
-"""
-
-from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
+"""Support for deCONZ climate devices."""
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
