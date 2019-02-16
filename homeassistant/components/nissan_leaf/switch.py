@@ -37,7 +37,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def device_state_attributes(self):
         """Return climate control attributes."""
-        attrs = super(LeafClimateSwitch, self).device_state_attributes
+        attrs = super().device_state_attributes
         attrs["updated_on"] = self.car.last_climate_response
         return attrs
 
