@@ -98,10 +98,8 @@ async def async_setup(hass, config):
             data_store = hass.data[DATA_LEAF][vin]
             async_track_point_in_utc_time(
                 hass, data_store.async_update_data, utcnow())
-            return True
-
-        _LOGGER.debug("Vin %s not recognised for update", vin)
-        return False
+        else:
+            _LOGGER.debug("Vin %s not recognised for update", vin)
 
     async def async_setup_leaf(car_config):
         """Set up a car."""
