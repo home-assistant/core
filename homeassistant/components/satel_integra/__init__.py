@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['satel_integra==0.3.0']
+REQUIREMENTS = ['satel_integra==0.3.2']
 
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
@@ -96,20 +96,20 @@ async def async_setup(hass, config):
                   conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
-    task_control_panel = hass.async_create_task(
+    hass.async_create_task(
         async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config))
 
-    task_zones = hass.async_create_task(
+    hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN,
                             {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config)
         )
 
 #    _LOGGER.debug("Before waiting for task_control_panel")
-        
+
 #    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
-    
+
 #    _LOGGER.debug("After waiting for task_control_panel")
-        
+
     @callback
     def alarm_status_update_callback():
         """Send status update received from alarm to home assistant."""

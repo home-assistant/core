@@ -2,13 +2,16 @@
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.satel_integra import (
-    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITION, DATA_SATEL, SIGNAL_PANEL_MESSAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+
+from . import (CONF_ARM_HOME_MODE,
+               CONF_DEVICE_PARTITION,
+               DATA_SATEL,
+               SIGNAL_PANEL_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +25,10 @@ async def async_setup_platform(
         return
 
     device = SatelIntegraAlarmPanel(
-        "Alarm Panel", discovery_info.get(CONF_ARM_HOME_MODE),discovery_info.get(CONF_DEVICE_PARTITION) )
+        "Alarm Panel",
+        discovery_info.get(CONF_ARM_HOME_MODE),
+        discovery_info.get(CONF_DEVICE_PARTITION))
+
     async_add_entities([device])
 
 
@@ -45,34 +51,35 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
 
     def _read_alarm_state(self):
-        """Read current status of the alarm device and translate it into HA alarm status"""       
-        
+        """Read current status of the alarm device and translate it into HA alarm status"""
+
         from satel_integra.satel_integra import AlarmState
-        
+
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED
 
         # Hardcoded for now, maybe in the future will make it into configuration variable:
-        
+
         satel_controller = self.hass.data[DATA_SATEL]
         if not satel_controller.connected:
             return STATE_UNKNOWN
-        
+
         state_map = {
-                AlarmState.TRIGGERED : STATE_ALARM_TRIGGERED,
-                AlarmState.TRIGGERED_FIRE : STATE_ALARM_TRIGGERED,
-                AlarmState.ARMED_MODE0 : STATE_ALARM_ARMED_AWAY, 
-                AlarmState.ARMED_MODE1 : STATE_ALARM_ARMED_HOME,
-                AlarmState.ARMED_MODE2 : STATE_ALARM_ARMED_HOME,
-                AlarmState.ARMED_MODE3 : STATE_ALARM_ARMED_HOME,
+            AlarmState.TRIGGERED : STATE_ALARM_TRIGGERED,
+            AlarmState.TRIGGERED_FIRE : STATE_ALARM_TRIGGERED,
+            AlarmState.ARMED_MODE0 : STATE_ALARM_ARMED_AWAY,
+            AlarmState.ARMED_MODE1 : STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE2 : STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE3 : STATE_ALARM_ARMED_HOME,
         }
 
         for satel_state, ha_state in state_map.items():
-            if satel_state in satel_controller.partition_states and self._partition_id in satel_controller.partition_states[satel_state]:
-                    hass_alarm_status = ha_state
-                    break
-        
-        # status = self.hass.data[DATA_SATEL].status 
+            if satel_state in satel_controller.partition_states and\
+               self._partition_id in satel_controller.partition_states[satel_state]:
+                hass_alarm_status = ha_state
+                break
+
+        # status = self.hass.data[DATA_SATEL].status
 
         # if status == AlarmState.ARMED_MODE0:
         #     hass_alarm_status = STATE_ALARM_ARMED_AWAY
@@ -91,7 +98,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         # elif status == AlarmState.DISARMED:
         #     hass_alarm_status = STATE_ALARM_DISARMED
         return hass_alarm_status
-        
+
     @callback
     def _update_alarm_status(self, message=None):
         """Handle received messages."""
@@ -125,8 +132,13 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        if code:
+        if not code:
+            return
+        if self._state == STATE_ALARM_TRIGGERED:
+            await self.hass.data[DATA_SATEL].clear_alarm(code)
+        else:
             await self.hass.data[DATA_SATEL].disarm(code)
+
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
