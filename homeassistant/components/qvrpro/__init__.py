@@ -11,7 +11,7 @@ from homeassistant.helpers.discovery import load_platform
 
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyqvrpro==0.43']
+REQUIREMENTS = ['pyqvrpro==0.44']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +54,18 @@ def setup(hass, config):
 
     load_platform(hass, 'camera', DOMAIN, {}, config)
 
+    # Register services
+    def handle_start_record(call):
+        guid = call.data.get('qvr_guid')
+        qvrpro.start_recording(guid)
+
+    def handle_stop_record(call):
+        guid = call.data.get('qvr_guid')
+        qvrpro.stop_recording(guid)
+
+    hass.services.register(DOMAIN, 'start_record', handle_start_record)
+    hass.services.register(DOMAIN, 'stop_record', handle_stop_record)
+
     return True
 
 
@@ -62,7 +74,7 @@ class QVRChannel:
 
     def __init__(self, name, model, brand, channel_index, guid):
         self.name = name
-        self._model = model
+        self.model = model
         self.brand = brand
-        self._index = channel_index
+        self.index = channel_index
         self.guid = guid

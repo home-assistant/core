@@ -41,6 +41,24 @@ class QVRProCamera(Camera):
         """Get the name of the camera."""
         return self._channel.name
 
+    @property
+    def model(self):
+        """Get the model of the camera."""
+        return self._channel.model
+
+    @property
+    def brand(self):
+        """Get the brand of the camera."""
+        return self._channel.brand
+
+    @property
+    def state_attributes(self):
+        attrs = super().state_attributes
+
+        attrs['qvr_guid'] = self._channel.guid
+
+        return attrs
+
     def camera_image(self):
         """Get image bytes from camera."""
         return self._client.get_snapshot(self._channel.guid)
