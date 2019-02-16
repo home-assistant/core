@@ -403,7 +403,7 @@ class LeafDataStore:
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
                     _LOGGER.debug("Climate data not in yet (%s) (%s). "
-                                  "Waiting (%s) seconds.", self.leaf.vin,
+                                  "Waiting (%s) seconds", self.leaf.vin,
                                   attempt, PYCARWINGS2_SLEEP)
                     await asyncio.sleep(PYCARWINGS2_SLEEP)
 
