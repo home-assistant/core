@@ -86,7 +86,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             if app:
                 await app.refresh()  # load all attributes
                 await update_app(self.hass, app)
-                # Get oauth settings by regenerating it
+                # Get oauth client id/secret by regenerating it
                 app_oauth = AppOAuth(app.app_id)
                 app_oauth.client_name = APP_OAUTH_CLIENT_NAME
                 app_oauth.scope.extend(APP_OAUTH_SCOPES)
@@ -129,34 +129,29 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             return self._show_step_wait_install(errors)
 
         # Find installed apps that were authorized
-        installed_apps = self.hass.data[DOMAIN][CONF_INSTALLED_APPS]
+        installed_apps = self.hass.data[DOMAIN][CONF_INSTALLED_APPS].copy()
         if not installed_apps:
             errors['base'] = 'app_not_installed'
             return self._show_step_wait_install(errors)
+        self.hass.data[DOMAIN][CONF_INSTALLED_APPS].clear()
 
-        # User may have installed the SmartApp in more than one SmartThings
-        # location. Config flows are created for the additional installations
-        for installed_app in installed_apps[1:]:
+        # Enrich the data
+        for installed_app in installed_apps:
             installed_app[CONF_APP_ID] = self.app_id
             installed_app[CONF_ACCESS_TOKEN] = self.access_token
             installed_app[CONF_OAUTH_CLIENT_ID] = self.oauth_client_id
             installed_app[CONF_OAUTH_CLIENT_SECRET] = self.oauth_client_secret
+
+        # User may have installed the SmartApp in more than one SmartThings
+        # location. Config flows are created for the additional installations
+        for installed_app in installed_apps[1:]:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN, context={'source': 'install'},
                     data=installed_app))
 
-        # return entity for the first one.
-        installed_app = installed_apps[0]
-        installed_app[CONF_APP_ID] = self.app_id
-        installed_app[CONF_ACCESS_TOKEN] = self.access_token
-        installed_app[CONF_OAUTH_CLIENT_ID] = self.oauth_client_id
-        installed_app[CONF_OAUTH_CLIENT_SECRET] = self.oauth_client_secret
-
-        # Clear out the saved data.
-        self.hass.data[DOMAIN][CONF_INSTALLED_APPS].clear()
-
-        return await self.async_step_install(installed_app)
+        # Create config entity for the first one.
+        return await self.async_step_install(installed_apps[0])
 
     def _show_step_user(self, errors):
         return self.async_show_form(

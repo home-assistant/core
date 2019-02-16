@@ -185,7 +185,7 @@ async def test_broker_regenerates_token(
             hass, config_entry, token, Mock(), [])
 
     assert stored_action
-    await stored_action()  # pylint:disable=not-callable
+    await stored_action(None)  # pylint:disable=not-callable
     assert token.refresh.call_count == 1
     assert config_entry.data[CONF_REFRESH_TOKEN] == token.refresh_token
 

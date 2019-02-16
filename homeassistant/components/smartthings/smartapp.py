@@ -236,30 +236,29 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     the first installation under the account, otherwise store the data
     for the config flow.
     """
-    # The permanent access token is copied from another config flow with the
-    # same parent app_id.  If one is not found, that means the user is within
-    # the initial config flow and the entry at the conclusion.
+    install_data = {
+        CONF_INSTALLED_APP_ID: req.installed_app_id,
+        CONF_LOCATION_ID: req.location_id,
+        CONF_REFRESH_TOKEN: req.refresh_token
+    }
+    # App attributes (client id/secret, etc...) are copied from another entry
+    # with the same parent app_id.  If one is not found, the install data is
+    # stored for the config flow to retrieve during the wait step.
     entry = next((
         entry for entry
         in hass.config_entries.async_entries(DOMAIN)
         if entry.data[CONF_APP_ID] == app.app_id), None)
     if entry:
+        data = entry.data.copy()
+        data.update(install_data)
         # Add as job not needed because the current coroutine was invoked
         # from the dispatcher and is not being awaited.
-        data = entry.data.copy()
-        data[CONF_INSTALLED_APP_ID] = req.installed_app_id
-        data[CONF_LOCATION_ID] = req.location_id
-        data[CONF_REFRESH_TOKEN] = req.refresh_token
         await hass.config_entries.flow.async_init(
             DOMAIN, context={'source': 'install'},
             data=data)
     else:
         # Store the data where the flow can find it
-        hass.data[DOMAIN][CONF_INSTALLED_APPS].append({
-            CONF_INSTALLED_APP_ID: req.installed_app_id,
-            CONF_LOCATION_ID: req.location_id,
-            CONF_REFRESH_TOKEN: req.refresh_token,
-        })
+        hass.data[DOMAIN][CONF_INSTALLED_APPS].append(install_data)
 
 
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):

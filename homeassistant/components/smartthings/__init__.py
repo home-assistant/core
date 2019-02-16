@@ -27,7 +27,7 @@ from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, smartapp_sync_subscriptions,
     validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.2']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.3']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,11 +206,13 @@ class DeviceBroker:
 
     def _connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
-        # Setup timer to regenerate the refresh token on a periodic basis.
+        # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
-        async def regenerate_refresh_token():
+        async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
-            await self._token.refresh()
+            await self._token.refresh(
+                self._entry.data[CONF_OAUTH_CLIENT_ID],
+                self._entry.data[CONF_OAUTH_CLIENT_SECRET])
             self._entry.data[CONF_REFRESH_TOKEN] = self._token.refresh_token
             self._hass.config_entries.async_update_entry(self._entry)
             _LOGGER.debug('Regenerated refresh token for installed app: %s',
