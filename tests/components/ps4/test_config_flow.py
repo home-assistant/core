@@ -8,7 +8,7 @@ from homeassistant.components.ps4.const import (
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 MOCK_TITLE = 'PlayStation 4'
 MOCK_CODE = '12345678'
@@ -40,7 +40,7 @@ async def test_full_flow_implementation(hass):
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
-               return_value=mock_coro(return_value=None)):
+               return_value=None):
         result = await flow.async_step_user()
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'creds'
@@ -52,20 +52,18 @@ async def test_full_flow_implementation(hass):
 
     # Step Creds results with form in Step Link.
     with patch('pyps4_homeassistant.Helper.get_creds',
-               return_value=mock_coro(return_value=MOCK_CREDS)), \
+               return_value=MOCK_CREDS), \
             patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=mock_coro(return_value=[{'host-ip':
-                                                        MOCK_HOST}])):
+                  return_value=[{'host-ip': MOCK_HOST}]):
         result = await flow.async_step_creds('submit')
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'link'
 
     # User Input results in created entry.
     with patch('pyps4_homeassistant.Helper.link',
-               return_value=mock_coro(return_value=(True, True))), \
+               return_value=(True, True)), \
             patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=mock_coro(return_value=[{'host-ip':
-                                                        MOCK_HOST}])):
+                  return_value=[{'host-ip': MOCK_HOST}]):
         result = await flow.async_step_link(MOCK_CONFIG)
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['data'][CONF_TOKEN] == MOCK_CREDS
@@ -79,7 +77,7 @@ async def test_port_bind_pass(hass):
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.port_bind',
-               return_value=mock_coro(return_value=None)):
+               return_value=None):
         result = await flow.async_step_user(user_input=None)
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'creds'
@@ -91,14 +89,14 @@ async def test_port_bind_abort(hass):
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.port_bind',
-               return_value=mock_coro(return_value=MOCK_UDP_PORT)):
+               return_value=MOCK_UDP_PORT):
         reason = 'port_987_bind_error'
         result = await flow.async_step_user(user_input=None)
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == reason
 
     with patch('pyps4_homeassistant.Helper.port_bind',
-               return_value=mock_coro(return_value=MOCK_TCP_PORT)):
+               return_value=MOCK_TCP_PORT):
         reason = 'port_997_bind_error'
         result = await flow.async_step_user(user_input=None)
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
@@ -121,8 +119,7 @@ async def test_no_devices_found_abort(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    with patch('pyps4_homeassistant.Helper.has_devices',
-               return_value=mock_coro(return_value=None)):
+    with patch('pyps4_homeassistant.Helper.has_devices', return_value=None):
         result = await flow.async_step_link(MOCK_CONFIG)
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == 'no_devices_found'
@@ -133,8 +130,7 @@ async def test_credential_abort(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    with patch('pyps4_homeassistant.Helper.get_creds',
-               return_value=mock_coro(return_value=None)):
+    with patch('pyps4_homeassistant.Helper.get_creds', return_value=None):
         result = await flow.async_step_creds('submit')
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == 'credential_error'
@@ -146,10 +142,9 @@ async def test_invalid_pin_error(hass):
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.link',
-               return_value=mock_coro(return_value=(True, False))), \
+               return_value=(True, False)), \
             patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=mock_coro(return_value=[{'host-ip':
-                                                        MOCK_HOST}])):
+                  return_value=[{'host-ip': MOCK_HOST}]):
         result = await flow.async_step_link(MOCK_CONFIG)
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'link'
@@ -162,10 +157,9 @@ async def test_device_connection_error(hass):
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.link',
-               return_value=mock_coro(return_value=(False, True))), \
+               return_value=(False, True)), \
             patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=mock_coro(return_value=[{'host-ip':
-                                                        MOCK_HOST}])):
+                  return_value=[{'host-ip': MOCK_HOST}]):
         result = await flow.async_step_link(MOCK_CONFIG)
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'link'
