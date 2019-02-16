@@ -398,6 +398,7 @@ enocean==0.50
 enturclient==0.2.0
 
 # homeassistant.components.envirophat
+# homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
