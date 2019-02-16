@@ -121,10 +121,16 @@ async def async_setup_entry(hass, entry):
         },
         manufacturer='Signify',
         name=config.name,
-        # Not yet exposed as properties in aiohue
-        model=config.raw['modelid'],
-        sw_version=config.raw['swversion'],
+        model=config.modelid,
+        sw_version=config.swversion,
     )
+
+    if config.swupdatebridgestate == "readytoinstall":
+        err = (
+            "Please check for software updates of the bridge "
+            "in the Philips Hue App."
+        )
+        _LOGGER.warning(err)
 
     return True
 
