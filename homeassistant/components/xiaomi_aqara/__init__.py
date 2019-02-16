@@ -247,7 +247,7 @@ class XiaomiDevice(Entity):
 
     @property
     def should_poll(self):
-        """Return the polling state. No polling needed."""
+        """Return the polling state."""
         return True
 
     @property
