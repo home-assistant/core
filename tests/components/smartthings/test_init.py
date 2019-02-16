@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant.components import smartthings
 from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE,
-    SUPPORTED_PLATFORMS)
+    CONF_INSTALLED_APP_ID, CONF_REFRESH_TOKEN, DATA_BROKERS, DOMAIN,
+    EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -146,8 +146,11 @@ async def test_config_entry_loads_platforms(
 
 async def test_unload_entry(hass, config_entry):
     """Test entries are unloaded correctly."""
-    broker = Mock()
-    broker.event_handler_disconnect = Mock()
+    connect_disconnect = Mock()
+    smart_app = Mock()
+    smart_app.connect_event.return_value = connect_disconnect
+    broker = smartthings.DeviceBroker(
+        hass, config_entry, Mock(), smart_app, [])
     hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id] = broker
 
     with patch.object(hass.config_entries, 'async_forward_entry_unload',
@@ -155,15 +158,40 @@ async def test_unload_entry(hass, config_entry):
                           return_value=True
                       )) as forward_mock:
         assert await smartthings.async_unload_entry(hass, config_entry)
-        assert broker.event_handler_disconnect.call_count == 1
+
+        assert connect_disconnect.call_count == 1
         assert config_entry.entry_id not in hass.data[DOMAIN][DATA_BROKERS]
         # Assert platforms unloaded
         await hass.async_block_till_done()
         assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
 
 
+async def test_broker_regenerates_token(
+        hass, config_entry):
+    """Test the device broker regenerates the refresh token."""
+    token = Mock()
+    token.refresh_token = str(uuid4())
+    token.refresh.return_value = mock_coro()
+    stored_action = None
+
+    def async_track_time_interval(hass, action, interval):
+        nonlocal stored_action
+        stored_action = action
+
+    with patch('homeassistant.components.smartthings'
+               '.async_track_time_interval',
+               new=async_track_time_interval):
+        smartthings.DeviceBroker(
+            hass, config_entry, token, Mock(), [])
+
+    assert stored_action
+    await stored_action()  # pylint:disable=not-callable
+    assert token.refresh.call_count == 1
+    assert config_entry.data[CONF_REFRESH_TOKEN] == token.refresh_token
+
+
 async def test_event_handler_dispatches_updated_devices(
-        hass, device_factory, event_request_factory):
+        hass, config_entry, device_factory, event_request_factory):
     """Test the event handler dispatches updated devices."""
     devices = [
         device_factory('Bedroom 1 Switch', ['switch']),
@@ -173,6 +201,7 @@ async def test_event_handler_dispatches_updated_devices(
     device_ids = [devices[0].device_id, devices[1].device_id,
                   devices[2].device_id]
     request = event_request_factory(device_ids)
+    config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
     called = False
 
     def signal(ids):
@@ -180,10 +209,12 @@ async def test_event_handler_dispatches_updated_devices(
         called = True
         assert device_ids == ids
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
-    broker = smartthings.DeviceBroker(
-        hass, devices, request.installed_app_id)
 
-    await broker.event_handler(request, None, None)
+    broker = smartthings.DeviceBroker(
+        hass, config_entry, Mock(), Mock(), devices)
+
+    # pylint:disable=protected-access
+    await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
     assert called
@@ -192,7 +223,7 @@ async def test_event_handler_dispatches_updated_devices(
 
 
 async def test_event_handler_ignores_other_installed_app(
-        hass, device_factory, event_request_factory):
+        hass, config_entry, device_factory, event_request_factory):
     """Test the event handler dispatches updated devices."""
     device = device_factory('Bedroom 1 Switch', ['switch'])
     request = event_request_factory([device.device_id])
@@ -202,21 +233,25 @@ async def test_event_handler_ignores_other_installed_app(
         nonlocal called
         called = True
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
-    broker = smartthings.DeviceBroker(hass, [device], str(uuid4()))
+    broker = smartthings.DeviceBroker(
+        hass, config_entry, Mock(), Mock(), [device])
 
-    await broker.event_handler(request, None, None)
+    # pylint:disable=protected-access
+    await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
     assert not called
 
 
 async def test_event_handler_fires_button_events(
-        hass, device_factory, event_factory, event_request_factory):
+        hass, config_entry, device_factory, event_factory,
+        event_request_factory):
     """Test the event handler fires button events."""
     device = device_factory('Button 1', ['button'])
     event = event_factory(device.device_id, capability='button',
                           attribute='button', value='pushed')
     request = event_request_factory(events=[event])
+    config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
     called = False
 
     def handler(evt):
@@ -231,8 +266,10 @@ async def test_event_handler_fires_button_events(
         }
     hass.bus.async_listen(EVENT_BUTTON, handler)
     broker = smartthings.DeviceBroker(
-        hass, [device], request.installed_app_id)
-    await broker.event_handler(request, None, None)
+        hass, config_entry, Mock(), Mock(), [device])
+
+    # pylint:disable=protected-access
+    await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
     assert called

@@ -14,13 +14,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .config_flow import SmartThingsFlowHandler  # noqa
 from .const import (
     CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_OAUTH_CLIENT_ID,
     CONF_OAUTH_CLIENT_SECRET, CONF_REFRESH_TOKEN, DATA_BROKERS, DATA_MANAGER,
-    DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS,
+    TOKEN_REFRESH_INTERVAL)
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, smartapp_sync_subscriptions,
     validate_installed_app)
@@ -98,9 +100,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry.data[CONF_REFRESH_TOKEN])
         entry.data[CONF_REFRESH_TOKEN] = token.refresh_token
         hass.config_entries.async_update_entry(entry)
-        await smartapp_sync_subscriptions(
-            hass, token.access_token, installed_app.location_id,
-            installed_app.installed_app_id)
 
         # Get devices and their current status
         devices = await api.devices(
@@ -111,18 +110,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                 await device.status.refresh()
             except ClientResponseError:
                 _LOGGER.debug("Unable to update status for device: %s (%s), "
-                              "the device will be ignored",
+                              "the device will be excluded",
                               device.label, device.device_id, exc_info=True)
                 devices.remove(device)
 
         await asyncio.gather(*[retrieve_device_status(d)
                                for d in devices.copy()])
 
+        # Sync device subscriptions
+        await smartapp_sync_subscriptions(
+            hass, token.access_token, installed_app.location_id,
+            installed_app.installed_app_id, devices)
+
         # Setup device broker
-        broker = DeviceBroker(hass, devices,
-                              installed_app.installed_app_id)
-        broker.event_handler_disconnect = \
-            smart_app.connect_event(broker.event_handler)
+        broker = DeviceBroker(hass, entry, token, smart_app, devices)
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
@@ -157,8 +158,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS].pop(entry.entry_id, None)
-    if broker and broker.event_handler_disconnect:
-        broker.event_handler_disconnect()
+    if broker:
+        broker.disconnect()
 
     tasks = [hass.config_entries.async_forward_entry_unload(entry, component)
              for component in SUPPORTED_PLATFORMS]
@@ -168,14 +169,19 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 class DeviceBroker:
     """Manages an individual SmartThings config entry."""
 
-    def __init__(self, hass: HomeAssistantType, devices: Iterable,
-                 installed_app_id: str):
+    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry,
+                 token, smart_app, devices: Iterable):
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
-        self._installed_app_id = installed_app_id
-        self.assignments = self._assign_capabilities(devices)
+        self._entry = entry
+        self._installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
+        self._smart_app = smart_app
+        self._token = token
+        self._event_disconnect = None
+        self._regenerate_token_remove = None
+        self._assignments = self._assign_capabilities(devices)
         self.devices = {device.device_id: device for device in devices}
-        self.event_handler_disconnect = None
+        self._connect()
 
     def _assign_capabilities(self, devices: Iterable):
         """Assign platforms to capabilities."""
@@ -198,17 +204,43 @@ class DeviceBroker:
             assignments[device.device_id] = slots
         return assignments
 
+    def _connect(self):
+        """Connect handlers/listeners for device/lifecycle events."""
+        # Setup timer to regenerate the refresh token on a periodic basis.
+        # Tokens expire in 30 days and once expired, cannot be recovered.
+        async def regenerate_refresh_token():
+            """Generate a new refresh token and update the config entry."""
+            await self._token.refresh()
+            self._entry.data[CONF_REFRESH_TOKEN] = self._token.refresh_token
+            self._hass.config_entries.async_update_entry(self._entry)
+            _LOGGER.debug('Regenerated refresh token for installed app: %s',
+                          self._installed_app_id)
+
+        self._regenerate_token_remove = async_track_time_interval(
+            self._hass, regenerate_refresh_token, TOKEN_REFRESH_INTERVAL)
+
+        # Connect handler to incoming device events
+        self._event_disconnect = \
+            self._smart_app.connect_event(self._event_handler)
+
+    def disconnect(self):
+        """Disconnects handlers/listeners for device/lifecycle events."""
+        if self._regenerate_token_remove:
+            self._regenerate_token_remove()
+        if self._event_disconnect:
+            self._event_disconnect()
+
     def get_assigned(self, device_id: str, platform: str):
         """Get the capabilities assigned to the platform."""
-        slots = self.assignments.get(device_id, {})
+        slots = self._assignments.get(device_id, {})
         return [key for key, value in slots.items() if value == platform]
 
     def any_assigned(self, device_id: str, platform: str):
         """Return True if the platform has any assigned capabilities."""
-        slots = self.assignments.get(device_id, {})
+        slots = self._assignments.get(device_id, {})
         return any(value for value in slots.values() if value == platform)
 
-    async def event_handler(self, req, resp, app):
+    async def _event_handler(self, req, resp, app):
         """Broker for incoming events."""
         from pysmartapp.event import EVENT_TYPE_DEVICE
         from pysmartthings import Capability, Attribute

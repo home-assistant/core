@@ -193,13 +193,12 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
 
 async def smartapp_sync_subscriptions(
         hass: HomeAssistantType, auth_token: str, location_id: str,
-        installed_app_id: str, *, skip_delete=False):
+        installed_app_id: str, devices):
     """Synchronize subscriptions of an installed up."""
     from pysmartthings import (
         CAPABILITIES, SmartThings, SourceType, Subscription)
 
     api = SmartThings(async_get_clientsession(hass), auth_token)
-    devices = await api.devices(location_ids=[location_id])
 
     # Build set of capabilities and prune unsupported ones
     capabilities = set()
@@ -207,9 +206,8 @@ async def smartapp_sync_subscriptions(
         capabilities.update(device.capabilities)
     capabilities.intersection_update(CAPABILITIES)
 
-    # Remove all (except for installs)
-    if not skip_delete:
-        await api.delete_subscriptions(installed_app_id)
+    # Remove all existing
+    await api.delete_subscriptions(installed_app_id)
 
     # Create for each capability
     async def create_subscription(target):

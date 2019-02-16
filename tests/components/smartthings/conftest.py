@@ -27,9 +27,11 @@ from tests.common import mock_coro
 async def setup_platform(hass, platform: str, *devices):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry(2, DOMAIN, "Test", {},
+    config_entry = ConfigEntry(2, DOMAIN, "Test",
+                               {CONF_INSTALLED_APP_ID:  str(uuid4())},
                                SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
+    broker = DeviceBroker(hass, config_entry, Mock(), Mock(), devices)
+
     hass.data[DOMAIN] = {
         DATA_BROKERS: {
             config_entry.entry_id: broker
