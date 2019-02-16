@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['nissan_leaf']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf binary sensor."""
     devices = []
     for vin, datastore in hass.data[DATA_LEAF].items():
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             vin, datastore)
         devices.append(LeafPluggedInSensor(datastore))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
