@@ -12,9 +12,6 @@ DEPENDENCIES = ['nissan_leaf']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Nissan Leaf switch platform setup."""
-    _LOGGER.debug(
-        "In switch setup platform, discovery_info=%s", discovery_info)
-
     devices = []
     for value in hass.data[DATA_LEAF].values():
         devices.append(LeafChargeSwitch(value))

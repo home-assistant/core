@@ -18,9 +18,6 @@ ICON_RANGE = 'mdi:speedometer'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensors setup."""
-    _LOGGER.debug("setup_platform nissan_leaf sensors, discovery_info=%s",
-                  discovery_info)
-
     devices = []
     for key, value in hass.data[DATA_LEAF].items():
         _LOGGER.debug("adding sensor for item key=%s, value=%s", key, value)

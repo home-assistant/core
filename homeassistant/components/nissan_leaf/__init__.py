@@ -221,8 +221,8 @@ class LeafDataStore:
         if (self.last_battery_response is not None and
                 self.data[DATA_CHARGING] is False and
                 self.data[DATA_BATTERY] <= RESTRICTED_BATTERY):
-            _LOGGER.info("Low battery so restricting refresh frequency (%s)",
-                         self.leaf.nickname)
+            _LOGGER.debug("Low battery so restricting refresh frequency (%s)",
+                          self.leaf.nickname)
             interval = RESTRICTED_INTERVAL
         else:
             intervals = [base_interval]
@@ -344,18 +344,19 @@ class LeafDataStore:
                 _LOGGER.info("No start date from servers. Aborting")
                 return None
 
-            _LOGGER.info("Start server date=%s", start_date)
+            _LOGGER.debug("Start server date=%s", start_date)
 
             # Request battery update from the car
-            _LOGGER.info("Requesting battery update, %s", self.leaf.vin)
+            _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
             request = await self.hass.async_add_job(self.leaf.request_update)
             if not request:
                 _LOGGER.error("Battery update request failed")
                 return None
 
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
-                _LOGGER.info("Waiting %s seconds for battery update (%s) (%s)",
-                             PYCARWINGS2_SLEEP, self.leaf.vin, attempt)
+                _LOGGER.debug(
+                    "Waiting %s seconds for battery update (%s) (%s)",
+                    PYCARWINGS2_SLEEP, self.leaf.vin, attempt)
                 await asyncio.sleep(PYCARWINGS2_SLEEP)
 
                 # Note leaf.get_status_from_update is always returning 0, so
@@ -365,12 +366,13 @@ class LeafDataStore:
                 )
 
                 latest_date = self._extract_start_date(server_info)
-                _LOGGER.info("Latest server date=%s", latest_date)
+                _LOGGER.debug("Latest server date=%s", latest_date)
                 if latest_date is not None and latest_date != start_date:
                     return server_info
 
-            _LOGGER.info("%s attempts exceeded return latest data from server",
-                         MAX_RESPONSE_ATTEMPTS)
+            _LOGGER.debug(
+                "%s attempts exceeded return latest data from server",
+                MAX_RESPONSE_ATTEMPTS)
             return server_info
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status.")
@@ -394,15 +396,15 @@ class LeafDataStore:
         """Set climate control mode via Nissan servers."""
         climate_result = None
         if toggle:
-            _LOGGER.info("Requesting climate turn on for %s", self.leaf.vin)
+            _LOGGER.debug("Requesting climate turn on for %s", self.leaf.vin)
             request = await self.hass.async_add_job(
                 self.leaf.start_climate_control
             )
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
-                    _LOGGER.info("Climate data not in yet (%s) (%s). "
-                                 "Waiting (%s) seconds.", self.leaf.vin,
-                                 attempt, PYCARWINGS2_SLEEP)
+                    _LOGGER.debug("Climate data not in yet (%s) (%s). "
+                                  "Waiting (%s) seconds.", self.leaf.vin,
+                                  attempt, PYCARWINGS2_SLEEP)
                     await asyncio.sleep(PYCARWINGS2_SLEEP)
 
                 climate_result = await self.hass.async_add_job(
@@ -413,7 +415,7 @@ class LeafDataStore:
                     break
 
         else:
-            _LOGGER.info("Requesting climate turn off for %s", self.leaf.vin)
+            _LOGGER.debug("Requesting climate turn off for %s", self.leaf.vin)
             request = await self.hass.async_add_job(
                 self.leaf.stop_climate_control
             )
