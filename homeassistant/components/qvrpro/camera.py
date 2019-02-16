@@ -10,8 +10,7 @@ from homeassistant.components.camera import Camera
 from .const import DOMAIN
 
 
-def setup_platform(hass, config, add_entities,
-                         discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the QVR Pro camera platform."""
     if discovery_info is None:
         return
