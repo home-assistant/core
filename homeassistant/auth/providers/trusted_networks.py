@@ -3,18 +3,20 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
-from typing import Any, Dict, Optional, cast
+from ipaddress import ip_address, ip_network
+from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
+    vol.Required('trusted_networks'): vol.All(cv.ensure_list, [ip_network])
 }, extra=vol.PREVENT_EXTRA)
 
 
@@ -36,6 +38,11 @@ class TrustedNetworksAuthProvider(AuthProvider):
     DEFAULT_TITLE = 'Trusted Networks'
 
     @property
+    def trusted_networks(self) -> List[ip_network]:
+        """Return trusted networks."""
+        return self.config['trusted_networks']
+
+    @property
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
@@ -49,7 +56,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
                            if not user.system_generated and user.is_active}
 
         return TrustedNetworksLoginFlow(
-            self, cast(str, context.get('ip_address')), available_users)
+            self, context.get('ip_address'), available_users)
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
@@ -80,19 +87,17 @@ class TrustedNetworksAuthProvider(AuthProvider):
         raise NotImplementedError
 
     @callback
-    def async_validate_access(self, ip_address: str) -> None:
+    def async_validate_access(self, ip: ip_address) -> None:
         """Make sure the access from trusted networks.
 
         Raise InvalidAuthError if not.
         Raise InvalidAuthError if trusted_networks is not configured.
         """
-        hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
-
-        if not hass_http or not hass_http.trusted_networks:
+        if not self.trusted_networks:
             raise InvalidAuthError('trusted_networks is not configured')
 
-        if not any(ip_address in trusted_network for trusted_network
-                   in hass_http.trusted_networks):
+        if not any(ip in trusted_network for trusted_network
+                   in self.trusted_networks):
             raise InvalidAuthError('Not in trusted_networks')
 
 
@@ -100,12 +105,12 @@ class TrustedNetworksLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     def __init__(self, auth_provider: TrustedNetworksAuthProvider,
-                 ip_address: str, available_users: Dict[str, Optional[str]]) \
+                 ip: ip_address, available_users: Dict[str, Optional[str]]) \
             -> None:
         """Initialize the login flow."""
         super().__init__(auth_provider)
         self._available_users = available_users
-        self._ip_address = ip_address
+        self._ip_address = ip
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
