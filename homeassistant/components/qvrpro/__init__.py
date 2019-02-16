@@ -11,7 +11,7 @@ from homeassistant.helpers.discovery import load_platform
 
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyqvrpro==0.42']
+REQUIREMENTS = ['pyqvrpro==0.43']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +27,18 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the QVR Pro component"""
     from pyqvrpro import Client
+    from pyqvrpro.client import AuthenticationError
 
-    user = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    host = config[DOMAIN].get(CONF_HOST)
+    user = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
+    host = config[DOMAIN][CONF_HOST]
 
     try:
         qvrpro = Client(user, password, host)
-    except Exception as e:
-        msg = e
+    except AuthenticationError:
+        _LOGGER.error(
+            'QVR Pro authentication failed.  Please check your credentials.')
+        return False
 
     channel_resp = qvrpro.get_channel_list()
 
@@ -63,4 +66,3 @@ class QVRChannel:
         self.brand = brand
         self._index = channel_index
         self.guid = guid
-
