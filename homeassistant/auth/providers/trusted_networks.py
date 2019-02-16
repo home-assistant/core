@@ -91,7 +91,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         raise NotImplementedError
 
     @callback
-    def async_validate_access(self, ip: IPAddress) -> None:
+    def async_validate_access(self, ip_addr: IPAddress) -> None:
         """Make sure the access from trusted networks.
 
         Raise InvalidAuthError if not.
@@ -100,7 +100,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         if not self.trusted_networks:
             raise InvalidAuthError('trusted_networks is not configured')
 
-        if not any(ip in trusted_network for trusted_network
+        if not any(ip_addr in trusted_network for trusted_network
                    in self.trusted_networks):
             raise InvalidAuthError('Not in trusted_networks')
 
@@ -109,12 +109,12 @@ class TrustedNetworksLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     def __init__(self, auth_provider: TrustedNetworksAuthProvider,
-                 ip: IPAddress, available_users: Dict[str, Optional[str]]) \
-            -> None:
+                 ip_addr: IPAddress,
+                 available_users: Dict[str, Optional[str]]) -> None:
         """Initialize the login flow."""
         super().__init__(auth_provider)
         self._available_users = available_users
-        self._ip_address = ip
+        self._ip_address = ip_addr
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
