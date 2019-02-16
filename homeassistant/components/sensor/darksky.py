@@ -32,7 +32,7 @@ CONF_UNITS = 'units'
 
 DEFAULT_LANGUAGE = 'en'
 DEFAULT_NAME = 'Dark Sky'
-DEFAULT_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 DEPRECATED_SENSOR_TYPES = {
     'apparent_temperature_max',
@@ -191,8 +191,6 @@ PLATFORM_SCHEMA = vol.All(
         ): cv.longitude,
         vol.Optional(CONF_UPDATE_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_FORECAST):
             vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
     }),
@@ -200,7 +198,7 @@ PLATFORM_SCHEMA = vol.All(
         CONF_UPDATE_INTERVAL,
         replacement_key=CONF_SCAN_INTERVAL,
         invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=DEFAULT_INTERVAL
+        default=SCAN_INTERVAL
     )
 )
 
@@ -210,7 +208,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     language = config.get(CONF_LANGUAGE)
-    interval = config[CONF_SCAN_INTERVAL]
+    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]

@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_NAME = 'Broadlink sensor'
 DEFAULT_TIMEOUT = 10
-DEFAULT_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS],
@@ -43,8 +43,6 @@ PLATFORM_SCHEMA = vol.All(
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_UPDATE_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
@@ -53,7 +51,7 @@ PLATFORM_SCHEMA = vol.All(
         CONF_UPDATE_INTERVAL,
         replacement_key=CONF_SCAN_INTERVAL,
         invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=DEFAULT_INTERVAL
+        default=SCAN_INTERVAL
     )
 )
 
@@ -65,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac_addr = binascii.unhexlify(mac)
     name = config.get(CONF_NAME)
     timeout = config.get(CONF_TIMEOUT)
-    update_interval = config[CONF_SCAN_INTERVAL]
+    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:

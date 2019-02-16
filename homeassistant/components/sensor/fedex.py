@@ -33,7 +33,7 @@ ICON = 'mdi:package-variant-closed'
 
 STATUS_DELIVERED = 'delivered'
 
-DEFAULT_INTERVAL = timedelta(seconds=1800)
+SCAN_INTERVAL = timedelta(seconds=1800)
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
@@ -42,14 +42,12 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UPDATE_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
     }),
     cv.deprecated(
         CONF_UPDATE_INTERVAL,
         replacement_key=CONF_SCAN_INTERVAL,
         invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=DEFAULT_INTERVAL
+        default=SCAN_INTERVAL
     )
 )
 
@@ -59,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import fedexdeliverymanager
 
     name = config.get(CONF_NAME)
-    update_interval = config[CONF_SCAN_INTERVAL]
+    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     try:
         cookie = hass.config.path(COOKIE)
