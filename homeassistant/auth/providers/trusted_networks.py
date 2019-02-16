@@ -3,8 +3,9 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
-from ipaddress import ip_address, ip_network
-from typing import Any, Dict, List, Optional, cast
+from ipaddress import ip_address, ip_network, IPv4Address, IPv6Address, \
+    IPv4Network, IPv6Network
+from typing import Any, Dict, List, Optional, Union, cast
 
 import voluptuous as vol
 
@@ -14,6 +15,9 @@ import homeassistant.helpers.config_validation as cv
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
+
+IPAddress = Union[IPv4Address, IPv6Address]
+IPNetwork = Union[IPv4Network, IPv6Network]
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
     vol.Required('trusted_networks'): vol.All(cv.ensure_list, [ip_network])
@@ -38,9 +42,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
     DEFAULT_TITLE = 'Trusted Networks'
 
     @property
-    def trusted_networks(self) -> List[ip_network]:
+    def trusted_networks(self) -> List[IPNetwork]:
         """Return trusted networks."""
-        return self.config['trusted_networks']
+        return cast(List[IPNetwork], self.config['trusted_networks'])
 
     @property
     def support_mfa(self) -> bool:
@@ -56,7 +60,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
                            if not user.system_generated and user.is_active}
 
         return TrustedNetworksLoginFlow(
-            self, context.get('ip_address'), available_users)
+            self, cast(IPAddress, context.get('ip_address')), available_users)
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
@@ -87,7 +91,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         raise NotImplementedError
 
     @callback
-    def async_validate_access(self, ip: ip_address) -> None:
+    def async_validate_access(self, ip: IPAddress) -> None:
         """Make sure the access from trusted networks.
 
         Raise InvalidAuthError if not.
@@ -105,7 +109,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     def __init__(self, auth_provider: TrustedNetworksAuthProvider,
-                 ip: ip_address, available_users: Dict[str, Optional[str]]) \
+                 ip: IPAddress, available_users: Dict[str, Optional[str]]) \
             -> None:
         """Initialize the login flow."""
         super().__init__(auth_provider)
