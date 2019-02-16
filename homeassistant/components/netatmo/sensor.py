@@ -17,6 +17,8 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
+import pyatmo
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MODULES = 'modules'
@@ -70,6 +72,8 @@ MODULE_TYPE_WIND = 'NAModule2'
 MODULE_TYPE_RAIN = 'NAModule3'
 MODULE_TYPE_INDOOR = 'NAModule4'
 
+ALL_PRODUCT_CLASSES = [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
@@ -87,11 +91,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def manual_config(netatmo, config, dev):
     """Handle manual configuration."""
-    import pyatmo
 
-    handled = []
-    not_handled = []
-    for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
+    not_handled = {}
+    for data_class in ALL_PRODUCT_CLASSES:
         data = NetAtmoData(netatmo.NETATMO_AUTH, data_class,
                            config.get(CONF_STATION))
         try:
@@ -100,32 +102,25 @@ def manual_config(netatmo, config, dev):
                     config[CONF_MODULES].items():
                 # Test if module exists
                 if module_name not in data.get_module_names():
-                    if module_name in handled:
-                        # already handled by other data class
-                        continue
-                    if module_name not in not_handled:
-                        not_handled.append(module_name)
-                    continue
+                    not_handled[module_name] = \
+                        not_handled[module_name]+1 \
+                        if module_name in not_handled else 1
                 else:
-                    if module_name in not_handled:
-                        not_handled.remove(module_name)
-                    if module_name not in handled:
-                        handled.append(module_name)
-                # Only create sensors for monitored properties
-                for variable in monitored_conditions:
-                    dev.append(NetAtmoSensor(data, module_name, variable))
+                    # Only create sensors for monitored properties
+                    for variable in monitored_conditions:
+                        dev.append(NetAtmoSensor(data, module_name, variable))
         except pyatmo.NoDevice:
             continue
 
-    for module_name in not_handled:
-        _LOGGER.error('Module name: "%s" not found', module_name)
+    for module_name, count in not_handled.items():
+        if count == len(ALL_PRODUCT_CLASSES):
+            _LOGGER.error('Module name: "%s" not found', module_name)
 
 
 def auto_config(netatmo, config, dev):
     """Handle auto configuration."""
-    import pyatmo
 
-    for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
+    for data_class in ALL_PRODUCT_CLASSES:
         data = NetAtmoData(netatmo.NETATMO_AUTH, data_class,
                            config.get(CONF_STATION))
         try:
