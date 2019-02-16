@@ -9,7 +9,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['lakeside==0.11']
+REQUIREMENTS = ['lakeside==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
