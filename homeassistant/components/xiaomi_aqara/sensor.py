@@ -112,3 +112,8 @@ class XiaomiSensor(XiaomiDevice):
         else:
             self._state = round(value, 1)
         return True
+
+    def update(self):
+        """Get data from hub."""
+        _LOGGER.debug("Update data from hub: %s", self._name)
+        self._get_from_hub(self._sid)
