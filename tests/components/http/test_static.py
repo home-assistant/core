@@ -10,14 +10,12 @@ from homeassistant.setup import async_setup_component
 async def test_register_static_path(hass, hass_client, aiohttp_client):
     """Test register a dir to host static resources."""
     assert await async_setup_component(hass, 'http', {'http': {}}) is True
-    # same hack as the one in http.start()
-    # prevent freeze of http app in order to register test path
+    # use the same hack as the one used in http.start()
+    # prevent freeze of http app in order to register static path
     hass.http.app._router.freeze = lambda: None
     client = await hass_client()
 
     with TemporaryDirectory() as tmp_dir:
-        # real_path = os.path.realpath(tmp_dir)
-
         # test default setting is cache-able and no auth need
         default_dir = os.path.join(tmp_dir, 'default')
         os.mkdir(default_dir)
