@@ -205,10 +205,10 @@ class LinkyData:
                                       .get_data_per_period(
                                            "monthly",
                                            (today.replace(day=1) -
-                                           relativedelta(months=12))
+                                            relativedelta(months=12))
                                            .strftime("%d/%m/%Y"),
                                            (today - relativedelta
-                                           (months=12))
+                                          (months=12))
                                            .strftime("%d/%m/%Y"))])
             _LOGGER.info("Same month last year (from 1st to same day): %s",
                     str(self.compare_month))
