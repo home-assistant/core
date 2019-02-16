@@ -7,12 +7,13 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+
+from .const import DOMAIN
 
 REQUIREMENTS = ['pyqvrpro==0.42']
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'qvrpro'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -47,6 +48,8 @@ def setup(hass, config):
         'channels': channels,
         'client': qvrpro
     }
+
+    load_platform(hass, 'camera', DOMAIN, {}, config)
 
     return True
 

@@ -6,23 +6,24 @@ https://home-assistant.io/components/camera.qvrpro
 """
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.qvrpro import DOMAIN as QVRPRO_DOMAIN
 
-DEPENDENCIES = ['qvrpro']
+from .const import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities,
+                         discovery_info=None):
     """Set up the QVR Pro camera platform."""
+    if discovery_info is None:
+        return
 
-    client = hass.data[QVRPRO_DOMAIN]['client']
+    client = hass.data[DOMAIN]['client']
 
     entities = []
 
-    for channel in hass.data[QVRPRO_DOMAIN]['channels']:
+    for channel in hass.data[DOMAIN]['channels']:
         entities.append(QVRProCamera(channel, client))
 
-    async_add_entities(entities)
+    add_entities(entities)
 
 
 class QVRProCamera(Camera):
