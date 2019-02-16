@@ -28,7 +28,7 @@ async def setup_platform(hass, platform: str, *devices):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
     broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
+    config_entry = ConfigEntry(2, DOMAIN, "Test", {},
                                SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
     hass.data[DOMAIN] = {
         DATA_BROKERS: {
@@ -240,7 +240,7 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_OAUTH_CLIENT_ID: str(uuid4()),
         CONF_OAUTH_CLIENT_SECRET: str(uuid4())
     }
-    return ConfigEntry("1", DOMAIN, location.name, data, SOURCE_USER,
+    return ConfigEntry(2, DOMAIN, location.name, data, SOURCE_USER,
                        CONN_CLASS_CLOUD_PUSH)
 
 

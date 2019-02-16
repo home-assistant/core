@@ -234,16 +234,10 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     """
     Handle when a SmartApp is installed by the user into a location.
 
-    Setup subscriptions using the access token SmartThings provided in the
-    event. An explicit subscription is required for each 'capability' in order
-    to receive the related attribute updates.  Finally, create a config entry
-    representing the installation if this is not the first installation under
-    the account.
+    Create a config entry representing the installation if this is not
+    the first installation under the account, otherwise store the data
+    for the config flow.
     """
-    await smartapp_sync_subscriptions(
-        hass, req.auth_token, req.location_id, req.installed_app_id,
-        skip_delete=True)
-
     # The permanent access token is copied from another config flow with the
     # same parent app_id.  If one is not found, that means the user is within
     # the initial config flow and the entry at the conclusion.
@@ -274,7 +268,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     """
     Handle when a SmartApp is updated (reconfigured) by the user.
 
-    Synchronize subscriptions to ensure we're up-to-date.
+    Store the refresh token and reload the config entry.
     """
     # Update refresh token in config entry
     entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)
@@ -284,10 +278,9 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     if entry:
         entry.data[CONF_REFRESH_TOKEN] = req.refresh_token
         hass.config_entries.async_update_entry(entry)
-
-    # Synchronize subscriptions
-    await smartapp_sync_subscriptions(
-        hass, req.auth_token, req.location_id, req.installed_app_id)
+        # Reload it
+        await entry.async_unload(hass)
+        await entry.async_setup(hass)
 
     _LOGGER.debug("SmartApp '%s' under parent app '%s' was updated",
                   req.installed_app_id, app.app_id)

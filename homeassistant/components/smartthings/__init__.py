@@ -37,6 +37,33 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle migration of a previous version config entry.
+
+    A config entry created under a previous version must go through the
+    integration setup again so we can properly retrieve the needed data
+    elements.  Force this by removing the entry and triggering a new flow.
+    """
+    from pysmartthings import SmartThings
+
+    # Delete the installed app
+    api = SmartThings(async_get_clientsession(hass),
+                      entry.data[CONF_ACCESS_TOKEN])
+    await api.delete_installed_app(entry.data[CONF_INSTALLED_APP_ID])
+    # Delete the entry
+    hass.async_create_task(
+        hass.config_entries.async_remove(entry.entry_id))
+    # only create new flow if there isn't a pending one for SmartThings.
+    flows = hass.config_entries.flow.async_progress()
+    if not [flow for flow in flows if flow['handler'] == DOMAIN]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': 'import'}))
+
+    # Return False because it could not be migrated.
+    return False
+
+
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
     from pysmartthings import SmartThings

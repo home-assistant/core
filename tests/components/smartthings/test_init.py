@@ -16,6 +16,25 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from tests.common import mock_coro
 
 
+async def test_migration_creates_new_flow(
+        hass, smartthings_mock, config_entry):
+    """Test migration deletes app and creates new flow."""
+    config_entry.version = 1
+    setattr(hass.config_entries, '_entries', [config_entry])
+    api = smartthings_mock.return_value
+    api.delete_installed_app.return_value = mock_coro()
+
+    await smartthings.async_migrate_entry(hass, config_entry)
+
+    assert api.delete_installed_app.call_count == 1
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(DOMAIN)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]['handler'] == 'smartthings'
+    assert flows[0]['context'] == {'source': 'import'}
+
+
 async def test_unrecoverable_api_errors_create_new_flow(
         hass, config_entry, smartthings_mock):
     """
