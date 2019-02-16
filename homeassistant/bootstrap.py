@@ -192,7 +192,7 @@ async def async_from_config_dict(config: Dict[str, Any],
             '\n\n'.join(msg), "Config Warning", "config_warning"
         )
 
-    # TEMP: warn users for invalid slugs
+    # TEMP: warn users of invalid extra keys
     # Remove after 0.92
     if cv.INVALID_EXTRA_KEYS_FOUND:
         msg = []
