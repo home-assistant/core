@@ -1188,6 +1188,9 @@ pyotgw==0.4b1
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
 
+# homeassistant.components.owlet
+pyowlet==1.0.2
+
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
 pyowm==2.10.0
