@@ -134,11 +134,13 @@ def auto_config(netatmo, config, dev):
         except pyatmo.NoDevice:
             continue
 
+
 def all_product_classes():
     """Returns all handled Netatmo product classes."""
     import pyatmo
 
     return [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
+
 
 class NetAtmoSensor(Entity):
     """Implementation of a Netatmo sensor."""
