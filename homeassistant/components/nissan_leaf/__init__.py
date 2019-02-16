@@ -141,7 +141,7 @@ async def async_setup(hass, config):
             " as the drive train battery won't connect."
             " Don't set the intervals too low.")
 
-        data_store = LeafDataStore(leaf, hass, car_config)
+        data_store = LeafDataStore(hass, leaf, car_config)
         hass.data[DATA_LEAF][leaf.vin] = data_store
 
         for component in LEAF_COMPONENTS:
@@ -165,13 +165,13 @@ async def async_setup(hass, config):
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
-    def __init__(self, leaf, hass, car_config):
+    def __init__(self, hass, leaf, car_config):
         """Initialise the data store."""
+        self.hass = hass
         self.leaf = leaf
         self.car_config = car_config
         self.nissan_connect = car_config[CONF_NCONNECT]
         self.force_miles = car_config[CONF_FORCE_MILES]
-        self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
         self.data[DATA_BATTERY] = 0
