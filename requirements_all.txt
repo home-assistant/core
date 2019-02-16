@@ -1188,6 +1188,9 @@ pypoint==1.0.6
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
 
+# homeassistant.components.qvrpro
+pyqvrpro==0.42
+
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
