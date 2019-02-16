@@ -151,6 +151,7 @@ async def test_unload_entry(hass, config_entry):
     smart_app.connect_event.return_value = connect_disconnect
     broker = smartthings.DeviceBroker(
         hass, config_entry, Mock(), smart_app, [])
+    broker.connect()
     hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id] = broker
 
     with patch.object(hass.config_entries, 'async_forward_entry_unload',
@@ -181,8 +182,9 @@ async def test_broker_regenerates_token(
     with patch('homeassistant.components.smartthings'
                '.async_track_time_interval',
                new=async_track_time_interval):
-        smartthings.DeviceBroker(
+        broker = smartthings.DeviceBroker(
             hass, config_entry, token, Mock(), [])
+        broker.connect()
 
     assert stored_action
     await stored_action(None)  # pylint:disable=not-callable
@@ -212,6 +214,7 @@ async def test_event_handler_dispatches_updated_devices(
 
     broker = smartthings.DeviceBroker(
         hass, config_entry, Mock(), Mock(), devices)
+    broker.connect()
 
     # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
@@ -235,6 +238,7 @@ async def test_event_handler_ignores_other_installed_app(
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
     broker = smartthings.DeviceBroker(
         hass, config_entry, Mock(), Mock(), [device])
+    broker.connect()
 
     # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
@@ -267,6 +271,7 @@ async def test_event_handler_fires_button_events(
     hass.bus.async_listen(EVENT_BUTTON, handler)
     broker = smartthings.DeviceBroker(
         hass, config_entry, Mock(), Mock(), [device])
+    broker.connect()
 
     # pylint:disable=protected-access
     await broker._event_handler(request, None, None)

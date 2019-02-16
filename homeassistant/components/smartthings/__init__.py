@@ -44,7 +44,7 @@ async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     A config entry created under a previous version must go through the
     integration setup again so we can properly retrieve the needed data
-    elements.  Force this by removing the entry and triggering a new flow.
+    elements. Force this by removing the entry and triggering a new flow.
     """
     from pysmartthings import SmartThings
 
@@ -124,6 +124,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
         # Setup device broker
         broker = DeviceBroker(hass, entry, token, smart_app, devices)
+        broker.connect()
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
@@ -181,7 +182,6 @@ class DeviceBroker:
         self._regenerate_token_remove = None
         self._assignments = self._assign_capabilities(devices)
         self.devices = {device.device_id: device for device in devices}
-        self._connect()
 
     def _assign_capabilities(self, devices: Iterable):
         """Assign platforms to capabilities."""
@@ -204,7 +204,7 @@ class DeviceBroker:
             assignments[device.device_id] = slots
         return assignments
 
-    def _connect(self):
+    def connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
         # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
