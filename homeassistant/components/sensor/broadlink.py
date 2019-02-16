@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_UPDATE_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SCAN_INTERVAL):
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): cv.string,

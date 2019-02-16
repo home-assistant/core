@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_UPDATE_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_SCAN_INTERVAL):
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
         }),
         cv.deprecated(

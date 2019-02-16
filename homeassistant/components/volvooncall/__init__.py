@@ -90,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_UPDATE_INTERVAL):
                 vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-            vol.Optional(CONF_SCAN_INTERVAL):
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
                 vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
             vol.Optional(CONF_NAME, default={}):
                 cv.schema_with_slug_keys(cv.string),

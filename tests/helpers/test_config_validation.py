@@ -713,7 +713,7 @@ def test_deprecated_with_default(caplog, schema):
 
 def test_deprecated_with_replacement_key_and_default(caplog, schema):
     """
-    Test deprecation behaves correctly when only a replacement key is provided.
+    Test deprecation with a replacement key and default.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -747,6 +747,22 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 0
     assert {'venus': True, 'jupiter': False} == output
+
+    deprecated_schema_with_default = vol.All(
+        vol.Schema({
+            'venus': cv.boolean,
+            vol.Optional('mars', default=False): cv.boolean,
+            vol.Optional('jupiter', default=False): cv.boolean
+        }),
+        cv.deprecated('mars', replacement_key='jupiter', default=False)
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema_with_default(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'") in caplog.text
+    assert {'jupiter': True} == output
 
 
 def test_deprecated_with_replacement_key_invalidation_version_default(

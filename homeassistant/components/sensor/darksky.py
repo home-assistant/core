@@ -191,7 +191,7 @@ PLATFORM_SCHEMA = vol.All(
         ): cv.longitude,
         vol.Optional(CONF_UPDATE_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_SCAN_INTERVAL):
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_FORECAST):
             vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),

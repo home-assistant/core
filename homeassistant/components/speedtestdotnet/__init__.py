@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_SERVER_ID): cv.positive_int,
             vol.Optional(CONF_UPDATE_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_SCAN_INTERVAL):
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
             vol.Optional(CONF_MANUAL, default=False): cv.boolean,
             vol.Optional(
