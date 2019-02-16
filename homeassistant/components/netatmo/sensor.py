@@ -89,8 +89,9 @@ def manual_config(netatmo, config, dev):
     """Handle manual configuration."""
     import pyatmo
 
+    handled = []
     not_handled = []
-    for data_class in [pyatmo.WeatherStationData]:
+    for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
         data = NetAtmoData(netatmo.NETATMO_AUTH, data_class,
                            config.get(CONF_STATION))
         try:
@@ -99,11 +100,17 @@ def manual_config(netatmo, config, dev):
                     config[CONF_MODULES].items():
                 # Test if module exists
                 if module_name not in data.get_module_names():
+                    if module_name in handled:
+                        # already handled by other data class
+                        continue
                     if module_name not in not_handled:
                         not_handled.append(module_name)
                     continue
-                elif module_name in not_handled:
-                    not_handled.remove(module_name)
+                else:
+                    if module_name in not_handled:
+                        not_handled.remove(module_name)
+                    if module_name not in handled:
+                        handled.append(module_name)
                 # Only create sensors for monitored properties
                 for variable in monitored_conditions:
                     dev.append(NetAtmoSensor(data, module_name, variable))
@@ -369,6 +376,8 @@ class NetAtmoData:
     def get_module_names(self):
         """Return all module available on the API as a list."""
         self.update()
+        if not self.data:
+            return []
         return self.data.keys()
 
     def _detect_platform_type(self):
@@ -412,7 +421,7 @@ class NetAtmoData:
                         newinterval = self.data[module]['When']
                         break
             except TypeError:
-                _LOGGER.error("No modules found!")
+                _LOGGER.debug("No %s modules found", self.data_class.__name__)
 
             if newinterval:
                 # Try and estimate when fresh data will be available
