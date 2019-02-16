@@ -73,7 +73,7 @@ async def test_register_static_path(hass, hass_client, aiohttp_client):
         assert await resp.text() == 'no-cache'
 
         # test single file register with cache control
-        test_file_path = os.path.join(no_cache_dir, 'cache.me')
+        test_file_path = os.path.join(no_cache_dir, 'cache.txt')
         with open(test_file_path, 'w') as tmp_file:
             tmp_file.write('cached')
 
@@ -82,14 +82,14 @@ async def test_register_static_path(hass, hass_client, aiohttp_client):
         resp = await client.get('cache.me')
         assert resp.status == 200
         assert resp.headers['Cache-Control'] == 'public, max-age=2678400'
-        assert resp.headers['Content-Type'] == 'text/troff'
+        assert resp.headers['Content-Type'] == 'text/plain'
         assert await resp.text() == 'cached'
 
         # this file still can be access from no-cache url
-        resp = await client.get('no-cache/cache.me')
+        resp = await client.get('no-cache/cache.txt')
         assert resp.status == 200
         assert 'Cache-Control' not in resp.headers
-        assert resp.headers['Content-Type'] == 'text/troff'
+        assert resp.headers['Content-Type'] == 'text/plain'
         assert await resp.text() == 'cached'
 
         # test secure feature
