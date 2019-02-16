@@ -1,6 +1,5 @@
 """Test the Trusted Networks auth provider."""
-from ipaddress import ip_network, ip_address
-from unittest.mock import Mock
+from ipaddress import ip_address
 
 import pytest
 import voluptuous as vol
