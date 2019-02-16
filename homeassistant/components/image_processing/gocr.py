@@ -106,7 +106,8 @@ class ImageProcessingGocr(ImageProcessingEntity):
                          '-e', '/dev/null', '-f', 'UTF8'] +
                          digits + unrecognized + threshold +
                          extra_arguments)
-        _LOGGER.info("Command : %s -i <tmpfile>", shlex.quote(' '.join(self._command)))
+        _LOGGER.info("Command : %s -i <tmpfile>",
+                     shlex.quote(' '.join(self._command)))
 
     @property
     def device_class(self):
@@ -144,7 +145,7 @@ class ImageProcessingGocr(ImageProcessingEntity):
             img = img.crop(self.crop)
         if self.negate:
             img = PIL.ImageOps.invert(img)
-        if self.rotate not None:
+        if self.rotate is not None:
             img = img.rotate(self.rotate, expand=1)
         tmp = NamedTemporaryFile(suffix='.ppm')
         self._state = None
