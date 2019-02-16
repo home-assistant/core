@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-from .const import SENSOR_MOVEMENT, SENSOR_BASE_STATION, SENSOR_HEART_RATE, \
-    SENSOR_OXYGEN_LEVEL
+from .const import (
+    SENSOR_BASE_STATION, SENSOR_HEART_RATE, SENSOR_MOVEMENT,
+    SENSOR_OXYGEN_LEVEL)
 
 REQUIREMENTS = ['pyowlet==1.0.2']
 
@@ -20,7 +21,7 @@ SENSOR_TYPES = [
     SENSOR_OXYGEN_LEVEL,
     SENSOR_HEART_RATE,
     SENSOR_BASE_STATION,
-    SENSOR_MOVEMENT
+    SENSOR_MOVEMENT,
 ]
 
 CONFIG_SCHEMA = vol.Schema({
@@ -43,8 +44,8 @@ def setup(hass, config):
     try:
         device = PyOwlet(username, password)
     except KeyError:
-        _LOGGER.error('Owlet authentication failed.  Please verify your '
-                      'credentials are correct.')
+        _LOGGER.error("Owlet authentication failed. Please verify your "
+                      "credentials are correct")
         return False
 
     device.update_properties()
