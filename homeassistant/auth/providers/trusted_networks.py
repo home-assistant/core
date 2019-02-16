@@ -85,9 +85,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
             self, credentials: Credentials) -> UserMeta:
         """Return extra user metadata for credentials.
 
-        Trusted network auth provider should never create new user.
+        Trusted network auth provider doesn't update user info.
         """
-        raise NotImplementedError
+        return UserMeta()
 
     @callback
     def async_validate_access(self, ip_addr: IPAddress) -> None:

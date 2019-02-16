@@ -207,7 +207,7 @@ async def test_login_as_existing_user(mock_hass):
         id='mock-user',
         is_owner=False,
         is_active=False,
-        name='Paulus',
+        name='Obsolete Name',
     ).add_to_auth_manager(manager)
     user.credentials.append(auth_models.Credentials(
         id='mock-id',
@@ -231,7 +231,7 @@ async def test_login_as_existing_user(mock_hass):
     assert user.id == 'mock-user'
     assert user.is_owner is False
     assert user.is_active is False
-    assert user.name == 'Paulus'
+    assert user.name == 'Test Name'
 
 
 async def test_linking_user_to_two_auth_providers(hass, hass_storage):

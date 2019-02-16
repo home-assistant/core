@@ -126,7 +126,6 @@ class CommandLineAuthProvider(AuthProvider):
         meta = self._user_meta.get(credentials.data["username"], {})
         return UserMeta(
             name=meta.get("name"),
-            is_active=True,
         )
 
 

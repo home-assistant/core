@@ -73,19 +73,16 @@ class ExampleAuthProvider(AuthProvider):
 
     async def async_user_meta_for_credentials(
             self, credentials: Credentials) -> UserMeta:
-        """Return extra user metadata for credentials.
-
-        Will be used to populate info when creating a new user.
-        """
+        """Return extra user metadata for credentials."""
         username = credentials.data['username']
         name = None
 
         for user in self.config['users']:
             if user['username'] == username:
-                name = user.get('name')
+                name = cast(Optional[str], user.get('name'))
                 break
 
-        return UserMeta(name=name, is_active=True)
+        return UserMeta(name=name)
 
 
 class ExampleLoginFlow(LoginFlow):

@@ -1,6 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional  # noqa: F401
+from typing import Dict, List, Optional  # noqa: F401
 import uuid
 
 import attr
@@ -124,5 +124,9 @@ class Credentials:
     is_new = attr.ib(type=bool, default=True)
 
 
-UserMeta = NamedTuple("UserMeta",
-                      [('name', Optional[str]), ('is_active', bool)])
+@attr.s(slots=True)
+class UserMeta:
+    """Used to pass attributes to be changed on a User object."""
+
+    name = attr.ib(type=Optional[str], default=None)
+    is_active = attr.ib(type=Optional[bool], default=None)

@@ -166,31 +166,35 @@ class AuthManager:
     async def async_get_or_create_user(self, credentials: models.Credentials) \
             -> models.User:
         """Get or create a user."""
-        if not credentials.is_new:
-            user = await self.async_get_user_by_credentials(credentials)
-            if user is None:
-                raise ValueError('Unable to find the user.')
-            return user
-
         auth_provider = self._async_get_auth_provider(credentials)
-
         if auth_provider is None:
             raise RuntimeError('Credential with unknown provider encountered')
-
-        info = await auth_provider.async_user_meta_for_credentials(
+        meta = await auth_provider.async_user_meta_for_credentials(
             credentials)
 
-        user = await self._store.async_create_user(
-            credentials=credentials,
-            name=info.name,
-            is_active=info.is_active,
-            group_ids=[GROUP_ID_ADMIN],
+        if credentials.is_new:
+            # set sensible defaults for new users unless explicitly
+            # overwritten by the auth provider
+            user = await self._store.async_create_user(
+                credentials=credentials,
+                name=meta.name,
+                is_active=True if meta.is_active is None else meta.is_active,
+                group_ids=[GROUP_ID_ADMIN],
+            )
+            self.hass.bus.async_fire(EVENT_USER_ADDED, {
+                'user_id': user.id
+            })
+            return user
+
+        _user = await self.async_get_user_by_credentials(credentials)
+        if _user is None:
+            raise ValueError('Unable to find the user.')
+        user = _user
+        await self._store.async_update_user(
+            user,
+            name=meta.name,
+            is_active=meta.is_active,
         )
-
-        self.hass.bus.async_fire(EVENT_USER_ADDED, {
-            'user_id': user.id
-        })
-
         return user
 
     async def async_link_user(self, user: models.User,

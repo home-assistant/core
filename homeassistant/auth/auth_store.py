@@ -145,6 +145,8 @@ class AuthStore:
         """Update a user."""
         assert self._groups is not None
 
+        changed = False
+
         if group_ids is not None:
             groups = []
             for grid in group_ids:
@@ -153,17 +155,22 @@ class AuthStore:
                     raise ValueError("Invalid group specified.")
                 groups.append(group)
 
-            user.groups = groups
-            user.invalidate_permission_cache()
+            if len(groups) != user.groups or \
+               any(group not in groups for group in user.groups):
+                user.groups = groups
+                user.invalidate_permission_cache()
+                changed = True
 
         for attr_name, value in (
                 ('name', name),
                 ('is_active', is_active),
         ):
-            if value is not None:
+            if value is not None and getattr(user, attr_name) != value:
                 setattr(user, attr_name, value)
+                changed = True
 
-        self._async_schedule_save()
+        if changed:
+            self._async_schedule_save()
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

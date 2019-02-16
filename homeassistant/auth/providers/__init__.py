@@ -104,9 +104,16 @@ class AuthProvider:
             self, credentials: Credentials) -> UserMeta:
         """Return extra user metadata for credentials.
 
-        Will be used to populate info when creating a new user.
+        Will be used to populate info when creating a new user or after
+        authenticating an existing one.
+        Returning an empty UserMeta() will cause default values to be
+        used for new users and not update existing users, which also is
+        the default implementation.
+        If values should only be set for new users, check for
+        credentials.is_new and only set fields in the returned UserMeta
+        object when that's True.
         """
-        raise NotImplementedError
+        return UserMeta()
 
 
 async def auth_provider_from_config(

@@ -82,12 +82,8 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     async def async_user_meta_for_credentials(
             self, credentials: Credentials) -> UserMeta:
-        """
-        Return info for the user.
-
-        Will be used to populate info when creating a new user.
-        """
-        return UserMeta(name=LEGACY_USER_NAME, is_active=True)
+        """Return info for the user."""
+        return UserMeta(name=LEGACY_USER_NAME)
 
 
 class LegacyLoginFlow(LoginFlow):
