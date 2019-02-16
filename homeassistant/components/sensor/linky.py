@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylinky==0.1.8']
+REQUIREMENTS = ['pylinky==0.2.0']
 
 KILOWATT_HOUR = 'kWh'
 
@@ -198,19 +198,12 @@ class LinkyData:
             _LOGGER.info("Connected to Enedis server successfully.")
             self.data = self.client.get_data()
             today = date.today()
-            # Fixes a bug in PyLinky
-            # pylint: disable=W0212
-            self.data["monthly"][0] = (self.client._get_data_per_month(
-                (today.replace(day=1) - relativedelta(months=12))
-                .strftime("%d/%m/%Y"),
-                ((today - relativedelta(months=11)).replace(day=1)
-                 - relativedelta(days=1)).strftime("%d/%m/%Y"))[0])
-            _LOGGER.info("Second request for bugfix")
             # Get partial CONSUMPTION of the same month last year
             self.compare_month = sum([d[CONSUMPTION]
                                       for d in self.client
-                                      ._get_data_per_month(
-                                          (today.replace(day=1) -
+                                      .get_data_per_period
+                                          (pylinky.MONTHLY,
+                                           today.replace(day=1) -
                                            relativedelta(months=12))
                                           .strftime("%d/%m/%Y"),
                                           (today - relativedelta
