@@ -265,8 +265,8 @@ class HomeAssistantHTTP:
             if requires_auth:
                 resource = SecureStaticResource
                 if cache_headers:
-                    _LOGGER.warning('cache_headers is ignored on {} since'
-                                    ' requires_auth=True'.format(path))
+                    _LOGGER.warning('cache_headers is ignored on % since'
+                                    ' requires_auth=True', path)
             elif cache_headers:
                 resource = CachingStaticResource
             else:
