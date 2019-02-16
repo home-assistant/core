@@ -136,7 +136,7 @@ def auto_config(netatmo, config, dev):
 
 
 def all_product_classes():
-    """Returns all handled Netatmo product classes."""
+    """Provide all handled Netatmo product classes."""
     import pyatmo
 
     return [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
