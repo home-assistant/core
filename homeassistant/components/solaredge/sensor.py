@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.solaredge/
 """
 
+import requests
+
 from datetime import timedelta
 import logging
 
@@ -26,6 +28,7 @@ CONF_SITE_ID = "site_id"
 OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
 DETAILS_UPDATE_DELAY = timedelta(hours=12)
 INVENTORY_UPDATE_DELAY = timedelta(hours=12)
+POWER_FLOW_UPDATE_DELAY = timedelta(minutes=10)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -47,7 +50,11 @@ SENSOR_TYPES = {
     'sensors': ['sensors', 'Sensors', None, None],
     'gateways': ['gateways', 'Gateways', None, None],
     'batteries': ['batteries', 'Batteries', None, None],
-    'inverters': ['inverters', 'Inverters', None, None]
+    'inverters': ['inverters', 'Inverters', None, None],
+    'power_consumption': ['LOAD', 'Power Consumption', None, 'mdi:flash'],
+    'solar_power': ['PV', 'Solar Power', None, 'mdi:solar-power'],
+    'grid_power': ['GRID', 'Grid Power', None, 'mdi:power-plug'],
+    'storage_power': ['STORAGE', 'Storage Power', None, 'mdi:car-battery']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -111,6 +118,8 @@ class SolarEdgeSensorFactory:
         self.details_data_service = SolarEdgeDetailsDataService(api, site_id)
         self.inventory_data_service = SolarEdgeInventoryDataService(api,
                                                                     site_id)
+        self.power_flow_data_service = SolarEdgePowerFlowDataService(api,
+                                                                     site_id)
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key."""
@@ -123,6 +132,10 @@ class SolarEdgeSensorFactory:
                             'batteries', 'inverters']:
             sensor = SolarEdgeInventorySensor(self.platform_name, sensor_key,
                                               self.inventory_data_service)
+        elif sensor_key in ['power_consumption', 'solar_power', 'grid_power',
+                            'storage_power']:
+            sensor = SolarEdgePowerFlowSensor(self.platform_name, sensor_key,
+                                              self.power_flow_data_service)
         else:
             sensor = SolarEdgeOverviewSensor(self.platform_name, sensor_key,
                                              self.overview_data_service)
@@ -222,6 +235,30 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         self.data_service.update()
         self._state = self.data_service.data[self._json_key]
         self._attributes = self.data_service.attributes[self._json_key]
+
+
+class SolarEdgePowerFlowSensor(SolarEdgeSensor):
+    """Representation of an SolarEdge Monitoring API power flow sensor."""
+
+    def __init__(self, platform_name, sensor_key, data_service):
+        """Initialize the power flow sensor."""
+        super().__init__(platform_name, sensor_key, data_service)
+
+        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
+
+        self._attributes = {}
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    def update(self):
+        """Get the latest inventory data and update state and attributes."""
+        self.data_service.update()
+        self._state = self.data_service.data.get(self._json_key)
+        self._attributes = self.data_service.attributes.get(self._json_key)
+        self._unit_of_measurement = self.data_service.unit
 
 
 class SolarEdgeDataService:
@@ -330,3 +367,67 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
 
         _LOGGER.debug("Updated SolarEdge inventory: %s, %s",
                       self.data, self.attributes)
+
+
+class SolarEdgePowerFlowDataService(SolarEdgeDataService):
+    """Get and update the latest power flow data."""
+
+    def __init__(self, api, site_id):
+        """Initialize the power flow data service."""
+        super().__init__(api, site_id)
+
+        self.unit = ''
+
+
+    @Throttle(POWER_FLOW_UPDATE_DELAY)
+    def update(self):
+        """Update the data from the SolarEdge Monitoring API."""
+        from requests.exceptions import HTTPError, ConnectTimeout
+
+        try:
+            #data = self.api.get_current_power_flow(self.site_idl
+        
+                       
+            r = requests.get('http://localhost/currentPowerFlow/2')
+            r.raise_for_status()
+            data = r.json()
+
+
+            power_flow = data['siteCurrentPowerFlow']
+        except KeyError:
+            _LOGGER.error("Missing power flow data, skipping update")
+            return
+        except (ConnectTimeout, HTTPError):
+            _LOGGER.error("Could not retrieve data, skipping update")
+            return
+        
+        power_from = []
+        power_to = []
+        
+        for connection in power_flow['connections']:
+            power_from.append(connection['from'].lower())
+            power_to.append(connection['to'].lower())
+
+        self.data = {}
+        self.attributes = {}
+        self.unit = power_flow['unit']
+
+        for key, value in power_flow.items():
+            if key in ['LOAD', 'PV', 'GRID', 'STORAGE']:
+                self.data[key] = value['currentPower']
+                self.attributes[key] = {'status': value['status']}
+            
+            if key in ['GRID']:
+                export = key.lower() in power_to
+                self.data[key] *= -1 if export else 1
+                self.attributes[key]['flow'] = 'export' if export else 'import'  
+            
+            if key in ['STORAGE']:
+                charge = key.lower() in power_to
+                self.data[key] *= -1 if charge else 1
+                self.attributes[key]['flow'] = 'charge' if charge else 'discharge'
+                pass
+
+        _LOGGER.debug("Updated SolarEdge power flow: %s, %s",
+                      self.data, self.attributes)
+
