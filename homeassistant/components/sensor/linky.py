@@ -202,16 +202,16 @@ class LinkyData:
             # Get partial CONSUMPTION of the same month last year
             self.compare_month = sum([d[CONSUMPTION]
                                       for d in self.client
-                                      .get_data_per_period
-                                          ("monthly",
-                                          (today.replace(day=1) -
+                                      .get_data_per_period(
+                                           "monthly",
+                                           (today.replace(day=1) -
                                            relativedelta(months=12))
                                            .strftime("%d/%m/%Y"),
-                                          (today - relativedelta
+                                           (today - relativedelta
                                            (months=12))
                                            .strftime("%d/%m/%Y"))])
             _LOGGER.info("Same month last year (from 1st to same day): %s",
-                str(self.compare_month))
+                    str(self.compare_month))
         except PyLinkyError as exp:
             reason = "(maybe due to night maintenance downtime schedule):"
             _LOGGER.warning("Unable to fetch Linky data %s %s", reason, exp)
