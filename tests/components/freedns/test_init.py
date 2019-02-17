@@ -24,7 +24,7 @@ def setup_freedns(hass, aioclient_mock):
     hass.loop.run_until_complete(async_setup_component(hass, freedns.DOMAIN, {
             freedns.DOMAIN: {
                 'access_token': ACCESS_TOKEN,
-                'update_interval': UPDATE_INTERVAL,
+                'scan_interval': UPDATE_INTERVAL,
             }
         }))
 
@@ -62,7 +62,7 @@ def test_setup_fails_if_wrong_token(hass, aioclient_mock):
     result = yield from async_setup_component(hass, freedns.DOMAIN, {
         freedns.DOMAIN: {
             'access_token': ACCESS_TOKEN,
-            'update_interval': UPDATE_INTERVAL,
+            'scan_interval': UPDATE_INTERVAL,
         }
     })
     assert not result
