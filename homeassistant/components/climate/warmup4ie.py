@@ -1,34 +1,17 @@
 r"""
 platform that offers a connection to a warmup4ie device.
-
-this platform is inspired by the following code:
-https://github.com/alyc100/SmartThingsPublic/tree/master/devicetypes/alyc100/\
-warmup-4ie.src
-
-to setup this component, you need to register to warmup first.
-see
-https://my.warmup.com/login
-
-Then add to your
-configuration.yaml
-
-climate:
-  - platform: warmup4ie
-    name: YOUR_DESCRIPTION
-    username: YOUR_E_MAIL_ADDRESS
-    password: YOUR_PASSWORD
-    location: YOUR_LOCATION_NAME
-    room: YOUR_ROOM_NAME
-
-# the following issues are not yet implemented, since i have currently no need
-# for them
-# OPEN  - holiday mode still missing
-#       - commands for setting/retrieving programmed times missing
 """
 
 import logging
+
 import voluptuous as vol
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+
 try:
     from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
                                                   SUPPORT_AWAY_MODE,
@@ -40,10 +23,6 @@ except ImportError:
         SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
         SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
 
-from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['warmup4ie==0.1.1']
 
@@ -71,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
     name = config.get(CONF_NAME)
@@ -85,14 +63,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         [Warmup4IE(hass, name, user, password, location, room, target_temp)])
 
 
-# pylint: disable=abstract-method
-# pylint: disable=too-many-instance-attributes
 # pylint: disable=import-self
 # pylint: disable=no-member
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
 
-    # pylint: disable-msg=too-many-arguments
     def __init__(self, hass, name, user, password, location,
                  room, target_temp):
         """Initialize the climate device."""
