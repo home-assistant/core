@@ -108,8 +108,6 @@ class TraccarScanner:
             for custom_attr in self._custom_attributes:
                 if device.get(custom_attr) is not None:
                     attr[custom_attr] = device[custom_attr]
-                else:
-                    attr[custom_attr] = ''
             await self._async_see(
                 dev_id=slugify(device['device_id']),
                 gps=(device.get('latitude'), device.get('longitude')),
