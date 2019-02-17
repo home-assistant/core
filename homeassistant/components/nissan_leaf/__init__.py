@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import logging
 import sys
 import time
-import urllib
 
 import voluptuous as vol
 

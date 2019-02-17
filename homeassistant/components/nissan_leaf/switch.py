@@ -56,7 +56,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False
 
-    # @MartinHjelmare would like removed - think provides nice UI feedback 
+    # @MartinHjelmare would like removed - think provides nice UI feedback
     # for switch.
     # Think VolvoOnCall component hase different icons for the switches.
     @property
