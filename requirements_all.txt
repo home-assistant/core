@@ -1207,6 +1207,9 @@ pypoint==1.1.1
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
 
+# homeassistant.components.ps4
+pyps4-homeassistant==0.3.0
+
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
