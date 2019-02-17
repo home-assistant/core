@@ -115,11 +115,6 @@ def setup(hass, config):
             # homeassistant to be slow to start
             sess = pycarwings2.Session(username, password, region)
             leaf = sess.get_leaf()
-        except(RuntimeError, urllib.error.HTTPError):
-            _LOGGER.error(
-                "Unable to connect to Nissan Connect with "
-                "username and password")
-            return False
         except KeyError:
             _LOGGER.error(
                 "Unable to fetch car details..."
