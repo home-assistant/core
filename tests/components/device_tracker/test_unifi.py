@@ -1,13 +1,13 @@
 """The tests for the Unifi WAP device tracker platform."""
 from unittest import mock
-from pyunifi.controller import APIError
-import homeassistant.util.dt as dt_util
 from datetime import datetime, timedelta
+from pyunifi.controller import APIError
 
 
 import pytest
 import voluptuous as vol
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL,
@@ -255,7 +255,7 @@ def test_monitored_conditions():
     ]
     ctrl.get_clients.return_value = fake_clients
     scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
-                                 ['essid', 'signal','latest_assoc_time'])
+                                 ['essid', 'signal', 'latest_assoc_time'])
     assert scanner.get_extra_attributes('123') == {
         'essid': 'barnet',
         'signal': -60,
