@@ -45,17 +45,12 @@ async def test_full_flow_implementation(hass):
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'creds'
 
-    # User input/submit results in Step Creds.
-    result = await flow.async_step_creds()
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['step_id'] == 'creds'
-
     # Step Creds results with form in Step Link.
     with patch('pyps4_homeassistant.Helper.get_creds',
                return_value=MOCK_CREDS), \
             patch('pyps4_homeassistant.Helper.has_devices',
                   return_value=[{'host-ip': MOCK_HOST}]):
-        result = await flow.async_step_creds('submit')
+        result = await flow.async_step_creds({})
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'link'
 
@@ -69,18 +64,6 @@ async def test_full_flow_implementation(hass):
         assert result['data'][CONF_TOKEN] == MOCK_CREDS
         assert result['data']['devices'] == [MOCK_DEVICE]
         assert result['title'] == MOCK_TITLE
-
-
-async def test_port_bind_pass(hass):
-    """Test that flow continues if can bind to port."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-
-    with patch('pyps4_homeassistant.Helper.port_bind',
-               return_value=None):
-        result = await flow.async_step_user(user_input=None)
-        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert result['step_id'] == 'creds'
 
 
 async def test_port_bind_abort(hass):
@@ -131,7 +114,7 @@ async def test_credential_abort(hass):
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.get_creds', return_value=None):
-        result = await flow.async_step_creds('submit')
+        result = await flow.async_step_creds({})
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == 'credential_error'
 
