@@ -6,6 +6,7 @@ import inspect
 import logging
 import threading
 import traceback
+import time
 from types import (MethodType, FunctionType, GeneratorType)
 from typing import Any, Callable, Optional, Union
 
@@ -171,13 +172,14 @@ def log_it(
     func: Union[MethodType, FunctionType, GeneratorType],
 ) -> Union[MethodType, FunctionType, GeneratorType]:
     """
-    Logs the function call if the supplied level is set.
+    Logs the function call.
 
     :param func: callable object.
     :type func: Union[MethodType, FunctionType, GeneratorType]
     :return: either the callable object or a wrapper.
     :rtype: Union[MethodType, FunctionType, GeneratorType]
     """
+
     if func.__code__.co_flags & 0x20:
         return func
 
@@ -186,7 +188,6 @@ def log_it(
 
         func_name, arg_string = _func_arg_string(func, args, kwargs)
         logger.debug(func_name + arg_string)
-
         return func(*args, **kwargs)
 
     return update_wrapper(wrapper, func)
@@ -196,7 +197,7 @@ def log_it_with_return(
     func: Union[MethodType, FunctionType, GeneratorType],
 ) -> Union[MethodType, FunctionType, GeneratorType]:
     """
-    Logs the function call abd return data if the supplied level is set.
+    Logs the function call and return data.
 
     :param func: callable object
     :type func: Union[MethodType, FunctionType, GeneratorType]
@@ -212,10 +213,64 @@ def log_it_with_return(
 
         func_name, arg_string = _func_arg_string(func, args, kwargs)
         logger.debug(func_name + arg_string)
+
         result = func(*args, **kwargs)
-        logger.debug(func_name + " => " + repr(result))
+        logger.debug('{0} => {1}'.format(func_name, repr(result)))
 
         return result
+
+
+    return update_wrapper(wrapper, func)
+
+
+def log_it_with_timer(
+    func: Union[MethodType, FunctionType, GeneratorType],
+) -> Union[MethodType, FunctionType, GeneratorType]:
+    """
+    Logs the function call and return data with timing the call.
+
+    :param func: callable object
+    :type func: Union[MethodType, FunctionType, GeneratorType]
+    :return: either the callable object or a wrapper
+    :rtype: Union[MethodType, FunctionType, GeneratorType]
+    """
+
+    if func.__code__.co_flags & 0x20:
+        return func
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        logger = logging.getLogger(func.__module__)
+
+        func_name, arg_string = _func_arg_string(func, args, kwargs)
+        logger.debug(func_name + arg_string)
+
+        start = time.time()
+        result = func(*args, **kwargs)
+        stop = time.time()
+
+        resolutions = (
+            (1, 'sec'),
+            (1000, 'ms'),
+            (1000000, 'μs'),
+            (1000000000, 'ns'),
+        )
+
+        for divider, suffix in resolutions:
+            duration = int(round((stop - start) / divider))
+            if duration > 0:
+                break
+        else:
+            duration = 'unknown'
+            suffix = ''
+
+        logger.debug(
+            'duration: {0} {1} - {2} => {3}'.format(
+                duration,
+                suffix,
+                func_name,
+                repr(result)
+            )
+        )
 
     return update_wrapper(wrapper, func)
 
@@ -247,6 +302,7 @@ def _func_arg_string(
     :return: string representation of the function and supplied arguments
     :rtype: tuple(str, str)
     """
+
     class_name = ""
     arg_names = inspect.getfullargspec(func)[0]
     start = 0
