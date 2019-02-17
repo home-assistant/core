@@ -64,7 +64,7 @@ def setup_platform(_hass, config, add_entities, _discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     try:
         bridge = lightify.Lightify(host, log_level=logging.DEBUG)
     except socket.error as err:
@@ -86,7 +86,7 @@ def setup_bridge(bridge, add_entities, config):
         """Update the lights objects with the latest info from the bridge."""
         try:
             new_lights = bridge.update_all_light_status(
-                config.get(CONF_INTERVAL_LIGHTIFY_STATUS))
+                config[CONF_INTERVAL_LIGHTIFY_STATUS])
             lights_changed = bridge.lights_changed()
         except TimeoutError:
             _LOGGER.error("Timeout during updating of lights")
@@ -95,13 +95,13 @@ def setup_bridge(bridge, add_entities, config):
             _LOGGER.error("OSError during updating of lights")
             return 0
 
-        if new_lights and config.get(CONF_ALLOW_LIGHTIFY_NODES):
+        if new_lights and config[CONF_ALLOW_LIGHTIFY_NODES]:
             new_entities = []
             for addr, light in new_lights.items():
                 if ((light.devicetype().name == 'SENSOR'
-                     and not config.get(CONF_ALLOW_LIGHTIFY_SENSORS)) or
+                     and not config[CONF_ALLOW_LIGHTIFY_SENSORS]) or
                         (light.devicetype().name == 'SWITCH'
-                         and not config.get(CONF_ALLOW_LIGHTIFY_SWITCHES))):
+                         and not config[CONF_ALLOW_LIGHTIFY_SWITCHES])):
                     continue
 
                 if addr not in lights:
@@ -121,9 +121,9 @@ def setup_bridge(bridge, add_entities, config):
         lights_changed = update_lights()
 
         try:
-            bridge.update_scene_list(config.get(CONF_INTERVAL_LIGHTIFY_CONF))
+            bridge.update_scene_list(config[CONF_INTERVAL_LIGHTIFY_CONF])
             new_groups = bridge.update_group_list(
-                config.get(CONF_INTERVAL_LIGHTIFY_CONF))
+                config[CONF_INTERVAL_LIGHTIFY_CONF])
             groups_updated = bridge.groups_updated()
         except TimeoutError:
             _LOGGER.error("Timeout during updating of scenes/groups")
@@ -155,7 +155,7 @@ def setup_bridge(bridge, add_entities, config):
         return max(lights_changed, groups_updated)
 
     update_lights()
-    if config.get(CONF_ALLOW_LIGHTIFY_GROUPS):
+    if config[CONF_ALLOW_LIGHTIFY_GROUPS]:
         update_groups()
 
 
