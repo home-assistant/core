@@ -18,7 +18,7 @@ SENSOR = {
         "type": "ZHAThermostat",
         "state": {"on": True, "temperature": 2260},
         "config": {"battery": 100, "heatsetpoint": 2200, "mode": "auto",
-                   "offset": 10, "valve": 30},
+                   "offset": 10, "reachable": True, "valve": 30},
         "uniqueid": "00:00:00:00:00:00:00:00-00"
     },
     "2": {
@@ -105,6 +105,30 @@ async def test_climate_devices(hass):
         'entity_id': 'climate.climate_1_name',
         'temperature': 20
     }, blocking=True)
+
+
+async def test_verify_state_update(hass):
+    """Test that state update properly."""
+    await setup_gateway(hass, {"sensors": SENSOR})
+    assert "climate.climate_1_name" in hass.data[deconz.DOMAIN].deconz_ids
+
+    thermostat = hass.states.get('climate.climate_1_name')
+    assert thermostat.state == 'on'
+
+    state_update = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "config": {"on": False}
+    }
+    hass.data[deconz.DOMAIN].api.async_event_handler(state_update)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    thermostat = hass.states.get('climate.climate_1_name')
+    assert thermostat.state == 'off'
 
 
 async def test_add_new_climate_device(hass):
