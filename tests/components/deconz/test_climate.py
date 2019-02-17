@@ -93,18 +93,33 @@ async def test_climate_devices(hass):
     hass.data[deconz.DOMAIN].api.sensors['1'].async_update(
         {'state': {'on': False}})
 
-    await hass.services.async_call('climate', 'turn_on', {
-        'entity_id': 'climate.climate_1_name'
-    }, blocking=True)
+    await hass.services.async_call(
+        'climate', 'turn_on', {'entity_id': 'climate.climate_1_name'},
+        blocking=True
+    )
+    hass.data[deconz.DOMAIN].api.session.put.assert_called_with(
+        'http://1.2.3.4:80/api/ABCDEF/sensors/1/config',
+        data='{"mode": "auto"}'
+    )
 
-    await hass.services.async_call('climate', 'turn_off', {
-        'entity_id': 'climate.climate_1_name'
-    }, blocking=True)
+    await hass.services.async_call(
+        'climate', 'turn_off', {'entity_id': 'climate.climate_1_name'},
+        blocking=True
+    )
+    hass.data[deconz.DOMAIN].api.session.put.assert_called_with(
+        'http://1.2.3.4:80/api/ABCDEF/sensors/1/config',
+        data='{"mode": "off"}'
+    )
 
-    await hass.services.async_call('climate', 'set_temperature', {
-        'entity_id': 'climate.climate_1_name',
-        'temperature': 20
-    }, blocking=True)
+    await hass.services.async_call(
+        'climate', 'set_temperature',
+        {'entity_id': 'climate.climate_1_name', 'temperature': 20},
+        blocking=True
+    )
+    hass.data[deconz.DOMAIN].api.session.put.assert_called_with(
+        'http://1.2.3.4:80/api/ABCDEF/sensors/1/config',
+        data='{"heatsetpoint": 2000.0}'
+    )
 
     assert len(hass.data[deconz.DOMAIN].api.session.put.mock_calls) == 3
 
