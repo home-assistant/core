@@ -13,7 +13,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (CONF_URL, CONF_ACCESS_TOKEN,
-                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL)
+                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
+                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +33,13 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
             vol.Optional(CONF_UPDATE_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_SCAN_INTERVAL):
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
                 vol.All(cv.time_period, cv.positive_timedelta),
         }),
         cv.deprecated(
             CONF_UPDATE_INTERVAL,
             replacement_key=CONF_SCAN_INTERVAL,
-            invalidation_version='1.0.0',
+            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
             default=DEFAULT_INTERVAL
         )
     )

@@ -606,7 +606,8 @@ def deprecated(key: str,
         else:
             value = default
         if (replacement_key
-                and replacement_key not in config
+                and (replacement_key not in config
+                     or default == config.get(replacement_key))
                 and value is not None):
             config[replacement_key] = value
 
