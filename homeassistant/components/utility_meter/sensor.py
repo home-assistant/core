@@ -90,9 +90,9 @@ class UtilityMeterSensor(RestoreEntity):
     @callback
     def async_reading(self, entity, old_state, new_state):
         """Handle the sensor state changes."""
-        if any([old_state is None, new_state is None]) or\
-            any([old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
-                 new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
+        if old_state is None or new_state is None or\
+                old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE] or\
+                new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             return
 
         if self._unit_of_measurement is None and\
