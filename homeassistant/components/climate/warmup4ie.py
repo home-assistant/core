@@ -1,6 +1,4 @@
-r"""
-platform that offers a connection to a warmup4ie device.
-"""
+"""platform that offers a connection to a warmup4ie device."""
 
 import logging
 
@@ -62,7 +60,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     add_entities(
-        [Warmup4IE(hass, name, device, user, password, location, room, target_temp)])
+        [Warmup4IE(hass, name, device, user, password, location, room,
+                   target_temp)])
 
 
 class Warmup4IE(ClimateDevice):
