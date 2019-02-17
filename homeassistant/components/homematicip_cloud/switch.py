@@ -50,8 +50,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))
         elif isinstance(device, OpenCollector8Module):
-            for index in range(0, 7):
-                device.append(HomematicipMultiSwitch(home, device, index))
+            for index in range(1, 9):
+                devices.append(HomematicipMultiSwitch(home, device, index))
 
     if devices:
         async_add_entities(devices)
@@ -94,18 +94,23 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
         return round(self._device.energyCounter)
 
 
-class HomematicipMultiSwitch(HomematicipSwitch):
+class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     """Representation of a HomematicIP Cloud multi switch device."""
 
-    def __init__(self, home, device, channelIndex):
-        """Initialize the switch device."""
-        self.channelIndex = channelIndex
-        super().__init__(home, device, 'channel{}'.format(channelIndex))
+    def __init__(self, home, device, index):
+        """Initialize the multi switch device."""
+        self.channelIndex = index
+        super().__init__(home, device, 'channel{}'.format(index))
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._device.on
+        return self._device.on[self.channelIndex]
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
@@ -114,11 +119,3 @@ class HomematicipMultiSwitch(HomematicipSwitch):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._device.turn_off(self.channelIndex)
-
-
-def getHomematicIPOpenCollector8(home, device, index):
-    """Initialize the 8 channel open collector switch device."""
-    self.channels = []
-    for index in range(0, 7):
-        self.channels.append(HomematicipMultiSwitch(home, device, index))
-    return channels
