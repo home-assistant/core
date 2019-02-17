@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
     CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL)
+    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -54,12 +54,12 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     api = API(hass.loop, session, config[CONF_USERNAME], config[CONF_PASSWORD],
               config[CONF_HOST], config[CONF_PORT], config[CONF_SSL])
-    
+
     scanner = TraccarScanner(
         api, hass, async_see,
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
         config.get(CONF_MONITORED_CONDITIONS, []))
-    
+
     return await scanner.async_init()
 
 
