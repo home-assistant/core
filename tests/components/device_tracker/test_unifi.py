@@ -2,7 +2,7 @@
 from unittest import mock
 from pyunifi.controller import APIError
 import homeassistant.util.dt as dt_util
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 import pytest
@@ -241,7 +241,8 @@ def test_monitored_conditions():
          'hostname': 'foobar',
          'essid': 'barnet',
          'signal': -60,
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+         'last_seen': dt_util.as_timestamp(dt_util.utcnow()),
+         'latest_assoc_time': 946684800.0},
         {'mac': '234',
          'name': 'Nice Name',
          'essid': 'barnet',
@@ -254,9 +255,14 @@ def test_monitored_conditions():
     ]
     ctrl.get_clients.return_value = fake_clients
     scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
-                                 ['essid', 'signal'])
-    assert scanner.get_extra_attributes('123') == {'essid': 'barnet',
-                                                   'signal': -60}
-    assert scanner.get_extra_attributes('234') == {'essid': 'barnet',
-                                                   'signal': -42}
+                                 ['essid', 'signal','latest_assoc_time'])
+    assert scanner.get_extra_attributes('123') == {
+        'essid': 'barnet',
+        'signal': -60,
+        'latest_assoc_time': datetime(2000, 1, 1, 0, 0, tzinfo=dt_util.UTC)
+    }
+    assert scanner.get_extra_attributes('234') == {
+        'essid': 'barnet',
+        'signal': -42
+    }
     assert scanner.get_extra_attributes('456') == {'essid': 'barnet'}
