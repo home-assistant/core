@@ -606,7 +606,7 @@ kiwiki-client==0.1.1
 konnected==0.1.4
 
 # homeassistant.components.eufy
-lakeside==0.11
+lakeside==0.12
 
 # homeassistant.components.owntracks
 libnacl==1.6.1
