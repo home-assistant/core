@@ -90,6 +90,7 @@ TEST_REQUIREMENTS = (
     'pynx584',
     'pyopenuv',
     'pyotp',
+    'pyps4-homeassistant',
     'pysmartapp',
     'pysmartthings',
     'pysonos',
