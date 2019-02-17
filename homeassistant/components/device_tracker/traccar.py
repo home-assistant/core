@@ -32,6 +32,7 @@ ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -40,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=8082): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
 })
 
 
@@ -52,7 +52,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     api = API(hass.loop, session, config[CONF_USERNAME], config[CONF_PASSWORD],
               config[CONF_HOST], config[CONF_PORT], config[CONF_SSL])
-    scanner = TraccarScanner(api, hass, async_see, config[CONF_SCAN_INTERVAL])
+    scanner = TraccarScanner(api, hass, async_see, config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL))
     return await scanner.async_init()
 
 
