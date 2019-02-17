@@ -226,20 +226,14 @@ class LeafDataStore:
             interval = RESTRICTED_INTERVAL
         else:
             intervals = [base_interval]
-            _LOGGER.debug("Could use base interval=%s", base_interval)
 
             if self.data[DATA_CHARGING]:
                 intervals.append(charging_interval)
-                _LOGGER.debug("Could use charging interval=%s",
-                              charging_interval)
 
             if self.data[DATA_CLIMATE]:
                 intervals.append(climate_interval)
-                _LOGGER.debug(
-                    "Could use climate interval=%s", climate_interval)
 
             interval = min(intervals)
-            _LOGGER.debug("Resulting interval=%s", interval)
 
         return utcnow() + interval
 
@@ -308,12 +302,10 @@ class LeafDataStore:
                     _LOGGER.debug("Empty Location Response Received")
                     self.data[DATA_LOCATION] = None
                 else:
-                    _LOGGER.debug("Got location data for Leaf")
-                    self.data[DATA_LOCATION] = location_response
-                    self.last_location_response = utcnow()
-
                     _LOGGER.debug("Location Response: %s",
                                   location_response.__dict__)
+                    self.data[DATA_LOCATION] = location_response
+                    self.last_location_response = utcnow()
             except CarwingsError:
                 _LOGGER.error("Error fetching location info")
 
