@@ -125,7 +125,7 @@ async def async_setup_entry(hass, entry):
         sw_version=config.swversion,
     )
 
-    if config.swupdatebridgestate == "readytoinstall":
+    if config.swupdate2_bridge_state == "readytoinstall":
         err = (
             "Please check for software updates of the bridge "
             "in the Philips Hue App."
