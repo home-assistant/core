@@ -1,8 +1,8 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
-import asyncio
 from datetime import datetime, timedelta
 import logging
 import sys
+import time
 import urllib
 
 import voluptuous as vol
@@ -12,9 +12,9 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['pycarwings2==2.8']
@@ -86,22 +86,22 @@ UPDATE_LEAF_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Nissan Leaf component."""
     import pycarwings2
 
-    async def handle_update(service):
+    def handle_update(service):
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
         vin = service.data.get(ATTR_VIN, '')
 
         if vin in hass.data[DATA_LEAF]:
             data_store = hass.data[DATA_LEAF][vin]
-            await data_store.async_update_data(utcnow())
+            data_store.update_data(utcnow())
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    async def async_setup_leaf(car_config):
+    def setup_leaf(car_config):
         """Set up a car."""
         _LOGGER.debug("Logging into You+Nissan...")
 
@@ -110,15 +110,11 @@ async def async_setup(hass, config):
         region = car_config[CONF_REGION]
         leaf = None
 
-        async def leaf_login():
-            nonlocal leaf
-            sess = pycarwings2.Session(username, password, region)
-            leaf = sess.get_leaf()
-
         try:
             # This might need to be made async (somehow) causes
             # homeassistant to be slow to start
-            await hass.async_add_job(leaf_login)
+            sess = pycarwings2.Session(username, password, region)
+            leaf = sess.get_leaf()
         except(RuntimeError, urllib.error.HTTPError):
             _LOGGER.error(
                 "Unable to connect to Nissan Connect with "
@@ -148,16 +144,15 @@ async def async_setup(hass, config):
             if component != 'device_tracker' or car_config[CONF_NCONNECT]:
                 load_platform(hass, component, DOMAIN, {}, car_config)
 
-        async_track_point_in_utc_time(hass, data_store.async_update_data,
-                                      utcnow() + INITIAL_UPDATE)
+        track_point_in_utc_time(hass, data_store.update_data,
+                                utcnow() + INITIAL_UPDATE)
 
     hass.data[DATA_LEAF] = {}
-    tasks = [async_setup_leaf(car) for car in config[DOMAIN]]
-    if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+    for car in config[DOMAIN]:
+        setup_leaf(car)
 
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_LEAF, handle_update,
-                                 schema=UPDATE_LEAF_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_UPDATE_LEAF, handle_update,
+                           schema=UPDATE_LEAF_SCHEMA)
 
     return True
 
@@ -190,7 +185,7 @@ class LeafDataStore:
         self.last_location_response = None
         self._remove_listener = None
 
-    async def async_update_data(self, now):
+    def update_data(self, now):
         """Update data from nissan leaf."""
         # Prevent against a previously scheduled update and an ad-hoc update
         # started from an update from both being triggered.
@@ -201,11 +196,11 @@ class LeafDataStore:
         # Clear next update whilst this update is underway
         self.next_update = None
 
-        await self.async_refresh_data(now)
+        self.refresh_data(now)
         self.next_update = self.get_next_interval()
         _LOGGER.debug("Next update=%s", self.next_update)
-        self._remove_listener = async_track_point_in_utc_time(
-            self.hass, self.async_update_data, self.next_update)
+        self._remove_listener = track_point_in_utc_time(
+            self.hass, self.update_data, self.next_update)
 
     def get_next_interval(self):
         """Calculate when the next update should occur."""
@@ -237,7 +232,7 @@ class LeafDataStore:
 
         return utcnow() + interval
 
-    async def async_refresh_data(self, now):
+    def refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
         from pycarwings2 import CarwingsError
 
@@ -251,7 +246,7 @@ class LeafDataStore:
         self.last_check = datetime.today()
         self.request_in_progress = True
 
-        server_response = await self.async_get_battery()
+        server_response = self.get_battery()
 
         if server_response is not None:
             _LOGGER.debug("Server Response: %s", server_response.__dict__)
@@ -279,13 +274,13 @@ class LeafDataStore:
                 self.data[DATA_PLUGGED_IN] = (
                     server_response.is_connected
                 )
-                async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+                dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
                 self.last_battery_response = utcnow()
 
         # Climate response only updated if battery data updated first.
         if server_response is not None:
             try:
-                climate_response = await self.async_get_climate()
+                climate_response = self.get_climate()
                 if climate_response is not None:
                     _LOGGER.debug("Got climate data for Leaf: %s",
                                   climate_response.__dict__)
@@ -296,7 +291,7 @@ class LeafDataStore:
 
         if self.nissan_connect:
             try:
-                location_response = await self.async_get_location()
+                location_response = self.get_location()
 
                 if location_response is None:
                     _LOGGER.debug("Empty Location Response Received")
@@ -310,7 +305,7 @@ class LeafDataStore:
                 _LOGGER.error("Error fetching location info")
 
         self.request_in_progress = False
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+        dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
     @staticmethod
     def _extract_start_date(battery_info):
@@ -321,14 +316,12 @@ class LeafDataStore:
         except KeyError:
             return None
 
-    async def async_get_battery(self):
+    def get_battery(self):
         """Request battery update from Nissan servers."""
         from pycarwings2 import CarwingsError
         try:
             # First, check nissan servers for the latest data
-            start_server_info = await self.hass.async_add_job(
-                self.leaf.get_latest_battery_status
-            )
+            start_server_info = self.leaf.get_latest_battery_status()
 
             # Store the date from the nissan servers
             start_date = self._extract_start_date(start_server_info)
@@ -340,7 +333,7 @@ class LeafDataStore:
 
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
-            request = await self.hass.async_add_job(self.leaf.request_update)
+            request = self.leaf.request_update()
             if not request:
                 _LOGGER.error("Battery update request failed")
                 return None
@@ -349,13 +342,13 @@ class LeafDataStore:
                 _LOGGER.debug(
                     "Waiting %s seconds for battery update (%s) (%s)",
                     PYCARWINGS2_SLEEP, self.leaf.vin, attempt)
-                await asyncio.sleep(PYCARWINGS2_SLEEP)
+                # Not sure of the best way to sleep in sync mode,
+                # used to be asyncio.sleep
+                time.sleep(PYCARWINGS2_SLEEP)
 
                 # Note leaf.get_status_from_update is always returning 0, so
                 # don't try to use it anymore.
-                server_info = await self.hass.async_add_job(
-                    self.leaf.get_latest_battery_status
-                )
+                server_info = self.leaf.get_latest_battery_status()
 
                 latest_date = self._extract_start_date(server_info)
                 _LOGGER.debug("Latest server date=%s", latest_date)
@@ -370,83 +363,78 @@ class LeafDataStore:
             _LOGGER.error("An error occurred getting battery status.")
             return None
 
-    async def async_get_climate(self):
+    def get_climate(self):
         """Request climate data from Nissan servers."""
         from pycarwings2 import CarwingsError
         try:
-            request = await self.hass.async_add_job(
-                self.leaf.get_latest_hvac_status
-            )
-            return request
+            return self.leaf.get_latest_hvac_status()
         except CarwingsError:
             _LOGGER.error(
                 "An error occurred communicating with the car %s",
                 self.leaf.vin)
             return None
 
-    async def async_set_climate(self, toggle):
+    def set_climate(self, toggle):
         """Set climate control mode via Nissan servers."""
         climate_result = None
         if toggle:
             _LOGGER.debug("Requesting climate turn on for %s", self.leaf.vin)
-            request = await self.hass.async_add_job(
-                self.leaf.start_climate_control
-            )
+            request = self.leaf.start_climate_control()
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
                     _LOGGER.debug("Climate data not in yet (%s) (%s). "
                                   "Waiting (%s) seconds", self.leaf.vin,
                                   attempt, PYCARWINGS2_SLEEP)
-                    await asyncio.sleep(PYCARWINGS2_SLEEP)
+                    # Not sure of the best way to sleep in sync mode,
+                    # used to be asyncio.sleep
+                    time.sleep(PYCARWINGS2_SLEEP)
 
-                climate_result = await self.hass.async_add_job(
-                    self.leaf.get_start_climate_control_result, request
-                )
+                climate_result = self.leaf.get_start_climate_control_result(
+                    request)
 
                 if climate_result is not None:
                     break
 
         else:
             _LOGGER.debug("Requesting climate turn off for %s", self.leaf.vin)
-            request = await self.hass.async_add_job(
-                self.leaf.stop_climate_control
-            )
+            request = self.leaf.stop_climate_control()
 
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
                     _LOGGER.debug("Climate data not in yet. (%s) (%s). "
                                   "Waiting %s seconds", self.leaf.vin,
                                   attempt, PYCARWINGS2_SLEEP)
-                    await asyncio.sleep(PYCARWINGS2_SLEEP)
+                    # Not sure of the best way to sleep in sync mode,
+                    # used to be asyncio.sleep
+                    time.sleep(PYCARWINGS2_SLEEP)
 
-                climate_result = await self.hass.async_add_job(
-                    self.leaf.get_stop_climate_control_result, request
-                )
+                climate_result = self.leaf.get_stop_climate_control_result(
+                    request)
 
                 if climate_result is not None:
                     break
 
         if climate_result is not None:
             _LOGGER.debug("Climate result: %s", climate_result.__dict__)
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+            dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
             return climate_result.is_hvac_running == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
 
-    async def async_get_location(self):
+    def get_location(self):
         """Get location from Nissan servers."""
-        request = await self.hass.async_add_job(self.leaf.request_location)
+        request = self.leaf.request_location()
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
                 _LOGGER.debug("Location data not in yet. (%s) (%s). "
                               "Waiting %s seconds", self.leaf.vin,
                               attempt, PYCARWINGS2_SLEEP)
-                await asyncio.sleep(PYCARWINGS2_SLEEP)
+                # Not sure of the best way to sleep in sync mode,
+                # used to be asyncio.sleep
+                time.sleep(PYCARWINGS2_SLEEP)
 
-            location_status = await self.hass.async_add_job(
-                self.leaf.get_status_from_location, request
-            )
+            location_status = self.leaf.get_status_from_location(request)
 
             if location_status is not None:
                 _LOGGER.debug("Location_status=%s", location_status.__dict__)
@@ -454,20 +442,20 @@ class LeafDataStore:
 
         return location_status
 
-    async def async_start_charging(self):
+    def start_charging(self):
         """Request start charging via Nissan servers."""
         # Send the command to request charging is started to Nissan servers.
         # If that completes OK then trigger a fresh update to pull the
         # charging status from the car after waiting a minute for the
         # charging request to reach the car.
-        result = await self.hass.async_add_job(self.leaf.start_charging)
+        result = self.leaf.start_charging()
         if result:
             _LOGGER.debug("Start charging sent, "
                           "request updated data in 1 minute")
             check_charge_at = utcnow() + timedelta(minutes=1)
             self.next_update = check_charge_at
-            async_track_point_in_utc_time(
-                self.hass, self.async_update_data, check_charge_at)
+            track_point_in_utc_time(
+                self.hass, self.update_data, check_charge_at)
 
 
 class LeafEntity(Entity):
@@ -495,10 +483,10 @@ class LeafEntity(Entity):
             'vin': self.car.leaf.vin,
         }
 
-    async def async_added_to_hass(self):
+    def added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
 
     @callback
