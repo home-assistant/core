@@ -40,6 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
             add_entities([NetatmoCamera(data, camera_name, home,
                                         camera_type, verify_ssl)])
+        data.get_persons()
     except pyatmo.NoDevice:
         return None
 
