@@ -247,7 +247,7 @@ class PersonManager:
         if any(person for person
                in chain(self.storage_data.values(),
                         self.config_data.values())
-               if person[CONF_USER_ID] == user_id):
+               if person.get(CONF_USER_ID) == user_id):
             raise ValueError("User already taken")
 
     async def _user_removed(self, event: Event):
@@ -417,7 +417,7 @@ def ws_list_person(hass: HomeAssistantType,
 
 @websocket_api.websocket_command({
     vol.Required('type'): 'person/create',
-    vol.Required('name'): str,
+    vol.Required('name'): vol.All(str, vol.Length(min=1)),
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional('device_trackers', default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
@@ -428,18 +428,22 @@ async def ws_create_person(hass: HomeAssistantType,
                            connection: websocket_api.ActiveConnection, msg):
     """Create a person."""
     manager = hass.data[DOMAIN]  # type: PersonManager
-    person = await manager.async_create_person(
-        name=msg['name'],
-        user_id=msg.get('user_id'),
-        device_trackers=msg['device_trackers']
-    )
-    connection.send_result(msg['id'], person)
+    try:
+        person = await manager.async_create_person(
+            name=msg['name'],
+            user_id=msg.get('user_id'),
+            device_trackers=msg['device_trackers']
+        )
+        connection.send_result(msg['id'], person)
+    except ValueError as err:
+        connection.send_error(
+            msg['id'], websocket_api.const.ERR_INVALID_FORMAT, str(err))
 
 
 @websocket_api.websocket_command({
     vol.Required('type'): 'person/update',
     vol.Required('person_id'): str,
-    vol.Optional('name'): str,
+    vol.Required('name'): vol.All(str, vol.Length(min=1)),
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
@@ -455,8 +459,12 @@ async def ws_update_person(hass: HomeAssistantType,
         if key in msg:
             changes[key] = msg[key]
 
-    person = await manager.async_update_person(msg['person_id'], **changes)
-    connection.send_result(msg['id'], person)
+    try:
+        person = await manager.async_update_person(msg['person_id'], **changes)
+        connection.send_result(msg['id'], person)
+    except ValueError as err:
+        connection.send_error(
+            msg['id'], websocket_api.const.ERR_INVALID_FORMAT, str(err))
 
 
 @websocket_api.websocket_command({
