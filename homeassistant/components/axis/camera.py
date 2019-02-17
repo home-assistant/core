@@ -5,11 +5,11 @@ from homeassistant.components.axis.const import (
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.const import (
-    CONF_AUTHENTICATION, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD,
-    CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
+    CONF_AUTHENTICATION, CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME,
+    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import CONF_DEVICE, DOMAIN as AXIS_DOMAIN
+from .const import DOMAIN as AXIS_DOMAIN
 
 DEPENDENCIES = [AXIS_DOMAIN]
 

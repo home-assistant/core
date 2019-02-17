@@ -1,5 +1,4 @@
 """Constants for the Axis component."""
-
 import logging
 
 LOGGER = logging.getLogger('homeassistant.components.axis')

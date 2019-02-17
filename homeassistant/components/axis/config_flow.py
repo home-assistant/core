@@ -1,5 +1,4 @@
 """Config flow to configure Axis devices."""
-
 from collections import OrderedDict
 
 import voluptuous as vol
