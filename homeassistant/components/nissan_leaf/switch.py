@@ -56,6 +56,9 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False
 
+    # @MartinHjelmare would like removed - think provides nice UI feedback 
+    # for switch.
+    # Think VolvoOnCall component hase different icons for the switches.
     @property
     def icon(self):
         """Climate control icon."""
@@ -72,6 +75,9 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         """Switch name."""
         return "{} {}".format(self.car.leaf.nickname, "Charging Status")
 
+    # @MartinHjelmare would like removed - think provides nice UI feedback
+    # for switch
+    # Think VolvoOnCall component hase different icons for the switches.
     @property
     def icon(self):
         """Charging switch icon."""
@@ -89,6 +95,13 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         if await self.car.async_start_charging():
             self.car.data[DATA_CHARGING] = True
 
+    # @MartinHjelmare says should be removed if we don't support it.
+    #                 Maybe it should be a scene?
+    # Unsure if better to provide as a sensor for the state, and a service to
+    # start a charge, e.g.
+    # - service: nissan_leaf.start_charging
+    #   data:
+    #     vin: XXXXXXXXXX
     def turn_off(self, **kwargs):
         """Nissan API doesn't allow stopping of charge remotely."""
         _LOGGER.info(
