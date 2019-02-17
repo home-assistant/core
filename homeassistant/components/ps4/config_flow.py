@@ -48,7 +48,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if failed in ports:
             reason = PORT_MSG[failed]
             return self.async_abort(reason=reason)
-        return await self.async_step_creds(user_input)
+        return await self.async_step_creds()
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
