@@ -219,7 +219,6 @@ def log_it_with_return(
 
         return result
 
-
     return update_wrapper(wrapper, func)
 
 
