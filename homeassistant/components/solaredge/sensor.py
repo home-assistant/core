@@ -379,20 +379,16 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         self.unit = ''
 
-
     @Throttle(POWER_FLOW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
         from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
-            #data = self.api.get_current_power_flow(self.site_idl
-        
-                       
+            # data = self.api.get_current_power_flow(self.site_idl
             r = requests.get('http://localhost/currentPowerFlow/2')
             r.raise_for_status()
             data = r.json()
-
 
             power_flow = data['siteCurrentPowerFlow']
         except KeyError:
@@ -401,10 +397,10 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         except (ConnectTimeout, HTTPError):
             _LOGGER.error("Could not retrieve data, skipping update")
             return
-        
+
         power_from = []
         power_to = []
-        
+
         for connection in power_flow['connections']:
             power_from.append(connection['from'].lower())
             power_to.append(connection['to'].lower())
@@ -417,18 +413,19 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
             if key in ['LOAD', 'PV', 'GRID', 'STORAGE']:
                 self.data[key] = value['currentPower']
                 self.attributes[key] = {'status': value['status']}
-            
+
             if key in ['GRID']:
                 export = key.lower() in power_to
                 self.data[key] *= -1 if export else 1
-                self.attributes[key]['flow'] = 'export' if export else 'import'  
-            
+                self.attributes[key]['flow'] = ('export' if export
+                                                else 'import')
+
             if key in ['STORAGE']:
                 charge = key.lower() in power_to
                 self.data[key] *= -1 if charge else 1
-                self.attributes[key]['flow'] = 'charge' if charge else 'discharge'
+                self.attributes[key]['flow'] = ('charge' if charge
+                                                else 'discharge')
                 pass
 
         _LOGGER.debug("Updated SolarEdge power flow: %s, %s",
                       self.data, self.attributes)
-
