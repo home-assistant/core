@@ -100,7 +100,7 @@ async def test_home_accessory(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
 
 
-async def test_battery_service(hass, hk_driver):
+async def test_battery_service(hass, hk_driver, caplog):
     """Test battery service."""
     entity_id = 'homekit.accessory'
     hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
@@ -123,6 +123,13 @@ async def test_battery_service(hass, hk_driver):
     assert acc._char_battery.value == 15
     assert acc._char_low_battery.value == 1
     assert acc._char_charging.value == 2
+
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 'error'})
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 15
+    assert acc._char_low_battery.value == 1
+    assert acc._char_charging.value == 2
+    assert 'ERROR' not in caplog.text
 
     # Test charging
     hass.states.async_set(entity_id, None, {
