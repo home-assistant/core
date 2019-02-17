@@ -6,7 +6,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_UPDATE_INTERVAL
+from homeassistant.const import CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL, \
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -23,17 +24,23 @@ REQUIREMENTS = ['tellduslive==0.10.10']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN:
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(
         vol.Schema({
             vol.Optional(CONF_HOST, default=DOMAIN): cv.string,
-            vol.Optional(CONF_UPDATE_INTERVAL, default=SCAN_INTERVAL):
-            (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
+            vol.Optional(CONF_UPDATE_INTERVAL):
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
+            vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
         }),
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+        cv.deprecated(
+            CONF_UPDATE_INTERVAL,
+            replacement_key=CONF_SCAN_INTERVAL,
+            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+            default=SCAN_INTERVAL
+        )
+    )
+}, extra=vol.ALLOW_EXTRA)
 
 DATA_CONFIG_ENTRY_LOCK = 'tellduslive_config_entry_lock'
 CONFIG_ENTRY_IS_SETUP = 'telldus_config_entry_is_setup'
@@ -102,7 +109,7 @@ async def async_setup(hass, config):
             context={'source': config_entries.SOURCE_IMPORT},
             data={
                 KEY_HOST: config[DOMAIN].get(CONF_HOST),
-                KEY_SCAN_INTERVAL: config[DOMAIN].get(CONF_UPDATE_INTERVAL),
+                KEY_SCAN_INTERVAL: config[DOMAIN][CONF_SCAN_INTERVAL],
             }))
     return True
 
