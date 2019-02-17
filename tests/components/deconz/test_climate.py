@@ -106,6 +106,8 @@ async def test_climate_devices(hass):
         'temperature': 20
     }, blocking=True)
 
+    assert len(hass.data[deconz.DOMAIN].api.session.put.mock_calls) == 3
+
 
 async def test_verify_state_update(hass):
     """Test that state update properly."""
