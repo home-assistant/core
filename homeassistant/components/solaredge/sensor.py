@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(OVERVIEW_SENSOR_TYPES)])
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,20 +147,21 @@ class SolarEdgeSensor(Entity):
 
     def __init__(self, platform_name, sensor_key, data_service):
         """Initialize the sensor."""
+        self.entity_id = '{}.{}'.format(platform_name, sensor_key).lower()
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data_service = data_service
 
         self._state = None
 
-        self._unit_of_measurement = OVERVIEW_SENSOR_TYPES[self.sensor_key][2]
-        self._icon = OVERVIEW_SENSOR_TYPES[self.sensor_key][3]
+        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._icon = SENSOR_TYPES[self.sensor_key][3]
 
     @property
     def name(self):
         """Return the name."""
         return "{} ({})".format(self.platform_name,
-                                OVERVIEW_SENSOR_TYPES[self.sensor_key][1])
+                                SENSOR_TYPES[self.sensor_key][1])
 
     @property
     def unit_of_measurement(self):
@@ -185,7 +186,7 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
         """Initialize the overview sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
@@ -221,7 +222,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         """Initialize the inventory sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
         self._attributes = {}
 
@@ -244,7 +245,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
-        self._json_key = OVERVIEW_SENSOR_TYPES[self.sensor_key][0]
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
         self._attributes = {}
 
