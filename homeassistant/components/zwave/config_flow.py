@@ -12,7 +12,23 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+VENDOR_IDS = (('Aeon Labs Gen5', 'VID_0658'),)
 
+
+def _get_z_stick():
+    import serial.tools.list_ports
+
+    for port in serial.tools.list_ports.comports(include_links=False):
+        if port.vid is None:
+            continue
+        for vendor, vid in VENDOR_IDS:
+            if vid == 'VID_' + hex(port.vid)[2:].zfill(4):
+                if sys.platform.startswith('win'):
+                    return vendor + ' : ' + '\\\\.\\' + port.device
+                else:
+                    return vendor + ' : ' + port.device
+
+                
 @config_entries.HANDLERS.register(DOMAIN)
 class ZwaveFlowHandler(config_entries.ConfigFlow):
     """Handle a Z-Wave config flow."""
@@ -31,9 +47,13 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
         errors = {}
 
+        com = _get_z_stick()
+        if com is None:
+            com = DEFAULT_CONF_USB_STICK_PATH
+
         fields = OrderedDict()
         fields[vol.Required(CONF_USB_STICK_PATH,
-                            default=DEFAULT_CONF_USB_STICK_PATH)] = str
+                            default=com)] = str
         fields[vol.Optional(CONF_NETWORK_KEY)] = str
 
         if user_input is not None:
@@ -44,9 +64,12 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             try:
                 from functools import partial
                 # pylint: disable=unused-variable
+                if ':' in com:
+                    com = com.split(':')[-1].strip()
+
                 option = await self.hass.async_add_executor_job(  # noqa: F841
                     partial(ZWaveOption,
-                            user_input[CONF_USB_STICK_PATH],
+                            com,
                             user_path=self.hass.config.config_dir)
                 )
             except ZWaveException:
