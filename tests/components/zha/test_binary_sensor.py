@@ -11,13 +11,13 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
     """Test zha binary_sensor platform."""
     from zigpy.zcl.clusters.security import IasZone
     from zigpy.zcl.clusters.measurement import OccupancySensing
-    from zigpy.zcl.clusters.general import OnOff, LevelControl
+    from zigpy.zcl.clusters.general import OnOff, LevelControl, Basic
     from zigpy.profiles.zha import DeviceType
 
     # create zigpy devices
     zigpy_device_zone = await async_init_zigpy_device(
         hass,
-        [IasZone.cluster_id],
+        [IasZone.cluster_id, Basic.cluster_id],
         [],
         None,
         zha_gateway
@@ -25,7 +25,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
 
     zigpy_device_remote = await async_init_zigpy_device(
         hass,
-        [],
+        [Basic.cluster_id],
         [OnOff.cluster_id, LevelControl.cluster_id],
         DeviceType.LEVEL_CONTROL_SWITCH,
         zha_gateway,
@@ -36,7 +36,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
 
     zigpy_device_occupancy = await async_init_zigpy_device(
         hass,
-        [OccupancySensing.cluster_id],
+        [OccupancySensing.cluster_id, Basic.cluster_id],
         [],
         None,
         zha_gateway,
