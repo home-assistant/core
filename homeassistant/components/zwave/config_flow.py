@@ -29,7 +29,7 @@ def _get_z_stick():
                 else:
                     return vendor + ' : ' + port.device
 
-                
+
 @config_entries.HANDLERS.register(DOMAIN)
 class ZwaveFlowHandler(config_entries.ConfigFlow):
     """Handle a Z-Wave config flow."""
