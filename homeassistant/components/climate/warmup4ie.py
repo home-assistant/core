@@ -8,20 +8,16 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_ROOM,
+    TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-try:
-    from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
-                                                  SUPPORT_AWAY_MODE,
-                                                  SUPPORT_OPERATION_MODE,
-                                                  SUPPORT_ON_OFF, STATE_AUTO,
-                                                  STATE_MANUAL)
-except ImportError:
-    from homeassistant.components.climate.const import (
-        SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
-        SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
+from homeassistant.components.climate.const import (SUPPORT_TARGET_TEMPERATURE,
+                                                    SUPPORT_AWAY_MODE,
+                                                    SUPPORT_OPERATION_MODE,
+                                                    SUPPORT_ON_OFF, STATE_AUTO,
+                                                    STATE_MANUAL)
 
 
 REQUIREMENTS = ['warmup4ie==0.1.1']
@@ -32,7 +28,6 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
 
 CONF_LOCATION = 'location'
-CONF_ROOM = 'room'
 CONF_TARGET_TEMP = 'target_temp'
 
 
@@ -50,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=no-member
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
     name = config.get(CONF_NAME)
@@ -59,16 +55,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     room = config.get(CONF_ROOM)
     target_temp = config.get(CONF_TARGET_TEMP)
 
+    import warmup4ie
+    device = warmup4ie.Warmup4IEDevice(user, password, location, room,
+                                       target_temp)
+    if device is None or not device.setup_finished:
+        raise PlatformNotReady
+
     add_entities(
-        [Warmup4IE(hass, name, user, password, location, room, target_temp)])
+        [Warmup4IE(hass, name, device, user, password, location, room, target_temp)])
 
 
-# pylint: disable=import-self
-# pylint: disable=no-member
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
 
-    def __init__(self, hass, name, user, password, location,
+    def __init__(self, hass, name, device, user, password, location,
                  room, target_temp):
         """Initialize the climate device."""
         _LOGGER.info("Setting up Warmup4IE component")
@@ -79,12 +79,7 @@ class Warmup4IE(ClimateDevice):
         self._away = False
         self._on = True
         self._current_operation_mode = STATE_MANUAL
-
-        import warmup4ie
-        self._device = warmup4ie.Warmup4IEDevice(
-            user, password, location, room, target_temp)
-        if self._device is None or not self._device.setup_finished:
-            raise PlatformNotReady
+        self._device = device
 
     @property
     def supported_features(self):
