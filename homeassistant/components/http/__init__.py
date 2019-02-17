@@ -277,19 +277,7 @@ class HomeAssistantHTTP:
                 """Serve file from disk."""
                 return web.FileResponse(path)
 
-        # aiohttp supports regex matching for variables. Using that as temp
-        # to work around cache busting MD5.
-        # Turns something like /static/dev-panel.html into
-        # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = os.path.splitext(url_path)
-        if ext:
-            base, file = base.rsplit('/', 1)
-            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
-            url_pattern = "{}/{{filename:{}}}".format(base, regex)
-        else:
-            url_pattern = url_path
-
-        self.app.router.add_route('GET', url_pattern, serve_file)
+        self.app.router.add_route('GET', url_path, serve_file)
 
     async def start(self):
         """Start the aiohttp server."""
