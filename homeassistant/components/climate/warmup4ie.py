@@ -1,4 +1,4 @@
-"""
+r"""
 platform that offers a connection to a warmup4ie device.
 
 this platform is inspired by the following code:
@@ -84,13 +84,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(
         [Warmup4IE(hass, name, user, password, location, room, target_temp)])
 
+
 # pylint: disable=abstract-method
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=import-self
 # pylint: disable=no-member
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
-    #pylint: disable-msg=too-many-arguments
+
+    # pylint: disable-msg=too-many-arguments
     def __init__(self, hass, name, user, password, location,
                  room, target_temp):
         """Initialize the climate device."""
@@ -185,8 +187,11 @@ class Warmup4IE(ClimateDevice):
         self._device.set_temperature_to_manual()
 
     def set_operation_mode(self, operation_mode):
-        """Set new target operation mode.
-        Switch device on if was previously off"""
+        """
+        Set new target operation mode.
+
+        Switch device on if was previously off
+        """
         if not self.is_on:
             self._on = True
         if operation_mode == STATE_AUTO:
