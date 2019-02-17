@@ -97,8 +97,7 @@ async def async_setup(hass, config):
 
         if vin in hass.data[DATA_LEAF]:
             data_store = hass.data[DATA_LEAF][vin]
-            async_track_point_in_utc_time(
-                hass, data_store.async_update_data, utcnow())
+            await data_store.async_update_data(utcnow())
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
