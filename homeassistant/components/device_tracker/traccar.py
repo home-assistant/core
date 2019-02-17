@@ -58,7 +58,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     scanner = TraccarScanner(
         api, hass, async_see,
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
-        config.get(CONF_MONITORED_CONDITIONS))
+        config[CONF_MONITORED_CONDITIONS])
 
     return await scanner.async_init()
 
