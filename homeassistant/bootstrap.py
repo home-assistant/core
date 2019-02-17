@@ -192,6 +192,23 @@ async def async_from_config_dict(config: Dict[str, Any],
             '\n\n'.join(msg), "Config Warning", "config_warning"
         )
 
+    # TEMP: warn users of invalid extra keys
+    # Remove after 0.92
+    if cv.INVALID_EXTRA_KEYS_FOUND:
+        msg = []
+        msg.append(
+            "Your configuration contains extra keys "
+            "that the platform does not support (but were silently "
+            "accepted before 0.88). Please find and remove the following."
+            "This will become a breaking change."
+        )
+        msg.append('\n'.join('- {}'.format(it)
+                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
+
+        hass.components.persistent_notification.async_create(
+            '\n\n'.join(msg), "Config Warning", "config_warning"
+        )
+
     return hass
 
 
