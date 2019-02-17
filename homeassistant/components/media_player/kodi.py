@@ -184,10 +184,17 @@ async def async_setup_platform(hass, config, async_add_entities,
         if properties is not None:
             unique_id = properties.get('uuid', None)
 
+    # Skip unresolvable hosts. This has been previously "handled"
+    # by an unhanled exception thrown by socket.gethostbyname()
+    try:
+        socket.getaddrinfo(host, port)
+    except socket.gaierror as exc:
+        _LOGGER.error("Can't resolve hostname '%s', skipping: %r", host, exc)
+        return
+
     # Only add a device once, so discovered devices do not override manual
     # config.
-    ip_addr = socket.gethostbyname(host)
-    if ip_addr in hass.data[DATA_KODI]:
+    if host in hass.data[DATA_KODI]:
         return
 
     # If we got an unique id, check that it does not exist already.
@@ -209,7 +216,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         timeout=config.get(CONF_TIMEOUT), websocket=websocket,
         unique_id=unique_id)
 
-    hass.data[DATA_KODI][ip_addr] = entity
+    hass.data[DATA_KODI][host] = entity
     async_add_entities([entity], update_before_add=True)
 
     async def async_service_handler(service):
