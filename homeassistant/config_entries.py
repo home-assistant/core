@@ -528,20 +528,18 @@ class ConfigEntries:
     def async_update_entry(
             self, entry: ConfigEntry, *,
             data: Optional[dict] = _UNDEF,
-            options: Optional[dict] = None) -> None:
+            options: Optional[dict] = _UNDEF) -> None:
         """Update a config entry."""
-        if data is _UNDEF and not options:
-            return
-
         if data is not _UNDEF:
             entry.data = data
 
-        if options:
+        if options is not _UNDEF:
             entry.options = options
 
-        for listener_ref in entry.update_listeners:
-            listener = listener_ref()
-            self.hass.async_create_task(listener(self.hass, entry))
+        if data is not _UNDEF or options is not _UNDEF:
+            for listener_ref in entry.update_listeners:
+                listener = listener_ref()
+                self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 
