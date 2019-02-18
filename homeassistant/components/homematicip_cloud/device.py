@@ -17,6 +17,7 @@ ATTR_HOME_NAME = 'home_name'
 ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MODEL_TYPE = 'model_type'
 ATTR_OPERATION_LOCK = 'operation_lock'
+ATTR_PEER_RSSI = 'peer_rssi'
 ATTR_SABOTAGE = 'sabotage'
 ATTR_STATUS_UPDATE = 'status_update'
 ATTR_UNREACHABLE = 'unreachable'
@@ -83,4 +84,14 @@ class HomematicipGenericDevice(Entity):
             attr.update({ATTR_LOW_BATTERY: self._device.lowBat})
         if hasattr(self._device, 'sabotage') and self._device.sabotage:
             attr.update({ATTR_SABOTAGE: self._device.sabotage})
+        if hasattr(self._device, 'rssiDeviceValue') and \
+                self._device.rssiDeviceValue:
+            attr.update({ATTR_DEVICE_RSSI: self._device.rssiDeviceValue})
+        if hasattr(self._device, 'rssiPeerValue') and \
+                self._device.rssiPeerValue:
+            attr.update({ATTR_PEER_RSSI: self._device.rssiPeerValue})
+        if hasattr(self._device, 'unreach') and self._device.unreach:
+            attr.update({ATTR_UNREACHABLE: self._device.unreach})
+        if hasattr(self._device, 'dutyCycle') and self._device.dutyCycle:
+            attr.update({ATTR_DUTY_CYCLE: True})
         return attr
