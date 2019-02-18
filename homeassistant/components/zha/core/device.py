@@ -15,9 +15,9 @@ from .const import (
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS
+    QUIRK_CLASS, LISTENER_BASIC
 )
-from .listeners import EventRelayListener
+from .listeners import EventRelayListener, BasicListener
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,7 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
+        self.power_source = None
 
     @property
     def name(self):
@@ -177,6 +178,13 @@ class ZHADevice:
         """Initialize listeners."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_listener_tasks('async_initialize', from_cache)
+        self.power_source = self.cluster_listeners.get(
+            LISTENER_BASIC).get_power_source()
+        _LOGGER.debug(
+            '%s: power source: %s',
+            self.name,
+            BasicListener.POWER_SOURCES.get(self.power_source)
+        )
         _LOGGER.debug('%s: completed initialization', self.name)
 
     async def _execute_listener_tasks(self, task_name, *args):
