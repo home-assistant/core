@@ -1,4 +1,5 @@
 """
+Provie animtaed GIF loops of BOM radar imagery.
 
 This component provides animated GIF images of weather-radar imagery derived
 the Australian Bureau of Meteorology (http://www.bom.gov.au/australia/radar/),
@@ -43,7 +44,6 @@ BOM loops, and 600 seconds (10 minutes) for 4-frame loops). If the 'id'
 parameter is specified, 'frames' and 'delta' values MUST be provided; if
 'location' is specified, 'frames' and 'delta' MAY be provided to override the
 default values from the RADARS dict.
-
 """
 
 import datetime as dt
@@ -130,7 +130,8 @@ locs = sorted(RADARS.keys())
 badloc = "Set 'location' to one of: {}".format(', '.join(locs))
 logger = logging.getLogger(__name__)
 
-def validate_schema(cfg):
+
+def _validate_schema(cfg):
     msg0 = "Specify either 'id' or 'location', not both"
     msg1 = "Specify 'id', 'delta' and 'frames' when 'location' is unspecified"
     if cfg.get('location'):
@@ -141,6 +142,7 @@ def validate_schema(cfg):
             raise Invalid(msg1)
     return cfg
 
+
 PLATFORM_SCHEMA = All(PLATFORM_SCHEMA.extend({
     Optional(CONF_DELTA): cv.positive_int,
     Optional(CONF_OUTFN): cv.string,
@@ -148,7 +150,7 @@ PLATFORM_SCHEMA = All(PLATFORM_SCHEMA.extend({
     Optional(CONF_ID): cv.positive_int,
     Optional(CONF_LOC): All(In(locs), msg=badloc),
     Optional(CONF_NAME): cv.string,
-}), validate_schema)
+}), _validate_schema)
 
 
 def log(msg):
@@ -172,7 +174,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         location = "ID {}".format(radar_id)
     name = config.get(CONF_NAME) or "BOM Radar Loop - {}".format(location)
     outfn = config.get(CONF_OUTFN)
-    bomradarloop = BOMRadarLoop(hass, location, delta, frames, radar_id, name, outfn)
+    bomradarloop = BOMRadarLoop(
+        hass,
+        location,
+        delta,
+        frames,
+        radar_id,
+        name,
+        outfn
+    )
     add_devices([bomradarloop])
 
 
@@ -203,7 +213,7 @@ class BOMRadarLoop(Camera):
             self._t0 = t1
             self._loop = self.get_loop()
         return self._loop
-        
+
     def get_background(self):
 
         """
