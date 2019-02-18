@@ -92,7 +92,7 @@ def setup(hass, config):
     async def async_handle_update(service):
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
-        vin = service.data.get(ATTR_VIN, '')
+        vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
             data_store = hass.data[DATA_LEAF][vin]
