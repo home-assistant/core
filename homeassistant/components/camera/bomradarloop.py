@@ -196,7 +196,6 @@ class BOMRadarLoop(Camera):
 
         super().__init__()
 
-        self.hass = hass
         self._location = location
         self._delta = delta
         self._frames = frames
