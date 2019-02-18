@@ -493,4 +493,4 @@ class LeafEntity(Entity):
     @callback
     def _update_callback(self):
         """Update the state."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
