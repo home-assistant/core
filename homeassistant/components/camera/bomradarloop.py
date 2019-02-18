@@ -133,14 +133,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _validate_schema(cfg):
-    msg0 = "Specify either 'id' or 'location', not both"
-    msg1 = "Specify 'id', 'delta' and 'frames' when 'location' is unspecified"
     if cfg.get('location'):
         if cfg.get('id'):
-            raise Invalid(msg0)
+            raise Invalid("Specify either 'id' or 'location', not both")
     else:
         if not all([cfg.get('id'), cfg.get('delta'), cfg.get('frames')]):
-            raise Invalid(msg1)
+            raise Invalid(
+                "Specify 'id', 'delta' and 'frames' when 'location'"
+                " is unspecified"
+            )
     return cfg
 
 
