@@ -157,16 +157,8 @@ PLATFORM_SCHEMA = All(PLATFORM_SCHEMA.extend({
 
 def _get_url(path):
     """Return a canonical URL for a suffix path on the BOM website."""
-    _log("Getting URL for path %s", path)
+    LOGGER.info("Getting URL for path %s", path)
     return 'http://www.bom.gov.au/{}'.format(path)
-
-
-def _log(*msg):
-    LOGGER.info(*msg)
-
-
-def _log_error(*msg):
-    LOGGER.error(*msg)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -233,14 +225,23 @@ class BOMRadarLoop(Camera):
         names), and distance-from-radar range markings, and merge into a single
         image.
         """
-        _log("Getting background for %s at %s", self._location, self._t0)
+        LOGGER.info(
+            "Getting background for %s at %s",
+            self._location,
+            self._t0
+        )
         suffix = 'products/radar_transparencies/IDR{}.background.png'
         url = _get_url(suffix.format(self._radar_id))
         background = self.get_image(url)
         if background is None:
             return None
         for layer in ('topography', 'locations', 'range'):
-            _log("Getting %s for %s at %s", layer, self._location, self._t0)
+            LOGGER.info(
+                "Getting %s for %s at %s",
+                layer,
+                self._location,
+                self._t0
+            )
             suffix = 'products/radar_transparencies/IDR{}.{}.png'.format(
                 self._radar_id,
                 layer
@@ -266,7 +267,7 @@ class BOMRadarLoop(Camera):
         list is empty, None is returned; the caller can decide how to handle
         that.
         """
-        _log("Getting frames for %s at %s", self._location, self._t0)
+        LOGGER.info("Getting frames for %s at %s", self._location, self._t0)
         pool0 = multiprocessing.dummy.Pool(self._frames)
         raw = pool0.map(self.get_wximg, self.get_time_strs())
         wximages = [x for x in raw if x is not None]
@@ -292,7 +293,7 @@ class BOMRadarLoop(Camera):
 
     def get_image(self, url):
         """Fetch an image from the BOM."""
-        _log("Getting image %s", url)
+        LOGGER.info("Getting image %s", url)
         response = requests.get(url)
         if response.status_code == 200:
             image = self._pilimg.open(io.BytesIO(response.content))
@@ -301,7 +302,7 @@ class BOMRadarLoop(Camera):
 
     def get_legend(self):
         """Fetch the BOM colorbar legend image."""
-        _log("Getting legend at %s", self._t0)
+        LOGGER.info("Getting legend at %s", self._t0)
         url = _get_url('products/radar_transparencies/IDR.legend.0.png')
         return self.get_image(url)
 
@@ -313,11 +314,11 @@ class BOMRadarLoop(Camera):
         includes a background, one or more supplemental layers, a colorbar
         legend, and a radar image.
         """
-        _log("Getting loop for %s at %s", self._location, self._t0)
+        LOGGER.info("Getting loop for %s at %s", self._location, self._t0)
         loop = io.BytesIO()
         frames = self.get_frames()
         if frames is not None:
-            _log(
+            LOGGER.info(
                 "Got %s frames for %s at %s",
                 len(frames),
                 self._location,
@@ -332,7 +333,7 @@ class BOMRadarLoop(Camera):
                 save_all=True,
             )
         else:
-            _log("Got NO frames for %s at %s", self._location, self._t0)
+            LOGGER.info("Got NO frames for %s at %s", self._location, self._t0)
             self._pilimg.new('RGB', (340, 370)).save(loop, format='GIF')
         if self._outfn:
             outdir = os.path.dirname(self._outfn)
@@ -340,12 +341,12 @@ class BOMRadarLoop(Camera):
                 try:
                     os.makedirs(outdir)
                 except OSError:
-                    _log_error("Could not create directory %s", outdir)
+                    LOGGER.error("Could not create directory %s", outdir)
             try:
                 with open(self._outfn, 'wb') as outfile:
                     outfile.write(loop.getvalue())
             except IOError:
-                _log_error("Could not write image to %s", self._outfn)
+                LOGGER.error("Could not write image to %s", self._outfn)
         return loop.getvalue()
 
     def get_time_strs(self):
@@ -355,7 +356,7 @@ class BOMRadarLoop(Camera):
         Return a list of strings representing YYYYMMDDHHMM times for the most
         recent set of radar images to be used to create the animated GIF.
         """
-        _log("Getting time strings starting at %s", self._t0)
+        LOGGER.info("Getting time strings starting at %s", self._t0)
         frame_numbers = range(self._frames, 0, -1)
         return [dt.datetime.fromtimestamp(
             self._t0 - (self._delta * n),
@@ -370,7 +371,11 @@ class BOMRadarLoop(Camera):
         get_image() returns None if the image could not be fetched, so the
         caller must deal with that possibility.
         """
-        _log("Getting radar imagery for %s at %s", self._location, time_str)
+        LOGGER.info(
+            "Getting radar imagery for %s at %s",
+            self._location,
+            time_str
+        )
         url = _get_url(
             '/radar/IDR{}.T.{}.png'.format(self._radar_id, time_str)
         )
