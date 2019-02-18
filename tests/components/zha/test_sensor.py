@@ -86,6 +86,7 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
     A dict containing relevant device info for testing is returned. It contains
     the entity id, zigpy device, and the zigbee cluster for the sensor.
     """
+    from zigpy.zcl.clusters.general import Basic
     device_infos = {}
     counter = 0
     for cluster_id in cluster_ids:
@@ -93,7 +94,7 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
         device_infos[cluster_id] = {"zigpy_device": None}
         device_infos[cluster_id]["zigpy_device"] = await \
             async_init_zigpy_device(
-                hass, [cluster_id], [], None, zha_gateway,
+                hass, [cluster_id, Basic.cluster_id], [], None, zha_gateway,
                 ieee="{}0:15:8d:00:02:32:4f:32".format(counter),
                 manufacturer="Fake{}".format(cluster_id),
                 model="FakeModel{}".format(cluster_id))
