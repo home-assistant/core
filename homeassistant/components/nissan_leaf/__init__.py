@@ -11,7 +11,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -465,10 +465,10 @@ class LeafEntity(Entity):
             'vin': self.car.leaf.vin,
         }
 
-    def added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
-        dispatcher_connect(
+        async_dispatcher_connect(
             self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback)
 
     @callback
