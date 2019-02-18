@@ -62,9 +62,9 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     # @MartinHjelmare would like removed - think provides nice UI feedback
     # for switch.
     # Think VolvoOnCall component hase different icons for the switches.
-    @property
-    def icon(self):
-        """Climate control icon."""
-        if self.car.data[DATA_CLIMATE]:
-            return 'mdi:fan'
-        return 'mdi:fan-off'
+#    @property
+#    def icon(self):
+#        """Climate control icon."""
+#        if self.car.data[DATA_CLIMATE]:
+#            return 'mdi:fan'
+#        return 'mdi:fan-off'
