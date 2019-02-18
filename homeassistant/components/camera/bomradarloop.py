@@ -328,12 +328,12 @@ class BOMRadarLoop(Camera):
             if not os.path.isdir(outdir):
                 try:
                     os.makedirs(outdir)
-                except:
+                except OSError:
                     _log_error("Could not create directory %s", outdir)
             try:
                 with open(self._outfn, 'wb') as f:
                     f.write(loop.getvalue())
-            except:
+            except IOError:
                 _log_error("Could not write image to %s", self._outfn)
         return loop.getvalue()
 
