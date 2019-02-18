@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default='@'): 
+        vol.Optional(CONF_HOST, default='@'):
         cv.deprecated(replacement_key=CONF_HOSTS),
         vol.Optional(CONF_HOSTS): cv.ensure_list,
     })
