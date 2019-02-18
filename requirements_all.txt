@@ -983,7 +983,7 @@ pydaikin==0.9
 pydanfossair==0.0.7
 
 # homeassistant.components.deconz
-pydeconz==47
+pydeconz==52
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

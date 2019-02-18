@@ -12,10 +12,7 @@ from .config_flow import configured_hosts
 from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==47']
-
-SUPPORTED_PLATFORMS = ['binary_sensor', 'cover',
-                       'light', 'scene', 'sensor', 'switch']
+REQUIREMENTS = ['pydeconz==52']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
