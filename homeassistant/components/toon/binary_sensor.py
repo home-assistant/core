@@ -61,7 +61,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
     def unique_id(self) -> str:
         """Return the unique ID for this binary sensor."""
         return '_'.join([DOMAIN, self.toon.agreement.id, 'binary_sensor',
-                        self.section, self.measurement, str(self.on_value)])
+                         self.section, self.measurement, str(self.on_value)])
 
     @property
     def device_class(self) -> str:
@@ -71,7 +71,6 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return the status of the binary sensor."""
-
         if self.on_value is not None:
             value = self._state == self.on_value
         elif self._state is None:

@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_ECO, STATE_HEAT,
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.toon import ToonEntity
 from homeassistant.components.toon.const import DATA_TOON_CLIENT, DOMAIN

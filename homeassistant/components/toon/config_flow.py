@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def configured_displays(hass):
-    """Returns a set of configured Toon displays."""
+    """Return a set of configured Toon displays."""
     return set(
         entry.data[CONF_DISPLAY]
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -39,7 +39,6 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-
         app = self.hass.data.get(DATA_TOON_CONFIG, {})
 
         if not app:
@@ -48,11 +47,11 @@ class ToonFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_authenticate(user_input)
 
     async def _show_authenticaticate_form(self, errors=None):
-        """Shows the authentication form to the user."""
+        """Show the authentication form to the user."""
         data_schema = vol.Schema({
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_TENANT, default=DEFAULT_TENANT): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_TENANT, default=DEFAULT_TENANT): str,
         })
 
         return self.async_show_form(
