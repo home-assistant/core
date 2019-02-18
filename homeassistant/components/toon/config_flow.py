@@ -142,8 +142,6 @@ class ToonFlowHandler(config_entries.ConfigFlow):
                         tenant_id=self.tenant,
                         display_common_name=user_input[CONF_DISPLAY])
 
-            _LOGGER.warning(toon.thermostat_info)
-
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error while authenticating")
             return self.async_abort(reason='unknown_auth_fail')
