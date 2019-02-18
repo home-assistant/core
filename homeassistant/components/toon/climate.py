@@ -1,90 +1,154 @@
-"""Support for Toon van Eneco Thermostats."""
+"""Support for Toon thermostat."""
+
+from datetime import timedelta
+import logging
+from typing import Any, Dict, List
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
+    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_ECO, STATE_HEAT,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-import homeassistant.components.toon as toon_main
+from homeassistant.components.toon import ToonEntity
+from homeassistant.components.toon.const import DATA_TOON_CLIENT, DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.helpers.typing import HomeAssistantType
+
+DEPENDENCIES = ['toon']
+
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 HA_TOON = {
     STATE_AUTO: 'Comfort',
     STATE_HEAT: 'Home',
     STATE_ECO: 'Away',
     STATE_COOL: 'Sleep',
+    STATE_DRY: 'Manual',
 }
+
 TOON_HA = {value: key for key, value in HA_TOON.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Toon climate device."""
-    add_entities([ThermostatDevice(hass)], True)
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
+                            async_add_entities) -> None:
+    """Set up a Toon binary sensors based on a config entry."""
+    toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
+    async_add_entities([ToonThermostatDevice(toon)], True)
 
 
-class ThermostatDevice(ClimateDevice):
+class ToonThermostatDevice(ToonEntity, ClimateDevice):
     """Representation of a Toon climate device."""
 
-    def __init__(self, hass):
+    def __init__(self, toon) -> None:
         """Initialize the Toon climate device."""
-        self._name = 'Toon van Eneco'
-        self.hass = hass
-        self.thermos = hass.data[toon_main.TOON_HANDLE]
-
         self._state = None
-        self._temperature = None
-        self._setpoint = None
-        self._operation_list = [
-            STATE_AUTO,
-            STATE_HEAT,
-            STATE_ECO,
-            STATE_COOL,
-        ]
+
+        self._current_temperature = None
+        self._target_temperature = None
+        self._real_target_temperature = None
+        self._next_target_temperature = None
+        self._modulation_level = None
+
+        self._heating_type = None
+        self._program_state = None
+        self._program_next = None
+        self._holiday_state = None
+
+        super().__init__(toon, "Toon Thermostat", 'mdi:thermostat')
 
     @property
-    def supported_features(self):
+    def unique_id(self) -> str:
+        """Return the unique ID for this thermostat."""
+        return self.toon.agreement.id
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this thermostat."""
+        toon = self.toon.agreement
+        return {
+            'identifiers': {
+                (DOMAIN, toon.id)
+            },
+            'name': self._name,
+            'manufacturer': 'Eneco',
+            'model': toon.display_hardware_version.rpartition('/')[0],
+            'sw_version': toon.display_software_version.rpartition('/')[-1],
+        }
+
+    @property
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
     @property
-    def name(self):
-        """Return the name of this thermostat."""
-        return self._name
-
-    @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return TEMP_CELSIUS
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return current operation i.e. comfort, home, away."""
-        return TOON_HA.get(self.thermos.get_data('state'))
+        return TOON_HA.get(self._state)
 
     @property
-    def operation_list(self):
+    def operation_list(self) -> List[str]:
         """Return a list of available operation modes."""
-        return self._operation_list
+        return list(HA_TOON.keys())
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self.thermos.get_data('temp')
+        return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self.thermos.get_data('setpoint')
+        return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the current state of the burner."""
+        return {
+            'heating_type': self._heating_type,
+
+            'real_target_temperature': self._real_target_temperature,
+            'next_target_temperature': self._next_target_temperature,
+            'modulation_level': self._modulation_level,
+
+            'program_state': self._program_state,
+            'program_next': self._program_next,
+            'holiday_state': self._holiday_state,
+        }
+
+    def set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the thermostat."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        self.thermos.set_temp(temp)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        self.toon.thermostat = temperature
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        self.thermos.set_state(HA_TOON[operation_mode])
+        self.toon.thermostat_state = HA_TOON[operation_mode]
 
-    def update(self):
+    async def async_update(self) -> None:
         """Update local state."""
-        self.thermos.update()
+        thermostat = self.toon.thermostat_info
+
+        if self.toon.thermostat_state is None:
+            self._state = None
+        else:
+            self._state = self.toon.thermostat_state.name
+
+        self._current_temperature = self.toon.temperature
+        self._target_temperature = self.toon.thermostat
+        self._real_target_temperature = thermostat.real_set_point / 100.0
+        self._next_target_temperature = thermostat.next_set_point / 100.0
+        self._modulation_level = thermostat.current_modulation_level
+
+        self._heating_type = self.toon.agreement.heating_type
+        self._program_state = thermostat.program_state
+        self._program_next = thermostat.next_program
+        self._holiday_state = (thermostat.active_state == 4)
