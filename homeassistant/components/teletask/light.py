@@ -9,7 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.teletask import (DATA_TELETASK)
 from homeassistant.components.light import (PLATFORM_SCHEMA,
-                        ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+                                            ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS,
+                                            Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
