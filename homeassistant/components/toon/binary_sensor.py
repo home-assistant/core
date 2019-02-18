@@ -22,16 +22,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     """Set up a Toon binary sensor based on a config entry."""
     toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
 
-    sensors = []
-
-    sensors.extend([
+    sensors = [
         ToonBinarySensor(toon, 'thermostat_info', 'burner_info', None,
                          "Boiler Burner", 'mdi:fire', None),
         ToonBinarySensor(toon, 'thermostat_info', 'burner_info', 2,
                          "Hot Tap Water", 'mdi:water-pump', None),
         ToonBinarySensor(toon, 'thermostat_info', 'active_state', 4,
                          "Toon Holiday Mode", 'mdi:airport', None),
-    ])
+    ]
 
     if toon.thermostat_info.have_ot_boiler:
         sensors.extend([

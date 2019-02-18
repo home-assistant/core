@@ -48,7 +48,6 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
 
         self._current_temperature = None
         self._target_temperature = None
-        self._real_target_temperature = None
         self._next_target_temperature = None
         self._modulation_level = None
 
@@ -67,15 +66,16 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this thermostat."""
-        toon = self.toon.agreement
+        agreement = self.toon.agreement
         return {
             'identifiers': {
-                (DOMAIN, toon.id)
+                (DOMAIN, agreement.id)
             },
             'name': self._name,
             'manufacturer': 'Eneco',
-            'model': toon.display_hardware_version.rpartition('/')[0],
-            'sw_version': toon.display_software_version.rpartition('/')[-1],
+            'model': agreement.display_hardware_version.rpartition('/')[0],
+            'sw_version': agreement.display_software_version
+                            .rpartition('/')[-1],
         }
 
     @property
@@ -114,7 +114,6 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
         return {
             'heating_type': self._heating_type,
 
-            'real_target_temperature': self._real_target_temperature,
             'next_target_temperature': self._next_target_temperature,
             'modulation_level': self._modulation_level,
 
@@ -143,7 +142,6 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
 
         self._current_temperature = self.toon.temperature
         self._target_temperature = self.toon.thermostat
-        self._real_target_temperature = thermostat.real_set_point / 100.0
         self._next_target_temperature = thermostat.next_set_point / 100.0
         self._modulation_level = thermostat.current_modulation_level
 

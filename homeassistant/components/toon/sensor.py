@@ -21,8 +21,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     """Set up Toon sensors based on a config entry."""
     toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
 
-    sensors = []
-    sensors.extend([
+    sensors = [
         ToonSensor(toon, 'power', 'value', "Current Power Usage",
                    'mdi:power-plug', POWER_WATT),
         ToonSensor(toon, 'power', 'average', "Average Power Usage",
@@ -37,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
         ToonSensor(toon, 'power', 'meter_reading_low',
                    "Power Meter Feed IN Tariff 2", 'mdi:power-plug',
                    POWER_KWH),
-    ])
+    ]
 
     if toon.gas:
         sensors.extend([
