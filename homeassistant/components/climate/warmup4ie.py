@@ -18,7 +18,7 @@ from homeassistant.components.climate.const import (SUPPORT_TARGET_TEMPERATURE,
                                                     STATE_MANUAL)
 
 
-REQUIREMENTS = ['warmup4ie==0.1.1']
+REQUIREMENTS = ['warmup4ie>=0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
