@@ -217,8 +217,7 @@ class BOMRadarLoop(Camera):
         return self._loop
 
     def get_background(self):
-        """
-        Get the background map image.
+        """Get the background map image.
 
         Fetch the background map, then the topography, locations (e.g. city
         names), and distance-from-radar range markings, and merge into a single
@@ -252,8 +251,7 @@ class BOMRadarLoop(Camera):
         return background
 
     def get_frames(self):
-        """
-        Get radar images for animation frames.
+        """Get radar images for animation frames.
 
         Use a thread pool to fetch a set of current radar images in parallel,
         then get a background image for this location, combine it with the
@@ -306,8 +304,7 @@ class BOMRadarLoop(Camera):
         return self.get_image(url)
 
     def get_loop(self):
-        """
-        Get the radar-imagery loop GIF image.
+        """Get the radar-imagery loop GIF image.
 
         Return an animated GIF comprising a set of frames, where each frame
         includes a background, one or more supplemental layers, a colorbar
@@ -349,8 +346,7 @@ class BOMRadarLoop(Camera):
         return loop.getvalue()
 
     def get_time_strs(self):
-        """
-        Get time strings.
+        """Get time strings.
 
         Return a list of strings representing YYYYMMDDHHMM times for the most
         recent set of radar images to be used to create the animated GIF.
@@ -363,8 +359,7 @@ class BOMRadarLoop(Camera):
         ).strftime('%Y%m%d%H%M') for n in frame_numbers]
 
     def get_wximg(self, time_str):
-        """
-        Get a weather-radar image.
+        """Get a weather-radar image.
 
         Return a radar weather image from the BOM website. Note that
         get_image() returns None if the image could not be fetched, so the
