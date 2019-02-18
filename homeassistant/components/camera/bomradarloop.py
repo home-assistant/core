@@ -1,9 +1,9 @@
 """
-Provie animtaed GIF loops of BOM radar imagery.
+Provide animated GIF loops of BOM radar imagery.
 
-This component provides animated GIF images of weather-radar imagery derived
-the Australian Bureau of Meteorology (http://www.bom.gov.au/australia/radar/),
-suitable for display in e.g. a Picture Entity card. The full configuration
+This component provides animated GIF images of weather-radar imagery, derived
+from Australian Bureau of Meteorology (http://www.bom.gov.au/australia/radar/)
+sources, for display in e.g. a Picture Entity card. The full configuration
 options are:
 
 camera:
@@ -22,8 +22,8 @@ camera:
     location: Sydney
 
 The 'location' parameter should correspond to one of the keys in the RADARS
-dict, relow. The configuration validator in the web interface will display a
-list of valid names if an incorrect one is specified.
+dict, below. The configuration validator in the web interface will display a
+list of valid names if an incorrect one is supplied.
 
 The optional 'name' parameter can be used to set a custom display name for the
 component in the web interface.
