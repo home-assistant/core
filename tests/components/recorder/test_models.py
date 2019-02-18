@@ -142,3 +142,12 @@ class TestRecorderRuns(unittest.TestCase):
 
         assert sorted(run.entity_ids()) == ['sensor.humidity', 'sensor.lux']
         assert run.entity_ids(in_run2) == ['sensor.humidity']
+
+
+def test_states_from_native_invalid_entity_id():
+    """Test loading a state from an invalid entity ID."""
+    event = States()
+    event.entity_id = "test.invalid__id"
+    event.attributes = "{}"
+    state = event.to_native()
+    assert state.entity_id == 'test.invalid__id'

@@ -24,7 +24,7 @@
             },
             "user": {
                 "data": {
-                    "enable_port_mapping": "Omogo\u010dajo preslikavo vrat (port mapping) za Home Assistent-a",
+                    "enable_port_mapping": "Omogo\u010dajo preslikavo vrat (port mapping) za Home Assistant-a",
                     "enable_sensors": "Dodaj prometne senzorje",
                     "igd": "UPnP/IGD"
                 },

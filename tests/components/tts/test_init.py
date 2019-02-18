@@ -10,7 +10,7 @@ import requests
 import homeassistant.components.http as http
 import homeassistant.components.tts as tts
 from homeassistant.components.tts.demo import DemoProvider
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
 from homeassistant.setup import setup_component, async_setup_component

@@ -12,7 +12,6 @@ import functools
 import logging
 import os
 import pathlib
-import re
 import sys
 import threading
 from time import monotonic
@@ -43,7 +42,7 @@ from homeassistant.util.async_ import (
     fire_coroutine_threadsafe)
 from homeassistant import util
 import homeassistant.util.dt as dt_util
-from homeassistant.util import location
+from homeassistant.util import location, slugify
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
@@ -62,9 +61,6 @@ DOMAIN = 'homeassistant'
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
@@ -77,8 +73,12 @@ def split_entity_id(entity_id: str) -> List[str]:
 
 
 def valid_entity_id(entity_id: str) -> bool:
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
+    """Test if an entity ID is a valid format.
+
+    Format: <domain>.<entity> where both are slugs.
+    """
+    return ('.' in entity_id and
+            slugify(entity_id) == entity_id.replace('.', '_', 1))
 
 
 def valid_state(state: str) -> bool:
@@ -664,11 +664,14 @@ class State:
                  attributes: Optional[Dict] = None,
                  last_changed: Optional[datetime.datetime] = None,
                  last_updated: Optional[datetime.datetime] = None,
-                 context: Optional[Context] = None) -> None:
+                 context: Optional[Context] = None,
+                 # Temp, because database can still store invalid entity IDs
+                 # Remove with 1.0 or in 2020.
+                 temp_invalid_id_bypass: Optional[bool] = False) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id):
+        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
@@ -775,7 +778,7 @@ class StateMachine:
         self._bus = bus
         self._loop = loop
 
-    def entity_ids(self, domain_filter: Optional[str] = None)-> List[str]:
+    def entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
         """List of entity ids that are being tracked."""
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
@@ -797,13 +800,13 @@ class StateMachine:
         return [state.entity_id for state in self._states.values()
                 if state.domain == domain_filter]
 
-    def all(self)-> List[State]:
+    def all(self) -> List[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(  # type: ignore
             self._loop, self.async_all).result()
 
     @callback
-    def async_all(self)-> List[State]:
+    def async_all(self) -> List[State]:
         """Create a list of all states.
 
         This method must be run in the event loop.

@@ -1,22 +1,21 @@
 """The tests for the MQTT sensor platform."""
+from datetime import datetime, timedelta
 import json
 import unittest
-
-from datetime import timedelta, datetime
 from unittest.mock import ANY, patch
 
-import homeassistant.core as ha
-from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_mqtt_component, fire_mqtt_message, \
-    assert_setup_component, async_fire_mqtt_message, \
-    async_mock_mqtt_component, MockConfigEntry, mock_registry
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import (
+    MockConfigEntry, assert_setup_component, async_fire_mqtt_message,
+    async_mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
+    mock_component, mock_mqtt_component, mock_registry)
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -429,12 +428,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
@@ -496,7 +495,7 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
                             data)
@@ -518,11 +517,11 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
                             data1)
@@ -614,6 +613,52 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.name == 'Beer'
     assert device.model == 'Glass'
     assert device.sw_version == '0.1-beta'
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
 
 
 async def test_entity_id_update(hass, mqtt_mock):

@@ -20,6 +20,7 @@ GROUP = {
             "id": "1",
             "name": "Scene 1"
         }],
+        "lights": [],
     }
 }
 

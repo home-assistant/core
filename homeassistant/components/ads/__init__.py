@@ -1,9 +1,8 @@
-"""
-Support for Automation Device Specification (ADS).
-
-For more details about this component, please refer to the documentation.
-https://home-assistant.io/components/ads/
-"""
+"""Support for Automation Device Specification (ADS)."""
+import threading
+import struct
+import logging
+import ctypes
 from collections import namedtuple
 import ctypes
 import logging

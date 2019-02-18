@@ -1,4 +1,4 @@
-"""Base Entity for all TelldusLiveEntities."""
+"""Base Entity for all TelldusLive entities."""
 from datetime import datetime
 import logging
 
@@ -116,10 +116,17 @@ class TelldusLiveEntity(Entity):
     def device_info(self):
         """Return device info."""
         device = self._client.device_info(self.device.device_id)
-        return {
+        device_info = {
             'identifiers': {('tellduslive', self.device.device_id)},
             'name': self.device.name,
-            'model': device['model'].title(),
-            'manufacturer': device['protocol'].title(),
-            'via_hub': ('tellduslive', device.get('client')),
         }
+        model = device.get('model')
+        if model is not None:
+            device_info['model'] = model.title()
+        protocol = device.get('protocol')
+        if protocol is not None:
+            device_info['manufacturer'] = protocol.title()
+        client = device.get('client')
+        if client is not None:
+            device_info['via_hub'] = ('tellduslive', client)
+        return device_info

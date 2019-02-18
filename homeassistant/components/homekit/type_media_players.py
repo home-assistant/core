@@ -3,12 +3,12 @@ import logging
 
 from pyhap.const import CATEGORY_SWITCH
 
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE,
     STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -18,10 +18,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MODE_FRIENDLY_NAME = {FEATURE_ON_OFF: 'Power',
-                      FEATURE_PLAY_PAUSE: 'Play/Pause',
-                      FEATURE_PLAY_STOP: 'Play/Stop',
-                      FEATURE_TOGGLE_MUTE: 'Mute'}
+MODE_FRIENDLY_NAME = {
+    FEATURE_ON_OFF: 'Power',
+    FEATURE_PLAY_PAUSE: 'Play/Pause',
+    FEATURE_PLAY_STOP: 'Play/Stop',
+    FEATURE_TOGGLE_MUTE: 'Mute',
+}
 
 
 @TYPES.register('MediaPlayer')

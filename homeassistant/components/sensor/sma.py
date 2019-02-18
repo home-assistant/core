@@ -68,9 +68,9 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
     vol.Optional(CONF_SENSORS, default={}):
-        vol.Schema({cv.slug: cv.ensure_list}),
+        cv.schema_with_slug_keys(cv.ensure_list),
     vol.Optional(CONF_CUSTOM, default={}):
-        vol.Schema({cv.slug: CUSTOM_SCHEMA}),
+        cv.schema_with_slug_keys(CUSTOM_SCHEMA),
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 

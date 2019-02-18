@@ -20,8 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.components import climate, input_boolean, switch
-from homeassistant.components.climate import STATE_HEAT, STATE_COOL
+from homeassistant.components import input_boolean, switch
+from homeassistant.components.climate.const import (
+    ATTR_OPERATION_MODE, STATE_HEAT, STATE_COOL, DOMAIN)
 import homeassistant.components as comps
 from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
@@ -77,7 +78,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
     assert await async_setup_component(hass, input_boolean.DOMAIN, {
         'input_boolean': {'test': None}})
 
-    assert await async_setup_component(hass, climate.DOMAIN, {'climate': {
+    assert await async_setup_component(hass, DOMAIN, {'climate': {
         'platform': 'generic_thermostat',
         'name': 'test',
         'heater': heater_switch,
@@ -105,7 +106,7 @@ async def test_heater_switch(hass, setup_comp_1):
         'platform': 'test'}})
     heater_switch = switch_1.entity_id
 
-    assert await async_setup_component(hass, climate.DOMAIN, {'climate': {
+    assert await async_setup_component(hass, DOMAIN, {'climate': {
         'platform': 'generic_thermostat',
         'name': 'test',
         'heater': heater_switch,
@@ -134,7 +135,7 @@ def setup_comp_2(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 2,
@@ -162,7 +163,7 @@ async def test_get_operation_modes(hass, setup_comp_2):
     """Test that the operation list returns the correct modes."""
     state = hass.states.get(ENTITY)
     modes = state.attributes.get('operation_list')
-    assert [climate.STATE_HEAT, STATE_OFF] == modes
+    assert [STATE_HEAT, STATE_OFF] == modes
 
 
 async def test_set_target_temp(hass, setup_comp_2):
@@ -355,7 +356,7 @@ async def test_operating_mode_heat(hass, setup_comp_2):
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    common.async_set_operation_mode(hass, climate.STATE_HEAT)
+    common.async_set_operation_mode(hass, STATE_HEAT)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -385,7 +386,7 @@ def setup_comp_3(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 2,
@@ -433,7 +434,7 @@ async def test_operating_mode_cool(hass, setup_comp_3):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
-    common.async_set_operation_mode(hass, climate.STATE_COOL)
+    common.async_set_operation_mode(hass, STATE_COOL)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -535,7 +536,7 @@ def setup_comp_4(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -611,7 +612,7 @@ async def test_mode_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_OFF)
+    common.async_set_operation_mode(hass, STATE_OFF)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -628,7 +629,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_HEAT)
+    common.async_set_operation_mode(hass, STATE_HEAT)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -642,7 +643,7 @@ def setup_comp_5(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -720,7 +721,7 @@ async def test_mode_change_ac_trigger_off_not_long_enough_2(
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_OFF)
+    common.async_set_operation_mode(hass, STATE_OFF)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -737,7 +738,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_HEAT)
+    common.async_set_operation_mode(hass, STATE_HEAT)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -751,7 +752,7 @@ def setup_comp_6(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -829,7 +830,7 @@ async def test_mode_change_heater_trigger_off_not_long_enough(
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_OFF)
+    common.async_set_operation_mode(hass, STATE_OFF)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -847,7 +848,7 @@ async def test_mode_change_heater_trigger_on_not_long_enough(
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    common.async_set_operation_mode(hass, climate.STATE_HEAT)
+    common.async_set_operation_mode(hass, STATE_HEAT)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -861,7 +862,7 @@ def setup_comp_7(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -933,7 +934,7 @@ def setup_comp_8(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -1000,7 +1001,7 @@ def setup_comp_9(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': [
+        hass, DOMAIN, {'climate': [
             {
                 'platform': 'generic_thermostat',
                 'name': 'test_heat',
@@ -1080,7 +1081,7 @@ def setup_comp_10(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_FAHRENHEIT
     assert hass.loop.run_until_complete(async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'cold_tolerance': 0.3,
@@ -1109,7 +1110,7 @@ async def test_precision(hass, setup_comp_10):
 async def test_custom_setup_params(hass):
     """Test the setup with custom parameters."""
     result = await async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -1129,13 +1130,14 @@ async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-              climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+                                               ATTR_OPERATION_MODE: "off",
+                                               ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
 
     await async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test_thermostat',
             'heater': ENT_SWITCH,
@@ -1144,7 +1146,7 @@ async def test_restore_state(hass):
 
     state = hass.states.get('climate.test_thermostat')
     assert(state.attributes[ATTR_TEMPERATURE] == 20)
-    assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+    assert(state.attributes[ATTR_OPERATION_MODE] == "off")
     assert(state.state == STATE_OFF)
 
 
@@ -1155,13 +1157,14 @@ async def test_no_restore_state(hass):
     """
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-              climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+                                               ATTR_OPERATION_MODE: "off",
+                                               ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
 
     await async_setup_component(
-        hass, climate.DOMAIN, {'climate': {
+        hass, DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test_thermostat',
             'heater': ENT_SWITCH,
@@ -1191,7 +1194,7 @@ async def test_restore_state_uncoherence_case(hass):
     state = hass.states.get(ENTITY)
     assert 20 == state.attributes[ATTR_TEMPERATURE]
     assert STATE_OFF == \
-        state.attributes[climate.ATTR_OPERATION_MODE]
+        state.attributes[ATTR_OPERATION_MODE]
     assert STATE_OFF == state.state
     assert 0 == len(calls)
 
@@ -1199,12 +1202,12 @@ async def test_restore_state_uncoherence_case(hass):
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert STATE_OFF == \
-        state.attributes[climate.ATTR_OPERATION_MODE]
+        state.attributes[ATTR_OPERATION_MODE]
     assert STATE_OFF == state.state
 
 
 async def _setup_climate(hass):
-    assert await async_setup_component(hass, climate.DOMAIN, {'climate': {
+    assert await async_setup_component(hass, DOMAIN, {'climate': {
         'platform': 'generic_thermostat',
         'name': 'test',
         'cold_tolerance': 2,
@@ -1220,6 +1223,6 @@ def _mock_restore_cache(hass, temperature=20, operation_mode=STATE_OFF):
     mock_restore_cache(hass, (
         State(ENTITY, '0', {
             ATTR_TEMPERATURE: str(temperature),
-            climate.ATTR_OPERATION_MODE: operation_mode,
+            ATTR_OPERATION_MODE: operation_mode,
             ATTR_AWAY_MODE: "on"}),
     ))

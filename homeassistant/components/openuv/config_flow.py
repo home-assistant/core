@@ -3,9 +3,9 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN

@@ -9,13 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_URL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_URL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
@@ -81,7 +82,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._uuid = uuid
         self._muted = False
         self._playing = True
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._remote = remote
         self._volume = 0
 

@@ -1,9 +1,4 @@
-"""
-Component to count within automations.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/counter/
-"""
+"""Component to count within automations."""
 import logging
 
 import voluptuous as vol
@@ -37,8 +32,8 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
@@ -46,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

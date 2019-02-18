@@ -22,10 +22,10 @@ from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
-import homeassistant.helpers.config_validation as cv
 from homeassistant import util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -96,6 +96,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
         ATTR_MAC: cv.string,

@@ -169,7 +169,8 @@ class EntityComponent:
                 self.logger.warning(
                     'Not passing an entity ID to a service to target all '
                     'entities is deprecated. Update your call to %s.%s to be '
-                    'instead: entity_id: "*"', service.domain, service.service)
+                    'instead: entity_id: %s', service.domain, service.service,
+                    ENTITY_MATCH_ALL)
 
             return [entity for entity in self.entities if entity.available]
 
@@ -182,8 +183,9 @@ class EntityComponent:
         """Register an entity service."""
         async def handle_service(call):
             """Handle the service."""
+            service_name = "{}.{}".format(self.domain, name)
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call
+                self._platforms.values(), func, call, service_name
             )
 
         self.hass.services.async_register(

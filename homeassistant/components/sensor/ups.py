@@ -12,7 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION)
+                                 ATTR_ATTRIBUTION, CONF_UPDATE_INTERVAL,
+                                 CONF_SCAN_INTERVAL,
+                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util import Throttle
@@ -25,17 +27,26 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ups'
 COOKIE = 'upsmychoice_cookies.pickle'
-CONF_UPDATE_INTERVAL = 'update_interval'
 ICON = 'mdi:package-variant-closed'
 STATUS_DELIVERED = 'delivered'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-})
+SCAN_INTERVAL = timedelta(seconds=1800)
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UPDATE_INTERVAL): (
+            vol.All(cv.time_period, cv.positive_timedelta)),
+    }),
+    cv.deprecated(
+        CONF_UPDATE_INTERVAL,
+        replacement_key=CONF_SCAN_INTERVAL,
+        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+        default=SCAN_INTERVAL
+    )
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,8 +61,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.exception("Could not connect to UPS My Choice")
         return False
 
-    add_entities([UPSSensor(session, config.get(CONF_NAME),
-                            config.get(CONF_UPDATE_INTERVAL))], True)
+    add_entities([UPSSensor(
+        session,
+        config.get(CONF_NAME),
+        config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    )], True)
 
 
 class UPSSensor(Entity):

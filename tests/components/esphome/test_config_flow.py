@@ -242,7 +242,9 @@ async def test_discovery_already_configured_ip(hass, mock_client):
         'host': '192.168.43.183',
         'port': 6053,
         'hostname': 'test8266.local.',
-        'properties': {}
+        'properties': {
+            "address": "192.168.43.183"
+        }
     }
     result = await flow.async_step_discovery(user_input=service_info)
     assert result['type'] == 'abort'

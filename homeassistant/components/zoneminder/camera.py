@@ -1,9 +1,4 @@
-"""
-Support for ZoneMinder camera streaming.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.zoneminder/
-"""
+"""Support for ZoneMinder camera streaming."""
 import logging
 
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL

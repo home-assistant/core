@@ -1,9 +1,4 @@
-"""
-This component provides light support for the Philips Hue system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.hue/
-"""
+"""Support for the Philips Hue lights."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -37,10 +32,11 @@ SUPPORT_HUE = {
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
     'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
-    'Color temperature light': SUPPORT_HUE_COLOR_TEMP
-    }
+    'Color temperature light': SUPPORT_HUE_COLOR_TEMP,
+}
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+GAMUT_TYPE_UNAVAILABLE = 'None'
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
 # 1.12 introduced the state object for groups
@@ -48,8 +44,8 @@ ATTR_IS_HUE_GROUP = 'is_hue_group'
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Hue lights.
 
     Can only be called when a user accidentally mentions hue platform in their
@@ -221,16 +217,29 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
-            self.gamut_typ = 'None'
+            self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == 'OSRAM'
             self.is_philips = light.manufacturername == 'Philips'
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
-            if not self.gamut:
-                err_msg = 'Can not get color gamut of light "%s"'
-                _LOGGER.warning(err_msg, self.name)
+            _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            if self.light.swupdatestate == "readytoinstall":
+                err = (
+                    "Please check for software updates of the bridge "
+                    "and/or the bulb: %s, in the Philips Hue App."
+                )
+                _LOGGER.warning(err, self.name)
+            if self.gamut:
+                if not color.check_valid_gamut(self.gamut):
+                    err = (
+                        "Color gamut of %s: %s, not valid, "
+                        "setting gamut to None."
+                    )
+                    _LOGGER.warning(err, self.name, str(self.gamut))
+                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                    self.gamut = None
 
     @property
     def unique_id(self):

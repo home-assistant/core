@@ -9,10 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    DOMAIN, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_OFF,
     STATE_ON)
