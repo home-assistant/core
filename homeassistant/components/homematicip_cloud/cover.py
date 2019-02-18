@@ -39,7 +39,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
-        return int(self._device.shutterLevel * 100)
+        return int((1 - self._device.shutterLevel) * 100)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
