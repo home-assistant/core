@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.solaredge/
 """
 
-import requests
-
 from datetime import timedelta
 import logging
 
@@ -385,11 +383,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
-            # data = self.api.get_current_power_flow(self.site_idl
-            r = requests.get('http://localhost/currentPowerFlow/2')
-            r.raise_for_status()
-            data = r.json()
-
+            data = self.api.get_current_power_flow(self.site_id)
             power_flow = data['siteCurrentPowerFlow']
         except KeyError:
             _LOGGER.error("Missing power flow data, skipping update")
@@ -400,6 +394,10 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         power_from = []
         power_to = []
+        
+        if not 'connections' in power_flow:
+            _LOGGER.error("Missing connections in power flow data")
+            return
 
         for connection in power_flow['connections']:
             power_from.append(connection['from'].lower())
