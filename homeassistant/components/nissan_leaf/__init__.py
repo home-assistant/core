@@ -11,7 +11,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -303,7 +303,7 @@ class LeafDataStore:
                 self.data[DATA_PLUGGED_IN] = (
                     server_response.is_connected
                 )
-                dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+                async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
                 self.last_battery_response = utcnow()
 
         # Climate response only updated if battery data updated first.
@@ -334,7 +334,7 @@ class LeafDataStore:
                 _LOGGER.error("Error fetching location info")
 
         self.request_in_progress = False
-        dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
     @staticmethod
     def _extract_start_date(battery_info):
@@ -433,7 +433,7 @@ class LeafDataStore:
 
         if climate_result is not None:
             _LOGGER.debug("Climate result: %s", climate_result.__dict__)
-            dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+            async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
             return climate_result.is_hvac_running == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
