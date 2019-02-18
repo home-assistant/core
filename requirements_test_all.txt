@@ -279,7 +279,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.17
+sqlalchemy==1.2.18
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
