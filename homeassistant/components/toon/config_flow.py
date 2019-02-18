@@ -134,12 +134,12 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
         app = self.hass.data.get(DATA_TOON_CONFIG, {})
         try:
-            toon = Toon(self.username,
-                        self.password,
-                        app[CONF_CLIENT_ID],
-                        app[CONF_CLIENT_SECRET],
-                        tenant_id=self.tenant,
-                        display_common_name=user_input[CONF_DISPLAY])
+            Toon(self.username,
+                 self.password,
+                 app[CONF_CLIENT_ID],
+                 app[CONF_CLIENT_SECRET],
+                 tenant_id=self.tenant,
+                 display_common_name=user_input[CONF_DISPLAY])
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error while authenticating")
