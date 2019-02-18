@@ -246,11 +246,6 @@ class XiaomiDevice(Entity):
         return self._is_available
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device_state_attributes
