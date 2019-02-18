@@ -35,10 +35,19 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+DEVICE_CLASS_CURTAIN = 'curtain'
+DEVICE_CLASS_DAMPER = 'damper'
+DEVICE_CLASS_DOOR = 'door'
+DEVICE_CLASS_GARAGE = 'garage'
+DEVICE_CLASS_SHADE = 'shade'
+DEVICE_CLASS_WINDOW = 'window'
 DEVICE_CLASSES = [
-    'damper',
-    'garage',        # Garage door control
-    'window',        # Window control
+    DEVICE_CLASS_CURTAIN,   # Curtain control (covering window, wall, etc..)
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_DOOR,      # Generic door control
+    DEVICE_CLASS_GARAGE,    # Garage door control
+    DEVICE_CLASS_SHADE,     # Shade control (covering window, wall, etc..)
+    DEVICE_CLASS_WINDOW,    # Window control
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
