@@ -187,7 +187,8 @@ class Warmup4IE(ClimateDevice):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._device.update_room()
+        if not self._device.update_room():
+            _LOGGER.error("updating Warmup4IE component failed.")
 
         # set operation mode
         mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
