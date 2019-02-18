@@ -75,16 +75,6 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         """Switch name."""
         return "{} {}".format(self.car.leaf.nickname, "Charging Status")
 
-    # @MartinHjelmare would like removed - think provides nice UI feedback
-    # for switch
-    # Think VolvoOnCall component hase different icons for the switches.
-    @property
-    def icon(self):
-        """Charging switch icon."""
-        if self.car.data[DATA_CHARGING]:
-            return 'mdi:flash'
-        return 'mdi:flash-off'
-
     @property
     def is_on(self):
         """Return true if charging."""
