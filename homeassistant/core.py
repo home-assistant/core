@@ -1117,7 +1117,7 @@ class ServiceRegistry:
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
-        })
+        }, context=context)
 
         if not blocking:
             self._hass.async_create_task(
