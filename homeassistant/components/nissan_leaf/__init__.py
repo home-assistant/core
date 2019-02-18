@@ -462,7 +462,6 @@ class LeafEntity(Entity):
             'last_attempt': self.car.last_check,
             'updated_on': self.car.last_battery_response,
             'update_in_progress': self.car.request_in_progress,
-            'location_updated_on': self.car.last_location_response,
             'vin': self.car.leaf.vin,
         }
 
