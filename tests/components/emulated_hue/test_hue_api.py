@@ -1,33 +1,37 @@
 """The tests for the emulated Hue component."""
 import asyncio
 import json
-
+from ipaddress import ip_address
 from unittest.mock import patch
-import pytest
 
-from homeassistant import setup, const, core
+from aiohttp.hdrs import CONTENT_TYPE
+import pytest
+from tests.common import get_test_instance_port
+
+from homeassistant import core, const, setup
 import homeassistant.components as core_components
 from homeassistant.components import (
-    emulated_hue, http, light, script, media_player, fan
-)
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView,
-    HueAllLightsStateView, HueOneLightStateView, HueOneLightChangeView)
+    fan, http, light, script, emulated_hue, media_player, cover)
 from homeassistant.components.emulated_hue import Config
+from homeassistant.components.emulated_hue.hue_api import (
+    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
+    HueAllLightsStateView, HueOneLightChangeView, HueAllGroupsStateView)
+from homeassistant.const import STATE_ON, STATE_OFF
 
-from tests.common import get_test_instance_port
+import homeassistant.util.dt as dt_util
+from datetime import timedelta
+from tests.common import async_fire_time_changed
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = 'http://127.0.0.1:{}'.format(BRIDGE_SERVER_PORT) + '{}'
-JSON_HEADERS = {const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON}
+JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
 @pytest.fixture
 def hass_hue(loop, hass):
-    """Setup a hass instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(
         core_components.async_setup(hass, {core.DOMAIN: {}}))
@@ -91,12 +95,29 @@ def hass_hue(loop, hass):
             ]
         }))
 
+    loop.run_until_complete(
+        setup.async_setup_component(hass, cover.DOMAIN, {
+            'cover': [
+                {
+                    'platform': 'demo',
+                }
+            ]
+        }))
+
     # Kitchen light is explicitly excluded from being exposed
     kitchen_light_entity = hass.states.get('light.kitchen_lights')
     attrs = dict(kitchen_light_entity.attributes)
     attrs[emulated_hue.ATTR_EMULATED_HUE] = False
     hass.states.async_set(
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
+        attributes=attrs)
+
+    # Ceiling Fan is explicitly excluded from being exposed
+    ceiling_fan_entity = hass.states.get('fan.ceiling_fan')
+    attrs = dict(ceiling_fan_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
+    hass.states.async_set(
+        ceiling_fan_entity.entity_id, ceiling_fan_entity.state,
         attributes=attrs)
 
     # Expose the script
@@ -107,21 +128,41 @@ def hass_hue(loop, hass):
         script_entity.entity_id, script_entity.state, attributes=attrs
     )
 
+    # Expose cover
+    cover_entity = hass.states.get('cover.living_room_window')
+    attrs = dict(cover_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(
+        cover_entity.entity_id, cover_entity.state, attributes=attrs
+    )
+
     return hass
 
 
 @pytest.fixture
-def hue_client(loop, hass_hue, test_client):
+def hue_client(loop, hass_hue, aiohttp_client):
     """Create web client for emulated hue api."""
     web_app = hass_hue.http.app
-    config = Config(None, {'type': 'alexa'})
+    config = Config(None, {
+        emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
+        emulated_hue.CONF_ENTITIES: {
+            'light.bed_light': {
+                emulated_hue.CONF_ENTITY_HIDDEN: True
+            },
+            'cover.living_room_window': {
+                emulated_hue.CONF_ENTITY_HIDDEN: False
+            }
 
-    HueUsernameView().register(web_app.router)
-    HueAllLightsStateView(config).register(web_app.router)
-    HueOneLightStateView(config).register(web_app.router)
-    HueOneLightChangeView(config).register(web_app.router)
+        }
+    })
 
-    return loop.run_until_complete(test_client(web_app))
+    HueUsernameView().register(web_app, web_app.router)
+    HueAllLightsStateView(config).register(web_app, web_app.router)
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    HueOneLightChangeView(config).register(web_app, web_app.router)
+    HueAllGroupsStateView(config).register(web_app, web_app.router)
+
+    return loop.run_until_complete(aiohttp_client(web_app))
 
 
 @asyncio.coroutine
@@ -138,7 +179,7 @@ def test_discover_lights(hue_client):
 
     # Make sure the lights we added to the config are there
     assert 'light.ceiling_lights' in devices
-    assert 'light.bed_light' in devices
+    assert 'light.bed_light' not in devices
     assert 'script.set_kitchen_light' in devices
     assert 'light.kitchen_lights' not in devices
     assert 'media_player.living_room' in devices
@@ -146,6 +187,8 @@ def test_discover_lights(hue_client):
     assert 'media_player.walkman' in devices
     assert 'media_player.lounge_room' in devices
     assert 'fan.living_room_fan' in devices
+    assert 'fan.ceiling_fan' not in devices
+    assert 'cover.living_room_window' in devices
 
 
 @asyncio.coroutine
@@ -178,19 +221,23 @@ def test_get_light_state(hass_hue, hue_client):
     assert result_json['light.ceiling_lights']['state'][HUE_API_STATE_BRI] == \
         127
 
-    # Turn bedroom light off
+    # Turn office light off
     yield from hass_hue.services.async_call(
         light.DOMAIN, const.SERVICE_TURN_OFF,
         {
-            const.ATTR_ENTITY_ID: 'light.bed_light'
+            const.ATTR_ENTITY_ID: 'light.ceiling_lights'
         },
         blocking=True)
 
-    bedroom_json = yield from perform_get_light_state(
-        hue_client, 'light.bed_light', 200)
+    office_json = yield from perform_get_light_state(
+        hue_client, 'light.ceiling_lights', 200)
 
-    assert bedroom_json['state'][HUE_API_STATE_ON] is False
-    assert bedroom_json['state'][HUE_API_STATE_BRI] == 0
+    assert office_json['state'][HUE_API_STATE_ON] is False
+    assert office_json['state'][HUE_API_STATE_BRI] == 0
+
+    # Make sure bedroom light isn't accessible
+    yield from perform_get_light_state(
+        hue_client, 'light.bed_light', 404)
 
     # Make sure kitchen light isn't accessible
     yield from perform_get_light_state(
@@ -199,35 +246,41 @@ def test_get_light_state(hass_hue, hue_client):
 
 @asyncio.coroutine
 def test_put_light_state(hass_hue, hue_client):
-    """Test the seeting of light states."""
+    """Test the setting of light states."""
     yield from perform_put_test_on_ceiling_lights(hass_hue, hue_client)
 
     # Turn the bedroom light on first
     yield from hass_hue.services.async_call(
         light.DOMAIN, const.SERVICE_TURN_ON,
-        {const.ATTR_ENTITY_ID: 'light.bed_light',
+        {const.ATTR_ENTITY_ID: 'light.ceiling_lights',
          light.ATTR_BRIGHTNESS: 153},
         blocking=True)
 
-    bed_light = hass_hue.states.get('light.bed_light')
-    assert bed_light.state == STATE_ON
-    assert bed_light.attributes[light.ATTR_BRIGHTNESS] == 153
+    ceiling_lights = hass_hue.states.get('light.ceiling_lights')
+    assert ceiling_lights.state == STATE_ON
+    assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 153
 
     # Go through the API to turn it off
-    bedroom_result = yield from perform_put_light_state(
+    ceiling_result = yield from perform_put_light_state(
         hass_hue, hue_client,
-        'light.bed_light', False)
+        'light.ceiling_lights', False)
 
-    bedroom_result_json = yield from bedroom_result.json()
+    ceiling_result_json = yield from ceiling_result.json()
 
-    assert bedroom_result.status == 200
-    assert 'application/json' in bedroom_result.headers['content-type']
+    assert ceiling_result.status == 200
+    assert 'application/json' in ceiling_result.headers['content-type']
 
-    assert len(bedroom_result_json) == 1
+    assert len(ceiling_result_json) == 1
 
     # Check to make sure the state changed
-    bed_light = hass_hue.states.get('light.bed_light')
-    assert bed_light.state == STATE_OFF
+    ceiling_lights = hass_hue.states.get('light.ceiling_lights')
+    assert ceiling_lights.state == STATE_OFF
+
+    # Make sure we can't change the bedroom light state
+    bedroom_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'light.bed_light', True)
+    assert bedroom_result.status == 404
 
     # Make sure we can't change the kitchen light state
     kitchen_result = yield from perform_put_light_state(
@@ -288,6 +341,98 @@ def test_put_light_state_media_player(hass_hue, hue_client):
     walkman = hass_hue.states.get('media_player.walkman')
     assert walkman.state == 'playing'
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
+
+
+async def test_close_cover(hass_hue, hue_client):
+    """Test opening cover ."""
+    COVER_ID = "cover.living_room_window"
+    # Turn the office light off first
+    await hass_hue.services.async_call(
+        cover.DOMAIN, const.SERVICE_CLOSE_COVER,
+        {const.ATTR_ENTITY_ID: COVER_ID},
+        blocking=True)
+
+    cover_test = hass_hue.states.get(COVER_ID)
+    assert cover_test.state == 'closing'
+
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass_hue, future)
+        await hass_hue.async_block_till_done()
+
+    cover_test = hass_hue.states.get(COVER_ID)
+    assert cover_test.state == 'closed'
+
+    # Go through the API to turn it on
+    cover_result = await perform_put_light_state(
+        hass_hue, hue_client,
+        COVER_ID, True, 100)
+
+    assert cover_result.status == 200
+    assert 'application/json' in cover_result.headers['content-type']
+
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass_hue, future)
+        await hass_hue.async_block_till_done()
+
+    cover_result_json = await cover_result.json()
+
+    assert len(cover_result_json) == 2
+
+    # Check to make sure the state changed
+    cover_test_2 = hass_hue.states.get(COVER_ID)
+    assert cover_test_2.state == 'open'
+
+
+async def test_set_position_cover(hass_hue, hue_client):
+    """Test setting postion cover ."""
+    COVER_ID = "cover.living_room_window"
+    # Turn the office light off first
+    await hass_hue.services.async_call(
+        cover.DOMAIN, const.SERVICE_CLOSE_COVER,
+        {const.ATTR_ENTITY_ID: COVER_ID},
+        blocking=True)
+
+    cover_test = hass_hue.states.get(COVER_ID)
+    assert cover_test.state == 'closing'
+
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass_hue, future)
+        await hass_hue.async_block_till_done()
+
+    cover_test = hass_hue.states.get(COVER_ID)
+    assert cover_test.state == 'closed'
+
+    level = 20
+    brightness = round(level/100*255)
+
+    # Go through the API to open
+    cover_result = await perform_put_light_state(
+        hass_hue, hue_client,
+        COVER_ID, False, brightness)
+
+    assert cover_result.status == 200
+    assert 'application/json' in cover_result.headers['content-type']
+
+    cover_result_json = await cover_result.json()
+
+    assert len(cover_result_json) == 2
+    assert True, cover_result_json[0]['success'][
+        '/lights/cover.living_room_window/state/on']
+    assert cover_result_json[1]['success'][
+        '/lights/cover.living_room_window/state/bri'] == level
+
+    for _ in range(100):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass_hue, future)
+        await hass_hue.async_block_till_done()
+
+    # Check to make sure the state changed
+    cover_test_2 = hass_hue.states.get(COVER_ID)
+    assert cover_test_2.state == 'open'
+    assert cover_test_2.attributes.get('current_position') == level
 
 
 @asyncio.coroutine
@@ -394,12 +539,26 @@ def test_proper_put_state_request(hue_client):
     assert result.status == 400
 
 
+@asyncio.coroutine
+def test_get_empty_groups_state(hue_client):
+    """Test the request to get groups endpoint."""
+    # Test proper on value parsing
+    result = yield from hue_client.get(
+            '/api/username/groups')
+
+    assert result.status == 200
+
+    result_json = yield from result.json()
+
+    assert result_json == {}
+
+
 # pylint: disable=invalid-name
-def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
-                                       content_type='application/json'):
+async def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
+                                             content_type='application/json'):
     """Test the setting of a light."""
     # Turn the office light off first
-    yield from hass_hue.services.async_call(
+    await hass_hue.services.async_call(
         light.DOMAIN, const.SERVICE_TURN_OFF,
         {const.ATTR_ENTITY_ID: 'light.ceiling_lights'},
         blocking=True)
@@ -408,14 +567,14 @@ def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
     assert ceiling_lights.state == STATE_OFF
 
     # Go through the API to turn it on
-    office_result = yield from perform_put_light_state(
+    office_result = await perform_put_light_state(
         hass_hue, hue_client,
         'light.ceiling_lights', True, 56, content_type)
 
     assert office_result.status == 200
     assert 'application/json' in office_result.headers['content-type']
 
-    office_result_json = yield from office_result.json()
+    office_result_json = await office_result.json()
 
     assert len(office_result_json) == 2
 
@@ -427,7 +586,7 @@ def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
 
 @asyncio.coroutine
 def perform_get_light_state(client, entity_id, expected_status):
-    """Test the gettting of a light state."""
+    """Test the getting of a light state."""
     result = yield from client.get('/api/username/lights/{}'.format(entity_id))
 
     assert result.status == expected_status
@@ -459,3 +618,12 @@ def perform_put_light_state(hass_hue, client, entity_id, is_on,
     yield from hass_hue.async_block_till_done()
 
     return result
+
+
+async def test_external_ip_blocked(hue_client):
+    """Test external IP blocked."""
+    with patch('homeassistant.components.http.real_ip.ip_address',
+               return_value=ip_address('45.45.45.45')):
+        result = await hue_client.get('/api/username/lights')
+
+    assert result.status == 400

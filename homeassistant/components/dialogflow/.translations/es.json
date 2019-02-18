@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Su instancia de Home Assistant debe ser accesible desde Internet para recibir mensajes de Dialogflow.",
+            "one_instance_allowed": "Solo una instancia es necesaria."
+        },
+        "create_entry": {
+            "default": "Para enviar eventos a Home Assistant, necesitas configurar [Integracion de flujos de dialogo de webhook]({dialogflow_url}).\n\nRellena la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nVer [Documentaci\u00f3n]({docs_url}) para mas detalles."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1 seguro de que desea configurar Dialogflow?"
+            }
+        },
+        "title": "Dialogflow"
+    }
+}

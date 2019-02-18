@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts este deja configurat",
+            "unknown": "Sa produs o eroare necunoscut\u0103."
+        },
+        "error": {
+            "invalid_2fa_method": "Metoda 2FA invalid\u0103 (Verifica\u021bi pe telefon).",
+            "invalid_login": "Conectare invalid\u0103, \u00eencerca\u021bi din nou."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA Pin"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "Adresa de email",
+                    "password": "Parol\u0103"
+                },
+                "description": "Gol",
+                "title": "Conectare Google Hangouts"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

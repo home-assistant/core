@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.buienradar/
 """
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import async_timeout
@@ -23,11 +23,14 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.7']
+REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
+MEASURED_LABEL = 'Measured'
 TIMEFRAME_LABEL = 'Timeframe'
+SYMBOL = 'symbol'
+
 # Schedule next call after (minutes):
 SCHEDULE_OK = 10
 # When an error occurred, new call after (minutes):
@@ -37,10 +40,14 @@ SCHEDULE_NOK = 2
 # Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
+    'condition': ['Condition', None, None],
+    'conditioncode': ['Condition code', None, None],
+    'conditiondetailed': ['Detailed condition', None, None],
+    'conditionexact': ['Full condition', None, None],
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'groundtemperature': ['Ground Temperature', TEMP_CELSIUS,
+    'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
                           'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
@@ -54,7 +61,67 @@ SENSOR_TYPES = {
     'precipitation_forecast_average': ['Precipitation forecast average',
                                        'mm/h', 'mdi:weather-pouring'],
     'precipitation_forecast_total': ['Precipitation forecast total',
-                                     'mm', 'mdi:weather-pouring']
+                                     'mm', 'mdi:weather-pouring'],
+    'temperature_1d': ['Temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'temperature_2d': ['Temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'temperature_3d': ['Temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'temperature_4d': ['Temperature 4d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'temperature_5d': ['Temperature 5d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'mintemp_1d': ['Minimum temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'mintemp_2d': ['Minimum temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'mintemp_3d': ['Minimum temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'mintemp_4d': ['Minimum temperature 4d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'mintemp_5d': ['Minimum temperature 5d', TEMP_CELSIUS, 'mdi:thermometer'],
+    'rain_1d': ['Rain 1d', 'mm', 'mdi:weather-pouring'],
+    'rain_2d': ['Rain 2d', 'mm', 'mdi:weather-pouring'],
+    'rain_3d': ['Rain 3d', 'mm', 'mdi:weather-pouring'],
+    'rain_4d': ['Rain 4d', 'mm', 'mdi:weather-pouring'],
+    'rain_5d': ['Rain 5d', 'mm', 'mdi:weather-pouring'],
+    'snow_1d': ['Snow 1d', 'cm', 'mdi:snowflake'],
+    'snow_2d': ['Snow 2d', 'cm', 'mdi:snowflake'],
+    'snow_3d': ['Snow 3d', 'cm', 'mdi:snowflake'],
+    'snow_4d': ['Snow 4d', 'cm', 'mdi:snowflake'],
+    'snow_5d': ['Snow 5d', 'cm', 'mdi:snowflake'],
+    'rainchance_1d': ['Rainchance 1d', '%', 'mdi:weather-pouring'],
+    'rainchance_2d': ['Rainchance 2d', '%', 'mdi:weather-pouring'],
+    'rainchance_3d': ['Rainchance 3d', '%', 'mdi:weather-pouring'],
+    'rainchance_4d': ['Rainchance 4d', '%', 'mdi:weather-pouring'],
+    'rainchance_5d': ['Rainchance 5d', '%', 'mdi:weather-pouring'],
+    'sunchance_1d': ['Sunchance 1d', '%', 'mdi:weather-partlycloudy'],
+    'sunchance_2d': ['Sunchance 2d', '%', 'mdi:weather-partlycloudy'],
+    'sunchance_3d': ['Sunchance 3d', '%', 'mdi:weather-partlycloudy'],
+    'sunchance_4d': ['Sunchance 4d', '%', 'mdi:weather-partlycloudy'],
+    'sunchance_5d': ['Sunchance 5d', '%', 'mdi:weather-partlycloudy'],
+    'windforce_1d': ['Wind force 1d', 'Bft', 'mdi:weather-windy'],
+    'windforce_2d': ['Wind force 2d', 'Bft', 'mdi:weather-windy'],
+    'windforce_3d': ['Wind force 3d', 'Bft', 'mdi:weather-windy'],
+    'windforce_4d': ['Wind force 4d', 'Bft', 'mdi:weather-windy'],
+    'windforce_5d': ['Wind force 5d', 'Bft', 'mdi:weather-windy'],
+    'condition_1d': ['Condition 1d', None, None],
+    'condition_2d': ['Condition 2d', None, None],
+    'condition_3d': ['Condition 3d', None, None],
+    'condition_4d': ['Condition 4d', None, None],
+    'condition_5d': ['Condition 5d', None, None],
+    'conditioncode_1d': ['Condition code 1d', None, None],
+    'conditioncode_2d': ['Condition code 2d', None, None],
+    'conditioncode_3d': ['Condition code 3d', None, None],
+    'conditioncode_4d': ['Condition code 4d', None, None],
+    'conditioncode_5d': ['Condition code 5d', None, None],
+    'conditiondetailed_1d': ['Detailed condition 1d', None, None],
+    'conditiondetailed_2d': ['Detailed condition 2d', None, None],
+    'conditiondetailed_3d': ['Detailed condition 3d', None, None],
+    'conditiondetailed_4d': ['Detailed condition 4d', None, None],
+    'conditiondetailed_5d': ['Detailed condition 5d', None, None],
+    'conditionexact_1d': ['Full condition 1d', None, None],
+    'conditionexact_2d': ['Full condition 2d', None, None],
+    'conditionexact_3d': ['Full condition 3d', None, None],
+    'conditionexact_4d': ['Full condition 4d', None, None],
+    'conditionexact_5d': ['Full condition 5d', None, None],
+    'symbol_1d': ['Symbol 1d', None, None],
+    'symbol_2d': ['Symbol 2d', None, None],
+    'symbol_3d': ['Symbol 3d', None, None],
+    'symbol_4d': ['Symbol 4d', None, None],
+    'symbol_5d': ['Symbol 5d', None, None],
 }
 
 CONF_TIMEFRAME = 'timeframe'
@@ -73,8 +140,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Create the buienradar sensor."""
     from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
@@ -94,20 +161,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
-    async_add_devices(dev)
+        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
+                            coordinates))
+    async_add_entities(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
-    yield from data.schedule_update(1)
+    await data.schedule_update(1)
 
 
 class BrSensor(Entity):
     """Representation of an Buienradar sensor."""
 
-    def __init__(self, sensor_type, client_name):
+    def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+        from buienradar.buienradar import (PRECIPITATION_FORECAST, CONDITION)
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -118,55 +186,134 @@ class BrSensor(Entity):
         self._attribution = None
         self._measured = None
         self._stationname = None
+        self._unique_id = self.uid(coordinates)
+
+        # All continuous sensors should be forced to be updated
+        self._force_update = self.type != SYMBOL and \
+            not self.type.startswith(CONDITION)
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
+    def uid(self, coordinates):
+        """Generate a unique id using coordinates and sensor type."""
+        # The combination of the location, name and sensor type is unique
+        return "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
+                                 coordinates[CONF_LONGITUDE],
+                                 self.type)
+
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, IMAGE, MEASURED,
+        from buienradar.buienradar import (ATTRIBUTION, CONDITION, CONDCODE,
+                                           DETAILED, EXACT, EXACTNL, FORECAST,
+                                           IMAGE, MEASURED,
                                            PRECIPITATION_FORECAST, STATIONNAME,
-                                           SYMBOL, TIMEFRAME)
+                                           TIMEFRAME)
+
+        # Check if we have a new measurement,
+        # otherwise we do not have to update the sensor
+        if self._measured == data.get(MEASURED):
+            return False
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
         self._measured = data.get(MEASURED)
-        if self.type == SYMBOL:
-            # update weather symbol & status text
-            new_state = data.get(self.type)
-            img = data.get(IMAGE)
 
-            # pylint: disable=protected-access
-            if new_state != self._state or img != self._entity_picture:
-                self._state = new_state
-                self._entity_picture = img
+        if self.type.endswith('_1d') or \
+           self.type.endswith('_2d') or \
+           self.type.endswith('_3d') or \
+           self.type.endswith('_4d') or \
+           self.type.endswith('_5d'):
+
+            fcday = 0
+            if self.type.endswith('_2d'):
+                fcday = 1
+            if self.type.endswith('_3d'):
+                fcday = 2
+            if self.type.endswith('_4d'):
+                fcday = 3
+            if self.type.endswith('_5d'):
+                fcday = 4
+
+            # update all other sensors
+            if self.type.startswith(SYMBOL) or self.type.startswith(CONDITION):
+                try:
+                    condition = data.get(FORECAST)[fcday].get(CONDITION)
+                except IndexError:
+                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    return False
+
+                if condition:
+                    new_state = condition.get(CONDITION, None)
+                    if self.type.startswith(SYMBOL):
+                        new_state = condition.get(EXACTNL, None)
+                    if self.type.startswith('conditioncode'):
+                        new_state = condition.get(CONDCODE, None)
+                    if self.type.startswith('conditiondetailed'):
+                        new_state = condition.get(DETAILED, None)
+                    if self.type.startswith('conditionexact'):
+                        new_state = condition.get(EXACT, None)
+
+                    img = condition.get(IMAGE, None)
+
+                    if new_state != self._state or img != self._entity_picture:
+                        self._state = new_state
+                        self._entity_picture = img
+                        return True
+                return False
+
+            try:
+                self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
+            except IndexError:
+                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                return False
+
+        if self.type == SYMBOL or self.type.startswith(CONDITION):
+            # update weather symbol & status text
+            condition = data.get(CONDITION, None)
+            if condition:
+                if self.type == SYMBOL:
+                    new_state = condition.get(EXACTNL, None)
+                if self.type == CONDITION:
+                    new_state = condition.get(CONDITION, None)
+                if self.type == 'conditioncode':
+                    new_state = condition.get(CONDCODE, None)
+                if self.type == 'conditiondetailed':
+                    new_state = condition.get(DETAILED, None)
+                if self.type == 'conditionexact':
+                    new_state = condition.get(EXACT, None)
+
+                img = condition.get(IMAGE, None)
+
+                if new_state != self._state or img != self._entity_picture:
+                    self._state = new_state
+                    self._entity_picture = img
+                    return True
+
             return False
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
-            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             self._timeframe = nested.get(TIMEFRAME)
-            # pylint: disable=protected-access
-            if new_state != self._state:
-                self._state = new_state
-                return True
-            return False
+            self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            return True
 
         # update all other sensors
-        new_state = data.get(self.type)
-        # pylint: disable=protected-access
-        if new_state != self._state:
-            self._state = new_state
-            return True
-        return False
+        self._state = data.get(self.type)
+        return True
 
     @property
     def attribution(self):
         """Return the attribution."""
         return self._attribution
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -179,18 +326,13 @@ class BrSensor(Entity):
         return self._state
 
     @property
-    def should_poll(self):  # pylint: disable=no-self-use
+    def should_poll(self):
         """No polling needed."""
         return False
 
     @property
     def entity_picture(self):
         """Weather symbol if type is symbol."""
-        from buienradar.buienradar import SYMBOL
-
-        if self.type != SYMBOL:
-            return None
-
         return self._entity_picture
 
     @property
@@ -205,10 +347,16 @@ class BrSensor(Entity):
 
             return result
 
-        return {
+        result = {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
         }
+        if self._measured is not None:
+            # convert datetime (Europe/Amsterdam) into local datetime
+            local_dt = dt_util.as_local(self._measured)
+            result[MEASURED_LABEL] = local_dt.strftime("%c")
+
+        return result
 
     @property
     def unit_of_measurement(self):
@@ -220,8 +368,13 @@ class BrSensor(Entity):
         """Return possible sensor specific icon."""
         return SENSOR_TYPES[self.type][2]
 
+    @property
+    def force_update(self):
+        """Return true for continuous sensors, false for discrete sensors."""
+        return self._force_update
 
-class BrData(object):
+
+class BrData:
     """Get the latest data and updates the states."""
 
     def __init__(self, hass, coordinates, timeframe, devices):
@@ -232,8 +385,7 @@ class BrData(object):
         self.coordinates = coordinates
         self.timeframe = timeframe
 
-    @asyncio.coroutine
-    def update_devices(self):
+    async def update_devices(self):
         """Update all devices/sensors."""
         if self.devices:
             tasks = []
@@ -243,18 +395,16 @@ class BrData(object):
                     tasks.append(dev.async_update_ha_state())
 
             if tasks:
-                yield from asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks, loop=self.hass.loop)
 
-    @asyncio.coroutine
-    def schedule_update(self, minute=1):
+    async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes.", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
         async_track_point_in_utc_time(self.hass, self.async_update,
                                       nxt)
 
-    @asyncio.coroutine
-    def get_data(self, url):
+    async def get_data(self, url):
         """Load data from specified url."""
         from buienradar.buienradar import (CONTENT,
                                            MESSAGE, STATUS_CODE, SUCCESS)
@@ -265,10 +415,10 @@ class BrData(object):
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from websession.get(url)
+                resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status
-                result[CONTENT] = yield from resp.text()
+                result[CONTENT] = await resp.text()
                 if resp.status == 200:
                     result[SUCCESS] = True
                 else:
@@ -280,17 +430,16 @@ class BrData(object):
             return result
         finally:
             if resp is not None:
-                yield from resp.release()
+                await resp.release()
 
-    @asyncio.coroutine
-    def async_update(self, *_):
+    async def async_update(self, *_):
         """Update the data from buienradar."""
         from buienradar.buienradar import (parse_data, CONTENT,
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
-        content = yield from self.get_data('http://xml.buienradar.nl')
+        content = await self.get_data('http://xml.buienradar.nl')
         if not content.get(SUCCESS, False):
-            content = yield from self.get_data('http://api.buienradar.nl')
+            content = await self.get_data('http://api.buienradar.nl')
 
         if content.get(SUCCESS) is not True:
             # unable to get the data
@@ -299,7 +448,7 @@ class BrData(object):
                             content.get(MESSAGE),
                             content.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(SCHEDULE_NOK)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         # rounding coordinates prevents unnecessary redirects/calls
@@ -308,7 +457,7 @@ class BrData(object):
             round(self.coordinates[CONF_LATITUDE], 2),
             round(self.coordinates[CONF_LONGITUDE], 2)
             )
-        raincontent = yield from self.get_data(rainurl)
+        raincontent = await self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
             # unable to get the data
@@ -317,7 +466,7 @@ class BrData(object):
                             raincontent.get(MESSAGE),
                             raincontent.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(SCHEDULE_NOK)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         result = parse_data(content.get(CONTENT),
@@ -328,15 +477,16 @@ class BrData(object):
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            _LOGGER.warning("Unable to parse data from Buienradar."
-                            "(Msg: %s)",
-                            result.get(MESSAGE),)
-            yield from self.schedule_update(SCHEDULE_NOK)
+            if int(datetime.now().strftime('%H')) > 0:
+                _LOGGER.warning("Unable to parse data from Buienradar."
+                                "(Msg: %s)",
+                                result.get(MESSAGE),)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         self.data = result.get(DATA)
-        yield from self.update_devices()
-        yield from self.schedule_update(SCHEDULE_OK)
+        await self.update_devices()
+        await self.schedule_update(SCHEDULE_OK)
 
     @property
     def attribution(self):
@@ -353,8 +503,8 @@ class BrData(object):
     @property
     def condition(self):
         """Return the condition."""
-        from buienradar.buienradar import SYMBOL
-        return self.data.get(SYMBOL)
+        from buienradar.buienradar import CONDITION
+        return self.data.get(CONDITION)
 
     @property
     def temperature(self):
@@ -384,6 +534,15 @@ class BrData(object):
             return None
 
     @property
+    def visibility(self):
+        """Return the visibility, or None."""
+        from buienradar.buienradar import VISIBILITY
+        try:
+            return int(self.data.get(VISIBILITY))
+        except (ValueError, TypeError):
+            return None
+
+    @property
     def wind_speed(self):
         """Return the windspeed, or None."""
         from buienradar.buienradar import WINDSPEED
@@ -395,9 +554,9 @@ class BrData(object):
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
-        from buienradar.buienradar import WINDDIRECTION
+        from buienradar.buienradar import WINDAZIMUTH
         try:
-            return int(self.data.get(WINDDIRECTION))
+            return int(self.data.get(WINDAZIMUTH))
         except (ValueError, TypeError):
             return None
 

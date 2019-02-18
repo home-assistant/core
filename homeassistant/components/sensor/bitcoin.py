@@ -15,11 +15,11 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['blockchain==1.3.3']
+REQUIREMENTS = ['blockchain==1.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.info"
 
 DEFAULT_CURRENCY = 'USD'
 
@@ -38,7 +38,7 @@ OPTION_TYPES = {
     'number_of_transactions': ['No. of Transactions', None],
     'hash_rate': ['Hash rate', 'PH/s'],
     'timestamp': ['Timestamp', None],
-    'mined_blocks': ['Minded Blocks', None],
+    'mined_blocks': ['Mined Blocks', None],
     'blocks_size': ['Block size', None],
     'total_fees_btc': ['Total fees', 'BTC'],
     'total_btc_sent': ['Total sent', 'BTC'],
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bitcoin sensors."""
     from blockchain import exchangerates
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(BitcoinSensor(data, variable, currency))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class BitcoinSensor(Entity):
@@ -112,7 +112,7 @@ class BitcoinSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
@@ -121,7 +121,6 @@ class BitcoinSensor(Entity):
         stats = self.data.stats
         ticker = self.data.ticker
 
-        # pylint: disable=no-member
         if self.type == 'exchangerate':
             self._state = ticker[self._currency].p15min
             self._unit_of_measurement = self._currency
@@ -170,7 +169,7 @@ class BitcoinSensor(Entity):
             self._state = '{0:.2f}'.format(stats.market_price_usd)
 
 
-class BitcoinData(object):
+class BitcoinData:
     """Get the latest data and update the states."""
 
     def __init__(self):

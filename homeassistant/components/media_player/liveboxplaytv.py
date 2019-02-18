@@ -4,24 +4,26 @@ Support for interface with an Orange Livebox Play TV appliance.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.liveboxplaytv/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE, SUPPORT_SELECT_SOURCE,
-    MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
-    STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==1.4.9']
+REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +41,12 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -58,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except IOError:
         _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
                       "Please check your configuration", host, port)
-    add_devices(livebox_devices, True)
+    async_add_entities(livebox_devices, True)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
@@ -72,27 +74,50 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._muted = False
         self._name = name
         self._current_source = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._channel_list = {}
         self._current_channel = None
         self._current_program = None
+        self._media_duration = None
+        self._media_remaining_time = None
         self._media_image_url = None
+        self._media_last_updated = None
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update(self):
+    async def async_update(self):
         """Retrieve the latest data."""
+        import pyteleloisirs
         try:
             self._state = self.refresh_state()
+            # Update channel list
+            self.refresh_channel_list()
             # Update current channel
-            channel = self._client.get_current_channel()
+            channel = self._client.channel
             if channel is not None:
-                self._current_program = self._client.program
-                self._current_channel = channel.get('name', None)
-                self._media_image_url = \
-                    self._client.get_current_channel_image(img_size=300)
-                self.refresh_channel_list()
+                self._current_channel = channel
+                program = await \
+                    self._client.async_get_current_program()
+                if program and self._current_program != program.get('name'):
+                    self._current_program = program.get('name')
+                    # Media progress info
+                    self._media_duration = \
+                        pyteleloisirs.get_program_duration(program)
+                    rtime = pyteleloisirs.get_remaining_time(program)
+                    if rtime != self._media_remaining_time:
+                        self._media_remaining_time = rtime
+                        self._media_last_updated = dt_util.utcnow()
+                # Set media image to current program if a thumbnail is
+                # available. Otherwise we'll use the channel's image.
+                img_size = 800
+                prg_img_url = await \
+                    self._client.async_get_current_program_image(img_size)
+                if prg_img_url:
+                    self._media_image_url = prg_img_url
+                else:
+                    chan_img_url = \
+                        self._client.get_current_channel_image(img_size)
+                    self._media_image_url = chan_img_url
         except requests.ConnectionError:
-            self._state = STATE_OFF
+            self._state = None
 
     @property
     def name(self):
@@ -136,8 +161,28 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         if self._current_channel:
-            return '{}: {}'.format(self._current_channel,
-                                   self._current_program)
+            if self._current_program:
+                return '{}: {}'.format(self._current_channel,
+                                       self._current_program)
+            return self._current_channel
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self._media_duration
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self._media_remaining_time
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self._media_last_updated
 
     @property
     def supported_features(self):
@@ -157,7 +202,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         state = self._client.media_state
         if state == 'PLAY':
             return STATE_PLAYING
-        elif state == 'PAUSE':
+        if state == 'PAUSE':
             return STATE_PAUSED
 
         return STATE_ON if self._client.is_on else STATE_OFF

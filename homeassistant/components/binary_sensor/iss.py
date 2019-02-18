@@ -13,7 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE)
+from homeassistant.const import (
+    CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, CONF_SHOW_ON_MAP)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyiss==1.0.1']
@@ -22,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ISS_NEXT_RISE = 'next_rise'
 ATTR_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
-
-CONF_SHOW_ON_MAP = 'show_on_map'
 
 DEFAULT_NAME = 'ISS'
 DEFAULT_DEVICE_CLASS = 'visible'
@@ -36,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ISS sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
 
-    add_devices([IssBinarySensor(iss_data, name, show_on_map)], True)
+    add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
 class IssBinarySensor(BinarySensorDevice):
@@ -64,7 +63,6 @@ class IssBinarySensor(BinarySensorDevice):
         self._state = None
         self._name = name
         self._show_on_map = show
-        self.update()
 
     @property
     def name(self):
@@ -103,7 +101,7 @@ class IssBinarySensor(BinarySensorDevice):
         self.iss_data.update()
 
 
-class IssData(object):
+class IssData:
     """Get data from the ISS API."""
 
     def __init__(self, latitude, longitude):

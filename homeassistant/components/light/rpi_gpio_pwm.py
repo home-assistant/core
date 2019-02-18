@@ -8,13 +8,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
+    Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
+from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['pwmled==1.1.1']
+REQUIREMENTS = ['pwmled==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +35,11 @@ CONF_LED_TYPE_RGB = 'rgb'
 CONF_LED_TYPE_RGBW = 'rgbw'
 CONF_LED_TYPES = [CONF_LED_TYPE_SIMPLE, CONF_LED_TYPE_RGB, CONF_LED_TYPE_RGBW]
 
-DEFAULT_COLOR = [255, 255, 255]
+DEFAULT_BRIGHTNESS = 255
+DEFAULT_COLOR = [0, 0]
 
 SUPPORT_SIMPLE_LED = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-SUPPORT_RGB_LED = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+SUPPORT_RGB_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LEDS): vol.All(cv.ensure_list, [
@@ -53,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PWM LED lights."""
     from pwmled.led import SimpleLed
     from pwmled.led.rgb import RgbLed
@@ -91,10 +94,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
         leds.append(led)
 
-    add_devices(leds)
+    add_entities(leds)
 
 
-class PwmSimpleLed(Light):
+class PwmSimpleLed(Light, RestoreEntity):
     """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):
@@ -102,7 +105,18 @@ class PwmSimpleLed(Light):
         self._led = led
         self._name = name
         self._is_on = False
-        self._brightness = 255
+        self._brightness = DEFAULT_BRIGHTNESS
+
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._is_on = (last_state.state == STATE_ON)
+            self._brightness = last_state.attributes.get('brightness',
+                                                         DEFAULT_BRIGHTNESS)
+            self._led.set(is_on=self._is_on,
+                          brightness=_from_hass_brightness(self._brightness))
 
     @property
     def should_poll(self):
@@ -168,8 +182,16 @@ class PwmRgbLed(PwmSimpleLed):
         super().__init__(led, name)
         self._color = DEFAULT_COLOR
 
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._color = last_state.attributes.get('hs_color', DEFAULT_COLOR)
+            self._led.set(color=_from_hass_color(self._color))
+
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
         return self._color
 
@@ -180,8 +202,8 @@ class PwmRgbLed(PwmSimpleLed):
 
     def turn_on(self, **kwargs):
         """Turn on a LED."""
-        if ATTR_RGB_COLOR in kwargs:
-            self._color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._color = kwargs[ATTR_HS_COLOR]
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
@@ -209,4 +231,5 @@ def _from_hass_brightness(brightness):
 def _from_hass_color(color):
     """Convert Home Assistant RGB list to Color tuple."""
     from pwmled import Color
-    return Color(*tuple(color))
+    rgb = color_util.color_hs_to_RGB(*color)
+    return Color(*tuple(rgb))

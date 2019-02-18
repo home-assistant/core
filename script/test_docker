@@ -1,6 +1,6 @@
 #!/bin/sh
 # Executes the tests with tox in a docker container.
-# Every argment is passed to tox to allow running only a subset of tests.
+# Every argument is passed to tox to allow running only a subset of tests.
 # The following example will only run media_player tests:
 # ./test_docker -- tests/components/media_player/
 

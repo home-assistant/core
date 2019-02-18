@@ -31,8 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up S20 switches."""
     from orvibo.s20 import discover, S20, S20Exception
 
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         except S20Exception:
             _LOGGER.error("S20 at %s couldn't be initialized", host)
 
-    add_devices_callback(switches)
+    add_entities_callback(switches)
 
 
 class S20Switch(SwitchDevice):

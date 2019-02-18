@@ -10,12 +10,12 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,12 +49,12 @@ MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
 #  'Favorites': 'FVP'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
     denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
 
     if denon.update():
-        add_devices([denon])
+        add_entities([denon])
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -78,7 +78,9 @@ class DenonDevice(MediaPlayerDevice):
 
     def _setup_sources(self, telnet):
         # NSFRN - Network name
-        self._name = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
+        nsfrn = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
+        if nsfrn:
+            self._name = nsfrn
 
         # SSFUN - Configured sources with names
         self._source_list = {}
@@ -106,11 +108,11 @@ class DenonDevice(MediaPlayerDevice):
             if not line:
                 break
             lines.append(line.decode('ASCII').strip())
-            _LOGGER.debug("Recived: %s", line)
+            _LOGGER.debug("Received: %s", line)
 
         if all_lines:
             return lines
-        return lines[0]
+        return lines[0] if lines else ''
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
@@ -167,7 +169,7 @@ class DenonDevice(MediaPlayerDevice):
         if self._pwstate == 'PWON':
             return STATE_ON
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def volume_level(self):
@@ -225,7 +227,7 @@ class DenonDevice(MediaPlayerDevice):
         self.telnet_command('MU' + ('ON' if mute else 'OFF'))
 
     def media_play(self):
-        """Play media media player."""
+        """Play media player."""
         self.telnet_command('NS9A')
 
     def media_pause(self):

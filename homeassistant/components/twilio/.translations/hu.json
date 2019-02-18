@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Csak egyetlen konfigur\u00e1ci\u00f3 sz\u00fcks\u00e9ges."
+        }
+    }
+}

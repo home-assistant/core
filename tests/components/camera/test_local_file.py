@@ -2,16 +2,19 @@
 import asyncio
 from unittest import mock
 
-# Using third party package because of a bug reading binary data in Python 3.4
-# https://bugs.python.org/issue23004
-from mock_open import MockOpen
-
+from homeassistant.components.camera import DOMAIN
+from homeassistant.components.camera.local_file import (
+    SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component
+
+from tests.common import mock_registry
 
 
 @asyncio.coroutine
-def test_loading_file(hass, test_client):
+def test_loading_file(hass, hass_client):
     """Test that it loads image from disk."""
+    mock_registry(hass)
+
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
         yield from async_setup_component(hass, 'camera', {
@@ -21,9 +24,9 @@ def test_loading_file(hass, test_client):
                 'file_path': 'mock.file',
             }})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
-    m_open = MockOpen(read_data=b'hello')
+    m_open = mock.mock_open(read_data=b'hello')
     with mock.patch(
             'homeassistant.components.camera.local_file.open',
             m_open, create=True
@@ -53,7 +56,7 @@ def test_file_not_readable(hass, caplog):
 
 
 @asyncio.coroutine
-def test_camera_content_type(hass, test_client):
+def test_camera_content_type(hass, hass_client):
     """Test local_file camera content_type."""
     cam_config_jpg = {
         'name': 'test_jpg',
@@ -80,10 +83,10 @@ def test_camera_content_type(hass, test_client):
         'camera': [cam_config_jpg, cam_config_png,
                    cam_config_svg, cam_config_noext]})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     image = 'hello'
-    m_open = MockOpen(read_data=image.encode())
+    m_open = mock.mock_open(read_data=image.encode())
     with mock.patch('homeassistant.components.camera.local_file.open',
                     m_open, create=True):
         resp_1 = yield from client.get('/api/camera_proxy/camera.test_jpg')
@@ -111,3 +114,37 @@ def test_camera_content_type(hass, test_client):
     assert resp_4.content_type == 'image/jpeg'
     body = yield from resp_4.text()
     assert body == image
+
+
+async def test_update_file_path(hass):
+    """Test update_file_path service."""
+    # Setup platform
+
+    mock_registry(hass)
+
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        await async_setup_component(hass, 'camera', {
+            'camera': {
+                'platform': 'local_file',
+                'file_path': 'mock/path.jpg'
+            }
+        })
+
+        # Fetch state and check motion detection attribute
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('friendly_name') == 'Local File'
+        assert state.attributes.get('file_path') == 'mock/path.jpg'
+
+        service_data = {
+            "entity_id": 'camera.local_file',
+            "file_path": 'new/path.jpg'
+        }
+
+        await hass.services.async_call(DOMAIN,
+                                       SERVICE_UPDATE_FILE_PATH,
+                                       service_data)
+        await hass.async_block_till_done()
+
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('file_path') == 'new/path.jpg'

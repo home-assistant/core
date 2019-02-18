@@ -10,12 +10,12 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME, CONF_PORT,
-    CONF_TIMEOUT)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,14 +39,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
         config.get(CONF_TIMEOUT))
 
     if pioneer.update():
-        add_devices([pioneer])
+        add_entities([pioneer])
 
 
 class PioneerDevice(MediaPlayerDevice):
@@ -85,14 +85,13 @@ class PioneerDevice(MediaPlayerDevice):
         return None
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
+        """Establish a telnet connection and sends command."""
         try:
             try:
-                telnet = telnetlib.Telnet(self._host,
-                                          self._port,
-                                          self._timeout)
-            except ConnectionRefusedError:
-                _LOGGER.debug("Pioneer %s refused connection", self._name)
+                telnet = telnetlib.Telnet(
+                    self._host, self._port, self._timeout)
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
@@ -105,8 +104,8 @@ class PioneerDevice(MediaPlayerDevice):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except ConnectionRefusedError:
-            _LOGGER.debug("Pioneer %s refused connection", self._name)
+        except (ConnectionRefusedError, OSError):
+            _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 
         pwstate = self.telnet_request(telnet, "?P", "PWR")
@@ -158,7 +157,7 @@ class PioneerDevice(MediaPlayerDevice):
         if self._pwstate == "PWR0":
             return STATE_ON
 
-        return STATE_UNKNOWN
+        return None
 
     @property
     def volume_level(self):

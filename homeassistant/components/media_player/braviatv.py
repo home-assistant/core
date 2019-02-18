@@ -5,24 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.braviatv/
 """
 import logging
-import os
-import json
 import re
 
 import voluptuous as vol
 
-from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
-    '#braviarc==0.3.7']
+REQUIREMENTS = ['braviarc-homeassistant==0.3.7.dev0']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -62,40 +60,7 @@ def _get_mac_address(ip_address):
     return None
 
 
-def _config_from_file(filename, config=None):
-    """Create the configuration from a file."""
-    if config:
-        # We're writing configuration
-        bravia_config = _config_from_file(filename)
-        if bravia_config is None:
-            bravia_config = {}
-        new_config = bravia_config.copy()
-        new_config.update(config)
-        try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(new_config))
-        except IOError as error:
-            _LOGGER.error("Saving config file failed: %s", error)
-            return False
-        return True
-    else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except ValueError as error:
-                return {}
-            except IOError as error:
-                _LOGGER.error("Reading config file failed: %s", error)
-                # This won't work yet
-                return False
-        else:
-            return {}
-
-
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)
 
@@ -103,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     pin = None
-    bravia_config = _config_from_file(hass.config.path(BRAVIA_CONFIG_FILE))
+    bravia_config = load_json(hass.config.path(BRAVIA_CONFIG_FILE))
     while bravia_config:
         # Set up a configured TV
         host_ip, host_config = bravia_config.popitem()
@@ -111,46 +76,45 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pin = host_config['pin']
             mac = host_config['mac']
             name = config.get(CONF_NAME)
-            add_devices([BraviaTVDevice(host, mac, name, pin)])
+            add_entities([BraviaTVDevice(host, mac, name, pin)])
             return
 
-    setup_bravia(config, pin, hass, add_devices)
+    setup_bravia(config, pin, hass, add_entities)
 
 
-def setup_bravia(config, pin, hass, add_devices):
+def setup_bravia(config, pin, hass, add_entities):
     """Set up a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
     if pin is None:
-        request_configuration(config, hass, add_devices)
+        request_configuration(config, hass, add_entities)
         return
-    else:
-        mac = _get_mac_address(host)
-        if mac is not None:
-            mac = mac.decode('utf8')
-        # If we came here and configuring this host, mark as done
-        if host in _CONFIGURING:
-            request_id = _CONFIGURING.pop(host)
-            configurator = get_component('configurator')
-            configurator.request_done(request_id)
-            _LOGGER.info("Discovery configuration done")
 
-        # Save config
-        if not _config_from_file(
-                hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'host': host, 'mac': mac}}):
-            _LOGGER.error("Failed to save configuration file")
+    mac = _get_mac_address(host)
+    if mac is not None:
+        mac = mac.decode('utf8')
+    # If we came here and configuring this host, mark as done
+    if host in _CONFIGURING:
+        request_id = _CONFIGURING.pop(host)
+        configurator = hass.components.configurator
+        configurator.request_done(request_id)
+        _LOGGER.info("Discovery configuration done")
 
-        add_devices([BraviaTVDevice(host, mac, name, pin)])
+    # Save config
+    save_json(
+        hass.config.path(BRAVIA_CONFIG_FILE),
+        {host: {'pin': pin, 'host': host, 'mac': mac}})
+
+    add_entities([BraviaTVDevice(host, mac, name, pin)])
 
 
-def request_configuration(config, hass, add_devices):
+def request_configuration(config, hass, add_entities):
     """Request configuration steps from the user."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -166,12 +130,12 @@ def request_configuration(config, hass, add_devices):
         braviarc = braviarc.BraviaRC(host)
         braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_devices)
+            setup_bravia(config, pin, hass, add_entities)
         else:
-            request_configuration(config, hass, add_devices)
+            request_configuration(config, hass, add_entities)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, name, bravia_configuration_callback,
+        name, bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
         'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",

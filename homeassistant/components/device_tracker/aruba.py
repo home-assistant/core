@@ -6,8 +6,6 @@ https://home-assistant.io/components/device_tracker.aruba/
 """
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,18 +13,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pexpect==4.0.1']
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+REQUIREMENTS = ['pexpect==4.6.0']
 
 _DEVICES_REGEX = re.compile(
-    r'(?P<name>([^\s]+))\s+' +
+    r'(?P<name>([^\s]+)?)\s+' +
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+')
+    r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -35,7 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a Aruba scanner."""
     scanner = ArubaDeviceScanner(config[DOMAIN])
@@ -51,8 +45,6 @@ class ArubaDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
-        self.lock = threading.Lock()
 
         self.last_results = {}
 
@@ -74,7 +66,6 @@ class ArubaDeviceScanner(DeviceScanner):
                 return client['name']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Aruba Access Point is up to date.
 
@@ -83,13 +74,12 @@ class ArubaDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            data = self.get_aruba_data()
-            if not data:
-                return False
+        data = self.get_aruba_data()
+        if not data:
+            return False
 
-            self.last_results = data.values()
-            return True
+        self.last_results = data.values()
+        return True
 
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
@@ -104,10 +94,10 @@ class ArubaDeviceScanner(DeviceScanner):
         if query == 1:
             _LOGGER.error("Timeout")
             return
-        elif query == 2:
+        if query == 2:
             _LOGGER.error("Unexpected response from router")
             return
-        elif query == 3:
+        if query == 3:
             ssh.sendline('yes')
             ssh.expect('password:')
         elif query == 4:

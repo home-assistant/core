@@ -1,14 +1,11 @@
 """The tests for the  Template switch platform."""
-import asyncio
-
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components as core
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+    get_test_home_assistant, assert_setup_component)
+from tests.components.switch import common
 
 
 class TestTemplateSwitch:
@@ -19,7 +16,7 @@ class TestTemplateSwitch:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -35,7 +32,7 @@ class TestTemplateSwitch:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
@@ -168,6 +165,45 @@ class TestTemplateSwitch:
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'value_template':
+                                "{{ states.switch.test_state.state }}",
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'entity_picture_template':
+                                "{% if states.switch.test_state.state %}"
+                                "/local/switch.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes['entity_picture'] == '/local/switch.png'
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
@@ -370,7 +406,7 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
 
-        core.switch.turn_on(self.hass, 'switch.test_template_switch')
+        common.turn_on(self.hass, 'switch.test_template_switch')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -406,48 +442,7 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_ON
 
-        core.switch.turn_off(self.hass, 'switch.test_template_switch')
+        common.turn_off(self.hass, 'switch.test_template_switch')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
-
-
-@asyncio.coroutine
-def test_restore_state(hass):
-    """Ensure states are restored on startup."""
-    hass.data[DATA_RESTORE_CACHE] = {
-        'switch.test_template_switch':
-            State('switch.test_template_switch', 'on'),
-    }
-
-    hass.state = CoreState.starting
-    mock_component(hass, 'recorder')
-
-    yield from setup.async_setup_component(hass, 'switch', {
-        'switch': {
-            'platform': 'template',
-            'switches': {
-                'test_template_switch': {
-                    'value_template':
-                        "{{ states.switch.test_state.state }}",
-                    'turn_on': {
-                        'service': 'switch.turn_on',
-                        'entity_id': 'switch.test_state'
-                    },
-                    'turn_off': {
-                        'service': 'switch.turn_off',
-                        'entity_id': 'switch.test_state'
-                    },
-                }
-            }
-        }
-    })
-
-    state = hass.states.get('switch.test_template_switch')
-    assert state.state == 'on'
-
-    yield from hass.async_start()
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('switch.test_template_switch')
-    assert state.state == 'unavailable'

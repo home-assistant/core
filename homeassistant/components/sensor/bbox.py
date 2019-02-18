@@ -10,12 +10,12 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BANDWIDTH_MEGABITS_SECONDS = 'Mb/s'  # type: str
 
-CONF_ATTRIBUTION = "Powered by Bouygues Telecom"
+ATTRIBUTION = "Powered by Bouygues Telecom"
 
 DEFAULT_NAME = 'Bbox'
 
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(BboxSensor(bbox_data, variable, name))
 
-    add_devices(sensors)
+    add_entities(sensors, True)
 
 
 class BboxSensor(Entity):
@@ -80,8 +80,6 @@ class BboxSensor(Entity):
         self._icon = SENSOR_TYPES[sensor_type][2]
         self.bbox_data = bbox_data
         self._state = None
-
-        self.update()
 
     @property
     def name(self):
@@ -107,7 +105,7 @@ class BboxSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
@@ -127,7 +125,7 @@ class BboxSensor(Entity):
                                 2)
 
 
-class BboxData(object):
+class BboxData:
     """Get data from the Bbox."""
 
     def __init__(self):

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El puente ya esta configurado",
+            "no_bridges": "No se han descubierto puentes deCONZ",
+            "one_instance_only": "El componente s\u00f3lo soporta una instancia deCONZ"
+        },
+        "error": {
+            "no_key": "No se pudo obtener una clave API"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Definir pasarela deCONZ"
+            },
+            "link": {
+                "description": "Desbloquee su pasarela deCONZ para registrarse con Home Assistant. \n\n 1. Ir a la configuraci\u00f3n del sistema deCONZ \n 2. Presione el bot\u00f3n \"Desbloquear Gateway\"",
+                "title": "Enlazar con deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Permitir importar sensores virtuales",
+                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
+                },
+                "title": "Opciones de configuraci\u00f3n adicionales para deCONZ"
+            }
+        },
+        "title": "Pasarela Zigbee deCONZ"
+    }
+}

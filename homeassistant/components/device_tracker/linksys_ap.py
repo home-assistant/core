@@ -6,23 +6,20 @@ https://home-assistant.io/components/device_tracker.linksys_ap/
 """
 import base64
 import logging
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
-from homeassistant.util import Throttle
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +39,7 @@ def get_scanner(hass, config):
         return None
 
 
-class LinksysAPDeviceScanner(object):
+class LinksysAPDeviceScanner(DeviceScanner):
     """This class queries a Linksys Access Point."""
 
     def __init__(self, config):
@@ -51,8 +48,6 @@ class LinksysAPDeviceScanner(object):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.verify_ssl = config[CONF_VERIFY_SSL]
-
-        self.lock = threading.Lock()
         self.last_results = []
 
         # Check if the access point is accessible
@@ -66,8 +61,7 @@ class LinksysAPDeviceScanner(object):
 
         return self.last_results
 
-    # pylint: disable=no-self-use
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """
         Return the name (if known) of the device.
 
@@ -76,26 +70,25 @@ class LinksysAPDeviceScanner(object):
         """
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Check for connected devices."""
         from bs4 import BeautifulSoup as BS
 
-        with self.lock:
-            _LOGGER.info("Checking Linksys AP")
+        _LOGGER.info("Checking Linksys AP")
 
-            self.last_results = []
-            for interface in range(INTERFACES):
-                request = self._make_request(interface)
-                self.last_results.extend(
-                    [x.find_all('td')[1].text
-                     for x in BS(request.content, "html.parser")
-                     .find_all(class_='section-row')]
-                )
+        self.last_results = []
+        for interface in range(INTERFACES):
+            request = self._make_request(interface)
+            self.last_results.extend(
+                [x.find_all('td')[1].text
+                 for x in BS(request.content, 'html.parser')
+                 .find_all(class_='section-row')]
+            )
 
-            return True
+        return True
 
     def _make_request(self, unit=0):
+        """Create a request to get the data."""
         # No, the '&&' is not a typo - this is expected by the web interface.
         login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
         pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')

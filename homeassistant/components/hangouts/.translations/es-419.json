@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts ya est\u00e1 configurado",
+            "unknown": "Se produjo un error desconocido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Direcci\u00f3n de correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                },
+                "title": "Inicio de sesi\u00f3n de Google Hangouts"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg."
+        },
+        "create_entry": {
+            "default": "\n\nOp Android, an [der OwnTracks App]({android_url}), g\u00e9i an Preferences -> Connection. \u00c4nnert folgend Astellungen:\n- Mode: Private HTTP\n- Host {webhool_url}\n- Identification:\n  - Username: `<Your name>`\n  - Device ID: `<Your device name>`\n\nOp IOS, an [der OwnTracks App]({ios_url}), klick op (i) Ikon uewen l\u00e9nks -> Settings. \u00c4nnert folgend Astellungen:\n- Mode: HTTP\n- URL: {webhool_url}\n- Turn on authentication:\n- UserID: `<Your name>`\n\n{secret}\n\nKuckt w.e.g. [Dokumentatioun]({docs_url}) fir m\u00e9i Informatiounen."
+        },
+        "step": {
+            "user": {
+                "description": "S\u00e9cher fir OwnTracks anzeriichten?",
+                "title": "OwnTracks ariichten"
+            }
+        },
+        "title": "Owntracks"
+    }
+}

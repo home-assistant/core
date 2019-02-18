@@ -4,24 +4,24 @@ Support for Google Play Music Desktop Player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.gpmdp/
 """
-import logging
 import json
-import os
+import logging
 import socket
 import time
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, SUPPORT_PLAY,
     MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
-from homeassistant.loader import get_component
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['websocket-client==0.37.0']
+REQUIREMENTS = ['websocket-client==0.54.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -46,9 +46,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def request_configuration(hass, config, url, add_devices_callback):
+def request_configuration(hass, config, url, add_entities_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'gpmdp' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['gpmdp'], "Failed to register, please try again.")
@@ -56,11 +56,12 @@ def request_configuration(hass, config, url, add_devices_callback):
         return
     from websocket import create_connection
     websocket = create_connection((url), timeout=1)
-    websocket.send(json.dumps({'namespace': 'connect',
-                               'method': 'connect',
-                               'arguments': ['Home Assistant']}))
+    websocket.send(json.dumps({
+        'namespace': 'connect',
+        'method': 'connect',
+        'arguments': ['Home Assistant']
+    }))
 
-    # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
         """Handle configuration changes."""
         while True:
@@ -86,9 +87,8 @@ def request_configuration(hass, config, url, add_devices_callback):
             if code == 'CODE_REQUIRED':
                 continue
             setup_gpmdp(hass, config, code,
-                        add_devices_callback)
-            _save_config(hass.config.path(GPMDP_CONFIG_FILE),
-                         {"CODE": code})
+                        add_entities_callback)
+            save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
             websocket.send(json.dumps({'namespace': 'connect',
                                        'method': 'connect',
                                        'arguments': ['Home Assistant', code]}))
@@ -96,7 +96,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             break
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
-        hass, DEFAULT_NAME, gpmdp_configuration_callback,
+        DEFAULT_NAME, gpmdp_configuration_callback,
         description=(
             'Enter the pin that is displayed in the '
             'Google Play Music Desktop Player.'),
@@ -105,7 +105,7 @@ def request_configuration(hass, config, url, add_devices_callback):
     )
 
 
-def setup_gpmdp(hass, config, code, add_devices):
+def setup_gpmdp(hass, config, code, add_entities):
     """Set up gpmdp."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -113,49 +113,19 @@ def setup_gpmdp(hass, config, code, add_devices):
     url = 'ws://{}:{}'.format(host, port)
 
     if not code:
-        request_configuration(hass, config, url, add_devices)
+        request_configuration(hass, config, url, add_entities)
         return
 
     if 'gpmdp' in _CONFIGURING:
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_devices([GPMDP(name, url, code)])
+    add_entities([GPMDP(name, url, code)], True)
 
 
-def _load_config(filename):
-    """Load configuration."""
-    if not os.path.isfile(filename):
-        return {}
-
-    try:
-        with open(filename, 'r') as fdesc:
-            inp = fdesc.read()
-
-        # In case empty file
-        if not inp:
-            return {}
-
-        return json.loads(inp)
-    except (IOError, ValueError) as error:
-        _LOGGER.error("Reading config file %s failed: %s", filename, error)
-        return None
-
-
-def _save_config(filename, config):
-    """Save configuration."""
-    try:
-        with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
-    except (IOError, TypeError) as error:
-        _LOGGER.error("Saving configuration file failed: %s", error)
-        return False
-    return True
-
-
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GPMDP platform."""
-    codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
+    codeconfig = load_json(hass.config.path(GPMDP_CONFIG_FILE))
     if codeconfig:
         code = codeconfig.get('CODE')
     elif discovery_info is not None:
@@ -164,7 +134,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         code = None
     else:
         code = None
-    setup_gpmdp(hass, config, code, add_devices_callback)
+    setup_gpmdp(hass, config, code, add_entities)
 
 
 class GPMDP(MediaPlayerDevice):
@@ -186,7 +156,7 @@ class GPMDP(MediaPlayerDevice):
         self._duration = None
         self._volume = None
         self._request_id = 0
-        self.update()
+        self._available = True
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""
@@ -232,22 +202,31 @@ class GPMDP(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the player."""
         time.sleep(1)
-        playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
-        if playstate is None:
-            return
-        self._status = PLAYBACK_DICT[str(playstate['value'])]
-        time_data = self.send_gpmdp_msg('playback', 'getCurrentTime')
-        if time_data is not None:
-            self._seek_position = int(time_data['value'] / 1000)
-        track_data = self.send_gpmdp_msg('playback', 'getCurrentTrack')
-        if track_data is not None:
-            self._title = track_data['value']['title']
-            self._artist = track_data['value']['artist']
-            self._albumart = track_data['value']['albumArt']
-            self._duration = int(track_data['value']['duration'] / 1000)
-        volume_data = self.send_gpmdp_msg('volume', 'getVolume')
-        if volume_data is not None:
-            self._volume = volume_data['value'] / 100
+        try:
+            self._available = True
+            playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
+            if playstate is None:
+                return
+            self._status = PLAYBACK_DICT[str(playstate['value'])]
+            time_data = self.send_gpmdp_msg('playback', 'getCurrentTime')
+            if time_data is not None:
+                self._seek_position = int(time_data['value'] / 1000)
+            track_data = self.send_gpmdp_msg('playback', 'getCurrentTrack')
+            if track_data is not None:
+                self._title = track_data['value']['title']
+                self._artist = track_data['value']['artist']
+                self._albumart = track_data['value']['albumArt']
+                self._duration = int(track_data['value']['duration'] / 1000)
+            volume_data = self.send_gpmdp_msg('volume', 'getVolume')
+            if volume_data is not None:
+                self._volume = volume_data['value'] / 100
+        except OSError:
+            self._available = False
+
+    @property
+    def available(self):
+        """Return if media player is available."""
+        return self._available
 
     @property
     def media_content_type(self):

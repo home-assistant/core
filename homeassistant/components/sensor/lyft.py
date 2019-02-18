@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['lyft_rides==0.1.0b0']
+REQUIREMENTS = ['lyft_rides==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,32 +33,40 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
-    vol.Required(CONF_START_LATITUDE): cv.latitude,
-    vol.Required(CONF_START_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_START_LATITUDE): cv.latitude,
+    vol.Optional(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS, default=None):
+    vol.Optional(CONF_PRODUCT_IDS):
         vol.All(cv.ensure_list, [cv.string]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
     from lyft_rides.auth import ClientCredentialGrant
+    from lyft_rides.errors import APIError
 
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
                                       scopes="public",
                                       is_sandbox_mode=False)
-    session = auth_flow.get_session()
+    try:
+        session = auth_flow.get_session()
+
+        timeandpriceest = LyftEstimate(
+            session, config.get(CONF_START_LATITUDE, hass.config.latitude),
+            config.get(CONF_START_LONGITUDE, hass.config.longitude),
+            config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
+        timeandpriceest.fetch_data()
+    except APIError as exc:
+        _LOGGER.error("Error setting up Lyft platform: %s", exc)
+        return False
 
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = LyftEstimate(
-        session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
-        config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
@@ -67,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if product.get('estimate') is not None:
             dev.append(LyftSensor(
                 'price', timeandpriceest, product_id, product))
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class LyftSensor(Entity):
@@ -176,7 +184,7 @@ class LyftSensor(Entity):
                      estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
 
 
-class LyftEstimate(object):
+class LyftEstimate:
     """The class for handling the time and price estimate."""
 
     def __init__(self, session, start_latitude, start_longitude,
@@ -188,14 +196,18 @@ class LyftEstimate(object):
         self.end_latitude = end_latitude
         self.end_longitude = end_longitude
         self.products = None
-        self.__real_update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest product info and estimates from the Lyft API."""
-        self.__real_update()
+        from lyft_rides.errors import APIError
+        try:
+            self.fetch_data()
+        except APIError as exc:
+            _LOGGER.error("Error fetching Lyft data: %s", exc)
 
-    def __real_update(self):
+    def fetch_data(self):
+        """Get the latest product info and estimates from the Lyft API."""
         from lyft_rides.client import LyftRidesClient
         client = LyftRidesClient(self._session)
 

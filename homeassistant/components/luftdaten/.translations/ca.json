@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "No s'ha pogut comunicar amb l'API de Luftdaten",
+            "invalid_sensor": "El sensor no est\u00e0 disponible o no \u00e9s v\u00e0lid",
+            "sensor_exists": "Sensor ja registrat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Mostrar al mapa",
+                    "station_id": "Identificador del sensor Luftdaten"
+                },
+                "title": "Configuraci\u00f3 de Luftdaten"
+            }
+        },
+        "title": "Luftdaten"
+    }
+}

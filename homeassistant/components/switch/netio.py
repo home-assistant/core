@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynetio==0.1.6']
+REQUIREMENTS = ['pynetio==0.1.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Netio platform."""
     from pynetio import Netio
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             DEVICES[host].netio, key, config[CONF_OUTLETS][key])
         DEVICES[host].entities.append(switch)
 
-    add_devices(DEVICES[host].entities)
+    add_entities(DEVICES[host].entities)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, dispose)
     return True
@@ -117,7 +117,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            hass.async_add_job(dev.async_update_ha_state())
+            hass.async_create_task(dev.async_update_ha_state())
 
         return self.json(True)
 
@@ -141,25 +141,25 @@ class NetioSwitch(SwitchDevice):
         """Return true if entity is available."""
         return not hasattr(self, 'telnet')
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn switch on."""
         self._set(True)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn switch off."""
         self._set(False)
 
     def _set(self, value):
         val = list('uuuu')
-        val[self.outlet - 1] = '1' if value else '0'
+        val[int(self.outlet) - 1] = '1' if value else '0'
         self.netio.get('port list %s' % ''.join(val))
-        self.netio.states[self.outlet - 1] = value
+        self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 
     @property
     def is_on(self):
         """Return the switch's status."""
-        return self.netio.states[self.outlet - 1]
+        return self.netio.states[int(self.outlet) - 1]
 
     def update(self):
         """Update the state."""
@@ -176,14 +176,14 @@ class NetioSwitch(SwitchDevice):
     @property
     def current_power_w(self):
         """Return actual power."""
-        return self.netio.consumptions[self.outlet - 1]
+        return self.netio.consumptions[int(self.outlet) - 1]
 
     @property
     def cumulated_consumption_kwh(self):
         """Return the total enerygy consumption since start_date."""
-        return self.netio.cumulated_consumptions[self.outlet - 1]
+        return self.netio.cumulated_consumptions[int(self.outlet) - 1]
 
     @property
     def start_date(self):
         """Point in time when the energy accumulation started."""
-        return self.netio.start_dates[self.outlet - 1]
+        return self.netio.start_dates[int(self.outlet) - 1]

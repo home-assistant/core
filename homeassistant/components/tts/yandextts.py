@@ -31,7 +31,12 @@ SUPPORT_CODECS = [
 
 SUPPORT_VOICES = [
     'jane', 'oksana', 'alyss', 'omazh',
-    'zahar', 'ermil'
+    'zahar', 'ermil', 'levitan', 'ermilov',
+    'silaerkan', 'kolya', 'kostya', 'nastya',
+    'sasha', 'nick', 'erkanyavas', 'zhenya',
+    'tanya', 'anton_samokhvalov', 'tatyana_abramova',
+    'voicesearch', 'ermil_with_tuning', 'robot',
+    'dude', 'zombie', 'smoky'
 ]
 
 SUPPORTED_EMOTION = [
@@ -63,9 +68,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Range(min=MIN_SPEED, max=MAX_SPEED)
 })
 
+SUPPORTED_OPTIONS = [
+    CONF_CODEC,
+    CONF_VOICE,
+    CONF_EMOTION,
+    CONF_SPEED,
+]
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+
+async def async_get_engine(hass, config):
     """Set up VoiceRSS speech component."""
     return YandexSpeechKitProvider(hass, config)
 
@@ -94,11 +105,16 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    @property
+    def supported_options(self):
+        """Return list of supported options."""
+        return SUPPORTED_OPTIONS
+
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
+        options = options or {}
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -106,20 +122,20 @@ class YandexSpeechKitProvider(Provider):
                     'text': message,
                     'lang': actual_language,
                     'key': self._key,
-                    'speaker': self._speaker,
-                    'format': self._codec,
-                    'emotion': self._emotion,
-                    'speed': self._speed
+                    'speaker': options.get(CONF_VOICE, self._speaker),
+                    'format': options.get(CONF_CODEC, self._codec),
+                    'emotion': options.get(CONF_EMOTION, self._emotion),
+                    'speed': options.get(CONF_SPEED, self._speed)
                 }
 
-                request = yield from websession.get(
+                request = await websession.get(
                     YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load URL %s",
                                   request.status, request.url)
                     return (None, None)
-                data = yield from request.read()
+                data = await request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")

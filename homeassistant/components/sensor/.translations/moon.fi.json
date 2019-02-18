@@ -1,0 +1,12 @@
+{
+    "state": {
+        "first_quarter": "Ensimm\u00e4inen nelj\u00e4nnes",
+        "full_moon": "T\u00e4ysikuu",
+        "last_quarter": "Viimeinen nelj\u00e4nnes",
+        "new_moon": "Uusikuu",
+        "waning_crescent": "V\u00e4henev\u00e4 sirppi",
+        "waning_gibbous": "V\u00e4henev\u00e4 kuperakuu",
+        "waxing_crescent": "Kasvava sirppi",
+        "waxing_gibbous": "Kasvava kuperakuu"
+    }
+}

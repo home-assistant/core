@@ -88,7 +88,8 @@ class MockNetwork(MagicMock):
     SIGNAL_NODE_QUERIES_COMPLETE = 'mock_NodeQueriesComplete'
     SIGNAL_AWAKE_NODES_QUERIED = 'mock_AwakeNodesQueried'
     SIGNAL_ALL_NODES_QUERIED = 'mock_AllNodesQueried'
-    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = 'mock_AllNodesQueriedSomeDead'
+    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = \
+        'mock_AllNodesQueriedSomeDead'
     SIGNAL_MSG_COMPLETE = 'mock_MsgComplete'
     SIGNAL_NOTIFICATION = 'mock_Notification'
     SIGNAL_CONTROLLER_COMMAND = 'mock_ControllerCommand'
@@ -119,6 +120,8 @@ class MockNode(MagicMock):
                  product_type='678',
                  command_classes=None,
                  can_wake_up_value=True,
+                 manufacturer_name='Test Manufacturer',
+                 product_name='Test Product',
                  network=None,
                  **kwargs):
         """Initialize a Z-Wave mock node."""
@@ -128,6 +131,8 @@ class MockNode(MagicMock):
         self.manufacturer_id = manufacturer_id
         self.product_id = product_id
         self.product_type = product_type
+        self.manufacturer_name = manufacturer_name
+        self.product_name = product_name
         self.can_wake_up_value = can_wake_up_value
         self._command_classes = command_classes or []
         if network is not None:
@@ -174,6 +179,7 @@ class MockValue(MagicMock):
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
         self.value_id = value_id
+        self.object_id = value_id
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 

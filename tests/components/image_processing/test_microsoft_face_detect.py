@@ -9,13 +9,14 @@ import homeassistant.components.microsoft_face as mf
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+from tests.components.image_processing import common
 
 
-class TestMicrosoftFaceDetectSetup(object):
+class TestMicrosoftFaceDetectSetup:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -25,7 +26,7 @@ class TestMicrosoftFaceDetectSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform(self, store_mock):
-        """Setup platform with one entity."""
+        """Set up platform with one entity."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_detect',
@@ -51,7 +52,7 @@ class TestMicrosoftFaceDetectSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform_name(self, store_mock):
-        """Setup platform with one entity and set name."""
+        """Set up platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_detect',
@@ -74,11 +75,11 @@ class TestMicrosoftFaceDetectSetup(object):
         assert self.hass.states.get('image_processing.test_local')
 
 
-class TestMicrosoftFaceDetect(object):
+class TestMicrosoftFaceDetect:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
@@ -108,7 +109,7 @@ class TestMicrosoftFaceDetect(object):
            'MicrosoftFaceDetectEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
     def test_ms_detect_process_image(self, poll_mock, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
@@ -146,7 +147,7 @@ class TestMicrosoftFaceDetect(object):
             params={'returnFaceAttributes': "age,gender"}
         )
 
-        ip.scan(self.hass, entity_id='image_processing.test_local')
+        common.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')
@@ -159,3 +160,23 @@ class TestMicrosoftFaceDetect(object):
         assert face_events[0].data['gender'] == 'male'
         assert face_events[0].data['entity_id'] == \
             'image_processing.test_local'
+
+        # Test that later, if a request is made that results in no face
+        # being detected, that this is reflected in the state object
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            self.endpoint_url.format("detect"),
+            text="[]",
+            params={'returnFaceAttributes': "age,gender"}
+        )
+
+        common.scan(self.hass, entity_id='image_processing.test_local')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('image_processing.test_local')
+
+        # No more face events were fired
+        assert len(face_events) == 1
+        # Total faces and actual qualified number of faces reset to zero
+        assert state.attributes.get('total_faces') == 0
+        assert state.state == '0'

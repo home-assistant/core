@@ -1,7 +1,7 @@
-"""Test Z-Wave config panel."""
+"""Test Group config panel."""
 import asyncio
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
@@ -11,12 +11,12 @@ VIEW_NAME = 'api:config:group:config'
 
 
 @asyncio.coroutine
-def test_get_device_config(hass, test_client):
+def test_get_device_config(hass, hass_client):
     """Test getting device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     def mock_read(path):
         """Mock reading data."""
@@ -40,12 +40,12 @@ def test_get_device_config(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_device_config(hass, test_client):
+def test_update_device_config(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     orig_data = {
         'hello.beer': {
@@ -66,8 +66,11 @@ def test_update_device_config(hass, test_client):
         """Mock writing data."""
         written.append(data)
 
+    mock_call = MagicMock()
+
     with patch('homeassistant.components.config._read', mock_read), \
-            patch('homeassistant.components.config._write', mock_write):
+            patch('homeassistant.components.config._write', mock_write), \
+            patch.object(hass.services, 'async_call', mock_call):
         resp = yield from client.post(
             '/api/config/group/config/hello_beer', data=json.dumps({
                 'name': 'Beer',
@@ -82,15 +85,16 @@ def test_update_device_config(hass, test_client):
     orig_data['hello_beer']['entities'] = ['light.top', 'light.bottom']
 
     assert written[0] == orig_data
+    mock_call.assert_called_once_with('group', 'reload')
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_key(hass, test_client):
+def test_update_device_config_invalid_key(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/not a slug', data=json.dumps({
@@ -101,12 +105,12 @@ def test_update_device_config_invalid_key(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_data(hass, test_client):
+def test_update_device_config_invalid_data(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/hello_beer', data=json.dumps({
@@ -117,12 +121,12 @@ def test_update_device_config_invalid_data(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_json(hass, test_client):
+def test_update_device_config_invalid_json(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/hello_beer', data='not json')

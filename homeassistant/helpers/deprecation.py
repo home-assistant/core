@@ -1,19 +1,20 @@
 """Deprecation helpers for Home Assistant."""
 import inspect
 import logging
+from typing import Any, Callable, Dict, Optional
 
 
-def deprecated_substitute(substitute_name):
+def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
     """Help migrate properties to new names.
 
     When a property is added to replace an older property, this decorator can
     be added to the new property, listing the old property as the substitute.
-    If the old property is defined, it's value will be used instead, and a log
+    If the old property is defined, its value will be used instead, and a log
     warning will be issued alerting the user of the impending change.
     """
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         """Decorate function as deprecated."""
-        def func_wrapper(self):
+        def func_wrapper(self: Callable) -> Any:
             """Wrap for the original function."""
             if hasattr(self, substitute_name):
                 # If this platform is still using the old property, issue
@@ -28,18 +29,17 @@ def deprecated_substitute(substitute_name):
                         substitute_name, substitute_name, func.__name__,
                         inspect.getfile(self.__class__))
                     warnings[module_name] = True
-                    # pylint: disable=protected-access
-                    func._deprecated_substitute_warnings = warnings
+                    setattr(func, '_deprecated_substitute_warnings', warnings)
 
                 # Return the old property
                 return getattr(self, substitute_name)
-            else:
-                return func(self)
+            return func(self)
         return func_wrapper
     return decorator
 
 
-def get_deprecated(config, new_name, old_name, default=None):
+def get_deprecated(config: Dict[str, Any], new_name: str, old_name: str,
+                   default: Optional[Any] = None) -> Optional[Any]:
     """Allow an old config name to be deprecated with a replacement.
 
     If the new config isn't found, but the old one is, the old value is used

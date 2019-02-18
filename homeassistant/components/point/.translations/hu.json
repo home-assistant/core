@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "title": "Point hiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                },
+                "description": "V\u00e1laszd ki, hogy melyik hiteles\u00edt\u00e9si szolg\u00e1ltat\u00f3n\u00e1l szeretn\u00e9d hiteles\u00edteni a Pointot.",
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

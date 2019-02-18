@@ -13,11 +13,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import split_entity_id, callback
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_REGION
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ OPENALPR_REGIONS = [
 ]
 
 CONF_ALPR_BIN = 'alp_bin'
-CONF_REGION = 'region'
 
 DEFAULT_BINARY = 'alpr'
 
@@ -56,8 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], '-c', config[CONF_REGION], '-']
     confidence = config[CONF_CONFIDENCE]
@@ -68,7 +67,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
         ))
 
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
@@ -83,7 +82,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
     def state(self):
         """Return the state of the entity."""
         confidence = 0
-        plate = STATE_UNKNOWN
+        plate = None
 
         # search high plate
         for i_pl, i_co in self.plates.items():
@@ -173,8 +172,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         """Return the name of the entity."""
         return self._name
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    async def async_process_image(self, image):
         """Process image.
 
         This method is a coroutine.
@@ -182,7 +180,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         result = {}
         vehicles = 0
 
-        alpr = yield from asyncio.create_subprocess_exec(
+        alpr = await asyncio.create_subprocess_exec(
             *self._cmd,
             loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
@@ -191,7 +189,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         )
 
         # Send image
-        stdout, _ = yield from alpr.communicate(input=image)
+        stdout, _ = await alpr.communicate(input=image)
         stdout = io.StringIO(str(stdout, 'utf-8'))
 
         while True:

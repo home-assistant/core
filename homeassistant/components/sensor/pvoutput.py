@@ -15,7 +15,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME)
+    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME,
+    ATTR_VOLTAGE)
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = 'http://pvoutput.org/service/r2/getstatus.jsp'
@@ -25,7 +26,6 @@ ATTR_POWER_GENERATION = 'power_generation'
 ATTR_ENERGY_CONSUMPTION = 'energy_consumption'
 ATTR_POWER_CONSUMPTION = 'power_consumption'
 ATTR_EFFICIENCY = 'efficiency'
-ATTR_VOLTAGE = 'voltage'
 
 CONF_SYSTEM_ID = 'system_id'
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -61,10 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch data from PVOutput")
         return False
 
-    add_devices([PvoutputSensor(rest, name)], True)
+    add_entities([PvoutputSensor(rest, name)], True)
 
 
-# pylint: disable=no-member
 class PvoutputSensor(Entity):
     """Representation of a PVOutput sensor."""
 

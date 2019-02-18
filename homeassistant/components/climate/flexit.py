@@ -17,34 +17,43 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
     ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
-import homeassistant.components.modbus as modbus
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE)
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE, None)
     name = config.get(CONF_NAME, None)
-    add_devices([Flexit(modbus_slave, name)], True)
+    hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
+    add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
 class Flexit(ClimateDevice):
     """Representation of a Flexit AC unit."""
 
-    def __init__(self, modbus_slave, name):
+    def __init__(self, hub, modbus_slave, name):
         """Initialize the unit."""
         from pyflexit import pyflexit
+        self._hub = hub
         self._name = name
         self._slave = modbus_slave
         self._target_temperature = None
@@ -60,7 +69,12 @@ class Flexit(ClimateDevice):
         self._heating = None
         self._cooling = None
         self._alarm = False
-        self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
+        self.unit = pyflexit.pyflexit(hub, modbus_slave)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     def update(self):
         """Update unit attributes."""
@@ -143,6 +157,6 @@ class Flexit(ClimateDevice):
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.unit.set_temp(self._target_temperature)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        self.unit.set_fan_speed(self._fan_list.index(fan))
+        self.unit.set_fan_speed(self._fan_list.index(fan_mode))

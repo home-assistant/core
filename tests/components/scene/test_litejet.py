@@ -5,8 +5,9 @@ from unittest import mock
 
 from homeassistant import setup
 from homeassistant.components import litejet
+
 from tests.common import get_test_home_assistant
-import homeassistant.components.scene as scene
+from tests.components.scene import common
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class TestLiteJetScene(unittest.TestCase):
 
     @mock.patch('pylitejet.LiteJet')
     def setup_method(self, method, mock_pylitejet):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.start()
 
@@ -59,7 +60,7 @@ class TestLiteJetScene(unittest.TestCase):
 
     def test_activate(self):
         """Test activating the scene."""
-        scene.activate(self.hass, ENTITY_SCENE)
+        common.activate(self.hass, ENTITY_SCENE)
         self.hass.block_till_done()
         self.mock_lj.activate_scene.assert_called_once_with(
             ENTITY_SCENE_NUMBER)

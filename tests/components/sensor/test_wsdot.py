@@ -1,17 +1,16 @@
 """The tests for the WSDOT platform."""
+from datetime import datetime, timedelta, timezone
 import re
 import unittest
-from datetime import timedelta, datetime, timezone
 
 import requests_mock
+from tests.common import get_test_home_assistant, load_fixture
 
 from homeassistant.components.sensor import wsdot
 from homeassistant.components.sensor.wsdot import (
-    WashingtonStateTravelTimeSensor, ATTR_DESCRIPTION,
-    ATTR_TIME_UPDATED, CONF_API_KEY, CONF_NAME,
-    CONF_ID, CONF_TRAVEL_TIMES, SCAN_INTERVAL)
+    ATTR_DESCRIPTION, ATTR_TIME_UPDATED, CONF_API_KEY, CONF_ID, CONF_NAME,
+    CONF_TRAVEL_TIMES, RESOURCE, SCAN_INTERVAL)
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
 
 
 class TestWSDOT(unittest.TestCase):
@@ -44,21 +43,19 @@ class TestWSDOT(unittest.TestCase):
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'wsdot': self.config}))
+        assert setup_component(self.hass, 'sensor', {'wsdot': self.config})
 
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational WSDOT sensor with proper attributes."""
-        uri = re.compile(WashingtonStateTravelTimeSensor.RESOURCE + '*')
+        uri = re.compile(RESOURCE + '*')
         mock_req.get(uri, text=load_fixture('wsdot.json'))
         wsdot.setup_platform(self.hass, self.config, self.add_entities)
-        self.assertEqual(len(self.entities), 1)
+        assert len(self.entities) == 1
         sensor = self.entities[0]
-        self.assertEqual(sensor.name, 'I90 EB')
-        self.assertEqual(sensor.state, 11)
-        self.assertEqual(sensor.device_state_attributes[ATTR_DESCRIPTION],
-                         'Downtown Seattle to Downtown Bellevue via I-90')
-        self.assertEqual(sensor.device_state_attributes[ATTR_TIME_UPDATED],
-                         datetime(2017, 1, 21, 15, 10,
-                                  tzinfo=timezone(timedelta(hours=-8))))
+        assert sensor.name == 'I90 EB'
+        assert sensor.state == 11
+        assert sensor.device_state_attributes[ATTR_DESCRIPTION] == \
+            'Downtown Seattle to Downtown Bellevue via I-90'
+        assert sensor.device_state_attributes[ATTR_TIME_UPDATED] == \
+            datetime(2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8)))

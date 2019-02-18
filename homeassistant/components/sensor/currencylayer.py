@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://apilayer.net/api/live'
 
-CONF_ATTRIBUTION = "Data provided by currencylayer.com"
+ATTRIBUTION = "Data provided by currencylayer.com"
 
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'CurrencyLayer Sensor'
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Currencylayer sensor."""
     base = config.get(CONF_BASE)
     api_key = config.get(CONF_API_KEY)
@@ -54,8 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if 'error' in response.json():
         return False
-    else:
-        add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class CurrencylayerSensor(Entity):
@@ -69,9 +68,14 @@ class CurrencylayerSensor(Entity):
         self._state = None
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._quote
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._base, self._quote)
+        return self._base
 
     @property
     def icon(self):
@@ -87,7 +91,7 @@ class CurrencylayerSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
@@ -99,7 +103,7 @@ class CurrencylayerSensor(Entity):
                 value['{}{}'.format(self._base, self._quote)], 4)
 
 
-class CurrencylayerData(object):
+class CurrencylayerData:
     """Get data from Currencylayer.org."""
 
     def __init__(self, resource, parameters):

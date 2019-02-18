@@ -16,5 +16,8 @@ ExecStart=/usr/bin/hass --runner
 SendSIGKILL=no
 RestartForceExitStatus=100
 
+# on vagrant (vboxfs), disable sendfile https://www.virtualbox.org/ticket/9069
+Environment=AIOHTTP_NOSENDFILE=1
+
 [Install]
 WantedBy=multi-user.target

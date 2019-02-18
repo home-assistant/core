@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['uber_rides==0.4.1']
+REQUIREMENTS = ['uber_rides==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Uber sensor."""
     from uber_rides.session import Session
 
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev.append(UberSensor(
                 'price', timeandpriceest, product_id, product))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class UberSensor(Entity):
@@ -87,11 +87,14 @@ class UberSensor(Entity):
             if self._product.get('price_details') is not None:
                 price_details = self._product['price_details']
                 self._unit_of_measurement = price_details.get('currency_code')
-                if price_details.get('low_estimate') is not None:
-                    statekey = 'minimum'
-                else:
-                    statekey = 'low_estimate'
-                self._state = int(price_details.get(statekey, 0))
+                try:
+                    if price_details.get('low_estimate') is not None:
+                        statekey = 'minimum'
+                    else:
+                        statekey = 'low_estimate'
+                    self._state = int(price_details.get(statekey))
+                except TypeError:
+                    self._state = 0
             else:
                 self._state = 0
 
@@ -172,7 +175,7 @@ class UberSensor(Entity):
                 self._state = 0
 
 
-class UberEstimate(object):
+class UberEstimate:
     """The class for handling the time and price estimate."""
 
     def __init__(self, session, start_latitude, start_longitude,

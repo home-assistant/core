@@ -11,12 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceEntity)
+    ImageProcessingFaceEntity, PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
+    CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['face_recognition==0.2.0']
+REQUIREMENTS = ['face_recognition==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dlib Face detection platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME)
         ))
 
-    add_devices(entities)
+    add_entities(entities)
 
 
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
@@ -58,8 +57,12 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
 
         self._faces = {}
         for face_name, face_file in faces.items():
-            image = face_recognition.load_image_file(face_file)
-            self._faces[face_name] = face_recognition.face_encodings(image)[0]
+            try:
+                image = face_recognition.load_image_file(face_file)
+                self._faces[face_name] = \
+                    face_recognition.face_encodings(image)[0]
+            except IndexError as err:
+                _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
 
     @property
     def camera_entity(self):

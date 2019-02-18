@@ -1,0 +1,12 @@
+{
+    "mfa_setup": {
+        "totp": {
+            "step": {
+                "init": {
+                    "title": "Configurar la autenticaci\u00f3n de dos factores mediante TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

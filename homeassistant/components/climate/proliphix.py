@@ -6,11 +6,12 @@ https://home-assistant.io/components/climate.proliphix/
 """
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PRECISION_TENTHS, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, PRECISION_TENTHS, TEMP_FAHRENHEIT,
+    ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['proliphix==0.4.1']
@@ -24,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -34,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     pdp = proliphix.PDP(host, username, password)
 
-    add_devices([ProliphixThermostat(pdp)])
+    add_entities([ProliphixThermostat(pdp)])
 
 
 class ProliphixThermostat(ClimateDevice):
@@ -45,6 +46,11 @@ class ProliphixThermostat(ClimateDevice):
         self._pdp = pdp
         self._pdp.update()
         self._name = self._pdp.name
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def should_poll(self):
@@ -97,9 +103,9 @@ class ProliphixThermostat(ClimateDevice):
         state = self._pdp.hvac_state
         if state in (1, 2):
             return STATE_IDLE
-        elif state == 3:
+        if state == 3:
             return STATE_HEAT
-        elif state == 6:
+        if state == 6:
             return STATE_COOL
 
     def set_temperature(self, **kwargs):

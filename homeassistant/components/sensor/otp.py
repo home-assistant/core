@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.otp/
 """
 import time
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -32,13 +31,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the OTP sensor."""
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
 
-    async_add_devices([TOTPSensor(name, token)], True)
+    async_add_entities([TOTPSensor(name, token)], True)
     return True
 
 
@@ -54,15 +53,14 @@ class TOTPSensor(Entity):
         self._state = None
         self._next_expiration = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._call_loop()
 
     @callback
     def _call_loop(self):
         self._state = self._otp.now()
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
         # Update must occur at even TIME_STEP, e.g. 12:00:00, 12:00:30,
         # 12:01:00, etc. in order to have synced time (see RFC6238)

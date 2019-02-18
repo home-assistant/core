@@ -7,7 +7,7 @@ import requests_mock
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor import sleepiq
 
-from tests.components.test_sleepiq import mock_responses
+from tests.components.sleepiq.test_init import mock_responses
 from tests.common import get_test_home_assistant
 
 
@@ -16,7 +16,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -49,14 +49,14 @@ class TestSleepIQSensorSetup(unittest.TestCase):
 
         sleepiq.setup_platform(self.hass,
                                self.config,
-                               self.add_devices,
+                               self.add_entities,
                                MagicMock())
-        self.assertEqual(2, len(self.DEVICES))
+        assert 2 == len(self.DEVICES)
 
         left_side = self.DEVICES[1]
-        self.assertEqual('SleepNumber ILE Test1 SleepNumber', left_side.name)
-        self.assertEqual(40, left_side.state)
+        assert 'SleepNumber ILE Test1 SleepNumber' == left_side.name
+        assert 40 == left_side.state
 
         right_side = self.DEVICES[0]
-        self.assertEqual('SleepNumber ILE Test2 SleepNumber', right_side.name)
-        self.assertEqual(80, right_side.state)
+        assert 'SleepNumber ILE Test2 SleepNumber' == right_side.name
+        assert 80 == right_side.state

@@ -1,4 +1,4 @@
-"""Zwave discovery schemas."""
+"""Z-Wave discovery schemas."""
 from . import const
 
 DEFAULT_VALUES_SCHEMA = {
@@ -16,6 +16,7 @@ DEFAULT_VALUES_SCHEMA = {
 DISCOVERY_SCHEMAS = [
     {const.DISC_COMPONENT: 'binary_sensor',
      const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_ENTRY_CONTROL,
          const.GENERIC_TYPE_SENSOR_ALARM,
          const.GENERIC_TYPE_SENSOR_BINARY,
          const.GENERIC_TYPE_SWITCH_BINARY,
@@ -28,10 +29,17 @@ DISCOVERY_SCHEMAS = [
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
-             const.DISC_GENRE: const.GENRE_USER
+             const.DISC_GENRE: const.GENRE_USER,
+         },
+         'off_delay': {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_CONFIGURATION],
+             const.DISC_INDEX: [9],
+             const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'climate',
-     const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_THERMOSTAT],
+     const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_THERMOSTAT,
+         const.GENERIC_TYPE_SENSOR_MULTILEVEL],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
@@ -92,7 +100,7 @@ DISCOVERY_SCHEMAS = [
              const.DISC_INDEX: [const.INDEX_SWITCH_MULTILEVEL_DIM],
              const.DISC_OPTIONAL: True,
          }})},
-    {const.DISC_COMPONENT: 'cover',  # Garage Door
+    {const.DISC_COMPONENT: 'cover',  # Garage Door Switch
      const.DISC_GENERIC_DEVICE_CLASS: [
          const.GENERIC_TYPE_SWITCH_MULTILEVEL,
          const.GENERIC_TYPE_ENTRY_CONTROL],
@@ -105,10 +113,35 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_SECURE_DOOR],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
-             const.DISC_COMMAND_CLASS: [
-                 const.COMMAND_CLASS_BARRIER_OPERATOR,
-                 const.COMMAND_CLASS_SWITCH_BINARY],
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_BINARY],
              const.DISC_GENRE: const.GENRE_USER,
+         }})},
+    {const.DISC_COMPONENT: 'cover',  # Garage Door Barrier
+     const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_SWITCH_MULTILEVEL,
+         const.GENERIC_TYPE_ENTRY_CONTROL],
+     const.DISC_SPECIFIC_DEVICE_CLASS: [
+         const.SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL,
+         const.SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL,
+         const.SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL,
+         const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
+         const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
+         const.SPECIFIC_TYPE_SECURE_DOOR],
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+         const.DISC_PRIMARY: {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_BARRIER_OPERATOR],
+             const.DISC_INDEX: [const.INDEX_BARRIER_OPERATOR_LABEL],
+         }})},
+    {const.DISC_COMPONENT: 'fan',
+     const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_SWITCH_MULTILEVEL],
+     const.DISC_SPECIFIC_DEVICE_CLASS: [
+         const.SPECIFIC_TYPE_FAN_SWITCH],
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+         const.DISC_PRIMARY: {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
+             const.DISC_INDEX: [const.INDEX_SWITCH_MULTILEVEL_LEVEL],
+             const.DISC_TYPE: const.TYPE_BYTE,
          }})},
     {const.DISC_COMPONENT: 'light',
      const.DISC_GENERIC_DEVICE_CLASS: [
@@ -142,8 +175,10 @@ DISCOVERY_SCHEMAS = [
     {const.DISC_COMPONENT: 'lock',
      const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_ENTRY_CONTROL],
      const.DISC_SPECIFIC_DEVICE_CLASS: [
+         const.SPECIFIC_TYPE_DOOR_LOCK,
          const.SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
-         const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
+         const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK,
+         const.SPECIFIC_TYPE_SECURE_LOCKBOX],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_DOOR_LOCK],
@@ -176,11 +211,13 @@ DISCOVERY_SCHEMAS = [
                  const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                  const.COMMAND_CLASS_METER,
                  const.COMMAND_CLASS_ALARM,
-                 const.COMMAND_CLASS_SENSOR_ALARM],
+                 const.COMMAND_CLASS_SENSOR_ALARM,
+                 const.COMMAND_CLASS_INDICATOR],
              const.DISC_GENRE: const.GENRE_USER,
          }})},
     {const.DISC_COMPONENT: 'switch',
      const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_METER,
          const.GENERIC_TYPE_SENSOR_ALARM,
          const.GENERIC_TYPE_SENSOR_BINARY,
          const.GENERIC_TYPE_SWITCH_BINARY,

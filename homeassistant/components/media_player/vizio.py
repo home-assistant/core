@@ -1,55 +1,47 @@
 """
 Vizio SmartCast TV support.
 
-Usually only 2016+ models come with SmartCast capabilities.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.vizio/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice
-)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_OFF,
-    STATE_ON,
-    CONF_NAME,
-    CONF_HOST,
-    CONF_ACCESS_TOKEN
-)
+    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyvizio==0.0.2']
+REQUIREMENTS = ['pyvizio==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SUPPRESS_WARNING = 'suppress_warning'
 CONF_VOLUME_STEP = 'volume_step'
 
-ICON = 'mdi:television'
 DEFAULT_NAME = 'Vizio SmartCast'
 DEFAULT_VOLUME_STEP = 1
-DEVICE_NAME = 'Python Vizio'
 DEVICE_ID = 'pyvizio'
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+DEVICE_NAME = 'Python Vizio'
+
+ICON = 'mdi:television'
+
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
 SUPPORTED_COMMANDS = SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
                      | SUPPORT_SELECT_SOURCE \
                      | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
-                     | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+                     | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP \
+                     | SUPPORT_VOLUME_SET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -61,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the VizioTV media player platform."""
     host = config.get(CONF_HOST)
     token = config.get(CONF_ACCESS_TOKEN)
@@ -70,17 +62,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = VizioDevice(host, token, name, volume_step)
     if device.validate_setup() is False:
-        _LOGGER.error('Failed to setup Vizio TV platform, '
-                      'please check if host and API key are correct.')
-        return False
+        _LOGGER.error("Failed to set up Vizio TV platform, "
+                      "please check if host and API key are correct")
+        return
 
     if config.get(CONF_SUPPRESS_WARNING):
-        import requests
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning
-        _LOGGER.warning('InsecureRequestWarning is disabled '
-                        'because of Vizio platform configuration.')
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    add_devices([device], True)
+        from requests.packages import urllib3
+        _LOGGER.warning("InsecureRequestWarning is disabled "
+                        "because of Vizio platform configuration")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    add_entities([device], True)
 
 
 class VizioDevice(MediaPlayerDevice):
@@ -91,7 +82,7 @@ class VizioDevice(MediaPlayerDevice):
         import pyvizio
         self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token)
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._volume_level = None
         self._volume_step = volume_step
         self._current_input = None
@@ -102,14 +93,16 @@ class VizioDevice(MediaPlayerDevice):
         """Retrieve latest state of the TV."""
         is_on = self._device.get_power_state()
         if is_on is None:
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
-        elif is_on is False:
+        if is_on is False:
             self._state = STATE_OFF
         else:
             self._state = STATE_ON
 
-        self._volume_level = self._device.get_current_volume()
+        volume = self._device.get_current_volume()
+        if volume is not None:
+            self._volume_level = float(volume) / 100.
         input_ = self._device.get_current_input()
         if input_ is not None:
             self._current_input = input_.meta_name
@@ -178,12 +171,26 @@ class VizioDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Increasing volume of the TV."""
+        self._volume_level += self._volume_step / 100.
         self._device.vol_up(num=self._volume_step)
 
     def volume_down(self):
         """Decreasing volume of the TV."""
+        self._volume_level -= self._volume_step / 100.
         self._device.vol_down(num=self._volume_step)
 
     def validate_setup(self):
-        """Validating if host is available and key is correct."""
+        """Validate if host is available and key is correct."""
         return self._device.get_current_volume() is not None
+
+    def set_volume_level(self, volume):
+        """Set volume level."""
+        if self._volume_level is not None:
+            if volume > self._volume_level:
+                num = int(100*(volume - self._volume_level))
+                self._volume_level = volume
+                self._device.vol_up(num=num)
+            elif volume < self._volume_level:
+                num = int(100*(self._volume_level - volume))
+                self._volume_level = volume
+                self._device.vol_down(num=num)
