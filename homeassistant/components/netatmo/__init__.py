@@ -1,6 +1,5 @@
 """Support for the Netatmo devices."""
 import logging
-import json
 from datetime import timedelta
 from urllib.error import HTTPError
 
