@@ -259,9 +259,11 @@ class BOMRadarLoop(Camera):
         that.
         """
         _log("Getting frames for %s at %s", self._location, self._t0)
-        fn_get = lambda time_str: self.get_wximg(time_str)
         pool0 = multiprocessing.dummy.Pool(self._frames)
-        raw = pool0.map(fn_get, self.get_time_strs())
+        raw = pool0.map(
+            lambda time_str: self.get_wximg(time_str),
+            self.get_time_strs()
+        )
         wximages = [x for x in raw if x is not None]
         if not wximages:
             return None
@@ -269,14 +271,18 @@ class BOMRadarLoop(Camera):
         background = self.get_background()
         if background is None:
             return None
-        fn_composite = lambda x: self._pilimg.alpha_composite(background, x)
-        composites = pool1.map(fn_composite, wximages)
+        composites = pool1.map(
+            lambda x: self._pilimg.alpha_composite(background, x),
+            wximages
+        )
         legend = self.get_legend()
         if legend is None:
             return None
         loop_frames = pool1.map(lambda _: legend.copy(), composites)
-        fn_paste = lambda x: x[0].paste(x[1], (0, 0))
-        pool1.map(fn_paste, zip(loop_frames, composites))
+        pool1.map(
+            lambda x: x[0].paste(x[1], (0, 0)),
+            zip(loop_frames, composites)
+        )
         return loop_frames
 
     def get_image(self, url):
@@ -346,12 +352,11 @@ class BOMRadarLoop(Camera):
         """
         _log("Getting time strings starting at %s", self._t0)
         tz = dt.timezone.utc
-        mkdt = lambda n: dt.datetime.fromtimestamp(
+        ns = range(self._frames, 0, -1)
+        return [dt.datetime.fromtimestamp(
             self._t0 - (self._delta * n),
             tz=tz
-        )
-        ns = range(self._frames, 0, -1)
-        return [mkdt(n).strftime('%Y%m%d%H%M') for n in ns]
+        ).strftime('%Y%m%d%H%M') for n in ns]
 
     def get_url(self, path):
         """Return a canonical URL for a suffix path on the BOM website."""
