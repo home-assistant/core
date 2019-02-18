@@ -17,14 +17,14 @@ from .common import async_init_zigpy_device
 @pytest.fixture
 async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # load the ZHA API
     async_load_api(hass, Mock(), zha_gateway)
 
     # create zigpy device
     await async_init_zigpy_device(
-        hass, [OnOff.cluster_id], [], None, zha_gateway)
+        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway)
 
     # load up switch domain
     await hass.config_entries.async_forward_entry_setup(
@@ -44,10 +44,16 @@ async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
 
     msg = await zha_client.receive_json()
 
-    assert len(msg['result']) == 1
+    assert len(msg['result']) == 2
 
-    cluster_info = msg['result'][0]
+    cluster_infos = sorted(msg['result'], key=lambda k: k[ID])
 
+    cluster_info = cluster_infos[0]
+    assert cluster_info[TYPE] == IN
+    assert cluster_info[ID] == 0
+    assert cluster_info[NAME] == 'Basic'
+
+    cluster_info = cluster_infos[1]
     assert cluster_info[TYPE] == IN
     assert cluster_info[ID] == 6
     assert cluster_info[NAME] == 'OnOff'
