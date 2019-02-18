@@ -18,10 +18,12 @@ ICON_RANGE = 'mdi:speedometer'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensors setup."""
+    if discovery_info is None:
+        return
+
     devices = []
     for vin, datastore in hass.data[DATA_LEAF].items():
-        _LOGGER.debug(
-            "Adding sensor for item vin=%s, datastore=%s", vin, datastore)
+        _LOGGER.debug("Adding sensors for vin=%s", vin)
         devices.append(LeafBatterySensor(datastore))
         devices.append(LeafRangeSensor(datastore, True))
         devices.append(LeafRangeSensor(datastore, False))

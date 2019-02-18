@@ -12,9 +12,13 @@ DEPENDENCIES = ['nissan_leaf']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Nissan Leaf switch platform setup."""
+    if discovery_info is None:
+        return
+
     devices = []
-    for value in hass.data[DATA_LEAF].values():
-        devices.append(LeafClimateSwitch(value))
+    for vin, datastore in hass.data[DATA_LEAF].items():
+        _LOGGER.debug("Adding switch for vin=%s", vin)
+        devices.append(LeafClimateSwitch(datastore))
 
     add_devices(devices, True)
 

@@ -12,11 +12,12 @@ DEPENDENCIES = ['nissan_leaf']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf binary sensor."""
+    if discovery_info is None:
+        return
+
     devices = []
     for vin, datastore in hass.data[DATA_LEAF].items():
-        _LOGGER.debug(
-            "binary_sensor setup_platform, vin=%s, datastore=%s",
-            vin, datastore)
+        _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
         devices.append(LeafPluggedInSensor(datastore))
         devices.append(LeafChargingSensor(datastore))
 
