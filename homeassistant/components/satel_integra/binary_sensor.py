@@ -62,13 +62,13 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
             if self._device_number in\
-                self.hass.data[DATA_SATEL].violated_outputs:
-                self._state = 1
+               self.hass.data[DATA_SATEL].violated_outputs:
+                    self._state = 1
             else:
                 self._state = 0
         else:
             if self._device_number in\
-                self.hass.data[DATA_SATEL].violated_zones:
+               self.hass.data[DATA_SATEL].violated_zones:
                 self._state = 1
             else:
                 self._state = 0

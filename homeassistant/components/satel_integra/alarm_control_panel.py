@@ -45,13 +45,14 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Update alarm status and register callbacks for future updates."""
-        _LOGGER.info("Starts listening for panel messages: async_dispatcher_connect")
+        _LOGGER.debug("Starts listening for panel messages")
         self._update_alarm_status()
         async_dispatcher_connect(
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
 
     def _read_alarm_state(self):
-        """Read current status of the alarm device and translate it into HA alarm status"""
+        """Read current status of the alarm device and
+           translate it into HA alarm status"""
 
         from satel_integra.satel_integra import AlarmState
 
@@ -63,21 +64,22 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
             return STATE_UNKNOWN
         # Warning: order is important here:
         state_map = {
-            AlarmState.TRIGGERED : STATE_ALARM_TRIGGERED,
-            AlarmState.TRIGGERED_FIRE : STATE_ALARM_TRIGGERED,
-            AlarmState.ARMED_MODE3 : STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE2 : STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE1 : STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE0 : STATE_ALARM_ARMED_AWAY,
-            AlarmState.EXIT_COUNTDOWN_OVER_10 : STATE_ALARM_PENDING,
-            AlarmState.EXIT_COUNTDOWN_UNDER_10 : STATE_ALARM_PENDING,
+            AlarmState.TRIGGERED: STATE_ALARM_TRIGGERED,
+            AlarmState.TRIGGERED_FIRE: STATE_ALARM_TRIGGERED,
+            AlarmState.ARMED_MODE3: STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE2: STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE1: STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE0: STATE_ALARM_ARMED_AWAY,
+            AlarmState.EXIT_COUNTDOWN_OVER_10: STATE_ALARM_PENDING,
+            AlarmState.EXIT_COUNTDOWN_UNDER_10: STATE_ALARM_PENDING,
         }
         _LOGGER.debug("State map of Satel: %s",
                       satel_controller.partition_states)
 
         for satel_state, ha_state in state_map.items():
             if satel_state in satel_controller.partition_states and\
-               self._partition_id in satel_controller.partition_states[satel_state]:
+               self._partition_id in\
+                    satel_controller.partition_states[satel_state]:
                 hass_alarm_status = ha_state
                 break
 
@@ -131,8 +133,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
             await self.hass.data[DATA_SATEL].clear_alarm(code)
-
-
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""

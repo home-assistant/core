@@ -1,14 +1,11 @@
 """Support for Satel Integra devices."""
-import asyncio
 import logging
 
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -76,7 +73,7 @@ async def async_setup(hass, config):
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
 
-    from satel_integra.satel_integra import AsyncSatel, AlarmState
+    from satel_integra.satel_integra import AsyncSatel
 
     controller = AsyncSatel(host, port, hass.loop, zones, outputs, partition)
 
@@ -103,12 +100,6 @@ async def async_setup(hass, config):
         async_load_platform(hass, 'binary_sensor', DOMAIN,
                             {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config)
         )
-
-#    _LOGGER.debug("Before waiting for task_control_panel")
-
-#    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
-
-#    _LOGGER.debug("After waiting for task_control_panel")
 
     @callback
     def alarm_status_update_callback():
