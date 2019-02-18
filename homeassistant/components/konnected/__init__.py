@@ -38,6 +38,7 @@ CONF_INVERSE = 'inverse'
 CONF_BLINK = 'blink'
 CONF_DISCOVERY = 'discovery'
 CONF_DHT_SENSORS = 'dht_sensors'
+CONF_DS18B20_SENSORS = 'ds18b20_sensors'
 
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
@@ -363,67 +364,49 @@ class DiscoveredDevice:
                 SIGNAL_SENSOR_UPDATE.format(entity_id),
                 state)
 
-    def sync_device_config(self):
-        """Sync the new pin configuration to the Konnected device."""
-        desired_sensor_configuration = self.binary_sensor_configuration()
-        current_sensor_configuration = [
-            {'pin': s[CONF_PIN]} for s in self.status.get('sensors')]
-        _LOGGER.debug('%s: desired sensor config: %s', self.device_id,
-                      desired_sensor_configuration)
-        _LOGGER.debug('%s: current sensor config: %s', self.device_id,
-                      current_sensor_configuration)
-
-        desired_actuator_config = self.actuator_configuration()
-        current_actuator_config = self.status.get('actuators')
-        _LOGGER.debug('%s: desired actuator config: %s', self.device_id,
-                      desired_actuator_config)
-        _LOGGER.debug('%s: current actuator config: %s', self.device_id,
-                      current_actuator_config)
-
-        desired_dht_config = self.dht_sensor_configuration()
-        current_dht_config = self.status.get(CONF_DHT_SENSORS)
-        _LOGGER.debug('%s: desired dht sensor config: %s', self.device_id,
-                      desired_dht_config)
-        _LOGGER.debug('%s: current dht sensor config: %s', self.device_id,
-                      current_dht_config)
-
-        desired_ds18b20_config = self.ds18b20_sensor_configuration()
-        current_ds18b20_config = self.status.get(CONF_DHT_SENSORS)
-        _LOGGER.debug('%s: desired ds18b20 sensor config: %s', self.device_id,
-                      desired_ds18b20_config)
-        _LOGGER.debug('%s: current ds18b20 sensor config: %s', self.device_id,
-                      current_ds18b20_config)
-
+    def desired_settings_payload(self):
+        """Return a dict representing the desired device configuration."""
         desired_api_host = \
             self.hass.data[DOMAIN].get(CONF_API_HOST) or \
             self.hass.config.api.base_url
         desired_api_endpoint = desired_api_host + ENDPOINT_ROOT
-        current_api_endpoint = self.status.get('endpoint')
 
-        _LOGGER.debug('%s: desired api endpoint: %s', self.device_id,
-                      desired_api_endpoint)
-        _LOGGER.debug('%s: current api endpoint: %s', self.device_id,
-                      current_api_endpoint)
+        return {
+            'sensors': self.binary_sensor_configuration(),
+            'actuators': self.actuator_configuration(),
+            'dht_sensors': self.dht_sensor_configuration(),
+            'ds18b20_sensors': self.ds18b20_sensor_configuration(),
+            'auth_token': self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
+            'endpoint': desired_api_endpoint,
+            'blink': self.stored_configuration.get(CONF_BLINK),
+            'discovery': self.stored_configuration.get(CONF_DISCOVERY)
+        }
 
-        if (desired_sensor_configuration != current_sensor_configuration) or \
-                (current_actuator_config != desired_actuator_config) or \
-                (current_dht_config != desired_dht_config) or \
-                (current_api_endpoint != desired_api_endpoint) or \
-                (self.status.get(CONF_BLINK) !=
-                 self.stored_configuration.get(CONF_BLINK)) or \
-                (self.status.get(CONF_DISCOVERY) !=
-                 self.stored_configuration.get(CONF_DISCOVERY)):
+    def current_settings_payload(self):
+        """Return a dict of configuration currently stored on the device."""
+        settings = self.status['settings']
+        if not settings:
+            settings = {}
+
+        return {
+            'sensors': [
+                {'pin': s[CONF_PIN]} for s in self.status.get('sensors')],
+            'actuators': self.status.get('actuators'),
+            'dht_sensors': self.status.get(CONF_DHT_SENSORS),
+            'ds18b20_sensors': self.status.get(CONF_DS18B20_SENSORS),
+            'auth_token': settings.get('token'),
+            'endpoint': settings.get('apiUrl'),
+            'blink': settings.get(CONF_BLINK),
+            'discovery': settings.get(CONF_DISCOVERY)
+        }
+
+    def sync_device_config(self):
+        """Sync the new pin configuration to the Konnected device if needed."""
+        _LOGGER.debug('Device %s settings payload: %s', self.device_id,
+                      self.desired_settings_payload())
+        if self.desired_settings_payload() != self.current_settings_payload():
             _LOGGER.info('pushing settings to device %s', self.device_id)
-            self.client.put_settings(
-                sensors=desired_sensor_configuration,
-                actuators=desired_actuator_config,
-                dht_sensors=desired_dht_config,
-                ds18b20_sensors=desired_ds18b20_config,
-                auth_token=self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
-                endpoint=desired_api_endpoint,
-                blink=self.stored_configuration.get(CONF_BLINK),
-                discovery=self.stored_configuration.get(CONF_DISCOVERY)
-            )
+            self.client.put_settings(**self.desired_settings_payload())
 
 
 class KonnectedView(HomeAssistantView):
