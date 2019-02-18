@@ -110,6 +110,7 @@ DEPENDENCIES = ['http']
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
 SIGNAL_SENSOR_UPDATE = 'konnected.{}.update'
+SIGNAL_DS18B20_NEW = 'konnected.ds18b20.new'
 
 
 async def async_setup(hass, config):
@@ -323,7 +324,7 @@ class DiscoveredDevice:
         return self.hass.data[DOMAIN][CONF_DEVICES].get(self.device_id)
 
     def binary_sensor_configuration(self):
-        """Return the configuration map for syncing sensors."""
+        """Return the configuration map for syncing binary sensors."""
         return [{'pin': p} for p in
                 self.stored_configuration[CONF_BINARY_SENSORS]]
 
@@ -338,6 +339,12 @@ class DiscoveredDevice:
         """Return the configuration map for syncing DHT sensors."""
         return [{'pin': sensor[CONF_PIN]} for sensor in
                 filter(lambda s: s[CONF_TYPE] == 'dht',
+                       self.stored_configuration[CONF_SENSORS])]
+
+    def ds18b20_sensor_configuration(self):
+        """Return the configuration map for syncing DS18B20 sensors."""
+        return [{'pin': sensor[CONF_PIN]} for sensor in
+                filter(lambda s: s[CONF_TYPE] == 'ds18b20',
                        self.stored_configuration[CONF_SENSORS])]
 
     def update_initial_states(self):
@@ -380,6 +387,13 @@ class DiscoveredDevice:
         _LOGGER.debug('%s: current dht sensor config: %s', self.device_id,
                       current_dht_config)
 
+        desired_ds18b20_config = self.ds18b20_sensor_configuration()
+        current_ds18b20_config = self.status.get(CONF_DHT_SENSORS)
+        _LOGGER.debug('%s: desired ds18b20 sensor config: %s', self.device_id,
+                      desired_ds18b20_config)
+        _LOGGER.debug('%s: current ds18b20 sensor config: %s', self.device_id,
+                      current_ds18b20_config)
+
         desired_api_host = \
             self.hass.data[DOMAIN].get(CONF_API_HOST) or \
             self.hass.config.api.base_url
@@ -404,6 +418,7 @@ class DiscoveredDevice:
                 sensors=desired_sensor_configuration,
                 actuators=desired_actuator_config,
                 dht_sensors=desired_dht_config,
+                ds18b20_sensors=desired_ds18b20_config,
                 auth_token=self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
                 endpoint=desired_api_endpoint,
                 blink=self.stored_configuration.get(CONF_BLINK),
@@ -502,6 +517,20 @@ class KonnectedView(HomeAssistantView):
                 hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state)
 
         temp, humi = payload.get('temp'), payload.get('humi')
+        addr = payload.get('addr')
+
+        if addr:
+            entity_id = pin_data.get(addr)
+            if entity_id:
+                async_dispatcher_send(
+                    hass, SIGNAL_SENSOR_UPDATE.format(entity_id), temp)
+            else:
+                sensor_data = pin_data
+                sensor_data['device_id'] = device_id
+                sensor_data['temperature'] = temp
+                sensor_data['addr'] = addr
+                async_dispatcher_send(
+                    hass, SIGNAL_DS18B20_NEW, sensor_data)
         if temp:
             entity_id = pin_data.get('temperature')
             async_dispatcher_send(

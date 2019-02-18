@@ -7,11 +7,10 @@ https://home-assistant.io/components/sensor.konnected/
 import logging
 
 from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, SIGNAL_SENSOR_UPDATE)
+    DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
     CONF_DEVICES, CONF_PIN, CONF_TYPE, CONF_NAME, CONF_SENSORS,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    ATTR_STATE, TEMP_FAHRENHEIT)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -29,7 +28,7 @@ SENSOR_TYPES = {
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up binary sensors attached to a Konnected device."""
+    """Set up sensors attached to a Konnected device."""
     if discovery_info is None:
         return
 
@@ -39,17 +38,31 @@ async def async_setup_platform(hass, config, async_add_entities,
     data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
     sensors = []
+
+    # Initialize all DHT sensors.
     for sensor in filter(lambda s: s[CONF_TYPE] == 'dht',
                          data[CONF_DEVICES][device_id][CONF_SENSORS]):
         sensors.append(
-            KonnectedDHTSensor(device_id, sensor, DEVICE_CLASS_TEMPERATURE))
+            KonnectedSensor(device_id, sensor, DEVICE_CLASS_TEMPERATURE))
         sensors.append(
-            KonnectedDHTSensor(device_id, sensor, DEVICE_CLASS_HUMIDITY))
+            KonnectedSensor(device_id, sensor, DEVICE_CLASS_HUMIDITY))
 
     async_add_entities(sensors)
 
+    @callback
+    def async_add_ds18b20(data):
+        """Add new KonnectedSensor representing a ds18b20 sensor."""
+        async_add_entities([
+            KonnectedSensor(data.get('device_id'), data,
+                            DEVICE_CLASS_TEMPERATURE)
+        ], True)
 
-class KonnectedDHTSensor(Entity):
+    # DS18B20 sensors entities are initialized when they report for the first
+    # time. Set up a listener for that signal from the Konnected component.
+    async_dispatcher_connect(hass, SIGNAL_DS18B20_NEW, async_add_ds18b20)
+
+
+class KonnectedSensor(Entity):
     """Represents a Konnected DHT Sensor."""
 
     def __init__(self, device_id, data, sensor_type):
@@ -58,13 +71,25 @@ class KonnectedDHTSensor(Entity):
         self._device_id = device_id
         self._type = sensor_type
         self._pin_num = self._data.get(CONF_PIN)
-        self._state = self._data.get(ATTR_STATE)
-        self._device_class = DEVICE_CLASS_TEMPERATURE
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._state = None
         self._name = '{} {}'.format(
             self._data.get(CONF_NAME, 'Konnected {} Pin {}'.format(
                 device_id, self._pin_num)),
             SENSOR_TYPES[sensor_type][0])
+
+        if sensor_type == DEVICE_CLASS_TEMPERATURE:
+            self._state = self.temperature(self._data.get(sensor_type))
+
+    def temperature(self, number=None):
+        """Format temperature and convert to Fahrenheit if necessary."""
+        if number is None:
+            return None
+
+        number = float(number)
+        if self._unit_of_measurement == TEMP_FAHRENHEIT:
+            number = celsius_to_fahrenheit(number)
+        return round(number, 1)
 
     @property
     def name(self):
@@ -83,7 +108,8 @@ class KonnectedDHTSensor(Entity):
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""
-        self._data[self._type] = self.entity_id
+        entity_id_key = self._data.get('addr') or self._type
+        self._data[entity_id_key] = self.entity_id
         async_dispatcher_connect(
             self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id),
             self.async_set_state)
@@ -91,11 +117,8 @@ class KonnectedDHTSensor(Entity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        state = float(state)
-        if self._unit_of_measurement == TEMP_FAHRENHEIT:
-            self._state = round(celsius_to_fahrenheit(state), 1)
-        elif self._unit_of_measurement == '%':
-            self._state = int(state)
+        if self._type == DEVICE_CLASS_TEMPERATURE:
+            self._state = self.temperature(state)
         else:
-            self._state = round(state, 1)
+            self._state = int(float(state))
         self.async_schedule_update_ha_state()
