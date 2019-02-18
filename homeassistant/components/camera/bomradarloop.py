@@ -304,10 +304,8 @@ class BOMRadarLoop(Camera):
         """
         _log("Getting loop for %s at %s", self._location, self._t0)
         loop = io.BytesIO()
-        try:
-            frames = self.get_frames()
-            if frames is None:
-                raise
+        frames = self.get_frames()
+        if frames is not None:
             _log(
                 "Got %s frames for %s at %s",
                 len(frames),
@@ -322,7 +320,7 @@ class BOMRadarLoop(Camera):
                 loop=0,
                 save_all=True,
             )
-        except:
+        else:
             _log("Got NO frames for %s at %s", self._location, self._t0)
             self._pilimg.new('RGB', (340, 370)).save(loop, format='GIF')
         if self._outfn:
