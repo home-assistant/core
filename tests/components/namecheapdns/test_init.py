@@ -78,6 +78,7 @@ def test_setup_fails_if_update_fails_deprecated(hass, aioclient_mock):
     assert not result
     assert aioclient_mock.call_count == 1
 
+
 @pytest.fixture
 def setup_namecheapdns(hass, aioclient_mock):
     """Fixture that sets up NamecheapDNS."""
