@@ -91,12 +91,9 @@ class Iperf3Sensor(RestoreEntity):
 
     def update(self):
         """Get the latest data and update the states."""
-        if self._sensor_type == ATTR_DOWNLOAD:
-            if self._iperf3_data.data[ATTR_DOWNLOAD]:
-                self._state = round(self._iperf3_data.data[ATTR_DOWNLOAD], 2)
-        elif self._sensor_type == ATTR_UPLOAD:
-            if self._iperf3_data.data[ATTR_UPLOAD]:
-                self._state = round(self._iperf3_data.data[ATTR_UPLOAD], 2)
+        data = self._iperf3_data.data.get(self._sensor_type, None)
+        if data is not None:
+            self._state = round(data, 2)
 
     @callback
     def _schedule_immediate_update(self, host):

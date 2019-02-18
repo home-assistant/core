@@ -5,11 +5,11 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_PORT, \
-    CONF_HOST, CONF_PROTOCOL, CONF_HOSTS, CONF_SCAN_INTERVAL, ATTR_ENTITY_ID
+    CONF_HOST, CONF_PROTOCOL, CONF_HOSTS, CONF_SCAN_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['iperf3==0.1.10']
@@ -32,6 +32,7 @@ DEFAULT_INTERVAL = timedelta(minutes=60)
 ATTR_DOWNLOAD = 'download'
 ATTR_UPLOAD = 'upload'
 ATTR_VERSION = 'Version'
+ATTR_HOST = 'host'
 
 UNIT_OF_MEASUREMENT = 'Mbit/s'
 
@@ -65,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID, default=None): cv.string,
+    vol.Optional(ATTR_HOST, default=None): cv.string,
 })
 
 
@@ -96,9 +97,9 @@ async def async_setup(hass, config):
 
     def update(call):
         """Service call to manually update the data."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-        if entity_id in hass.data[DOMAIN]:
-            hass.data[DOMAIN][entity_id].update()
+        called_host = call.data[ATTR_HOST]
+        if called_host in hass.data[DOMAIN]:
+            hass.data[DOMAIN][called_host].update()
         else:
             for iperf3_host in hass.data[DOMAIN].values():
                 iperf3_host.update()
