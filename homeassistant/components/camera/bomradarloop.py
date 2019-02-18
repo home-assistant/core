@@ -219,6 +219,8 @@ class BOMRadarLoop(Camera):
 
     def get_background(self):
         """
+        Get the background map image.
+
         Fetch the background map, then the topography, locations (e.g. city
         names), and distance-from-radar range markings, and merge into a single
         image.
@@ -243,6 +245,8 @@ class BOMRadarLoop(Camera):
 
     def get_frames(self):
         """
+        Get radar images for animation frames.
+
         Use a thread pool to fetch a set of current radar images in parallel,
         then get a background image for this location, combine it with the
         colorbar legend, and finally composite each radar image onto a copy of
@@ -286,13 +290,14 @@ class BOMRadarLoop(Camera):
 
     def get_legend(self):
         """Fetch the BOM colorbar legend image."""
-
         _log("Getting legend at {}".format(self._t0))
         url = self.get_url('products/radar_transparencies/IDR.legend.0.png')
         return self.get_image(url)
 
     def get_loop(self):
         """
+        Get the radar-imagery loop GIF image.
+
         Return an animated GIF comprising a set of frames, where each frame
         includes a background, one or more supplemental layers, a colorbar
         legend, and a radar image.
@@ -335,6 +340,8 @@ class BOMRadarLoop(Camera):
 
     def get_time_strs(self):
         """
+        Get time strings.
+
         Return a list of strings representing YYYYMMDDHHMM times for the most
         recent set of radar images to be used to create the animated GIF.
         """
@@ -349,12 +356,13 @@ class BOMRadarLoop(Camera):
 
     def get_url(self, path):
         """Return a canonical URL for a suffix path on the BOM website."""
-
         _log("Getting URL for path {}".format(path))
         return 'http://www.bom.gov.au/{}'.format(path)
 
     def get_wximg(self, time_str):
         """
+        Get a weather-radar image.
+
         Return a radar weather image from the BOM website. Note that
         get_image() returns None if the image could not be fetched, so the
         caller must deal with that possibility.
@@ -367,4 +375,5 @@ class BOMRadarLoop(Camera):
 
     @property
     def name(self):
+        """Return the component name."""
         return self._name
