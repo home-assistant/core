@@ -133,9 +133,10 @@ class DarkSkyWeather(WeatherEntity):
         """Return the pressure."""
         pressure = self._ds_currently.get('pressure')
         if 'us' in self._dark_sky.units:
-            return round(convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
+            return round(
+                convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
         return pressure
-    
+
     @property
     def visibility(self):
         """Return the visibility."""
