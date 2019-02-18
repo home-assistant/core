@@ -39,3 +39,5 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 icon=ICON_CAR)
 
     dispatcher_connect(hass, SIGNAL_UPDATE_LEAF, see_vehicle)
+
+    return True
