@@ -17,23 +17,23 @@ def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Nissan Leaf tracker."""
     def see_vehicle():
         """Handle the reporting of the vehicle position."""
-        for key, value in hass.data[DATA_LEAF].items():
-            host_name = value.leaf.nickname
+        for vin, datastore in hass.data[DATA_LEAF].items():
+            host_name = datastore.leaf.nickname
             dev_id = 'nissan_leaf_{}'.format(slugify(host_name))
-            if not value.data[DATA_LOCATION]:
-                _LOGGER.debug("No position found for vehicle %s", key)
+            if not datastore.data[DATA_LOCATION]:
+                _LOGGER.debug("No position found for vehicle %s", vin)
                 return
             _LOGGER.debug("Updating device_tracker for %s with position %s",
-                          value.leaf.nickname,
-                          value.data[DATA_LOCATION].__dict__)
+                          datastore.leaf.nickname,
+                          datastore.data[DATA_LOCATION].__dict__)
             attrs = {
-                'updated_on': value.last_location_response,
+                'updated_on': datastore.last_location_response,
             }
             see(dev_id=dev_id,
                 host_name=host_name,
                 gps=(
-                    value.data[DATA_LOCATION].latitude,
-                    value.data[DATA_LOCATION].longitude
+                    datastore.data[DATA_LOCATION].latitude,
+                    datastore.data[DATA_LOCATION].longitude
                 ),
                 attributes=attrs,
                 icon=ICON_CAR)
