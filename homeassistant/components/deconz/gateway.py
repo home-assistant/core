@@ -8,7 +8,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
+    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, NEW_DEVICE, NEW_SENSOR,
+    SUPPORTED_PLATFORMS)
 
 
 class DeconzGateway:
@@ -44,7 +45,7 @@ class DeconzGateway:
 
         self.listeners.append(
             async_dispatcher_connect(
-                hass, 'deconz_new_sensor', self.async_add_remote))
+                hass, NEW_SENSOR, self.async_add_remote))
 
         self.async_add_remote(self.api.sensors.values())
 
@@ -64,8 +65,7 @@ class DeconzGateway:
         """Handle event of new device creation in deCONZ."""
         if not isinstance(device, list):
             device = [device]
-        async_dispatcher_send(
-            self.hass, 'deconz_new_{}'.format(device_type), device)
+        async_dispatcher_send(self.hass, NEW_DEVICE[device_type], device)
 
     @callback
     def async_add_remote(self, sensors):
