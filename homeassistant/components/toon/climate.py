@@ -27,7 +27,6 @@ HA_TOON = {
     STATE_HEAT: 'Home',
     STATE_ECO: 'Away',
     STATE_COOL: 'Sleep',
-    STATE_DRY: 'Manual',
 }
 
 TOON_HA = {value: key for key, value in HA_TOON.items()}
