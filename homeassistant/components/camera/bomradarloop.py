@@ -53,10 +53,11 @@ import multiprocessing.dummy
 import os
 import time
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.helpers import config_validation as cv
 from voluptuous import All, In, Invalid, Optional
 import requests
+
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['Pillow==5.4.1']
 
@@ -126,9 +127,9 @@ RADARS = {
     'Yarrawonga':      {'id': '493', 'delta': 360, 'frames': 6},
 }
 
-locs = sorted(RADARS.keys())
-badloc = "Set 'location' to one of: {}".format(', '.join(locs))
-logger = logging.getLogger(__name__)
+LOCS = sorted(RADARS.keys())
+BADLOC = "Set 'location' to one of: {}".format(', '.join(LOCS))
+LOGGER = logging.getLogger(__name__)
 
 
 def _validate_schema(cfg):
@@ -148,17 +149,23 @@ PLATFORM_SCHEMA = All(PLATFORM_SCHEMA.extend({
     Optional(CONF_OUTFN): cv.string,
     Optional(CONF_FRAMES): cv.positive_int,
     Optional(CONF_ID): cv.positive_int,
-    Optional(CONF_LOC): All(In(locs), msg=badloc),
+    Optional(CONF_LOC): All(In(LOCS), msg=BADLOC),
     Optional(CONF_NAME): cv.string,
 }), _validate_schema)
 
 
+def _get_url(path):
+    """Return a canonical URL for a suffix path on the BOM website."""
+    _log("Getting URL for path %s", path)
+    return 'http://www.bom.gov.au/{}'.format(path)
+
+
 def _log(*msg):
-    logger.info(*msg)
+    LOGGER.info(*msg)
 
 
 def _log_error(*msg):
-    logger.error(*msg)
+    LOGGER.error(*msg)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -211,9 +218,9 @@ class BOMRadarLoop(Camera):
     def camera_image(self):
         """Return the latest BOM radar-loop image."""
         now = int(time.time())
-        t1 = now - (now % self._delta)
-        if t1 > self._t0:
-            self._t0 = t1
+        _t1 = now - (now % self._delta)
+        if _t1 > self._t0:
+            self._t0 = _t1
             self._loop = self.get_loop()
         return self._loop
 
@@ -227,7 +234,7 @@ class BOMRadarLoop(Camera):
         """
         _log("Getting background for %s at %s", self._location, self._t0)
         suffix = 'products/radar_transparencies/IDR{}.background.png'
-        url = self.get_url(suffix.format(self._radar_id))
+        url = _get_url(suffix.format(self._radar_id))
         background = self.get_image(url)
         if background is None:
             return None
@@ -237,7 +244,7 @@ class BOMRadarLoop(Camera):
                 self._radar_id,
                 layer
             )
-            url = self.get_url(suffix)
+            url = _get_url(suffix)
             image = self.get_image(url)
             if image is not None:
                 background = self._pilimg.alpha_composite(background, image)
@@ -260,10 +267,7 @@ class BOMRadarLoop(Camera):
         """
         _log("Getting frames for %s at %s", self._location, self._t0)
         pool0 = multiprocessing.dummy.Pool(self._frames)
-        raw = pool0.map(
-            lambda time_str: self.get_wximg(time_str),
-            self.get_time_strs()
-        )
+        raw = pool0.map(self.get_wximg, self.get_time_strs())
         wximages = [x for x in raw if x is not None]
         if not wximages:
             return None
@@ -297,7 +301,7 @@ class BOMRadarLoop(Camera):
     def get_legend(self):
         """Fetch the BOM colorbar legend image."""
         _log("Getting legend at %s", self._t0)
-        url = self.get_url('products/radar_transparencies/IDR.legend.0.png')
+        url = _get_url('products/radar_transparencies/IDR.legend.0.png')
         return self.get_image(url)
 
     def get_loop(self):
@@ -337,8 +341,8 @@ class BOMRadarLoop(Camera):
                 except OSError:
                     _log_error("Could not create directory %s", outdir)
             try:
-                with open(self._outfn, 'wb') as f:
-                    f.write(loop.getvalue())
+                with open(self._outfn, 'wb') as outfile:
+                    outfile.write(loop.getvalue())
             except IOError:
                 _log_error("Could not write image to %s", self._outfn)
         return loop.getvalue()
@@ -351,17 +355,11 @@ class BOMRadarLoop(Camera):
         recent set of radar images to be used to create the animated GIF.
         """
         _log("Getting time strings starting at %s", self._t0)
-        tz = dt.timezone.utc
-        ns = range(self._frames, 0, -1)
+        frame_numbers = range(self._frames, 0, -1)
         return [dt.datetime.fromtimestamp(
             self._t0 - (self._delta * n),
-            tz=tz
-        ).strftime('%Y%m%d%H%M') for n in ns]
-
-    def get_url(self, path):
-        """Return a canonical URL for a suffix path on the BOM website."""
-        _log("Getting URL for path %s", path)
-        return 'http://www.bom.gov.au/{}'.format(path)
+            tz=dt.timezone.utc
+        ).strftime('%Y%m%d%H%M') for n in frame_numbers]
 
     def get_wximg(self, time_str):
         """
@@ -372,7 +370,7 @@ class BOMRadarLoop(Camera):
         caller must deal with that possibility.
         """
         _log("Getting radar imagery for %s at %s", self._location, time_str)
-        url = self.get_url(
+        url = _get_url(
             '/radar/IDR{}.T.{}.png'.format(self._radar_id, time_str)
         )
         return self.get_image(url)
