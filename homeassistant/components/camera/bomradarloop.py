@@ -138,10 +138,8 @@ def _validate_schema(cfg):
             raise Invalid("Specify either 'id' or 'location', not both")
     else:
         if not all([cfg.get('id'), cfg.get('delta'), cfg.get('frames')]):
-            raise Invalid(
-                "Specify 'id', 'delta' and 'frames' when 'location'"
-                " is unspecified"
-            )
+            raise Invalid("Specify 'id', 'delta' and 'frames' when 'location'"
+                          " is unspecified")
     return cfg
 
 
@@ -175,15 +173,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         location = "ID {}".format(radar_id)
     name = config.get(CONF_NAME) or "BOM Radar Loop - {}".format(location)
     outfn = config.get(CONF_OUTFN)
-    bomradarloop = BOMRadarLoop(
-        hass,
-        location,
-        delta,
-        frames,
-        radar_id,
-        name,
-        outfn
-    )
+    bomradarloop = BOMRadarLoop(hass, location, delta, frames, radar_id, name,
+                                outfn)
     add_devices([bomradarloop])
 
 
@@ -223,27 +214,18 @@ class BOMRadarLoop(Camera):
         names), and distance-from-radar range markings, and merge into a single
         image.
         """
-        LOGGER.info(
-            "Getting background for %s at %s",
-            self._location,
-            self._t0
-        )
+        LOGGER.info("Getting background for %s at %s", self._location,
+                    self._t0)
         suffix = 'products/radar_transparencies/IDR{}.background.png'
         url = _get_url(suffix.format(self._radar_id))
         background = self.get_image(url)
         if background is None:
             return None
         for layer in ('topography', 'locations', 'range'):
-            LOGGER.info(
-                "Getting %s for %s at %s",
-                layer,
-                self._location,
-                self._t0
-            )
+            LOGGER.info("Getting %s for %s at %s", layer, self._location,
+                        self._t0)
             suffix = 'products/radar_transparencies/IDR{}.{}.png'.format(
-                self._radar_id,
-                layer
-            )
+                self._radar_id, layer)
             url = _get_url(suffix)
             image = self.get_image(url)
             if image is not None:
@@ -275,17 +257,14 @@ class BOMRadarLoop(Camera):
         if background is None:
             return None
         composites = pool1.map(
-            lambda x: self._pilimg.alpha_composite(background, x),
-            wximages
+            lambda x: self._pilimg.alpha_composite(background, x), wximages
         )
         legend = self.get_legend()
         if legend is None:
             return None
         loop_frames = pool1.map(lambda _: legend.copy(), composites)
-        pool1.map(
-            lambda x: x[0].paste(x[1], (0, 0)),
-            zip(loop_frames, composites)
-        )
+        pool1.map(lambda x: x[0].paste(x[1], (0, 0)),
+                  zip(loop_frames, composites))
         return loop_frames
 
     def get_image(self, url):
@@ -314,20 +293,10 @@ class BOMRadarLoop(Camera):
         loop = io.BytesIO()
         frames = self.get_frames()
         if frames is not None:
-            LOGGER.info(
-                "Got %s frames for %s at %s",
-                len(frames),
-                self._location,
-                self._t0
-            )
-            frames[0].save(
-                loop,
-                append_images=frames[1:],
-                duration=500,
-                format='GIF',
-                loop=0,
-                save_all=True,
-            )
+            LOGGER.info("Got %s frames for %s at %s", len(frames),
+                        self._location, self._t0)
+            frames[0].save(loop, append_images=frames[1:], duration=500,
+                           format='GIF', loop=0, save_all=True)
         else:
             LOGGER.info("Got NO frames for %s at %s", self._location, self._t0)
             self._pilimg.new('RGB', (340, 370)).save(loop, format='GIF')
@@ -365,11 +334,8 @@ class BOMRadarLoop(Camera):
         get_image() returns None if the image could not be fetched, so the
         caller must deal with that possibility.
         """
-        LOGGER.info(
-            "Getting radar imagery for %s at %s",
-            self._location,
-            time_str
-        )
+        LOGGER.info("Getting radar imagery for %s at %s", self._location,
+                    time_str)
         url = _get_url(
             '/radar/IDR{}.T.{}.png'.format(self._radar_id, time_str)
         )
