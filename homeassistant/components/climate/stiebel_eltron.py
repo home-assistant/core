@@ -17,29 +17,27 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.stiebel_eltron/
 """
 import logging
+
 import voluptuous as vol
 
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY, STATE_AUTO, STATE_IDLE, STATE_MANUAL,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
-    ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA,
-    ATTR_CURRENT_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    STATE_AUTO, STATE_MANUAL, STATE_IDLE)
-from homeassistant.components import modbus
+    ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE, DEVICE_DEFAULT_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-
-REQUIREMENTS = ['pymodbus==1.3.1',
-                """https://github.com/fucm/python-stiebel-eltron/archive/v0.0.1.dev1.zip#
-                   python-stiebel-eltron==0.0.1.dev1"""]
+REQUIREMENTS = ['pystiebeleltron==0.0.1.dev2']
 DEPENDENCIES = ['modbus']
 
 
 DEFAULT_SLAVE = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE):
         vol.All(int, vol.Range(min=0, max=32)),
@@ -56,29 +54,23 @@ STATE_DHW = 'Warmwasserbetrieb'
 STATE_EMERGENCY = 'Notbetrieb'
 
 """Mapping Stiebel Eltron states to homeassistant states."""
-STE_TO_HASS_STATE = {'AUTOMATIC': STATE_AUTO,
-                     'MANUAL MODE': STATE_MANUAL,
-                     'STANDBY': STATE_IDLE,
-                     'DAY MODE': STATE_DAYMODE,
-                     'SETBACK MODE': STATE_SETBACK,
-                     'DHW': STATE_DHW,
-                     'EMERGENCY OPERATION': STATE_EMERGENCY}
+STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
+                   'MANUAL MODE': STATE_MANUAL,
+                   'STANDBY': STATE_IDLE,
+                   'DAY MODE': STATE_DAYMODE,
+                   'SETBACK MODE': STATE_SETBACK,
+                   'DHW': STATE_DHW,
+                   'EMERGENCY OPERATION': STATE_EMERGENCY}
 
 """Mapping homeassistant states to Stiebel Eltron states."""
-HASS_TO_STE_STATE = {STATE_AUTO: 'AUTOMATIC',
-                     STATE_MANUAL: 'MANUAL MODE',
-                     STATE_IDLE: 'STANDBY',
-                     STATE_DAYMODE: 'DAY MODE',
-                     STATE_SETBACK: 'SETBACK MODE',
-                     STATE_DHW: 'DHW',
-                     STATE_EMERGENCY: 'EMERGENCY OPERATION'}
+HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the StiebelEltron platform."""
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
     modbus_slave = config.get(CONF_SLAVE, DEFAULT_SLAVE)
-    modbus_client = modbus.HUB
+    modbus_client = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
 
     add_devices([StiebelEltron(name, modbus_client, modbus_slave)], True)
     return True
@@ -114,20 +106,20 @@ class StiebelEltron(ClimateDevice):
         if not self.unit.update():
             _LOGGER.warning("Modbus read failed")
 
-        self._target_temperature = self.unit.get_target_temp
-        self._current_temperature = self.unit.get_current_temp
-        # self._current_humidity = self.unit.get_current_humidity
-        self._filter_alarm = self.unit.get_filter_alarm
-        self._current_operation = self.unit.get_operation
+        self._target_temperature = self.unit.get_target_temp()
+        self._current_temperature = self.unit.get_current_temp()
+        self._current_humidity = self.unit.get_current_humidity()
+        self._filter_alarm = self.unit.get_filter_alarm_status()
+        self._current_operation = self.unit.get_operation()
 
-        _LOGGER.debug("Update %s, current temp: %s", self._name, 
+        _LOGGER.debug("Update %s, current temp: %s", self._name,
                       self._current_temperature)
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            # ATTR_CURRENT_HUMIDITY: self._current_humidity,
+            ATTR_CURRENT_HUMIDITY: self._current_humidity,
             'filter_alarm':     self._filter_alarm
         }
 
@@ -177,7 +169,7 @@ class StiebelEltron(ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         _LOGGER.debug("set_temperature: %s", self._target_temperature)
-        # self.unit.set_target_temp(self._target_temperature)
+        self.unit.set_target_temp(self._target_temperature)
 
     # Handle SUPPORT_OPERATION_MODE
     @property
@@ -188,11 +180,11 @@ class StiebelEltron(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HASS_STATE.get(self._current_operation)
+        return STE_TO_HA_STATE.get(self._current_operation)
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        new_mode = HASS_TO_STE_STATE.get(operation_mode)
+        new_mode = HA_TO_STE_STATE.get(operation_mode)
         _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
                       new_mode)
         self._current_operation = new_mode
