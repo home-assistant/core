@@ -14,12 +14,12 @@ OFF = 0
 
 async def test_switch(hass, config_entry, zha_gateway):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.general import OnOff, Basic
     from zigpy.zcl.foundation import Status
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [OnOff.cluster_id], [], None, zha_gateway)
+        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway)
 
     # load up switch domain
     await hass.config_entries.async_forward_entry_setup(
