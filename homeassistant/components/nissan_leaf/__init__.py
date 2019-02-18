@@ -176,10 +176,10 @@ def setup(hass, config):
     for car in config[DOMAIN]:
         setup_leaf(car)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_UPDATE_LEAF,
         async_handle_update, schema=UPDATE_LEAF_SCHEMA)
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_START_CHARGE_LEAF,
         async_handle_start_charge, schema=START_CHARGE_LEAF_SCHEMA)
 
