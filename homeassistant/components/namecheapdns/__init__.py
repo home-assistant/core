@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'namecheapdns'
 
-CONF_HOSTS = CONF_HOST + 's' #FIXME Put in homeassistant.const ?
+CONF_HOSTS = CONF_HOST + 's'  #FIXME Put in homeassistant.const ?
 
 INTERVAL = timedelta(minutes=5)
 
@@ -27,7 +27,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default='@'): cv.deprecated(replacement_key=CONF_HOSTS),
+        vol.Optional(CONF_HOST, default='@'): 
+        cv.deprecated(replacement_key=CONF_HOSTS),
         vol.Optional(CONF_HOSTS): cv.ensure_list,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -41,13 +42,13 @@ async def async_setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
 
     session = async_get_clientsession(hass)
-    
+
     if not hosts and _host is not None:
-        hosts = [_host];
-    
+        hosts = [_host]
+
     result = False
-    
-    for host in hosts :
+
+    for host in hosts:
         result |= await _update_namecheapdns(session, host, domain, password)
 
         if not result:
