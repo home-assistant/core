@@ -29,11 +29,11 @@ from .core.gateway import establish_device_mappings
 from .core.channels.registry import populate_channel_registry
 
 REQUIREMENTS = [
-    'bellows==0.7.0',
-    'zigpy==0.2.0',
-    'zigpy-xbee==0.1.1',
+    'bellows-homeassistant==0.7.1',
+    'zigpy-homeassistant==0.3.0',
+    'zigpy-xbee-homeassistant==0.1.2',
     'zha-quirks==0.0.6',
-    'zigpy-deconz==0.0.1'
+    'zigpy-deconz==0.1.0'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
