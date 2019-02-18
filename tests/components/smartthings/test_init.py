@@ -120,7 +120,7 @@ async def test_unauthorized_installed_app_raises_not_ready(
 
 async def test_config_entry_loads_platforms(
         hass, config_entry, app, installed_app,
-        device, smartthings_mock):
+        device, smartthings_mock, subscription_factory):
     """Test config entry loads properly and proxies to platforms."""
     setattr(hass.config_entries, '_entries', [config_entry])
 
@@ -133,8 +133,9 @@ async def test_config_entry_loads_platforms(
     mock_token.access_token.return_value = str(uuid4())
     mock_token.refresh_token.return_value = str(uuid4())
     api.generate_tokens.return_value = mock_coro(return_value=mock_token)
-    api.delete_subscriptions.return_value = mock_coro()
-    api.create_subscription.side_effect = lambda *args, **kwargs: mock_coro()
+    subscriptions = [subscription_factory(capability)
+                     for capability in device.capabilities]
+    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
 
     with patch.object(hass.config_entries, 'async_forward_entry_setup',
                       return_value=mock_coro()) as forward_mock:

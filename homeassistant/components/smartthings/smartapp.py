@@ -196,21 +196,14 @@ async def smartapp_sync_subscriptions(
         installed_app_id: str, devices):
     """Synchronize subscriptions of an installed up."""
     from pysmartthings import (
-        CAPABILITIES, SmartThings, SourceType, Subscription)
+        CAPABILITIES, SmartThings, SourceType, Subscription,
+        SubscriptionEntity
+    )
 
     api = SmartThings(async_get_clientsession(hass), auth_token)
+    tasks = []
 
-    # Build set of capabilities and prune unsupported ones
-    capabilities = set()
-    for device in devices:
-        capabilities.update(device.capabilities)
-    capabilities.intersection_update(CAPABILITIES)
-
-    # Remove all existing
-    await api.delete_subscriptions(installed_app_id)
-
-    # Create for each capability
-    async def create_subscription(target):
+    async def create_subscription(target: str):
         sub = Subscription()
         sub.installed_app_id = installed_app_id
         sub.location_id = location_id
@@ -224,8 +217,40 @@ async def smartapp_sync_subscriptions(
             _LOGGER.exception("Failed to create subscription for '%s' under "
                               "app '%s'", target, installed_app_id)
 
-    tasks = [create_subscription(c) for c in capabilities]
-    await asyncio.gather(*tasks)
+    async def delete_subscription(sub: SubscriptionEntity):
+        try:
+            await api.delete_subscription(
+                installed_app_id, sub.subscription_id)
+            _LOGGER.debug("Removed subscription for '%s' under app '%s' "
+                          "because it was no longer needed",
+                          sub.capability, installed_app_id)
+        except Exception:  # pylint:disable=broad-except
+            _LOGGER.exception("Failed to remove subscription for '%s' under "
+                              "app '%s'", sub.capability, installed_app_id)
+
+    # Build set of capabilities and prune unsupported ones
+    capabilities = set()
+    for device in devices:
+        capabilities.update(device.capabilities)
+    capabilities.intersection_update(CAPABILITIES)
+
+    # Get current subscriptions and find differences
+    subscriptions = await api.subscriptions(installed_app_id)
+    for subscription in subscriptions:
+        if subscription.capability in capabilities:
+            capabilities.remove(subscription.capability)
+        else:
+            # Delete the subscription
+            tasks.append(delete_subscription(subscription))
+
+    # Remaining capabilities need subscriptions created
+    tasks.extend([create_subscription(c) for c in capabilities])
+
+    if tasks:
+        await asyncio.gather(*tasks)
+    else:
+        _LOGGER.debug("Subscriptions for app '%s' are up-to-date",
+                      installed_app_id)
 
 
 async def smartapp_install(hass: HomeAssistantType, req, resp, app):

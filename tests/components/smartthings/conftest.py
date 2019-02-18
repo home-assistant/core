@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
-    DeviceEntity, InstalledApp, Location)
+    DeviceEntity, InstalledApp, Location, Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -244,6 +244,16 @@ def config_entry_fixture(hass, installed_app, location):
     }
     return ConfigEntry(2, DOMAIN, location.name, data, SOURCE_USER,
                        CONN_CLASS_CLOUD_PUSH)
+
+
+@pytest.fixture(name="subscription_factory")
+def subscription_factory_fixture():
+    """Fixture for creating mock subscriptions."""
+    def _factory(capability):
+        sub = Subscription()
+        sub.capability = capability
+        return sub
+    return _factory
 
 
 @pytest.fixture(name="device_factory")
