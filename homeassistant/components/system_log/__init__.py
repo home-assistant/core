@@ -93,7 +93,7 @@ class LogEntry:
 
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
-        self.timestamp = record.created
+        self.first_occured = self.timestamp = record.created
         self.level = record.levelname
         self.message = record.getMessage()
         if record.exc_info:
@@ -130,9 +130,13 @@ class DedupStore(OrderedDict):
         key = str(entry.hash())
 
         if key in self:
-            entry.count = self[key].count + 1
+            # Update stored entry
+            self[key].count += 1
+            self[key].timestamp = entry.timestamp
 
-        self[key] = entry
+            self.move_to_end(key)
+        else:
+            self[key] = entry
 
         if len(self) > self.maxlen:
             # Removes the first record which should also be the oldest
