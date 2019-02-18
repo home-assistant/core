@@ -1,6 +1,5 @@
 """Support for Iperf3 sensors."""
-from homeassistant.components.iperf3 import ATTR_DOWNLOAD, ATTR_UPLOAD, \
-    DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES, ATTR_VERSION
+from homeassistant.components.iperf3 import DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES, ATTR_VERSION
 from homeassistant.const import (
     ATTR_ATTRIBUTION)
 from homeassistant.core import callback
