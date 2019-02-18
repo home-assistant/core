@@ -1,12 +1,12 @@
 """Support for Satel Integra alarm, using ETHM module."""
 import logging
-
+import asyncio
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+    STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, STATE_UNKNOWN)
 
 from . import (CONF_ARM_HOME_MODE,
                CONF_DEVICE_PARTITION,
@@ -58,20 +58,22 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED
 
-        # Hardcoded for now, maybe in the future will make it into configuration variable:
-
         satel_controller = self.hass.data[DATA_SATEL]
         if not satel_controller.connected:
             return STATE_UNKNOWN
-
+        # Warning: order is important here:
         state_map = {
             AlarmState.TRIGGERED : STATE_ALARM_TRIGGERED,
             AlarmState.TRIGGERED_FIRE : STATE_ALARM_TRIGGERED,
-            AlarmState.ARMED_MODE0 : STATE_ALARM_ARMED_AWAY,
-            AlarmState.ARMED_MODE1 : STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE2 : STATE_ALARM_ARMED_HOME,
             AlarmState.ARMED_MODE3 : STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE2 : STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE1 : STATE_ALARM_ARMED_HOME,
+            AlarmState.ARMED_MODE0 : STATE_ALARM_ARMED_AWAY,
+            AlarmState.EXIT_COUNTDOWN_OVER_10 : STATE_ALARM_PENDING,
+            AlarmState.EXIT_COUNTDOWN_UNDER_10 : STATE_ALARM_PENDING,
         }
+        _LOGGER.debug("State map of Satel: %s",
+                      satel_controller.partition_states)
 
         for satel_state, ha_state in state_map.items():
             if satel_state in satel_controller.partition_states and\
@@ -79,24 +81,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
                 hass_alarm_status = ha_state
                 break
 
-        # status = self.hass.data[DATA_SATEL].status
-
-        # if status == AlarmState.ARMED_MODE0:
-        #     hass_alarm_status = STATE_ALARM_ARMED_AWAY
-
-        # elif status in [
-        #         AlarmState.ARMED_MODE0,
-        #         AlarmState.ARMED_MODE1,
-        #         AlarmState.ARMED_MODE2,
-        #         AlarmState.ARMED_MODE3
-        # ]:
-        #     hass_alarm_status = STATE_ALARM_ARMED_HOME
-
-        # elif status in [AlarmState.TRIGGERED, AlarmState.TRIGGERED_FIRE]:
-        #     hass_alarm_status = STATE_ALARM_TRIGGERED
-
-        # elif status == AlarmState.DISARMED:
-        #     hass_alarm_status = STATE_ALARM_DISARMED
         return hass_alarm_status
 
     @callback
@@ -131,22 +115,38 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         return self._state
 
     async def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
+        """Send disarm command.fclea"""
+
         if not code:
+            _LOGGER.debug("Code was null")
             return
-        if self._state == STATE_ALARM_TRIGGERED:
+
+        clear_alarm_necessary = (self._state == STATE_ALARM_TRIGGERED)
+
+        _LOGGER.debug("clear_alarm_necessary: %s", clear_alarm_necessary)
+
+        await self.hass.data[DATA_SATEL].disarm(code)
+
+        if clear_alarm_necessary:
+            # Wait 1s before clearing the alarm
+            await asyncio.sleep(1)
             await self.hass.data[DATA_SATEL].clear_alarm(code)
-        else:
-            await self.hass.data[DATA_SATEL].disarm(code)
+
 
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
+
+        _LOGGER.debug("Arm away: %s", code)
+
         if code:
             await self.hass.data[DATA_SATEL].arm(code)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
+
+        _LOGGER.debug("Arm home: %s", code)
+
         if code:
             await self.hass.data[DATA_SATEL].arm(
                 code, self._arm_home_mode)
