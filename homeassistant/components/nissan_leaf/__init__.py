@@ -78,9 +78,13 @@ LEAF_COMPONENTS = [
 SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
 
 SERVICE_UPDATE_LEAF = 'update'
+SERVICE_START_CHARGE_LEAF = 'start_charge'
 ATTR_VIN = 'vin'
 
 UPDATE_LEAF_SCHEMA = vol.Schema({
+    vol.Required(ATTR_VIN): cv.string,
+})
+START_CHARGE_LEAF_SCHEMA = vol.Schema({
     vol.Required(ATTR_VIN): cv.string,
 })
 
@@ -90,6 +94,7 @@ def setup(hass, config):
     import pycarwings2
 
     async def async_handle_update(service):
+        """Handle service to update leaf data from Nissan servers."""
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
         vin = service.data[ATTR_VIN]
@@ -97,6 +102,32 @@ def setup(hass, config):
         if vin in hass.data[DATA_LEAF]:
             data_store = hass.data[DATA_LEAF][vin]
             await data_store.async_update_data(utcnow())
+        else:
+            _LOGGER.debug("Vin %s not recognised for update", vin)
+
+    async def async_handle_start_charge(service):
+        """Handle service to start charging."""
+        # It would be better if this was changed to use nickname, or
+        # an entity name rather than a vin.
+        vin = service.data[ATTR_VIN]
+
+        if vin in hass.data[DATA_LEAF]:
+            data_store = hass.data[DATA_LEAF][vin]
+
+            # Send the command to request charging is started to Nissan
+            # servers. If that completes OK then trigger a fresh update to
+            # pull the charging status from the car after waiting a minute
+            # for the charging request to reach the car.
+            result = await hass.async_add_executor_job(
+                data_store.leaf.start_charging)
+            if result:
+                _LOGGER.debug("Start charging sent, "
+                              "request updated data in 1 minute")
+                check_charge_at = utcnow() + timedelta(minutes=1)
+                data_store.next_update = check_charge_at
+                async_track_point_in_utc_time(
+                    hass, data_store.async_update_data, check_charge_at)
+
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
@@ -148,6 +179,9 @@ def setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_LEAF,
         async_handle_update, schema=UPDATE_LEAF_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_START_CHARGE_LEAF,
+        async_handle_start_charge, schema=START_CHARGE_LEAF_SCHEMA)
 
     return True
 
@@ -424,21 +458,6 @@ class LeafDataStore:
                 break
 
         return location_status
-
-    def start_charging(self):
-        """Request start charging via Nissan servers."""
-        # Send the command to request charging is started to Nissan servers.
-        # If that completes OK then trigger a fresh update to pull the
-        # charging status from the car after waiting a minute for the
-        # charging request to reach the car.
-        result = self.leaf.start_charging()
-        if result:
-            _LOGGER.debug("Start charging sent, "
-                          "request updated data in 1 minute")
-            check_charge_at = utcnow() + timedelta(minutes=1)
-            self.next_update = check_charge_at
-            async_track_point_in_utc_time(
-                self.hass, self.async_update_data, check_charge_at)
 
 
 class LeafEntity(Entity):

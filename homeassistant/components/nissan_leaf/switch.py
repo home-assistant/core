@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.nissan_leaf import (
-    DATA_CHARGING, DATA_CLIMATE, DATA_LEAF, LeafEntity)
+    DATA_CLIMATE, DATA_LEAF, LeafEntity)
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +14,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Nissan Leaf switch platform setup."""
     devices = []
     for value in hass.data[DATA_LEAF].values():
-        devices.append(LeafChargeSwitch(value))
         devices.append(LeafClimateSwitch(value))
 
     add_devices(devices, True)
@@ -65,35 +64,3 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         if self.car.data[DATA_CLIMATE]:
             return 'mdi:fan'
         return 'mdi:fan-off'
-
-
-class LeafChargeSwitch(LeafEntity, ToggleEntity):
-    """Nissan Leaf Charging On switch."""
-
-    @property
-    def name(self):
-        """Switch name."""
-        return "{} {}".format(self.car.leaf.nickname, "Charging Status")
-
-    @property
-    def is_on(self):
-        """Return true if charging."""
-        return self.car.data[DATA_CHARGING]
-
-    async def async_turn_on(self, **kwargs):
-        """Start car charging."""
-        if await self.car.async_start_charging():
-            self.car.data[DATA_CHARGING] = True
-
-    # @MartinHjelmare says should be removed if we don't support it.
-    #                 Maybe it should be a scene?
-    # Unsure if better to provide as a sensor for the state, and a service to
-    # start a charge, e.g.
-    # - service: nissan_leaf.start_charging
-    #   data:
-    #     vin: XXXXXXXXXX
-    def turn_off(self, **kwargs):
-        """Nissan API doesn't allow stopping of charge remotely."""
-        _LOGGER.info(
-            "Cannot turn off Leaf charging."
-            " Nissan API does not support stopping charge remotely")
