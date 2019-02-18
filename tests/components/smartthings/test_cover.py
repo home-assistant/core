@@ -7,12 +7,13 @@ real HTTP calls are not initiated during testing.
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
-    DOMAIN as COVER_DOMAIN, SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER,
+    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION,
     STATE_CLOSING, STATE_OPENING)
 from homeassistant.components.smartthings import cover
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -101,6 +102,49 @@ async def test_close(hass, device_factory):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_CLOSING
+
+
+async def test_set_cover_position(hass, device_factory):
+    """Test the cover sets to the specific position."""
+    # Arrange
+    device = device_factory(
+        'Shade',
+        [Capability.window_shade, Capability.battery,
+         Capability.switch_level],
+        {Attribute.window_shade: 'opening', Attribute.battery: 95,
+         Attribute.level: 10})
+    await setup_platform(hass, COVER_DOMAIN, device)
+    # Act
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50}, blocking=True)
+
+    state = hass.states.get('cover.shade')
+    # Result of call does not update state
+    assert state.state == STATE_OPENING
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 95
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
+    # Ensure API called
+    # pylint: disable=protected-access
+    assert device._api.post_device_command.call_count == 1  # type: ignore
+
+
+async def test_set_cover_position_unsupported(hass, device_factory):
+    """Test set position does nothing when not supported by device."""
+    # Arrange
+    device = device_factory(
+        'Shade',
+        [Capability.window_shade],
+        {Attribute.window_shade: 'opening'})
+    await setup_platform(hass, COVER_DOMAIN, device)
+    # Act
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50}, blocking=True)
+
+    # Ensure API was notcalled
+    # pylint: disable=protected-access
+    assert device._api.post_device_command.call_count == 0  # type: ignore
 
 
 async def test_update_from_signal(hass, device_factory):
