@@ -68,6 +68,11 @@ class TfiacClimate(ClimateDevice):
         hass.data[DOMAIN] = self
         self._client = Tfiac(host)
 
+    @property
+    def available(self):
+        """Return if the device is available."""
+        return self._client.available
+
     def update(self):
         """Update status via socket polling."""
         self._client.update()
