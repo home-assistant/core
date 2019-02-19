@@ -63,7 +63,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
             if self._device_number in\
                self.hass.data[DATA_SATEL].violated_outputs:
-                    self._state = 1
+                self._state = 1
             else:
                 self._state = 0
         else:
