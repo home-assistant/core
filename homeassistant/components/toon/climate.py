@@ -9,7 +9,8 @@ from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.toon import ToonEntity
-from homeassistant.components.toon.const import DATA_TOON_CLIENT, DOMAIN
+from homeassistant.components.toon.const import (
+    DATA_TOON_CLIENT, DOMAIN, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -87,7 +88,7 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
 
     @property
     def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
+        """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
@@ -109,6 +110,16 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._target_temperature
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return DEFAULT_MIN_TEMP
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return DEFAULT_MAX_TEMP
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:

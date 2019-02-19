@@ -10,6 +10,8 @@ CONF_CLIENT_SECRET = 'client_secret'
 CONF_DISPLAY = 'display'
 CONF_TENANT = 'tenant'
 
+DEFAULT_MAX_TEMP = 30
+DEFAULT_MIN_TEMP = 6
 DEFAULT_TENANT = 'eneco'
 
 CURRENCY_EUR = 'EUR'
