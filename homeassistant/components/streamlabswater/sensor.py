@@ -25,6 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     location_name = hass.data[STREAMLABSWATER_DOMAIN]['location_name']
 
     streamlabs_usage_data = StreamlabsUsageData(location_id, client)
+    streamlabs_usage_data.update()
 
     add_devices([
         StreamLabsDailyUsage(location_name, streamlabs_usage_data),
@@ -87,7 +88,7 @@ class StreamLabsDailyUsage(Entity):
     @property
     def state(self):
         """Return the current daily usage."""
-        return self._state
+        return self._streamlabs_usage_data.get_daily_usage()
 
     @property
     def unit_of_measurement(self):
@@ -97,7 +98,6 @@ class StreamLabsDailyUsage(Entity):
     def update(self):
         """Retrieve the latest daily usage."""
         self._streamlabs_usage_data.update()
-        self._state = self._streamlabs_usage_data.get_daily_usage()
 
 
 class StreamLabsMonthlyUsage(Entity):
@@ -122,7 +122,7 @@ class StreamLabsMonthlyUsage(Entity):
     @property
     def state(self):
         """Return the current monthly usage."""
-        return self._state
+        return self._streamlabs_usage_data.get_monthly_usage()
 
     @property
     def unit_of_measurement(self):
@@ -132,7 +132,6 @@ class StreamLabsMonthlyUsage(Entity):
     def update(self):
         """Retrieve the latest monthly usage."""
         self._streamlabs_usage_data.update()
-        self._state = self._streamlabs_usage_data.get_monthly_usage()
 
 
 class StreamLabsYearlyUsage(Entity):
@@ -157,7 +156,7 @@ class StreamLabsYearlyUsage(Entity):
     @property
     def state(self):
         """Return the current yearly usage."""
-        return self._state
+        return self._streamlabs_usage_data.get_yearly_usage()
 
     @property
     def unit_of_measurement(self):
@@ -167,4 +166,3 @@ class StreamLabsYearlyUsage(Entity):
     def update(self):
         """Retrieve the latest yearly usage."""
         self._streamlabs_usage_data.update()
-        self._state = self._streamlabs_usage_data.get_yearly_usage()

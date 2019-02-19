@@ -22,6 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     location_name = hass.data[STREAMLABSWATER_DOMAIN]['location_name']
 
     streamlabs_location_data = StreamlabsLocationData(location_id, client)
+    streamlabs_location_data.update()
 
     add_devices([
         StreamlabsAwayMode(location_name, streamlabs_location_data)
