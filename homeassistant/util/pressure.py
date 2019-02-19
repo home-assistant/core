@@ -18,7 +18,7 @@ VALID_UNITS = [
     PRESSURE_PA,
     PRESSURE_HPA,
     PRESSURE_MBAR,
-    PRESSURE_INHG,
+    PRESSURE_INHG
 ]
 
 UNIT_CONVERSION = {
@@ -31,6 +31,7 @@ UNIT_CONVERSION = {
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
+    print(VALID_UNITS)
     if unit_1 not in VALID_UNITS:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, PRESSURE))
