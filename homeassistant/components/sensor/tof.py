@@ -9,7 +9,7 @@ Fixed setup for current driver version:
 
 - DEFAULT_RANGE is always LONG
 - DEFAULT_I2C_BUS is always 1
-- A GPIO output port is connected to VL53L1X XSHUT input, in order to reset device.
+- A GPIO connected to VL53L1X XSHUT input resets the device.
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
 """
@@ -25,7 +25,6 @@ from homeassistant.components import rpi_gpio
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['smbus2==0.2.2', 'VL53L1X2==0.1.5']
 
@@ -48,15 +47,21 @@ DEFAULT_SENSOR_ID = 123
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
-    vol.Optional(CONF_XSHUT, default=DEFAULT_XSHUT): cv.positive_int,
+    vol.Optional(CONF_NAME,
+                 default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS,
+                 default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+    vol.Optional(CONF_XSHUT,
+                 default=DEFAULT_XSHUT): cv.positive_int,
 })
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(hass,
+                               config,
+                               async_add_entities,
+                               discovery_info=None):
     """Setup the VL53L1X ToF Sensor from ST."""
-    import smbus #  pylint: disable=import-error
-    from VL53L1X2 import VL53L1X #  pylint: disable=import-error
+    from VL53L1X2 import VL53L1X
 
     name = config.get(CONF_NAME)
     unit = LENGTH_MILIMETERS
@@ -71,19 +76,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     time.sleep(0.01)
 
     tof = VL53L1X()
-    tof.open() #  Initialise the i2c bus and configure the sensor
-    tof.add_sensor(sensor_id, DEFAULT_I2C_ADDRESS) #  add a VL53L1X device
-    tof.start_ranging(sensor_id, 2) #  Start ranging, driver use always LONG range
+    tof.open()
+    tof.add_sensor(sensor_id, DEFAULT_I2C_ADDRESS)
+    tof.start_ranging(sensor_id, 2)
 
-    distance_mm = tof.get_distance(sensor_id)  #  Grab the range in mm
-    _LOGGER.info("Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
-                    distance_mm))
+    distance_mm = tof.get_distance(sensor_id)
+    _LOGGER.info(
+        "Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
+        distance_mm))
     tof.stop_ranging(sensor_id)
     sensor = await hass.async_add_job(partial(VL53L1X))
     dev = [VL53L1XSensor(sensor, name, unit)]
 
     async_add_entities(dev, True)
-    
+
 
 class VL53L1XSensor(Entity):
     """Implementation of VL53L1X sensor."""
