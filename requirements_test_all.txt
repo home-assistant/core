@@ -49,9 +49,6 @@ aiounifi==4
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
-# homeassistant.components.zha
-bellows-homeassistant==0.7.1
-
 # homeassistant.components.calendar.caldav
 caldav==0.5.0
 
@@ -304,6 +301,3 @@ wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
-
-# homeassistant.components.zha
-zigpy-homeassistant==0.3.0
