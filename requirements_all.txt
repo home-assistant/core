@@ -1653,6 +1653,9 @@ statsd==3.2.1
 # homeassistant.components.steam_online
 steamodd==4.21
 
+# homeassistant.components.streamlabswater
+streamlabswater==1.0.1
+
 # homeassistant.components.solaredge
 # homeassistant.components.thermoworks_smoke
 # homeassistant.components.traccar
