@@ -48,7 +48,7 @@ async def async_setup_platform(
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
-        conf_meter_rollover = hass.data[DATA_UTILITY][meter]
+        conf_meter_rollover = hass.data[DATA_UTILITY][meter]\
             [CONF_METER_ROLLOVER]
         conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
             CONF_TARIFF_ENTITY)
