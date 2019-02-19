@@ -1,7 +1,7 @@
 """Support for Iperf3 sensors."""
-from homeassistant.components.iperf3 import DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES, ATTR_VERSION
-from homeassistant.const import (
-    ATTR_ATTRIBUTION)
+from homeassistant.components.iperf3 import (
+    DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES, ATTR_VERSION)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -90,7 +90,7 @@ class Iperf3Sensor(RestoreEntity):
 
     def update(self):
         """Get the latest data and update the states."""
-        data = self._iperf3_data.data.get(self._sensor_type, None)
+        data = self._iperf3_data.data.get(self._sensor_type)
         if data is not None:
             self._state = round(data, 2)
 
