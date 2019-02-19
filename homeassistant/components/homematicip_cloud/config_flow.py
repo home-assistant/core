@@ -6,7 +6,7 @@ from homeassistant.core import callback
 
 from .const import (
     _LOGGER, DOMAIN as HMIPC_DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME,
-    HMIPC_PIN)
+    HMIPC_PIN, HMIPC_SHOW_EXTRA_ATTR)
 from .hap import HomematicipAuth
 
 
@@ -84,6 +84,7 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         hapid = import_info[HMIPC_HAPID]
         authtoken = import_info[HMIPC_AUTHTOKEN]
         name = import_info[HMIPC_NAME]
+        show_extra_attr = import_info[HMIPC_SHOW_EXTRA_ATTR]
 
         hapid = hapid.replace('-', '').upper()
         if hapid in configured_haps(self.hass):
@@ -97,5 +98,6 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                 HMIPC_AUTHTOKEN: authtoken,
                 HMIPC_HAPID: hapid,
                 HMIPC_NAME: name,
+                HMIPC_SHOW_EXTRA_ATTR: show_extra_attr,
             }
         )

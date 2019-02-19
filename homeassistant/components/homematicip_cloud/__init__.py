@@ -9,8 +9,8 @@ import homeassistant.helpers.config_validation as cv
 
 from .config_flow import configured_haps
 from .const import (
-    CONF_ACCESSPOINT, CONF_AUTHTOKEN, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID,
-    HMIPC_NAME)
+    CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_SHOW_EXTRA_ATTR, DOMAIN,
+    HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_SHOW_EXTRA_ATTR)
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
@@ -23,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME, default=''): vol.Any(cv.string),
         vol.Required(CONF_ACCESSPOINT): cv.string,
         vol.Required(CONF_AUTHTOKEN): cv.string,
+        vol.Optional(CONF_SHOW_EXTRA_ATTR, default=False): cv.boolean,
     })]),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,6 +42,7 @@ async def async_setup(hass, config):
                     HMIPC_HAPID: conf[CONF_ACCESSPOINT],
                     HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
                     HMIPC_NAME: conf[CONF_NAME],
+                    HMIPC_SHOW_EXTRA_ATTR: conf[CONF_SHOW_EXTRA_ATTR],
                 }
             ))
 

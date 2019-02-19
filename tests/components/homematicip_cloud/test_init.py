@@ -17,6 +17,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(hass):
                 hmipc.CONF_ACCESSPOINT: 'ABC123',
                 hmipc.CONF_AUTHTOKEN: '123',
                 hmipc.CONF_NAME: 'name',
+                hmipc.CONF_SHOW_EXTRA_ATTR: False
             }
         }) is True
 
@@ -33,6 +34,7 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
                 hmipc.CONF_ACCESSPOINT: 'ABC123',
                 hmipc.CONF_AUTHTOKEN: '123',
                 hmipc.CONF_NAME: 'name',
+                hmipc.CONF_SHOW_EXTRA_ATTR: False
             }
         }) is True
 
@@ -46,6 +48,7 @@ async def test_setup_entry_successful(hass):
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
         hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPC_SHOW_EXTRA_ATTR: False
     })
     entry.add_to_hass(hass)
     with patch.object(hmipc, 'HomematicipHAP') as mock_hap:
@@ -55,6 +58,7 @@ async def test_setup_entry_successful(hass):
                 hmipc.CONF_ACCESSPOINT: 'ABC123',
                 hmipc.CONF_AUTHTOKEN: '123',
                 hmipc.CONF_NAME: 'hmip',
+                hmipc.CONF_SHOW_EXTRA_ATTR: False
             }
         }) is True
 
@@ -71,6 +75,7 @@ async def test_setup_defined_accesspoint(hass):
                 hmipc.CONF_ACCESSPOINT: 'ABC123',
                 hmipc.CONF_AUTHTOKEN: '123',
                 hmipc.CONF_NAME: 'hmip',
+                hmipc.CONF_SHOW_EXTRA_ATTR: True
             }
         }) is True
 
@@ -79,6 +84,7 @@ async def test_setup_defined_accesspoint(hass):
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
         hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPC_SHOW_EXTRA_ATTR: True
     }
 
 

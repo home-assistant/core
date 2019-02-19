@@ -122,7 +122,8 @@ async def test_import_config(hass):
     result = await flow.async_step_import({
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip'
+        hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPC_SHOW_EXTRA_ATTR: False
     })
 
     assert result['type'] == 'create_entry'
@@ -130,7 +131,8 @@ async def test_import_config(hass):
     assert result['data'] == {
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip'
+        hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPC_SHOW_EXTRA_ATTR: False
     }
 
 
@@ -146,7 +148,8 @@ async def test_import_existing_config(hass):
     result = await flow.async_step_import({
         hmipc.HMIPC_HAPID: 'ABC123',
         hmipc.HMIPC_AUTHTOKEN: '123',
-        hmipc.HMIPC_NAME: 'hmip'
+        hmipc.HMIPC_NAME: 'hmip',
+        hmipc.HMIPC_SHOW_EXTRA_ATTR: True
     })
 
     assert result['type'] == 'abort'

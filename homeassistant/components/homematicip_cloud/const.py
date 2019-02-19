@@ -17,8 +17,10 @@ COMPONENTS = [
 
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
+CONF_SHOW_EXTRA_ATTR = 'show_extra_attributes'
 
 HMIPC_NAME = 'name'
 HMIPC_HAPID = 'hapid'
 HMIPC_AUTHTOKEN = 'authtoken'
 HMIPC_PIN = 'pin'
+HMIPC_SHOW_EXTRA_ATTR = 'show_extra_attributes'
