@@ -67,15 +67,16 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this thermostat."""
         agreement = self.toon.agreement
+        model = agreement.display_hardware_version.rpartition('/')[0]
+        sw_version = agreement.display_software_version.rpartition('/')[-1]
         return {
             'identifiers': {
                 (DOMAIN, agreement.id)
             },
             'name': self._name,
             'manufacturer': 'Eneco',
-            'model': agreement.display_hardware_version.rpartition('/')[0],
-            'sw_version': agreement.display_software_version
-                            .rpartition('/')[-1],
+            'model': model,
+            'sw_version': sw_version,
         }
 
     @property

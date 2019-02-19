@@ -18,7 +18,6 @@ REQUIREMENTS = ['toonapilib==3.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
