@@ -73,7 +73,7 @@ RADARS = {
     'SellicksHill':    {'id': '463', 'delta': 600, 'frames': 4},
     'SouthDoodlakine': {'id': '583', 'delta': 360, 'frames': 6},
     'Sydney':          {'id': '713', 'delta': 360, 'frames': 6},
-    'Townsville':      {'id': '733', 'delta': 360, 'frames': 6},
+    'Townsville':      {'id': '733', 'delta': 600, 'frames': 4},
     'WaggaWagga':      {'id': '553', 'delta': 600, 'frames': 4},
     'Warrego':         {'id': '673', 'delta': 600, 'frames': 4},
     'Warruwi':         {'id': '773', 'delta': 360, 'frames': 6},
