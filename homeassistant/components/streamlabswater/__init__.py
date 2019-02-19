@@ -81,8 +81,8 @@ def setup(hass, config):
     if location_id is None:
         location = locations[0]
         location_id = location['locationId']
-        _LOGGER.info("Streamlabs Water Monitor auto-detected location_id={}"
-                     .format(location_id))
+        _LOGGER.info("Streamlabs Water Monitor auto-detected location_id=%s",
+                     location_id)
     else:
         location = next((
             l for l in locations if location_id == l['locationId']), None)
