@@ -72,14 +72,23 @@ def setup(hass, config):
     location_id = conf.get(CONF_LOCATION_ID)
 
     client = streamlabswater.StreamlabsClient(api_key)
+    locations = client.get_locations().get('locations')
+
+    if locations is None:
+        _LOGGER.error("Unable to retrieve locations. Verify API key.")
+        return False
 
     if location_id is None:
-        location = client.get_locations()['locations'][0]
+        location = locations[0]
         location_id = location['locationId']
         _LOGGER.info("Streamlabs Water Monitor auto-detected location_id={}"
                      .format(location_id))
     else:
-        location = client.get_location(location_id)
+        location = next((
+            l for l in locations if location_id == l['locationId']), None)
+        if location is None:
+            _LOGGER.error("Supplied location_id is invalid.")
+            return False
 
     location_name = location['name']
 
