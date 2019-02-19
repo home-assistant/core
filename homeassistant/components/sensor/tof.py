@@ -82,8 +82,8 @@ async def async_setup_platform(hass,
 
     distance_mm = tof.get_distance(sensor_id)
     _LOGGER.info(
-        "Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
-        distance_mm))
+       "Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
+       distance_mm))
     tof.stop_ranging(sensor_id)
     sensor = await hass.async_add_job(partial(VL53L1X))
     dev = [VL53L1XSensor(sensor, name, unit)]
