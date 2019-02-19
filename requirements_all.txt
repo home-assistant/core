@@ -916,7 +916,7 @@ pyW800rf32==0.1
 # py_noaa==0.3.0
 
 # homeassistant.components.ads
-pyads==2.2.6
+pyads==3.0.7
 
 # homeassistant.components.sensor.aftership
 pyaftership==0.1.2
