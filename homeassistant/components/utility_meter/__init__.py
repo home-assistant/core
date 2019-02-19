@@ -12,10 +12,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from .const import (
     DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_TARIFF_ENTITY, CONF_TARIFF,
-    CONF_TARIFFS, CONF_METER, DATA_UTILITY, SERVICE_RESET,
-    SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
-    ATTR_TARIFF)
+    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_METER_ROLLOVER, CONF_TARIFF_ENTITY,
+    CONF_TARIFF, CONF_TARIFFS, CONF_METER, DATA_UTILITY, SERVICE_RESET,
+    SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF, ATTR_TARIFF)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,7 @@ METER_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
     vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
+    vol.Optional(CONF_METER_ROLLOVER, default=True): cv.boolean,
     vol.Optional(CONF_TARIFFS, default=[]): vol.All(
         cv.ensure_list, [cv.string]),
 })
