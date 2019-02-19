@@ -5,7 +5,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -14,8 +14,6 @@ REQUIREMENTS = ['defusedxml==0.5.0']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'namecheapdns'
-
-CONF_HOSTS = CONF_HOST + 's'  #FIXME Put in homeassistant.const ?
 
 INTERVAL = timedelta(minutes=5)
 
@@ -27,12 +25,24 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default='@'):
-        cv.deprecated(replacement_key=CONF_HOSTS),
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+        cv.string,
         vol.Optional(CONF_HOSTS): cv.ensure_list,
-    })
+    }),
+    cv.deprecated(
+        CONF_HOST,
+        replacement_key=CONF_HOSTS,
+        invalidation_version="0.91",
+        default = [DEFAULT_HOST]),
+    _ensure_list('hosts')
 }, extra=vol.ALLOW_EXTRA)
 
+def _ensure_list(key: str):
+    def validator(config: {}):
+        if key in config:
+            config[key] = cv.ensure_list(config[key])
+        return config
+    return validator
 
 async def async_setup(hass, config):
     """Initialize the namecheap DNS component."""
