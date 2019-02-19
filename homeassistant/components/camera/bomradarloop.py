@@ -1,49 +1,8 @@
 """
 Provide animated GIF loops of BOM radar imagery.
 
-This component provides animated GIF images of weather-radar imagery, derived
-from Australian Bureau of Meteorology (http://www.bom.gov.au/australia/radar/)
-sources, for display in e.g. a Picture Entity card. The full configuration
-options are:
-
-camera:
-  - platform: bomradarloop
-    location: <location-name>
-    name: <entity-name>
-    filename: /config/www/loop.gif
-    id: <radar-id>
-    frames: <frames-per-animation>
-    delta: <seconds-between-frames>
-
-A simple full example configuration:
-
-camera:
-  - platform: bomradarloop
-    location: Sydney
-
-The 'location' parameter should correspond to one of the keys in the RADARS
-dict, below. The configuration validator in the web interface will display a
-list of valid names if an incorrect one is supplied.
-
-The optional 'name' parameter can be used to set a custom display name for the
-component in the web interface.
-
-The optional 'filename' parameter, if specified, will cause the component to
-write the animated GIF image to the specified filesystem path each time it is
-updated. The component will attempt to create any missing parent directories
-leading to the file.
-
-The paramters 'id', 'frames', and 'delta' may be used to override any of the
-values in the RADARS dict below. The 'location' and 'id' parameters are
-mutually exclusive: You must specify one or the other. The 'frames' parameter
-specifies the number of individual radar images to use when constructing the
-GIF (the Javascript-based loops BOM provides usually consist of either 4 or
-6 frames). The 'delta' parameter specifies the number of seconds between
-frames, as available from BOM (usually 360 seconds (6 minutes) for 6-frame
-BOM loops, and 600 seconds (10 minutes) for 4-frame loops). If the 'id'
-parameter is specified, 'frames' and 'delta' values MUST be provided; if
-'location' is specified, 'frames' and 'delta' MAY be provided to override the
-default values from the RADARS dict.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/bomradarloop/
 """
 
 import datetime as dt
