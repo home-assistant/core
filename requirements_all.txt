@@ -124,7 +124,7 @@ aiohue==1.9.0
 aioiliad==0.1.1
 
 # homeassistant.components.sensor.imap
-aioimaplib==0.7.13
+aioimaplib==0.7.15
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
