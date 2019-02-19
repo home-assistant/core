@@ -68,9 +68,6 @@ PyXiaomiGateway==0.11.1
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
 
-# homeassistant.components.remote_rpi_gpio
-gpiozero==1.4.1
-
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
@@ -486,6 +483,9 @@ googledevices==1.0.2
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.5.1
 
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.4.1
+
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
@@ -819,6 +819,9 @@ pilight==0.1.1
 # homeassistant.components.image_processing.qrcode
 # homeassistant.components.image_processing.tensorflow
 pillow==5.4.1
+
+# homeassistant.components.remote_rpi_gpio
+pigpio==1.42
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
