@@ -68,6 +68,9 @@ PyXiaomiGateway==0.11.1
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
 
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.4.1
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
