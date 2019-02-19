@@ -64,7 +64,7 @@ def async_setup(hass, config):
                     'visible': True
                 })
             # dynamically add the cloud services
-            # here we should take the info about users services to anable them
+            # here we should take the info about users services to enable them
             try:
                 hass.async_run_job(
                     async_load_platform(hass, 'ais_gm_service', {}, {}))

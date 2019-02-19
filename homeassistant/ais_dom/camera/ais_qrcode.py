@@ -84,6 +84,10 @@ class QRCodeCamera(Camera):
         """Process the image."""
         return self._image.getvalue()
 
+    def turn_on(self):
+        """Turn on camera."""
+        self._refresh_()
+
     def _refresh_(self):
         import pyqrcode
         import png
@@ -91,5 +95,4 @@ class QRCodeCamera(Camera):
         self._image.truncate(0)
         self._image.seek(0)
 
-        qr_code.png(self._image, scale=6, module_color=[
-                   0xff, 0xff, 0xff], background=[0, 0, 0, 128])
+        qr_code.png(self._image, scale=6, module_color=[0, 0, 0], background=[0xff, 0xff, 0xff])

@@ -10,10 +10,12 @@ import logging
 import json
 import os.path
 from operator import itemgetter
+
+from homeassistant.ais_dom.ais_global import G_AIS_SECURE_ANDROID_ID_DOM
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
-REQUIREMENTS = ['gmusicapi==11.0.1']
+REQUIREMENTS = ['gmusicapi==12.0.0']
 
 DOMAIN = 'ais_gm_service'
 PERSISTENCE_GM_SONGS = '/.dom/gm_songs.json'
@@ -67,17 +69,21 @@ def get_keys_async(hass):
     def load():
         global GM_DEV_KEY, GM_USER, GM_PASS
         try:
-            ws_resp = aisCloud.key("gm_dev_key")
-            json_ws_resp = ws_resp.json()
-            GM_DEV_KEY = json_ws_resp["key"]
             ws_resp = aisCloud.key("gm_user_key")
             json_ws_resp = ws_resp.json()
             GM_USER = json_ws_resp["key"]
             ws_resp = aisCloud.key("gm_pass_key")
             json_ws_resp = ws_resp.json()
             GM_PASS = json_ws_resp["key"]
+            try:
+                ws_resp = aisCloud.key("gm_dev_key")
+                json_ws_resp = ws_resp.json()
+                GM_DEV_KEY = json_ws_resp["key"]
+            except:
+                GM_DEV_KEY = None
+                _LOGGER.warning("No GM device key we will use MAC address of gate.")
         except Exception as e:
-            _LOGGER.error("No credentials to Google Music")
+            _LOGGER.error("No credentials to Google Music: " + str(e))
 
     yield from hass.async_add_job(load)
 
@@ -87,21 +93,56 @@ class GMusicData:
 
     def __init__(self, hass, config):
         """Initialize the books authors."""
+        global GM_DEV_KEY
         global G_GM_MOBILE_CLIENT_API
         self.hass = hass
         self.all_gm_tracks = []
         self.selected_books = []
+        _LOGGER.info("GM_USER: " + GM_USER + " GM_PASS: *******" + " GM_DEV_KEY: " + str(GM_DEV_KEY))
         from gmusicapi import Mobileclient
         G_GM_MOBILE_CLIENT_API = Mobileclient()
-        G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, GM_DEV_KEY)
+        if GM_DEV_KEY is None:
+            G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, Mobileclient.FROM_MAC_ADDRESS)
+        else:
+            G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, GM_DEV_KEY)
+
         if not G_GM_MOBILE_CLIENT_API.is_authenticated():
-            _LOGGER.error("Failed to log in, check gmusicapi")
+            _LOGGER.error("Failed to log in, check Google Music api")
             return False
         else:
-            _LOGGER.info("OK - we are in Gmusic")
-            _LOGGER.info(
-                "devices: " + str(
-                    G_GM_MOBILE_CLIENT_API.get_registered_devices()))
+            _LOGGER.info("OK - we are in Google Music")
+            registered_devices = G_GM_MOBILE_CLIENT_API.get_registered_devices()
+            for d in registered_devices:
+                if d['id'].startswith('0x'):
+                    _LOGGER.warning("Your device ID in Google Music: " + str(d['id'][2:]) + " " + str(d))
+                else:
+                    _LOGGER.warning("Your device ID in Google Music: " + str(d['id'].replace(':', '')) + " " + str(d))
+
+            # trying to find first android device
+            if GM_DEV_KEY is None:
+                for device in registered_devices:
+                    if device['type'] == 'ANDROID':
+                        GM_DEV_KEY = device['id'][2:]
+                        break
+            # try to find gate id in devices or take the last one
+            if GM_DEV_KEY is None:
+                for device in registered_devices:
+                    if device['id'].startswith('0x'):
+                        d = device['id'][2:]
+                    else:
+                        d = device['id'].replace(':', '')
+
+                    GM_DEV_KEY = d
+                    if d == G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', ''):
+                        break
+            # try to register the gate id - Providing an unregistered mobile device id will register it to your account
+            if GM_DEV_KEY is None:
+                GM_DEV_KEY = G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', '')
+            G_GM_MOBILE_CLIENT_API.logout()
+            G_GM_MOBILE_CLIENT_API = None
+            G_GM_MOBILE_CLIENT_API = Mobileclient()
+            G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, GM_DEV_KEY)
+            _LOGGER.info("GM_USER: " + GM_USER + " GM_PASS: *******" + " GM_DEV_KEY: " + str(GM_DEV_KEY))
 
     def get_books(self, call):
         """Load books for the selected author."""
@@ -191,9 +232,7 @@ class GMusicData:
         if call.data["book_chapter"] == ais_global.G_EMPTY_OPTION:
             # stop all players
             # TODO - stop only the player selected for books
-            self.hass.services.call(
-                'media_player',
-                'media_stop')
+            self.hass.services.call('media_player', 'media_stop', {"entity_id": "all"})
             return
         book_chapter = call.data["book_chapter"]
         _url = None

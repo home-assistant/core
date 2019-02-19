@@ -24,6 +24,11 @@
        key: setupStorageSymlinks
        val: true
        ip: 127.0.0.1
+   - service: ais_shell_command.set_ais_secure_android_id_dom
+   - delay: '3'
+   - service: camera.turn_on
+     data:
+       entity_id: camera.remote_access
    - delay: '3'
    - service: ais_drives_service.refresh_files
    - delay: '1'
@@ -55,13 +60,7 @@
      data:
        payload: 0
        topic: dom/cmnd/state
-   - service: input_boolean.turn_off
-     data:
-       entity_id: input_boolean.ais_remote_access
-#   - service: camera.snapshot
-#     data:
-#       entity_id: camera.remote_access
-#       filename: ~/tmp
+   - service: ais_shell_command.change_remote_access
    - delay: '300'
    - service: ais_ai_service.prepare_remote_menu
 

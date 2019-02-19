@@ -118,3 +118,7 @@ ais_bookmarks:
 
 # set up Zeroconf and make AIS dom discoverable
 ais_mdns:
+
+#
+system_health:
+ais_gm_service:
