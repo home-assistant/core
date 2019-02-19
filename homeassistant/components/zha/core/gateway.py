@@ -253,6 +253,10 @@ async def _create_cluster_channel(cluster, zha_device, is_new_join,
 
 async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
     """Dispatch or store discovery information."""
+    if not discovery_info['channels']:
+        _LOGGER.warning(
+            "there are no channels in the discovery info: %s", discovery_info)
+        return None
     component = discovery_info['component']
     if is_new_join:
         async_dispatcher_send(
