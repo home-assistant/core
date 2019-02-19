@@ -13,7 +13,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VENDOR_IDS = (('Aeon Labs Gen5', 'VID_0658'),)
+
+VENDOR_IDS = ('0658',)
 
 
 def _get_z_stick():
@@ -22,12 +23,27 @@ def _get_z_stick():
     for port in serial.tools.list_ports.comports(include_links=False):
         if port.vid is None:
             continue
-        for vendor, vid in VENDOR_IDS:
-            if vid == 'VID_' + hex(port.vid)[2:].zfill(4):
+
+        if port.manufacturer is not None:
+            label = ' (' + port.manufacturer + ')'
+        else:
+            label = ''
+
+        if port.product is not None and 'Zigbee' in port.product:
+            continue
+        if port.interface is not None and 'Zigbee' in port.interface:
+            continue
+        if port.description is not None and 'Zigbee' in port.description:
+            continue
+
+        for vid in VENDOR_IDS:
+            if vid == hex(port.vid)[2:].zfill(4):
                 if sys.platform.startswith('win'):
-                    return vendor + ' : ' + '\\\\.\\' + port.device
+                    return '\\\\.\\' + port.device + label
                 else:
-                    return vendor + ' : ' + port.device
+                    return port.device + label
+
+    return DEFAULT_CONF_USB_STICK_PATH
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -48,13 +64,9 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
         errors = {}
 
-        com = _get_z_stick()
-        if com is None:
-            com = DEFAULT_CONF_USB_STICK_PATH
-
         fields = OrderedDict()
         fields[vol.Required(CONF_USB_STICK_PATH,
-                            default=com)] = str
+                            default=_get_z_stick())] = str
         fields[vol.Optional(CONF_NETWORK_KEY)] = str
 
         if user_input is not None:
@@ -65,16 +77,19 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             try:
                 from functools import partial
                 # pylint: disable=unused-variable
-                if ':' in com:
-                    com = com.split(':')[-1].strip()
+                port = user_input[CONF_USB_STICK_PATH]
+                port = port.split('(')[0].strip()
 
                 option = await self.hass.async_add_executor_job(  # noqa: F841
                     partial(ZWaveOption,
-                            com,
+                            port,
                             user_path=self.hass.config.config_dir)
                 )
+                user_input[CONF_USB_STICK_PATH] = port
+
             except ZWaveException:
                 errors['base'] = 'option_error'
+
                 return self.async_show_form(
                     step_id='user',
                     data_schema=vol.Schema(fields),
