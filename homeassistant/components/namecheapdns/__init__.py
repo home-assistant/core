@@ -5,7 +5,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD, CONF_DOMAIN
+from homeassistant.const import (CONF_HOST, CONF_HOSTS, 
+                                 CONF_PASSWORD, CONF_DOMAIN)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -33,9 +34,10 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_HOST,
         replacement_key=CONF_HOSTS,
         invalidation_version="0.91",
-        default = [DEFAULT_HOST]),
+        default=[DEFAULT_HOST]),
     _ensure_list('hosts')
 }, extra=vol.ALLOW_EXTRA)
+
 
 def _ensure_list(key: str):
     def validator(config: {}):
