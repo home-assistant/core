@@ -5,7 +5,7 @@ Time of Flight - VL53L1X Laser Ranger.
 For more details about this platform, please refer to
 https://github.com/josemotta/vl53l1x-python
 
-Fixed setup for initial version:
+Fixed setup for current driver version:
 
 - DEFAULT_RANGE is always LONG
 - DEFAULT_I2C_BUS is always 1
@@ -33,7 +33,7 @@ DEPENDENCIES = ['rpi_gpio']
 
 _LOGGER = logging.getLogger(__name__)
 
-LENGTH_MILIMETERS = 'mm' # type: str
+LENGTH_MILIMETERS = 'mm'
 
 CONF_I2C_ADDRESS = 'i2c_address'
 CONF_I2C_BUS = 'i2c_bus'
@@ -42,8 +42,6 @@ CONF_XSHUT = 'xshut'
 
 DEFAULT_NAME = 'VL53L1X'
 DEFAULT_I2C_ADDRESS = 0x29
-# DEFAULT_I2C_BUS = 1
-# DEFAULT_RANGE = 2
 DEFAULT_XSHUT = 16
 DEFAULT_SENSOR_ID = 123
 
@@ -52,8 +50,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
-#    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-#    vol.Optional(CONF_RANGE, default=DEFAULT_RANGE): cv.positive_int,
     vol.Optional(CONF_XSHUT, default=DEFAULT_XSHUT): cv.positive_int,
 })
 
@@ -63,14 +59,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     from VL53L1X2 import VL53L1X #  pylint: disable=import-error
 
     name = config.get(CONF_NAME)
-    # bus_number = config.get(CONF_I2C_BUS)
-    # i2c_address = config.get(CONF_I2C_ADDRESS)
     unit = LENGTH_MILIMETERS
-    # range = config.get(CONF_RANGE)
     xshut = config.get(CONF_XSHUT)
     sensor_id = DEFAULT_SENSOR_ID
 
-    # pulse XSHUT port and keep it HIGH
+    #  pulse XSHUT port and keep it HIGH
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, 0)
     time.sleep(0.01)
@@ -83,13 +76,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     tof.start_ranging(sensor_id, 2) #  Start ranging, driver use always LONG range
 
     distance_mm = tof.get_distance(sensor_id)  #  Grab the range in mm
-    _LOGGER.warning("Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
+    _LOGGER.info("Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
                     distance_mm))
-
     tof.stop_ranging(sensor_id)
-   
     sensor = await hass.async_add_job(partial(VL53L1X))
-
     dev = [VL53L1XSensor(sensor, name, unit)]
 
     async_add_entities(dev, True)
