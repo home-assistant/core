@@ -5,10 +5,11 @@ import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.toon import ToonEntity
-from homeassistant.components.toon.const import DATA_TOON_CLIENT, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ToonEntity
+from .const import DATA_TOON_CLIENT, DOMAIN
 
 DEPENDENCIES = ['toon']
 

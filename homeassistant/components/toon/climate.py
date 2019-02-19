@@ -6,14 +6,14 @@ from typing import Any, Dict, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.toon import ToonEntity
-from homeassistant.components.toon.const import (
-    DATA_TOON_CLIENT, DOMAIN, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ToonEntity
+from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 
 DEPENDENCIES = ['toon']
 

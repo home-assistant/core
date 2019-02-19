@@ -2,12 +2,13 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.toon import ToonEntity
-from homeassistant.components.toon.const import DATA_TOON_CLIENT, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CURRENCY_EUR, POWER_KWH, POWER_WATT, VOLUME_CM3, VOLUME_M3
+from . import ToonEntity
+from .const import (
+    CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH, POWER_WATT, VOLUME_CM3,
+    VOLUME_M3)
 
 DEPENDENCIES = ['toon']
 
