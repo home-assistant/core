@@ -51,10 +51,11 @@ def async_setup(hass, config):
     data = hass.data[DOMAIN] = AisColudData(hass)
     yield from data.get_types_async()
 
-    # TODO add "Clound" panel to the menu list
-    # yield from hass.components.frontend.async_register_built_in_panel(
-    #         'iframe', "Usługi online", "mdi:cloud-sync",
-    #         "cloud", {'url': 'https://powiedz.co/ords/f?p=100:101'})
+    # add "Console" panel to the menu list
+    my_ip = ais_global.get_my_global_ip()
+    yield from hass.components.frontend.async_register_built_in_panel(
+            'iframe', "Konsola", "mdi:console",
+            "console", {'url': 'http://' + my_ip + ':8888'})
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types  ")

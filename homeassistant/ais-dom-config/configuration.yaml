@@ -29,6 +29,9 @@ ais_updater:
 ais_drives_service:
 conversation:
 
+system_health:
+
+
 # Show links to resources in log and frontend
 introduction:
 

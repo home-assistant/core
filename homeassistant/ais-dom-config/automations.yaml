@@ -58,10 +58,10 @@
    - service: input_boolean.turn_off
      data:
        entity_id: input_boolean.ais_remote_access
-#   - service: camera.snapshot
-#     data:
-#       entity_id: camera.remote_access
-#       filename: ~/tmp
+   - service: camera.snapshot
+     data:
+       entity_id: camera.remote_access
+       filename: "/data/data/pl.sviete.dom/files/home/AIS"
    - delay: '300'
    - service: ais_ai_service.prepare_remote_menu
 
