@@ -75,7 +75,8 @@ def setup(hass, config):
         ads = AdsHub(client)
     except pyads.ADSError:
         _LOGGER.error(
-            "Could not connect to ADS host (netid=%s, ip=%s, port=%s)", net_id, ip_address, port)
+            "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
+            net_id, ip_address, port)
         return False
 
     hass.data[DATA_ADS] = ads
