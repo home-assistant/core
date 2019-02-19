@@ -1,9 +1,4 @@
-"""
-Use SDCP network control to power on/off and check state of Sony projector.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch.sony_projector/
-"""
+"""Support for Sony projectors via SDCP network control."""
 import logging
 
 import voluptuous as vol
