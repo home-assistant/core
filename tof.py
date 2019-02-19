@@ -42,8 +42,8 @@ CONF_XSHUT = 'xshut'
 
 DEFAULT_NAME = 'VL53L1X'
 DEFAULT_I2C_ADDRESS = 0x29
-#DEFAULT_I2C_BUS = 1
-#DEFAULT_RANGE = 2
+# DEFAULT_I2C_BUS = 1
+# DEFAULT_RANGE = 2
 DEFAULT_XSHUT = 16
 DEFAULT_SENSOR_ID = 123
 
@@ -59,14 +59,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the VL53L1X ToF Sensor from ST."""
-    import smbus # pylint: disable=import-error
-    from VL53L1X2 import VL53L1X # pylint: disable=import-error
+    import smbus #  pylint: disable=import-error
+    from VL53L1X2 import VL53L1X #  pylint: disable=import-error
 
     name = config.get(CONF_NAME)
-    #bus_number = config.get(CONF_I2C_BUS)
-    #i2c_address = config.get(CONF_I2C_ADDRESS)
+    # bus_number = config.get(CONF_I2C_BUS)
+    # i2c_address = config.get(CONF_I2C_ADDRESS)
     unit = LENGTH_MILIMETERS
-    #range = config.get(CONF_RANGE)
+    # range = config.get(CONF_RANGE)
     xshut = config.get(CONF_XSHUT)
     sensor_id = DEFAULT_SENSOR_ID
 
@@ -78,12 +78,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     time.sleep(0.01)
 
     tof = VL53L1X()
-    tof.open() # Initialise the i2c bus and configure the sensor
-    tof.add_sensor(sensor_id, DEFAULT_I2C_ADDRESS) # add a VL53L1X device
-    tof.start_ranging(sensor_id, 2) # Start ranging, driver use always LONG range
+    tof.open() #  Initialise the i2c bus and configure the sensor
+    tof.add_sensor(sensor_id, DEFAULT_I2C_ADDRESS) #  add a VL53L1X device
+    tof.start_ranging(sensor_id, 2) #  Start ranging, driver use always LONG range
 
-    distance_mm = tof.get_distance(sensor_id)  # Grab the range in mm
-    _LOGGER.warning("Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"), distance_mm))
+    distance_mm = tof.get_distance(sensor_id)  #  Grab the range in mm
+    _LOGGER.warning("Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
+                    distance_mm))
 
     tof.stop_ranging(sensor_id)
    
@@ -92,6 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dev = [VL53L1XSensor(sensor, name, unit)]
 
     async_add_entities(dev, True)
+    
 
 class VL53L1XSensor(Entity):
     """Implementation of VL53L1X sensor."""
@@ -129,21 +131,6 @@ class VL53L1XSensor(Entity):
 
         d = self.vl53l1x_sensor.distance
 
-        #_LOGGER.info("VL53L1X sensor update: %s", d)
+        #  _LOGGER.info("VL53L1X sensor update: %s", d)
 
         self._state = d
-
-        """ TODO: do we really need this?
-        await self.hass.async_add_job(partial(self.vl53l1x_sensor.add_sensor, DEFAULT_SENSOR_ID, self.i2c_address))
-        await self.hass.async_add_job(partial(self.vl53l1x_sensor.start_ranging,  DEFAULT_SENSOR_ID, 2))
-        await self.hass.async_add_job(partial(self.vl53l1x_sensor.update, DEFAULT_SENSOR_ID))
-
-        if self.vl53l1x_sensor.sample_ok:
-            self._state = self.vl53l1x_sensor.distance(DEFAULT_SENSOR_ID) / 10
-        else:
-            _LOGGER.warning("Bad Update of sensor.%s: %s",
-                            self.name, self.vl53l1x_sensor.distance(DEFAULT_SENSOR_ID))
-        
-        await self.hass.async_add_job(partial(self.vl53l1x_sensor.stop_ranging,  DEFAULT_SENSOR_ID))
-        """
-        
