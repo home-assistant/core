@@ -76,6 +76,10 @@ def async_setup(hass, config):
     def change_remote_access(service):
         yield from _change_remote_access(hass, service)
 
+    @asyncio.coroutine
+    def set_ais_secure_android_id_dom(service):
+        yield from _set_ais_secure_android_id_dom(hass, service)
+
     # register services
     hass.services.async_register(
         DOMAIN, 'change_host_name', change_host_name)
@@ -99,6 +103,8 @@ def async_setup(hass, config):
         DOMAIN, 'show_network_devices_info', show_network_devices_info)
     hass.services.async_register(
         DOMAIN, 'led', led)
+    hass.services.async_register(
+        DOMAIN, 'set_ais_secure_android_id_dom', set_ais_secure_android_id_dom)
     hass.services.async_register(
         DOMAIN, 'init_local_sdcard', init_local_sdcard)
     hass.services.async_register(
@@ -127,9 +133,12 @@ def _change_remote_access(hass, call):
     access = hass.states.get('input_boolean.ais_remote_access').state
     gate_id = hass.states.get('sensor.ais_secure_android_id_dom').state
     if access == 'on':
+        os.system("pm2 delete tunnel")
         os.system("pm2 start lt --name tunnel -- -h http://paczka.pro -p 8180 -s " + gate_id)
+        os.system("pm2 save")
     else:
         os.system("pm2 delete tunnel")
+        os.system("pm2 save")
 
 @asyncio.coroutine
 def _key_event(hass, call):
@@ -157,6 +166,18 @@ def _led(hass, call):
     subprocess.Popen(
         "su -c ' " + script + " " + str(brightness) + "'",
         shell=True, stdout=None, stderr=None)
+
+@asyncio.coroutine
+def _set_ais_secure_android_id_dom(hass, call):
+    import subprocess
+    try:
+        android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=5)
+    except Exception:
+        from uuid import getnode as get_mac
+        android_id = get_mac()
+
+    ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+    hass.states.async_set('sensor.ais_secure_android_id_dom', "dom-" + str(android_id))
 
 
 @asyncio.coroutine

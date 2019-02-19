@@ -48,6 +48,9 @@ G_MODEL_SONOFF_T13 = "sonoff_t13"
 G_BOOKMARK_MEDIA_POSITION = 0
 G_BOOKMARK_MEDIA_CONTENT_ID = ""
 
+#
+G_AIS_SECURE_ANDROID_ID_DOM = None
+
 
 def set_media_bookmark(media_content_id, position):
     global G_BOOKMARK_MEDIA_POSITION

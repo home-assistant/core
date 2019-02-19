@@ -8,23 +8,18 @@ sensor:
   - platform: mqtt
     state_topic: ais/version/sensor
     name: version_info
-  - platform: ais_android_cmd
-    command: su -c "settings get secure android_id"
-    name: ais_secure_android_id
-    scan_interval: 60000
-  - platform: template
-    sensors:
-      ais_secure_android_id_dom:
-        value_template: "dom-{{ states.sensor.ais_secure_android_id.state }}"
+  - platform: mqtt
+    state_topic: ais/secure_android_id/sensor
+    name: ais_secure_android_id_dom
 camera:
   - platform: ais_qrcode
     name: remote_access
-    value_template: "http://{{states.sensor.ais_secure_android_id_dom.state}}.paczka.pro"
+    value_template: "https://{{states.sensor.ais_secure_android_id_dom.state}}.paczka.pro"
 
 input_boolean:
   ais_remote_access:
     name: Dostęp z Internetu
-    initial: off
+    #initial: off
     icon: mdi:remote-desktop
 
 group:

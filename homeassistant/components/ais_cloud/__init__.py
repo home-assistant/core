@@ -248,15 +248,8 @@ class AisCloudWS:
         # take the token from secrets
         global CLOUD_WS_TOKEN, CLOUD_WS_HEADER
         if CLOUD_WS_TOKEN is None:
-            try:
-                import subprocess
-                CLOUD_WS_TOKEN = 'dom_' + subprocess.check_output(
-                    'su -c "settings get secure android_id"', shell=True, timeout=15)
-                CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
-            except Exception as e:
-                CLOUD_WS_TOKEN = 'dom-unknown'
-                CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
-                _LOGGER.info("Exception: getCurrentToken " + str(e))
+            CLOUD_WS_TOKEN = ais_global.G_AIS_SECURE_ANDROID_ID_DOM
+            CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
 
     def ask(self, question, org_answer):
         self.setCloudToken()

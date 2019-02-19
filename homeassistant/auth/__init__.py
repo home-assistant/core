@@ -93,6 +93,18 @@ class AuthManager:
     @property
     def auth_providers(self) -> List[AuthProvider]:
         """Return a list of available auth providers."""
+        # AIS dom ----------------------------------------------------------------
+        remote_access = self.hass.states.get('input_boolean.ais_remote_access').state
+        if remote_access == "on":
+            ext_provider = OrderedDict()  # type: _ProviderDict
+            for p in self._providers:
+                (key, value) = p
+                if key == "homeassistant":
+                    ext_provider[p] = self._providers[p]
+            # Return only homeassistant provider
+            return list(ext_provider.values())
+        # Return a list of all available auth providers
+        # AIS dom ----------------------------------------------------------------
         return list(self._providers.values())
 
     @property
