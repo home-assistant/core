@@ -1,4 +1,4 @@
-"""Distance util functions."""
+"""Pressure util functions."""
 
 import logging
 from numbers import Number
