@@ -1,9 +1,4 @@
-"""
-Allow users to set and activate scenes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scene/
-"""
+"""Allow users to set and activate scenes."""
 import asyncio
 import importlib
 import logging
@@ -25,8 +20,7 @@ STATES = 'states'
 def _hass_domain_validator(config):
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {
-            CONF_PLATFORM: HASS_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HASS_DOMAIN, STATES: config}
 
     return config
 

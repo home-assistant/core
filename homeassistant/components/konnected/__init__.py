@@ -1,9 +1,4 @@
-"""
-Support for Konnected devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/konnected/
-"""
+"""Support for Konnected devices."""
 import asyncio
 import hmac
 import json

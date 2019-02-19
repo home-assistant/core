@@ -1,9 +1,4 @@
-"""
-Support for the Tesla platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tesla/
-"""
+"""Support for tracking Tesla cars."""
 import logging
 
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN

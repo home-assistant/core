@@ -1,9 +1,4 @@
-"""
-Support for track controls on the Sisyphus Kinetic Art Table.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.sisyphus/
-"""
+"""Support for track controls on the Sisyphus Kinetic Art Table."""
 import logging
 
 from homeassistant.components.media_player import MediaPlayerDevice

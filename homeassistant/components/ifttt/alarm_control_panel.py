@@ -1,9 +1,4 @@
-"""
-Interfaces with alarm control panels that have to be controlled through IFTTT.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ifttt/
-"""
+"""Support for alarm control panels that can be controlled through IFTTT."""
 import logging
 import re
 
@@ -15,9 +10,9 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.ifttt import (
     ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_CODE,
-    CONF_OPTIMISTIC, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_CODE, CONF_NAME, CONF_OPTIMISTIC,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ifttt']

@@ -1,10 +1,4 @@
-"""
-Connects to LCN platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lcn/
-"""
-
+"""Support for LCN devices."""
 import logging
 import re
 

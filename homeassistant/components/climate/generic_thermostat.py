@@ -11,10 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO, ClimateDevice,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO,
     ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, ATTR_ENTITY_ID,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_UNKNOWN, PRECISION_HALVES,

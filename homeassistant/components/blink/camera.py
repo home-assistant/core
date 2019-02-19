@@ -1,9 +1,4 @@
-"""
-Support for Blink system camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.blink/
-"""
+"""Support for Blink system camera."""
 import logging
 
 from homeassistant.components.blink import BLINK_DATA, DEFAULT_BRAND

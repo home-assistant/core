@@ -1,9 +1,4 @@
-"""
-Component for interacting with a Lutron Caseta system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lutron_caseta/
-"""
+"""Component for interacting with a Lutron Caseta system."""
 import logging
 
 import voluptuous as vol
@@ -30,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_KEYFILE): cv.string,
         vol.Required(CONF_CERTFILE): cv.string,
-        vol.Required(CONF_CA_CERTS): cv.string
+        vol.Required(CONF_CA_CERTS): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -47,15 +42,14 @@ async def async_setup(hass, base_config):
     keyfile = hass.config.path(config[CONF_KEYFILE])
     certfile = hass.config.path(config[CONF_CERTFILE])
     ca_certs = hass.config.path(config[CONF_CA_CERTS])
-    bridge = Smartbridge.create_tls(hostname=config[CONF_HOST],
-                                    keyfile=keyfile,
-                                    certfile=certfile,
-                                    ca_certs=ca_certs)
+    bridge = Smartbridge.create_tls(
+        hostname=config[CONF_HOST], keyfile=keyfile, certfile=certfile,
+        ca_certs=ca_certs)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
     await bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
-        _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
-                      config[CONF_HOST])
+        _LOGGER.error(
+            "Unable to connect to Lutron smartbridge at %s", config[CONF_HOST])
         return False
 
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])

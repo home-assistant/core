@@ -1,9 +1,4 @@
-"""
-KIRA interface to receive UDP packets from an IR-IP bridge.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.kira/
-"""
+"""KIRA interface to receive UDP packets from an IR-IP bridge."""
 import logging
 
 from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_UNKNOWN

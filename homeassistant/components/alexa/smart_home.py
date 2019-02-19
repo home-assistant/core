@@ -1,10 +1,4 @@
-"""Support for alexa Smart Home Skill API.
-
-API documentation:
-https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
-https://developer.amazon.com/docs/device-apis/message-guide.html
-"""
-
+"""Support for alexa Smart Home Skill API."""
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
@@ -17,8 +11,9 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components import (
-    alert, automation, binary_sensor, climate, cover, fan, group, http,
+    alert, automation, binary_sensor, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
+from homeassistant.components.climate import const as climate
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
@@ -28,7 +23,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, STATE_LOCKED, STATE_ON, STATE_UNAVAILABLE,
+    SERVICE_VOLUME_MUTE, STATE_LOCKED, STATE_ON, STATE_OFF, STATE_UNAVAILABLE,
     STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
@@ -63,10 +58,11 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_COOL, 'COOL'),
     (climate.STATE_AUTO, 'AUTO'),
     (climate.STATE_ECO, 'ECO'),
-    (climate.STATE_OFF, 'OFF'),
+    (climate.STATE_MANUAL, 'AUTO'),
+    (STATE_OFF, 'OFF'),
     (climate.STATE_IDLE, 'OFF'),
     (climate.STATE_FAN_ONLY, 'OFF'),
-    (climate.STATE_DRY, 'OFF')
+    (climate.STATE_DRY, 'OFF'),
 ])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -770,7 +766,7 @@ class _AlexaThermostatController(_AlexaInterface):
 
         unit = self.hass.config.units.temperature_unit
         if name == 'targetSetpoint':
-            temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
+            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
         elif name == 'lowerSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
         elif name == 'upperSetpoint':

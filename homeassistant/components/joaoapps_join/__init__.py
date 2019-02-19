@@ -1,9 +1,4 @@
-"""
-Component for Joaoapps Join services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/join/
-"""
+"""Support for Joaoapps Join services."""
 import logging
 
 import voluptuous as vol
@@ -16,6 +11,7 @@ REQUIREMENTS = ['python-join-api==0.0.2']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'joaoapps_join'
+
 CONF_DEVICE_ID = 'device_id'
 CONF_DEVICE_IDS = 'device_ids'
 CONF_DEVICE_NAMES = 'device_names'
@@ -26,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_DEVICE_IDS): cv.string,
         vol.Optional(CONF_DEVICE_NAMES): cv.string,
-        vol.Optional(CONF_NAME): cv.string
+        vol.Optional(CONF_NAME): cv.string,
     }])
 }, extra=vol.ALLOW_EXTRA)
 

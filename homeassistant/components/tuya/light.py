@@ -1,9 +1,4 @@
-"""
-Support for the Tuya light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tuya/
-"""
+"""Support for the Tuya lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)

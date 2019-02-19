@@ -1,10 +1,4 @@
-"""
-Support for KNX/IP covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.knx/
-"""
-
+"""Support for KNX/IP covers."""
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -49,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)

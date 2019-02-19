@@ -1,9 +1,4 @@
-"""
-Support for Neato botvac connected vacuum cleaners.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/neato/
-"""
+"""Support for Neato botvac connected vacuum cleaners."""
 import logging
 from datetime import timedelta
 from urllib.error import HTTPError
@@ -15,9 +10,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
-
 REQUIREMENTS = ['pybotvac==0.0.13']
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'

@@ -1,20 +1,18 @@
-"""
-Support for Ambient Weather Station binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ambient_station/
-"""
+"""Support for Ambient Weather Station binary sensors."""
 import logging
 
 from homeassistant.components.ambient_station import (
-    SENSOR_TYPES, TYPE_BATTOUT, AmbientWeatherEntity)
+    SENSOR_TYPES, TYPE_BATT1, TYPE_BATT10, TYPE_BATT2, TYPE_BATT3, TYPE_BATT4,
+    TYPE_BATT5, TYPE_BATT6, TYPE_BATT7, TYPE_BATT8, TYPE_BATT9, TYPE_BATTOUT,
+    AmbientWeatherEntity)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_NAME
 
 from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_BINARY_SENSOR
 
-DEPENDENCIES = ['ambient_station']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['ambient_station']
 
 
 async def async_setup_platform(
@@ -60,7 +58,10 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        if self._sensor_type == TYPE_BATTOUT:
+        if self._sensor_type in (TYPE_BATT1, TYPE_BATT10, TYPE_BATT2,
+                                 TYPE_BATT3, TYPE_BATT4, TYPE_BATT5,
+                                 TYPE_BATT6, TYPE_BATT7, TYPE_BATT8,
+                                 TYPE_BATT9, TYPE_BATTOUT):
             return self._state == 0
 
         return self._state == 1

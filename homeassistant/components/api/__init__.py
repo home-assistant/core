@@ -1,9 +1,4 @@
-"""
-Rest API for Home Assistant.
-
-For more details about the RESTful API, please refer to the documentation at
-https://developers.home-assistant.io/docs/en/external_api_rest.html
-"""
+"""Rest API for Home Assistant."""
 import asyncio
 import json
 import logging

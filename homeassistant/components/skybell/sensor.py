@@ -1,9 +1,4 @@
-"""
-Sensor support for Skybell Doorbells.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.skybell/
-"""
+"""Sensor support for Skybell Doorbells."""
 from datetime import timedelta
 import logging
 

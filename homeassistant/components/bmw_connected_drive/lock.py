@@ -1,9 +1,4 @@
-"""
-Support for BMW cars with BMW ConnectedDrive.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lock.bmw_connected_drive/
-"""
+"""Support for BMW car locks with BMW ConnectedDrive."""
 import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN

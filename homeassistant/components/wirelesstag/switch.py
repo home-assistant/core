@@ -1,9 +1,4 @@
-"""
-Switch implementation for Wireless Sensor Tags (wirelesstag.net) platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.wirelesstag/
-"""
+"""Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 import logging
 
 import voluptuous as vol
@@ -64,8 +59,8 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
         super().__init__(api, tag)
         self._switch_type = switch_type
         self.sensor_type = SWITCH_TYPES[self._switch_type][1]
-        self._name = '{} {}'.format(self._tag.name,
-                                    SWITCH_TYPES[self._switch_type][0])
+        self._name = '{} {}'.format(
+            self._tag.name, SWITCH_TYPES[self._switch_type][0])
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""

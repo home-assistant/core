@@ -1,9 +1,4 @@
-"""
-Support for interacting with Digital Ocean droplets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.digital_ocean/
-"""
+"""Support for interacting with Digital Ocean droplets."""
 import logging
 
 import voluptuous as vol
@@ -13,7 +8,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.digital_ocean import (
     CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
     ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, CONF_ATTRIBUTION, DATA_DIGITAL_OCEAN)
+    ATTR_REGION, ATTR_VCPUS, ATTRIBUTION, DATA_DIGITAL_OCEAN)
 from homeassistant.const import ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +65,7 @@ class DigitalOceanSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_CREATED_AT: self.data.created_at,
             ATTR_DROPLET_ID: self.data.id,
             ATTR_DROPLET_NAME: self.data.name,

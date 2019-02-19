@@ -15,10 +15,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .helpers import (
     bind_configure_reporting, construct_unique_id,
-    safe_read, get_attr_id_by_name)
+    safe_read, get_attr_id_by_name, bind_cluster)
 from .const import (
     CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
-    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, ATTR_LEVEL
+    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, LISTENER_BASIC,
+    LISTENER_ATTRIBUTE, LISTENER_ON_OFF, LISTENER_COLOR, LISTENER_FAN,
+    LISTENER_LEVEL, LISTENER_ZONE, LISTENER_ACTIVE_POWER, LISTENER_BATTERY,
+    LISTENER_EVENT_RELAY
 )
 
 LISTENER_REGISTRY = {}
@@ -30,12 +33,25 @@ def populate_listener_registry():
     """Populate the listener registry."""
     from zigpy import zcl
     LISTENER_REGISTRY.update({
+        zcl.clusters.general.Alarms.cluster_id: ClusterListener,
+        zcl.clusters.general.Commissioning.cluster_id: ClusterListener,
+        zcl.clusters.general.Identify.cluster_id: ClusterListener,
+        zcl.clusters.general.Groups.cluster_id: ClusterListener,
+        zcl.clusters.general.Scenes.cluster_id: ClusterListener,
+        zcl.clusters.general.Partition.cluster_id: ClusterListener,
+        zcl.clusters.general.Ota.cluster_id: ClusterListener,
+        zcl.clusters.general.PowerProfile.cluster_id: ClusterListener,
+        zcl.clusters.general.ApplianceControl.cluster_id: ClusterListener,
+        zcl.clusters.general.PollControl.cluster_id: ClusterListener,
+        zcl.clusters.general.GreenPowerProxy.cluster_id: ClusterListener,
+        zcl.clusters.general.OnOffConfiguration.cluster_id: ClusterListener,
         zcl.clusters.general.OnOff.cluster_id: OnOffListener,
         zcl.clusters.general.LevelControl.cluster_id: LevelListener,
         zcl.clusters.lighting.Color.cluster_id: ColorListener,
         zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id:
         ActivePowerListener,
         zcl.clusters.general.PowerConfiguration.cluster_id: BatteryListener,
+        zcl.clusters.general.Basic.cluster_id: BasicListener,
         zcl.clusters.security.IasZone.cluster_id: IASZoneListener,
         zcl.clusters.hvac.Fan.cluster_id: FanListener,
     })
@@ -92,6 +108,7 @@ class ClusterListener:
 
     def __init__(self, cluster, device):
         """Initialize ClusterListener."""
+        self.name = 'cluster_{}'.format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
@@ -216,11 +233,10 @@ class ClusterListener:
 class AttributeListener(ClusterListener):
     """Listener for the attribute reports cluster."""
 
-    name = 'attribute'
-
     def __init__(self, cluster, device):
         """Initialize AttributeListener."""
         super().__init__(cluster, device)
+        self.name = LISTENER_ATTRIBUTE
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
             self._value_attribute = get_attr_id_by_name(self.cluster, attr)
@@ -247,13 +263,12 @@ class AttributeListener(ClusterListener):
 class OnOffListener(ClusterListener):
     """Listener for the OnOff Zigbee cluster."""
 
-    name = 'on_off'
-
     ON_OFF = 0
 
     def __init__(self, cluster, device):
-        """Initialize ClusterListener."""
+        """Initialize OnOffListener."""
         super().__init__(cluster, device)
+        self.name = LISTENER_ON_OFF
         self._state = None
 
     @callback
@@ -295,9 +310,12 @@ class OnOffListener(ClusterListener):
 class LevelListener(ClusterListener):
     """Listener for the LevelControl Zigbee cluster."""
 
-    name = ATTR_LEVEL
-
     CURRENT_LEVEL = 0
+
+    def __init__(self, cluster, device):
+        """Initialize LevelListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_LEVEL
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -350,7 +368,10 @@ class LevelListener(ClusterListener):
 class IASZoneListener(ClusterListener):
     """Listener for the IASZone Zigbee cluster."""
 
-    name = 'zone'
+    def __init__(self, cluster, device):
+        """Initialize LevelListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_ZONE
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -373,18 +394,8 @@ class IASZoneListener(ClusterListener):
         from zigpy.exceptions import DeliveryError
         _LOGGER.debug("%s: started IASZoneListener configuration",
                       self._unique_id)
-        try:
-            res = await self._cluster.bind()
-            _LOGGER.debug(
-                "%s: bound  '%s' cluster: %s",
-                self.unique_id, self._cluster.ep_attribute, res[0]
-            )
-        except DeliveryError as ex:
-            _LOGGER.debug(
-                "%s: Failed to bind '%s' cluster: %s",
-                self.unique_id, self._cluster.ep_attribute, str(ex)
-            )
 
+        await bind_cluster(self.unique_id, self._cluster)
         ieee = self._cluster.endpoint.device.application.ieee
 
         try:
@@ -425,7 +436,10 @@ class IASZoneListener(ClusterListener):
 class ActivePowerListener(AttributeListener):
     """Listener that polls active power level."""
 
-    name = 'active_power'
+    def __init__(self, cluster, device):
+        """Initialize ActivePowerListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_ACTIVE_POWER
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -433,7 +447,7 @@ class ActivePowerListener(AttributeListener):
 
         # This is a polling listener. Don't allow cache.
         result = await self.get_attribute_value(
-            'active_power', from_cache=False)
+            LISTENER_ACTIVE_POWER, from_cache=False)
         async_dispatcher_send(
             self._zha_device.hass,
             "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
@@ -443,14 +457,53 @@ class ActivePowerListener(AttributeListener):
     async def async_initialize(self, from_cache):
         """Initialize listener."""
         await self.get_attribute_value(
-            'active_power', from_cache=from_cache)
+            LISTENER_ACTIVE_POWER, from_cache=from_cache)
         await super().async_initialize(from_cache)
+
+
+class BasicListener(ClusterListener):
+    """Listener to interact with the basic cluster."""
+
+    BATTERY = 3
+    POWER_SOURCES = {
+        0: 'Unknown',
+        1: 'Mains (single phase)',
+        2: 'Mains (3 phase)',
+        BATTERY: 'Battery',
+        4: 'DC source',
+        5: 'Emergency mains constantly powered',
+        6: 'Emergency mains and transfer switch'
+    }
+
+    def __init__(self, cluster, device):
+        """Initialize BasicListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_BASIC
+        self._power_source = None
+
+    async def async_configure(self):
+        """Configure this listener."""
+        await super().async_configure()
+        await self.async_initialize(False)
+
+    async def async_initialize(self, from_cache):
+        """Initialize listener."""
+        self._power_source = await self.get_attribute_value(
+            'power_source', from_cache=from_cache)
+        await super().async_initialize(from_cache)
+
+    def get_power_source(self):
+        """Get the power source."""
+        return self._power_source
 
 
 class BatteryListener(ClusterListener):
     """Listener that polls active power level."""
 
-    name = 'battery'
+    def __init__(self, cluster, device):
+        """Initialize BatteryListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_BATTERY
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -490,7 +543,10 @@ class BatteryListener(ClusterListener):
 class EventRelayListener(ClusterListener):
     """Event relay that can be attached to zigbee clusters."""
 
-    name = 'event_relay'
+    def __init__(self, cluster, device):
+        """Initialize EventRelayListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_EVENT_RELAY
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -522,15 +578,14 @@ class EventRelayListener(ClusterListener):
 class ColorListener(ClusterListener):
     """Color listener."""
 
-    name = 'color'
-
     CAPABILITIES_COLOR_XY = 0x08
     CAPABILITIES_COLOR_TEMP = 0x10
     UNSUPPORTED_ATTRIBUTE = 0x86
 
     def __init__(self, cluster, device):
-        """Initialize ClusterListener."""
+        """Initialize ColorListener."""
         super().__init__(cluster, device)
+        self.name = LISTENER_COLOR
         self._color_capabilities = None
 
     def get_color_capabilities(self):
@@ -560,9 +615,12 @@ class ColorListener(ClusterListener):
 class FanListener(ClusterListener):
     """Fan listener."""
 
-    name = 'fan'
-
     _value_attribute = 0
+
+    def __init__(self, cluster, device):
+        """Initialize FanListener."""
+        super().__init__(cluster, device)
+        self.name = LISTENER_FAN
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
@@ -605,10 +663,9 @@ class FanListener(ClusterListener):
 class ZDOListener:
     """Listener for ZDO events."""
 
-    name = 'zdo'
-
     def __init__(self, cluster, device):
-        """Initialize ClusterListener."""
+        """Initialize ZDOListener."""
+        self.name = 'zdo'
         self._cluster = cluster
         self._zha_device = device
         self._status = ListenerStatus.CREATED

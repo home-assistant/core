@@ -1,9 +1,4 @@
-"""
-This component provides basic support for Abode Home Security system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/abode/
-"""
+"""Support for Abode Home Security system."""
 import logging
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -22,7 +17,8 @@ REQUIREMENTS = ['abodepy==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by goabode.com"
+ATTRIBUTION = "Data provided by goabode.com"
+
 CONF_POLLING = 'polling'
 
 DOMAIN = 'abode'
@@ -285,7 +281,7 @@ class AbodeDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'device_id': self._device.device_id,
             'battery_low': self._device.battery_low,
             'no_response': self._device.no_response,
@@ -332,7 +328,7 @@ class AbodeAutomation(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'automation_id': self._automation.automation_id,
             'type': self._automation.type,
             'sub_type': self._automation.sub_type

@@ -1,16 +1,11 @@
-"""
-This component provides HA sensor support for Logi Circle cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.logi_circle/
-"""
+"""Support for Logi Circle sensors."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.logi_circle import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
+    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING,
@@ -26,26 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, unit of measure, icon per sensor key.
 SENSOR_TYPES = {
-    'battery_level': [
-        'Battery', '%', 'battery-50'],
-
-    'last_activity_time': [
-        'Last Activity', None, 'history'],
-
-    'privacy_mode': [
-        'Privacy Mode', None, 'eye'],
-
-    'signal_strength_category': [
-        'WiFi Signal Category', None, 'wifi'],
-
-    'signal_strength_percentage': [
-        'WiFi Signal Strength', '%', 'wifi'],
-
-    'speaker_volume': [
-        'Volume', '%', 'volume-high'],
-
-    'streaming_mode': [
-        'Streaming Mode', None, 'camera'],
+    'battery_level': ['Battery', '%', 'battery-50'],
+    'last_activity_time': ['Last Activity', None, 'history'],
+    'privacy_mode': ['Privacy Mode', None, 'eye'],
+    'signal_strength_category': ['WiFi Signal Category', None, 'wifi'],
+    'signal_strength_percentage': ['WiFi Signal Strength', '%', 'wifi'],
+    'speaker_volume': ['Volume', '%', 'volume-high'],
+    'streaming_mode': ['Streaming Mode', None, 'camera'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -104,7 +86,7 @@ class LogiSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'battery_saving_mode': (
                 STATE_ON if self._camera.battery_saving else STATE_OFF),
             'ip_address': self._camera.ip_address,

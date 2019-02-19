@@ -1,4 +1,4 @@
-"""Component to manage a shopping list."""
+"""Support to manage a shopping list."""
 import asyncio
 import logging
 import uuid

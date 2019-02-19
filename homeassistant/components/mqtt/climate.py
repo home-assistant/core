@@ -10,11 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA)
+from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
-    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO, STATE_COOL,
+    STATE_AUTO, STATE_COOL,
     STATE_DRY, STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
     SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,

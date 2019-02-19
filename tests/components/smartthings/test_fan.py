@@ -39,26 +39,6 @@ async def test_async_setup_platform():
     await fan.async_setup_platform(None, None, None)
 
 
-def test_is_fan(device_factory):
-    """Test fans are correctly identified."""
-    non_fans = [
-        device_factory('Unknown', ['Unknown']),
-        device_factory("Switch 1", [Capability.switch]),
-        device_factory("Non-Switchable Fan", [Capability.fan_speed]),
-        device_factory("Color Light",
-                       [Capability.switch, Capability.switch_level,
-                        Capability.color_control,
-                        Capability.color_temperature])
-    ]
-    fan_device = device_factory(
-        "Fan 1", [Capability.switch, Capability.switch_level,
-                  Capability.fan_speed])
-
-    assert fan.is_fan(fan_device), fan_device.name
-    for device in non_fans:
-        assert not fan.is_fan(device), device.name
-
-
 async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the fan types."""
     device = device_factory(

@@ -1,9 +1,4 @@
-"""
-Support for Envisalink-based alarm control panels (Honeywell/DSC).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.envisalink/
-"""
+"""Support for Envisalink-based alarm control panels (Honeywell/DSC)."""
 import logging
 
 import voluptuous as vol
@@ -31,8 +26,8 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     configured_partitions = discovery_info['partitions']
     code = discovery_info[CONF_CODE]
@@ -42,14 +37,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         device = EnvisalinkAlarm(
-            hass,
-            part_num,
-            device_config_data[CONF_PARTITIONNAME],
-            code,
-            panic_type,
-            hass.data[DATA_EVL].alarm_state['partition'][part_num],
-            hass.data[DATA_EVL]
-        )
+            hass, part_num, device_config_data[CONF_PARTITIONNAME], code,
+            panic_type, hass.data[DATA_EVL].alarm_state['partition'][part_num],
+            hass.data[DATA_EVL])
         devices.append(device)
 
     async_add_entities(devices)

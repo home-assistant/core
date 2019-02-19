@@ -26,7 +26,7 @@ ATTR_DESCRIPTION = 'Description'
 ATTR_TIME_UPDATED = 'TimeUpdated'
 ATTR_TRAVEL_TIME_ID = 'TravelTimeID'
 
-CONF_ATTRIBUTION = "Data provided by WSDOT"
+ATTRIBUTION = "Data provided by WSDOT"
 
 CONF_TRAVEL_TIMES = 'travel_time'
 
@@ -115,7 +115,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+            attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
             for key in [ATTR_AVG_TIME, ATTR_NAME, ATTR_DESCRIPTION,
                         ATTR_TRAVEL_TIME_ID]:
                 attrs[key] = self._data.get(key)

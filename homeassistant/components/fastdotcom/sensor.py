@@ -1,9 +1,4 @@
-"""
-Support for Fast.com internet speed testing sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fastdotcom/
-"""
+"""Support for Fast.com internet speed testing sensor."""
 import logging
 
 from homeassistant.components.fastdotcom import DOMAIN as FASTDOTCOM_DOMAIN, \

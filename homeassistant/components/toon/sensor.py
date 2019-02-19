@@ -1,9 +1,4 @@
-"""
-Component for the rebranded Quby thermostat as provided by Eneco.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.toon/
-"""
+"""Support for rebranded Quby thermostat as provided by Eneco."""
 import logging
 import datetime
 

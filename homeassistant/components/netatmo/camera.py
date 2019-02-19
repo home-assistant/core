@@ -1,9 +1,4 @@
-"""
-Support for the Netatmo cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.netatmo/.
-"""
+"""Support for the Netatmo cameras."""
 import logging
 
 import requests
@@ -36,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     import pyatmo
     try:
-        data = CameraData(netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
@@ -45,6 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
             add_entities([NetatmoCamera(data, camera_name, home,
                                         camera_type, verify_ssl)])
+        data.get_persons()
     except pyatmo.NoDevice:
         return None
 

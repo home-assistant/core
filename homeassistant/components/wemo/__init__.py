@@ -1,9 +1,4 @@
-"""
-Support for WeMo device discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wemo/
-"""
+"""Support for WeMo device discovery."""
 import logging
 
 import requests
@@ -31,7 +26,7 @@ WEMO_MODEL_DISPATCH = {
     'Maker':   'switch',
     'Motion': 'binary_sensor',
     'Sensor':  'binary_sensor',
-    'Socket':  'switch'
+    'Socket':  'switch',
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -68,8 +63,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_STATIC, default=[]): vol.Schema([
             vol.All(cv.string, coerce_host_port)
         ]),
-        vol.Optional(CONF_DISCOVERY,
-                     default=DEFAULT_DISCOVERY): cv.boolean
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -115,17 +109,17 @@ def setup(hass, config):
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
-            _LOGGER.debug('Ignoring known device %s %s',
-                          service, discovery_info)
+            _LOGGER.debug(
+                "Ignoring known device %s %s", service, discovery_info)
             return
 
-        _LOGGER.debug('Discovered unique WeMo device: %s', serial)
+        _LOGGER.debug("Discovered unique WeMo device: %s", serial)
         KNOWN_DEVICES.append(serial)
 
         component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
 
-        discovery.load_platform(hass, component, DOMAIN,
-                                discovery_info, config)
+        discovery.load_platform(
+            hass, component, DOMAIN, discovery_info, config)
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
@@ -146,7 +140,7 @@ def setup(hass, config):
                 device = pywemo.discovery.device_from_description(url, None)
             except (requests.exceptions.ConnectionError,
                     requests.exceptions.Timeout) as err:
-                _LOGGER.error('Unable to access WeMo at %s (%s)', url, err)
+                _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
                 continue
 
             if not [d[1] for d in devices
@@ -162,8 +156,8 @@ def setup(hass, config):
                                     device))
 
         for url, device in devices:
-            _LOGGER.debug('Adding WeMo device at %s:%i',
-                          device.host, device.port)
+            _LOGGER.debug(
+                "Adding WeMo device at %s:%i", device.host, device.port)
 
             discovery_info = {
                 'model_name': device.model_name,
@@ -176,7 +170,6 @@ def setup(hass, config):
 
         _LOGGER.debug("WeMo device discovery has finished")
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                         discover_wemo_devices)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, discover_wemo_devices)
 
     return True

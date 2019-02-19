@@ -1,9 +1,4 @@
-"""
-Decorator service for the media_player.play_media service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/media_extractor/
-"""
+"""Decorator service for the media_player.play_media service."""
 import logging
 
 import voluptuous as vol
@@ -17,7 +12,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2019.02.08']
+REQUIREMENTS = ['youtube_dl==2019.02.18']
 
 _LOGGER = logging.getLogger(__name__)
 

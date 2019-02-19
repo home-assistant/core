@@ -1,11 +1,4 @@
-"""
-Support for Tellstick covers using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tellduslive/
-"""
+"""Support for Tellstick covers using Tellstick Net."""
 import logging
 
 from homeassistant.components import cover, tellduslive

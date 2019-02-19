@@ -1,9 +1,4 @@
-"""
-Support for RFXtrx switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rfxtrx/
-"""
+"""Support for RFXtrx switches."""
 import logging
 
 import voluptuous as vol

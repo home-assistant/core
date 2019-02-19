@@ -1,9 +1,4 @@
-"""
-Support for the Skybell HD Doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/skybell/
-"""
+"""Support for the Skybell HD Doorbell."""
 import logging
 
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -18,7 +13,7 @@ REQUIREMENTS = ['skybellpy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by Skybell.com"
+ATTRIBUTION = "Data provided by Skybell.com"
 
 NOTIFICATION_ID = 'skybell_notification'
 NOTIFICATION_TITLE = 'Skybell Sensor Setup'
@@ -81,7 +76,7 @@ class SkybellDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'device_id': self._device.device_id,
             'status': self._device.status,
             'location': self._device.location,

@@ -1,9 +1,4 @@
-"""
-Z-Wave platform that handles fans.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.zwave/
-"""
+"""Support for Z-Wave fans."""
 import logging
 import math
 
@@ -36,8 +31,8 @@ SPEED_TO_VALUE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave fans."""
     pass
 

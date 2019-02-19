@@ -1,9 +1,4 @@
-"""
-Support for interface with an LG webOS Smart TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.webostv/
-"""
+"""Support for interface with an LG webOS Smart TV."""
 import asyncio
 from datetime import timedelta
 import logging

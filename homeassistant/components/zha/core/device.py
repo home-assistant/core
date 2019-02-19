@@ -15,9 +15,9 @@ from .const import (
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS
+    QUIRK_CLASS, LISTENER_BASIC
 )
-from .listeners import EventRelayListener
+from .listeners import EventRelayListener, BasicListener
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,7 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
+        self.power_source = None
 
     @property
     def name(self):
@@ -173,10 +174,17 @@ class ZHADevice:
         await self._execute_listener_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache=False):
         """Initialize listeners."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_listener_tasks('async_initialize', from_cache)
+        self.power_source = self.cluster_listeners.get(
+            LISTENER_BASIC).get_power_source()
+        _LOGGER.debug(
+            '%s: power source: %s',
+            self.name,
+            BasicListener.POWER_SOURCES.get(self.power_source)
+        )
         _LOGGER.debug('%s: completed initialization', self.name)
 
     async def _execute_listener_tasks(self, task_name, *args):
@@ -220,24 +228,24 @@ class ZHADevice:
             if ep_id != 0
         }
 
-    async def get_cluster(self, endpooint_id, cluster_id, cluster_type=IN):
+    async def get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
         clusters = await self.get_clusters()
-        return clusters[endpooint_id][cluster_type][cluster_id]
+        return clusters[endpoint_id][cluster_type][cluster_id]
 
-    async def get_cluster_attributes(self, endpooint_id, cluster_id,
+    async def get_cluster_attributes(self, endpoint_id, cluster_id,
                                      cluster_type=IN):
         """Get zigbee attributes for specified cluster."""
-        cluster = await self.get_cluster(endpooint_id, cluster_id,
+        cluster = await self.get_cluster(endpoint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
             return None
         return cluster.attributes
 
-    async def get_cluster_commands(self, endpooint_id, cluster_id,
+    async def get_cluster_commands(self, endpoint_id, cluster_id,
                                    cluster_type=IN):
         """Get zigbee commands for specified cluster."""
-        cluster = await self.get_cluster(endpooint_id, cluster_id,
+        cluster = await self.get_cluster(endpoint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
             return None
@@ -246,12 +254,12 @@ class ZHADevice:
             SERVER_COMMANDS: cluster.server_commands,
         }
 
-    async def write_zigbee_attribute(self, endpooint_id, cluster_id,
+    async def write_zigbee_attribute(self, endpoint_id, cluster_id,
                                      attribute, value, cluster_type=IN,
                                      manufacturer=None):
         """Write a value to a zigbee attribute for a cluster in this entity."""
         cluster = await self.get_cluster(
-            endpooint_id, cluster_id, cluster_type)
+            endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
 
@@ -266,7 +274,7 @@ class ZHADevice:
                 value,
                 attribute,
                 cluster_id,
-                endpooint_id,
+                endpoint_id,
                 response
             )
             return response
@@ -276,17 +284,17 @@ class ZHADevice:
                 '{}: {}'.format(ATTR_VALUE, value),
                 '{}: {}'.format(ATTR_ATTRIBUTE, attribute),
                 '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
-                '{}: {}'.format(ATTR_ENDPOINT_ID, endpooint_id),
+                '{}: {}'.format(ATTR_ENDPOINT_ID, endpoint_id),
                 exc
             )
             return None
 
-    async def issue_cluster_command(self, endpooint_id, cluster_id, command,
+    async def issue_cluster_command(self, endpoint_id, cluster_id, command,
                                     command_type, args, cluster_type=IN,
                                     manufacturer=None):
         """Issue a command against specified zigbee cluster on this entity."""
         cluster = await self.get_cluster(
-            endpooint_id, cluster_id, cluster_type)
+            endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         response = None
@@ -305,6 +313,6 @@ class ZHADevice:
             '{}: {}'.format(ATTR_ARGS, args),
             '{}: {}'.format(ATTR_CLUSTER_ID, cluster_type),
             '{}: {}'.format(ATTR_MANUFACTURER, manufacturer),
-            '{}: {}'.format(ATTR_ENDPOINT_ID, endpooint_id)
+            '{}: {}'.format(ATTR_ENDPOINT_ID, endpoint_id)
         )
         return response

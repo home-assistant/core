@@ -1,9 +1,4 @@
-"""
-Support for Wink fans.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.wink/
-"""
+"""Support for Wink fans."""
 import logging
 
 from homeassistant.components.fan import (

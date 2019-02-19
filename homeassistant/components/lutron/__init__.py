@@ -1,9 +1,4 @@
-"""
-Component for interacting with a Lutron RadioRA 2 system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lutron/
-"""
+"""Component for interacting with a Lutron RadioRA 2 system."""
 import logging
 
 import voluptuous as vol

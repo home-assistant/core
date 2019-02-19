@@ -1,10 +1,4 @@
-"""
-Support for Velux covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.velux/
-"""
-
+"""Support for Velux covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
     SUPPORT_STOP, CoverDevice)
@@ -14,8 +8,8 @@ from homeassistant.core import callback
 DEPENDENCIES = ['velux']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:

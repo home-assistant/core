@@ -1,22 +1,14 @@
-"""
-Support for KNX/IP climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.knx/
-"""
-
+"""Support for KNX/IP climate devices."""
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, STATE_HEAT,
-    STATE_IDLE, STATE_MANUAL, STATE_DRY,
-    STATE_FAN_ONLY, STATE_ECO, ClimateDevice)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS)
-from homeassistant.core import callback
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, STATE_MANUAL,
+    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
@@ -86,15 +78,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
     vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODES): vol.All(cv.ensure_list,
-                                                [vol.In(OPERATION_MODES)]),
+    vol.Optional(CONF_OPERATION_MODES):
+        vol.All(cv.ensure_list, [vol.In(OPERATION_MODES)]),
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up climate(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
@@ -153,10 +145,8 @@ def async_add_entities_config(hass, config, async_add_entities):
         setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
         setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
         setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
-        group_address_on_off=config.get(
-            CONF_ON_OFF_ADDRESS),
-        group_address_on_off_state=config.get(
-            CONF_ON_OFF_STATE_ADDRESS),
+        group_address_on_off=config.get(CONF_ON_OFF_ADDRESS),
+        group_address_on_off_state=config.get(CONF_ON_OFF_STATE_ADDRESS),
         min_temp=config.get(CONF_MIN_TEMP),
         max_temp=config.get(CONF_MAX_TEMP),
         mode=climate_mode)

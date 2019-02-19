@@ -1,12 +1,4 @@
-"""
-Support for LaMetric time.
-
-This is the base platform to support LaMetric components:
-Notify, Light, Mediaplayer
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lametric/
-"""
+"""Support for LaMetric time."""
 import logging
 
 import voluptuous as vol

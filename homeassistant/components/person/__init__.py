@@ -1,40 +1,43 @@
-"""
-Support for tracking people.
-
-For more details about this component, please refer to the documentation.
-https://home-assistant.io/components/person/
-"""
+"""Support for tracking people."""
 from collections import OrderedDict
+from itertools import chain
 import logging
 import uuid
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
-    EVENT_HOMEASSISTANT_START)
-from homeassistant.core import callback
+    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
+from homeassistant.core import callback, Event
+from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.components import websocket_api
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_EDITABLE = 'editable'
 ATTR_SOURCE = 'source'
 ATTR_USER_ID = 'user_id'
+
 CONF_DEVICE_TRACKERS = 'device_trackers'
 CONF_USER_ID = 'user_id'
+
 DOMAIN = 'person'
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
+# Device tracker states to ignore
+IGNORE_STATES = (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
 PERSON_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.string,
@@ -49,6 +52,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
+
+
+@bind_hass
+async def async_create_person(hass, name, *, user_id=None,
+                              device_trackers=None):
+    """Create a new person."""
+    await hass.data[DOMAIN].async_create_person(
+        name=name,
+        user_id=user_id,
+        device_trackers=device_trackers,
+    )
 
 
 class PersonManager:
@@ -67,8 +81,8 @@ class PersonManager:
             person_id = conf[CONF_ID]
 
             if person_id in config_data:
-                _LOGGER.error("Found config user with duplicate ID: %s",
-                              person_id)
+                _LOGGER.error(
+                    "Found config user with duplicate ID: %s", person_id)
                 continue
 
             config_data[person_id] = conf
@@ -98,39 +112,71 @@ class PersonManager:
             storage_data[person[CONF_ID]] = person
 
         entities = []
+        seen_users = set()
 
         for person_conf in self.config_data.values():
             person_id = person_conf[CONF_ID]
             user_id = person_conf.get(CONF_USER_ID)
 
-            if (user_id is not None
-                    and await self.hass.auth.async_get_user(user_id) is None):
-                _LOGGER.error(
-                    "Invalid user_id detected for person %s", person_id)
-                continue
+            if user_id is not None:
+                if await self.hass.auth.async_get_user(user_id) is None:
+                    _LOGGER.error(
+                        "Invalid user_id detected for person %s", person_id)
+                    continue
+
+                if user_id in seen_users:
+                    _LOGGER.error(
+                        "Duplicate user_id %s detected for person %s",
+                        user_id, person_id)
+                    continue
+
+                seen_users.add(user_id)
 
             entities.append(Person(person_conf, False))
 
+        # To make sure IDs don't overlap between config/storage
+        seen_persons = set(self.config_data)
+
         for person_conf in storage_data.values():
-            if person_conf[CONF_ID] in self.config_data:
+            person_id = person_conf[CONF_ID]
+            user_id = person_conf[CONF_USER_ID]
+
+            if person_id in seen_persons:
                 _LOGGER.error(
                     "Skipping adding person from storage with same ID as"
                     " configuration.yaml entry: %s", person_id)
                 continue
+
+            if user_id is not None and user_id in seen_users:
+                _LOGGER.error(
+                    "Duplicate user_id %s detected for person %s",
+                    user_id, person_id)
+                continue
+
+            # To make sure all users have just 1 person linked.
+            seen_users.add(user_id)
 
             entities.append(Person(person_conf, True))
 
         if entities:
             await self.component.async_add_entities(entities)
 
-    async def async_create_person(self, *, name, device_trackers=None,
-                                  user_id=None):
+        self.hass.bus.async_listen(EVENT_USER_REMOVED, self._user_removed)
+
+    async def async_create_person(
+            self, *, name, device_trackers=None, user_id=None):
         """Create a new person."""
+        if not name:
+            raise ValueError("Name is required")
+
+        if user_id is not None:
+            await self._validate_user_id(user_id)
+
         person = {
             CONF_ID: uuid.uuid4().hex,
             CONF_NAME: name,
             CONF_USER_ID: user_id,
-            CONF_DEVICE_TRACKERS: device_trackers,
+            CONF_DEVICE_TRACKERS: device_trackers or [],
         }
         self.storage_data[person[CONF_ID]] = person
         self._async_schedule_save()
@@ -140,16 +186,21 @@ class PersonManager:
     async def async_update_person(self, person_id, *, name=_UNDEF,
                                   device_trackers=_UNDEF, user_id=_UNDEF):
         """Update person."""
-        if person_id not in self.storage_data:
+        current = self.storage_data.get(person_id)
+
+        if current is None:
             raise ValueError("Invalid person specified.")
 
         changes = {
             key: value for key, value in (
-                ('name', name),
-                ('device_trackers', device_trackers),
-                ('user_id', user_id)
-            ) if value is not _UNDEF
+                (CONF_NAME, name),
+                (CONF_DEVICE_TRACKERS, device_trackers),
+                (CONF_USER_ID, user_id)
+            ) if value is not _UNDEF and current[key] != value
         }
+
+        if CONF_USER_ID in changes and user_id is not None:
+            await self._validate_user_id(user_id)
 
         self.storage_data[person_id].update(changes)
         self._async_schedule_save()
@@ -187,6 +238,27 @@ class PersonManager:
         return {
             'persons': list(self.storage_data.values())
         }
+
+    async def _validate_user_id(self, user_id):
+        """Validate the used user_id."""
+        if await self.hass.auth.async_get_user(user_id) is None:
+            raise ValueError("User does not exist")
+
+        if any(person for person
+               in chain(self.storage_data.values(),
+                        self.config_data.values())
+               if person.get(CONF_USER_ID) == user_id):
+            raise ValueError("User already taken")
+
+    async def _user_removed(self, event: Event):
+        """Handle event that a person is removed."""
+        user_id = event.data['user_id']
+        for person in self.storage_data.values():
+            if person[CONF_USER_ID] == user_id:
+                await self.async_update_person(
+                    person_id=person[CONF_ID],
+                    user_id=None
+                )
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -269,8 +341,8 @@ class Person(RestoreEntity):
         def person_start_hass(now):
             self.person_updated()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        person_start_hass)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, person_start_hass)
 
     @callback
     def person_updated(self):
@@ -282,30 +354,31 @@ class Person(RestoreEntity):
         trackers = self._config.get(CONF_DEVICE_TRACKERS)
 
         if trackers:
-            def sort_key(state):
-                if state:
-                    return state.last_updated
-                return dt_util.utc_from_timestamp(0)
-
-            latest = max(
-                [self.hass.states.get(entity_id) for entity_id in trackers],
-                key=sort_key
-            )
-
-            @callback
-            def async_handle_tracker_update(entity, old_state, new_state):
-                """Handle the device tracker state changes."""
-                self._parse_source_state(new_state)
-                self.async_schedule_update_ha_state()
-
             _LOGGER.debug(
                 "Subscribe to device trackers for %s", self.entity_id)
 
             self._unsub_track_device = async_track_state_change(
-                self.hass, trackers, async_handle_tracker_update)
+                self.hass, trackers, self._async_handle_tracker_update)
 
-        else:
-            latest = None
+        self._update_state()
+
+    @callback
+    def _async_handle_tracker_update(self, entity, old_state, new_state):
+        """Handle the device tracker state changes."""
+        self._update_state()
+
+    @callback
+    def _update_state(self):
+        """Update the state."""
+        latest = None
+        for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
+            state = self.hass.states.get(entity_id)
+
+            if not state or state.state in IGNORE_STATES:
+                continue
+
+            if latest is None or state.last_updated > latest.last_updated:
+                latest = state
 
         if latest:
             self._parse_source_state(latest)
@@ -344,7 +417,7 @@ def ws_list_person(hass: HomeAssistantType,
 
 @websocket_api.websocket_command({
     vol.Required('type'): 'person/create',
-    vol.Required('name'): str,
+    vol.Required('name'): vol.All(str, vol.Length(min=1)),
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional('device_trackers', default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
@@ -355,18 +428,22 @@ async def ws_create_person(hass: HomeAssistantType,
                            connection: websocket_api.ActiveConnection, msg):
     """Create a person."""
     manager = hass.data[DOMAIN]  # type: PersonManager
-    person = await manager.async_create_person(
-        name=msg['name'],
-        user_id=msg.get('user_id'),
-        device_trackers=msg['device_trackers']
-    )
-    connection.send_result(msg['id'], person)
+    try:
+        person = await manager.async_create_person(
+            name=msg['name'],
+            user_id=msg.get('user_id'),
+            device_trackers=msg['device_trackers']
+        )
+        connection.send_result(msg['id'], person)
+    except ValueError as err:
+        connection.send_error(
+            msg['id'], websocket_api.const.ERR_INVALID_FORMAT, str(err))
 
 
 @websocket_api.websocket_command({
     vol.Required('type'): 'person/update',
     vol.Required('person_id'): str,
-    vol.Optional('name'): str,
+    vol.Required('name'): vol.All(str, vol.Length(min=1)),
     vol.Optional('user_id'): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)),
@@ -382,8 +459,12 @@ async def ws_update_person(hass: HomeAssistantType,
         if key in msg:
             changes[key] = msg[key]
 
-    person = await manager.async_update_person(msg['person_id'], **changes)
-    connection.send_result(msg['id'], person)
+    try:
+        person = await manager.async_update_person(msg['person_id'], **changes)
+        connection.send_result(msg['id'], person)
+    except ValueError as err:
+        connection.send_error(
+            msg['id'], websocket_api.const.ERR_INVALID_FORMAT, str(err))
 
 
 @websocket_api.websocket_command({

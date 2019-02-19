@@ -1,22 +1,18 @@
-"""
-Support for Wink thermostats and Air Conditioners.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.wink/
-"""
+"""Support for Wink thermostats and Air Conditioners."""
 import logging
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO,
+    STATE_AUTO, STATE_COOL, STATE_ECO,
     STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT,
     SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    ClimateDevice)
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
-    PRECISION_TENTHS, STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, PRECISION_TENTHS, STATE_OFF, STATE_ON, STATE_UNKNOWN,
+    TEMP_CELSIUS)
 from homeassistant.helpers.temperature import display_temp as show_temp
 
 _LOGGER = logging.getLogger(__name__)

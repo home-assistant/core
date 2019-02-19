@@ -1,4 +1,4 @@
-"""Component to embed Sonos."""
+"""Support to embed Sonos."""
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 

@@ -1,29 +1,18 @@
-"""
-Component for monitoring the Transmission BitTorrent client API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/transmission/
-"""
+"""Support for the Transmission BitTorrent client API."""
 from datetime import timedelta
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_SCAN_INTERVAL
-)
-from homeassistant.helpers import discovery, config_validation as cv
+    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-
 REQUIREMENTS = ['transmissionrpc==0.11']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'

@@ -1,10 +1,4 @@
-"""
-Support for wired switches attached to a Konnected device.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.konnected/
-"""
-
+"""Support for wired switches attached to a Konnected device."""
 import logging
 
 from homeassistant.components.konnected import (
@@ -19,8 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set switches attached to a Konnected device."""
     if discovery_info is None:
         return
@@ -37,7 +31,7 @@ class KonnectedSwitch(ToggleEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, pin_num, data):
-        """Initialize the switch."""
+        """Initialize the Konnected switch."""
         self._data = data
         self._device_id = device_id
         self._pin_num = pin_num
@@ -49,7 +43,7 @@ class KonnectedSwitch(ToggleEntity):
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
-        _LOGGER.debug('Created new switch: %s', self._name)
+        _LOGGER.debug("Created new switch: %s", self._name)
 
     @property
     def name(self):

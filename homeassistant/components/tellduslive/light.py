@@ -1,11 +1,4 @@
-"""
-Support for Tellstick switches using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tellduslive/
-"""
+"""Support for Tellstick lights using Tellstick Net."""
 import logging
 
 from homeassistant.components import light, tellduslive

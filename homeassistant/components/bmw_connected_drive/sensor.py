@@ -1,9 +1,4 @@
-"""
-Reads vehicle status from BMW connected drive portal.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bmw_connected_drive/
-"""
+"""Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
@@ -25,7 +20,7 @@ ATTR_TO_HA_METRIC = {
     'max_range_electric': ['mdi:ruler', LENGTH_KILOMETERS],
     'remaining_fuel': ['mdi:gas-station', VOLUME_LITERS],
     'charging_time_remaining': ['mdi:update', 'h'],
-    'charging_status': ['mdi:battery-charging', None]
+    'charging_status': ['mdi:battery-charging', None],
 }
 
 ATTR_TO_HA_IMPERIAL = {
@@ -36,7 +31,7 @@ ATTR_TO_HA_IMPERIAL = {
     'max_range_electric': ['mdi:ruler', LENGTH_MILES],
     'remaining_fuel': ['mdi:gas-station', VOLUME_GALLONS],
     'charging_time_remaining': ['mdi:update', 'h'],
-    'charging_status': ['mdi:battery-charging', None]
+    'charging_status': ['mdi:battery-charging', None],
 }
 
 
@@ -54,12 +49,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in accounts:
         for vehicle in account.account.vehicles:
             for attribute_name in vehicle.drive_train_attributes:
-                device = BMWConnectedDriveSensor(account, vehicle,
-                                                 attribute_name,
-                                                 attribute_info)
+                device = BMWConnectedDriveSensor(
+                    account, vehicle, attribute_name, attribute_info)
                 devices.append(device)
-            device = BMWConnectedDriveSensor(account, vehicle, 'mileage',
-                                             attribute_info)
+            device = BMWConnectedDriveSensor(
+                account, vehicle, 'mileage', attribute_info)
             devices.append(device)
     add_entities(devices, True)
 
@@ -140,13 +134,13 @@ class BMWConnectedDriveSensor(Entity):
             self._state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
             value = getattr(vehicle_state, self._attribute)
-            value_converted = self.hass.config.units.volume(value,
-                                                            VOLUME_LITERS)
+            value_converted = self.hass.config.units.volume(
+                value, VOLUME_LITERS)
             self._state = round(value_converted)
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
-            value_converted = self.hass.config.units.length(value,
-                                                            LENGTH_KILOMETERS)
+            value_converted = self.hass.config.units.length(
+                value, LENGTH_KILOMETERS)
             self._state = round(value_converted)
         else:
             self._state = getattr(vehicle_state, self._attribute)

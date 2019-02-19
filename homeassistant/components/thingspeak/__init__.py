@@ -1,9 +1,4 @@
-"""
-A component to submit data to thingspeak.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/thingspeak/
-"""
+"""Support for submitting data to Thingspeak."""
 import logging
 
 from requests.exceptions import RequestException
@@ -26,8 +21,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_ID): int,
-        vol.Required(CONF_WHITELIST): cv.string
-        }),
+        vol.Required(CONF_WHITELIST): cv.string,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -47,7 +42,7 @@ def setup(hass, config):
     except RequestException:
         _LOGGER.error("Error while accessing the ThingSpeak channel. "
                       "Please check that the channel exists and your "
-                      "API key is correct.")
+                      "API key is correct")
         return False
 
     def thingspeak_listener(entity_id, old_state, new_state):

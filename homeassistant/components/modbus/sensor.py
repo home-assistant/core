@@ -1,19 +1,15 @@
-"""
-Support for Modbus Register sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.modbus/
-"""
+"""Support for Modbus Register sensors."""
 import logging
 import struct
 
 import voluptuous as vol
 
-from homeassistant.components import modbus
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import (
     CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
     CONF_STRUCTURE)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -40,6 +36,7 @@ DATA_TYPE_CUSTOM = 'custom'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
@@ -54,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT,
                     DATA_TYPE_CUSTOM]),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }]
 })
 
@@ -70,11 +67,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         structure = '>i'
         if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM:
             try:
-                structure = '>{}'.format(data_types[
-                    register.get(CONF_DATA_TYPE)][register.get(CONF_COUNT)])
+                structure = '>{}'.format(data_types[register.get(
+                    CONF_DATA_TYPE)][register.get(CONF_COUNT)])
             except KeyError:
                 _LOGGER.error("Unable to detect data type for %s sensor, "
-                              "try a custom type.", register.get(CONF_NAME))
+                              "try a custom type", register.get(CONF_NAME))
                 continue
         else:
             structure = register.get(CONF_STRUCTURE)
@@ -93,7 +90,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "(%d words)", size, register.get(CONF_COUNT))
             continue
 
+        hub_name = register.get(CONF_HUB)
+        hub = hass.data[MODBUS_DOMAIN][hub_name]
         sensors.append(ModbusRegisterSensor(
+            hub,
             register.get(CONF_NAME),
             register.get(CONF_SLAVE),
             register.get(CONF_REGISTER),
@@ -111,13 +111,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ModbusRegisterSensor(Entity):
+class ModbusRegisterSensor(RestoreEntity):
     """Modbus register sensor."""
 
-    def __init__(self, name, slave, register, register_type,
+    def __init__(self, hub, name, slave, register, register_type,
                  unit_of_measurement, count, reverse_order, scale, offset,
                  structure, precision):
         """Initialize the modbus register sensor."""
+        self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
@@ -130,6 +131,13 @@ class ModbusRegisterSensor(Entity):
         self._precision = precision
         self._structure = structure
         self._value = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._value = state.state
 
     @property
     def state(self):
@@ -149,12 +157,12 @@ class ModbusRegisterSensor(Entity):
     def update(self):
         """Update the state of the sensor."""
         if self._register_type == REGISTER_TYPE_INPUT:
-            result = modbus.HUB.read_input_registers(
+            result = self._hub.read_input_registers(
                 self._slave,
                 self._register,
                 self._count)
         else:
-            result = modbus.HUB.read_holding_registers(
+            result = self._hub.read_holding_registers(
                 self._slave,
                 self._register,
                 self._count)
@@ -165,8 +173,8 @@ class ModbusRegisterSensor(Entity):
             if self._reverse_order:
                 registers.reverse()
         except AttributeError:
-            _LOGGER.error("No response from modbus slave %s, register %s",
-                          self._slave, self._register)
+            _LOGGER.error("No response from hub %s, slave %s, register %s",
+                          self._hub.name, self._slave, self._register)
             return
         byte_string = b''.join(
             [x.to_bytes(2, byteorder='big') for x in registers]

@@ -1,9 +1,4 @@
-"""
-Component that will help set the FFmpeg component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ffmpeg/
-"""
+"""Support for FFmpeg."""
 import logging
 import re
 

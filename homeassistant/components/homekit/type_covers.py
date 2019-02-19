@@ -11,11 +11,11 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN)
 
 from . import TYPES
-from .accessories import debounce, HomeAccessory
+from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
-    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION,
-    SERV_GARAGE_DOOR_OPENER, SERV_WINDOW_COVERING)
+    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION, SERV_GARAGE_DOOR_OPENER,
+    SERV_WINDOW_COVERING)
 
 _LOGGER = logging.getLogger(__name__)
 

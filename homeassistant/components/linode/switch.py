@@ -1,19 +1,14 @@
-"""
-Support for interacting with Linode nodes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.linode/
-"""
+"""Support for interacting with Linode nodes."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.linode import (
-    CONF_NODES, ATTR_CREATED, ATTR_NODE_ID, ATTR_NODE_NAME,
-    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, DATA_LINODE)
+    ATTR_CREATED, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
+    ATTR_NODE_ID, ATTR_NODE_NAME, ATTR_REGION, ATTR_VCPUS, CONF_NODES,
+    DATA_LINODE)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Component to offer a way to select an option from a list.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_select/
-"""
+"""Support to select an option from a list."""
 import logging
 
 import voluptuous as vol

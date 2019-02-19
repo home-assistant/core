@@ -1,9 +1,4 @@
-"""
-Support for Velbus covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.velbus/
-"""
+"""Support for Velbus covers."""
 import logging
 import time
 
