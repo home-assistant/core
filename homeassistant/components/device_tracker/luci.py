@@ -70,15 +70,12 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def _update_info(self):
-        """Check the Luci router for devices.
-
-        Returns a boolean. True if scan was successful.
-        """
+        """Check the Luci router for devices."""
         result = self.router.get_all_connected_devices(
             only_reachable=True)
 
         _LOGGER.debug("Luci get_all_connected_devices returned:"
-                      " %s" % result)
+                      " %s", result)
 
         last_results = []
         for device in result:
