@@ -131,10 +131,6 @@ class SynologyCamera(Camera):
         """Disable motion detection in camera."""
         self._surveillance.disable_motion_detection(self._camera_id)
 
-    def home_mode_enabled(self):
-        """Return the camera home mode status."""
-        return self._surveilance.get_home_mode_status()
-
     def enable_home_mode(self):
         """Enable home mode."""
         self._surveillance.set_home_mode(True)
