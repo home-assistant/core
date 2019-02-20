@@ -695,7 +695,6 @@ class OptionsFlowManager:
             return
         flow = HANDLERS[entry.domain].async_get_options_flow(
             entry.data, entry.options)
-        flow.init_step = context['source']
         return flow
 
     async def _async_finish_flow(

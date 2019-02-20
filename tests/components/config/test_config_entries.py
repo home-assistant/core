@@ -495,7 +495,7 @@ async def test_options_flow(hass, client):
                     self.config = config
                     self.options = options
 
-                async def async_step_user(self, user_input=None):
+                async def async_step_init(self, user_input=None):
                     schema = OrderedDict()
                     schema[vol.Required('enabled')] = bool
                     return self.async_show_form(
@@ -557,7 +557,7 @@ async def test_two_step_options_flow(hass, client):
                     self.config = config
                     self.options = options
 
-                async def async_step_user(self, user_input=None):
+                async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id='finish',
                         data_schema=vol.Schema({
