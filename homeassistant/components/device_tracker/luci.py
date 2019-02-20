@@ -53,7 +53,7 @@ class LuciDeviceScanner(DeviceScanner):
                                  config[CONF_USERNAME],
                                  config[CONF_PASSWORD])
 
-        self.last_results = []  # type: List[Device]
+        self.last_results = {}
         self.success_init = self.router.is_logged_in()
 
     def scan_devices(self):
@@ -70,7 +70,7 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def _update_info(self):
-        """Check the Luci router for devices
+        """Check the Luci router for devices.
 
         Returns a boolean. True if scan was successful.
         """
