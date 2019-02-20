@@ -1,4 +1,4 @@
-"""System health component."""
+"""Support for System health ."""
 import asyncio
 from collections import OrderedDict
 import logging
@@ -7,15 +7,17 @@ from typing import Callable, Dict
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components import websocket_api
+from homeassistant.core import callback
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.loader import bind_hass
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 DOMAIN = 'system_health'
+
 INFO_CALLBACK_TIMEOUT = 5
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass

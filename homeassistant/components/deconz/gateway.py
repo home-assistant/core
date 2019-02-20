@@ -1,5 +1,5 @@
 """Representation of a deCONZ gateway."""
-from homeassistant import config_entries
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_EVENT, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client
@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
+    DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
 
 
 class DeconzGateway:
@@ -20,7 +20,6 @@ class DeconzGateway:
         self.config_entry = config_entry
         self.available = True
         self.api = None
-        self._cancel_retry_setup = None
 
         self.deconz_ids = {}
         self.events = []
@@ -35,22 +34,8 @@ class DeconzGateway:
             self.async_connection_status_callback
         )
 
-        if self.api is False:
-            retry_delay = 2 ** (tries + 1)
-            _LOGGER.error(
-                "Error connecting to deCONZ gateway. Retrying in %d seconds",
-                retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._cancel_retry_setup = hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
+        if not self.api:
+            raise ConfigEntryNotReady
 
         for component in SUPPORTED_PLATFORMS:
             hass.async_create_task(
@@ -107,12 +92,6 @@ class DeconzGateway:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        # If we have a retry scheduled, we were never setup.
-        if self._cancel_retry_setup is not None:
-            self._cancel_retry_setup()
-            self._cancel_retry_setup = None
-            return True
-
         self.api.close()
 
         for component in SUPPORTED_PLATFORMS:

@@ -1,9 +1,4 @@
-"""
-Support for deCONZ sensor.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.deconz/
-"""
+"""Support for deCONZ sensors."""
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -21,8 +16,8 @@ ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ sensors."""
     pass
 

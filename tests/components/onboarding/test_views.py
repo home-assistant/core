@@ -69,6 +69,7 @@ async def test_onboarding_user_already_done(hass, hass_storage,
 
 async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     """Test creating a new user."""
+    assert await async_setup_component(hass, 'person', {})
     mock_storage(hass_storage, {
         'done': ['hello']
     })
@@ -90,6 +91,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert user.name == 'Test Name'
     assert len(user.credentials) == 1
     assert user.credentials[0].data['username'] == 'test-user'
+    assert len(hass.data['person'].storage_data) == 1
 
 
 async def test_onboarding_user_invalid_name(hass, hass_storage,

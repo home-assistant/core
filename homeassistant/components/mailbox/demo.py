@@ -1,9 +1,4 @@
-"""
-Asterisk Voicemail interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mailbox.asteriskvm/
-"""
+"""Support for a demo mailbox."""
 from hashlib import sha1
 import logging
 import os
@@ -14,7 +9,7 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
-MAILBOX_NAME = "DemoMailbox"
+MAILBOX_NAME = 'DemoMailbox'
 
 
 async def async_get_handler(hass, config, discovery_info=None):

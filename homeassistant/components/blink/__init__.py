@@ -1,9 +1,4 @@
-"""
-Support for Blink Home Camera System.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/blink/
-"""
+"""Support for Blink Home Camera System."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -29,7 +24,7 @@ DEFAULT_BRAND = 'Blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 SIGNAL_UPDATE_BLINK = "blink_update"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 TYPE_CAMERA_ARMED = 'motion_enabled'
 TYPE_MOTION_DETECTED = 'motion_detected'

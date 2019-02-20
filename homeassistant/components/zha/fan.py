@@ -10,9 +10,10 @@ from homeassistant.components.fan import (
     DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .core import helpers
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, FAN_CHANNEL,
+    SIGNAL_ATTR_UPDATED
+)
 from .entity import ZhaEntity
 
 DEPENDENCIES = ['zha']
@@ -79,19 +80,17 @@ class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN
-    value_attribute = 0  # fan_mode
 
-    @property
-    def zcl_reporting_config(self) -> dict:
-        """Return a dict of attribute reporting configuration."""
-        return {
-            self.cluster: {self.value_attribute: REPORT_CONFIG_OP}
-        }
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._fan_channel = self.cluster_channels.get(FAN_CHANNEL)
 
-    @property
-    def cluster(self):
-        """Fan ZCL Cluster."""
-        return self._endpoint.fan
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
 
     @property
     def supported_features(self) -> int:
@@ -115,6 +114,16 @@ class ZhaFan(ZhaEntity, FanEntity):
             return False
         return self._state != SPEED_OFF
 
+    @property
+    def device_state_attributes(self):
+        """Return state attributes."""
+        return self.state_attributes
+
+    def async_set_state(self, state):
+        """Handle state update from channel."""
+        self._state = VALUE_TO_SPEED.get(state, self._state)
+        self.async_schedule_update_ha_state()
+
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
@@ -128,31 +137,5 @@ class ZhaFan(ZhaEntity, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        from zigpy.exceptions import DeliveryError
-        try:
-            await self._endpoint.fan.write_attributes(
-                {'fan_mode': SPEED_TO_VALUE[speed]}
-            )
-        except DeliveryError as ex:
-            _LOGGER.error("%s: Could not set speed: %s", self.entity_id, ex)
-            return
-
-        self._state = speed
-        self.async_schedule_update_ha_state()
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        result = await helpers.safe_read(self.cluster, ['fan_mode'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
-        new_value = result.get('fan_mode', None)
-        self._state = VALUE_TO_SPEED.get(new_value, None)
-
-    def attribute_updated(self, attribute, value):
-        """Handle attribute update from device."""
-        attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
-        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
-                      self.entity_id, self.cluster.name, attr_name, value)
-        if attribute == self.value_attribute:
-            self._state = VALUE_TO_SPEED.get(value, self._state)
-            self.async_schedule_update_ha_state()
+        await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
+        self.async_set_state(speed)

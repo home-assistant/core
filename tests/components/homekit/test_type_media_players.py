@@ -4,7 +4,7 @@ from homeassistant.components.homekit.const import (
     ATTR_VALUE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE)
 from homeassistant.components.homekit.type_media_players import MediaPlayer
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE, STATE_OFF, STATE_ON,
