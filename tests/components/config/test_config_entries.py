@@ -523,7 +523,6 @@ async def test_options_flow(hass, client):
     data = await resp.json()
 
     data.pop('flow_id')
-    print(data)
     assert data == {
         'type': 'form',
         'handler': 'test1',

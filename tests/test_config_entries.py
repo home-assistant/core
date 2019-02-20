@@ -553,10 +553,11 @@ async def test_update_entry_options_and_trigger_listener(hass, manager):
     )
     entry.add_to_manager(manager)
 
-    @callback
-    def update_listener(hass, entry):
+    async def update_listener(hass, entry):
         """Test function."""
-        hass.data['update_listener'] = True
+        assert entry.options == {
+            'second': True
+        }
 
     entry.add_update_listener(update_listener)
 
@@ -567,7 +568,6 @@ async def test_update_entry_options_and_trigger_listener(hass, manager):
     assert entry.options == {
         'second': True
     }
-    assert hass.data['update_listener'] is True
 
 
 async def test_setup_raise_not_ready(hass, caplog):
