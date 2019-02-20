@@ -36,6 +36,26 @@ def test_extract_single_energy():
     assert energy == 0.6
 
 
+def test_convert_MWh_to_kWh():
+    """Test extracting energy from single plant."""
+    plant_info_data = [
+        {
+            "plantMoneyText": "137.9 ",
+            "plantName": "my plant",
+            "plantId": "107658",
+            "isHaveStorage": "false",
+            "todayEnergy": "0.6 kWh",
+            "totalEnergy": "50.9 MWh",
+            "currentPower": "142 W",
+        }
+    ]
+
+    energy = victim.GrowattPlant(None, None, "foo", "bar")._extract_energy(
+        plant_info_data, "totalEnergy"
+    )
+    assert energy == 50900
+
+
 def test_extract_multiple_energy():
     """Test extracting energy fromm multiple plants."""
     plant_info_data = [
@@ -113,3 +133,18 @@ def test_today_energy_total(_, __):
             None, growatt.GrowattApi(), "foo", "bar"
         ).todays_energy_total()
         assert energy_total == 0.6
+
+
+def test_convert_kwh_to_kwh():
+    """Test converting kWh to kWh."""
+    assert victim.GrowattPlant._convert_to_kwh("5", "kWh") == 5
+
+
+def test_convert_mwh_to_kwh():
+    """Test converting MWh to kWh."""
+    assert victim.GrowattPlant._convert_to_kwh("5", "MWh") == 5000
+
+
+def test_convert_gwh_to_kwh():
+    """Test converting GWh to kWh."""
+    assert victim.GrowattPlant._convert_to_kwh("5", "GWh") == 5000000

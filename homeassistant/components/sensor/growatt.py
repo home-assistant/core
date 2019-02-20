@@ -85,10 +85,26 @@ class GrowattPlant(Entity):
         return self._unit_of_measurement
 
     @staticmethod
+    def _convert_to_kwh(value: str, metric_name: str):
+        """Convert a value to a kWh value."""
+        watts = float(value)
+        multiplier_lookup = {"kWh": 1, "MWh": 1000, "GWh": 1000 * 1000}
+        if metric_name not in multiplier_lookup:
+            message = (
+                "Found an unsupported metric name {}"
+                "cannot convert safely to kWh."
+            ).format(metric_name)
+            logging.error(message)
+            raise ValueError(message)
+
+        multiplier = multiplier_lookup[metric_name]
+        return watts * multiplier
+
+    @staticmethod
     def _extract_energy(plant_info_data, key):
         """Extract energy as float from a string."""
-        kwhs = [_[key] for _ in plant_info_data]
-        energies = [float(_.split(" ")[0]) for _ in kwhs]
+        watts = [_[key] for _ in plant_info_data]
+        energies = [GrowattPlant._convert_to_kwh(*_.split(" ")) for _ in watts]
         return sum(energies)
 
     def todays_energy_total(self):
