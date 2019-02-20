@@ -131,3 +131,16 @@ xiaomi_remote_control_move_step:
     duration:
       description: Duration of the movement.
       example: '1500'
+
+xiaomi_clean_zone:
+  description: Start the cleaning operation in the selected areas for the number of repeats indicated.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: 'vacuum.xiaomi_vacuum_cleaner'
+    zone:
+      description: Array of zones. Each zone is an array of 4 integer values.
+      example: '[[23510,25311,25110,26362]]'
+    repeats:
+      description: Number of cleaning repeats for each zone between 1 and 3.
+      example: '1'
