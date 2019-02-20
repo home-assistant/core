@@ -18,8 +18,11 @@ REQUIREMENTS = ['london-tube-status==0.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by TfL Open Data"
+
 CONF_LINE = 'line'
+
 SCAN_INTERVAL = timedelta(seconds=30)
+
 TUBE_LINES = [
     'Bakerloo',
     'Central',
@@ -34,7 +37,8 @@ TUBE_LINES = [
     'Piccadilly',
     'TfL Rail',
     'Victoria',
-    'Waterloo & City']
+    'Waterloo & City',
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LINE):

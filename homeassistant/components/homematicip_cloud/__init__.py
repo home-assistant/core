@@ -1,9 +1,4 @@
-"""
-Support for HomematicIP Cloud components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud devices."""
 import logging
 
 import voluptuous as vol
@@ -19,7 +14,7 @@ from .const import (
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.9.8']
+REQUIREMENTS = ['homematicip==0.10.5']
 
 _LOGGER = logging.getLogger(__name__)
 

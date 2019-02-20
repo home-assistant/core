@@ -1,21 +1,15 @@
-"""
-Timer component.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/timer/
-"""
-import logging
+"""Support for Timers."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
-
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,24 +37,24 @@ SERVICE_CANCEL = 'cancel'
 SERVICE_FINISH = 'finish'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SERVICE_SCHEMA_DURATION = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_DURATION,
                  default=timedelta(DEFAULT_DURATION)): cv.time_period,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_DURATION, timedelta(DEFAULT_DURATION)):
                 cv.time_period,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

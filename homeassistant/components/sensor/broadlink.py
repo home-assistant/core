@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT)
+    CONF_TIMEOUT, CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -23,9 +24,9 @@ REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 DEVICE_DEFAULT_NAME = 'Broadlink sensor'
 DEFAULT_TIMEOUT = 10
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS],
@@ -35,16 +36,24 @@ SENSOR_TYPES = {
     'noise': ['Noise', ' '],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
-})
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.Optional(CONF_UPDATE_INTERVAL):
+            vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+    }),
+    cv.deprecated(
+        CONF_UPDATE_INTERVAL,
+        replacement_key=CONF_SCAN_INTERVAL,
+        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+        default=SCAN_INTERVAL
+    )
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac_addr = binascii.unhexlify(mac)
     name = config.get(CONF_NAME)
     timeout = config.get(CONF_TIMEOUT)
-    update_interval = config.get(CONF_UPDATE_INTERVAL)
+    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:

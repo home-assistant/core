@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "invalid_password": "Mot de passe invalide !"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Veuillez saisir le mot de passe que vous avez d\u00e9fini dans votre configuration.",
+                "title": "Entrer votre mot de passe"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                },
+                "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/).",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -25,7 +25,8 @@ _RESOURCE = 'https://hourlypricing.comed.com/api'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
+ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
+
 CONF_CURRENT_HOUR_AVERAGE = 'current_hour_average'
 CONF_FIVE_MINUTE = 'five_minute'
 CONF_MONITORED_FEEDS = 'monitored_feeds'
@@ -97,8 +98,7 @@ class ComedHourlyPricingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
-        return attrs
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
@@ -120,7 +120,7 @@ class ComedHourlyPricingSensor(Entity):
                         float(data[0]['price']) + self.offset, 2)
 
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)

@@ -1,9 +1,4 @@
-"""
-Platform for the Daikin AC.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/components/daikin/
-"""
+"""Platform for the Daikin AC."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -12,7 +7,7 @@ from socket import timeout
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOSTS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -51,12 +46,12 @@ async def async_setup(hass, config):
     if not hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': config.SOURCE_IMPORT}))
+                DOMAIN, context={'source': SOURCE_IMPORT}))
     for host in hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={'source': config.SOURCE_IMPORT},
+                context={'source': SOURCE_IMPORT},
                 data={
                     KEY_HOST: host,
                 }))

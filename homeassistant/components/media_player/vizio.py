@@ -11,13 +11,13 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
-    STATE_UNKNOWN)
+    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['pyvizio==0.0.4']
@@ -82,7 +82,7 @@ class VizioDevice(MediaPlayerDevice):
         import pyvizio
         self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token)
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._volume_level = None
         self._volume_step = volume_step
         self._current_input = None
@@ -93,7 +93,7 @@ class VizioDevice(MediaPlayerDevice):
         """Retrieve latest state of the TV."""
         is_on = self._device.get_power_state()
         if is_on is None:
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
         if is_on is False:
             self._state = STATE_OFF

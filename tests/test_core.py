@@ -1,6 +1,7 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+import functools
 import logging
 import os
 import unittest
@@ -45,11 +46,24 @@ def test_async_add_job_schedule_callback():
     assert len(hass.add_job.mock_calls) == 0
 
 
-@patch('asyncio.iscoroutinefunction', return_value=True)
-def test_async_add_job_schedule_coroutinefunction(mock_iscoro):
-    """Test that we schedule coroutines and add jobs to the job pool."""
+def test_async_add_job_schedule_partial_callback():
+    """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
+    partial = functools.partial(ha.callback(job))
+
+    ha.HomeAssistant.async_add_job(hass, partial)
+    assert len(hass.loop.call_soon.mock_calls) == 1
+    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_add_job_schedule_coroutinefunction(loop):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=loop))
+
+    async def job():
+        pass
 
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
@@ -57,11 +71,26 @@ def test_async_add_job_schedule_coroutinefunction(mock_iscoro):
     assert len(hass.add_job.mock_calls) == 0
 
 
-@patch('asyncio.iscoroutinefunction', return_value=False)
-def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
+def test_async_add_job_schedule_partial_coroutinefunction(loop):
+    """Test that we schedule partial coros and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=loop))
+
+    async def job():
+        pass
+    partial = functools.partial(job)
+
+    ha.HomeAssistant.async_add_job(hass, partial)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_add_job_add_threaded_job_to_pool():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
-    job = MagicMock()
+
+    def job():
+        pass
 
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
@@ -69,10 +98,8 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
-@patch('asyncio.iscoroutine', return_value=True)
-def test_async_create_task_schedule_coroutine(mock_iscoro):
+def test_async_create_task_schedule_coroutine(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-<<<<<<< HEAD
     hass = MagicMock(loop=MagicMock(wraps=loop))
 <<<<<<< HEAD
 
@@ -86,12 +113,6 @@ def test_async_create_task_schedule_coroutine(mock_iscoro):
 
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     ha.HomeAssistant.async_create_task(hass, job())
-=======
-    hass = MagicMock()
-    job = MagicMock()
-
-    ha.HomeAssistant.async_create_task(hass, job)
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -1014,6 +1035,7 @@ def test_track_task_functions(loop):
 async def test_service_executed_with_subservices(hass):
     """Test we block correctly till all services done."""
     calls = async_mock_service(hass, 'test', 'inner')
+    context = ha.Context()
 
     async def handle_outer(call):
         """Handle outer service call."""
@@ -1027,11 +1049,13 @@ async def test_service_executed_with_subservices(hass):
 
     hass.services.async_register('test', 'outer', handle_outer)
 
-    await hass.services.async_call('test', 'outer', blocking=True)
+    await hass.services.async_call('test', 'outer', blocking=True,
+                                   context=context)
 
     assert len(calls) == 4
     assert [call.service for call in calls] == [
         'outer', 'inner', 'inner', 'outer']
+    assert all(call.context is context for call in calls)
 
 
 async def test_service_call_event_contains_original_data(hass):
@@ -1048,11 +1072,14 @@ async def test_service_call_event_contains_original_data(hass):
         'number': vol.Coerce(int)
     }))
 
+    context = ha.Context()
     await hass.services.async_call('test', 'service', {
         'number': '23'
-    }, blocking=True)
+    }, blocking=True, context=context)
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data['service_data']['number'] == '23'
+    assert events[0].context is context
     assert len(calls) == 1
     assert calls[0].data['number'] == 23
+    assert calls[0].context is context

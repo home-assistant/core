@@ -1,11 +1,5 @@
-"""
-Support for system log.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
-from collections import deque
-from io import StringIO
+"""Support for system log."""
+from collections import OrderedDict
 import logging
 import re
 import traceback
@@ -89,7 +83,6 @@ def _figure_out_source(record, call_stack, hass):
     return record.pathname
 
 
-<<<<<<< HEAD
 class LogEntry:
     """Store HA log entries."""
 
@@ -157,13 +150,6 @@ class DedupStore(OrderedDict):
     def to_list(self):
         """Return reversed list of log entries - LIFO."""
         return [value.to_dict() for value in reversed(self.values())]
-=======
-def _exception_as_string(exc_info):
-    buf = StringIO()
-    if exc_info:
-        traceback.print_exception(*exc_info, file=buf)
-    return buf.getvalue()
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 
 class LogErrorHandler(logging.Handler):
@@ -173,17 +159,8 @@ class LogErrorHandler(logging.Handler):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
-        self.records = deque(maxlen=maxlen)
+        self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
-
-    def _create_entry(self, record, call_stack):
-        return {
-            'timestamp': record.created,
-            'level': record.levelname,
-            'message': record.getMessage(),
-            'exception': _exception_as_string(record.exc_info),
-            'source': _figure_out_source(record, call_stack, self.hass),
-            }
 
     def emit(self, record):
         """Save error and warning logs.
@@ -197,10 +174,11 @@ class LogErrorHandler(logging.Handler):
             if not record.exc_info:
                 stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-            entry = self._create_entry(record, stack)
-            self.records.appendleft(entry)
+            entry = LogEntry(record, stack,
+                             _figure_out_source(record, stack, self.hass))
+            self.records.add_entry(entry)
             if self.fire_event:
-                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
+                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass, config):
@@ -256,6 +234,4 @@ class AllErrorsView(HomeAssistantView):
 
     async def get(self, request):
         """Get all errors and warnings."""
-        # deque is not serializable (it's just "list-like") so it must be
-        # converted to a list before it can be serialized to json
-        return self.json(list(self.handler.records))
+        return self.json(self.handler.records.to_list())

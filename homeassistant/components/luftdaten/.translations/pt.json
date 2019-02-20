@@ -8,9 +8,12 @@
         "step": {
             "user": {
                 "data": {
-                    "show_on_map": "Mostrar no mapa"
-                }
+                    "show_on_map": "Mostrar no mapa",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Definir Luftdaten"
             }
-        }
+        },
+        "title": "Luftdaten"
     }
 }

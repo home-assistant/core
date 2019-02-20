@@ -1,4 +1,4 @@
-"""Provides a UPNP discovery method that mimics Hue hubs."""
+"""Support UPNP discovery method that mimics Hue hubs."""
 import threading
 import socket
 import logging

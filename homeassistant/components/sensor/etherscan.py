@@ -11,18 +11,14 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-etherscan-api==0.0.3']
 
-<<<<<<< HEAD
 ATTRIBUTION = "Data provided by etherscan.io"
 
 <<<<<<< HEAD
 =======
-=======
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 CONF_ADDRESS = 'address'
 CONF_TOKEN = 'token'
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 CONF_TOKEN_ADDRESS = 'token_address'
-CONF_ATTRIBUTION = "Data provided by etherscan.io"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -81,9 +77,7 @@ class EtherscanSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest state of the sensor."""

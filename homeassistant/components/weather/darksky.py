@@ -1,9 +1,4 @@
-"""
-Platform for retrieving meteorological data from Dark Sky.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/weather.darksky/
-"""
+"""Support for retrieving meteorological data from Dark Sky."""
 from datetime import datetime, timedelta
 import logging
 
@@ -12,13 +7,12 @@ from requests.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_WIND_SPEED, ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_PRECIPITATION,
-    PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS,
-    CONF_MODE, TEMP_FAHRENHEIT)
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -71,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     units = config.get(CONF_UNITS)
     if not units:
-        units = 'si' if hass.config.units.is_metric else 'us'
+        units = 'ca' if hass.config.units.is_metric else 'us'
 
     dark_sky = DarkSkyData(
         config.get(CONF_API_KEY), latitude, longitude, units)

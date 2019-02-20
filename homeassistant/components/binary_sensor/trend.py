@@ -18,14 +18,10 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
 <<<<<<< HEAD
-<<<<<<< HEAD
 REQUIREMENTS = ['numpy==1.16.1']
 =======
 REQUIREMENTS = ['numpy==1.16.0']
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
-=======
-REQUIREMENTS = ['numpy==1.15.4']
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +50,7 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
 })
 
 

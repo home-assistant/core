@@ -14,14 +14,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 <<<<<<< HEAD
-<<<<<<< HEAD
 REQUIREMENTS = ['numpy==1.16.1', 'pypollencom==2.2.2']
 =======
 REQUIREMENTS = ['numpy==1.16.0', 'pypollencom==2.2.2']
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
-=======
-REQUIREMENTS = ['numpy==1.15.4', 'pypollencom==2.2.2']
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 _LOGGER = logging.getLogger(__name__)
 

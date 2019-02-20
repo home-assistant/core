@@ -1,9 +1,4 @@
-"""
-Offer state listening automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#state-trigger
-"""
+"""Offer state listening automation rules."""
 import voluptuous as vol
 
 from homeassistant.core import callback

@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import pprint
+import random
 import uuid
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
@@ -11,9 +12,10 @@ from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
-from homeassistant.util.aiohttp import MockRequest, serialize_response
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
+from . import utils
 from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
 
 HANDLERS = Registry()
@@ -60,11 +62,17 @@ class CloudIoT:
         # Local code waiting for a response
         self._response_handler = {}
         self._on_connect = []
+        self._on_disconnect = []
 
     @callback
     def register_on_connect(self, on_connect_cb):
         """Register an async on_connect callback."""
         self._on_connect.append(on_connect_cb)
+
+    @callback
+    def register_on_disconnect(self, on_disconnect_cb):
+        """Register an async on_disconnect callback."""
+        self._on_disconnect.append(on_disconnect_cb)
 
     @property
     def connected(self):
@@ -100,6 +108,17 @@ class CloudIoT:
                 # Still adding it here to make sure we can always reconnect
                 _LOGGER.exception("Unexpected error")
 
+            if self.state == STATE_CONNECTED and self._on_disconnect:
+                try:
+                    yield from asyncio.wait([
+                        cb() for cb in self._on_disconnect
+                    ])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_disconnect callbacks")
+
             if self.close_requested:
                 break
 
@@ -107,9 +126,11 @@ class CloudIoT:
             self.tries += 1
 
             try:
-                # Sleep 2^tries seconds between retries
-                self.retry_task = hass.async_create_task(asyncio.sleep(
-                    2**min(9, self.tries), loop=hass.loop))
+                # Sleep 2^tries + 0…tries*3 seconds between retries
+                self.retry_task = hass.async_create_task(
+                    asyncio.sleep(2**min(9, self.tries) +
+                                  random.randint(0, self.tries * 3),
+                                  loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
@@ -188,7 +209,13 @@ class CloudIoT:
             self.state = STATE_CONNECTED
 
             if self._on_connect:
-                yield from asyncio.wait([cb() for cb in self._on_connect])
+                try:
+                    yield from asyncio.wait([cb() for cb in self._on_connect])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_connect callbacks")
 
             while not client.closed:
                 msg = yield from client.receive()
@@ -313,13 +340,13 @@ def async_handle_google_actions(hass, cloud, payload):
 
 
 @HANDLERS.register('cloud')
-@asyncio.coroutine
-def async_handle_cloud(hass, cloud, payload):
+async def async_handle_cloud(hass, cloud, payload):
     """Handle an incoming IoT message for cloud component."""
     action = payload['action']
 
     if action == 'logout':
-        yield from cloud.logout()
+        # Log out of Home Assistant Cloud
+        await cloud.logout()
         _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
     else:
@@ -352,10 +379,8 @@ async def async_handle_webhook(hass, cloud, payload):
     response = await hass.components.webhook.async_handle_webhook(
         found['webhook_id'], request)
 
-    response_dict = serialize_response(response)
+    response_dict = utils.aiohttp_serialize_response(response)
     body = response_dict.get('body')
-    if body:
-        body = body.decode('utf-8')
 
     return {
         'body': body,

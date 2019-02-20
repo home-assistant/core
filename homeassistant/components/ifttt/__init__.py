@@ -1,18 +1,13 @@
-"""
-Support to trigger Maker IFTTT recipes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ifttt/
-"""
+"""Support to trigger Maker IFTTT recipes."""
 import json
 import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyfttt==0.3']
 DEPENDENCIES = ['webhook']

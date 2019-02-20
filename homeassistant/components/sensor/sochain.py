@@ -14,17 +14,13 @@ REQUIREMENTS = ['python-sochain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 ATTRIBUTION = "Data provided by chain.so"
 
 <<<<<<< HEAD
 =======
-=======
->>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 CONF_ADDRESS = 'address'
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 CONF_NETWORK = 'network'
-CONF_ATTRIBUTION = "Data provided by chain.so"
 
 DEFAULT_NAME = 'Crypto Balance'
 
@@ -37,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the sochain sensors."""
     from pysochain import ChainSo
     address = config.get(CONF_ADDRESS)
@@ -80,7 +76,7 @@ class SochainSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     async def async_update(self):

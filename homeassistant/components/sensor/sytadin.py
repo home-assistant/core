@@ -18,14 +18,13 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.6.3']
+REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 URL = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
-CONF_ATTRIBUTION = "Data provided by Direction des routes Île-de-France" \
-                   "(DiRIF)"
+ATTRIBUTION = "Data provided by Direction des routes Île-de-France (DiRIF)"
 
 DEFAULT_NAME = 'Sytadin'
 REGEX = r'(\d*\.\d+|\d+)'
@@ -95,7 +94,7 @@ class SytadinSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):

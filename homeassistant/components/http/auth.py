@@ -1,5 +1,4 @@
 """Authentication for HTTP component."""
-
 import base64
 import hmac
 import logging
@@ -8,19 +7,19 @@ from aiohttp import hdrs
 from aiohttp.web import middleware
 import jwt
 
-from homeassistant.core import callback
-from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.auth.providers import legacy_api_password
 from homeassistant.auth.util import generate_secret
+from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_API_PASSWORD = 'api_password'
 DATA_SIGN_SECRET = 'http.auth.sign_secret'
 SIGN_QUERY_PARAM = 'authSig'
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -92,8 +91,8 @@ def setup_auth(app, trusted_networks, api_password):
             for user in users:
                 if user.is_owner:
                     request['hass_user'] = user
+                    authenticated = True
                     break
-            authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
