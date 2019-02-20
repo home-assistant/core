@@ -11,7 +11,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pyvesync==0.1.1']
+REQUIREMENTS = ['pyvesync-v2==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
