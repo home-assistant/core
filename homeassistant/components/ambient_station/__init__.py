@@ -339,8 +339,10 @@ class AmbientStation:
 
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
-                    ATTR_LOCATION: station['info']['location'],
-                    ATTR_NAME: station['info']['name'],
+                    ATTR_LOCATION: station.get('info', {}).get('location'),
+                    ATTR_NAME:
+                        station.get('info', {}).get(
+                            'name', station['macAddress']),
                 }
 
             for component in ('binary_sensor', 'sensor'):
