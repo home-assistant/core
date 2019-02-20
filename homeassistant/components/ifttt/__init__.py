@@ -1,9 +1,4 @@
-"""
-Support to trigger Maker IFTTT recipes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ifttt/
-"""
+"""Support to trigger Maker IFTTT recipes."""
 import json
 import logging
 

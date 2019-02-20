@@ -10,7 +10,8 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, config_entries, components as core_components)
+    core, config as conf_util, config_entries, components as core_components,
+    loader)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -124,6 +125,15 @@ async def async_from_config_dict(config: Dict[str, Any],
                      if key != core.DOMAIN)
     components.update(hass.config_entries.async_domains())
 
+    # Resolve all dependencies of all components.
+    for component in list(components):
+        try:
+            components.update(loader.component_dependencies(hass, component))
+        except loader.LoaderError:
+            # Ignore it, or we'll break startup
+            # It will be properly handled during setup.
+            pass
+
     # setup components
     res = await core_components.async_setup(hass, config)
     if not res:
@@ -177,6 +187,23 @@ async def async_from_config_dict(config: Dict[str, Any],
             )
             msg.append('\n'.join('- {} -> {}'.format(*item)
                                  for item in cv.INVALID_SLUGS_FOUND.items()))
+
+        hass.components.persistent_notification.async_create(
+            '\n\n'.join(msg), "Config Warning", "config_warning"
+        )
+
+    # TEMP: warn users of invalid extra keys
+    # Remove after 0.92
+    if cv.INVALID_EXTRA_KEYS_FOUND:
+        msg = []
+        msg.append(
+            "Your configuration contains extra keys "
+            "that the platform does not support (but were silently "
+            "accepted before 0.88). Please find and remove the following."
+            "This will become a breaking change."
+        )
+        msg.append('\n'.join('- {}'.format(it)
+                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
 
         hass.components.persistent_notification.async_create(
             '\n\n'.join(msg), "Config Warning", "config_warning"

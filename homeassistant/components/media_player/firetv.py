@@ -10,9 +10,11 @@ import threading
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, )
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING, STATE_STANDBY)
@@ -25,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FIRETV = SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_VOLUME_SET | SUPPORT_PLAY
+    SUPPORT_PLAY
 
 CONF_ADBKEY = 'adbkey'
 CONF_GET_SOURCE = 'get_source'
@@ -170,6 +172,11 @@ class FireTVDevice(MediaPlayerDevice):
     def available(self):
         """Return whether or not the ADB connection is valid."""
         return self._available
+
+    @property
+    def app_id(self):
+        """Return the current app."""
+        return self._current_app
 
     @property
     def source(self):

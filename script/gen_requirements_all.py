@@ -51,7 +51,7 @@ TEST_REQUIREMENTS = (
     'enturclient',
     'ephem',
     'evohomeclient',
-    'feedparser',
+    'feedparser-homeassistant',
     'foobot_async',
     'geojson_client',
     'georss_client',
@@ -124,6 +124,8 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
+    'zigpy',
+    'bellows',
 )
 
 IGNORE_PACKAGES = (

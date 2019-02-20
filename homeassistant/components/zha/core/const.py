@@ -55,10 +55,41 @@ IEEE = 'ieee'
 MODEL = 'model'
 NAME = 'name'
 
-LISTENER_BATTERY = 'battery'
+SENSOR_TYPE = 'sensor_type'
+HUMIDITY = 'humidity'
+TEMPERATURE = 'temperature'
+ILLUMINANCE = 'illuminance'
+PRESSURE = 'pressure'
+METERING = 'metering'
+ELECTRICAL_MEASUREMENT = 'electrical_measurement'
+GENERIC = 'generic'
+UNKNOWN = 'unknown'
+OPENING = 'opening'
+ZONE = 'zone'
+OCCUPANCY = 'occupancy'
+
+ATTR_LEVEL = 'level'
+
+ON_OFF_CHANNEL = 'on_off'
+ATTRIBUTE_CHANNEL = 'attribute'
+BASIC_CHANNEL = 'basic'
+COLOR_CHANNEL = 'color'
+FAN_CHANNEL = 'fan'
+LEVEL_CHANNEL = ATTR_LEVEL
+ZONE_CHANNEL = 'zone'
+ELECTRICAL_MEASUREMENT_CHANNEL = 'active_power'
+POWER_CONFIGURATION_CHANNEL = 'battery'
+EVENT_RELAY_CHANNEL = 'event_relay'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
+SIGNAL_MOVE_LEVEL = "move_level"
+SIGNAL_SET_LEVEL = "set_level"
+SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
+SIGNAL_REMOVE = 'remove'
+
+QUIRK_APPLIED = 'quirk_applied'
+QUIRK_CLASS = 'quirk_class'
 
 
 class RadioType(enum.Enum):
@@ -78,9 +109,11 @@ DISCOVERY_KEY = 'zha_discovery_info'
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
+CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
-EVENTABLE_CLUSTERS = []
+EVENT_RELAY_CLUSTERS = []
+NO_SENSOR_CLUSTERS = []
 
 REPORT_CONFIG_MAX_INT = 900
 REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800

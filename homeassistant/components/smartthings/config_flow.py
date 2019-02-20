@@ -1,7 +1,7 @@
 """Config flow to configure SmartThings."""
 import logging
 
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp import ClientResponseError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -50,7 +50,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Get access token and validate it."""
-        from pysmartthings import SmartThings
+        from pysmartthings import APIResponseError, SmartThings
 
         errors = {}
         if not self.hass.config.api.base_url.lower().startswith('https://'):
@@ -87,6 +87,14 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
                 app = await create_app(self.hass, self.api)
             setup_smartapp(self.hass, app)
             self.app_id = app.app_id
+        except APIResponseError as ex:
+            if ex.is_target_error():
+                errors['base'] = 'webhook_error'
+            else:
+                errors['base'] = "app_setup_error"
+            _LOGGER.exception("API error setting up the SmartApp: %s",
+                              ex.raw_error_response)
+            return self._show_step_user(errors)
         except ClientResponseError as ex:
             if ex.status == 401:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
@@ -94,6 +102,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
                 errors[CONF_ACCESS_TOKEN] = "token_forbidden"
             else:
                 errors['base'] = "app_setup_error"
+                _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_user(errors)
         except Exception:  # pylint:disable=broad-except
             errors['base'] = "app_setup_error"

@@ -30,9 +30,11 @@ if TYPE_CHECKING:
     from aioesphomeapi import APIClient, EntityInfo, EntityState, DeviceInfo, \
         ServiceCall
 
-DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.4.2']
+REQUIREMENTS = ['aioesphomeapi==1.5.0']
 
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'esphome'
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
 DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
@@ -52,8 +54,6 @@ HA_COMPONENTS = [
     'sensor',
     'switch',
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
@@ -325,6 +325,7 @@ async def _setup_auto_reconnect_logic(hass: HomeAssistantType,
             # In the future another API will be set up so that the ESP can
             # notify HA of connectivity directly, but for new we'll use a
             # really short reconnect interval.
+            tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8**tries, 60.0)))
             _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
             await asyncio.sleep(wait_time)

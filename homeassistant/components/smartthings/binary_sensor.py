@@ -1,9 +1,6 @@
-"""
-Support for binary sensors through the SmartThings cloud API.
+"""Support for binary sensors through the SmartThings cloud API."""
+from typing import Optional, Sequence
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.binary_sensor/
-"""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import SmartThingsEntity
@@ -20,7 +17,7 @@ CAPABILITY_TO_ATTRIB = {
     'soundSensor': 'sound',
     'tamperAlert': 'tamper',
     'valve': 'valve',
-    'waterSensor': 'water'
+    'waterSensor': 'water',
 }
 ATTRIB_TO_CLASS = {
     'acceleration': 'moving',
@@ -31,7 +28,7 @@ ATTRIB_TO_CLASS = {
     'sound': 'sound',
     'tamper': 'problem',
     'valve': 'opening',
-    'water': 'moisture'
+    'water': 'moisture',
 }
 
 
@@ -46,10 +43,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
-        for capability, attrib in CAPABILITY_TO_ATTRIB.items():
-            if capability in device.capabilities:
-                sensors.append(SmartThingsBinarySensor(device, attrib))
+        for capability in broker.get_assigned(
+                device.device_id, 'binary_sensor'):
+            attrib = CAPABILITY_TO_ATTRIB[capability]
+            sensors.append(SmartThingsBinarySensor(device, attrib))
     async_add_entities(sensors)
+
+
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
+    return [capability for capability in CAPABILITY_TO_ATTRIB
+            if capability in capabilities]
 
 
 class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):

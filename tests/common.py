@@ -486,6 +486,8 @@ class MockModule:
 class MockPlatform:
     """Provide a fake platform."""
 
+    __name__ = "homeassistant.components.light.bla"
+
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None, async_setup_platform=None,

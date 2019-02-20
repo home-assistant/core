@@ -10,7 +10,8 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.const import PRECISION_WHOLE, PRECISION_TENTHS, TEMP_CELSIUS
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,10 +1,4 @@
-"""
-Component to track utility consumption over given periods of time.
-
-For more details about this component, please refer to the documentation
-at https://www.home-assistant.io/components/utility_meter/
-"""
-
+"""Support for tracking consumption over given periods of time."""
 import logging
 
 import voluptuous as vol
@@ -25,7 +19,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TARIFF_ICON = "mdi:clock-outline"
+TARIFF_ICON = 'mdi:clock-outline'
 
 ATTR_TARIFFS = 'tariffs'
 
@@ -57,6 +51,7 @@ async def async_setup(hass, config):
     """Set up an Utility Meter."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DATA_UTILITY] = {}
+    register_services = False
 
     for meter, conf in config.get(DOMAIN).items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
@@ -86,21 +81,23 @@ async def async_setup(hass, config):
                     })
             hass.async_create_task(discovery.async_load_platform(
                 hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config))
+            register_services = True
 
-    component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_METER_SCHEMA,
-        'async_reset_meters'
-    )
+    if register_services:
+        component.async_register_entity_service(
+            SERVICE_RESET, SERVICE_METER_SCHEMA,
+            'async_reset_meters'
+        )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
-        'async_select_tariff'
-    )
+        component.async_register_entity_service(
+            SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
+            'async_select_tariff'
+        )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
-        'async_next_tariff'
-    )
+        component.async_register_entity_service(
+            SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
+            'async_next_tariff'
+        )
 
     return True
 
@@ -156,6 +153,7 @@ class TariffSelect(RestoreEntity):
 
     async def async_reset_meters(self):
         """Reset all sensors of this meter."""
+        _LOGGER.debug("reset meter %s", self.entity_id)
         async_dispatcher_send(self.hass, SIGNAL_RESET_METER,
                               self.entity_id)
 

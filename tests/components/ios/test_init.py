@@ -26,7 +26,7 @@ def mock_dependencies(hass):
 
 async def test_creating_entry_sets_up_sensor(hass):
     """Test setting up iOS loads the sensor component."""
-    with patch('homeassistant.components.sensor.ios.async_setup_entry',
+    with patch('homeassistant.components.ios.sensor.async_setup_entry',
                return_value=mock_coro(True)) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             ios.DOMAIN, context={'source': config_entries.SOURCE_USER})

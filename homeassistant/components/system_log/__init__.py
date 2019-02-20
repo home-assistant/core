@@ -1,11 +1,5 @@
-"""
-Support for system log.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
-from collections import deque
-from io import StringIO
+"""Support for system log."""
+from collections import OrderedDict
 import logging
 import re
 import traceback
@@ -89,11 +83,63 @@ def _figure_out_source(record, call_stack, hass):
     return record.pathname
 
 
-def _exception_as_string(exc_info):
-    buf = StringIO()
-    if exc_info:
-        traceback.print_exception(*exc_info, file=buf)
-    return buf.getvalue()
+class LogEntry:
+    """Store HA log entries."""
+
+    def __init__(self, record, stack, source):
+        """Initialize a log entry."""
+        self.first_occured = self.timestamp = record.created
+        self.level = record.levelname
+        self.message = record.getMessage()
+        if record.exc_info:
+            self.exception = ''.join(
+                traceback.format_exception(*record.exc_info))
+            _, _, tb = record.exc_info  # pylint: disable=invalid-name
+            # Last line of traceback contains the root cause of the exception
+            self.root_cause = str(traceback.extract_tb(tb)[-1])
+        else:
+            self.exception = ''
+            self.root_cause = None
+        self.source = source
+        self.count = 1
+
+    def hash(self):
+        """Calculate a key for DedupStore."""
+        return frozenset([self.message, self.root_cause])
+
+    def to_dict(self):
+        """Convert object into dict to maintain backward compatability."""
+        return vars(self)
+
+
+class DedupStore(OrderedDict):
+    """Data store to hold max amount of deduped entries."""
+
+    def __init__(self, maxlen=50):
+        """Initialize a new DedupStore."""
+        super().__init__()
+        self.maxlen = maxlen
+
+    def add_entry(self, entry):
+        """Add a new entry."""
+        key = str(entry.hash())
+
+        if key in self:
+            # Update stored entry
+            self[key].count += 1
+            self[key].timestamp = entry.timestamp
+
+            self.move_to_end(key)
+        else:
+            self[key] = entry
+
+        if len(self) > self.maxlen:
+            # Removes the first record which should also be the oldest
+            self.popitem(last=False)
+
+    def to_list(self):
+        """Return reversed list of log entries - LIFO."""
+        return [value.to_dict() for value in reversed(self.values())]
 
 
 class LogErrorHandler(logging.Handler):
@@ -103,17 +149,8 @@ class LogErrorHandler(logging.Handler):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
-        self.records = deque(maxlen=maxlen)
+        self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
-
-    def _create_entry(self, record, call_stack):
-        return {
-            'timestamp': record.created,
-            'level': record.levelname,
-            'message': record.getMessage(),
-            'exception': _exception_as_string(record.exc_info),
-            'source': _figure_out_source(record, call_stack, self.hass),
-            }
 
     def emit(self, record):
         """Save error and warning logs.
@@ -127,10 +164,11 @@ class LogErrorHandler(logging.Handler):
             if not record.exc_info:
                 stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-            entry = self._create_entry(record, stack)
-            self.records.appendleft(entry)
+            entry = LogEntry(record, stack,
+                             _figure_out_source(record, stack, self.hass))
+            self.records.add_entry(entry)
             if self.fire_event:
-                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
+                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass, config):
@@ -186,6 +224,4 @@ class AllErrorsView(HomeAssistantView):
 
     async def get(self, request):
         """Get all errors and warnings."""
-        # deque is not serializable (it's just "list-like") so it must be
-        # converted to a list before it can be serialized to json
-        return self.json(list(self.handler.records))
+        return self.json(self.handler.records.to_list())

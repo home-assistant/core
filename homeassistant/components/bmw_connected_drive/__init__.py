@@ -1,9 +1,4 @@
-"""
-Reads vehicle status from BMW connected drive portal.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/bmw_connected_drive/
-"""
+"""Reads vehicle status from BMW connected drive portal."""
 import datetime
 import logging
 
@@ -87,8 +82,8 @@ def setup_account(account_config: dict, hass, name: str) \
     read_only = account_config[CONF_READ_ONLY]
 
     _LOGGER.debug('Adding new account %s', name)
-    cd_account = BMWConnectedDriveAccount(username, password, region, name,
-                                          read_only)
+    cd_account = BMWConnectedDriveAccount(
+        username, password, region, name, read_only)
 
     def execute_service(call):
         """Execute a service for a vehicle.
@@ -99,7 +94,7 @@ def setup_account(account_config: dict, hass, name: str) \
         vin = call.data[ATTR_VIN]
         vehicle = cd_account.account.get_vehicle(vin)
         if not vehicle:
-            _LOGGER.error('Could not find a vehicle for VIN "%s"!', vin)
+            _LOGGER.error("Could not find a vehicle for VIN %s", vin)
             return
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
@@ -108,9 +103,7 @@ def setup_account(account_config: dict, hass, name: str) \
         # register the remote services
         for service in _SERVICE_MAP:
             hass.services.register(
-                DOMAIN, service,
-                execute_service,
-                schema=SERVICE_SCHEMA)
+                DOMAIN, service, execute_service, schema=SERVICE_SCHEMA)
 
     # update every UPDATE_INTERVAL minutes, starting now
     # this should even out the load on the servers
@@ -144,15 +137,15 @@ class BMWConnectedDriveAccount:
 
         Notify all listeners about the update.
         """
-        _LOGGER.debug('Updating vehicle state for account %s, '
-                      'notifying %d listeners',
-                      self.name, len(self._update_listeners))
+        _LOGGER.debug(
+            "Updating vehicle state for account %s, notifying %d listeners",
+            self.name, len(self._update_listeners))
         try:
             self.account.update_vehicle_states()
             for listener in self._update_listeners:
                 listener()
         except IOError as exception:
-            _LOGGER.error('Error updating the vehicle state.')
+            _LOGGER.error("Error updating the vehicle state")
             _LOGGER.exception(exception)
 
     def add_update_listener(self, listener):

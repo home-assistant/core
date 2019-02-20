@@ -11,9 +11,11 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
     STATE_PAUSED, STATE_PLAYING)

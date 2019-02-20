@@ -1,9 +1,4 @@
-"""
-Support for deCONZ binary sensor.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.deconz/
-"""
+"""Support for deCONZ binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
@@ -16,8 +11,8 @@ from .deconz_device import DeconzDevice
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ binary sensors."""
     pass
 
