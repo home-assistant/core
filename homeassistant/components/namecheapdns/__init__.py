@@ -47,15 +47,11 @@ def _ensure_list(key: str):
 
 async def async_setup(hass, config):
     """Initialize the namecheap DNS component."""
-    _host = config[DOMAIN][CONF_HOST]
     hosts = config[DOMAIN][CONF_HOSTS]
     domain = config[DOMAIN][CONF_DOMAIN]
     password = config[DOMAIN][CONF_PASSWORD]
 
     session = async_get_clientsession(hass)
-
-    if not hosts and _host is not None:
-        hosts = [_host]
 
     result = False
 
