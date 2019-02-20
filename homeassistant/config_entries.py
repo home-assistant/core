@@ -435,7 +435,7 @@ class ConfigEntries:
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
-        self.options = Options(hass)
+        self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -674,7 +674,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 flw['flow_id'] != self.flow_id]
 
 
-class Options:
+class OptionsFlowManager:
     """Flow to set options for a configuration entry."""
 
     def __init__(self, hass: HomeAssistant) -> None:
