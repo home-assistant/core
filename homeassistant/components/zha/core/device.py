@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+from enum import Enum
 import logging
 
 from homeassistant.helpers.dispatcher import (
@@ -21,6 +22,13 @@ from .channels import EventRelayChannel
 from .channels.general import BasicChannel
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DeviceStatus(Enum):
+    """Status of a device."""
+
+    CREATED = 1
+    INITIALIZED = 2
 
 
 class ZHADevice:
@@ -61,6 +69,7 @@ class ZHADevice:
             self._zigpy_device.__class__.__name__
         )
         self.power_source = None
+        self.status = DeviceStatus.CREATED
 
     @property
     def name(self):
@@ -186,6 +195,7 @@ class ZHADevice:
             self.name,
             BasicChannel.POWER_SOURCES.get(self.power_source)
         )
+        self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
     async def _execute_channel_tasks(self, task_name, *args):
