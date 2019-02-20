@@ -56,6 +56,7 @@ async def test_state(hass):
 
     assert state.state == '1'
 
+
 async def test_net_consumption(hass):
     """Test utility sensor state."""
     config = {
@@ -87,6 +88,7 @@ async def test_net_consumption(hass):
     assert state is not None
 
     assert state.state == '-1'
+
 
 async def test_non_net_consumption(hass):
     """Test utility sensor state."""
