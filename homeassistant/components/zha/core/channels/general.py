@@ -199,4 +199,4 @@ class PowerConfigurationChannel(ZigbeeChannel):
         await self.get_attribute_value(
             'battery_percentage_remaining', from_cache=from_cache)
         await self.get_attribute_value(
-            'active_power', from_cache=from_cache)
+            'battery_voltage', from_cache=from_cache)
