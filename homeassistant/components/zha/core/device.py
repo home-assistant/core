@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send
 )
 from .const import (
+<<<<<<< HEAD
     ATTR_MANUFACTURER, POWER_CONFIGURATION_CHANNEL, SIGNAL_AVAILABLE, IN, OUT,
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
@@ -19,6 +20,15 @@ from .const import (
 )
 from .channels import EventRelayChannel
 from .channels.general import BasicChannel
+=======
+    ATTR_MANUFACTURER, LISTENER_BATTERY, SIGNAL_AVAILABLE, IN, OUT,
+    ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
+    ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
+    ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
+    QUIRK_CLASS, LISTENER_BASIC
+)
+from .listeners import EventRelayListener, BasicListener
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +49,15 @@ class ZHADevice:
             self._manufacturer = zigpy_device.endpoints[ept_id].manufacturer
             self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
+<<<<<<< HEAD
         self.cluster_channels = {}
         self._relay_channels = []
         self._all_channels = []
+=======
+        self.cluster_listeners = {}
+        self._relay_listeners = []
+        self._all_listeners = []
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         self._name = "{} {}".format(
             self.manufacturer,
             self.model
@@ -114,9 +130,15 @@ class ZHADevice:
         return self._zha_gateway
 
     @property
+<<<<<<< HEAD
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
         return self._all_channels
+=======
+    def all_listeners(self):
+        """Return cluster listeners and relay listeners for device."""
+        return self._all_listeners
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     @property
     def available_signal(self):
@@ -157,6 +179,7 @@ class ZHADevice:
             QUIRK_CLASS: self.quirk_class
         }
 
+<<<<<<< HEAD
     def add_cluster_channel(self, cluster_channel):
         """Add cluster channel to device."""
         # only keep 1 power configuration channel
@@ -168,10 +191,24 @@ class ZHADevice:
             self._relay_channels.append(cluster_channel)
         else:
             self.cluster_channels[cluster_channel.name] = cluster_channel
+=======
+    def add_cluster_listener(self, cluster_listener):
+        """Add cluster listener to device."""
+        # only keep 1 power listener
+        if cluster_listener.name is LISTENER_BATTERY and \
+                LISTENER_BATTERY in self.cluster_listeners:
+            return
+        self._all_listeners.append(cluster_listener)
+        if isinstance(cluster_listener, EventRelayListener):
+            self._relay_listeners.append(cluster_listener)
+        else:
+            self.cluster_listeners[cluster_listener.name] = cluster_listener
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)
+<<<<<<< HEAD
         await self._execute_channel_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
 
@@ -210,6 +247,46 @@ class ZHADevice:
                 '%s channel: %s %s stage failed ex: %s',
                 self.name,
                 "{}-{}".format(channel.name, channel.unique_id),
+=======
+        await self._execute_listener_tasks('async_configure')
+        _LOGGER.debug('%s: completed configuration', self.name)
+
+    async def async_initialize(self, from_cache=False):
+        """Initialize listeners."""
+        _LOGGER.debug('%s: started initialization', self.name)
+        await self._execute_listener_tasks('async_initialize', from_cache)
+        self.power_source = self.cluster_listeners.get(
+            LISTENER_BASIC).get_power_source()
+        _LOGGER.debug(
+            '%s: power source: %s',
+            self.name,
+            BasicListener.POWER_SOURCES.get(self.power_source)
+        )
+        _LOGGER.debug('%s: completed initialization', self.name)
+
+    async def _execute_listener_tasks(self, task_name, *args):
+        """Gather and execute a set of listener tasks."""
+        listener_tasks = []
+        for listener in self.all_listeners:
+            listener_tasks.append(
+                self._async_create_task(listener, task_name, *args))
+        await asyncio.gather(*listener_tasks)
+
+    async def _async_create_task(self, listener, func_name, *args):
+        """Configure a single listener on this device."""
+        try:
+            await getattr(listener, func_name)(*args)
+            _LOGGER.debug('%s: listener: %s %s stage succeeded',
+                          self.name,
+                          "{}-{}".format(
+                              listener.name, listener.unique_id),
+                          func_name)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                '%s listener: %s %s stage failed ex: %s',
+                self.name,
+                "{}-{}".format(listener.name, listener.unique_id),
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 func_name,
                 ex
             )

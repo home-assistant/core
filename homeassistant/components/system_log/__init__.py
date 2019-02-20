@@ -88,7 +88,11 @@ class LogEntry:
 
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
+<<<<<<< HEAD
         self.first_occured = self.timestamp = record.created
+=======
+        self.timestamp = record.created
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         self.level = record.levelname
         self.message = record.getMessage()
         if record.exc_info:
@@ -125,6 +129,7 @@ class DedupStore(OrderedDict):
         key = str(entry.hash())
 
         if key in self:
+<<<<<<< HEAD
             # Update stored entry
             self[key].count += 1
             self[key].timestamp = entry.timestamp
@@ -132,6 +137,11 @@ class DedupStore(OrderedDict):
             self.move_to_end(key)
         else:
             self[key] = entry
+=======
+            entry.count = self[key].count + 1
+
+        self[key] = entry
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
         if len(self) > self.maxlen:
             # Removes the first record which should also be the oldest

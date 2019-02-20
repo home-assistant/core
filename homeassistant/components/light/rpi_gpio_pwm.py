@@ -3,7 +3,11 @@ import logging
 
 import voluptuous as vol
 
+<<<<<<< HEAD
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
+=======
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)

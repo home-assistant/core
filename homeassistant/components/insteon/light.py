@@ -1,4 +1,9 @@
-"""Support for Insteon lights via PowerLinc Modem."""
+"""
+Support for Insteon lights via PowerLinc Modem.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/light.insteon/
+"""
 import logging
 
 from homeassistant.components.insteon import InsteonEntity
@@ -12,8 +17,8 @@ DEPENDENCIES = ['insteon']
 MAX_BRIGHTNESS = 255
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Insteon component."""
     insteon_modem = hass.data['insteon'].get('modem')
 

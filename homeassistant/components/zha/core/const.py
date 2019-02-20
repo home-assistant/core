@@ -70,6 +70,7 @@ OCCUPANCY = 'occupancy'
 
 ATTR_LEVEL = 'level'
 
+<<<<<<< HEAD
 ON_OFF_CHANNEL = 'on_off'
 ATTRIBUTE_CHANNEL = 'attribute'
 BASIC_CHANNEL = 'basic'
@@ -80,6 +81,18 @@ ZONE_CHANNEL = 'zone'
 ELECTRICAL_MEASUREMENT_CHANNEL = 'active_power'
 POWER_CONFIGURATION_CHANNEL = 'battery'
 EVENT_RELAY_CHANNEL = 'event_relay'
+=======
+LISTENER_ON_OFF = 'on_off'
+LISTENER_ATTRIBUTE = 'attribute'
+LISTENER_BASIC = 'basic'
+LISTENER_COLOR = 'color'
+LISTENER_FAN = 'fan'
+LISTENER_LEVEL = ATTR_LEVEL
+LISTENER_ZONE = 'zone'
+LISTENER_ACTIVE_POWER = 'active_power'
+LISTENER_BATTERY = 'battery'
+LISTENER_EVENT_RELAY = 'event_relay'
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
 SIGNAL_MOVE_LEVEL = "move_level"

@@ -16,6 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by chain.so"
 
+<<<<<<< HEAD
+=======
+CONF_ADDRESS = 'address'
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 CONF_NETWORK = 'network'
 
 DEFAULT_NAME = 'Crypto Balance'

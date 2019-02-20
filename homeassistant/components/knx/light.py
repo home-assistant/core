@@ -3,15 +3,30 @@ from enum import Enum
 
 import voluptuous as vol
 
+<<<<<<< HEAD
 from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
+=======
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
+    Light)
+from homeassistant.const import CONF_NAME
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
+<<<<<<< HEAD
+=======
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
+
+
+CONF_ADDRESS = 'address'
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 CONF_STATE_ADDRESS = 'state_address'
 CONF_BRIGHTNESS_ADDRESS = 'brightness_address'
 CONF_BRIGHTNESS_STATE_ADDRESS = 'brightness_state_address'

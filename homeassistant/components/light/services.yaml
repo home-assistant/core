@@ -202,9 +202,12 @@ yeelight_start_flow:
     count:
       description: The number of times to run this flow (0 to run forever).
       example: 0
+<<<<<<< HEAD
     action:
       description: The action to take after the flow stops. Can be 'recover', 'stay', 'off'. (default 'recover')
       example: 'stay'
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     transitions:
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'

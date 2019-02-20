@@ -669,11 +669,18 @@ omit =
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/const.py
+<<<<<<< HEAD
     homeassistant/components/zha/core/channels/*
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     homeassistant/components/zha/core/const.py
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
+<<<<<<< HEAD
+=======
+    homeassistant/components/zha/core/listeners.py
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py

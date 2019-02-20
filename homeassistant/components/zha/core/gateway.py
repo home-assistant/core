@@ -18,6 +18,7 @@ from .const import (
     ZHA_DISCOVERY_NEW, DEVICE_CLASS, SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS, COMPONENT_CLUSTERS, HUMIDITY,
     TEMPERATURE, ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
+<<<<<<< HEAD
     GENERIC, SENSOR_TYPE, EVENT_RELAY_CLUSTERS, UNKNOWN,
     OPENING, ZONE, OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
@@ -30,6 +31,17 @@ from .channels import (
 )
 from .channels.general import BasicChannel
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
+=======
+    GENERIC, SENSOR_TYPE, EVENT_RELAY_CLUSTERS, LISTENER_BATTERY, UNKNOWN,
+    OPENING, ZONE, OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
+    REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
+    REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE, NO_SENSOR_CLUSTERS)
+from .device import ZHADevice
+from ..device_entity import ZhaDeviceEntity
+from .listeners import (
+    LISTENER_REGISTRY, AttributeListener, EventRelayListener, ZDOListener,
+    BasicListener)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 from .helpers import convert_ieee
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 EntityReference = collections.namedtuple(
+<<<<<<< HEAD
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
+=======
+    'EntityReference', 'reference_id zha_device cluster_listeners device_info')
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 
 class ZHAGateway:
@@ -109,14 +125,22 @@ class ZHAGateway:
         return self._device_registry
 
     def register_entity_reference(
+<<<<<<< HEAD
             self, ieee, reference_id, zha_device, cluster_channels,
+=======
+            self, ieee, reference_id, zha_device, cluster_listeners,
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             device_info):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
             EntityReference(
                 reference_id=reference_id,
                 zha_device=zha_device,
+<<<<<<< HEAD
                 cluster_channels=cluster_channels,
+=======
+                cluster_listeners=cluster_listeners,
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 device_info=device_info
             )
         )
@@ -172,14 +196,22 @@ class ZHAGateway:
             # available and we already loaded fresh state above
             zha_device.update_available(True)
         elif not zha_device.available and zha_device.power_source is not None\
+<<<<<<< HEAD
                 and zha_device.power_source != BasicChannel.BATTERY:
+=======
+                and zha_device.power_source != BasicListener.BATTERY:
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             # the device is currently marked unavailable and it isn't a battery
             # powered device so we should be able to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,
                 "with power source: {}".format(
+<<<<<<< HEAD
                     BasicChannel.POWER_SOURCES.get(zha_device.power_source)
+=======
+                    BasicListener.POWER_SOURCES.get(zha_device.power_source)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 )
             )
             await zha_device.async_initialize(from_cache=False)
@@ -191,11 +223,19 @@ class ZHAGateway:
         import zigpy.profiles
 
         if endpoint_id == 0:  # ZDO
+<<<<<<< HEAD
             await _create_cluster_channel(
                 endpoint,
                 zha_device,
                 is_new_join,
                 channel_class=ZDOChannel
+=======
+            await _create_cluster_listener(
+                endpoint,
+                zha_device,
+                is_new_join,
+                listener_class=ZDOListener
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             )
             return
 
@@ -237,6 +277,7 @@ class ZHAGateway:
         ))
 
 
+<<<<<<< HEAD
 async def _create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=None, channel_class=None):
     """Create a cluster channel and attach it to a device."""
@@ -249,6 +290,20 @@ async def _create_cluster_channel(cluster, zha_device, is_new_join,
     zha_device.add_cluster_channel(channel)
     if channels is not None:
         channels.append(channel)
+=======
+async def _create_cluster_listener(cluster, zha_device, is_new_join,
+                                   listeners=None, listener_class=None):
+    """Create a cluster listener and attach it to a device."""
+    if listener_class is None:
+        listener_class = LISTENER_REGISTRY.get(cluster.cluster_id,
+                                               AttributeListener)
+    listener = listener_class(cluster, zha_device)
+    if is_new_join:
+        await listener.async_configure()
+    zha_device.add_cluster_listener(listener)
+    if listeners is not None:
+        listeners.append(listener)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 
 async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
@@ -275,6 +330,7 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
                     for c in profile_clusters[1]
                     if c in endpoint.out_clusters]
 
+<<<<<<< HEAD
     channels = []
     cluster_tasks = []
 
@@ -285,13 +341,29 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
     for cluster in out_clusters:
         cluster_tasks.append(_create_cluster_channel(
             cluster, zha_device, is_new_join, channels=channels))
+=======
+    listeners = []
+    cluster_tasks = []
+
+    for cluster in in_clusters:
+        cluster_tasks.append(_create_cluster_listener(
+            cluster, zha_device, is_new_join, listeners=listeners))
+
+    for cluster in out_clusters:
+        cluster_tasks.append(_create_cluster_listener(
+            cluster, zha_device, is_new_join, listeners=listeners))
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     await asyncio.gather(*cluster_tasks)
 
     discovery_info = {
         'unique_id': device_key,
         'zha_device': zha_device,
+<<<<<<< HEAD
         'channels': channels,
+=======
+        'listeners': listeners,
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         'component': component
     }
 
@@ -317,7 +389,11 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
     """Dispatch single cluster matches to HA components."""
     cluster_matches = []
     cluster_match_tasks = []
+<<<<<<< HEAD
     event_channel_tasks = []
+=======
+    event_listener_tasks = []
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     for cluster in endpoint.in_clusters.values():
         if cluster.cluster_id not in profile_clusters[0]:
             cluster_match_tasks.append(_handle_single_cluster_match(
@@ -330,7 +406,11 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
             ))
 
         if cluster.cluster_id in NO_SENSOR_CLUSTERS:
+<<<<<<< HEAD
             cluster_match_tasks.append(_handle_channel_only_cluster_match(
+=======
+            cluster_match_tasks.append(_handle_listener_only_cluster_match(
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 zha_device,
                 cluster,
                 is_new_join,
@@ -348,6 +428,7 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
             ))
 
         if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
+<<<<<<< HEAD
             event_channel_tasks.append(_create_cluster_channel(
                 cluster,
                 zha_device,
@@ -355,6 +436,15 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
                 channel_class=EventRelayChannel
             ))
     await asyncio.gather(*event_channel_tasks)
+=======
+            event_listener_tasks.append(_create_cluster_listener(
+                cluster,
+                zha_device,
+                is_new_join,
+                listener_class=EventRelayListener
+            ))
+    await asyncio.gather(*event_listener_tasks)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     cluster_match_results = await asyncio.gather(*cluster_match_tasks)
     for cluster_match in cluster_match_results:
         if cluster_match is not None:
@@ -362,10 +452,17 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
     return cluster_matches
 
 
+<<<<<<< HEAD
 async def _handle_channel_only_cluster_match(
         zha_device, cluster, is_new_join):
     """Handle a channel only cluster match."""
     await _create_cluster_channel(cluster, zha_device, is_new_join)
+=======
+async def _handle_listener_only_cluster_match(
+        zha_device, cluster, is_new_join):
+    """Handle a listener only cluster match."""
+    await _create_cluster_listener(cluster, zha_device, is_new_join)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 
 async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
@@ -379,15 +476,25 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
 
     if component is None or component not in COMPONENTS:
         return
+<<<<<<< HEAD
     channels = []
     await _create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=channels)
+=======
+    listeners = []
+    await _create_cluster_listener(cluster, zha_device, is_new_join,
+                                   listeners=listeners)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
     discovery_info = {
         'unique_id': cluster_key,
         'zha_device': zha_device,
+<<<<<<< HEAD
         'channels': channels,
+=======
+        'listeners': listeners,
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         'entity_suffix': '_{}'.format(cluster.cluster_id),
         'component': component
     }
@@ -406,11 +513,19 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
 
 def _create_device_entity(zha_device):
     """Create ZHADeviceEntity."""
+<<<<<<< HEAD
     device_entity_channels = []
     if POWER_CONFIGURATION_CHANNEL in zha_device.cluster_channels:
         channel = zha_device.cluster_channels.get(POWER_CONFIGURATION_CHANNEL)
         device_entity_channels.append(channel)
     return ZhaDeviceEntity(zha_device, device_entity_channels)
+=======
+    device_entity_listeners = []
+    if LISTENER_BATTERY in zha_device.cluster_listeners:
+        listener = zha_device.cluster_listeners.get(LISTENER_BATTERY)
+        device_entity_listeners.append(listener)
+    return ZhaDeviceEntity(zha_device, device_entity_listeners)
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 
 def establish_device_mappings():

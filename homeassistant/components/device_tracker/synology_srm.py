@@ -13,7 +13,11 @@ from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
 
+<<<<<<< HEAD
 REQUIREMENTS = ['synology-srm==0.0.6']
+=======
+REQUIREMENTS = ['synology-srm==0.0.4']
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -101,10 +101,17 @@ def test_async_add_job_add_threaded_job_to_pool():
 def test_async_create_task_schedule_coroutine(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=loop))
+<<<<<<< HEAD
 
     async def job():
         pass
 
+=======
+
+    async def job():
+        pass
+
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     ha.HomeAssistant.async_create_task(hass, job())
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1

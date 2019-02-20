@@ -46,6 +46,7 @@ DATA_KEY = 'light.yeelight'
 
 ATTR_MODE = 'mode'
 ATTR_COUNT = 'count'
+<<<<<<< HEAD
 ATTR_ACTION = 'action'
 ATTR_TRANSITIONS = 'transitions'
 
@@ -53,6 +54,10 @@ ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
 
+=======
+ATTR_TRANSITIONS = 'transitions'
+
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 YEELIGHT_RGB_TRANSITION = 'RGBTransition'
 YEELIGHT_HSV_TRANSACTION = 'HSVTransition'
 YEELIGHT_TEMPERATURE_TRANSACTION = 'TemperatureTransition'
@@ -64,8 +69,11 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
+<<<<<<< HEAD
     vol.Optional(ATTR_ACTION, default=ACTION_RECOVER):
         vol.Any(ACTION_RECOVER, ACTION_OFF, ACTION_STAY),
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     vol.Required(ATTR_TRANSITIONS): [{
         vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION):
             vol.All(cv.ensure_list, [cv.positive_int]),
@@ -611,14 +619,21 @@ class YeelightLight(Light):
 
         return transition_objects
 
+<<<<<<< HEAD
     def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
+=======
+    def start_flow(self, transitions, count=0):
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         """Start flow."""
         import yeelight
 
         try:
             flow = yeelight.Flow(
                 count=count,
+<<<<<<< HEAD
                 action=yeelight.Flow.actions[action],
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 transitions=self.transitions_config_parser(transitions))
 
             self._bulb.start_flow(flow)

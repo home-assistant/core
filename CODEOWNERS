@@ -68,7 +68,10 @@ homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/device_tracker/traccar.py @ludeeus
 homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
+<<<<<<< HEAD
 homeassistant/components/device_tracker/synology_srm.py @aerialls
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/influx/* @fabaff
 homeassistant/components/light/lifx_legacy.py @amelchio
@@ -267,7 +270,10 @@ homeassistant/components/*/tradfri.py @ggravlingen
 homeassistant/components/unifi/* @kane610
 homeassistant/components/switch/unifi.py @kane610
 homeassistant/components/upcloud/* @scop
+<<<<<<< HEAD
 homeassistant/components/utility_meter/* @dgomes
+=======
+>>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 homeassistant/components/*/upcloud.py @scop
 
 # V
