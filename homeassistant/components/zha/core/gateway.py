@@ -256,7 +256,7 @@ async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
     if not discovery_info['channels']:
         _LOGGER.warning(
             "there are no channels in the discovery info: %s", discovery_info)
-        return None
+        return
     component = discovery_info['component']
     if is_new_join:
         async_dispatcher_send(
