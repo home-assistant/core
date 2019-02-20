@@ -667,7 +667,7 @@ py-cpuinfo==4.0.0
 py-melissa-climate==1.0.6
 
 # homeassistant.components.camera.synology
-py-synology==0.2.0
+py-synology==0.3.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
