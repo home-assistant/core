@@ -66,8 +66,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
         self._state = None
         self._button = None
 
-        bouncetimeinS = self._bouncetime/1000
-
         try:
             self._button = remote_rpi_gpio.setup_input(self._address,
                                                        self._port,

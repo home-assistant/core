@@ -7,22 +7,20 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'remote_rpi_gpio'
 
+
 def setup(hass, config):
     """Set up the Raspberry PI GPIO component."""
-
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
-
     def prepare_gpio(event):
         """Stuff to do when home assistant starts."""
-
     return True
 
 
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
     from gpiozero import LED  # pylint: disable=import-error
-    from gpiozero.pins.pigpio import PiGPIOFactory  # pylint: disable=import-error
+    from gpiozero.pins.pigpio import PiGPIOFactory  # noqa: E501 pylint: disable=import-error
 
     try:
         return LED(port, active_high=invert_logic,
@@ -45,8 +43,6 @@ def setup_input(address, port, pull_mode):
 
 def write_output(switch, value):
     """Write a value to a GPIO."""
-    from gpiozero import LED  # pylint: disable=import-error
-
     if value == 1:
         switch.on()
     if value == 0:
