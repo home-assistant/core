@@ -98,6 +98,9 @@ aioasuswrt==1.1.20
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
+# homeassistant.components.device_tracker.luci
+openwrt-luci-rpc==0.3.0
+
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
 
