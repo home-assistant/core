@@ -1,9 +1,4 @@
-"""
-Support for Xfinity Gateways.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.xfinity/
-"""
+"""Support for device tracking via Xfinity Gateways."""
 import logging
 
 from requests.exceptions import RequestException
@@ -27,10 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return an Xfinity Gateway scanner."""
-    info = config[DOMAIN]
-    host = info.get(CONF_HOST)
-
-    scanner = XfinityDeviceScanner(host)
+    scanner = XfinityDeviceScanner(config[DOMAIN][CONF_HOST])
 
     return scanner if scanner.success_init else None
 
