@@ -635,7 +635,6 @@ async def test_entry_options(hass, manager):
             return OptionsFlowHandler(config, options)
 
     config_entries.HANDLERS['test'] = TestFlow()
-    print(entry)
     flow = await manager.options._async_create_flow(
         entry.entry_id, context={'source': 'test'}, data=None)
 
