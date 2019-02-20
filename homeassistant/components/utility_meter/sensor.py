@@ -17,7 +17,7 @@ from .const import (
     DATA_UTILITY, SIGNAL_RESET_METER,
     HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY,
     CONF_SOURCE_SENSOR, CONF_METER_TYPE, CONF_METER_OFFSET,
-    CONF_METER_ROLLOVER, CONF_TARIFF, CONF_TARIFF_ENTITY, CONF_METER)
+    CONF_METER_NET_CONSUMPTION, CONF_TARIFF, CONF_TARIFF_ENTITY, CONF_METER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,15 +48,15 @@ async def async_setup_platform(
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
-        conf_meter_rollover =\
-            hass.data[DATA_UTILITY][meter][CONF_METER_ROLLOVER]
+        conf_meter_net_consumption =\
+            hass.data[DATA_UTILITY][meter][CONF_METER_NET_CONSUMPTION]
         conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
             CONF_TARIFF_ENTITY)
 
         meters.append(UtilityMeterSensor(
             conf_meter_source, conf.get(CONF_NAME), conf_meter_type,
-            conf_meter_offset, conf_meter_rollover, conf.get(CONF_TARIFF),
-            conf_meter_tariff_entity))
+            conf_meter_offset, conf_meter_net_consumption,
+            conf.get(CONF_TARIFF), conf_meter_tariff_entity))
 
     async_add_entities(meters)
 
@@ -64,8 +64,8 @@ async def async_setup_platform(
 class UtilityMeterSensor(RestoreEntity):
     """Representation of an utility meter sensor."""
 
-    def __init__(self, source_entity, name, meter_type, meter_offset=0,
-                 rollover=True, tariff=None, tariff_entity=None):
+    def __init__(self, source_entity, name, meter_type, meter_offset,
+                 net_consumption, tariff=None, tariff_entity=None):
         """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
         self._state = 0
@@ -79,7 +79,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._unit_of_measurement = None
         self._period = meter_type
         self._period_offset = meter_offset
-        self._sensor_rollsover = rollover
+        self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
@@ -99,7 +99,7 @@ class UtilityMeterSensor(RestoreEntity):
         try:
             diff = Decimal(new_state.state) - Decimal(old_state.state)
 
-            if self._sensor_rollsover and diff < 0:
+            if (not self._sensor_net_consumption) and diff < 0:
                 # Source sensor just rolled over for unknow reasons,
                 return
             self._state += diff
