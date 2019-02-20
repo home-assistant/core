@@ -56,7 +56,9 @@ class RemoteRPiGPIOSwitch(ToggleEntity):
         self._switch = None
 
         try:
-            self._switch = remote_rpi_gpio.setup_output(self._address, self._port, self._invert_logic)
+            self._switch = remote_rpi_gpio.setup_output(self._address,
+                                                        self._port,
+                                                        self._invert_logic)
         except (ValueError, IndexError, KeyError):
             return None
 
@@ -78,12 +80,14 @@ class RemoteRPiGPIOSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         print("turning on switch: ", self._switch)
-        remote_rpi_gpio.write_output(self._switch, 0 if self._invert_logic else 1)
+        remote_rpi_gpio.write_output(self._switch,
+                                     0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        remote_rpi_gpio.write_output(self._switch, 1 if self._invert_logic else 0)
+        remote_rpi_gpio.write_output(self._switch,
+                                     1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()

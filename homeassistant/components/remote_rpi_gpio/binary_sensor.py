@@ -54,7 +54,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
-    def __init__(self, name, address, port, pull_mode, bouncetime, invert_logic):
+    def __init__(self, name, address, port, pull_mode, 
+                 bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._address = address
@@ -68,7 +69,9 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
         bouncetimeinS = self._bouncetime/1000
 
         try:
-            self._button = remote_rpi_gpio.setup_input(self._address, self._port, self._pull_mode)
+            self._button = remote_rpi_gpio.setup_input(self._address,
+                                                       self._port,
+                                                       self._pull_mode)
         except (ValueError, IndexError, KeyError):
             return None
 

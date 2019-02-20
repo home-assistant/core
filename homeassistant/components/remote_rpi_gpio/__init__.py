@@ -21,14 +21,14 @@ def setup(hass, config):
 
     return True
 
-
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
     from gpiozero import LED  # pylint: disable=import-error
     from gpiozero.pins.pigpio import PiGPIOFactory  # pylint: disable=import-error
 
     try:
-        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
+        return LED(port, active_high=invert_logic,
+                   pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError):
         return None
 
@@ -38,7 +38,8 @@ def setup_input(address, port, pull_mode):
     from gpiozero.pins.pigpio import PiGPIOFactory
 
     try:
-        return Button(port, pull_up=pull_mode, pin_factory=PiGPIOFactory(address))
+        return Button(port, pull_up=pull_mode,
+                      pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError):
         return None
 
@@ -46,16 +47,12 @@ def write_output(switch, value):
     """Write a value to a GPIO."""
     from gpiozero import LED  # pylint: disable=import-error
 
-    if value==1:
+    if value == 1:
         switch.on()
-    if value==0:
+    if value == 0:
         switch.off()
-
 
 def read_input(button):
     """Read a value from a GPIO."""
     return button.value
 
-
-#def edge_detect(button, event_callback, bounce):
-#    """Add detection for RISING and FALLING events."""
