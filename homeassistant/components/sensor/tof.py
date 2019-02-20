@@ -74,17 +74,7 @@ async def async_setup_platform(hass,
     time.sleep(0.01)
     rpi_gpio.write_output(xshut, 1)
     time.sleep(0.01)
-
-    tof = VL53L1X()
-    tof.open()
-    tof.add_sensor(sensor_id, DEFAULT_I2C_ADDRESS)
-    tof.start_ranging(sensor_id, 2)
-
-    distance_mm = tof.get_distance(sensor_id)
-    _LOGGER.info(
-       "Time: {}\tVL53L1X: {} mm".format(datetime.utcnow().strftime("%S.%f"),
-       distance_mm))
-    tof.stop_ranging(sensor_id)
+    
     sensor = await hass.async_add_job(partial(VL53L1X))
     dev = [VL53L1XSensor(sensor, name, unit)]
 
