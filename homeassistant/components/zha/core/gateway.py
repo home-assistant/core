@@ -23,7 +23,7 @@ from .const import (
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE, NO_SENSOR_CLUSTERS,
     POWER_CONFIGURATION_CHANNEL)
-from .device import ZHADevice
+from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
     AttributeListeningChannel, EventRelayChannel, ZDOChannel
@@ -139,7 +139,9 @@ class ZHAGateway:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
-            device.update_available(True)
+            # avoid a race condition during new joins
+            if device.status is DeviceStatus.INITIALIZED:
+                device.update_available(True)
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
@@ -319,6 +321,14 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
     cluster_match_tasks = []
     event_channel_tasks = []
     for cluster in endpoint.in_clusters.values():
+        # don't let profiles prevent these channels from being created
+        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
+            cluster_match_tasks.append(_handle_channel_only_cluster_match(
+                zha_device,
+                cluster,
+                is_new_join,
+            ))
+
         if cluster.cluster_id not in profile_clusters[0]:
             cluster_match_tasks.append(_handle_single_cluster_match(
                 hass,
@@ -326,13 +336,6 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
                 cluster,
                 device_key,
                 zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
-                is_new_join,
-            ))
-
-        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
-            cluster_match_tasks.append(_handle_channel_only_cluster_match(
-                zha_device,
-                cluster,
                 is_new_join,
             ))
 
