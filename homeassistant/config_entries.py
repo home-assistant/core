@@ -226,8 +226,7 @@ class ConfigEntry:
                  'update_listeners', '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, connection_class: str,
-                 options: Optional[dict] = None,
+                 source: str, connection_class: str, options: dict = {},
                  entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
