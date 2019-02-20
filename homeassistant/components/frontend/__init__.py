@@ -21,11 +21,7 @@ from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
 
-<<<<<<< HEAD
 REQUIREMENTS = ['home-assistant-frontend==20190219.0']
-=======
-REQUIREMENTS = ['home-assistant-frontend==20190218.0']
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',

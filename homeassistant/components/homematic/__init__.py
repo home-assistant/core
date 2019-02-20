@@ -14,11 +14,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-<<<<<<< HEAD
 REQUIREMENTS = ['pyhomematic==0.1.56']
-=======
-REQUIREMENTS = ['pyhomematic==0.1.55']
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 _LOGGER = logging.getLogger(__name__)
 

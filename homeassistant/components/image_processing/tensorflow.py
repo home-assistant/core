@@ -12,11 +12,7 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-<<<<<<< HEAD
 REQUIREMENTS = ['numpy==1.16.1', 'pillow==5.4.1', 'protobuf==3.6.1']
-=======
-REQUIREMENTS = ['numpy==1.16.0', 'pillow==5.4.1', 'protobuf==3.6.1']
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 _LOGGER = logging.getLogger(__name__)
 

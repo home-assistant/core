@@ -13,11 +13,6 @@ REQUIREMENTS = ['python-etherscan-api==0.0.3']
 
 ATTRIBUTION = "Data provided by etherscan.io"
 
-<<<<<<< HEAD
-=======
-CONF_ADDRESS = 'address'
-CONF_TOKEN = 'token'
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 CONF_TOKEN_ADDRESS = 'token_address'
 
 SCAN_INTERVAL = timedelta(minutes=5)

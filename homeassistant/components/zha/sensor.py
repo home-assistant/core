@@ -12,11 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
     ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
-<<<<<<< HEAD
     GENERIC, SENSOR_TYPE, ATTRIBUTE_CHANNEL, ELECTRICAL_MEASUREMENT_CHANNEL,
-=======
-    GENERIC, SENSOR_TYPE, LISTENER_ATTRIBUTE, LISTENER_ACTIVE_POWER,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
 from .entity import ZhaEntity
 
@@ -78,13 +74,8 @@ UNIT_REGISTRY = {
     GENERIC: None
 }
 
-<<<<<<< HEAD
 CHANNEL_REGISTRY = {
     ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
-=======
-LISTENER_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: LISTENER_ACTIVE_POWER,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 }
 
 POLLING_REGISTRY = {
@@ -139,15 +130,9 @@ class Sensor(ZhaEntity):
 
     _domain = DOMAIN
 
-<<<<<<< HEAD
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-=======
-    def __init__(self, unique_id, zha_device, listeners, **kwargs):
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, listeners, **kwargs)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
         self._unit = UNIT_REGISTRY.get(sensor_type)
         self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
@@ -162,28 +147,17 @@ class Sensor(ZhaEntity):
             sensor_type,
             False
         )
-<<<<<<< HEAD
         self._channel = self.cluster_channels.get(
             CHANNEL_REGISTRY.get(sensor_type, ATTRIBUTE_CHANNEL)
-=======
-        self._listener = self.cluster_listeners.get(
-            LISTENER_REGISTRY.get(sensor_type, LISTENER_ATTRIBUTE)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-<<<<<<< HEAD
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
         await self.async_accept_signal(
             self._channel, SIGNAL_STATE_ATTR,
-=======
-            self._listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
-        await self.async_accept_signal(
-            self._listener, SIGNAL_STATE_ATTR,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             self.async_update_state_attribute)
 
     @property
@@ -201,10 +175,6 @@ class Sensor(ZhaEntity):
         return self._state
 
     def async_set_state(self, state):
-<<<<<<< HEAD
         """Handle state update from channel."""
-=======
-        """Handle state update from listener."""
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()

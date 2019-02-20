@@ -111,11 +111,7 @@ aiofreepybox==0.0.6
 aioftp==0.12.0
 
 # homeassistant.components.harmony.remote
-<<<<<<< HEAD
 aioharmony==0.1.8
-=======
-aioharmony==0.1.5
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -539,11 +535,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-<<<<<<< HEAD
 home-assistant-frontend==20190219.0
-=======
-home-assistant-frontend==20190218.0
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -760,11 +752,7 @@ nuheat==0.3.0
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
-<<<<<<< HEAD
 numpy==1.16.1
-=======
-numpy==1.16.0
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -1074,11 +1062,7 @@ pyhik==0.2.2
 pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
-<<<<<<< HEAD
 pyhomematic==0.1.56
-=======
-pyhomematic==0.1.55
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1651,11 +1635,7 @@ suds-py3==1.3.3.0
 swisshydrodata==0.0.3
 
 # homeassistant.components.device_tracker.synology_srm
-<<<<<<< HEAD
 synology-srm==0.0.6
-=======
-synology-srm==0.0.4
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.14

@@ -339,15 +339,10 @@ class AmbientStation:
 
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
-<<<<<<< HEAD
                     ATTR_LOCATION: station.get('info', {}).get('location'),
                     ATTR_NAME:
                         station.get('info', {}).get(
                             'name', station['macAddress']),
-=======
-                    ATTR_LOCATION: station['info']['location'],
-                    ATTR_NAME: station['info']['name'],
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 }
 
             for component in ('binary_sensor', 'sensor'):

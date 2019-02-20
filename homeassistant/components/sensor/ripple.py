@@ -10,10 +10,6 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-ripple-api==0.0.3']
 
-<<<<<<< HEAD
-=======
-CONF_ADDRESS = 'address'
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 ATTRIBUTION = "Data provided by ripple.com"
 
 DEFAULT_NAME = 'Ripple Balance'

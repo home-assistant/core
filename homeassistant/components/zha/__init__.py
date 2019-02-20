@@ -26,11 +26,7 @@ from .core.const import (
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.gateway import establish_device_mappings
-<<<<<<< HEAD
 from .core.channels.registry import populate_channel_registry
-=======
-from .core.listeners import populate_listener_registry
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -94,11 +90,7 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
     establish_device_mappings()
-<<<<<<< HEAD
     populate_channel_registry()
-=======
-    populate_listener_registry()
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = (

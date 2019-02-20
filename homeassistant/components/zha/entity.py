@@ -27,11 +27,7 @@ class ZhaEntity(entity.Entity):
 
     _domain = None  # Must be overridden by subclasses
 
-<<<<<<< HEAD
     def __init__(self, unique_id, zha_device, channels,
-=======
-    def __init__(self, unique_id, zha_device, listeners,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                  skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False
@@ -52,42 +48,25 @@ class ZhaEntity(entity.Entity):
                     slugify(zha_device.manufacturer),
                     slugify(zha_device.model),
                     ieeetail,
-<<<<<<< HEAD
                     channels[0].cluster.endpoint.endpoint_id,
-=======
-                    listeners[0].cluster.endpoint.endpoint_id,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                     kwargs.get(ENTITY_SUFFIX, ''),
                 )
             else:
                 self.entity_id = "{}.zha_{}_{}{}".format(
                     self._domain,
                     ieeetail,
-<<<<<<< HEAD
                     channels[0].cluster.endpoint.endpoint_id,
-=======
-                    listeners[0].cluster.endpoint.endpoint_id,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                     kwargs.get(ENTITY_SUFFIX, ''),
                 )
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
-<<<<<<< HEAD
         self.cluster_channels = {}
         self._available = False
         self._component = kwargs['component']
         self._unsubs = []
         for channel in channels:
             self.cluster_channels[channel.name] = channel
-=======
-        self.cluster_listeners = {}
-        self._available = False
-        self._component = kwargs['component']
-        self._unsubs = []
-        for listener in listeners:
-            self.cluster_listeners[listener.name] = listener
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     @property
     def name(self):
@@ -168,11 +147,7 @@ class ZhaEntity(entity.Entity):
         )
         self._zha_device.gateway.register_entity_reference(
             self._zha_device.ieee, self.entity_id, self._zha_device,
-<<<<<<< HEAD
             self.cluster_channels, self.device_info)
-=======
-            self.cluster_listeners, self.device_info)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
@@ -181,7 +156,6 @@ class ZhaEntity(entity.Entity):
 
     async def async_update(self):
         """Retrieve latest state."""
-<<<<<<< HEAD
         for channel in self.cluster_channels:
             if hasattr(channel, 'async_update'):
                 await channel.async_update()
@@ -189,15 +163,6 @@ class ZhaEntity(entity.Entity):
     async def async_accept_signal(self, channel, signal, func,
                                   signal_override=False):
         """Accept a signal from a channel."""
-=======
-        for listener in self.cluster_listeners:
-            if hasattr(listener, 'async_update'):
-                await listener.async_update()
-
-    async def async_accept_signal(self, listener, signal, func,
-                                  signal_override=False):
-        """Accept a signal from a listener."""
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         unsub = None
         if signal_override:
             unsub = async_dispatcher_connect(
@@ -208,11 +173,7 @@ class ZhaEntity(entity.Entity):
         else:
             unsub = async_dispatcher_connect(
                 self.hass,
-<<<<<<< HEAD
                 "{}_{}".format(channel.unique_id, signal),
-=======
-                "{}_{}".format(listener.unique_id, signal),
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 func
             )
         self._unsubs.append(unsub)

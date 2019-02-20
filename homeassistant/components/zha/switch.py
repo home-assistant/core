@@ -9,11 +9,7 @@ import logging
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
-<<<<<<< HEAD
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
-=======
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, LISTENER_ON_OFF,
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
@@ -64,11 +60,7 @@ class Switch(ZhaEntity, SwitchDevice):
     def __init__(self, **kwargs):
         """Initialize the ZHA switch."""
         super().__init__(**kwargs)
-<<<<<<< HEAD
         self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
-=======
-        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     @property
     def is_on(self) -> bool:
@@ -79,7 +71,6 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-<<<<<<< HEAD
         await self._on_off_channel.on()
 
     async def async_turn_off(self, **kwargs):
@@ -88,16 +79,6 @@ class Switch(ZhaEntity, SwitchDevice):
 
     def async_set_state(self, state):
         """Handle state update from channel."""
-=======
-        await self._on_off_listener.on()
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the entity off."""
-        await self._on_off_listener.off()
-
-    def async_set_state(self, state):
-        """Handle state update from listener."""
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         self._state = bool(state)
         self.async_schedule_update_ha_state()
 
@@ -110,8 +91,4 @@ class Switch(ZhaEntity, SwitchDevice):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-<<<<<<< HEAD
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
-=======
-            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev

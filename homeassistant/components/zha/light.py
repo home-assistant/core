@@ -10,13 +10,8 @@ from homeassistant.components import light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 from .const import (
-<<<<<<< HEAD
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, COLOR_CHANNEL,
     ON_OFF_CHANNEL, LEVEL_CHANNEL, SIGNAL_ATTR_UPDATED, SIGNAL_SET_LEVEL
-=======
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, LISTENER_COLOR,
-    LISTENER_ON_OFF, LISTENER_LEVEL, SIGNAL_ATTR_UPDATED, SIGNAL_SET_LEVEL
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
     )
 from .entity import ZhaEntity
 
@@ -72,43 +67,24 @@ class Light(ZhaEntity, light.Light):
 
     _domain = light.DOMAIN
 
-<<<<<<< HEAD
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-=======
-    def __init__(self, unique_id, zha_device, listeners, **kwargs):
-        """Initialize the ZHA light."""
-        super().__init__(unique_id, zha_device, listeners, **kwargs)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         self._supported_features = 0
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-<<<<<<< HEAD
         self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
         self._level_channel = self.cluster_channels.get(LEVEL_CHANNEL)
         self._color_channel = self.cluster_channels.get(COLOR_CHANNEL)
 
         if self._level_channel:
-=======
-        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
-        self._level_listener = self.cluster_listeners.get(LISTENER_LEVEL)
-        self._color_listener = self.cluster_listeners.get(LISTENER_COLOR)
-
-        if self._level_listener:
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
 
-<<<<<<< HEAD
         if self._color_channel:
             color_capabilities = self._color_channel.get_color_capabilities()
-=======
-        if self._color_listener:
-            color_capabilities = self._color_listener.get_color_capabilities()
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
 
@@ -163,17 +139,10 @@ class Light(ZhaEntity, light.Light):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-<<<<<<< HEAD
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
-=======
-            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
-        if self._level_listener:
-            await self.async_accept_signal(
-                self._level_listener, SIGNAL_SET_LEVEL, self.set_level)
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -183,11 +152,7 @@ class Light(ZhaEntity, light.Light):
         if light.ATTR_COLOR_TEMP in kwargs and \
                 self.supported_features & light.SUPPORT_COLOR_TEMP:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
-<<<<<<< HEAD
             success = await self._color_channel.move_to_color_temp(
-=======
-            success = await self._color_listener.move_to_color_temp(
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 temperature, duration)
             if not success:
                 return
@@ -197,11 +162,7 @@ class Light(ZhaEntity, light.Light):
                 self.supported_features & light.SUPPORT_COLOR:
             hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*hs_color)
-<<<<<<< HEAD
             success = await self._color_channel.move_to_color(
-=======
-            success = await self._color_listener.move_to_color(
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 int(xy_color[0] * 65535),
                 int(xy_color[1] * 65535),
                 duration,
@@ -213,11 +174,7 @@ class Light(ZhaEntity, light.Light):
         if self._brightness is not None:
             brightness = kwargs.get(
                 light.ATTR_BRIGHTNESS, self._brightness or 255)
-<<<<<<< HEAD
             success = await self._level_channel.move_to_level_with_on_off(
-=======
-            success = await self._level_listener.move_to_level_with_on_off(
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 brightness,
                 duration
             )
@@ -228,11 +185,7 @@ class Light(ZhaEntity, light.Light):
             self.async_schedule_update_ha_state()
             return
 
-<<<<<<< HEAD
         success = await self._on_off_channel.on()
-=======
-        success = await self._on_off_listener.on()
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         if not success:
             return
 
@@ -245,20 +198,12 @@ class Light(ZhaEntity, light.Light):
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
         success = None
         if duration and supports_level:
-<<<<<<< HEAD
             success = await self._level_channel.move_to_level_with_on_off(
-=======
-            success = await self._level_listener.move_to_level_with_on_off(
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
                 0,
                 duration*10
             )
         else:
-<<<<<<< HEAD
             success = await self._on_off_channel.off()
-=======
-            success = await self._on_off_listener.off()
->>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
         _LOGGER.debug("%s was turned off: %s", self.entity_id, success)
         if not success:
             return
