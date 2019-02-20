@@ -113,8 +113,7 @@ class VL53L1XSensor(Entity):
         self.vl53l1x_sensor.update(DEFAULT_SENSOR_ID)
         self.vl53l1x_sensor.stop_ranging(DEFAULT_SENSOR_ID)
 
-        d = self.vl53l1x_sensor.distance
+        #  _LOGGER.info("VL53L1X sensor update: %s",
+        #               self.vl53l1x_sensor.distance)
 
-        #  _LOGGER.info("VL53L1X sensor update: %s", d)
-
-        self._state = d
+        self._state = self.vl53l1x_sensor.distance
