@@ -133,6 +133,14 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         super().__init__(home, device, post)
 
     @property
+    def device_info(self):
+        """Return device specific attributes.
+
+        A HomematicipSecurityZoneSensorGroup does not belong to a device.
+        """
+        return None
+
+    @property
     def device_class(self):
         """Return the class of this sensor."""
         return 'safety'
@@ -173,6 +181,14 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
     def __init__(self, home, device):
         """Initialize security group."""
         super().__init__(home, device, 'Sensors')
+
+    @property
+    def device_info(self):
+        """Return device specific attributes.
+
+        A HomematicipSecuritySensorGroup does not belong to a device.
+        """
+        return None
 
     @property
     def device_state_attributes(self):

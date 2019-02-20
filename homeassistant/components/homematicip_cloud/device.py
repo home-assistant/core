@@ -1,6 +1,7 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
 
+from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 ATTR_SABOTAGE = 'sabotage'
 ATTR_STATUS_UPDATE = 'status_update'
 ATTR_UNREACHABLE = 'unreachable'
+CONST_MANUFACTURER = 'eQ-3'
 
 
 class HomematicipGenericDevice(Entity):
@@ -31,23 +33,39 @@ class HomematicipGenericDevice(Entity):
         self._device = device
         self.post = post
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
-    
+
     @property
     def device_info(self):
         """Return device specific attributes."""
-        
+        identifier = self._device.id \
+            if hasattr(self._device, 'id') \
+            else self.unique_id
+        name = self._device.label
+        manufacturer = self._device.oem \
+            if hasattr(self._device, 'oem') \
+            else CONST_MANUFACTURER
+        model_type = self._device.modelType \
+            if hasattr(self._device, 'modelType') \
+            else None
+        sw_version = self._device.firmwareVersion \
+            if hasattr(self._device, 'firmwareVersion') \
+            else None
+        via_hub = self._device.homeId \
+            if hasattr(self._device, 'homeId') \
+            else None
+
         return {
             'identifiers': {
                 # Serial numbers of Homematic IP device
-                (self._device.id)
+                (homematicip_cloud.DOMAIN, identifier)
             },
-            'name': self._device.label,
-            'manufacturer': self._device.oem,
-            'model': self._device.modelType,
-            'sw_version': self._device.firmwareVersion,
-            'via_hub': (self._device.homeId),
+            'name': name,
+            'manufacturer': manufacturer,
+            'model': model_type,
+            'sw_version': sw_version,
+            'via_hub': (homematicip_cloud.DOMAIN, via_hub),
         }
-    
+
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._device.on_update(self._device_changed)
