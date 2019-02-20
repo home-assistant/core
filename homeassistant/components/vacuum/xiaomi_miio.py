@@ -404,9 +404,7 @@ class MiroboVacuum(StateVacuumDevice):
                                zone,
                                repeats=1):
         """Clean selected area for the number of repeats indicated."""
-        _LOGGER.debug("Zone to clean: %s repeats: %s", zone, repeats)
         from miio import DeviceException
-        _LOGGER.debug("Original zone: %s", zone)
         for _zone in zone:
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)
