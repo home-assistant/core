@@ -1,9 +1,6 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
 REQUIREMENTS = ['gpiozero==1.4.1', 'pigpio==1.42', 'RPi.GPIO==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +18,7 @@ def setup(hass, config):
 
     return True
 
+
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
     from gpiozero import LED  # pylint: disable=import-error
@@ -31,6 +29,7 @@ def setup_output(address, port, invert_logic):
                    pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError):
         return None
+
 
 def setup_input(address, port, pull_mode):
     """Set up a GPIO as input."""
@@ -43,6 +42,7 @@ def setup_input(address, port, pull_mode):
     except (ValueError, IndexError, KeyError):
         return None
 
+
 def write_output(switch, value):
     """Write a value to a GPIO."""
     from gpiozero import LED  # pylint: disable=import-error
@@ -52,7 +52,7 @@ def write_output(switch, value):
     if value == 0:
         switch.off()
 
+
 def read_input(button):
     """Read a value from a GPIO."""
     return button.value
-

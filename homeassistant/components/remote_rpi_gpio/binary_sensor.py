@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
-    def __init__(self, name, address, port, pull_mode, 
+    def __init__(self, name, address, port, pull_mode,
                  bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name or DEVICE_DEFAULT_NAME
