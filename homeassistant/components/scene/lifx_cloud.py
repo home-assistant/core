@@ -1,4 +1,9 @@
-"""Support for LIFX Cloud scenes."""
+"""
+Support for LIFX Cloud scenes.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/scene.lifx_cloud/
+"""
 import asyncio
 import logging
 

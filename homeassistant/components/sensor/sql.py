@@ -1,4 +1,9 @@
-"""Sensor from an SQL Query."""
+"""
+Sensor from an SQL Query.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.sql/
+"""
 import decimal
 import datetime
 import logging
@@ -15,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.18']
+REQUIREMENTS = ['sqlalchemy==1.2.15']
 
 CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'

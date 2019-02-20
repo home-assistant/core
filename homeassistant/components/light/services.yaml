@@ -192,6 +192,7 @@ yeelight_set_mode:
     mode:
       description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
       example: 'moonlight'
+<<<<<<< HEAD
 
 yeelight_start_flow:
   description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects
@@ -211,3 +212,5 @@ yeelight_start_flow:
     transitions:
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
+=======
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"

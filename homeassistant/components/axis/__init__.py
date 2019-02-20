@@ -1,4 +1,9 @@
-"""Support for Axis devices."""
+"""
+Support for Axis devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/axis/
+"""
 import logging
 
 import voluptuous as vol
@@ -45,7 +50,9 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
+    DOMAIN: vol.Schema({
+        cv.slug: DEVICE_SCHEMA,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_VAPIX_CALL = 'vapix_call'

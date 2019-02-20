@@ -11,11 +11,9 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import PlatformNotReady
@@ -156,8 +154,8 @@ class SongpalDevice(MediaPlayerDevice):
                 _LOGGER.debug("New active source: %s", self._active_source)
                 await self.async_update_ha_state()
             else:
-                _LOGGER.debug("Got non-handled content change: %s",
-                              content)
+                _LOGGER.warning("Got non-handled content change: %s",
+                                content)
 
         async def _power_changed(power: PowerChange):
             _LOGGER.debug("Power changed: %s", power)
@@ -181,8 +179,6 @@ class SongpalDevice(MediaPlayerDevice):
                 # back from a disconnected state.
                 await self.async_update_ha_state(force_refresh=True)
                 delay = min(2*delay, 300)
-
-            _LOGGER.info("Reconnected to %s", self.name)
 
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
@@ -290,8 +286,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return currently active source."""
-        # Avoid a KeyError when _active_source is not (yet) populated
-        return getattr(self._active_source, 'title', None)
+        return self._active_source.title
 
     @property
     def volume_level(self):

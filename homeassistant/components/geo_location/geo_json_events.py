@@ -1,4 +1,9 @@
-"""Support for generic GeoJSON events."""
+"""
+Generic GeoJSON events platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/geo_location/geo_json_events/
+"""
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -6,10 +11,10 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+    PLATFORM_SCHEMA, GeoLocationEvent)
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL,
-    EVENT_HOMEASSISTANT_START)
+    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -103,7 +108,7 @@ class GeoJsonFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class GeoJsonLocationEvent(GeolocationEvent):
+class GeoJsonLocationEvent(GeoLocationEvent):
     """This represents an external event with GeoJSON data."""
 
     def __init__(self, feed_manager, external_id):

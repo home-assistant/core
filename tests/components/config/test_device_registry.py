@@ -1,4 +1,4 @@
-"""Test device_registry API."""
+"""Test entity_registry API."""
 import pytest
 
 from homeassistant.components.config import device_registry
@@ -48,7 +48,6 @@ async def test_list_devices(hass, client, registry):
             'name': None,
             'sw_version': None,
             'hub_device_id': None,
-            'area_id': None,
         },
         {
             'config_entries': ['1234'],
@@ -58,30 +57,5 @@ async def test_list_devices(hass, client, registry):
             'name': None,
             'sw_version': None,
             'hub_device_id': dev1,
-            'area_id': None,
         }
     ]
-
-
-async def test_update_device(hass, client, registry):
-    """Test update entry."""
-    device = registry.async_get_or_create(
-        config_entry_id='1234',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
-        identifiers={('bridgeid', '0123')},
-        manufacturer='manufacturer', model='model')
-
-    assert not device.area_id
-
-    await client.send_json({
-        'id': 1,
-        'device_id': device.id,
-        'area_id': '12345A',
-        'type': 'config/device_registry/update',
-    })
-
-    msg = await client.receive_json()
-
-    assert msg['result']['id'] == device.id
-    assert msg['result']['area_id'] == '12345A'
-    assert len(registry.devices) == 1

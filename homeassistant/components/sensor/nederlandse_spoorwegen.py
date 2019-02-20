@@ -21,8 +21,7 @@ REQUIREMENTS = ['nsapi==2.7.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by NS"
-
+CONF_ATTRIBUTION = "Data provided by NS"
 CONF_ROUTES = 'routes'
 CONF_FROM = 'from'
 CONF_TO = 'to'
@@ -156,7 +155,7 @@ class NSDepartureSensor(Entity):
             'transfers': self._trips[0].nr_transfers,
             'route': route,
             'remarks': [r.message for r in self._trips[0].trip_remarks],
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

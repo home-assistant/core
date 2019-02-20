@@ -1,1 +1,0 @@
-"""Support for WebOS TV."""

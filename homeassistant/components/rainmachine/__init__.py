@@ -1,4 +1,9 @@
-"""Support for RainMachine devices."""
+"""
+Support for RainMachine devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/rainmachine/
+"""
 import logging
 from datetime import timedelta
 

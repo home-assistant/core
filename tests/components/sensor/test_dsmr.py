@@ -12,6 +12,7 @@ from unittest.mock import Mock
 import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
+from homeassistant.const import STATE_UNKNOWN
 import pytest
 from tests.common import assert_setup_component
 
@@ -82,7 +83,7 @@ def test_default_setup(hass, mock_connection_factory):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
     assert power_consumption.state == '0.0'
-    assert power_consumption.attributes.get('unit_of_measurement') == 'kWh'
+    assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get('sensor.power_tariff')
@@ -95,12 +96,10 @@ def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
 
-    config = {'platform': 'dsmr'}
-
-    entity = DerivativeDSMREntity('test', '1.0.0', config)
+    entity = DerivativeDSMREntity('test', '1.0.0')
     yield from entity.async_update()
 
-    assert entity.state is None, 'initial state not unknown'
+    assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
@@ -110,7 +109,7 @@ def test_derivative():
     }
     yield from entity.async_update()
 
-    assert entity.state is None, \
+    assert entity.state == STATE_UNKNOWN, \
         'state after first update should still be unknown'
 
     entity.telegram = {

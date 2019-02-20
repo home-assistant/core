@@ -3,6 +3,7 @@ import json
 from urllib.parse import parse_qsl
 from typing import Any, Dict, Optional
 
+from aiohttp import web
 from multidict import CIMultiDict, MultiDict
 
 
@@ -41,3 +42,12 @@ class MockRequest:
     async def text(self) -> str:
         """Return the body as text."""
         return self._text
+
+
+def serialize_response(response: web.Response) -> Dict[str, Any]:
+    """Serialize an aiohttp response to a dictionary."""
+    return {
+        'status': response.status,
+        'body': response.body,
+        'headers': dict(response.headers),
+    }

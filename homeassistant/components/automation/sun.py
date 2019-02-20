@@ -1,4 +1,9 @@
-"""Offer sun based automation rules."""
+"""
+Offer sun based automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#sun-trigger
+"""
 from datetime import timedelta
 import logging
 

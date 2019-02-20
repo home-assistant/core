@@ -3,11 +3,11 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED, async_start)
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.mqtt.discovery import async_start, \
+                                       ALREADY_DISCOVERED
+from homeassistant.const import STATE_ON, STATE_OFF
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
+from tests.common import async_fire_mqtt_message, mock_coro, MockConfigEntry
 
 
 @asyncio.coroutine
@@ -222,15 +222,7 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
         '  "stat_t": "test_topic/~",'
-        '  "cmd_t": "~/test_topic",'
-        '  "dev":{'
-        '    "ids":["5706DF"],'
-        '    "name":"DiscoveryExpansionTest1 Device",'
-        '    "mdl":"Generic",'
-        '    "sw":"1.2.3.4",'
-        '    "mf":"Noone"'
-        '  }'
-        '}'
+        '  "cmd_t": "~/test_topic" }'
     )
 
     async_fire_mqtt_message(

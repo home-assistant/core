@@ -1,4 +1,5 @@
 """Config flow to configure deCONZ component."""
+
 import voluptuous as vol
 
 from homeassistant import config_entries

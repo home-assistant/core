@@ -12,15 +12,14 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
+    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.3.0']
+REQUIREMENTS = ['pytraccar==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,6 @@ ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -41,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=8082): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=[]): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -54,22 +50,15 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     api = API(hass.loop, session, config[CONF_USERNAME], config[CONF_PASSWORD],
               config[CONF_HOST], config[CONF_PORT], config[CONF_SSL])
-
-    scanner = TraccarScanner(
-        api, hass, async_see,
-        config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
-        config[CONF_MONITORED_CONDITIONS])
-
+    scanner = TraccarScanner(api, hass, async_see)
     return await scanner.async_init()
 
 
 class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
-    def __init__(self, api, hass, async_see, scan_interval, custom_attributes):
+    def __init__(self, api, hass, async_see):
         """Initialize."""
-        self._custom_attributes = custom_attributes
-        self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
         self._hass = hass
@@ -81,14 +70,14 @@ class TraccarScanner:
             await self._async_update()
             async_track_time_interval(self._hass,
                                       self._async_update,
-                                      self._scan_interval)
+                                      DEFAULT_SCAN_INTERVAL)
 
         return self._api.authenticated
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
         _LOGGER.debug('Updating device data.')
-        await self._api.get_device_info(self._custom_attributes)
+        await self._api.get_device_info()
         for devicename in self._api.device_info:
             device = self._api.device_info[devicename]
             attr = {}
@@ -105,9 +94,6 @@ class TraccarScanner:
                 attr[ATTR_BATTERY_LEVEL] = device['battery']
             if device.get('motion') is not None:
                 attr[ATTR_MOTION] = device['motion']
-            for custom_attr in self._custom_attributes:
-                if device.get(custom_attr) is not None:
-                    attr[custom_attr] = device[custom_attr]
             await self._async_see(
                 dev_id=slugify(device['device_id']),
                 gps=(device.get('latitude'), device.get('longitude')),

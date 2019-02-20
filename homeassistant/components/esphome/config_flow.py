@@ -53,23 +53,6 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             errors=errors
         )
 
-    async def async_step_discovery(self, user_input: ConfigType):
-        """Handle discovery."""
-        address = user_input['properties'].get(
-            'address', user_input['hostname'][:-1])
-        for entry in self._async_current_entries():
-            if entry.data['host'] == address:
-                return self.async_abort(
-                    reason='already_configured'
-                )
-
-        # Prefer .local addresses (mDNS is available after all, otherwise
-        # we wouldn't have received the discovery message)
-        return await self.async_step_user(user_input={
-            'host': address,
-            'port': user_input['port'],
-        })
-
     def _async_get_entry(self):
         return self.async_create_entry(
             title=self._name,
@@ -109,6 +92,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         cli = APIClient(self.hass.loop, self._host, self._port, '')
 
         try:
+            await cli.start()
             await cli.connect()
             device_info = await cli.device_info()
         except APIConnectionError as err:
@@ -116,7 +100,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 return 'resolve_error', None
             return 'connection_error', None
         finally:
-            await cli.disconnect(force=True)
+            await cli.stop(force=True)
 
         return None, device_info
 
@@ -127,9 +111,17 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         cli = APIClient(self.hass.loop, self._host, self._port, self._password)
 
         try:
-            await cli.connect(login=True)
+            await cli.start()
+            await cli.connect()
         except APIConnectionError:
-            await cli.disconnect(force=True)
+            await cli.stop(force=True)
+            return 'connection_error'
+
+        try:
+            await cli.login()
+        except APIConnectionError:
             return 'invalid_password'
+        finally:
+            await cli.stop(force=True)
 
         return None

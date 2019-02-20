@@ -1,4 +1,9 @@
-"""Support for Telegram bot using polling."""
+"""
+Telegram bot polling implementation.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.polling/
+"""
 import logging
 
 from homeassistant.components.telegram_bot import (

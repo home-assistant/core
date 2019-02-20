@@ -1,4 +1,9 @@
-"""Support to serve the Home Assistant API as WSGI application."""
+"""
+This module provides WSGI application to serve the Home Assistant API.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/http/
+"""
 from ipaddress import ip_network
 import logging
 import os
@@ -13,15 +18,18 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as hass_util
-from homeassistant.util import ssl as ssl_util
 from homeassistant.util.logging import HideSensitiveDataFilter
+from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import CACHE_HEADERS, CachingStaticResource
+from .static import (
+    CachingFileResponse, CachingStaticResource, staticresource_middleware)
+
+# Import as alias
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.7.0']
@@ -91,7 +99,6 @@ class ApiConfig:
         self.port = port
         self.api_password = api_password
 
-        host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
             self.base_url = host
         elif use_ssl:
@@ -184,7 +191,8 @@ class HomeAssistantHTTP:
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
                  login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(middlewares=[])
+        app = self.app = web.Application(
+            middlewares=[staticresource_middleware])
 
         # This order matters
         setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
@@ -271,13 +279,25 @@ class HomeAssistantHTTP:
         if cache_headers:
             async def serve_file(request):
                 """Serve file from disk."""
-                return web.FileResponse(path, headers=CACHE_HEADERS)
+                return CachingFileResponse(path)
         else:
             async def serve_file(request):
                 """Serve file from disk."""
                 return web.FileResponse(path)
 
-        self.app.router.add_route('GET', url_path, serve_file)
+        # aiohttp supports regex matching for variables. Using that as temp
+        # to work around cache busting MD5.
+        # Turns something like /static/dev-panel.html into
+        # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
+        base, ext = os.path.splitext(url_path)
+        if ext:
+            base, file = base.rsplit('/', 1)
+            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
+            url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        else:
+            url_pattern = url_path
+
+        self.app.router.add_route('GET', url_pattern, serve_file)
 
     async def start(self):
         """Start the aiohttp server."""

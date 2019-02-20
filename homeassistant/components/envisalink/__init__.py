@@ -1,4 +1,9 @@
-"""Support for Envisalink devices."""
+"""
+Support for Envisalink devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/envisalink/
+"""
 import asyncio
 import logging
 
@@ -141,19 +146,19 @@ async def async_setup(hass, config):
     @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
-        _LOGGER.debug("Envisalink sent a zone update event. Updating zones...")
+        _LOGGER.info("Envisalink sent a zone update event. Updating zones...")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
-        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms...")
+        _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
-        _LOGGER.debug("The envisalink sent a partition update event")
+        _LOGGER.info("The envisalink sent a partition update event")
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback

@@ -12,7 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL, ATTR_ATTRIBUTION
+from homeassistant.const import CONF_EMAIL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
@@ -20,8 +20,6 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Have I Been Pwned (HIBP)"
 
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -77,7 +75,7 @@ class HaveIBeenPwnedSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes of the sensor."""
-        val = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        val = {}
         if self._email not in self._data.data:
             return val
 

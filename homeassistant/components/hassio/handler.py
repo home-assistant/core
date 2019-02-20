@@ -1,4 +1,9 @@
-"""Handler for Hass.io."""
+"""
+Exposes regular REST commands as services.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hassio/
+"""
 import asyncio
 import logging
 import os

@@ -1,4 +1,9 @@
-"""Support for Telegram bots using webhooks."""
+"""
+Allows utilizing telegram webhooks.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.webhooks/
+"""
 import datetime as dt
 from ipaddress import ip_network
 import logging

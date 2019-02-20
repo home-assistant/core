@@ -1,4 +1,9 @@
-"""Support for NSW Rural Fire Service Feeds."""
+"""
+NSW Rural Fire Service Feed platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/geo_location/nsw_rural_fire_service_feed/
+"""
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -6,10 +11,10 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+    PLATFORM_SCHEMA, GeoLocationEvent)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LOCATION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_RADIUS, CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION, ATTR_LOCATION, CONF_RADIUS, CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_START, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -124,7 +129,7 @@ class NswRuralFireServiceFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class NswRuralFireServiceLocationEvent(GeolocationEvent):
+class NswRuralFireServiceLocationEvent(GeoLocationEvent):
     """This represents an external event with NSW Rural Fire Service data."""
 
     def __init__(self, feed_manager, external_id):

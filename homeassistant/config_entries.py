@@ -7,11 +7,7 @@ component.
 During startup, Home Assistant will setup the entries during the normal setup
 of a component. It will first call the normal setup and then call the method
 `async_setup_entry(hass, entry)` for each entry. The same method is called when
-Home Assistant is running while a config entry is created.  If the version of
-the config entry does not match that of the flow handler, setup will
-call the method `async_migrate_entry(hass, entry)` with the expectation that
-the entry be brought to the current version.  Return `True` to indicate
-migration was successful, otherwise `False`.
+Home Assistant is running while a config entry is created.
 
 ## Config Flows
 
@@ -34,7 +30,7 @@ At a minimum, each config flow will have to define a version number and the
     class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
@@ -120,7 +116,6 @@ If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
 import logging
-import functools
 import uuid
 from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
 
@@ -132,7 +127,6 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
@@ -141,23 +135,17 @@ SOURCE_IMPORT = 'import'
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'ambient_station',
     'cast',
     'daikin',
     'deconz',
     'dialogflow',
     'esphome',
-    'emulated_roku',
-    'geofency',
-    'gpslogger',
     'hangouts',
     'homematicip_cloud',
     'hue',
     'ifttt',
     'ios',
-    'ipma',
     'lifx',
-    'locative',
     'luftdaten',
     'mailgun',
     'mqtt',
@@ -165,10 +153,8 @@ FLOWS = [
     'openuv',
     'owntracks',
     'point',
-    'ps4',
     'rainmachine',
     'simplisafe',
-    'smartthings',
     'smhi',
     'sonos',
     'tellduslive',
@@ -194,8 +180,6 @@ SAVE_DELAY = 1
 ENTRY_STATE_LOADED = 'loaded'
 # There was an error while trying to set up this config entry
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
-# There was an error while trying to migrate the config entry to a new version
-ENTRY_STATE_MIGRATION_ERROR = 'migration_error'
 # The config entry was not ready to be set up yet, but might be later
 ENTRY_STATE_SETUP_RETRY = 'setup_retry'
 # The config entry has not been loaded
@@ -263,12 +247,6 @@ class ConfigEntry:
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
-
-        # Perform migration
-        if component.DOMAIN == self.domain:
-            if not await self.async_migrate(hass):
-                self.state = ENTRY_STATE_MIGRATION_ERROR
-                return
 
         try:
             result = await component.async_setup_entry(hass, self)
@@ -344,45 +322,6 @@ class ConfigEntry:
                               self.title, component.DOMAIN)
             if component.DOMAIN == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
-            return False
-
-    async def async_migrate(self, hass: HomeAssistant) -> bool:
-        """Migrate an entry.
-
-        Returns True if config entry is up-to-date or has been migrated.
-        """
-        handler = HANDLERS.get(self.domain)
-        if handler is None:
-            _LOGGER.error("Flow handler not found for entry %s for %s",
-                          self.title, self.domain)
-            return False
-        # Handler may be a partial
-        while isinstance(handler, functools.partial):
-            handler = handler.func
-
-        if self.version == handler.VERSION:
-            return True
-
-        component = getattr(hass.components, self.domain)
-        supports_migrate = hasattr(component, 'async_migrate_entry')
-        if not supports_migrate:
-            _LOGGER.error("Migration handler not found for entry %s for %s",
-                          self.title, self.domain)
-            return False
-
-        try:
-            result = await component.async_migrate_entry(hass, self)
-            if not isinstance(result, bool):
-                _LOGGER.error('%s.async_migrate_entry did not return boolean',
-                              self.domain)
-                return False
-            if result:
-                # pylint: disable=protected-access
-                hass.config_entries._async_schedule_save()  # type: ignore
-            return result
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error migrating entry %s for %s',
-                              self.title, component.DOMAIN)
             return False
 
     def as_dict(self):
@@ -495,10 +434,9 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(self, entry, *, data=_UNDEF):
+    def async_update_entry(self, entry, *, data):
         """Update a config entry."""
-        if data is not _UNDEF:
-            entry.data = data
+        entry.data = data
         self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):

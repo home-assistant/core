@@ -132,8 +132,7 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
         assert auth_msg['type'] == TYPE_AUTH_INVALID
 
 
-async def test_auth_legacy_support_with_password(hass, aiohttp_client,
-                                                 legacy_auth):
+async def test_auth_legacy_support_with_password(hass, aiohttp_client):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, 'websocket_api', {
         'http': {

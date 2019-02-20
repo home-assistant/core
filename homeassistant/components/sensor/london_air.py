@@ -11,6 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -142,7 +143,7 @@ class AirSensor(Entity):
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:
-            self._state = None
+            self._state = STATE_UNKNOWN
 
 
 def parse_species(species_data):

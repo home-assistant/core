@@ -1,4 +1,9 @@
-"""Provide the functionality to group entities."""
+"""
+Provide the functionality to group entities.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/group/
+"""
 import asyncio
 import logging
 
@@ -17,8 +22,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
-
-from .reproduce_state import async_reproduce_states  # noqa
 
 DOMAIN = 'group'
 

@@ -1,4 +1,9 @@
-"""Support for Actions on Google Assistant Smart Home Control."""
+"""
+Support for Actions on Google Assistant Smart Home Control.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/google_assistant/
+"""
 import asyncio
 import logging
 from typing import Dict, Any
@@ -32,7 +37,7 @@ ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
     vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_ROOM_HINT): cv.string,
+    vol.Optional(CONF_ROOM_HINT): cv.string
 })
 
 GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
@@ -44,7 +49,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_KEY): cv.string,
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
     vol.Optional(CONF_ALLOW_UNLOCK,
-                 default=DEFAULT_ALLOW_UNLOCK): cv.boolean,
+                 default=DEFAULT_ALLOW_UNLOCK): cv.boolean
 }, extra=vol.PREVENT_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({

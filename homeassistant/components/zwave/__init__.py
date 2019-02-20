@@ -1,4 +1,9 @@
-"""Support for Z-Wave."""
+"""
+Support for Z-Wave.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zwave/
+"""
 import asyncio
 import copy
 import logging
@@ -37,7 +42,7 @@ from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.2']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,7 +284,7 @@ async def async_setup_entry(hass, config_entry):
 
     options.set_console_output(use_debug)
 
-    if config_entry.data.get(CONF_NETWORK_KEY):
+    if CONF_NETWORK_KEY in config_entry.data:
         options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
     await hass.async_add_executor_job(options.lock)

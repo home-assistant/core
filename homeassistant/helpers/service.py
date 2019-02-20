@@ -187,7 +187,7 @@ async def async_get_all_descriptions(hass):
 
 
 @bind_hass
-async def entity_service_call(hass, platforms, func, call, service_name=''):
+async def entity_service_call(hass, platforms, func, call):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -204,11 +204,8 @@ async def entity_service_call(hass, platforms, func, call, service_name=''):
     if ATTR_ENTITY_ID in call.data:
         target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
     else:
-        # Remove the service_name parameter along with this warning
-        _LOGGER.warning(
-            'Not passing an entity ID to a service to target all '
-            'entities is deprecated. Update your call to %s to be '
-            'instead: entity_id: %s', service_name, ENTITY_MATCH_ALL)
+        _LOGGER.warning('Not passing an entity ID to a service to target all '
+                        'entities is deprecated. Use instead: entity_id: "*"')
         target_all_entities = True
 
     if not target_all_entities:

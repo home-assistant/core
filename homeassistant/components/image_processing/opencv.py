@@ -17,10 +17,14 @@ from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 REQUIREMENTS = ['numpy==1.16.1']
 =======
 REQUIREMENTS = ['numpy==1.16.0']
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
+=======
+REQUIREMENTS = ['numpy==1.15.4']
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 _LOGGER = logging.getLogger(__name__)
 

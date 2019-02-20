@@ -1,7 +1,8 @@
-"""Implement the Google Smart Home traits."""
+"""Implement the Smart Home traits."""
 import logging
 
 from homeassistant.components import (
+    climate,
     cover,
     group,
     fan,
@@ -14,7 +15,6 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -24,7 +24,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
@@ -517,7 +516,7 @@ class TemperatureSettingTrait(_Trait):
     hass_to_google = {
         climate.STATE_HEAT: 'heat',
         climate.STATE_COOL: 'cool',
-        STATE_OFF: 'off',
+        climate.STATE_OFF: 'off',
         climate.STATE_AUTO: 'heatcool',
         climate.STATE_FAN_ONLY: 'fan-only',
         climate.STATE_DRY: 'dry',
@@ -577,7 +576,7 @@ class TemperatureSettingTrait(_Trait):
                 round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_LOW],
                                         unit, TEMP_CELSIUS), 1)
         else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
+            target_temp = attrs.get(climate.ATTR_TEMPERATURE)
             if target_temp is not None:
                 response['thermostatTemperatureSetpoint'] = round(
                     temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
@@ -607,7 +606,7 @@ class TemperatureSettingTrait(_Trait):
             await self.hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    ATTR_TEMPERATURE: temp
+                    climate.ATTR_TEMPERATURE: temp
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:

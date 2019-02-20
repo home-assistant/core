@@ -1,4 +1,5 @@
 """Config flow to configure the SimpliSafe component."""
+
 from collections import OrderedDict
 
 import voluptuous as vol

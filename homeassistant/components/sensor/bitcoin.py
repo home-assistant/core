@@ -19,7 +19,7 @@ REQUIREMENTS = ['blockchain==1.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+CONF_ATTRIBUTION = "Data provided by blockchain.info"
 
 DEFAULT_CURRENCY = 'USD'
 
@@ -112,7 +112,7 @@ class BitcoinSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     def update(self):

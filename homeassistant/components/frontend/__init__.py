@@ -1,4 +1,9 @@
-"""Handle the frontend for Home Assistant."""
+"""
+Handle the frontend for Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/frontend/
+"""
 import asyncio
 import json
 import logging
@@ -19,6 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
+<<<<<<< HEAD
 from .storage import async_setup_frontend_storage
 
 <<<<<<< HEAD
@@ -26,6 +32,9 @@ REQUIREMENTS = ['home-assistant-frontend==20190219.0']
 =======
 REQUIREMENTS = ['home-assistant-frontend==20190218.0']
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
+=======
+REQUIREMENTS = ['home-assistant-frontend==20181219.0']
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -196,7 +205,6 @@ def add_manifest_json_key(key, val):
 
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
-    await async_setup_frontend_storage(hass)
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_PANELS, websocket_get_panels, SCHEMA_GET_PANELS)
     hass.components.websocket_api.async_register_command(

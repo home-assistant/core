@@ -1,4 +1,10 @@
-"""Support for alexa Smart Home Skill API."""
+"""Support for alexa Smart Home Skill API.
+
+API documentation:
+https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
+https://developer.amazon.com/docs/device-apis/message-guide.html
+"""
+
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
@@ -11,9 +17,8 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components import (
-    alert, automation, binary_sensor, cover, fan, group, http,
+    alert, automation, binary_sensor, climate, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
-from homeassistant.components.climate import const as climate
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
@@ -22,9 +27,8 @@ from homeassistant.const import (
     CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, STATE_LOCKED, STATE_ON, STATE_OFF, STATE_UNAVAILABLE,
-    STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
+    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -58,11 +62,10 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_COOL, 'COOL'),
     (climate.STATE_AUTO, 'AUTO'),
     (climate.STATE_ECO, 'ECO'),
-    (climate.STATE_MANUAL, 'AUTO'),
-    (STATE_OFF, 'OFF'),
+    (climate.STATE_OFF, 'OFF'),
     (climate.STATE_IDLE, 'OFF'),
     (climate.STATE_FAN_ONLY, 'OFF'),
-    (climate.STATE_DRY, 'OFF'),
+    (climate.STATE_DRY, 'OFF')
 ])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -388,37 +391,6 @@ class _AlexaInterface:
                     'timeOfSample': datetime.now().strftime(DATE_FORMAT),
                     'uncertaintyInMilliseconds': 0
                 }
-
-
-class _AlexaEndpointHealth(_AlexaInterface):
-    """Implements Alexa.EndpointHealth.
-
-    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
-    """
-
-    def __init__(self, hass, entity):
-        super().__init__(entity)
-        self.hass = hass
-
-    def name(self):
-        return 'Alexa.EndpointHealth'
-
-    def properties_supported(self):
-        return [{'name': 'connectivity'}]
-
-    def properties_proactively_reported(self):
-        return False
-
-    def properties_retrievable(self):
-        return True
-
-    def get_property(self, name):
-        if name != 'connectivity':
-            raise _UnsupportedProperty(name)
-
-        if self.entity.state == STATE_UNAVAILABLE:
-            return {'value': 'UNREACHABLE'}
-        return {'value': 'OK'}
 
 
 class _AlexaPowerController(_AlexaInterface):
@@ -766,7 +738,7 @@ class _AlexaThermostatController(_AlexaInterface):
 
         unit = self.hass.config.units.temperature_unit
         if name == 'targetSetpoint':
-            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
+            temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
         elif name == 'lowerSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
         elif name == 'upperSetpoint':
@@ -797,8 +769,7 @@ class _GenericCapabilities(_AlexaEntity):
         return [_DisplayCategory.OTHER]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity),
-                _AlexaEndpointHealth(self.hass, self.entity)]
+        return [_AlexaPowerController(self.entity)]
 
 
 @ENTITY_ADAPTERS.register(switch.DOMAIN)
@@ -807,8 +778,7 @@ class _SwitchCapabilities(_AlexaEntity):
         return [_DisplayCategory.SWITCH]
 
     def interfaces(self):
-        return [_AlexaPowerController(self.entity),
-                _AlexaEndpointHealth(self.hass, self.entity)]
+        return [_AlexaPowerController(self.entity)]
 
 
 @ENTITY_ADAPTERS.register(climate.DOMAIN)
@@ -822,7 +792,6 @@ class _ClimateCapabilities(_AlexaEntity):
             yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -835,7 +804,6 @@ class _CoverCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield _AlexaPercentageController(self.entity)
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
@@ -853,7 +821,6 @@ class _LightCapabilities(_AlexaEntity):
             yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield _AlexaColorTemperatureController(self.entity)
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
@@ -866,7 +833,6 @@ class _FanCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield _AlexaPercentageController(self.entity)
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
@@ -875,33 +841,31 @@ class _LockCapabilities(_AlexaEntity):
         return [_DisplayCategory.SMARTLOCK]
 
     def interfaces(self):
-        return [_AlexaLockController(self.entity),
-                _AlexaEndpointHealth(self.hass, self.entity)]
+        return [_AlexaLockController(self.entity)]
 
 
-@ENTITY_ADAPTERS.register(media_player.const.DOMAIN)
+@ENTITY_ADAPTERS.register(media_player.DOMAIN)
 class _MediaPlayerCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.TV]
 
     def interfaces(self):
         yield _AlexaPowerController(self.entity)
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & media_player.const.SUPPORT_VOLUME_SET:
+        if supported & media_player.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
 
-        step_volume_features = (media_player.const.SUPPORT_VOLUME_MUTE |
-                                media_player.const.SUPPORT_VOLUME_STEP)
+        step_volume_features = (media_player.SUPPORT_VOLUME_MUTE |
+                                media_player.SUPPORT_VOLUME_STEP)
         if supported & step_volume_features:
             yield _AlexaStepSpeaker(self.entity)
 
-        playback_features = (media_player.const.SUPPORT_PLAY |
-                             media_player.const.SUPPORT_PAUSE |
-                             media_player.const.SUPPORT_STOP |
-                             media_player.const.SUPPORT_NEXT_TRACK |
-                             media_player.const.SUPPORT_PREVIOUS_TRACK)
+        playback_features = (media_player.SUPPORT_PLAY |
+                             media_player.SUPPORT_PAUSE |
+                             media_player.SUPPORT_STOP |
+                             media_player.SUPPORT_NEXT_TRACK |
+                             media_player.SUPPORT_PREVIOUS_TRACK)
         if supported & playback_features:
             yield _AlexaPlaybackController(self.entity)
 
@@ -949,7 +913,6 @@ class _SensorCapabilities(_AlexaEntity):
                 TEMP_CELSIUS,
         ):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
-            yield _AlexaEndpointHealth(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
@@ -970,8 +933,6 @@ class _BinarySensorCapabilities(_AlexaEntity):
             yield _AlexaContactSensor(self.hass, self.entity)
         elif sensor_type is self.TYPE_MOTION:
             yield _AlexaMotionSensor(self.hass, self.entity)
-
-        yield _AlexaEndpointHealth(self.hass, self.entity)
 
     def get_type(self):
         """Return the type of binary sensor."""
@@ -1032,7 +993,8 @@ class Config:
         self.entity_config = entity_config or {}
 
 
-async def async_setup(hass, config):
+@ha.callback
+def async_setup(hass, config):
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the
@@ -1058,7 +1020,8 @@ async def async_setup(hass, config):
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if AUTH_KEY in hass.data:
-        await async_enable_proactive_mode(hass, smart_home_config)
+        hass.loop.create_task(
+            async_enable_proactive_mode(hass, smart_home_config))
 
 
 async def async_enable_proactive_mode(hass, smart_home_config):
@@ -1374,7 +1337,8 @@ async def async_send_changereport_message(hass, config, alexa_entity):
         return
 
     headers = {
-        "Authorization": "Bearer {}".format(token)
+        "Authorization": "Bearer {}".format(token),
+        "Content-Type": "application/json;charset=UTF-8"
     }
 
     endpoint = alexa_entity.entity_id()
@@ -1395,14 +1359,14 @@ async def async_send_changereport_message(hass, config, alexa_entity):
                              payload=payload)
     message.set_endpoint_full(token, endpoint)
 
-    message_serialized = message.serialize()
+    message_str = json.dumps(message.serialize())
 
     try:
         session = aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
             response = await session.post(config.endpoint,
                                           headers=headers,
-                                          json=message_serialized,
+                                          data=message_str,
                                           allow_redirects=True)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -1411,7 +1375,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     response_text = await response.text()
 
-    _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+    _LOGGER.debug("Sent: %s", message_str)
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status != 202:
@@ -1788,7 +1752,7 @@ async def async_api_set_volume(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -1805,8 +1769,7 @@ async def async_api_select_input(hass, config, directive, context):
     entity = directive.entity
 
     # attempt to map the ALL UPPERCASE payload name to a source
-    source_list = entity.attributes[
-        media_player.const.ATTR_INPUT_SOURCE_LIST] or []
+    source_list = entity.attributes[media_player.ATTR_INPUT_SOURCE_LIST] or []
     for source in source_list:
         # response will always be space separated, so format the source in the
         # most likely way to find a match
@@ -1821,7 +1784,7 @@ async def async_api_select_input(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_INPUT_SOURCE: media_input,
+        media_player.ATTR_INPUT_SOURCE: media_input,
     }
 
     await hass.services.async_call(
@@ -1837,8 +1800,7 @@ async def async_api_adjust_volume(hass, config, directive, context):
     volume_delta = int(directive.payload['volume'])
 
     entity = directive.entity
-    current_level = entity.attributes.get(
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL)
+    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
     # read current state
     try:
@@ -1850,11 +1812,11 @@ async def async_api_adjust_volume(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_SET,
+        entity.domain, media_player.SERVICE_VOLUME_SET,
         data, blocking=False, context=context)
 
     return directive.response()
@@ -1876,11 +1838,11 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
     if volume_step > 0:
         await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_UP,
+            entity.domain, media_player.SERVICE_VOLUME_UP,
             data, blocking=False, context=context)
     elif volume_step < 0:
         await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_DOWN,
+            entity.domain, media_player.SERVICE_VOLUME_DOWN,
             data, blocking=False, context=context)
 
     return directive.response()
@@ -1895,11 +1857,11 @@ async def async_api_set_mute(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
     await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_MUTE,
+        entity.domain, media_player.SERVICE_VOLUME_MUTE,
         data, blocking=False, context=context)
 
     return directive.response()

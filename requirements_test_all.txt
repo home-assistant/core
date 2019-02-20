@@ -5,21 +5,21 @@
 asynctest==0.12.2
 coveralls==1.2.0
 flake8-docstrings==1.3.0
-flake8==3.7.5
+flake8==3.6.0
 mock-open==1.3.1
-mypy==0.660
+mypy==0.650
 pydocstyle==3.0.0
 pylint==2.2.2
 pytest-aiohttp==0.3.0
-pytest-cov==2.6.1
+pytest-cov==2.6.0
 pytest-sugar==0.9.2
 pytest-timeout==1.3.3
-pytest==4.2.1
+pytest==4.0.2
 requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.4.2
+HAP-python==2.4.1
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1.3
@@ -30,9 +30,6 @@ PyTransportNSW==0.1.1
 # homeassistant.components.notify.yessssms
 YesssSMS==0.2.3
 
-# homeassistant.components.ambient_station
-aioambient==0.1.2
-
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
@@ -41,16 +38,13 @@ aioautomatic==0.6.5
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.1
+aiohue==1.5.0
 
 # homeassistant.components.unifi
-aiounifi==4
+aiounifi==3
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
-
-# homeassistant.components.zha
-bellows==0.7.0
 
 # homeassistant.components.calendar.caldav
 caldav==0.5.0
@@ -67,12 +61,6 @@ defusedxml==0.5.0
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.12
 
-# homeassistant.components.device_tracker.ee_brightbox
-eebrightbox==0.0.4
-
-# homeassistant.components.emulated_roku
-emulated_roku==0.1.8
-
 # homeassistant.components.sensor.entur_public_transport
 enturclient==0.1.3
 
@@ -84,12 +72,12 @@ ephem==3.7.6.0
 evohomeclient==0.2.8
 
 # homeassistant.components.feedreader
-feedparser-homeassistant==5.2.2.dev1
+feedparser==5.2.1
 
 # homeassistant.components.sensor.foobot
 foobot_async==0.3.1
 
-# homeassistant.components.google.tts
+# homeassistant.components.tts.google
 gTTS-token==1.1.3
 
 # homeassistant.components.geo_location.geo_json_events
@@ -101,7 +89,7 @@ geojson_client==0.3
 georss_client==0.5
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.11
+ha-ffmpeg==1.9
 
 # homeassistant.components.hangouts
 hangups==0.4.6
@@ -110,12 +98,13 @@ hangups==0.4.6
 hbmqtt==0.9.4
 
 # homeassistant.components.sensor.jewish_calendar
-hdate==0.8.7
+hdate==0.7.5
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.9
+holidays==0.9.8
 
 # homeassistant.components.frontend
+<<<<<<< HEAD
 <<<<<<< HEAD
 home-assistant-frontend==20190219.0
 =======
@@ -124,9 +113,12 @@ home-assistant-frontend==20190218.0
 
 # homeassistant.components.homekit_controller
 homekit==0.12.2
+=======
+home-assistant-frontend==20181219.0
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.5
+homematicip==0.9.8
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -156,10 +148,14 @@ mficlient==0.3.0
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
 <<<<<<< HEAD
+<<<<<<< HEAD
 numpy==1.16.1
 =======
 numpy==1.16.0
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
+=======
+numpy==1.15.4
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -192,17 +188,21 @@ py-canary==0.5.0
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==52
+pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
 <<<<<<< HEAD
+<<<<<<< HEAD
 pyhomematic==0.1.56
 =======
 pyhomematic==0.1.55
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
+=======
+pyhomematic==0.1.54
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -222,20 +222,11 @@ pyopenuv==1.0.4
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
 
-# homeassistant.components.ps4
-pyps4-homeassistant==0.3.0
-
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
-# homeassistant.components.smartthings
-pysmartapp==0.3.0
-
-# homeassistant.components.smartthings
-pysmartthings==0.6.2
-
 # homeassistant.components.sonos
-pysonos==0.0.6
+pysonos==0.0.5
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -245,7 +236,7 @@ pyspcwebgw==0.4.0
 python-forecastio==1.4.0
 
 # homeassistant.components.nest
-python-nest==4.1.0
+python-nest==4.0.5
 
 # homeassistant.components.sensor.awair
 python_awair==0.0.3
@@ -257,7 +248,7 @@ pythonwhois==2.4.3
 pytradfri[async]==6.0.1
 
 # homeassistant.components.device_tracker.unifi
-pyunifi==2.16
+pyunifi==2.13
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
@@ -266,7 +257,7 @@ pywebpush==1.6.0
 regenmaschine==1.1.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b8
+restrictedpython==4.0b7
 
 # homeassistant.components.rflink
 rflink==0.0.37
@@ -275,7 +266,7 @@ rflink==0.0.37
 ring_doorbell==0.2.2
 
 # homeassistant.components.media_player.yamaha
-rxv==0.6.0
+rxv==0.5.1
 
 # homeassistant.components.simplisafe
 simplisafe-python==3.1.14
@@ -284,14 +275,14 @@ simplisafe-python==3.1.14
 sleepyq==0.6
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.8
+smhi-pkg==1.0.5
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.18
+sqlalchemy==1.2.15
 
 # homeassistant.components.sensor.srp_energy
 srpenergy==1.0.5
@@ -316,6 +307,3 @@ wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
-
-# homeassistant.components.zha
-zigpy==0.2.0

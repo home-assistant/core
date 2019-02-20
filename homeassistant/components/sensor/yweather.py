@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME,
+    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN,
     ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,8 +21,7 @@ REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Weather details provided by Yahoo! Inc."
-
+CONF_ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
 
@@ -100,7 +99,7 @@ class YahooWeatherSensor(Entity):
         self._client = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self._type = sensor_type
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._data = weather_data
         self._forecast = forecast
@@ -132,7 +131,7 @@ class YahooWeatherSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
 
         if self._code is not None and "weather" in self._type:
             attrs['condition_code'] = self._code

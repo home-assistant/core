@@ -40,10 +40,7 @@ def test_flatten():
 async def test_component_translation_file(hass):
     """Test the component translation file function."""
     assert await async_setup_component(hass, 'switch', {
-        'switch': [
-            {'platform': 'test'},
-            {'platform': 'test_embedded'}
-        ]
+        'switch': {'platform': 'test'}
     })
     assert await async_setup_component(hass, 'test_standalone', {
         'test_standalone'
@@ -55,11 +52,6 @@ async def test_component_translation_file(hass):
     assert path.normpath(translation.component_translation_file(
         hass, 'switch.test', 'en')) == path.normpath(hass.config.path(
             'custom_components', 'switch', '.translations', 'test.en.json'))
-
-    assert path.normpath(translation.component_translation_file(
-        hass, 'switch.test_embedded', 'en')) == path.normpath(hass.config.path(
-            'custom_components', 'test_embedded', '.translations',
-            'switch.en.json'))
 
     assert path.normpath(translation.component_translation_file(
         hass, 'test_standalone', 'en')) == path.normpath(hass.config.path(

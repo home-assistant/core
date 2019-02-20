@@ -1,4 +1,9 @@
-"""Support for Alexa skill service end point."""
+"""
+Support for Alexa skill service end point.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/alexa/
+"""
 import enum
 import logging
 

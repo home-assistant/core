@@ -1,14 +1,13 @@
 """Provide configuration end points for Z-Wave."""
-from collections import deque
 import logging
 
+from collections import deque
 from aiohttp.web import Response
-
-from homeassistant.components.config import EditKeyBasedConfigView
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 import homeassistant.core as ha
+from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.config import EditKeyBasedConfigView
+from homeassistant.components.zwave import const, DEVICE_CONFIG_SCHEMA_ENTRY
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

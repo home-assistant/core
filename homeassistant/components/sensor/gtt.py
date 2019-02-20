@@ -13,6 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pygtt==1.1.2']
 
@@ -79,7 +80,7 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        next_time = get_datetime(self.data.state_bus)
+        next_time = dt_util.parse_time(self.data.state_bus['time'][0]['run'])
         self._state = next_time.isoformat()
 
 
@@ -98,7 +99,8 @@ class GttData:
     def get_data(self):
         """Get the data from the api."""
         self.bus_list = self._pygtt.get_by_stop(self._stop)
-        self.bus_list.sort(key=get_datetime)
+        self.bus_list.sort(key=lambda b:
+                           datetime.strptime(b['time'][0]['run'], "%H:%M"))
 
         if self._bus_name is not None:
             self.state_bus = self.get_bus_by_name()
@@ -111,13 +113,3 @@ class GttData:
         for bus in self.bus_list:
             if bus['bus_name'] == self._bus_name:
                 return bus
-
-
-def get_datetime(bus):
-    """Get the datetime from a bus."""
-    bustime = datetime.strptime(bus['time'][0]['run'], "%H:%M")
-    now = datetime.now()
-    bustime = bustime.replace(year=now.year, month=now.month, day=now.day)
-    if bustime < now:
-        bustime = bustime + timedelta(days=1)
-    return bustime

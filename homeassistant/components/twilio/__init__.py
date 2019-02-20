@@ -1,4 +1,9 @@
-"""Support for Twilio."""
+"""
+Support for Twilio.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/twilio/
+"""
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv

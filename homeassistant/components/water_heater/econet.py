@@ -1,4 +1,9 @@
-"""Support for Rheem EcoNet water heaters."""
+"""
+Support for Rheem EcoNet water heaters.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/water_heater.econet/
+"""
 import datetime
 import logging
 

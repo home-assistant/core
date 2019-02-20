@@ -1,4 +1,9 @@
-"""Support for Telegram bot to send messages only."""
+"""
+Telegram bot implementation to send messages only.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.broadcast/
+"""
 import logging
 
 from homeassistant.components.telegram_bot import (
@@ -12,6 +17,8 @@ PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 async def async_setup_platform(hass, config):
     """Set up the Telegram broadcast platform."""
+    # Check the API key works
+
     bot = initialize_bot(config)
 
     bot_config = await hass.async_add_job(bot.getMe)

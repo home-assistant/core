@@ -10,10 +10,8 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET)
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING, STATE_UNKNOWN)

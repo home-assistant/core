@@ -1,14 +1,12 @@
 """Offer reusable conditions."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import functools as ft
 import logging
 import sys
-from typing import Callable, Container, Optional, Union, cast
 
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.components import zone as zone_cmp
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
@@ -31,30 +29,25 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=invalid-name
 
 
-def _threaded_factory(async_factory:
-                      Callable[[ConfigType, bool], Callable[..., bool]]) \
-                      -> Callable[[ConfigType, bool], Callable[..., bool]]:
+def _threaded_factory(async_factory):
     """Create threaded versions of async factories."""
     @ft.wraps(async_factory)
-    def factory(config: ConfigType,
-                config_validation: bool = True) -> Callable[..., bool]:
+    def factory(config, config_validation=True):
         """Threaded factory."""
         async_check = async_factory(config, config_validation)
 
-        def condition_if(hass: HomeAssistant,
-                         variables: TemplateVarsType = None) -> bool:
+        def condition_if(hass, variables=None):
             """Validate condition."""
-            return cast(bool, run_callback_threadsafe(
+            return run_callback_threadsafe(
                 hass.loop, async_check, hass, variables,
-            ).result())
+            ).result()
 
         return condition_if
 
     return factory
 
 
-def async_from_config(config: ConfigType,
-                      config_validation: bool = True) -> Callable[..., bool]:
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -71,22 +64,20 @@ def async_from_config(config: ConfigType,
         raise HomeAssistantError('Invalid condition "{}" specified {}'.format(
             config.get(CONF_CONDITION), config))
 
-    return cast(Callable[..., bool], factory(config, config_validation))
+    return factory(config, config_validation)
 
 
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType,
-                          config_validation: bool = True) \
-                          -> Callable[..., bool]:
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
     checks = None
 
     def if_and_condition(hass: HomeAssistant,
-                         variables: TemplateVarsType = None) -> bool:
+                         variables=None) -> bool:
         """Test and condition."""
         nonlocal checks
 
@@ -110,16 +101,14 @@ def async_and_from_config(config: ConfigType,
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType,
-                         config_validation: bool = True) \
-                         -> Callable[..., bool]:
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
     checks = None
 
     def if_or_condition(hass: HomeAssistant,
-                        variables: TemplateVarsType = None) -> bool:
+                        variables=None) -> bool:
         """Test and condition."""
         nonlocal checks
 
@@ -142,22 +131,17 @@ def async_or_from_config(config: ConfigType,
 or_from_config = _threaded_factory(async_or_from_config)
 
 
-def numeric_state(hass: HomeAssistant, entity: Union[None, str, State],
-                  below: Optional[float] = None, above: Optional[float] = None,
-                  value_template: Optional[Template] = None,
-                  variables: TemplateVarsType = None) -> bool:
+def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
+                  value_template=None, variables=None):
     """Test a numeric state condition."""
-    return cast(bool, run_callback_threadsafe(
+    return run_callback_threadsafe(
         hass.loop, async_numeric_state, hass, entity, below, above,
         value_template, variables,
-    ).result())
+    ).result()
 
 
-def async_numeric_state(hass: HomeAssistant, entity: Union[None, str, State],
-                        below: Optional[float] = None,
-                        above: Optional[float] = None,
-                        value_template: Optional[Template] = None,
-                        variables: TemplateVarsType = None) -> bool:
+def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
+                        value_template=None, variables=None):
     """Test a numeric state condition."""
     if isinstance(entity, str):
         entity = hass.states.get(entity)
@@ -180,24 +164,22 @@ def async_numeric_state(hass: HomeAssistant, entity: Union[None, str, State],
         return False
 
     try:
-        fvalue = float(value)
+        value = float(value)
     except ValueError:
         _LOGGER.warning("Value cannot be processed as a number: %s "
                         "(Offending entity: %s)", entity, value)
         return False
 
-    if below is not None and fvalue >= below:
+    if below is not None and value >= below:
         return False
 
-    if above is not None and fvalue <= above:
+    if above is not None and value <= above:
         return False
 
     return True
 
 
-def async_numeric_state_from_config(config: ConfigType,
-                                    config_validation: bool = True) \
-                                    -> Callable[..., bool]:
+def async_numeric_state_from_config(config, config_validation=True):
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.NUMERIC_STATE_CONDITION_SCHEMA(config)
@@ -206,8 +188,7 @@ def async_numeric_state_from_config(config: ConfigType,
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    def if_numeric_state(hass: HomeAssistant,
-                         variables: TemplateVarsType = None) -> bool:
+    def if_numeric_state(hass, variables=None):
         """Test numeric state condition."""
         if value_template is not None:
             value_template.hass = hass
@@ -221,8 +202,7 @@ def async_numeric_state_from_config(config: ConfigType,
 numeric_state_from_config = _threaded_factory(async_numeric_state_from_config)
 
 
-def state(hass: HomeAssistant, entity: Union[None, str, State], req_state: str,
-          for_period: Optional[timedelta] = None) -> bool:
+def state(hass, entity, req_state, for_period=None):
     """Test if state matches requirements.
 
     Async friendly.
@@ -232,7 +212,6 @@ def state(hass: HomeAssistant, entity: Union[None, str, State], req_state: str,
 
     if entity is None:
         return False
-    assert isinstance(entity, State)
 
     is_state = entity.state == req_state
 
@@ -242,26 +221,22 @@ def state(hass: HomeAssistant, entity: Union[None, str, State], req_state: str,
     return dt_util.utcnow() - for_period > entity.last_changed
 
 
-def state_from_config(config: ConfigType,
-                      config_validation: bool = True) -> Callable[..., bool]:
+def state_from_config(config, config_validation=True):
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.STATE_CONDITION_SCHEMA(config)
     entity_id = config.get(CONF_ENTITY_ID)
-    req_state = cast(str, config.get(CONF_STATE))
+    req_state = config.get(CONF_STATE)
     for_period = config.get('for')
 
-    def if_state(hass: HomeAssistant,
-                 variables: TemplateVarsType = None) -> bool:
+    def if_state(hass, variables=None):
         """Test if condition."""
         return state(hass, entity_id, req_state, for_period)
 
     return if_state
 
 
-def sun(hass: HomeAssistant, before: Optional[str] = None,
-        after: Optional[str] = None, before_offset: Optional[timedelta] = None,
-        after_offset: Optional[timedelta] = None) -> bool:
+def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
     utcnow = dt_util.utcnow()
     today = dt_util.as_local(utcnow).date()
@@ -279,27 +254,22 @@ def sun(hass: HomeAssistant, before: Optional[str] = None,
         # There is no sunset today
         return False
 
-    if before == SUN_EVENT_SUNRISE and \
-       utcnow > cast(datetime, sunrise) + before_offset:
+    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    if before == SUN_EVENT_SUNSET and \
-       utcnow > cast(datetime, sunset) + before_offset:
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
         return False
 
-    if after == SUN_EVENT_SUNRISE and \
-       utcnow < cast(datetime, sunrise) + after_offset:
+    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
         return False
 
-    if after == SUN_EVENT_SUNSET and \
-       utcnow < cast(datetime, sunset) + after_offset:
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
 
 
-def sun_from_config(config: ConfigType,
-                    config_validation: bool = True) -> Callable[..., bool]:
+def sun_from_config(config, config_validation=True):
     """Wrap action method with sun based condition."""
     if config_validation:
         config = cv.SUN_CONDITION_SCHEMA(config)
@@ -308,24 +278,21 @@ def sun_from_config(config: ConfigType,
     before_offset = config.get('before_offset')
     after_offset = config.get('after_offset')
 
-    def time_if(hass: HomeAssistant,
-                variables: TemplateVarsType = None) -> bool:
+    def time_if(hass, variables=None):
         """Validate time based if-condition."""
         return sun(hass, before, after, before_offset, after_offset)
 
     return time_if
 
 
-def template(hass: HomeAssistant, value_template: Template,
-             variables: TemplateVarsType = None) -> bool:
+def template(hass, value_template, variables=None):
     """Test if template condition matches."""
-    return cast(bool, run_callback_threadsafe(
+    return run_callback_threadsafe(
         hass.loop, async_template, hass, value_template, variables,
-    ).result())
+    ).result()
 
 
-def async_template(hass: HomeAssistant, value_template: Template,
-                   variables: TemplateVarsType = None) -> bool:
+def async_template(hass, value_template, variables=None):
     """Test if template condition matches."""
     try:
         value = value_template.async_render(variables)
@@ -336,16 +303,13 @@ def async_template(hass: HomeAssistant, value_template: Template,
     return value.lower() == 'true'
 
 
-def async_template_from_config(config: ConfigType,
-                               config_validation: bool = True) \
-                               -> Callable[..., bool]:
+def async_template_from_config(config, config_validation=True):
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
-    value_template = cast(Template, config.get(CONF_VALUE_TEMPLATE))
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    def template_if(hass: HomeAssistant,
-                    variables: TemplateVarsType = None) -> bool:
+    def template_if(hass, variables=None):
         """Validate template based if-condition."""
         value_template.hass = hass
 
@@ -357,9 +321,7 @@ def async_template_from_config(config: ConfigType,
 template_from_config = _threaded_factory(async_template_from_config)
 
 
-def time(before: Optional[dt_util.dt.time] = None,
-         after: Optional[dt_util.dt.time] = None,
-         weekday: Union[None, str, Container[str]] = None) -> bool:
+def time(before=None, after=None, weekday=None):
     """Test if local time condition matches.
 
     Handle the fact that time is continuous and we may be testing for
@@ -392,8 +354,7 @@ def time(before: Optional[dt_util.dt.time] = None,
     return True
 
 
-def time_from_config(config: ConfigType,
-                     config_validation: bool = True) -> Callable[..., bool]:
+def time_from_config(config, config_validation=True):
     """Wrap action method with time based condition."""
     if config_validation:
         config = cv.TIME_CONDITION_SCHEMA(config)
@@ -401,16 +362,14 @@ def time_from_config(config: ConfigType,
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
 
-    def time_if(hass: HomeAssistant,
-                variables: TemplateVarsType = None) -> bool:
+    def time_if(hass, variables=None):
         """Validate time based if-condition."""
         return time(before, after, weekday)
 
     return time_if
 
 
-def zone(hass: HomeAssistant, zone_ent: Union[None, str, State],
-         entity: Union[None, str, State]) -> bool:
+def zone(hass, zone_ent, entity):
     """Test if zone-condition matches.
 
     Async friendly.
@@ -437,16 +396,14 @@ def zone(hass: HomeAssistant, zone_ent: Union[None, str, State],
                                  entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
-def zone_from_config(config: ConfigType,
-                     config_validation: bool = True) -> Callable[..., bool]:
+def zone_from_config(config, config_validation=True):
     """Wrap action method with zone based condition."""
     if config_validation:
         config = cv.ZONE_CONDITION_SCHEMA(config)
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
 
-    def if_in_zone(hass: HomeAssistant,
-                   variables: TemplateVarsType = None) -> bool:
+    def if_in_zone(hass, variables=None):
         """Test if condition."""
         return zone(hass, zone_entity_id, entity_id)
 

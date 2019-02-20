@@ -1,4 +1,9 @@
-"""Support for IHC devices."""
+"""
+Support for IHC devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/ihc/
+"""
 import logging
 import os.path
 
@@ -219,7 +224,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
         return False
     project = ElementTree.fromstring(project_xml)
 
-    # If an auto setup file exist in the configuration it will override
+    # if an auto setup file exist in the configuration it will override
     yaml_path = hass.config.path(AUTO_SETUP_YAML)
     if not os.path.isfile(yaml_path):
         yaml_path = os.path.join(os.path.dirname(__file__), AUTO_SETUP_YAML)
@@ -259,9 +264,9 @@ def get_discovery_info(component_setup, groups, controller_id):
                         'ihc_id': ihc_id,
                         'ctrl_id': controller_id,
                         'product': {
-                            'name': product.get('name') or '',
-                            'note': product.get('note') or '',
-                            'position': product.get('position') or ''},
+                            'name': product.attrib['name'],
+                            'note': product.attrib['note'],
+                            'position': product.attrib['position']},
                         'product_cfg': product_cfg}
                     discovery_data[name] = device
     return discovery_data

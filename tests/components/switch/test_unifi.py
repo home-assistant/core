@@ -109,7 +109,7 @@ DEVICE_1 = {
     'mac': '00:00:00:00:01:01',
     'type': 'usw',
     'name': 'mock-name',
-    'port_overrides': [],
+    'portconf_id': '',
     'port_table': [
         {
             'media': 'GE',

@@ -21,8 +21,7 @@ REQUIREMENTS = ['pyowm==2.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by OpenWeatherMap"
-
+CONF_ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_FORECAST = 'forecast'
 CONF_LANGUAGE = 'language'
 
@@ -122,7 +121,7 @@ class OpenWeatherMapSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     def update(self):

@@ -35,13 +35,6 @@ class FlowHandler(config_entries.ConfigFlow):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
-        from tellduslive import Session
-        self._session = Session(
-            public_key=PUBLIC_KEY,
-            private_key=NOT_SO_PRIVATE_KEY,
-            host=self._host,
-            application=APPLICATION_NAME,
-        )
         return self._session.authorize_url
 
     async def async_step_user(self, user_input=None):
@@ -63,36 +56,38 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Handle the submitted configuration."""
-        errors = {}
-        if user_input is not None:
-            if await self.hass.async_add_executor_job(
-                    self._session.authorize):
-                host = self._host or CLOUD_NAME
-                if self._host:
-                    session = {
-                        KEY_HOST: host,
-                        KEY_TOKEN: self._session.access_token
-                    }
-                else:
-                    session = {
-                        KEY_TOKEN: self._session.access_token,
-                        KEY_TOKEN_SECRET: self._session.access_token_secret
-                    }
-                return self.async_create_entry(
-                    title=host, data={
-                        KEY_HOST: host,
-                        KEY_SCAN_INTERVAL: self._scan_interval.seconds,
-                        KEY_SESSION: session,
-                    })
+        if not self._session:
+            from tellduslive import Session
+            self._session = Session(
+                public_key=PUBLIC_KEY,
+                private_key=NOT_SO_PRIVATE_KEY,
+                host=self._host,
+                application=APPLICATION_NAME,
+            )
+
+        if user_input is not None and self._session.authorize():
+            host = self._host or CLOUD_NAME
+            if self._host:
+                session = {
+                    KEY_HOST: host,
+                    KEY_TOKEN: self._session.access_token
+                }
             else:
-                errors['base'] = 'auth_error'
+                session = {
+                    KEY_TOKEN: self._session.access_token,
+                    KEY_TOKEN_SECRET: self._session.access_token_secret
+                }
+            return self.async_create_entry(
+                title=host, data={
+                    KEY_HOST: host,
+                    KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                    KEY_SESSION: session,
+                })
 
         try:
             with async_timeout.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(
                     self._get_auth_url)
-            if not auth_url:
-                return self.async_abort(reason='authorize_url_fail')
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
         except Exception:  # pylint: disable=broad-except
@@ -102,7 +97,6 @@ class FlowHandler(config_entries.ConfigFlow):
         _LOGGER.debug('Got authorization URL %s', auth_url)
         return self.async_show_form(
             step_id='auth',
-            errors=errors,
             description_placeholders={
                 'app_name': APPLICATION_NAME,
                 'auth_url': auth_url,
@@ -113,10 +107,17 @@ class FlowHandler(config_entries.ConfigFlow):
         """Run when a Tellstick is discovered."""
         from tellduslive import supports_local_api
         _LOGGER.info('Discovered tellstick device: %s', user_input)
-        if supports_local_api(user_input[1]):
-            _LOGGER.info('%s support local API', user_input[1])
-            self._hosts.append(user_input[0])
+        # Ignore any known devices
+        for entry in self._async_current_entries():
+            if entry.data[KEY_HOST] == user_input[0]:
+                return self.async_abort(reason='already_configured')
 
+        if not supports_local_api(user_input[1]):
+            _LOGGER.debug('Tellstick does not support local API')
+            # Configure the cloud service
+            return await self.async_step_auth()
+
+        self._hosts.append(user_input[0])
         return await self.async_step_user()
 
     async def async_step_import(self, user_input):

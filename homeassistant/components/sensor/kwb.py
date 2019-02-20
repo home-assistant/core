@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
-                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -104,7 +105,7 @@ class KWBSensor(Entity):
         """Return the state of value."""
         if self._sensor.value is not None and self._sensor.available:
             return self._sensor.value
-        return None
+        return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):

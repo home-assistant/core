@@ -1,4 +1,5 @@
 """Constants for the UniFi component."""
+
 import logging
 
 LOGGER = logging.getLogger('homeassistant.components.unifi')

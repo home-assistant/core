@@ -43,7 +43,7 @@ SUPPORTED_VOICES = [
     'Joey', 'Justin', 'Matthew', 'Ivy', 'Joanna', 'Kendra', 'Kimberly',
     'Salli',  # English
     'Geraint',  # English Welsh
-    'Mathieu', 'Celine', 'Lea',  # French
+    'Mathieu', 'Celine', 'Léa',  # French
     'Chantal',  # French Canadian
     'Hans', 'Marlene', 'Vicki',  # German
     'Aditi',  # Hindi

@@ -22,9 +22,8 @@ REQUIREMENTS = ['xmltodict==0.11.0']
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.zillow.com/webservice/GetZestimate.htm'
 
-ATTRIBUTION = "Data provided by Zillow.com"
-
 CONF_ZPID = 'zpid'
+CONF_ATTRIBUTION = "Data provided by Zillow.com"
 
 DEFAULT_NAME = 'Zestimate'
 NAME = 'zestimate'
@@ -94,7 +93,7 @@ class ZestimateDataSensor(Entity):
         if self.data is not None:
             attributes = self.data
         attributes['address'] = self.address
-        attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
+        attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attributes
 
     @property

@@ -14,11 +14,9 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_URL, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
     STATE_ON, STATE_PAUSED, STATE_PLAYING)
@@ -28,7 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.4']
+REQUIREMENTS = ['async-upnp-client==0.13.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +145,7 @@ async def async_setup_platform(
         raise PlatformNotReady()
 
     # wrap with DmrDevice
-    from async_upnp_client.profiles.dlna import DmrDevice
+    from async_upnp_client.dlna import DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)
 
     # create our own device
@@ -316,8 +314,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        from async_upnp_client.profiles.dlna import DeviceState
-        if self._device.state == DeviceState.PLAYING:
+        from async_upnp_client import dlna
+        if self._device.state == dlna.STATE_PLAYING:
             return
 
         # Play it
@@ -357,12 +355,12 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not self._available:
             return STATE_OFF
 
-        from async_upnp_client.profiles.dlna import DeviceState
+        from async_upnp_client import dlna
         if self._device.state is None:
             return STATE_ON
-        if self._device.state == DeviceState.PLAYING:
+        if self._device.state == dlna.STATE_PLAYING:
             return STATE_PLAYING
-        if self._device.state == DeviceState.PAUSED:
+        if self._device.state == dlna.STATE_PAUSED:
             return STATE_PAUSED
 
         return STATE_IDLE

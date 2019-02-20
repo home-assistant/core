@@ -1,4 +1,5 @@
 """Support for Alexa skill auth."""
+
 import asyncio
 import json
 import logging

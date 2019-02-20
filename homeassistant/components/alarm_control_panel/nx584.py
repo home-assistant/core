@@ -70,7 +70,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return 'Number'
 
     @property
     def state(self):

@@ -34,8 +34,7 @@ ATTR_STATION_ID = 'station_id'
 ATTR_STATION_NAME = 'station_name'
 ATTR_ZONE_ID = 'zone_id'
 
-ATTRIBUTION = "Data provided by the Australian Bureau of Meteorology"
-
+CONF_ATTRIBUTION = "Data provided by the Australian Bureau of Meteorology"
 CONF_STATION = 'station'
 CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
@@ -159,7 +158,7 @@ class BOMCurrentSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_LAST_UPDATE: self.bom_data.last_updated,
             ATTR_SENSOR_ID: self._condition,
             ATTR_STATION_ID: self.bom_data.latest_data['wmo'],

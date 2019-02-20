@@ -21,9 +21,6 @@ ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
 ATTR_ARCH = 'arch'
 
-HZ_ACTUAL_RAW = 'hz_actual_raw'
-HZ_ADVERTISED_RAW = 'hz_advertised_raw'
-
 DEFAULT_NAME = 'CPU speed'
 
 ICON = 'mdi:pulse'
@@ -69,16 +66,11 @@ class CpuSpeedSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.info is not None:
-            attrs = {
+            return {
                 ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
+                ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
             }
-
-            if HZ_ADVERTISED_RAW in self.info:
-                attrs[ATTR_HZ] = round(
-                    self.info[HZ_ADVERTISED_RAW][0] / 10 ** 9, 2
-                )
-            return attrs
 
     @property
     def icon(self):
@@ -90,9 +82,4 @@ class CpuSpeedSensor(Entity):
         from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
-        if HZ_ACTUAL_RAW in self.info:
-            self._state = round(
-                float(self.info[HZ_ACTUAL_RAW][0]) / 10 ** 9, 2
-            )
-        else:
-            self._state = None
+        self._state = round(float(self.info['hz_actual_raw'][0])/10**9, 2)

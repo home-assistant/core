@@ -32,11 +32,11 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'bme680',
+    'homekit',
     'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
-    'aioambient',
     'aioautomatic',
     'aiohttp_cors',
     'aiohue',
@@ -46,12 +46,10 @@ TEST_REQUIREMENTS = (
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
-    'eebrightbox',
-    'emulated_roku',
     'enturclient',
     'ephem',
     'evohomeclient',
-    'feedparser-homeassistant',
+    'feedparser',
     'foobot_async',
     'geojson_client',
     'georss_client',
@@ -64,7 +62,6 @@ TEST_REQUIREMENTS = (
     'hdate',
     'holidays',
     'home-assistant-frontend',
-    'homekit',
     'homematicip',
     'influxdb',
     'jsonpath',
@@ -90,9 +87,6 @@ TEST_REQUIREMENTS = (
     'pynx584',
     'pyopenuv',
     'pyotp',
-    'pyps4-homeassistant',
-    'pysmartapp',
-    'pysmartthings',
     'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
@@ -125,8 +119,6 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
-    'zigpy',
-    'bellows',
 )
 
 IGNORE_PACKAGES = (

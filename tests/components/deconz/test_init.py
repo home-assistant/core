@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
@@ -80,11 +79,9 @@ async def test_setup_entry_no_available_bridge(hass):
     """Test setup entry fails if deCONZ is not available."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
-    with patch(
-        'pydeconz.DeconzSession.async_load_parameters',
-        return_value=mock_coro(False)
-    ), pytest.raises(ConfigEntryNotReady):
-        await deconz.async_setup_entry(hass, entry)
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               return_value=mock_coro(False)):
+        assert await deconz.async_setup_entry(hass, entry) is False
 
 
 async def test_setup_entry_successful(hass):

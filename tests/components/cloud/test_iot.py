@@ -147,10 +147,11 @@ def test_handler_forwarding():
     assert payload == 'payload'
 
 
-async def test_handling_core_messages_logout(hass, mock_cloud):
+@asyncio.coroutine
+def test_handling_core_messages(hass, mock_cloud):
     """Test handling core messages."""
     mock_cloud.logout.return_value = mock_coro()
-    await iot.async_handle_cloud(hass, mock_cloud, {
+    yield from iot.async_handle_cloud(hass, mock_cloud, {
         'action': 'logout',
         'reason': 'Logged in at two places.'
     })

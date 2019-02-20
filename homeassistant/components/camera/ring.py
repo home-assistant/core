@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.ring import (
-    DATA_RING, ATTRIBUTION, NOTIFICATION_ID)
+    DATA_RING, CONF_ATTRIBUTION, NOTIFICATION_ID)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
@@ -34,7 +34,8 @@ SCAN_INTERVAL = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+        cv.time_period,
 })
 
 
@@ -105,7 +106,7 @@ class RingCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._camera.id,
             'firmware': self._camera.firmware,
             'kind': self._camera.kind,
@@ -141,7 +142,7 @@ class RingCam(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                self._ffmpeg.ffmpeg_stream_content_type)
+                'multipart/x-mixed-replace;boundary=ffserver')
         finally:
             await stream.close()
 

@@ -1,4 +1,9 @@
-"""Support for HomeMatic devices."""
+"""
+Support for HomeMatic devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/homematic/
+"""
 from datetime import timedelta
 from functools import partial
 import logging
@@ -8,17 +13,21 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
-    CONF_PLATFORM, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
+    CONF_PLATFORM, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 REQUIREMENTS = ['pyhomematic==0.1.56']
 =======
 REQUIREMENTS = ['pyhomematic==0.1.55']
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
+=======
+REQUIREMENTS = ['pyhomematic==0.1.54']
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +73,7 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
         'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
-        'IPKeySwitchPowermeter', 'IPGarage', 'IPKeySwitch', 'IPMultiIO'],
+        'IPKeySwitchPowermeter', 'IPGarage'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer', 'IPDimmer',
                       'ColorEffectLight'],
     DISCOVER_SENSORS: [
@@ -78,7 +87,7 @@ HM_DEVICE_TYPES = {
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
         'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage',
-        'UniversalSensor', 'MotionIPV2', 'IPMultiIO'],
+        'UniversalSensor', 'MotionIPV2'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -88,8 +97,7 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
-        'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
-        'IPMultiIO', 'TiltIP'],
+        'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -111,8 +119,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
-    'RSSI_PEER': ['rssi_peer', {}],
-    'RSSI_DEVICE': ['rssi_device', {}],
+    'RSSI_PEER': ['rssi', {}],
+    'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'LEVEL': ['level', {}],
     'BATTERY_STATE': ['battery', {}],

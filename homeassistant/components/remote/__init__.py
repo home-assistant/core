@@ -1,4 +1,9 @@
-"""Support to interface with universal remote control devices."""
+"""
+Component to interface with universal remote control devices.
+
+For more details about this component, please refer to the documentation
+at https://home-assistant.io/components/remote/
+"""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -13,8 +18,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 

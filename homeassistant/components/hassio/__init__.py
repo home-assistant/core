@@ -1,4 +1,9 @@
-"""Support for Hass.io."""
+"""
+Exposes regular REST commands as services.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hassio/
+"""
 from datetime import timedelta
 import logging
 import os
@@ -9,15 +14,16 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.const import (
     ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
-from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import DOMAIN as HASS_DOMAIN
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError
 
 from .auth import async_setup_auth
-from .discovery import async_setup_discovery
 from .handler import HassIO, HassioAPIError
+from .discovery import async_setup_discovery
 from .http import HassIOView
 
 _LOGGER = logging.getLogger(__name__)

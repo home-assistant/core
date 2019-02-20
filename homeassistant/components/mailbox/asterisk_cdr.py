@@ -1,4 +1,9 @@
-"""Support for the Asterisk CDR interface."""
+"""
+Asterisk CDR interface.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/mailbox.asterisk_cdr/
+"""
 import logging
 import hashlib
 import datetime
@@ -9,11 +14,9 @@ from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN
 from homeassistant.components.mailbox import Mailbox
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-_LOGGER = logging.getLogger(__name__)
-
 DEPENDENCIES = ['asterisk_mbox']
-
-MAILBOX_NAME = 'asterisk_cdr'
+_LOGGER = logging.getLogger(__name__)
+MAILBOX_NAME = "asterisk_cdr"
 
 
 async def async_get_handler(hass, config, discovery_info=None):

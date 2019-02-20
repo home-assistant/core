@@ -9,10 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE)
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -95,31 +93,15 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest state from the device."""
-        from pypjlink.projector import ProjectorError
         with self.projector() as projector:
-            try:
-                pwstate = projector.get_power()
-                if pwstate in ('on', 'warm-up'):
-                    self._pwstate = STATE_ON
-                else:
-                    self._pwstate = STATE_OFF
-                self._muted = projector.get_mute()[1]
-                self._current_source = \
-                    format_input_source(*projector.get_input())
-            except KeyError as err:
-                if str(err) == "'OK'":
-                    self._pwstate = STATE_OFF
-                    self._muted = False
-                    self._current_source = None
-                else:
-                    raise
-            except ProjectorError as err:
-                if str(err) == 'unavailable time':
-                    self._pwstate = STATE_OFF
-                    self._muted = False
-                    self._current_source = None
-                else:
-                    raise
+            pwstate = projector.get_power()
+            if pwstate == 'off':
+                self._pwstate = STATE_OFF
+            else:
+                self._pwstate = STATE_ON
+            self._muted = projector.get_mute()[1]
+            self._current_source = \
+                format_input_source(*projector.get_input())
 
     @property
     def name(self):

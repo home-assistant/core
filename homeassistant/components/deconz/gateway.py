@@ -1,5 +1,5 @@
 """Representation of a deCONZ gateway."""
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant import config_entries
 from homeassistant.const import CONF_EVENT, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client
@@ -8,8 +8,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, NEW_DEVICE, NEW_SENSOR,
-    SUPPORTED_PLATFORMS)
+    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
 
 
 class DeconzGateway:
@@ -21,6 +20,7 @@ class DeconzGateway:
         self.config_entry = config_entry
         self.available = True
         self.api = None
+        self._cancel_retry_setup = None
 
         self.deconz_ids = {}
         self.events = []
@@ -35,8 +35,22 @@ class DeconzGateway:
             self.async_connection_status_callback
         )
 
-        if not self.api:
-            raise ConfigEntryNotReady
+        if self.api is False:
+            retry_delay = 2 ** (tries + 1)
+            _LOGGER.error(
+                "Error connecting to deCONZ gateway. Retrying in %d seconds",
+                retry_delay)
+
+            async def retry_setup(_now):
+                """Retry setup."""
+                if await self.async_setup(tries + 1):
+                    # This feels hacky, we should find a better way to do this
+                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
+
+            self._cancel_retry_setup = hass.helpers.event.async_call_later(
+                retry_delay, retry_setup)
+
+            return False
 
         for component in SUPPORTED_PLATFORMS:
             hass.async_create_task(
@@ -45,7 +59,7 @@ class DeconzGateway:
 
         self.listeners.append(
             async_dispatcher_connect(
-                hass, NEW_SENSOR, self.async_add_remote))
+                hass, 'deconz_new_sensor', self.async_add_remote))
 
         self.async_add_remote(self.api.sensors.values())
 
@@ -65,7 +79,8 @@ class DeconzGateway:
         """Handle event of new device creation in deCONZ."""
         if not isinstance(device, list):
             device = [device]
-        async_dispatcher_send(self.hass, NEW_DEVICE[device_type], device)
+        async_dispatcher_send(
+            self.hass, 'deconz_new_{}'.format(device_type), device)
 
     @callback
     def async_add_remote(self, sensors):
@@ -92,6 +107,12 @@ class DeconzGateway:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
+        # If we have a retry scheduled, we were never setup.
+        if self._cancel_retry_setup is not None:
+            self._cancel_retry_setup()
+            self._cancel_retry_setup = None
+            return True
+
         self.api.close()
 
         for component in SUPPORTED_PLATFORMS:
@@ -140,7 +161,6 @@ class DeconzEvent:
         self._device.register_async_callback(self.async_update_callback)
         self._event = 'deconz_{}'.format(CONF_EVENT)
         self._id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self._id)
 
     @callback
     def async_will_remove_from_hass(self) -> None:

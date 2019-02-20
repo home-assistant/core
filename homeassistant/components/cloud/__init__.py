@@ -1,4 +1,9 @@
-"""Component to integrate the Home Assistant cloud."""
+"""
+Component to integrate the Home Assistant cloud.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/cloud/
+"""
 from datetime import datetime, timedelta
 import json
 import logging
@@ -101,7 +106,6 @@ async def async_setup(hass, config):
     )
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
-    await auth_api.async_setup(hass, cloud)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     await http_api.async_setup(hass)
     return True
@@ -259,7 +263,7 @@ class Cloud:
         self.access_token = info['access_token']
         self.refresh_token = info['refresh_token']
 
-        self.hass.async_create_task(self.iot.connect())
+        self.hass.add_job(self.iot.connect())
 
     def _decode_claims(self, token):  # pylint: disable=no-self-use
         """Decode the claims in a token."""

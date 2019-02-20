@@ -13,7 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import (CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
 
@@ -77,7 +78,7 @@ class TankUtilitySensor(Entity):
         self._password = password
         self._token = token
         self._device = device
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._name = "Tank Utility " + self.device
         self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
         self._attributes = {}

@@ -174,7 +174,7 @@ class MikrotikScanner(DeviceScanner):
             else:
                 devices_tracker = 'ip'
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "Loading %s devices from Mikrotik (%s) ...",
             devices_tracker, self.host)
 

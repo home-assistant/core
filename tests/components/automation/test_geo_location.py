@@ -1,4 +1,4 @@
-"""The tests for the geolocation trigger."""
+"""The tests for the geo location trigger."""
 import pytest
 
 from homeassistant.components import automation, zone

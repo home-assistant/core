@@ -1,4 +1,4 @@
-"""Support for OwnTracks."""
+"""Component for OwnTracks."""
 from collections import defaultdict
 import json
 import logging
@@ -8,19 +8,16 @@ from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components import mqtt
 from homeassistant.setup import async_when_setup
+import homeassistant.helpers.config_validation as cv
 
 from .config_flow import CONF_SECRET
 
+DOMAIN = "owntracks"
 REQUIREMENTS = ['libnacl==1.6.1']
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'owntracks'
 DEPENDENCIES = ['webhook']
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
@@ -49,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }
 }, extra=vol.ALLOW_EXTRA)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):

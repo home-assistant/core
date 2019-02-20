@@ -45,8 +45,6 @@ class BboxDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Get host from config."""
-        from typing import List  # noqa: pylint: disable=unused-import
-
         self.host = config[CONF_HOST]
 
         """Initialize the scanner."""

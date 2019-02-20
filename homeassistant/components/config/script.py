@@ -1,4 +1,5 @@
 """Provide configuration end points for scripts."""
+
 from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components.script import DOMAIN, SCRIPT_ENTRY_SCHEMA
 from homeassistant.const import SERVICE_RELOAD

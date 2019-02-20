@@ -1,4 +1,9 @@
-"""Support for Automation Device Specification (ADS)."""
+"""
+Support for Automation Device Specification (ADS).
+
+For more details about this component, please refer to the documentation.
+https://home-assistant.io/components/ads/
+"""
 import threading
 import struct
 import logging
@@ -41,8 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL]),
-    vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE]),
+    vol.Required(CONF_ADS_VALUE): cv.match_all,
     vol.Required(CONF_ADS_VAR): cv.string,
 })
 

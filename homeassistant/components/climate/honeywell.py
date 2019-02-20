@@ -12,9 +12,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE, ATTR_FAN_LIST,
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (

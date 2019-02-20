@@ -1,4 +1,9 @@
-"""Support to send and receive Telegram messages."""
+"""
+Component to send and receive Telegram messages.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot/
+"""
 import io
 from functools import partial
 import logging

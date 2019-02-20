@@ -67,7 +67,6 @@ async def test_full_flow_implementation(hass, mock_tellduslive):
     result = await flow.async_step_discovery(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
-    assert len(flow._hosts) == 2
 
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -157,14 +156,12 @@ async def test_step_disco_no_local_api(hass, mock_tellduslive):
     result = await flow.async_step_discovery(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert len(flow._hosts) == 1
 
 
 async def test_step_auth(hass, mock_tellduslive):
     """Test that create cloud entity from auth."""
     flow = init_config_flow(hass)
 
-    await flow.async_step_auth()
     result = await flow.async_step_auth(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'Cloud API'
@@ -181,11 +178,10 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):
     """Test wrong auth."""
     flow = init_config_flow(hass)
 
-    await flow.async_step_auth()
+    await flow.async_step_user()
     result = await flow.async_step_auth('')
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert result['errors']['base'] == 'auth_error'
 
 
 async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
@@ -205,14 +201,6 @@ async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'authorize_url_timeout'
 
-async def test_abort_no_auth_url(hass, mock_tellduslive):
-    """Test abort if generating authorize url returns none."""
-    flow = init_config_flow(hass)
-    flow._get_auth_url = Mock(return_value=False)
-
-    result = await flow.async_step_user()
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'authorize_url_fail'
 
 async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
     """Test we abort if generating authorize url blows up."""
@@ -232,4 +220,4 @@ async def test_discovery_already_configured(hass, mock_tellduslive):
 
     result = await flow.async_step_discovery(['some-host', ''])
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'already_setup'
+    assert result['reason'] == 'already_configured'

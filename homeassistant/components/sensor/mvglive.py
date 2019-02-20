@@ -14,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION)
+    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
+    )
 
 REQUIREMENTS = ['PyMVGLive==1.1.4']
 
@@ -86,7 +87,7 @@ class MVGLiveSensor(Entity):
         self._name = name
         self.data = MVGLiveData(station, destinations, directions,
                                 lines, products, timeoffset, number)
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._icon = ICONS['-']
 
     @property

@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = 'identity'
 
-ATTRIBUTION = "Data provided by Discogs"
+CONF_ATTRIBUTION = "Data provided by Discogs"
 
 DEFAULT_NAME = 'Discogs'
 
@@ -86,7 +86,7 @@ class DiscogsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_IDENTITY: self._identity.name,
         }
 

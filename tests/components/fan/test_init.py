@@ -27,7 +27,7 @@ class TestFanEntity(unittest.TestCase):
 
     def test_fanentity(self):
         """Test fan entity methods."""
-        assert 'off' == self.fan.state
+        assert 'on' == self.fan.state
         assert 0 == len(self.fan.speed_list)
         assert 0 == self.fan.supported_features
         assert {'speed_list': []} == self.fan.state_attributes

@@ -26,8 +26,7 @@ ATTR_NEXT_UP_IN = 'next_due_in'
 
 API_CLIENT_NAME = 'homeassistant-homeassistant'
 
-ATTRIBUTION = "Data provided by entur.org under NLOD"
-
+CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
 CONF_WHITELIST_LINES = 'line_whitelist'
@@ -141,7 +140,7 @@ class EnturPublicTransportSensor(Entity):
         self._state = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_STOP_ID: self._stop,
         }
 

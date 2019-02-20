@@ -107,16 +107,13 @@ def _handle_cloud_errors(handler):
             result = await handler(view, request, *args, **kwargs)
             return result
 
-        except Exception as err:  # pylint: disable=broad-except
+        except (auth_api.CloudError, asyncio.TimeoutError) as err:
             err_info = _CLOUD_ERRORS.get(err.__class__)
             if err_info is None:
-                _LOGGER.exception(
-                    "Unexpected error processing request for %s", request.path)
                 err_info = (502, 'Unexpected error: {}'.format(err))
             status, msg = err_info
-            return view.json_message(
-                msg, status_code=status,
-                message_code=err.__class__.__name__.lower())
+            return view.json_message(msg, status_code=status,
+                                     message_code=err.__class__.__name__)
 
     return error_handler
 

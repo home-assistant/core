@@ -32,24 +32,24 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.5.4',
-    'astral==1.9.2',
+    'aiohttp==3.5.1',
+    'astral==1.7.1',
     'async_timeout==3.0.1',
     'attrs==18.2.0',
-    'bcrypt==3.1.5',
+    'bcrypt==3.1.4',
     'certifi>=2018.04.16',
     'jinja2>=2.10',
     'PyJWT==1.6.4',
     # PyJWT has loose dependency. We want the latest one.
-    'cryptography==2.5',
+    'cryptography==2.3.1',
     'pip>=8.0.3',
     'python-slugify==1.2.6',
     'pytz>=2018.07',
     'pyyaml>=3.13,<4',
     'requests==2.21.0',
-    'ruamel.yaml==0.15.88',
+    'ruamel.yaml==0.15.81',
     'voluptuous==0.11.5',
-    'voluptuous-serialize==2.1.0',
+    'voluptuous-serialize==2.0.0',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

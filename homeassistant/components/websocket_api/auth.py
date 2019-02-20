@@ -6,7 +6,6 @@ from homeassistant.const import __version__
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.ban import process_wrong_login, \
     process_success_login
-from homeassistant.auth.providers import legacy_api_password
 
 from .connection import ActiveConnection
 from .error import Disconnect
@@ -82,8 +81,7 @@ class AuthPhase:
         elif self._hass.auth.support_legacy and 'api_password' in msg:
             self._logger.debug("Received api_password")
             if validate_password(self._request, msg['api_password']):
-                user = await legacy_api_password.async_get_user(self._hass)
-                return await self._async_finish_auth(user, None)
+                return await self._async_finish_auth(None, None)
 
         self._send_message(auth_invalid_message(
             'Invalid access token or password'))

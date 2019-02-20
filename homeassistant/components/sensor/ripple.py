@@ -13,8 +13,12 @@ REQUIREMENTS = ['python-ripple-api==0.0.3']
 <<<<<<< HEAD
 =======
 CONF_ADDRESS = 'address'
+<<<<<<< HEAD
 >>>>>>> Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev
 ATTRIBUTION = "Data provided by ripple.com"
+=======
+CONF_ATTRIBUTION = "Data provided by ripple.com"
+>>>>>>> Revert "Merge branch 'dev' of https://github.com/marcogazzola/home-assistant into dev"
 
 DEFAULT_NAME = 'Ripple Balance'
 
@@ -63,7 +67,7 @@ class RippleSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     def update(self):

@@ -4,8 +4,7 @@ import logging
 from datetime import timedelta, datetime
 from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused-import
 
-from homeassistant.core import (
-    HomeAssistant, callback, State, CoreState, valid_entity_id)
+from homeassistant.core import HomeAssistant, callback, State, CoreState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
@@ -81,8 +80,7 @@ class RestoreStateData():
                 else:
                     data.last_states = {
                         item['state']['entity_id']: StoredState.from_dict(item)
-                        for item in stored_states
-                        if valid_entity_id(item['state']['entity_id'])}
+                        for item in stored_states}
                     _LOGGER.debug(
                         'Created cache with %s', list(data.last_states))
 

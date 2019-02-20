@@ -20,11 +20,10 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aioimaplib==0.7.15']
+REQUIREMENTS = ['aioimaplib==0.7.13']
 
 CONF_SERVER = 'server'
 CONF_FOLDER = 'folder'
-CONF_SEARCH = 'search'
 
 DEFAULT_PORT = 993
 
@@ -37,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVER): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_FOLDER, default='INBOX'): cv.string,
-    vol.Optional(CONF_SEARCH, default='UnSeen UnDeleted'): cv.string,
 })
 
 
@@ -51,8 +49,7 @@ async def async_setup_platform(hass,
                         config.get(CONF_PASSWORD),
                         config.get(CONF_SERVER),
                         config.get(CONF_PORT),
-                        config.get(CONF_FOLDER),
-                        config.get(CONF_SEARCH))
+                        config.get(CONF_FOLDER))
     if not await sensor.connection():
         raise PlatformNotReady
 
@@ -63,7 +60,7 @@ async def async_setup_platform(hass,
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, folder, search):
+    def __init__(self, name, user, password, server, port, folder):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
@@ -71,8 +68,7 @@ class ImapSensor(Entity):
         self._server = server
         self._port = port
         self._folder = folder
-        self._email_count = None
-        self._search = search
+        self._unread_count = 0
         self._connection = None
         self._does_push = None
         self._idle_loop_task = None
@@ -94,8 +90,8 @@ class ImapSensor(Entity):
 
     @property
     def state(self):
-        """Return the number of emails found."""
-        return self._email_count
+        """Return the number of unread emails."""
+        return self._unread_count
 
     @property
     def available(self):
@@ -131,7 +127,7 @@ class ImapSensor(Entity):
         while True:
             try:
                 if await self.connection():
-                    await self.refresh_email_count()
+                    await self.refresh_unread_count()
                     await self.async_update_ha_state()
 
                     idle = await self._connection.idle_start()
@@ -150,22 +146,16 @@ class ImapSensor(Entity):
 
         try:
             if await self.connection():
-                await self.refresh_email_count()
+                await self.refresh_unread_count()
         except (aioimaplib.AioImapException, asyncio.TimeoutError):
             self.disconnected()
 
-    async def refresh_email_count(self):
-        """Check the number of found emails."""
+    async def refresh_unread_count(self):
+        """Check the number of unread emails."""
         if self._connection:
             await self._connection.noop()
-            result, lines = await self._connection.search(self._search)
-
-            if result == 'OK':
-                self._email_count = len(lines[0].split())
-            else:
-                _LOGGER.error("Can't parse IMAP server response to search "
-                              "'%s':  %s / %s",
-                              self._search, result, lines[0])
+            _, lines = await self._connection.search('UnSeen UnDeleted')
+            self._unread_count = len(lines[0].split())
 
     def disconnected(self):
         """Forget the connection after it was lost."""

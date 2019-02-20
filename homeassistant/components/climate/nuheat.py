@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ClimateDevice,
     DOMAIN,
     SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE,

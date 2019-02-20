@@ -65,15 +65,45 @@ DEFAULT_CORE_CONFIG = (
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
-# Configure a default setup of Home Assistant (frontend, api, etc)
-default_config:
-
-# Show the introduction message on startup.
+# Show links to resources in log and frontend
 introduction:
+
+# Enables the frontend
+frontend:
+
+# Enables configuration UI
+config:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
+
+# Discover some devices automatically
+discovery:
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time
+history:
+
+# View all events in a logbook
+logbook:
+
+# Enables a map showing the location of tracked devices
+map:
+
+# Track the sun
+sun:
 
 # Sensors
 sensor:
@@ -83,6 +113,9 @@ sensor:
 # Text to speech
 tts:
   - platform: google
+
+# Cloud
+cloud:
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -137,9 +170,10 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
     return configs
 
 
-PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
-    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
-)
+PACKAGES_CONFIG_SCHEMA = vol.Schema({
+    cv.slug: vol.Schema(  # Package names are slugs
+        {cv.string: vol.Any(dict, list, None)})  # Component configuration
+})
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -410,11 +444,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    try:
-        domain_config = config.get(domain, config)
-    except AttributeError:
-        domain_config = config
-
+    domain_config = config.get(domain, config)
     message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
@@ -597,7 +627,7 @@ def _identify_config_schema(module: ModuleType) -> \
     except (AttributeError, KeyError):
         return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
+    if t_schema.startswith('{'):
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
@@ -713,21 +743,15 @@ def async_process_component_config(
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif (hasattr(component, 'PLATFORM_SCHEMA') or
-          hasattr(component, 'PLATFORM_SCHEMA_BASE')):
+    elif hasattr(component, 'PLATFORM_SCHEMA'):
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
-                    p_validated = \
-                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
-                            p_config)
-                else:
-                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
+                p_validated = component.PLATFORM_SCHEMA(  # type: ignore
+                    p_config)
             except vol.Invalid as ex:
-                async_log_exception(ex, domain, p_config, hass)
+                async_log_exception(ex, domain, config, hass)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -747,10 +771,10 @@ def async_process_component_config(
                 # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
+                        p_validated)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_config, hass)
+                                        p_validated, hass)
                     continue
 
             platforms.append(p_validated)

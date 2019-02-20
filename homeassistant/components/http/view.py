@@ -1,20 +1,26 @@
-"""Support for views."""
+"""
+This module provides WSGI application to serve the Home Assistant API.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/http/
+"""
 import asyncio
 import json
 import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPBadRequest, HTTPInternalServerError, HTTPUnauthorized)
+    HTTPUnauthorized, HTTPInternalServerError, HTTPBadRequest)
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.components.http.ban import process_success_login
-from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
+from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant import exceptions
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
+
 
 _LOGGER = logging.getLogger(__name__)
 

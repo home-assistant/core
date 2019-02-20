@@ -1,4 +1,9 @@
-"""Support for Synology NAS Sensors."""
+"""
+Support for Synology NAS Sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.synologydsm/
+"""
 import logging
 from datetime import timedelta
 
@@ -17,8 +22,7 @@ REQUIREMENTS = ['python-synology==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = 'Data provided by Synology'
-
+CONF_ATTRIBUTION = 'Data provided by Synology'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
 DEFAULT_PORT = 5001
@@ -190,7 +194,7 @@ class SynoNasSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
 

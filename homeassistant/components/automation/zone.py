@@ -1,4 +1,9 @@
-"""Offer zone automation rules."""
+"""
+Offer zone automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#zone-trigger
+"""
 import voluptuous as vol
 
 from homeassistant.core import callback
