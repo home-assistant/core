@@ -1,9 +1,4 @@
-"""
-Utility meter from sensors providing raw data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.utility_meter/
-"""
+"""Utility meter from sensors providing raw data."""
 import logging
 
 from decimal import Decimal, DecimalException
@@ -40,8 +35,8 @@ PAUSED = 'paused'
 COLLECTING = 'collecting'
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the utility meter sensor."""
     if discovery_info is None:
         _LOGGER.error("This platform is only available through discovery")
@@ -56,12 +51,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
             CONF_TARIFF_ENTITY)
 
-        meters.append(UtilityMeterSensor(conf_meter_source,
-                                         conf.get(CONF_NAME),
-                                         conf_meter_type,
-                                         conf_meter_offset,
-                                         conf.get(CONF_TARIFF),
-                                         conf_meter_tariff_entity))
+        meters.append(UtilityMeterSensor(
+            conf_meter_source, conf.get(CONF_NAME), conf_meter_type,
+            conf_meter_offset, conf.get(CONF_TARIFF),
+            conf_meter_tariff_entity))
 
     async_add_entities(meters)
 
@@ -90,9 +83,9 @@ class UtilityMeterSensor(RestoreEntity):
     @callback
     def async_reading(self, entity, old_state, new_state):
         """Handle the sensor state changes."""
-        if any([old_state is None,
-                old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE],
-                new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]]):
+        if old_state is None or new_state is None or\
+                old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE] or\
+                new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             return
 
         if self._unit_of_measurement is None and\
@@ -181,21 +174,22 @@ class UtilityMeterSensor(RestoreEntity):
             self._last_reset = state.attributes.get(ATTR_LAST_RESET)
             await self.async_update_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
-                # Fake cancelation function to init the meter paused
+                # Fake cancellation function to init the meter paused
                 self._collecting = lambda: None
 
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
             if self._tariff_entity is not None:
-                _LOGGER.debug("track %s", self._tariff_entity)
-                async_track_state_change(self.hass, self._tariff_entity,
-                                         self.async_tariff_change)
+                _LOGGER.debug("Track %s", self._tariff_entity)
+                async_track_state_change(
+                    self.hass, self._tariff_entity, self.async_tariff_change)
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
                 if self._tariff != tariff_entity_state.state:
                     return
 
+            _LOGGER.debug("tracking source: %s", self._sensor_source_id)
             self._collecting = async_track_state_change(
                 self.hass, self._sensor_source_id, self.async_reading)
 

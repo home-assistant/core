@@ -1,10 +1,6 @@
-"""
-Support for lights through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.light/
-"""
+"""Support for lights through the SmartThings cloud API."""
 import asyncio
+from typing import Optional, Sequence
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
@@ -29,29 +25,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsLight(device) for device in broker.devices.values()
-         if is_light(device)], True)
+         if broker.any_assigned(device.device_id, 'light')], True)
 
 
-def is_light(device):
-    """Determine if the device should be represented as a light."""
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
     from pysmartthings import Capability
 
+    supported = [
+        Capability.switch,
+        Capability.switch_level,
+        Capability.color_control,
+        Capability.color_temperature,
+    ]
     # Must be able to be turned on/off.
-    if Capability.switch not in device.capabilities:
-        return False
-    # Not a fan (which might also have switch_level)
-    if Capability.fan_speed in device.capabilities:
-        return False
+    if Capability.switch not in capabilities:
+        return None
     # Must have one of these
     light_capabilities = [
         Capability.color_control,
         Capability.color_temperature,
         Capability.switch_level
     ]
-    if any(capability in device.capabilities
+    if any(capability in capabilities
            for capability in light_capabilities):
-        return True
-    return False
+        return supported
+    return None
 
 
 def convert_scale(value, value_scale, target_scale, round_digits=4):

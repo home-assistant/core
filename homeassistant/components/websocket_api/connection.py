@@ -32,6 +32,16 @@ class ActiveConnection:
         return Context(user_id=user.id)
 
     @callback
+    def send_result(self, msg_id, result=None):
+        """Send a result message."""
+        self.send_message(messages.result_message(msg_id, result))
+
+    @callback
+    def send_error(self, msg_id, code, message):
+        """Send a error message."""
+        self.send_message(messages.error_message(msg_id, code, message))
+
+    @callback
     def async_handle(self, msg):
         """Handle a single incoming message."""
         handlers = self.hass.data[const.DOMAIN]

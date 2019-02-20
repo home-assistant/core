@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Votre instance Home Assistant doit \u00eatre accessible \u00e0 partir d'Internet pour recevoir les messages Geofency.",
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+        }
+    }
+}

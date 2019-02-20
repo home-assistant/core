@@ -1,9 +1,4 @@
-"""
-Support for Alexa skill service end point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alexa/
-"""
+"""Support for Alexa skill service end point."""
 import copy
 from datetime import datetime
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Automation Device Specification (ADS).
-
-For more details about this component, please refer to the documentation.
-https://home-assistant.io/components/ads/
-"""
+"""Support for Automation Device Specification (ADS)."""
 import threading
 import struct
 import logging
@@ -14,7 +9,7 @@ from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyads==2.2.6']
+REQUIREMENTS = ['pyads==3.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +73,10 @@ def setup(hass, config):
 
     try:
         ads = AdsHub(client)
-    except pyads.pyads.ADSError:
+    except pyads.ADSError:
         _LOGGER.error(
-            "Could not connect to ADS host (netid=%s, port=%s)", net_id, port)
+            "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
+            net_id, ip_address, port)
         return False
 
     hass.data[DATA_ADS] = ads
@@ -173,7 +169,7 @@ class AdsHub:
         self._notification_items[hnotify] = NotificationItem(
             hnotify, huser, name, plc_datatype, callback)
 
-    def _device_notification_callback(self, addr, notification, huser):
+    def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
         contents = notification.contents
 

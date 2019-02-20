@@ -5,6 +5,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -30,7 +31,6 @@ class HueBridge:
         self.allow_groups = allow_groups
         self.available = True
         self.api = None
-        self._cancel_retry_setup = None
 
     @property
     def host(self):
@@ -59,20 +59,7 @@ class HueBridge:
             return False
 
         except CannotConnect:
-            retry_delay = 2 ** (tries + 1)
-            LOGGER.error("Error connecting to the Hue bridge at %s. Retrying "
-                         "in %d seconds", host, retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._cancel_retry_setup = hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
+            raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception('Unknown error connecting with Hue bridge at %s',
@@ -97,13 +84,6 @@ class HueBridge:
         # The bridge can be in 3 states:
         #  - Setup was successful, self.api is not None
         #  - Authentication was wrong, self.api is None, not retrying setup.
-        #  - Host was down. self.api is None, we're retrying setup
-
-        # If we have a retry scheduled, we were never setup.
-        if self._cancel_retry_setup is not None:
-            self._cancel_retry_setup()
-            self._cancel_retry_setup = None
-            return True
 
         # If the authentication was wrong.
         if self.api is None:
