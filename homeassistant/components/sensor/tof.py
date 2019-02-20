@@ -17,7 +17,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 import time
-from datetime import datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -66,7 +65,6 @@ async def async_setup_platform(hass,
     name = config.get(CONF_NAME)
     unit = LENGTH_MILIMETERS
     xshut = config.get(CONF_XSHUT)
-    sensor_id = DEFAULT_SENSOR_ID
 
     #  pulse XSHUT port and keep it HIGH
     rpi_gpio.setup_output(xshut)
@@ -74,7 +72,7 @@ async def async_setup_platform(hass,
     time.sleep(0.01)
     rpi_gpio.write_output(xshut, 1)
     time.sleep(0.01)
-    
+
     sensor = await hass.async_add_job(partial(VL53L1X))
     dev = [VL53L1XSensor(sensor, name, unit)]
 
