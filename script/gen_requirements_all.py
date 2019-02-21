@@ -105,6 +105,7 @@ TEST_REQUIREMENTS = (
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
+    'pyHS100',
     'regenmaschine',
     'restrictedpython',
     'rflink',

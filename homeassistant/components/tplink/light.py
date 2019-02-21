@@ -7,19 +7,20 @@ https://home-assistant.io/components/light.tplink/
 import logging
 import time
 
-import voluptuous as vol
-
-from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
+import homeassistant.helpers.device_registry as dr
+from homeassistant.components.tplink import (DOMAIN as TPLINK_DOMAIN,
+                                             CONF_LIGHT)
 
-REQUIREMENTS = ['pyHS100==0.3.4']
+DEPENDENCIES = ['tplink']
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,20 +28,25 @@ ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
-DEFAULT_NAME = 'TP-Link Light'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading as a platform is deprecated, '
+                    'convert to use the tplink component.')
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Initialise pyLB100 SmartBulb."""
-    from pyHS100 import SmartBulb
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    add_entities([TPLinkSmartBulb(SmartBulb(host), name)], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up discovered switches."""
+    devs = []
+    for dev in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
+        devs.append(TPLinkSmartBulb(dev))
+
+    async_add_entities(devs, True)
+
+    return True
 
 
 def brightness_to_percentage(byt):
@@ -56,25 +62,42 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
-    def __init__(self, smartbulb: 'SmartBulb', name) -> None:  # noqa: F821
+    def __init__(self, smartbulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._name = name
+        self._sysinfo = None
         self._state = None
-        self._available = True
+        self._available = False
         self._color_temp = None
         self._brightness = None
         self._hs = None
-        self._supported_features = 0
+        self._supported_features = None
         self._min_mireds = None
         self._max_mireds = None
         self._emeter_params = {}
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._sysinfo["mac"]
+
+    @property
     def name(self):
-        """Return the name of the Smart Bulb, if any."""
-        return self._name
+        """Return the name of the Smart Bulb."""
+        return self._sysinfo["alias"]
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            "name": self.name,
+            "model": self._sysinfo["model"],
+            "manufacturer": 'TP-Link',
+            "connections": {
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            "sw_version": self._sysinfo["sw_ver"],
+        }
 
     @property
     def available(self) -> bool:
@@ -88,7 +111,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+        from pyHS100 import SmartBulb
+        self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
@@ -105,7 +129,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
+        from pyHS100 import SmartBulb
+        self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
     def min_mireds(self):
@@ -139,17 +164,13 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartDeviceException
+        from pyHS100 import SmartDeviceException, SmartBulb
         try:
-            if self._supported_features == 0:
+            if self._supported_features is None:
                 self.get_features()
 
             self._state = (
-                self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-
-            # Pull the name from the device if a name was not specified
-            if self._name == DEFAULT_NAME:
-                self._name = self.smartbulb.alias
+                self.smartbulb.state == SmartBulb.BULB_STATE_ON)
 
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
@@ -185,9 +206,9 @@ class TPLinkSmartBulb(Light):
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
-                _LOGGER.warning(
-                    "Could not read state for %s: %s", self._name, ex)
-                self._available = False
+                _LOGGER.warning("Could not read state for %s: %s",
+                                self.smartbulb.host, ex)
+            self._available = False
 
     @property
     def supported_features(self):
@@ -196,6 +217,9 @@ class TPLinkSmartBulb(Light):
 
     def get_features(self):
         """Determine all supported features in one go."""
+        self._sysinfo = self.smartbulb.sys_info
+        self._supported_features = 0
+
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
         if self.smartbulb.is_variable_color_temp:

@@ -7,58 +7,77 @@ https://home-assistant.io/components/switch.tplink/
 import logging
 import time
 
-import voluptuous as vol
-
 from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
-import homeassistant.helpers.config_validation as cv
+    SwitchDevice, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
+from homeassistant.components.tplink import (DOMAIN as TPLINK_DOMAIN,
+                                             CONF_SWITCH)
+from homeassistant.const import ATTR_VOLTAGE
+import homeassistant.helpers.device_registry as dr
 
-REQUIREMENTS = ['pyHS100==0.3.4']
+DEPENDENCIES = ['tplink']
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 ATTR_CURRENT_A = 'current_a'
 
-CONF_LEDS = 'enable_leds'
 
-DEFAULT_NAME = 'TP-Link Switch'
+def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform.
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_LEDS): cv.boolean,
-})
+    Deprecated.
+    """
+    _LOGGER.warning('Loading as a platform is deprecated, '
+                    'convert to use the tplink component.')
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the TPLink switch platform."""
-    from pyHS100 import SmartPlug
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    leds_on = config.get(CONF_LEDS)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up discovered switches."""
+    devs = []
+    for dev in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
+        devs.append(SmartPlugSwitch(dev))
 
-    add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
+    async_add_entities(devs, True)
+
+    return True
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, name, leds_on):
+    def __init__(self, smartplug):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._name = name
-        self._leds_on = leds_on
+        self._sysinfo = None
         self._state = None
-        self._available = True
+        self._available = False
         # Set up emeter cache
         self._emeter_params = {}
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._sysinfo["mac"]
+
+    @property
     def name(self):
-        """Return the name of the Smart Plug, if any."""
-        return self._name
+        """Return the name of the Smart Plug."""
+        return self._sysinfo["alias"]
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            "name": self.name,
+            "model": self._sysinfo["model"],
+            "manufacturer": 'TP-Link',
+            "connections": {
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            "sw_version": self._sysinfo["sw_ver"],
+        }
 
     @property
     def available(self) -> bool:
@@ -87,16 +106,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
+            if not self._sysinfo:
+                self._sysinfo = self.smartplug.sys_info
+
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
-
-            if self._leds_on is not None:
-                self.smartplug.led = self._leds_on
-                self._leds_on = None
-
-            # Pull the name from the device if a name was not specified
-            if self._name == DEFAULT_NAME:
-                self._name = self.smartplug.alias
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
@@ -123,6 +137,6 @@ class SmartPlugSwitch(SwitchDevice):
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
-                _LOGGER.warning(
-                    "Could not read state for %s: %s", self.name, ex)
-                self._available = False
+                _LOGGER.warning("Could not read state for %s: %s",
+                                self.smartplug.host, ex)
+            self._available = False
