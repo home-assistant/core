@@ -37,7 +37,7 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_info(self):
         """Return device specific attributes."""
-        # Only physical devices should be HA device.
+        # Only physical devices should be HA devices.
         # Every HomematicIP device has a serial number,
         # that is stored in id property.
         if hasattr(self._device, 'id') and self._device.id is not None:
