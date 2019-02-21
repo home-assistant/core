@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT, STATE_HOME)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA, DOMAIN)
 from homeassistant.helpers.aiohttp_client import (
