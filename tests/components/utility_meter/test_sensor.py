@@ -122,6 +122,7 @@ async def test_non_net_consumption(hass):
 
     assert state.state == '0'
 
+
 async def _test_self_reset(hass, cycle, start_time, expect_reset=True):
     """Test energy sensor self reset."""
     config = {
