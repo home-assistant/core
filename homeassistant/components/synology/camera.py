@@ -104,12 +104,20 @@ class SynologyCamera(Camera):
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
+
     @property
     def name(self):
         """Return the name of this device."""
         return self._camera.name
 
     @property
+
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'home_mode': self.home_mode
+        }
+    
     def is_recording(self):
         """Return true if the device is recording."""
         return self._camera.is_recording
