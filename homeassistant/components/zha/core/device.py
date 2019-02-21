@@ -146,11 +146,11 @@ class ZHADevice:
                 self._available_signal,
                 False
             )
-            async_dispatcher_send(
-                self.hass,
-                "{}_{}".format(self._available_signal, 'entity'),
-                True
-            )
+        async_dispatcher_send(
+            self.hass,
+            "{}_{}".format(self._available_signal, 'entity'),
+            available
+        )
         self._available = available
 
     @property
