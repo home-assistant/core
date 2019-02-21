@@ -394,6 +394,7 @@ omit =
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
     homeassistant/components/remember_the_milk/__init__.py
+    homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/rfxtrx/*
