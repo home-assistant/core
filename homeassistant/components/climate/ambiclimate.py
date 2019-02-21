@@ -26,7 +26,6 @@ CONFIGURATOR_DESCRIPTION = 'To link your Ambiclimate account, ' \
                            'click the link, login, and authorize:'
 CONFIGURATOR_LINK_NAME = 'Link Ambiclimate account'
 CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
-DEFAULT_CACHE_PATH = '.ambiclimate-token-cache'
 DEFAULT_NAME = 'Ambiclimate'
 SERVICE_COMFORT_FEEDBACK = 'send_comfort_feedback'
 SERVICE_COMFORT_MODE = 'set_comfort_mode'
