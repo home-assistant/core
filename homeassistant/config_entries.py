@@ -520,7 +520,7 @@ class ConfigEntries:
                 # New in 0.79
                 connection_class=entry.get('connection_class',
                                            CONN_CLASS_UNKNOWN),
-                # New in 0.8x
+                # New in 0.89
                 options=entry.get('options'))
             for entry in config['entries']]
 
