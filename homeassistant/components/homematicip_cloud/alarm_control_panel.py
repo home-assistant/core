@@ -46,6 +46,12 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
         super().__init__(home, device)
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        # A HomematicipSecurityZone is not a device.
+        return None
+
+    @property
     def state(self):
         """Return the state of the device."""
         from homematicip.base.enums import WindowState

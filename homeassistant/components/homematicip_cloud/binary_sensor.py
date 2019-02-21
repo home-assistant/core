@@ -134,10 +134,8 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
 
     @property
     def device_info(self):
-        """Return device specific attributes.
-
-        A HomematicipSecurityZoneSensorGroup does not belong to a device.
-        """
+        """Return device specific attributes."""
+        # A HomematicipSecurityZoneSensorGroup is not a device.
         return None
 
     @property
@@ -184,10 +182,8 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
 
     @property
     def device_info(self):
-        """Return device specific attributes.
-
-        A HomematicipSecuritySensorGroup does not belong to a device.
-        """
+        """Return device specific attributes."""
+        # A HomematicipSecuritySensorGroup is not a device.
         return None
 
     @property
