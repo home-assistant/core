@@ -8,7 +8,6 @@ https://github.com/josemotta/vl53l1x-python
 Fixed setup for current driver version:
 
 - DEFAULT_RANGE is always LONG
-- DEFAULT_I2C_BUS is always 1
 - A GPIO connected to VL53L1X XSHUT input resets the device.
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
@@ -60,7 +59,7 @@ async def async_setup_platform(hass,
                                async_add_entities,
                                discovery_info=None):
     """Setup the VL53L1X ToF Sensor from ST."""
-    from VL53L1X2 import VL53L1X
+    from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     unit = LENGTH_MILIMETERS
