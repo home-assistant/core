@@ -89,7 +89,6 @@ class SynologyCamera(Camera):
         self._camera = self._surveillance.get_camera(camera_id)
         self._motion_setting = self._surveillance.get_motion_setting(camera_id)
         self.is_streaming = self._camera.is_enabled
-        self.home_mode = self._surveillance.get_home_mode_status()
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -111,11 +110,9 @@ class SynologyCamera(Camera):
         return self._camera.name
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            'home_mode': self.home_mode
-        }
+    def home_mode(self):
+        """Return true if the device is recording."""
+        return self.home_mode
 
     def is_recording(self):
         """Return true if the device is recording."""
@@ -132,7 +129,7 @@ class SynologyCamera(Camera):
         self._motion_setting = self._surveillance.get_motion_setting(
             self._camera.camera_id)
         self.is_streaming = self._camera.is_enabled
-        self.home_mode = self._surveillance.get_home_mode_status()
+        self.hass.states.set('camera.synology_home_mode', self._surveillance.get_home_mode_status())
 
     @property
     def motion_detection_enabled(self):
