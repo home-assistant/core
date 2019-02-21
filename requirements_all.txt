@@ -892,8 +892,7 @@ py17track==2.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
-# homeassistant.components.light.tplink
-# homeassistant.components.switch.tplink
+# homeassistant.components.tplink
 pyHS100==0.3.4
 
 # homeassistant.components.air_quality.norway_air
