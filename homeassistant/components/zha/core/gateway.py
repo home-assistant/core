@@ -478,6 +478,8 @@ def establish_device_mappings():
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
+        # this works for now but if we hit conflicts we can break it out to
+        # a different dict that is keyed by manufacturer
         SMARTTHINGS_HUMIDITY_CLUSTER: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
