@@ -40,7 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Enigma2 TV platform."""
     name = config[CONF_NAME]
 
     # Generate a configuration for the Enigma2 library
