@@ -179,7 +179,9 @@ def _set_ais_secure_android_id_dom(hass, call):
         android_id = get_mac()
 
     ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
-    hass.states.async_set('sensor.ais_secure_android_id_dom', ais_global.G_AIS_SECURE_ANDROID_ID_DOM)
+    hass.states.async_set('sensor.ais_secure_android_id_dom', ais_global.G_AIS_SECURE_ANDROID_ID_DOM,
+                          {"friendly_name": "Unikalny identyfikator bramki",
+                           "icon": "mdi:account-card-details"})
     _LOGGER.info("sensor.ais_secure_android_id_dom -> " + ais_global.G_AIS_SECURE_ANDROID_ID_DOM)
 
     # try:
