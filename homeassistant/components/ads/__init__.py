@@ -4,10 +4,6 @@ import struct
 import logging
 import ctypes
 from collections import namedtuple
-import ctypes
-import logging
-import struct
-import threading
 
 import voluptuous as vol
 
