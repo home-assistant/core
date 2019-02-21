@@ -172,13 +172,14 @@ FLOWS = [
     'smhi',
     'sonos',
     'tellduslive',
+    'tplink',
     'tradfri',
     'twilio',
     'unifi',
     'upnp',
     'zha',
     'zone',
-    'zwave'
+    'zwave',
 ]
 
 
