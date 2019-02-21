@@ -20,7 +20,7 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['env_canada==0.0.7']
+REQUIREMENTS = ['env_canada==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,11 +174,17 @@ def get_forecast(ec_data, forecast_type):
     """Build the forecast array."""
     forecast_array = []
 
+    forecast_time = ec_data.forecast_time
+    if not forecast_time:
+        return []
+
+    ref_time = datetime.datetime.strptime(forecast_time, '%Y%m%d%H%M%S')
+
     if forecast_type == 'daily':
         half_days = ec_data.daily_forecasts
-        if half_days[0]['temperature_class'] == 'high':
+        if 'High' in half_days[0]['text_summary']:
             forecast_array.append({
-                ATTR_FORECAST_TIME: dt.now().isoformat(),
+                ATTR_FORECAST_TIME: ref_time.isoformat(),
                 ATTR_FORECAST_TEMP: int(half_days[0]['temperature']),
                 ATTR_FORECAST_TEMP_LOW: int(half_days[1]['temperature']),
                 ATTR_FORECAST_CONDITION: icon_code_to_condition(
@@ -193,7 +199,7 @@ def get_forecast(ec_data, forecast_type):
                                   range(1, 10, 2)):
             forecast_array.append({
                 ATTR_FORECAST_TIME:
-                    (dt.now() + datetime.timedelta(days=day)).isoformat(),
+                    (ref_time + datetime.timedelta(days=day)).isoformat(),
                 ATTR_FORECAST_TEMP: int(half_days[high]['temperature']),
                 ATTR_FORECAST_TEMP_LOW: int(half_days[low]['temperature']),
                 ATTR_FORECAST_CONDITION: icon_code_to_condition(
