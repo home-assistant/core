@@ -7,9 +7,8 @@ import voluptuous as vol
 
 from homeassistant.components import remote
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_NUM_REPEATS,
-    DEFAULT_DELAY_SECS, ATTR_HOLD_SECS, DEFAULT_HOLD_SECS,
-    DOMAIN, PLATFORM_SCHEMA)
+    ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_HOLD_SECS,
+    ATTR_NUM_REPEATS, DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 )
@@ -35,8 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
-        vol.Coerce(float),
-    vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS):
         vol.Coerce(float),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -342,11 +339,12 @@ class HarmonyRemote(remote.RemoteDevice):
             _LOGGER.error("%s: Device %s is invalid", self.name, device)
             return
 
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS)
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
-        hold_secs = kwargs.get(ATTR_HOLD_SECS)
-        _LOGGER.debug("Sending commands to device %s holding for %s seconds",
-                      device, hold_secs)
+        hold_secs = kwargs[ATTR_HOLD_SECS]
+        _LOGGER.debug("Sending commands to device %s holding for %s seconds "
+                      "with a delay of %s seconds",
+                      device, hold_secs, delay_secs)
 
         # Creating list of commands to send.
         snd_cmnd_list = []
