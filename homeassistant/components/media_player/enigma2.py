@@ -15,7 +15,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['openwebif.py==0.9']
@@ -28,7 +28,8 @@ DEFAULT_TIMEOUT = 0
 
 SUPPORTED_ENIGMA2 = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                           SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
-                          SUPPORT_PREVIOUS_TRACK | SUPPORT_TURN_ON | SUPPORT_PAUSE
+                          SUPPORT_PREVIOUS_TRACK | \
+                          SUPPORT_TURN_ON | SUPPORT_PAUSE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
