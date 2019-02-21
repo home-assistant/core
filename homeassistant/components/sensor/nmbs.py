@@ -256,7 +256,7 @@ class NMBSSensor(Entity):
         self._attrs = next_connection
 
         if self._excl_vias and self.is_via_connection:
-            _LOGGER.info("Skipping update of NMBSSensor \
+            _LOGGER.debug("Skipping update of NMBSSensor \
                 because this connection is a via")
             return
 
