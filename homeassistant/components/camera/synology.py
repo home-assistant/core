@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['py-synology==0.2.0']
+REQUIREMENTS = ['py-synology==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,3 +128,11 @@ class SynologyCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self._surveillance.disable_motion_detection(self._camera_id)
+
+    def turn_off(self):
+        """Turn off camera."""
+        self._surveillance.disable_camera(self._camera_id)
+
+    def turn_on(self):
+        """Turn on camera."""
+        self._surveillance.enable_camera(self._camera_id)
