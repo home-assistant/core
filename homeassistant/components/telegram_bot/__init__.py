@@ -52,6 +52,7 @@ ATTR_USERNAME = 'username'
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PARAMS = 'proxy_params'
+CONF_BASE_URL = 'base_url'
 
 DOMAIN = 'telegram_bot'
 
@@ -302,13 +303,14 @@ def initialize_bot(p_config):
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
+    base_url = p_config.get(CONF_BASE_URL)
 
     if proxy_url is not None:
         request = Request(con_pool_size=8, proxy_url=proxy_url,
                           urllib3_proxy_kwargs=proxy_params)
     else:
         request = Request(con_pool_size=8)
-    return Bot(token=api_key, request=request)
+    return Bot(token=api_key, base_url = base_url,  request=request)
 
 
 class TelegramNotificationService:
