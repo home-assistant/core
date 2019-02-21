@@ -525,10 +525,7 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(
-            self, entry: ConfigEntry, *,
-            data: Optional[dict] = _UNDEF,
-            options: Optional[dict] = _UNDEF) -> None:
+    def async_update_entry(self, entry, *, data=_UNDEF, options=_UNDEF):
         """Update a config entry."""
         if data is not _UNDEF:
             entry.data = data
@@ -684,9 +681,7 @@ class OptionsFlowManager:
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
 
-    async def _async_create_flow(
-            self, entry_id: str, *,
-            context: dict, data) -> data_entry_flow.FlowHandler:
+    async def _async_create_flow(self, entry_id, *, context, data):
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.
@@ -698,8 +693,7 @@ class OptionsFlowManager:
             entry.data, entry.options)
         return flow
 
-    async def _async_finish_flow(
-            self, flow: data_entry_flow.FlowHandler, result: dict):
+    async def _async_finish_flow(self, flow, result):
         """Finish an options flow and update options for configuration entry.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
