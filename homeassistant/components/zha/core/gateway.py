@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
+SMARTTHINGS_HUMIDITY_CLUSTER = 64581
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
@@ -174,7 +175,8 @@ class ZHAGateway:
             # available and we already loaded fresh state above
             zha_device.update_available(True)
         elif not zha_device.available and zha_device.power_source is not None\
-                and zha_device.power_source != BasicChannel.BATTERY:
+                and zha_device.power_source != BasicChannel.BATTERY\
+                and zha_device.power_source != BasicChannel.UNKNOWN:
             # the device is currently marked unavailable and it isn't a battery
             # powered device so we should be able to update it now
             _LOGGER.debug(
@@ -380,7 +382,10 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
     """Dispatch a single cluster match to a HA component."""
     component = None  # sub_component = None
     for cluster_type, candidate_component in device_classes.items():
-        if isinstance(cluster, cluster_type):
+        if isinstance(cluster_type, int):
+            if cluster.cluster_id == cluster_type:
+                component = candidate_component
+        elif isinstance(cluster, cluster_type):
             component = candidate_component
             break
 
@@ -473,6 +478,7 @@ def establish_device_mappings():
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
+        SMARTTHINGS_HUMIDITY_CLUSTER: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
         zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
@@ -489,6 +495,7 @@ def establish_device_mappings():
 
     SENSOR_TYPES.update({
         zcl.clusters.measurement.RelativeHumidity.cluster_id: HUMIDITY,
+        SMARTTHINGS_HUMIDITY_CLUSTER: HUMIDITY,
         zcl.clusters.measurement.TemperatureMeasurement.cluster_id:
         TEMPERATURE,
         zcl.clusters.measurement.PressureMeasurement.cluster_id: PRESSURE,

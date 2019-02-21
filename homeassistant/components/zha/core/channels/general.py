@@ -126,9 +126,11 @@ class LevelControlChannel(ZigbeeChannel):
 class BasicChannel(ZigbeeChannel):
     """Channel to interact with the basic cluster."""
 
+    UNKNOWN = 0
     BATTERY = 3
+
     POWER_SOURCES = {
-        0: 'Unknown',
+        UNKNOWN: 'Unknown',
         1: 'Mains (single phase)',
         2: 'Mains (3 phase)',
         BATTERY: 'Battery',
