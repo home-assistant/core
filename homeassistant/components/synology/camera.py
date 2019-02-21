@@ -129,7 +129,8 @@ class SynologyCamera(Camera):
         self._motion_setting = self._surveillance.get_motion_setting(
             self._camera.camera_id)
         self.is_streaming = self._camera.is_enabled
-        self.hass.states.set('camera.synology_home_mode', self._surveillance.get_home_mode_status())
+        self.hass.states.set('camera.synology_home_mode', 
+                              self._surveillance.get_home_mode_status())
 
     @property
     def motion_detection_enabled(self):
