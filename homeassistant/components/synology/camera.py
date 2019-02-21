@@ -111,13 +111,12 @@ class SynologyCamera(Camera):
         return self._camera.name
 
     @property
-
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
             'home_mode': self.home_mode
         }
-    
+        
     def is_recording(self):
         """Return true if the device is recording."""
         return self._camera.is_recording
