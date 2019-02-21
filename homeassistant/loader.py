@@ -83,7 +83,7 @@ def get_platform(hass,  # type: HomeAssistant
     """
     # If the platform has a component, we will limit the platform loading path
     # to be the same source (custom/built-in).
-    component = get_component(hass, platform_name)
+    component = _load_file(hass, platform_name, LOOKUP_PATHS)
 
     # Until we have moved all platforms under their component/own folder, it
     # can be that the component is None.
@@ -181,7 +181,7 @@ def _load_file(hass,  # type: HomeAssistant
 
             cache[comp_or_platform] = module
 
-            if index == 0:
+            if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
                 _LOGGER.warning(
                     'You are using a custom component for %s which has not '
                     'been tested by Home Assistant. This component might '
