@@ -55,16 +55,16 @@ async def async_setup_platform(hass, config, async_add_entities,
     def handle_enable_home_mode(call):
         surveillance.set_home_mode(True)
 
-    hass.services.async_register(DOMAIN, 
-                                 'enable_home_mode', 
+    hass.services.async_register(DOMAIN,
+                                 'enable_home_mode',
                                  handle_enable_home_mode)
 
     """Register a service to be able to disable home mode."""
     def handle_disable_home_mode(call):
         surveillance.set_home_mode(False)
 
-    hass.services.async_register(DOMAIN, 
-                                 'disable_home_mode', 
+    hass.services.async_register(DOMAIN,
+                                 'disable_home_mode',
                                  handle_disable_home_mode)
 
     # add cameras
