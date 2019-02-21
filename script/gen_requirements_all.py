@@ -125,8 +125,8 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
-    'zigpy',
-    'bellows',
+    'zigpy-homeassistant',
+    'bellows-homeassistant',
 )
 
 IGNORE_PACKAGES = (

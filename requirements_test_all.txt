@@ -41,7 +41,7 @@ aioautomatic==0.6.5
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.0
+aiohue==1.9.1
 
 # homeassistant.components.unifi
 aiounifi==4
@@ -50,7 +50,7 @@ aiounifi==4
 apns2==0.3.0
 
 # homeassistant.components.zha
-bellows==0.7.0
+bellows-homeassistant==0.7.1
 
 # homeassistant.components.calendar.caldav
 caldav==0.5.0
@@ -116,7 +116,7 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190218.0
+home-assistant-frontend==20190220.0
 
 # homeassistant.components.homekit_controller
 homekit==0.12.2
@@ -151,7 +151,7 @@ mficlient==0.3.0
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
-numpy==1.16.0
+numpy==1.16.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -190,7 +190,7 @@ pydeconz==52
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.55
+pyhomematic==0.1.56
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -306,4 +306,4 @@ wakeonlan==1.1.6
 warrant==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.2.0
+zigpy-homeassistant==0.3.0

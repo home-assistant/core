@@ -111,20 +111,20 @@ aiofreepybox==0.0.6
 aioftp==0.12.0
 
 # homeassistant.components.harmony.remote
-aioharmony==0.1.5
+aioharmony==0.1.8
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.0
+aiohue==1.9.1
 
 # homeassistant.components.sensor.iliad_italy
 aioiliad==0.1.1
 
 # homeassistant.components.sensor.imap
-aioimaplib==0.7.13
+aioimaplib==0.7.15
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -196,7 +196,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows==0.7.0
+bellows-homeassistant==0.7.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -292,7 +292,7 @@ construct==2.9.45
 # credstash==1.15.0
 
 # homeassistant.components.sensor.crimereports
-crimereports==1.0.0
+crimereports==1.0.1
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -535,7 +535,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190218.0
+home-assistant-frontend==20190220.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -752,7 +752,7 @@ nuheat==0.3.0
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
-numpy==1.16.0
+numpy==1.16.1
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -773,7 +773,10 @@ openevsewifi==0.4
 openhomedevice==0.4.2
 
 # homeassistant.components.air_quality.opensensemap
-opensensemap-api==0.1.3
+opensensemap-api==0.1.4
+
+# homeassistant.components.device_tracker.luci
+openwrt-luci-rpc==0.3.0
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
@@ -916,7 +919,7 @@ pyW800rf32==0.1
 # py_noaa==0.3.0
 
 # homeassistant.components.ads
-pyads==2.2.6
+pyads==3.0.7
 
 # homeassistant.components.sensor.aftership
 pyaftership==0.1.2
@@ -1062,7 +1065,7 @@ pyhik==0.2.2
 pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
-pyhomematic==0.1.55
+pyhomematic==0.1.56
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1502,7 +1505,7 @@ rocketchat-API==0.6.1
 roombapy==1.3.1
 
 # homeassistant.components.sensor.rova
-rova==0.0.2
+rova==0.1.0
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.7
@@ -1635,7 +1638,7 @@ suds-py3==1.3.3.0
 swisshydrodata==0.0.3
 
 # homeassistant.components.device_tracker.synology_srm
-synology-srm==0.0.4
+synology-srm==0.0.6
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.14
@@ -1811,13 +1814,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.0.1
+zigpy-deconz==0.1.1
 
 # homeassistant.components.zha
-zigpy-xbee==0.1.1
+zigpy-homeassistant==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.2.0
+zigpy-xbee-homeassistant==0.1.2
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3

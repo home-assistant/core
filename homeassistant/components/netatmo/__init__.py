@@ -1,6 +1,5 @@
 """Support for the Netatmo devices."""
 import logging
-import json
 from datetime import timedelta
 from urllib.error import HTTPError
 
@@ -18,6 +17,9 @@ DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_PERSONS = 'netatmo_persons'
+DATA_WEBHOOK_URL = 'netatmo_webhook_url'
+
 CONF_SECRET_KEY = 'secret_key'
 CONF_WEBHOOKS = 'webhooks'
 
@@ -28,7 +30,6 @@ SERVICE_DROPWEBHOOK = 'dropwebhook'
 
 NETATMO_AUTH = None
 NETATMO_WEBHOOK_URL = None
-NETATMO_PERSONS = {}
 
 DEFAULT_PERSON = 'Unknown'
 DEFAULT_DISCOVERY = True
@@ -85,7 +86,8 @@ def setup(hass, config):
     """Set up the Netatmo devices."""
     import pyatmo
 
-    global NETATMO_AUTH, NETATMO_WEBHOOK_URL
+    global NETATMO_AUTH
+    hass.data[DATA_PERSONS] = {}
     try:
         NETATMO_AUTH = pyatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
@@ -103,11 +105,12 @@ def setup(hass, config):
 
     if config[DOMAIN][CONF_WEBHOOKS]:
         webhook_id = hass.components.webhook.async_generate_id()
-        NETATMO_WEBHOOK_URL = hass.components.webhook.async_generate_url(
-            webhook_id)
+        hass.data[
+            DATA_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
+                webhook_id)
         hass.components.webhook.async_register(
             DOMAIN, 'Netatmo', webhook_id, handle_webhook)
-        NETATMO_AUTH.addwebhook(NETATMO_WEBHOOK_URL)
+        NETATMO_AUTH.addwebhook(hass.data[DATA_WEBHOOK_URL])
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)
 
@@ -115,7 +118,7 @@ def setup(hass, config):
         """Service to (re)add webhooks during runtime."""
         url = service.data.get(CONF_URL)
         if url is None:
-            url = NETATMO_WEBHOOK_URL
+            url = hass.data[DATA_WEBHOOK_URL]
         _LOGGER.info("Adding webhook for URL: %s", url)
         NETATMO_AUTH.addwebhook(url)
 
@@ -142,9 +145,8 @@ def dropwebhook(hass):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
-    body = await request.text()
     try:
-        data = json.loads(body) if body else {}
+        data = await request.json()
     except ValueError:
         return None
 
@@ -158,7 +160,7 @@ async def handle_webhook(hass, webhook_id, request):
     if data.get(ATTR_EVENT_TYPE) == EVENT_PERSON:
         for person in data[ATTR_PERSONS]:
             published_data[ATTR_ID] = person.get(ATTR_ID)
-            published_data[ATTR_NAME] = NETATMO_PERSONS.get(
+            published_data[ATTR_NAME] = hass.data[DATA_PERSONS].get(
                 published_data[ATTR_ID], DEFAULT_PERSON)
             published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             published_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
@@ -186,8 +188,9 @@ async def handle_webhook(hass, webhook_id, request):
 class CameraData:
     """Get the latest data from Netatmo."""
 
-    def __init__(self, auth, home=None):
+    def __init__(self, hass, auth, home=None):
         """Initialize the data object."""
+        self._hass = hass
         self.auth = auth
         self.camera_data = None
         self.camera_names = []
@@ -227,9 +230,9 @@ class CameraData:
 
     def get_persons(self):
         """Gather person data for webhooks."""
-        global NETATMO_PERSONS
         for person_id, person_data in self.camera_data.persons.items():
-            NETATMO_PERSONS[person_id] = person_data.get(ATTR_PSEUDO)
+            self._hass.data[DATA_PERSONS][person_id] = person_data.get(
+                ATTR_PSEUDO)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

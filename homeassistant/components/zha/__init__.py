@@ -26,14 +26,14 @@ from .core.const import (
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.gateway import establish_device_mappings
-from .core.listeners import populate_listener_registry
+from .core.channels.registry import populate_channel_registry
 
 REQUIREMENTS = [
-    'bellows==0.7.0',
-    'zigpy==0.2.0',
-    'zigpy-xbee==0.1.1',
+    'bellows-homeassistant==0.7.1',
+    'zigpy-homeassistant==0.3.0',
+    'zigpy-xbee-homeassistant==0.1.2',
     'zha-quirks==0.0.6',
-    'zigpy-deconz==0.0.1'
+    'zigpy-deconz==0.1.1'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -90,7 +90,7 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
     establish_device_mappings()
-    populate_listener_registry()
+    populate_channel_registry()
 
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = (
