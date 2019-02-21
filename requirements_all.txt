@@ -583,6 +583,9 @@ iperf3==0.1.10
 # homeassistant.components.route53
 ipify==1.0.0
 
+# homeassistant.components.reddit
+praw==6.1.1
+
 # homeassistant.components.verisure
 jsonpath==0.75
 
