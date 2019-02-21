@@ -1,9 +1,4 @@
-"""
-Support for OpenTherm Gateway devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/opentherm_gw/
-"""
+"""Support for OpenTherm Gateway devices."""
 import logging
 from datetime import datetime, date
 
@@ -19,6 +14,10 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['pyotgw==0.4b1']
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'opentherm_gw'
 
@@ -103,10 +102,6 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-REQUIREMENTS = ['pyotgw==0.3b1']
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):

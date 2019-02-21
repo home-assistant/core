@@ -1,26 +1,22 @@
-"""
-Sensor for Last.fm account status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.lastfm/
-"""
+"""Sensor for Last.fm account status."""
 import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==2.4.0']
+REQUIREMENTS = ['pylast==3.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'
 ATTR_TOP_PLAYED = 'top_played'
+ATTRIBUTION = "Data provided by Last.fm"
 
 CONF_USERS = 'users'
 
@@ -105,6 +101,7 @@ class LastfmSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_LAST_PLAYED: self._lastplayed,
             ATTR_PLAY_COUNT: self._playcount,
             ATTR_TOP_PLAYED: self._topplayed,

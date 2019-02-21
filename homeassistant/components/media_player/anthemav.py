@@ -9,11 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['anthemav==1.1.8']
@@ -59,7 +61,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
     _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
-    _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
     async_add_entities([device])
@@ -101,7 +102,7 @@ class AnthemAVR(MediaPlayerDevice):
             return STATE_ON
         if pwrstate is False:
             return STATE_OFF
-        return STATE_UNKNOWN
+        return None
 
     @property
     def is_volume_muted(self):

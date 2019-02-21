@@ -20,7 +20,8 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
@@ -439,6 +440,9 @@ class Light(ToggleEntity):
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
+        if supported_features & SUPPORT_EFFECT:
+            data[ATTR_EFFECT_LIST] = self.effect_list
+
         if self.is_on:
             if supported_features & SUPPORT_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
@@ -460,7 +464,6 @@ class Light(ToggleEntity):
                 data[ATTR_WHITE_VALUE] = self.white_value
 
             if supported_features & SUPPORT_EFFECT:
-                data[ATTR_EFFECT_LIST] = self.effect_list
                 data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}

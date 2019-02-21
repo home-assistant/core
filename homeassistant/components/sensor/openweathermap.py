@@ -17,11 +17,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.9.0']
+REQUIREMENTS = ['pyowm==2.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by OpenWeatherMap"
+ATTRIBUTION = "Data provided by OpenWeatherMap"
+
 CONF_FORECAST = 'forecast'
 CONF_LANGUAGE = 'language'
 
@@ -121,7 +122,7 @@ class OpenWeatherMapSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):

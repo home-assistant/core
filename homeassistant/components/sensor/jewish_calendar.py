@@ -4,7 +4,6 @@ Platform to retrieve Jewish calendar information for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.7.5']
+REQUIREMENTS = ['hdate==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +30,24 @@ SENSOR_TYPES = {
     'mga_end_shma': ['Latest time for Shm"a MG"A', 'mdi:calendar-clock'],
     'plag_mincha': ['Plag Hamincha', 'mdi:weather-sunset-down'],
     'first_stars': ['T\'set Hakochavim', 'mdi:weather-night'],
+    'upcoming_shabbat_candle_lighting': ['Upcoming Shabbat Candle Lighting',
+                                         'mdi:candle'],
+    'upcoming_shabbat_havdalah': ['Upcoming Shabbat Havdalah',
+                                  'mdi:weather-night'],
+    'upcoming_candle_lighting': ['Upcoming Candle Lighting', 'mdi:candle'],
+    'upcoming_havdalah': ['Upcoming Havdalah', 'mdi:weather-night'],
+    'issur_melacha_in_effect': ['Issur Melacha in Effect',
+                                'mdi:power-plug-off'],
+    'omer_count': ['Day of the Omer', 'mdi:counter'],
 }
 
 CONF_DIASPORA = 'diaspora'
 CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
+CONF_CANDLE_LIGHT_MINUTES = 'candle_lighting_minutes_before_sunset'
+CONF_HAVDALAH_OFFSET_MINUTES = 'havdalah_minutes_after_sunset'
+
+CANDLE_LIGHT_DEFAULT = 18
 
 DEFAULT_NAME = 'Jewish Calendar'
 
@@ -46,6 +58,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_LANGUAGE, default='english'):
         vol.In(['hebrew', 'english']),
+    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT): int,
+    # Default of 0 means use 8.5 degrees / 'three_stars' time.
+    vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
     vol.Optional(CONF_SENSORS, default=['date']):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
@@ -59,6 +74,8 @@ async def async_setup_platform(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     diaspora = config.get(CONF_DIASPORA)
+    candle_lighting_offset = config.get(CONF_CANDLE_LIGHT_MINUTES)
+    havdalah_offset = config.get(CONF_HAVDALAH_OFFSET_MINUTES)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -68,7 +85,8 @@ async def async_setup_platform(
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
             name, language, sensor_type, latitude, longitude,
-            hass.config.time_zone, diaspora))
+            hass.config.time_zone, diaspora, candle_lighting_offset,
+            havdalah_offset))
     async_add_entities(dev, True)
 
 
@@ -77,7 +95,8 @@ class JewishCalSensor(Entity):
 
     def __init__(
             self, name, language, sensor_type, latitude, longitude, timezone,
-            diaspora):
+            diaspora, candle_lighting_offset=CANDLE_LIGHT_DEFAULT,
+            havdalah_offset=0):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -88,6 +107,8 @@ class JewishCalSensor(Entity):
         self.longitude = longitude
         self.timezone = timezone
         self.diaspora = diaspora
+        self.candle_lighting_offset = candle_lighting_offset
+        self.havdalah_offset = havdalah_offset
         _LOGGER.debug("Sensor %s initialized", self.type)
 
     @property
@@ -118,24 +139,61 @@ class JewishCalSensor(Entity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        if now > sunset:
-            today += timedelta(1)
+        location = hdate.Location(latitude=self.latitude,
+                                  longitude=self.longitude,
+                                  timezone=self.timezone,
+                                  diaspora=self.diaspora)
+
+        def make_zmanim(date):
+            """Create a Zmanim object."""
+            return hdate.Zmanim(
+                date=date, location=location,
+                candle_lighting_offset=self.candle_lighting_offset,
+                havdalah_offset=self.havdalah_offset, hebrew=self._hebrew)
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
+        lagging_date = date
 
+        # Advance Hebrew date if sunset has passed.
+        # Not all sensors should advance immediately when the Hebrew date
+        # officially changes (i.e. after sunset), hence lagging_date.
+        if now > sunset:
+            date = date.next_day
+        today_times = make_zmanim(today)
+        if today_times.havdalah and now > today_times.havdalah:
+            lagging_date = lagging_date.next_day
+
+        # Terminology note: by convention in py-libhdate library, "upcoming"
+        # refers to "current" or "upcoming" dates.
         if self.type == 'date':
             self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
-            self._state = date.parasha
+            # Compute the weekly portion based on the upcoming shabbat.
+            self._state = lagging_date.upcoming_shabbat.parasha
         elif self.type == 'holiday_name':
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
+        elif self.type == 'upcoming_shabbat_candle_lighting':
+            times = make_zmanim(lagging_date.upcoming_shabbat
+                                .previous_day.gdate)
+            self._state = times.candle_lighting
+        elif self.type == 'upcoming_candle_lighting':
+            times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov
+                                .first_day.previous_day.gdate)
+            self._state = times.candle_lighting
+        elif self.type == 'upcoming_shabbat_havdalah':
+            times = make_zmanim(lagging_date.upcoming_shabbat.gdate)
+            self._state = times.havdalah
+        elif self.type == 'upcoming_havdalah':
+            times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov
+                                .last_day.gdate)
+            self._state = times.havdalah
+        elif self.type == 'issur_melacha_in_effect':
+            self._state = make_zmanim(now).issur_melacha_in_effect
         else:
-            times = hdate.Zmanim(
-                date=today, latitude=self.latitude, longitude=self.longitude,
-                timezone=self.timezone, hebrew=self._hebrew).zmanim
+            times = make_zmanim(today).zmanim
             self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)

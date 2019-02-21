@@ -10,7 +10,8 @@
                     "latitude": "Breddegrad",
                     "longitude": "L\u00e6ngdegrad",
                     "name": "Navn",
-                    "passive": "Passiv"
+                    "passive": "Passiv",
+                    "radius": "Radius"
                 },
                 "title": "Definer zoneparametre"
             }

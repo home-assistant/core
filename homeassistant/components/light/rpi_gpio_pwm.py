@@ -1,21 +1,17 @@
-"""
-Support for LED lights that can be controlled using PWM.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.pwm/
-"""
+"""Support for LED lights that can be controlled using PWM."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['pwmled==1.3.0']
+REQUIREMENTS = ['pwmled==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +19,6 @@ CONF_LEDS = 'leds'
 CONF_DRIVER = 'driver'
 CONF_PINS = 'pins'
 CONF_FREQUENCY = 'frequency'
-CONF_ADDRESS = 'address'
 
 CONF_DRIVER_GPIO = 'gpio'
 CONF_DRIVER_PCA9685 = 'pca9685'
@@ -34,6 +29,7 @@ CONF_LED_TYPE_RGB = 'rgb'
 CONF_LED_TYPE_RGBW = 'rgbw'
 CONF_LED_TYPES = [CONF_LED_TYPE_SIMPLE, CONF_LED_TYPE_RGB, CONF_LED_TYPE_RGBW]
 
+DEFAULT_BRIGHTNESS = 255
 DEFAULT_COLOR = [0, 0]
 
 SUPPORT_SIMPLE_LED = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
@@ -44,11 +40,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         {
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
-            vol.Required(CONF_PINS): vol.All(cv.ensure_list,
-                                             [cv.positive_int]),
+            vol.Required(CONF_PINS):
+                vol.All(cv.ensure_list, [cv.positive_int]),
             vol.Required(CONF_TYPE): vol.In(CONF_LED_TYPES),
             vol.Optional(CONF_FREQUENCY): cv.positive_int,
-            vol.Optional(CONF_ADDRESS): cv.byte
+            vol.Optional(CONF_ADDRESS): cv.byte,
         }
     ])
 })
@@ -95,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(leds)
 
 
-class PwmSimpleLed(Light):
+class PwmSimpleLed(Light, RestoreEntity):
     """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):
@@ -103,7 +99,18 @@ class PwmSimpleLed(Light):
         self._led = led
         self._name = name
         self._is_on = False
-        self._brightness = 255
+        self._brightness = DEFAULT_BRIGHTNESS
+
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._is_on = (last_state.state == STATE_ON)
+            self._brightness = last_state.attributes.get('brightness',
+                                                         DEFAULT_BRIGHTNESS)
+            self._led.set(is_on=self._is_on,
+                          brightness=_from_hass_brightness(self._brightness))
 
     @property
     def should_poll(self):
@@ -168,6 +175,14 @@ class PwmRgbLed(PwmSimpleLed):
         """Initialize a RGB(W) PWM LED."""
         super().__init__(led, name)
         self._color = DEFAULT_COLOR
+
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._color = last_state.attributes.get('hs_color', DEFAULT_COLOR)
+            self._led.set(color=_from_hass_color(self._color))
 
     @property
     def hs_color(self):

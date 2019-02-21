@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "TelldusLive est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "auth_error": "Erreur d'authentification, veuillez r\u00e9essayer."
+        },
+        "step": {
+            "user": {
+                "description": "Vide"
+            }
+        }
+    }
+}

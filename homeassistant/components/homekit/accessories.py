@@ -9,10 +9,9 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
-    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID,
-    ATTR_SERVICE)
-from homeassistant.core import callback as ha_callback
-from homeassistant.core import split_entity_id
+    ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_SERVICE,
+    __version__)
+from homeassistant.core import callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
@@ -22,8 +21,7 @@ from .const import (
     CHAR_BATTERY_LEVEL, CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY,
     DEBOUNCE_TIMEOUT, EVENT_HOMEKIT_CHANGED, MANUFACTURER,
     SERV_BATTERY_SERVICE)
-from .util import (
-    convert_to_float, show_setup_message, dismiss_setup_message)
+from .util import convert_to_float, dismiss_setup_message, show_setup_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +122,8 @@ class HomeAccessory(Accessory):
         """
         battery_level = convert_to_float(
             new_state.attributes.get(ATTR_BATTERY_LEVEL))
+        if battery_level is None:
+            return
         self._char_battery.set_value(battery_level)
         self._char_low_battery.set_value(battery_level < 20)
         _LOGGER.debug('%s: Updated battery level to %d', self.entity_id,

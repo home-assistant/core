@@ -107,7 +107,7 @@ class XiaomiCamera(Camera):
             _LOGGER.warning("There don't appear to be any folders")
             return False
 
-        first_dir = dirs[-1]
+        first_dir = latest_dir = dirs[-1]
         try:
             ftp.cwd(first_dir)
         except error_perm as exc:
@@ -161,6 +161,6 @@ class XiaomiCamera(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                self._manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()

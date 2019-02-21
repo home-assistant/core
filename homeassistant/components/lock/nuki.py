@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-REQUIREMENTS = ['pynuki==1.3.1']
+REQUIREMENTS = ['pynuki==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 

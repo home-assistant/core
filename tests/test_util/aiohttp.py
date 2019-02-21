@@ -183,6 +183,11 @@ class AiohttpClientMockResponse:
         return self._url
 
     @property
+    def content_type(self):
+        """Return yarl of URL."""
+        return self._headers.get('content-type')
+
+    @property
     def content(self):
         """Return content."""
         return mock_stream(self.response)

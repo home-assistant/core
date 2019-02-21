@@ -1,9 +1,4 @@
-"""
-Support for Automation Device Specification (ADS).
-
-For more details about this component, please refer to the documentation.
-https://home-assistant.io/components/ads/
-"""
+"""Support for Automation Device Specification (ADS)."""
 import threading
 import struct
 import logging
@@ -14,7 +9,7 @@ from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyads==2.2.6']
+REQUIREMENTS = ['pyads==3.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +41,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE]),
-    vol.Required(CONF_ADS_VALUE): cv.match_all,
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL]),
+    vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
     vol.Required(CONF_ADS_VAR): cv.string,
 })
 
@@ -78,9 +73,10 @@ def setup(hass, config):
 
     try:
         ads = AdsHub(client)
-    except pyads.pyads.ADSError:
+    except pyads.ADSError:
         _LOGGER.error(
-            "Could not connect to ADS host (netid=%s, port=%s)", net_id, port)
+            "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
+            net_id, ip_address, port)
         return False
 
     hass.data[DATA_ADS] = ads
@@ -125,16 +121,23 @@ class AdsHub:
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
+        import pyads
         _LOGGER.debug("Shutting down ADS")
         for notification_item in self._notification_items.values():
-            self._client.del_device_notification(
-                notification_item.hnotify,
-                notification_item.huser
-            )
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
                 notification_item.hnotify, notification_item.huser)
-        self._client.close()
+            try:
+                self._client.del_device_notification(
+                    notification_item.hnotify,
+                    notification_item.huser
+                )
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+        try:
+            self._client.close()
+        except pyads.ADSError as err:
+            _LOGGER.error(err)
 
     def register_device(self, device):
         """Register a new device."""
@@ -166,7 +169,7 @@ class AdsHub:
         self._notification_items[hnotify] = NotificationItem(
             hnotify, huser, name, plc_datatype, callback)
 
-    def _device_notification_callback(self, addr, notification, huser):
+    def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
         contents = notification.contents
 

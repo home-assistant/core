@@ -13,7 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -57,7 +57,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._username = username
         self._password = password
         self._websession = async_get_clientsession(self._hass)
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._alarm = Alarmdotcom(
             username, password, self._websession, hass.loop)
 
@@ -81,8 +81,8 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
-        return 'Any'
+            return alarm.FORMAT_NUMBER
+        return alarm.FORMAT_TEXT
 
     @property
     def state(self):
@@ -93,7 +93,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         if self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
-        return STATE_UNKNOWN
+        return None
 
     @property
     def device_state_attributes(self):

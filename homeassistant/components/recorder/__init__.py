@@ -1,12 +1,4 @@
-"""
-Support for recording details.
-
-Component that records all events and state changes. Allows other components
-to query this database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/recorder/
-"""
+"""Support for recording details."""
 import asyncio
 from collections import namedtuple
 import concurrent.futures
@@ -33,7 +25,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.14']
+REQUIREMENTS = ['sqlalchemy==1.2.18']
 
 _LOGGER = logging.getLogger(__name__)
 

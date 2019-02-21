@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, CONF_RESOURCE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, STATE_UNKNOWN)
+    CONF_MONITORED_VARIABLES, CONF_NAME)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -116,7 +116,7 @@ class ArestSensor(Entity):
         self._name = '{} {}'.format(location.title(), name.title())
         self._variable = variable
         self._pin = pin
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
@@ -145,7 +145,7 @@ class ArestSensor(Entity):
             return values['error']
 
         value = self._renderer(
-            values.get('value', values.get(self._variable, STATE_UNKNOWN)))
+            values.get('value', values.get(self._variable, None)))
         return value
 
     def update(self):

@@ -28,7 +28,8 @@ ATTR_DUE_IN = 'Due in'
 ATTR_DUE_AT = 'Due at'
 ATTR_NEXT_UP = 'Later Bus'
 
-CONF_ATTRIBUTION = "Data provided by data.dublinked.ie"
+ATTRIBUTION = "Data provided by data.dublinked.ie"
+
 CONF_STOP_ID = 'stopid'
 CONF_ROUTE = 'route'
 
@@ -92,7 +93,7 @@ class DublinPublicTransportSensor(Entity):
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"
-            if self._times:
+            if len(self._times) > 1:
                 next_up = self._times[1][ATTR_ROUTE] + " in "
                 next_up += self._times[1][ATTR_DUE_IN]
 
@@ -101,7 +102,7 @@ class DublinPublicTransportSensor(Entity):
                 ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
                 ATTR_STOP_ID: self._stop,
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_NEXT_UP: next_up
             }
 

@@ -1,4 +1,9 @@
-"""Sensor for Brottsplatskartan."""
+"""
+Sensor platform for Brottsplatskartan information.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.brottsplatskartan/
+"""
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -17,7 +22,9 @@ REQUIREMENTS = ['brottsplatskartan==0.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AREA = 'area'
+
 DEFAULT_NAME = 'Brottsplatskartan'
+
 SCAN_INTERVAL = timedelta(minutes=30)
 
 AREAS = [
@@ -29,37 +36,32 @@ AREAS = [
     "Örebro län", "Östergötlands län"
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=[]):
-            vol.All(cv.ensure_list, [vol.In(AREAS)])
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_AREA, default=[]):
+        vol.All(cv.ensure_list, [vol.In(AREAS)]),
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
     import brottsplatskartan
+
+    area = config.get(CONF_AREA)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
-    area = config.get(CONF_AREA)
 
     # Every Home Assistant instance should have their own unique
     # app parameter: https://brottsplatskartan.se/sida/api
-    app = 'ha-' + str(uuid.getnode())
+    app = 'ha-{}'.format(uuid.getnode())
 
     bpk = brottsplatskartan.BrottsplatsKartan(
-        app=app, area=area,
-        latitude=latitude, longitude=longitude
-    )
+        app=app, area=area, latitude=latitude, longitude=longitude)
 
-    add_entities(
-        [BrottsplatskartanSensor(bpk, name)], True
-    )
+    add_entities([BrottsplatskartanSensor(bpk, name)], True)
 
 
 class BrottsplatskartanSensor(Entity):
@@ -67,11 +69,9 @@ class BrottsplatskartanSensor(Entity):
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        import brottsplatskartan
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
+        self._attributes = {}
         self._brottsplatskartan = bpk
         self._name = name
-        self._previous_incidents = set()
         self._state = None
 
     @property
@@ -91,6 +91,7 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
+        import brottsplatskartan
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
@@ -98,13 +99,10 @@ class BrottsplatskartanSensor(Entity):
             _LOGGER.debug("Problems fetching incidents")
             return
 
-        if len(incidents) < len(self._previous_incidents):
-            self._previous_incidents = set()
-
         for incident in incidents:
             incident_type = incident.get('title_type')
             incident_counts[incident_type] += 1
-            self._previous_incidents.add(incident.get('id'))
 
+        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
         self._attributes.update(incident_counts)
         self._state = len(incidents)

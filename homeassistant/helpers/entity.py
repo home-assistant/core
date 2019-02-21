@@ -319,7 +319,7 @@ class Entity:
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task."""
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
+        self.hass.async_create_task(self.async_update_ha_state(force_refresh))
 
     async def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.

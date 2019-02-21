@@ -15,11 +15,12 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -189,7 +190,7 @@ class Volumio(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         volume = self._state.get('volume', None)
         if volume is not None and volume != "":
-            volume = volume / 100
+            volume = int(volume) / 100
         return volume
 
     @property

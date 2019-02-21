@@ -1,0 +1,7 @@
+{
+    "mfa_setup": {
+        "totp": {
+            "title": ""
+        }
+    }
+}

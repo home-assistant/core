@@ -16,6 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
@@ -25,7 +26,8 @@ ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
-CONF_ATTRIBUTION = "Powered by Waze"
+ATTRIBUTION = "Powered by Waze"
+
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
@@ -40,6 +42,7 @@ ICON = 'mdi:car'
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
 SCAN_INTERVAL = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
@@ -136,7 +139,7 @@ class WazeTravelTime(Entity):
         if self._state is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
         if 'distance' in self._state:
@@ -182,6 +185,7 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator

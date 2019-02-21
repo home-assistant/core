@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock, patch
 from tests.common import get_test_home_assistant
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     SUPPORT_HOLD_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,

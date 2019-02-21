@@ -1,9 +1,4 @@
-"""
-Allow to set up simple automation rules via the config file.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/automation/
-"""
+"""Allow to set up simple automation rules via the config file."""
 import asyncio
 from functools import partial
 import importlib
@@ -375,8 +370,6 @@ def _async_get_action(hass, config, name):
     async def action(entity_id, variables, context):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
-        hass.components.logbook.async_log_entry(
-            name, 'has been triggered', DOMAIN, entity_id)
 
         try:
             await script_obj.async_run(variables, context)

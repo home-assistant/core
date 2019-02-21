@@ -249,7 +249,7 @@ async def test_get_panels(hass, hass_ws_client):
     """Test get_panels command."""
     await async_setup_component(hass, 'frontend')
     await hass.components.frontend.async_register_built_in_panel(
-        'map', 'Map', 'mdi:account-location')
+        'map', 'Map', 'mdi:tooltip-account')
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -264,7 +264,7 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['success']
     assert msg['result']['map']['component_name'] == 'map'
     assert msg['result']['map']['url_path'] == 'map'
-    assert msg['result']['map']['icon'] == 'mdi:account-location'
+    assert msg['result']['map']['icon'] == 'mdi:tooltip-account'
     assert msg['result']['map']['title'] == 'Map'
 
 

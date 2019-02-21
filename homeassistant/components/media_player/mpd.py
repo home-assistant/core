@@ -11,12 +11,14 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -300,14 +302,13 @@ class MpdDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        _LOGGER.debug(str.format("Playing playlist: {0}", media_id))
+        _LOGGER.debug("Playing playlist: %s", media_id)
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
-                _LOGGER.warning(str.format("Unknown playlist name %s.",
-                                           media_id))
+                _LOGGER.warning("Unknown playlist name %s", media_id)
             self._client.clear()
             self._client.load(media_id)
             self._client.play()
@@ -319,7 +320,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(self._status['random'])
+        return bool(int(self._status['random']))
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""

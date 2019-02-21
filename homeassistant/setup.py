@@ -63,7 +63,7 @@ async def _async_process_dependencies(
     blacklisted = [dep for dep in dependencies
                    if dep in loader.DEPENDENCY_BLACKLIST]
 
-    if blacklisted:
+    if blacklisted and name != 'default_config':
         _LOGGER.error("Unable to set up dependencies of %s: "
                       "found blacklisted dependencies: %s",
                       name, ', '.join(blacklisted))
@@ -106,12 +106,18 @@ async def _async_setup_component(hass: core.HomeAssistant,
         log_error("Component not found.", False)
         return False
 
-    # Validate no circular dependencies
-    components = loader.load_order_component(hass, domain)
-
-    # OrderedSet is empty if component or dependencies could not be resolved
-    if not components:
-        log_error("Unable to resolve component or dependencies.")
+    # Validate all dependencies exist and there are no circular dependencies
+    try:
+        loader.component_dependencies(hass, domain)
+    except loader.ComponentNotFound as err:
+        _LOGGER.error(
+            "Not setting up %s because we are unable to resolve "
+            "(sub)dependency %s", domain, err.domain)
+        return False
+    except loader.CircularDependency as err:
+        _LOGGER.error(
+            "Not setting up %s because it contains a circular dependency: "
+            "%s -> %s", domain, err.from_domain, err.to_domain)
         return False
 
     processed_config = \
@@ -190,7 +196,8 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
 
     This method is a coroutine.
     """
-    platform_path = PLATFORM_FORMAT.format(domain, platform_name)
+    platform_path = PLATFORM_FORMAT.format(domain=domain,
+                                           platform=platform_name)
 
     def log_error(msg: str) -> None:
         """Log helper."""

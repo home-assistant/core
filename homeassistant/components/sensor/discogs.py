@@ -22,7 +22,8 @@ REQUIREMENTS = ['discogs_client==2.2.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = 'identity'
-CONF_ATTRIBUTION = "Data provided by Discogs"
+
+ATTRIBUTION = "Data provided by Discogs"
 
 DEFAULT_NAME = 'Discogs'
 
@@ -125,7 +126,7 @@ class DiscogsSensor(Entity):
 
         if self._type != 'random_record':
             return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data['user'],
             }
 
@@ -137,7 +138,7 @@ class DiscogsSensor(Entity):
                 self._attrs['formats'][0]['descriptions'][0]),
             'label': self._attrs['labels'][0]['name'],
             'released': self._attrs['year'],
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data['user'],
         }
 

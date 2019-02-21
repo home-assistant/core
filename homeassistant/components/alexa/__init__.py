@@ -1,9 +1,4 @@
-"""
-Support for Alexa skill service end point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alexa/
-"""
+"""Support for Alexa skill service end point."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,9 @@ from homeassistant.helpers import entityfilter
 
 from . import flash_briefings, intent, smart_home
 from .const import (
-    CONF_AUDIO, CONF_DISPLAY_URL, CONF_TEXT, CONF_TITLE, CONF_UID, DOMAIN,
-    CONF_FILTER, CONF_ENTITY_CONFIG)
+    CONF_AUDIO, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY_URL,
+    CONF_ENDPOINT, CONF_TEXT, CONF_TITLE, CONF_UID, DOMAIN, CONF_FILTER,
+    CONF_ENTITY_CONFIG)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +26,9 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 })
 
 SMART_HOME_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENDPOINT): cv.string,
+    vol.Optional(CONF_CLIENT_ID): cv.string,
+    vol.Optional(CONF_CLIENT_SECRET): cv.string,
     vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
 })
@@ -53,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Activate Alexa component."""
+    """Activate the Alexa component."""
     config = config.get(DOMAIN, {})
     flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
 
@@ -68,6 +67,6 @@ async def async_setup(hass, config):
         pass
     else:
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        smart_home.async_setup(hass, smart_home_config)
+        await smart_home.async_setup(hass, smart_home_config)
 
     return True

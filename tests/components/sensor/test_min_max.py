@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    STATE_UNKNOWN, STATE_UNAVAILABLE, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 from tests.common import get_test_home_assistant
 
 
@@ -209,7 +210,7 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test_max')
         assert STATE_UNKNOWN != state.state
 
-        self.hass.states.set(entity_ids[1], STATE_UNKNOWN)
+        self.hass.states.set(entity_ids[1], STATE_UNAVAILABLE)
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
