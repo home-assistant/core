@@ -116,7 +116,7 @@ class SynologyCamera(Camera):
         return {
             'home_mode': self.home_mode
         }
-        
+
     def is_recording(self):
         """Return true if the device is recording."""
         return self._camera.is_recording
