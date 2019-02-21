@@ -37,10 +37,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
-        # Skip Creds Step if a device is configured.
-        self.entry = self.hass.config_entries.async_entries(DOMAIN)
-        if self.entry:
-            return await self.async_step_link()
+        # Abort if device is configured.
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='devices_configured')
 
         # Check if able to bind to ports: UDP 987, TCP 997.
         ports = PORT_MSG.keys()
@@ -79,19 +78,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         device_list = [
             device['host-ip'] for device in devices]
 
-        # If entry exists check that devices found aren't configured.
-        if self.entry:
-            # Should be only 1 entry max.
-            _entry = self.entry[0]
-            conf_devices = _entry.data['devices']
-            for c_device in conf_devices:
-                if c_device['host'] in device_list:
-                    # Remove configured device from search list.
-                    device_list.remove(c_device['host'])
-            # If list is empty then all devices are configured.
-            if not device_list:
-                return self.async_abort(reason='devices_configured')
-
         # Login to PS4 with user data.
         if user_input is not None:
             self.region = user_input[CONF_REGION]
@@ -112,15 +98,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                     CONF_NAME: self.name,
                     CONF_REGION: self.region
                 }
-
-                if self.entry:
-                    conf_devices.append(device)
-                    await self.hass.config_entries.async_remove(
-                        _entry.entry_id)
-                    return self.async_create_entry(
-                        title='PlayStation 4',
-                        data=_entry.data,
-                    )
 
                 # Create entry.
                 return self.async_create_entry(
