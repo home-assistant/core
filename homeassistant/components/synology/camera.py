@@ -6,9 +6,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT, STATE_HOME)
 from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA)
+    Camera, PLATFORM_SCHEMA, DOMAIN)
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession)
@@ -51,6 +51,18 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     cameras = surveillance.get_all_cameras()
 
+    """Register a service to be able to enable home mode."""
+    def handle_enable_home_mode(call):
+        surveillance.set_home_mode(True)
+
+    hass.services.async_register(DOMAIN, 'enable_home_mode', handle_enable_home_mode)
+
+    """Register a service to be able to disable home mode."""
+    def handle_disable_home_mode(call):
+        surveillance.set_home_mode(False)
+
+    hass.services.async_register(DOMAIN, 'disable_home_mode', handle_disable_home_mode)
+
     # add cameras
     devices = []
     for camera in cameras:
@@ -73,6 +85,7 @@ class SynologyCamera(Camera):
         self._camera = self._surveillance.get_camera(camera_id)
         self._motion_setting = self._surveillance.get_motion_setting(camera_id)
         self.is_streaming = self._camera.is_enabled
+        self.home_mode = self._surveillance.get_home_mode_status()
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -108,6 +121,7 @@ class SynologyCamera(Camera):
         self._motion_setting = self._surveillance.get_motion_setting(
             self._camera.camera_id)
         self.is_streaming = self._camera.is_enabled
+        self.home_mode = self._surveillance.get_home_mode_status()
 
     @property
     def motion_detection_enabled(self):
