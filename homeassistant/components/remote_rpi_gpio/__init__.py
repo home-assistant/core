@@ -10,10 +10,10 @@ DOMAIN = 'remote_rpi_gpio'
 
 def setup(hass, config):
     """Set up the Raspberry PI GPIO component."""
-    def cleanup_gpio(event):
-        """Stuff to do before stopping."""
-    def prepare_gpio(event):
-        """Stuff to do when home assistant starts."""
+#    def cleanup_gpio(event):
+#        """Stuff to do before stopping."""
+#    def prepare_gpio(event):
+#        """Stuff to do when home assistant starts."""
     return True
 
 
@@ -34,8 +34,14 @@ def setup_input(address, port, pull_mode):
     from gpiozero import Button
     from gpiozero.pins.pigpio import PiGPIOFactory
 
+    if pull_mode == "UP":
+        pull_gpio_up = True
+    if pull_mode == "DOWN":
+        pull_gpio_up = False
+
     try:
-        return Button(port, pull_up=pull_mode,
+        return Button(port,
+                      pull_up=pull_gpio_up,
                       pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError):
         return None

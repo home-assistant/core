@@ -19,7 +19,7 @@ CONF_PULL_MODE = 'pull_mode'
 
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = True
+DEFAULT_PULL_MODE = "UP"
 
 DEPENDENCIES = ['remote_rpi_gpio']
 
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
     vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.boolean,
+    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
 })
 
 
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for port_num, port_name in ports.items():
         binary_sensors.append(RemoteRPiGPIOBinarySensor(
             port_name, address, port_num, pull_mode, bouncetime, invert_logic))
-    add_entities(binary_sensors, True)
+    add_entities(binary_sensors, False)
 
 
 class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
@@ -77,6 +77,8 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
             """Read state from GPIO."""
             self._state = remote_rpi_gpio.read_input(self._button)
             self.schedule_update_ha_state()
+
+        self._state = remote_rpi_gpio.read_input(self._button)
 
         self._button.when_released = read_gpio
         self._button.when_pressed = read_gpio
