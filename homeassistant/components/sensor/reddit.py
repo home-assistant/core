@@ -13,9 +13,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_CLIENT_ID, CONF_CLIENT_SECRET,
-    CONF_USERNAME, CONF_PASSWORD, CONF_MAXIMUM)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_MAXIMUM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -23,6 +21,8 @@ REQUIREMENTS = ['praw==6.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
 CONF_SUBREDDITS = 'subreddits'
 
 ATTR_ID = 'id'
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     subreddits = config[CONF_SUBREDDITS]
     user_agent = config.get(CONF_USERNAME) + '_home_assistant_sensor'
-    limit = config.config.get(CONF_MAXIMUM)
+    limit = config.get(CONF_MAXIMUM)
 
     try:
         reddit = praw.Reddit(
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             password=config.get(CONF_PASSWORD),
             user_agent=user_agent)
 
-        _LOGGER.info('Connected to reddit api')
+        _LOGGER.info('Connected to praw')
 
     except praw.exceptions.PRAWException as err:
         _LOGGER.error("Reddit error %s", err)
@@ -90,7 +90,7 @@ class RedditSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'reddit_' + self.subreddit
+        return 'reddit_' + self._subreddit
 
     @property
     def state(self):
