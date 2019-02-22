@@ -2,28 +2,29 @@
 import logging
 
 from homeassistant.components.nissan_leaf import (
-    DATA_LEAF, DATA_PLUGGED_IN, LeafEntity)
+    DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nissan_leaf']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf binary sensor."""
-    _LOGGER.debug(
-        "binary_sensor setup_platform, discovery_info=%s", discovery_info)
+    if discovery_info is None:
+        return
 
     devices = []
-    for key, value in hass.data[DATA_LEAF].items():
-        _LOGGER.debug(
-            "binary_sensor setup_platform, key=%s, value=%s", key, value)
-        devices.append(LeafPluggedInSensor(value))
+    for vin, datastore in hass.data[DATA_LEAF].items():
+        _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
+        devices.append(LeafPluggedInSensor(datastore))
+        devices.append(LeafChargingSensor(datastore))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
-class LeafPluggedInSensor(LeafEntity):
+class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
     """Plugged In Sensor class."""
 
     @property
@@ -32,7 +33,7 @@ class LeafPluggedInSensor(LeafEntity):
         return "{} {}".format(self.car.leaf.nickname, "Plug Status")
 
     @property
-    def state(self):
+    def is_on(self):
         """Return true if plugged in."""
         return self.car.data[DATA_PLUGGED_IN]
 
@@ -42,3 +43,24 @@ class LeafPluggedInSensor(LeafEntity):
         if self.car.data[DATA_PLUGGED_IN]:
             return 'mdi:power-plug'
         return 'mdi:power-plug-off'
+
+
+class LeafChargingSensor(LeafEntity, BinarySensorDevice):
+    """Charging Sensor class."""
+
+    @property
+    def name(self):
+        """Sensor name."""
+        return "{} {}".format(self.car.leaf.nickname, "Charging Status")
+
+    @property
+    def is_on(self):
+        """Return true if charging."""
+        return self.car.data[DATA_CHARGING]
+
+    @property
+    def icon(self):
+        """Icon handling."""
+        if self.car.data[DATA_CHARGING]:
+            return 'mdi:flash'
+        return 'mdi:flash-off'
