@@ -176,7 +176,8 @@ def _setup_platform(hass, config, add_entities, discovery_info):
                     _LOGGER.warning("Failed to initialize '%s'", host)
         else:
             players = pysonos.discover(
-                interface_addr=config.get(CONF_INTERFACE_ADDR))
+                interface_addr=config.get(CONF_INTERFACE_ADDR),
+                all_households=True)
 
         if not players:
             _LOGGER.warning("No Sonos speakers found")

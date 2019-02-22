@@ -21,7 +21,7 @@ ENTITY_ID = 'media_player.kitchen'
 class pysonosDiscoverMock():
     """Mock class for the pysonos.discover method."""
 
-    def discover(interface_addr):
+    def discover(interface_addr, all_households=False):
         """Return tuple of pysonos.SoCo objects representing found speakers."""
         return {SoCoMock('192.0.2.1')}
 
