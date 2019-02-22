@@ -7,7 +7,8 @@
             "token_already_setup": "Token zosta\u0142 ju\u017c skonfigurowany.",
             "token_forbidden": "Token nie ma wymaganych zakres\u00f3w OAuth.",
             "token_invalid_format": "Token musi by\u0107 w formacie UID/GUID",
-            "token_unauthorized": "Token jest niewa\u017cny lub nie ma ju\u017c autoryzacji."
+            "token_unauthorized": "Token jest niewa\u017cny lub nie ma ju\u017c autoryzacji.",
+            "webhook_error": "SmartThings nie mo\u017ce sprawdzi\u0107 poprawno\u015bci punktu ko\u0144cowego skonfigurowanego w `base_url`. Sprawd\u017a wymagania dotycz\u0105ce komponentu."
         },
         "step": {
             "user": {
