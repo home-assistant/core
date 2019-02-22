@@ -154,7 +154,7 @@ amcrest==1.2.3
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.media_player.anthemav
-anthemav==1.1.8
+anthemav==1.1.9
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -196,7 +196,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows==0.7.0
+bellows-homeassistant==0.7.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -535,7 +535,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190219.0
+home-assistant-frontend==20190220.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -773,7 +773,10 @@ openevsewifi==0.4
 openhomedevice==0.4.2
 
 # homeassistant.components.air_quality.opensensemap
-opensensemap-api==0.1.3
+opensensemap-api==0.1.4
+
+# homeassistant.components.device_tracker.luci
+openwrt-luci-rpc==0.3.0
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
@@ -889,8 +892,7 @@ py17track==2.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
-# homeassistant.components.light.tplink
-# homeassistant.components.switch.tplink
+# homeassistant.components.tplink
 pyHS100==0.3.4
 
 # homeassistant.components.air_quality.norway_air
@@ -1062,7 +1064,7 @@ pyhik==0.2.2
 pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
-pyhomematic==0.1.55
+pyhomematic==0.1.56
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1414,6 +1416,9 @@ pytradfri[async]==6.0.1
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
 
+# homeassistant.components.device_tracker.ubee
+pyubee==0.2
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.16
 
@@ -1502,7 +1507,7 @@ rocketchat-API==0.6.1
 roombapy==1.3.1
 
 # homeassistant.components.sensor.rova
-rova==0.0.2
+rova==0.1.0
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.7
@@ -1811,13 +1816,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.0.1
+zigpy-deconz==0.1.1
 
 # homeassistant.components.zha
-zigpy-xbee==0.1.1
+zigpy-homeassistant==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.2.0
+zigpy-xbee-homeassistant==0.1.2
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
