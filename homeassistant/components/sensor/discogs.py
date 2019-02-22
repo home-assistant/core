@@ -33,18 +33,22 @@ UNIT_RECORDS = 'records'
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
+SENSOR_COLLECTION_TYPE = 'collection'
+SENSOR_WANTLIST_TYPE = 'wantlist'
+SENSOR_RANDOM_RECORD_TYPE = 'random_record'
+
 SENSORS = {
-    'collection': {
+    [SENSOR_COLLECTION_TYPE]: {
         'name': 'Collection',
         'icon': 'mdi:album',
         'unit_of_measurement': 'records'
     },
-    'wantlist': {
+    [SENSOR_WANTLIST_TYPE]: {
         'name': 'Wantlist',
         'icon': 'mdi:album',
         'unit_of_measurement': 'records'
     },
-    'random_record': {
+    [SENSOR_RANDOM_RECORD_TYPE]: {
         'name': 'Random Record',
         'icon': 'mdi:record_player',
         'unit_of_measurement': None
@@ -124,7 +128,7 @@ class DiscogsSensor(Entity):
         if self._state is None or self._attrs is None:
             return None
 
-        if self._type != 'random_record':
+        if self._type != SENSOR_RANDOM_RECORD_TYPE:
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data['user'],
@@ -156,9 +160,9 @@ class DiscogsSensor(Entity):
 
     def update(self):
         """Set state to the amount of records in user's collection."""
-        if self._type == 'collection':
+        if self._type == SENSOR_COLLECTION_TYPE:
             self._state = self._discogs_data['collection_count']
-        elif self._type == 'wantlist':
+        elif self._type == SENSOR_WANTLIST_TYPE:
             self._state = self._discogs_data['wantlist_count']
         else:
             self._state = self.get_random_record()
