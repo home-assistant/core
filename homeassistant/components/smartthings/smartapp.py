@@ -290,7 +290,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     """
     Handle when a SmartApp is updated (reconfigured) by the user.
 
-    Store the refresh token and reload the config entry.
+    Store the refresh token in the config entry.
     """
     # Update refresh token in config entry
     entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)
@@ -300,9 +300,6 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     if entry:
         entry.data[CONF_REFRESH_TOKEN] = req.refresh_token
         hass.config_entries.async_update_entry(entry)
-        # Reload it
-        await entry.async_unload(hass)
-        await entry.async_setup(hass)
 
     _LOGGER.debug("SmartApp '%s' under parent app '%s' was updated",
                   req.installed_app_id, app.app_id)

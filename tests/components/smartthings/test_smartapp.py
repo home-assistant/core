@@ -97,13 +97,11 @@ async def test_smartapp_install_creates_flow(
     assert entries[1].title == location.name
 
 
-async def test_smartapp_update_reloads_entry(
+async def test_smartapp_update_saves_token(
         hass, smartthings_mock, location, device_factory):
-    """Test update reloads the entry."""
+    """Test update saves token."""
     # Arrange
     entry = Mock()
-    entry.async_unload.return_value = mock_coro()
-    entry.async_setup.return_value = mock_coro()
     entry.data = {
         'installed_app_id': str(uuid4()),
         'app_id': str(uuid4())
@@ -122,8 +120,7 @@ async def test_smartapp_update_reloads_entry(
     # Act
     await smartapp.smartapp_update(hass, request, None, app)
     # Assert
-    assert entry.async_unload.call_count == 1
-    assert entry.async_setup.call_count == 1
+    assert entry.data[CONF_REFRESH_TOKEN] == request.refresh_token
 
 
 async def test_smartapp_uninstall(hass, config_entry):
