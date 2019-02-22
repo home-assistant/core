@@ -109,6 +109,7 @@ class ECSensor(Entity):
         self.platform_name = platform_name
         self._state = None
         self._attr = None
+        self.update()
 
     @property
     def name(self):

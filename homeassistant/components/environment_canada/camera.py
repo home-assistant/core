@@ -73,13 +73,7 @@ class ECCamera(Camera):
 
     def camera_image(self):
         """Return bytes of camera image."""
-        self.radar_object.update()
-
-        if CONF_LOOP:
-            self.image = self.radar_object.get_loop()
-        else:
-            self.image = self.radar_object.get_latest_frame()
-
+        self.update()
         return self.image
 
     @property
@@ -103,4 +97,7 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        self.radar_object.update()
+        if CONF_LOOP:
+            self.image = self.radar_object.get_loop()
+        else:
+            self.image = self.radar_object.get_latest_frame()
