@@ -609,13 +609,14 @@ class MockConfigEntry(config_entries.ConfigEntry):
 
     def __init__(self, *, domain='test', data=None, version=1, entry_id=None,
                  source=config_entries.SOURCE_USER, title='Mock Title',
-                 state=None,
+                 state=None, options={},
                  connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
             'entry_id': entry_id or 'mock-id',
             'domain': domain,
             'data': data or {},
+            'options': options,
             'version': version,
             'title': title,
             'connection_class': connection_class,
