@@ -78,6 +78,65 @@ async def test_full_flow_implementation(hass):
         assert result['title'] == MOCK_TITLE
 
 
+async def test_multiple_flow_implementation(hass):
+    """Test multiple device flows."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+
+    # User Step Started, results in Step Creds
+    with patch('pyps4_homeassistant.Helper.port_bind',
+               return_value=None):
+        result = await flow.async_step_user()
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'creds'
+
+    # Step Creds results with form in Step Link.
+    with patch('pyps4_homeassistant.Helper.get_creds',
+               return_value=MOCK_CREDS), \
+            patch('pyps4_homeassistant.Helper.has_devices',
+                  return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_creds({})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'link'
+
+    # User Input results in created entry.
+    with patch('pyps4_homeassistant.Helper.link',
+               return_value=(True, True)), \
+            patch('pyps4_homeassistant.Helper.has_devices',
+                  return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(MOCK_CONFIG)
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['data'][CONF_TOKEN] == MOCK_CREDS
+        assert result['data']['devices'] == [MOCK_DEVICE]
+        assert result['title'] == MOCK_TITLE
+
+        await hass.async_block_till_done()
+
+    # Test additional flow.
+    mock_data = {
+        CONF_TOKEN: result['data'][CONF_TOKEN],
+        'devices': result['data']['devices']}
+    # User Step Started, results in Step Link:
+    MockConfigEntry(domain=ps4.DOMAIN, data=mock_data).add_to_hass(hass)
+    with patch('pyps4_homeassistant.Helper.port_bind',
+               return_value=None):
+        result = await flow.async_step_user()
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'link'
+
+    # Step Link
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST},
+                             {'host-ip': MOCK_HOST_ADDITIONAL}]), \
+            patch('pyps4_homeassistant.Helper.link',
+                  return_value=(True, True)):
+        result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['data'][CONF_TOKEN] == MOCK_CREDS
+        assert len(result['data']['devices']) == 2
+        assert result['title'] == MOCK_TITLE
+
+
 async def test_port_bind_abort(hass):
     """Test that flow aborted when cannot bind to ports 987, 997."""
     flow = ps4.PlayStation4FlowHandler()
