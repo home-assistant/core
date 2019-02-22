@@ -38,8 +38,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
         # Skip Creds Step if a device is configured.
-        self.entry = self.hass.config_entries.async_entries(DOMAIN)
-        if self.entry:
+        if self.hass.config_entries.async_entries(DOMAIN):
             return await self.async_step_link()
 
         # Check if able to bind to ports: UDP 987, TCP 997.
@@ -80,9 +79,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             device['host-ip'] for device in devices]
 
         # If entry exists check that devices found aren't configured.
-        if self.entry:
+        if self.hass.config_entries.async_entries(DOMAIN):
             # Should be only 1 entry max.
-            _entry = self.entry[0]
+            _entry = self.hass.config_entries.async_entries(DOMAIN)[0]
             conf_devices = _entry.data['devices']
             for c_device in conf_devices:
                 if c_device['host'] in device_list:
