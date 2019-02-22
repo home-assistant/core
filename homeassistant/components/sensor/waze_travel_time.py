@@ -205,7 +205,7 @@ class WazeTravelTime(Entity):
             try:
                 params = WazeRouteCalculator.WazeRouteCalculator(
                     self._origin, self._destination, self._region,
-                    log_lvl="DEBUG")
+                    log_lvl=logging.DEBUG)
                 routes = params.calc_all_routes_info(real_time=self._realtime)
 
                 if self._incl_filter is not None:
