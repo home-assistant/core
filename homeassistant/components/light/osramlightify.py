@@ -352,6 +352,7 @@ class Luminary(Light):
                 kwargs[ATTR_KELVIN])
             self._luminary.set_temperature(kwargs[ATTR_KELVIN], transition)
 
+        self._is_on = True
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             self._luminary.set_luminance(int(self._brightness / 2.55),
@@ -367,6 +368,7 @@ class Luminary(Light):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        self._is_on = False
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
             self._brightness = DEFAULT_BRIGHTNESS
