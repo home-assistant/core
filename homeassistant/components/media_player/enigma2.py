@@ -66,7 +66,7 @@ class Enigma2Device(MediaPlayerDevice):
         self.e2_box = openwebif.api.CreateDevice(config['host'],
                                                  port=config['port'])
 
-        self.volume = 20
+        self.volume = 10
         self.current_service_channel_name = None
         self.current_programme_name = None
         self.current_service_ref = None
