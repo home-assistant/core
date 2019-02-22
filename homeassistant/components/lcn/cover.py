@@ -55,6 +55,7 @@ class LcnCover(LcnDevice, CoverDevice):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
+        self._closed = True
         states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.DOWN
         self.address_connection.control_motors(states)
@@ -62,6 +63,7 @@ class LcnCover(LcnDevice, CoverDevice):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
+        self._closed = False
         states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.UP
         self.address_connection.control_motors(states)
@@ -69,6 +71,7 @@ class LcnCover(LcnDevice, CoverDevice):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
+        self._closed = None
         states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.STOP
         self.address_connection.control_motors(states)
