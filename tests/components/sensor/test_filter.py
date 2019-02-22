@@ -108,6 +108,16 @@ class TestFilterSensor(unittest.TestCase):
                              radius=4.0)
         for state in self.values:
             filtered = filt.filter_state(state)
+        assert 21 == filtered.state
+
+    def test_outlier_step(self):
+        """Test if outlier filter handles long-running step-changes correctly."""
+        filt = OutlierFilter(window_size=3,
+                             precision=2,
+                             entity=None,
+                             radius=1.0)
+        for state in self.values[:-1]:
+            filtered = filt.filter_state(state)
         assert 22 == filtered.state
 
     def test_initial_outlier(self):

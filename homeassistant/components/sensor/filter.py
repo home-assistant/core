@@ -405,9 +405,9 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
+        median = statistics.median([s.state for s in self.states])
         if (len(self.states) == self.states.maxlen and
-                abs(new_state.state -
-                    statistics.median([s.state for s in self.states])) >
+                abs(new_state.state - median) >
                 self._radius):
 
             self._stats_internal['erasures'] += 1
@@ -415,7 +415,7 @@ class OutlierFilter(Filter):
             _LOGGER.debug("Outlier nr. %s in %s: %s",
                           self._stats_internal['erasures'],
                           self._entity, new_state)
-            return self.states[-1]
+            new_state.state = median
         return new_state
 
 
