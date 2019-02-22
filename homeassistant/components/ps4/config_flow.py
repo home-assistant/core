@@ -37,10 +37,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
-        # Skip Creds Step if a device is configured.
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return await self.async_step_link()
-
         # Check if able to bind to ports: UDP 987, TCP 997.
         ports = PORT_MSG.keys()
         failed = await self.hass.async_add_executor_job(
@@ -48,6 +44,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if failed in ports:
             reason = PORT_MSG[failed]
             return self.async_abort(reason=reason)
+        # Skip Creds Step if a device is configured.
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return await self.async_step_link()
         return await self.async_step_creds()
 
     async def async_step_creds(self, user_input=None):
