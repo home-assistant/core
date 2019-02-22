@@ -15,6 +15,9 @@ ICON_CAR = "mdi:car"
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Nissan Leaf tracker."""
+    if discovery_info is None:
+        return False
+
     def see_vehicle():
         """Handle the reporting of the vehicle position."""
         for vin, datastore in hass.data[DATA_LEAF].items():
