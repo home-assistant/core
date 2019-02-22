@@ -61,12 +61,13 @@ async def async_setup(hass, config):
                       discovery_info['binary_sensor'], config)
         load_platform(hass, 'sensor', DOMAIN,
                       discovery_info['sensor'], config)
+
     def syn_clock(self):
-        controller.sync_clock();
+        controller.sync_clock()
 
 
     controller.scan(callback)
-    hass.services.async_register(DOMAIN, 'sync_clock', syn_clock )
+    hass.services.async_register(DOMAIN, 'sync_clock', syn_clock)
 
     return True
 
