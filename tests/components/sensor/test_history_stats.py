@@ -54,7 +54,6 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Test the conversion from templates to period."""
         now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
         with patch.dict(template.ENV.globals, {'now': lambda: now}):
-            print(dt_util.now())
             today = Template('{{ now().replace(hour=0).replace(minute=0)'
                              '.replace(second=0) }}', self.hass)
             duration = timedelta(hours=2, minutes=1)

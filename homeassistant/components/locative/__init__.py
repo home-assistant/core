@@ -1,9 +1,4 @@
-"""
-Support for Locative.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/locative/
-"""
+"""Support for Locative."""
 import logging
 from typing import Dict
 
@@ -101,7 +96,7 @@ async def handle_webhook(hass, webhook_id, request):
                 location_name
             )
             return web.Response(
-                body='Setting location to not home',
+                text='Setting location to not home',
                 status=HTTP_OK
             )
 
@@ -110,7 +105,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            body='Ignoring exit from {} (already in {})'.format(
+            text='Ignoring exit from {} (already in {})'.format(
                 location_name, current_state
             ),
             status=HTTP_OK
@@ -120,14 +115,14 @@ async def handle_webhook(hass, webhook_id, request):
         # In the app, a test message can be sent. Just return something to
         # the user to let them know that it works.
         return web.Response(
-            body='Received test message.',
+            text='Received test message.',
             status=HTTP_OK
         )
 
     _LOGGER.error('Received unidentified message from Locative: %s',
                   direction)
     return web.Response(
-        body='Received unidentified message: {}'.format(direction),
+        text='Received unidentified message: {}'.format(direction),
         status=HTTP_UNPROCESSABLE_ENTITY
     )
 

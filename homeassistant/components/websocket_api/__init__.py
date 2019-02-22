@@ -1,9 +1,4 @@
-"""
-Websocket based API for Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://developers.home-assistant.io/docs/external_api_websocket.html
-"""
+"""WebSocket based API for Home Assistant."""
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 

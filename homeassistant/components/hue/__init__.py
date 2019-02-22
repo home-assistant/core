@@ -28,6 +28,8 @@ CONF_BRIDGES = "bridges"
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_ALLOW_UNREACHABLE = False
 
+DATA_CONFIGS = 'hue_configs'
+
 PHUE_CONFIG_FILE = 'phue.conf'
 
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
@@ -59,6 +61,7 @@ async def async_setup(hass, config):
         conf = {}
 
     hass.data[DOMAIN] = {}
+    hass.data[DATA_CONFIGS] = {}
     configured = configured_hosts(hass)
 
     # User has configured bridges
@@ -71,7 +74,7 @@ async def async_setup(hass, config):
         host = bridge_conf[CONF_HOST]
 
         # Store config in hass.data so the config entry can find it
-        hass.data[DOMAIN][host] = bridge_conf
+        hass.data[DATA_CONFIGS][host] = bridge_conf
 
         # If configured, the bridge will be set up during config entry phase
         if host in configured:
@@ -96,7 +99,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     host = entry.data['host']
-    config = hass.data[DOMAIN].get(host)
+    config = hass.data[DATA_CONFIGS].get(host)
 
     if config is None:
         allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
@@ -106,11 +109,11 @@ async def async_setup_entry(hass, entry):
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
 
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
-    hass.data[DOMAIN][host] = bridge
 
     if not await bridge.async_setup():
         return False
 
+    hass.data[DOMAIN][host] = bridge
     config = bridge.api.config
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

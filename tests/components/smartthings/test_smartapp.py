@@ -2,11 +2,10 @@
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from pysmartthings import AppEntity
+from pysmartthings import AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
-from homeassistant.components.smartthings.const import (
-    DATA_MANAGER, DOMAIN, SUPPORTED_CAPABILITIES)
+from homeassistant.components.smartthings.const import DATA_MANAGER, DOMAIN
 
 from tests.common import mock_coro
 
@@ -36,8 +35,10 @@ async def test_update_app_updated_needed(hass, app):
     assert mock_app.classifications == app.classifications
 
 
-async def test_smartapp_install_abort_if_no_other(hass, smartthings_mock):
+async def test_smartapp_install_abort_if_no_other(
+        hass, smartthings_mock, device_factory):
     """Test aborts if no other app was configured already."""
+    # Arrange
     api = smartthings_mock.return_value
     api.create_subscription.return_value = mock_coro()
     app = Mock()
@@ -46,17 +47,23 @@ async def test_smartapp_install_abort_if_no_other(hass, smartthings_mock):
     request.installed_app_id = uuid4()
     request.auth_token = uuid4()
     request.location_id = uuid4()
-
+    devices = [
+        device_factory('', [Capability.battery, 'ping']),
+        device_factory('', [Capability.switch, Capability.switch_level]),
+        device_factory('', [Capability.switch])
+    ]
+    api.devices = Mock()
+    api.devices.return_value = mock_coro(return_value=devices)
+    # Act
     await smartapp.smartapp_install(hass, request, None, app)
-
+    # Assert
     entries = hass.config_entries.async_entries('smartthings')
     assert not entries
-    assert api.create_subscription.call_count == \
-        len(SUPPORTED_CAPABILITIES)
+    assert api.create_subscription.call_count == 3
 
 
 async def test_smartapp_install_creates_flow(
-        hass, smartthings_mock, config_entry, location):
+        hass, smartthings_mock, config_entry, location, device_factory):
     """Test installation creates flow."""
     # Arrange
     setattr(hass.config_entries, '_entries', [config_entry])
@@ -68,20 +75,55 @@ async def test_smartapp_install_creates_flow(
     request.installed_app_id = str(uuid4())
     request.auth_token = str(uuid4())
     request.location_id = location.location_id
+    devices = [
+        device_factory('', [Capability.battery, 'ping']),
+        device_factory('', [Capability.switch, Capability.switch_level]),
+        device_factory('', [Capability.switch])
+    ]
+    api.devices = Mock()
+    api.devices.return_value = mock_coro(return_value=devices)
     # Act
     await smartapp.smartapp_install(hass, request, None, app)
     # Assert
     await hass.async_block_till_done()
     entries = hass.config_entries.async_entries('smartthings')
     assert len(entries) == 2
-    assert api.create_subscription.call_count == \
-        len(SUPPORTED_CAPABILITIES)
+    assert api.create_subscription.call_count == 3
     assert entries[1].data['app_id'] == app.app_id
     assert entries[1].data['installed_app_id'] == request.installed_app_id
     assert entries[1].data['location_id'] == request.location_id
     assert entries[1].data['access_token'] == \
         config_entry.data['access_token']
     assert entries[1].title == location.name
+
+
+async def test_smartapp_update_syncs_subs(
+        hass, smartthings_mock, config_entry, location, device_factory):
+    """Test update synchronizes subscriptions."""
+    # Arrange
+    setattr(hass.config_entries, '_entries', [config_entry])
+    app = Mock()
+    app.app_id = config_entry.data['app_id']
+    api = smartthings_mock.return_value
+    api.delete_subscriptions = Mock()
+    api.delete_subscriptions.return_value = mock_coro()
+    api.create_subscription.return_value = mock_coro()
+    request = Mock()
+    request.installed_app_id = str(uuid4())
+    request.auth_token = str(uuid4())
+    request.location_id = location.location_id
+    devices = [
+        device_factory('', [Capability.battery, 'ping']),
+        device_factory('', [Capability.switch, Capability.switch_level]),
+        device_factory('', [Capability.switch])
+    ]
+    api.devices = Mock()
+    api.devices.return_value = mock_coro(return_value=devices)
+    # Act
+    await smartapp.smartapp_update(hass, request, None, app)
+    # Assert
+    assert api.create_subscription.call_count == 3
+    assert api.delete_subscriptions.call_count == 1
 
 
 async def test_smartapp_uninstall(hass, config_entry):

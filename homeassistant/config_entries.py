@@ -30,7 +30,7 @@ At a minimum, each config flow will have to define a version number and the
     class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
-        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
@@ -127,6 +127,7 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
+_UNDEF = object()
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
@@ -149,6 +150,7 @@ FLOWS = [
     'hue',
     'ifttt',
     'ios',
+    'ipma',
     'lifx',
     'locative',
     'luftdaten',
@@ -440,9 +442,10 @@ class ConfigEntries:
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(self, entry, *, data):
+    def async_update_entry(self, entry, *, data=_UNDEF):
         """Update a config entry."""
-        entry.data = data
+        if data is not _UNDEF:
+            entry.data = data
         self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):

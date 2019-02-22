@@ -3,7 +3,7 @@ import asyncio
 import functools
 import logging
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 import requests_mock as _requests_mock
@@ -14,10 +14,9 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import legacy_api_password, homeassistant
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
+    async_test_home_assistant, INSTANCES, mock_coro,
     mock_storage as mock_storage, MockUser, CLIENT_ID)
 from tests.test_util.aiohttp import mock_aiohttp_client
-from tests.mock.zwave import MockNetwork, MockOption
 
 if os.environ.get('UVLOOP') == '1':
     import uvloop
@@ -90,32 +89,6 @@ def aioclient_mock():
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session
-
-
-@pytest.fixture
-def mqtt_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_component(hass))
-    client.reset_mock()
-    return client
-
-
-@pytest.fixture
-def mock_openzwave():
-    """Mock out Open Z-Wave."""
-    base_mock = MagicMock()
-    libopenzwave = base_mock.libopenzwave
-    libopenzwave.__file__ = 'test'
-    base_mock.network.ZWaveNetwork = MockNetwork
-    base_mock.option.ZWaveOption = MockOption
-
-    with patch.dict('sys.modules', {
-        'libopenzwave': libopenzwave,
-        'openzwave.option': base_mock.option,
-        'openzwave.network': base_mock.network,
-        'openzwave.group': base_mock.group,
-    }):
-        yield base_mock
 
 
 @pytest.fixture

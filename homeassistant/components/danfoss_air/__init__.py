@@ -1,9 +1,4 @@
-"""
-Support for Danfoss Air HRV.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/danfoss_air/
-"""
+"""Support for Danfoss Air HRV."""
 from datetime import timedelta
 import logging
 

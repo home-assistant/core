@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
 
-REQUIREMENTS = ['co2signal==0.4.1']
+REQUIREMENTS = ['co2signal==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 

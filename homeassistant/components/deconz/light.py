@@ -1,9 +1,4 @@
-"""
-Support for deCONZ light.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.deconz/
-"""
+"""Support for deCONZ lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -21,8 +16,8 @@ from .deconz_device import DeconzDevice
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ lights and group."""
     pass
 

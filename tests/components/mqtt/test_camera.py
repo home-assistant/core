@@ -168,7 +168,7 @@ async def test_entity_id_update(hass, mqtt_mock):
     state = hass.states.get('camera.beer')
     assert state is not None
     assert mock_mqtt.async_subscribe.call_count == 1
-    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, None)
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('camera.beer', new_entity_id='camera.milk')
@@ -181,4 +181,4 @@ async def test_entity_id_update(hass, mqtt_mock):
     state = hass.states.get('camera.milk')
     assert state is not None
     assert mock_mqtt.async_subscribe.call_count == 1
-    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, 'utf-8')
+    mock_mqtt.async_subscribe.assert_any_call('test-topic', ANY, 0, None)
