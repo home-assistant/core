@@ -111,12 +111,14 @@ class TestFilterSensor(unittest.TestCase):
         assert 21 == filtered.state
 
     def test_outlier_step(self):
-        """Test if outlier filter handles long-running step-changes correctly."""
+        """Test if outlier filter handles long-running
+        step-changes correctly."""
         filt = OutlierFilter(window_size=3,
                              precision=2,
                              entity=None,
-                             radius=1.0)
-        for state in self.values[:-1]:
+                             radius=1.1)
+        self.values[-1].state = 22
+        for state in self.values:
             filtered = filt.filter_state(state)
         assert 22 == filtered.state
 
@@ -129,7 +131,7 @@ class TestFilterSensor(unittest.TestCase):
         out = ha.State('sensor.test_monitored', 4000)
         for state in [out]+self.values:
             filtered = filt.filter_state(state)
-        assert 22 == filtered.state
+        assert 21 == filtered.state
 
     def test_lowpass(self):
         """Test if lowpass filter works."""

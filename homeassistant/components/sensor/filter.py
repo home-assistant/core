@@ -333,11 +333,14 @@ class Filter:
         """Implement filter."""
         raise NotImplementedError()
 
-    def filter_state(self, new_state):
+    def filter_state(self, new_state, store_raw=False):
         """Implement a common interface for filters."""
         filtered = self._filter_state(FilterState(new_state))
         filtered.set_precision(self.precision)
-        self.states.append(copy(filtered))
+        if store_raw:
+            self.states.append(copy(FilterState(new_state)))
+        else:
+            self.states.append(copy(filtered))
         new_state.state = filtered.state
         return new_state
 
@@ -403,9 +406,13 @@ class OutlierFilter(Filter):
         self._radius = radius
         self._stats_internal = Counter()
 
+    def filter_state(self, new_state, store_raw=True):
+        return super().filter_state(new_state, store_raw)
+
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
-        median = statistics.median([s.state for s in self.states])
+        median = statistics.median([s.state for s in self.states]) \
+            if len(self.states) > 0 else 0
         if (len(self.states) == self.states.maxlen and
                 abs(new_state.state - median) >
                 self._radius):
