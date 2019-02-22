@@ -50,13 +50,13 @@ async def websocket_update_device(hass, connection, msg):
     """Handle update area websocket command."""
     registry = await async_get_registry(hass)
 
-    entry = registry.async_update_device(
-        msg['device_id'],
-        area_id=msg['area_id'],
-        name_by_user=msg['name_by_user'])
+    msg.pop('type')
+    msg_id = msg.pop('id')
+
+    entry = registry.async_update_device(**msg)
 
     connection.send_message(websocket_api.result_message(
-        msg['id'], _entry_dict(entry)
+        msg_id, _entry_dict(entry)
     ))
 
 
