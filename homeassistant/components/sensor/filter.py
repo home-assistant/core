@@ -313,6 +313,7 @@ class Filter:
         self._entity = entity
         self._skip_processing = False
         self._window_size = window_size
+        self._store_raw = False
 
     @property
     def window_size(self):
@@ -333,11 +334,11 @@ class Filter:
         """Implement filter."""
         raise NotImplementedError()
 
-    def filter_state(self, new_state, store_raw=False):
+    def filter_state(self, new_state):
         """Implement a common interface for filters."""
         filtered = self._filter_state(FilterState(new_state))
         filtered.set_precision(self.precision)
-        if store_raw:
+        if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
         else:
             self.states.append(copy(filtered))
@@ -405,9 +406,7 @@ class OutlierFilter(Filter):
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
         self._stats_internal = Counter()
-
-    def filter_state(self, new_state, store_raw=True):
-        return super().filter_state(new_state, store_raw)
+        self._store_raw = True
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
