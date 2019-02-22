@@ -1,10 +1,4 @@
-"""
-Support for LCN covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.lcn/
-"""
-
+"""Support for LCN covers."""
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.lcn import (
     CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN, LcnDevice, get_connection)
@@ -61,7 +55,6 @@ class LcnCover(LcnDevice, CoverDevice):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._closed = False
         states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.DOWN
         self.address_connection.control_motors(states)
@@ -69,7 +62,6 @@ class LcnCover(LcnDevice, CoverDevice):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._closed = True
         states = [self.pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = self.pypck.lcn_defs.MotorStateModifier.UP
         self.address_connection.control_motors(states)

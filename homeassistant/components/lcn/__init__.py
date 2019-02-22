@@ -181,15 +181,12 @@ async def async_setup(hass, config):
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
 
     # load platforms
-    hass.async_create_task(
-        async_load_platform(hass, 'cover', DOMAIN,
-                            config[DOMAIN][CONF_COVERS], config))
-    hass.async_create_task(
-        async_load_platform(hass, 'light', DOMAIN,
-                            config[DOMAIN][CONF_LIGHTS], config))
-    hass.async_create_task(
-        async_load_platform(hass, 'switch', DOMAIN,
-                            config[DOMAIN][CONF_SWITCHES], config))
+    for component, conf_key in (('cover', CONF_COVERS),
+                                ('light', CONF_LIGHTS),
+                                ('switch', CONF_SWITCHES)):
+        hass.async_create_task(
+            async_load_platform(hass, component, DOMAIN,
+                                config[DOMAIN][conf_key], config))
 
     return True
 
