@@ -591,24 +591,3 @@ class DirecTvDevice(MediaPlayerDevice):
 
         _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
         self.dtv.tune_channel(media_id)
-
-    def mute_volume(self, mute):
-        pass
-
-    def set_volume_level(self, volume):
-        pass
-
-    def media_seek(self, position):
-        pass
-
-    def select_source(self, source):
-        pass
-
-    def select_sound_mode(self, sound_mode):
-        pass
-
-    def clear_playlist(self):
-        pass
-
-    def set_shuffle(self, shuffle):
-        pass
