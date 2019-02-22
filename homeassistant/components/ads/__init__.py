@@ -35,8 +35,6 @@ DOMAIN = 'ads'
 
 SERVICE_WRITE_DATA_BY_NAME = 'write_data_by_name'
 
-TYPES = [ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_DINT, ADSTYPE_UDINT]
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
