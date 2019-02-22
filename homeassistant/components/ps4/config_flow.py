@@ -113,9 +113,12 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 }
 
                 if self.hass.config_entries.async_entries(DOMAIN):
-                    conf_devices.append(device)
+                    # Add new device to previous entry data
+                    _entry.data['devices'].append(device)
+                    # Delete previous entry
                     await self.hass.config_entries.async_remove(
                         _entry.entry_id)
+                    # Create new entry from previous, with new device
                     return self.async_create_entry(
                         title='PlayStation 4',
                         data=_entry.data,
