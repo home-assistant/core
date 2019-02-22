@@ -49,6 +49,7 @@ async def test_list_devices(hass, client, registry):
             'sw_version': None,
             'hub_device_id': None,
             'area_id': None,
+            'friendly_name': None,
         },
         {
             'config_entries': ['1234'],
@@ -59,6 +60,7 @@ async def test_list_devices(hass, client, registry):
             'sw_version': None,
             'hub_device_id': dev1,
             'area_id': None,
+            'friendly_name': None,
         }
     ]
 
@@ -72,11 +74,13 @@ async def test_update_device(hass, client, registry):
         manufacturer='manufacturer', model='model')
 
     assert not device.area_id
+    assert not device.friendly_name
 
     await client.send_json({
         'id': 1,
         'device_id': device.id,
         'area_id': '12345A',
+        'friendly_name': 'Test Friendly Name',
         'type': 'config/device_registry/update',
     })
 
@@ -84,4 +88,5 @@ async def test_update_device(hass, client, registry):
 
     assert msg['result']['id'] == device.id
     assert msg['result']['area_id'] == '12345A'
+    assert msg['result']['friendly_name'] == 'Test Friendly Name'
     assert len(registry.devices) == 1

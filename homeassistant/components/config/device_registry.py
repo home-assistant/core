@@ -19,6 +19,7 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE,
     vol.Required('device_id'): str,
     vol.Optional('area_id'): vol.Any(str, None),
+    vol.Optional('friendly_name'): vol.Any(str, None),
 })
 
 
@@ -50,7 +51,9 @@ async def websocket_update_device(hass, connection, msg):
     registry = await async_get_registry(hass)
 
     entry = registry.async_update_device(
-        msg['device_id'], area_id=msg['area_id'])
+        msg['device_id'],
+        area_id=msg['area_id'],
+        friendly_name=msg['friendly_name'])
 
     connection.send_message(websocket_api.result_message(
         msg['id'], _entry_dict(entry)
@@ -70,4 +73,5 @@ def _entry_dict(entry):
         'id': entry.id,
         'hub_device_id': entry.hub_device_id,
         'area_id': entry.area_id,
+        'friendly_name': entry.friendly_name,
     }

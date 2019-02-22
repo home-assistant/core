@@ -37,6 +37,7 @@ class DeviceEntry:
     sw_version = attr.ib(type=str, default=None)
     hub_device_id = attr.ib(type=str, default=None)
     area_id = attr.ib(type=str, default=None)
+    friendly_name = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
@@ -124,9 +125,11 @@ class DeviceRegistry:
         )
 
     @callback
-    def async_update_device(self, device_id, *, area_id=_UNDEF):
+    def async_update_device(
+            self, device_id, *, area_id=_UNDEF, friendly_name=_UNDEF):
         """Update properties of a device."""
-        return self._async_update_device(device_id, area_id=area_id)
+        return self._async_update_device(
+            device_id, area_id=area_id, friendly_name=friendly_name)
 
     @callback
     def _async_update_device(self, device_id, *, add_config_entry_id=_UNDEF,
@@ -138,7 +141,8 @@ class DeviceRegistry:
                              name=_UNDEF,
                              sw_version=_UNDEF,
                              hub_device_id=_UNDEF,
-                             area_id=_UNDEF):
+                             area_id=_UNDEF,
+                             friendly_name=_UNDEF):
         """Update device attributes."""
         old = self.devices[device_id]
 
@@ -179,6 +183,10 @@ class DeviceRegistry:
         if (area_id is not _UNDEF and area_id != old.area_id):
             changes['area_id'] = area_id
 
+        if (friendly_name is not _UNDEF and
+                friendly_name != old.friendly_name):
+            changes['friendly_name'] = friendly_name
+
         if not changes:
             return old
 
@@ -208,7 +216,8 @@ class DeviceRegistry:
                     # Introduced in 0.79
                     hub_device_id=device.get('hub_device_id'),
                     # Introduced in 0.87
-                    area_id=device.get('area_id')
+                    area_id=device.get('area_id'),
+                    friendly_name=device.get('friendly_name')
                 )
 
         self.devices = devices
@@ -234,7 +243,8 @@ class DeviceRegistry:
                 'sw_version': entry.sw_version,
                 'id': entry.id,
                 'hub_device_id': entry.hub_device_id,
-                'area_id': entry.area_id
+                'area_id': entry.area_id,
+                'friendly_name': entry.friendly_name
             } for entry in self.devices.values()
         ]
 

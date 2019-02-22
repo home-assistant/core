@@ -133,7 +133,8 @@ async def test_loading_from_storage(hass, hass_storage):
                     'model': 'model',
                     'name': 'name',
                     'sw_version': 'version',
-                    'area_id': '12345A'
+                    'area_id': '12345A',
+                    'friendly_name': 'Test Friendly Name'
                 }
             ]
         }
@@ -148,6 +149,7 @@ async def test_loading_from_storage(hass, hass_storage):
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
     assert entry.area_id == '12345A'
+    assert entry.friendly_name == 'Test Friendly Name'
     assert isinstance(entry.config_entries, set)
 
 
@@ -360,8 +362,11 @@ async def test_update(registry):
         })
 
     assert not entry.area_id
+    assert not entry.friendly_name
 
-    updated_entry = registry.async_update_device(entry.id, area_id='12345A')
+    updated_entry = registry.async_update_device(
+        entry.id, area_id='12345A', friendly_name='Test Friendly Name')
 
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
+    assert updated_entry.friendly_name == 'Test Friendly Name'
