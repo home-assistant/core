@@ -14,7 +14,7 @@ from homeassistant.const import (ATTR_NAME, ATTR_TEMPERATURE,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['ambiclimate==0.1.0']
+REQUIREMENTS = ['ambiclimate==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ STORAGE_VERSION = 1
 AUTH_CALLBACK_NAME = 'api:ambiclimate'
 AUTH_CALLBACK_PATH = '/api/ambiclimate'
 
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_ON_OFF)
 
@@ -44,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
 })
-
 
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -90,6 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                        description=CONFIGURATOR_DESCRIPTION,
                        submit_caption=CONFIGURATOR_SUBMIT_CAPTION)
             hass.data[AMBICLIMATE_DATA] = data
+
         hass.async_add_job(_call_request_config)
         return
 
@@ -126,8 +125,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         if device:
             await device.set_comfort_feedback(service.data.get(ATTR_VALUE))
 
-    hass.services.async_register(DOMAIN, SERVICE_COMFORT_FEEDBACK,
-                                 send_comfort_feedback, schema=SEND_COMFORT_FEEDBACK_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_COMFORT_FEEDBACK,
+                                 send_comfort_feedback,
+                                 schema=SEND_COMFORT_FEEDBACK_SCHEMA)
 
     async def set_comfort_mode(service):
         """Set comfort mode."""
@@ -136,8 +137,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         if device:
             await device.set_comfort_mode()
 
-    hass.services.async_register(DOMAIN, SERVICE_COMFORT_MODE,
-                                 set_comfort_mode, schema=SET_COMFORT_MODE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_COMFORT_MODE,
+                                 set_comfort_mode,
+                                 schema=SET_COMFORT_MODE_SCHEMA)
 
     async def set_temperature_mode(service):
         """Set temperature mode."""
@@ -146,8 +149,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         if device:
             await device.set_temperature_mode(service.data.get(ATTR_VALUE))
 
-    hass.services.async_register(DOMAIN, SERVICE_TEMPERATURE_MODE,
-                                 set_temperature_mode, schema=SET_TEMPERATURE_MODE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_TEMPERATURE_MODE,
+                                 set_temperature_mode,
+                                 schema=SET_TEMPERATURE_MODE_SCHEMA)
 
 
 class AmbiclimateAuthCallbackView(HomeAssistantView):
@@ -251,16 +256,16 @@ class Ambiclimate(ClimateDevice):
         await self._heater.set_target_temperature(temperature)
 
     async def async_turn_on(self):
-        """Turn device unit on."""
+        """Turn device on."""
         await self._heater.turn_on()
 
     async def async_turn_off(self):
-        """Turn device unit off."""
+        """Turn device off."""
         await self._heater.turn_off()
 
     async def async_update(self):
         """Retrieve latest state."""
-        token_info = await self._heater.ambiclimate_control.refresh_access_token()
+        token_info = await self._heater.control.refresh_access_token()
         if token_info:
             await self._store.async_save(token_info)
         self._data = await self._heater.update_device()
