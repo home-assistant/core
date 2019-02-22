@@ -112,7 +112,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                     CONF_REGION: self.region
                 }
 
-                if self.entry:
+                if self.hass.config_entries.async_entries(DOMAIN):
                     conf_devices.append(device)
                     await self.hass.config_entries.async_remove(
                         _entry.entry_id)
