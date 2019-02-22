@@ -94,7 +94,8 @@ async def test_multiple_flow_implementation(hass):
     with patch('pyps4_homeassistant.Helper.get_creds',
                return_value=MOCK_CREDS), \
             patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=[{'host-ip': MOCK_HOST}]):
+                  return_value=[{'host-ip': MOCK_HOST},
+                                {'host-ip': MOCK_HOST_ADDITIONAL}]):
         result = await flow.async_step_creds({})
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'link'
