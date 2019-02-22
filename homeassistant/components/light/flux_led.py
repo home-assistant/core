@@ -166,9 +166,13 @@ class FluxLight(Light):
         self._ipaddr = device['ipaddr']
         self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
-        self._custom_effect = device[CONF_CUSTOM_EFFECT]
         self._bulb = None
         self._error_reported = False
+
+        if CONF_CUSTOM_EFFECT in device:
+            self._custom_effect = device[CONF_CUSTOM_EFFECT]
+        else:
+            self._custom_effect = {}
 
     def _connect(self):
         """Connect to Flux light."""
