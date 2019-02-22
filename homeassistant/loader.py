@@ -160,8 +160,8 @@ def _load_file(hass,  # type: HomeAssistant
             sys.path.insert(0, hass.config.config_dir)
         cache = hass.data[DATA_KEY] = {}
 
-    for index, path in enumerate('{}.{}'.format(base, comp_or_platform)
-                                 for base in base_paths):
+    for path in ('{}.{}'.format(base, comp_or_platform)
+                 for base in base_paths):
         try:
             module = importlib.import_module(path)
 
