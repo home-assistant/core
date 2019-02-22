@@ -14,8 +14,14 @@ MOCK_TITLE = 'PlayStation 4'
 MOCK_CODE = '12345678'
 MOCK_CREDS = '000aa000'
 MOCK_HOST = '192.0.0.0'
+MOCK_HOST_ADDITIONAL = '192.0.0.1'
 MOCK_DEVICE = {
     CONF_HOST: MOCK_HOST,
+    CONF_NAME: DEFAULT_NAME,
+    CONF_REGION: DEFAULT_REGION
+}
+MOCK_DEVICE_ADDITIONAL = {
+    CONF_HOST: MOCK_HOST_ADDITIONAL,
     CONF_NAME: DEFAULT_NAME,
     CONF_REGION: DEFAULT_REGION
 }
@@ -25,9 +31,15 @@ MOCK_CONFIG = {
     CONF_REGION: DEFAULT_REGION,
     CONF_CODE: MOCK_CODE
 }
+MOCK_CONFIG_ADDITIONAL = {
+    CONF_IP_ADDRESS: MOCK_HOST_ADDITIONAL,
+    CONF_NAME: DEFAULT_NAME,
+    CONF_REGION: DEFAULT_REGION,
+    CONF_CODE: MOCK_CODE
+}
 MOCK_DATA = {
     CONF_TOKEN: MOCK_CREDS,
-    'devices': MOCK_DEVICE
+    'devices': [MOCK_DEVICE]
 }
 MOCK_UDP_PORT = int(987)
 MOCK_TCP_PORT = int(997)
@@ -87,14 +99,35 @@ async def test_port_bind_abort(hass):
 
 
 async def test_duplicate_abort(hass):
-    """Test that Flow aborts when already configured."""
+    """Test that Flow aborts when found devices already configured."""
     MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA).add_to_hass(hass)
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=None)
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'devices_configured'
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(user_input=None)
+        assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result['reason'] == 'devices_configured'
+
+
+async def test_additional_device(hass):
+    """Test that Flow can configure another device."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+    flow.creds = MOCK_CREDS
+    MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA).add_to_hass(hass)
+
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST},
+                             {'host-ip': MOCK_HOST_ADDITIONAL}]), \
+            patch('pyps4_homeassistant.Helper.link',
+                  return_value=(True, True)):
+        result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['data'][CONF_TOKEN] == MOCK_CREDS
+        assert len(result['data']['devices']) == 2
+        assert result['title'] == MOCK_TITLE
 
 
 async def test_no_devices_found_abort(hass):
