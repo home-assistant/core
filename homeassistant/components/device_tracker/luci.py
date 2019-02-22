@@ -4,7 +4,6 @@ Support for OpenWRT (luci) routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.luci/
 """
-from collections import namedtuple
 import logging
 import voluptuous as vol
 
@@ -14,7 +13,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SSL)
 
-REQUIREMENTS = ['openwrt-luci-rpc==0.3.0']
+REQUIREMENTS = ['openwrt-luci-rpc==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,23 +34,17 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'name'])
-
-
 class LuciDeviceScanner(DeviceScanner):
     """This class scans for devices connected to an OpenWrt router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
-        protocol = 'http' if not config[CONF_SSL] else 'https'
-        host_url = '{}://{}'.format(protocol, host)
-
         from openwrt_luci_rpc import OpenWrtRpc
 
-        self.router = OpenWrtRpc(host_url,
+        self.router = OpenWrtRpc(config[CONF_HOST],
                                  config[CONF_USERNAME],
-                                 config[CONF_PASSWORD])
+                                 config[CONF_PASSWORD],
+                                 config[CONF_SSL])
 
         self.last_results = {}
         self.success_init = self.router.is_logged_in()
@@ -65,9 +58,23 @@ class LuciDeviceScanner(DeviceScanner):
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next((
-            result.name for result in self.last_results
+            result.hostname for result in self.last_results
             if result.mac == device), None)
         return name
+
+    def get_extra_attributes(self, device):
+        """
+        Get extra attributes of a device.
+
+        Some known extra attributes that may be returned in the dict
+        include Mac Address (mac), Network Device (dev), Ip Address
+        (ip), reachable status (reachable), Associated router
+        (host), Hostname if known (hostname) among others.
+        """
+        device = next((
+            result for result in self.last_results
+            if result.mac == device), None)
+        return device._asdict()
 
     def _update_info(self):
         """Check the Luci router for devices."""
@@ -79,7 +86,6 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            last_results.append(
-                Device(device['macaddress'], device['hostname']))
+            last_results.append(device)
 
         self.last_results = last_results
