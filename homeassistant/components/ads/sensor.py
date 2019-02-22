@@ -20,7 +20,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
     vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT):
-        vol.In([ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]),
+        vol.In([ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE,
+                ads.ADSTYPE_DINT, ads.ADSTYPE_UDINT]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
 })
