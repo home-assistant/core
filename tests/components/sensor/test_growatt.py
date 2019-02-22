@@ -2,6 +2,7 @@
 import json
 from unittest import mock
 
+import pytest
 import requests_mock
 import growatt
 
@@ -16,73 +17,32 @@ def test_login(_):
     assert login_success
 
 
-def test_extract_single_energy():
-    """Test extracting energy from single plant."""
-    plant_info_data = [
-        {
-            "plantMoneyText": "137.9 ",
-            "plantName": "my plant",
-            "plantId": "107658",
-            "isHaveStorage": "false",
-            "todayEnergy": "0.6 kWh",
-            "totalEnergy": "114.9 kWh",
-            "currentPower": "142 W",
-        }
-    ]
-
-    energy = victim.GrowattPlant(None, None, "foo", "bar")._extract_energy(
-        plant_info_data, "todayEnergy"
+def test_convert_multiplier():
+    """Test converting multipliers."""
+    assert (
+        victim.GrowattPlant(None, None, "", "").convert_multiplier(
+            "kg", {"g": 1, "kg": 1000}
+        )
+        == 1000
     )
-    assert energy == 0.6
 
 
-def test_convert_MWh_to_kWh():
-    """Test extracting energy from single plant."""
-    plant_info_data = [
-        {
-            "plantMoneyText": "137.9 ",
-            "plantName": "my plant",
-            "plantId": "107658",
-            "isHaveStorage": "false",
-            "todayEnergy": "0.6 kWh",
-            "totalEnergy": "50.9 MWh",
-            "currentPower": "142 W",
-        }
-    ]
+def test_convert_multiplier_no_value():
+    """Test converting multipliers with exception."""
+    with pytest.raises(ValueError):
+        victim.GrowattPlant(None, None, "", "").convert_multiplier(
+            "kg", {"g": 1, "mg": 0.001}
+        )
 
-    energy = victim.GrowattPlant(None, None, "foo", "bar")._extract_energy(
-        plant_info_data, "totalEnergy"
+
+def test_convert_to_kwh():
+    """Test converting to kWh."""
+    assert (
+        victim.GrowattPlantTotals(None, None, "", "")._convert_to_kwh(
+            "5.42", "GWh"
+        )
+        == 5420000
     )
-    assert energy == 50900
-
-
-def test_extract_multiple_energy():
-    """Test extracting energy fromm multiple plants."""
-    plant_info_data = [
-        {
-            "plantMoneyText": "137.9 ",
-            "plantName": "my plant",
-            "plantId": "107658",
-            "isHaveStorage": "false",
-            "todayEnergy": "0.6 kWh",
-            "totalEnergy": "114.9 kWh",
-            "currentPower": "142 W",
-        },
-        {
-            "plantMoneyText": "137.9 ",
-            "plantName": "my plant",
-            "plantId": "107658",
-            "isHaveStorage": "false",
-            "todayEnergy": "0.6 kWh",
-            "totalEnergy": "114.9 kWh",
-            "currentPower": "142 W",
-        },
-    ]
-
-    energy = victim.GrowattPlant(None, None, "foo", "bar")._extract_energy(
-        plant_info_data, "todayEnergy"
-    )
-    assert energy == 1.2
 
 
 @mock.patch(
@@ -121,7 +81,24 @@ dummy_plant_info = {
 
 @mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
-def test_today_energy_total(_, __):
+def test_today_energy(_, __):
+    """Test extracting todays energy from plant."""
+    with requests_mock.mock() as m:
+        m.get(
+            "https://server.growatt.com/PlantListAPI.do?userId=1",
+            text=json.dumps(dummy_plant_info),
+        )
+
+        sensor = victim.GrowattPlantToday(
+            None, growatt.GrowattApi(), "foo", "bar"
+        )
+        sensor.update()
+        assert sensor._state == 0.6
+
+
+@mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
+@mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
+def test_total_energy(_, __):
     """Test extracting total energy from plant."""
     with requests_mock.mock() as m:
         m.get(
@@ -129,22 +106,25 @@ def test_today_energy_total(_, __):
             text=json.dumps(dummy_plant_info),
         )
 
-        energy_total = victim.GrowattPlant(
+        sensor = victim.GrowattPlantTotal(
             None, growatt.GrowattApi(), "foo", "bar"
-        ).todays_energy_total()
-        assert energy_total == 0.6
+        )
+        sensor.update()
+        assert sensor._state == 114.9
 
 
-def test_convert_kwh_to_kwh():
-    """Test converting kWh to kWh."""
-    assert victim.GrowattPlant._convert_to_kwh("5", "kWh") == 5
+@mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
+@mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
+def test_current_energy(_, __):
+    """Test extracting current energy from plant."""
+    with requests_mock.mock() as m:
+        m.get(
+            "https://server.growatt.com/PlantListAPI.do?userId=1",
+            text=json.dumps(dummy_plant_info),
+        )
 
-
-def test_convert_mwh_to_kwh():
-    """Test converting MWh to kWh."""
-    assert victim.GrowattPlant._convert_to_kwh("5", "MWh") == 5000
-
-
-def test_convert_gwh_to_kwh():
-    """Test converting GWh to kWh."""
-    assert victim.GrowattPlant._convert_to_kwh("5", "GWh") == 5000000
+        sensor = victim.GrowattPlantCurrent(
+            None, growatt.GrowattApi(), "foo", "bar"
+        )
+        sensor.update()
+        assert sensor._state == 142.0
