@@ -1,0 +1,9 @@
+{
+    "config": {
+        "title": "Person tracker",
+        "abort": {
+            "already_configured": "Person component is already configured through configuration.yaml",
+            "only_one_entry": "Person component can only have one entry"
+        }
+    }
+}

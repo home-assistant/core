@@ -2,10 +2,12 @@
 from typing import Dict, Any, Tuple, Optional
 
 import homeassistant.core
+from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable=invalid-name
 
 GPSType = Tuple[float, float]
+ConfigEntryType = ConfigEntry
 ConfigType = Dict[str, Any]
 HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceDataType = Dict[str, Any]

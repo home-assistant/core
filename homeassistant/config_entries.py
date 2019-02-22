@@ -164,6 +164,7 @@ FLOWS = [
     'nest',
     'openuv',
     'owntracks',
+    'person',
     'point',
     'ps4',
     'rainmachine',

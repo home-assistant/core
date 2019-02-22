@@ -6,6 +6,7 @@ import uuid
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
@@ -19,7 +20,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import (
+    ConfigEntryType, ConfigType, HomeAssistantType)
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -263,8 +265,23 @@ class PersonManager:
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the person component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
     conf_persons = config.get(DOMAIN, [])
+    await async_setup_person(hass, conf_persons)
+    return True
+
+
+async def async_setup_entry(
+        hass: HomeAssistantType, config_entry: ConfigEntryType):
+    """Set up the person component for frontend configuration only."""
+    if DOMAIN not in hass.data:
+        await async_setup_person(hass, [])
+        return True
+    return False
+
+
+async def async_setup_person(hass: HomeAssistantType, conf_persons: list):
+    """Create the person component."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
     manager = hass.data[DOMAIN] = PersonManager(hass, component, conf_persons)
     await manager.async_initialize()
 
@@ -272,8 +289,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     websocket_api.async_register_command(hass, ws_create_person)
     websocket_api.async_register_command(hass, ws_update_person)
     websocket_api.async_register_command(hass, ws_delete_person)
-
-    return True
 
 
 class Person(RestoreEntity):
@@ -480,3 +495,19 @@ async def ws_delete_person(hass: HomeAssistantType,
     manager = hass.data[DOMAIN]  # type: PersonManager
     await manager.async_delete_person(msg['person_id'])
     connection.send_result(msg['id'])
+
+
+@config_entries.HANDLERS.register(DOMAIN)
+class PersonFlowHandler(config_entries.ConfigFlow):
+    """Person config flow."""
+
+    VERSION = 1
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        if DOMAIN in self.hass.config_entries.async_domains():
+            return self.async_abort(reason='only_one_entry')
+        if DOMAIN in self.hass.data:
+            return self.async_abort(reason='already_configured')
+        return self.async_create_entry(
+            title='manage persons via the UI', data={})
