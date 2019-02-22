@@ -222,12 +222,11 @@ class TPLinkSmartBulb(Light):
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
-        if hasattr(self.smartbulb, 'is_variable_color_temp') \
-                and self.smartbulb.is_variable_color_temp:
+        if getattr(self.smartbulb, 'is_variable_color_temp', False):
             self._supported_features += SUPPORT_COLOR_TEMP
             self._min_mireds = kelvin_to_mired(
                 self.smartbulb.valid_temperature_range[1])
             self._max_mireds = kelvin_to_mired(
                 self.smartbulb.valid_temperature_range[0])
-        if hasattr(self.smartbulb, 'is_color') and self.smartbulb.is_color:
+        if getattr(self.smartbulb, 'is_color', False):
             self._supported_features += SUPPORT_COLOR
