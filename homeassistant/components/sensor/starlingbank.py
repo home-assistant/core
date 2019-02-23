@@ -98,6 +98,6 @@ class StarlingBalanceSensor(Entity):
         """Fetch new state data for the sensor."""
         self._starling_account.update_balance_data()
         if self._balance_data_type == 'cleared_balance':
-            self._state = self._starling_account.cleared_balance
+            self._state = self._starling_account.cleared_balance / 100
         elif self._balance_data_type == 'effective_balance':
-            self._state = self._starling_account.effective_balance
+            self._state = self._starling_account.effective_balance / 100
