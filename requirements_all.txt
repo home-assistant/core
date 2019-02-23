@@ -897,7 +897,7 @@ pyHS100==0.3.4
 
 # homeassistant.components.air_quality.norway_air
 # homeassistant.components.weather.met
-pyMetno==0.4.5
+pyMetno==0.4.6
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.23
