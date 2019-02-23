@@ -51,12 +51,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         self._current_temperature = None
         self._target_temperature = None
         self._next_target_temperature = None
-        self._modulation_level = None
 
         self._heating_type = None
-        self._program_state = None
-        self._program_next = None
-        self._holiday_state = None
 
         super().__init__(toon, "Toon Thermostat", 'mdi:thermostat')
 
@@ -110,13 +106,6 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         """Return the current state of the burner."""
         return {
             'heating_type': self._heating_type,
-
-            'next_target_temperature': self._next_target_temperature,
-            'modulation_level': self._modulation_level,
-
-            'program_state': self._program_state,
-            'program_next': self._program_next,
-            'holiday_state': self._holiday_state,
         }
 
     def set_temperature(self, **kwargs) -> None:
@@ -130,8 +119,6 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
     async def async_update(self) -> None:
         """Update local state."""
-        thermostat = self.toon.thermostat_info
-
         if self.toon.thermostat_state is None:
             self._state = None
         else:
@@ -139,10 +126,4 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
         self._current_temperature = self.toon.temperature
         self._target_temperature = self.toon.thermostat
-        self._next_target_temperature = thermostat.next_set_point / 100.0
-        self._modulation_level = thermostat.current_modulation_level
-
         self._heating_type = self.toon.agreement.heating_type
-        self._program_state = thermostat.program_state
-        self._program_next = thermostat.next_program
-        self._holiday_state = (thermostat.active_state == 4)
