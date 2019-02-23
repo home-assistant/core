@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     if toon.thermostat_info.have_ot_boiler:
         sensors.extend([
             ToonBoilerBinarySensor(toon, 'thermostat_info',
-                                   'ot_communication_error', 0,
+                                   'ot_communication_error', '0',
                                    "OpenTherm Connection",
                                    'mdi:check-network-outline',
                                    'connectivity'),
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                                    inverted=True),
             ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info',
                                    None, "Boiler Burner", 'mdi:fire', None),
-            ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info', 2,
+            ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info', '2',
                                    "Hot Tap Water", 'mdi:water-pump', None),
         ])
 
