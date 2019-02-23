@@ -151,6 +151,15 @@ class PrometheusMetrics:
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_person(self, state):
+        metric = self._metric(
+            'person_state',
+            self.prometheus_client.Gauge,
+            'State of the person (0/1)',
+        )
+        value = state_helper.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_light(self, state):
         metric = self._metric(
             'light_state',
