@@ -35,6 +35,7 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+# Refer to the cover dev docs for device class descriptions
 DEVICE_CLASS_AWNING = 'awning'
 DEVICE_CLASS_BLIND = 'blind'
 DEVICE_CLASS_CURTAIN = 'curtain'
@@ -44,19 +45,17 @@ DEVICE_CLASS_GARAGE = 'garage'
 DEVICE_CLASS_SHADE = 'shade'
 DEVICE_CLASS_SHUTTER = 'shutter'
 DEVICE_CLASS_WINDOW = 'window'
-
 DEVICE_CLASSES = [
-    DEVICE_CLASS_AWNING,    # Awning over a over window, patio, tec..
-    DEVICE_CLASS_BLIND,     # Window blinds
-    DEVICE_CLASS_CURTAIN,   # Curtain covering a window, wall, etc..
-    DEVICE_CLASS_DAMPER,    # Vent damper, digital window tint/film, etc...
-    DEVICE_CLASS_DOOR,      # Generic door control
-    DEVICE_CLASS_GARAGE,    # Garage door control
-    DEVICE_CLASS_SHADE,     # Shade control (covering window, wall, etc..)
-    DEVICE_CLASS_SHUTTER,   # Shutter covering a window, door, etc...
-    DEVICE_CLASS_WINDOW,    # Window control
+    DEVICE_CLASS_AWNING,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_CURTAIN,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHADE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW
 ]
-
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1
