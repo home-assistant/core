@@ -51,7 +51,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
 
     def _read_alarm_state(self):
-        """Read current status of the alarm and translate it into HA status"""
+        """Read current status of the alarm and translate it into HA status."""
         from satel_integra.satel_integra import AlarmState
 
         # Default - disarmed:
@@ -115,7 +115,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         return self._state
 
     async def async_alarm_disarm(self, code=None):
-        """Send disarm command.fclea"""
+        """Send disarm command."""
         if not code:
             _LOGGER.debug("Code was null")
             return
