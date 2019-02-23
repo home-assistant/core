@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
     if CONF_ADB_SERVER_IP not in config:
-        # "python-adb"
+        # Use "python-adb" (Python ADB implementation)
         if CONF_ADBKEY in config:
             ftv = FireTV(host, config[CONF_ADBKEY])
             adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ftv = FireTV(host)
             adb_log = ""
     else:
-        # "pure-python-adb"
+        # Use "pure-python-adb" (communicate with ADB server)
         ftv = FireTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
                      adb_server_port=config[CONF_ADB_SERVER_PORT])
         adb_log = " using ADB server at {0}:{1}".format(
@@ -134,7 +134,7 @@ class FireTVDevice(MediaPlayerDevice):
 
         # ADB exceptions to catch
         if not self.firetv.adb_server_ip:
-            # "python-adb"
+            # Using "python-adb" (Python ADB implementation)
             from adb.adb_protocol import (InvalidChecksumError,
                                           InvalidCommandError,
                                           InvalidResponseError)
@@ -145,7 +145,7 @@ class FireTVDevice(MediaPlayerDevice):
                                InvalidCommandError, InvalidResponseError,
                                TcpTimeoutException)
         else:
-            # "pure-python-adb"
+            # Using "pure-python-adb" (communicate with ADB server)
             self.exceptions = (ConnectionResetError,)
 
         self._state = None
