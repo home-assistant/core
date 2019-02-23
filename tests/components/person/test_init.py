@@ -101,6 +101,7 @@ async def test_valid_invalid_user_ids(hass, hass_admin_user):
 
 async def test_setup_tracker(hass, hass_admin_user):
     """Test set up person with one device tracker."""
+    hass.state = CoreState.not_running
     user_id = hass_admin_user.id
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
@@ -148,6 +149,7 @@ async def test_setup_tracker(hass, hass_admin_user):
 
 async def test_setup_two_trackers(hass, hass_admin_user):
     """Test set up person with two device trackers."""
+    hass.state = CoreState.not_running
     user_id = hass_admin_user.id
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
@@ -191,6 +193,7 @@ async def test_setup_two_trackers(hass, hass_admin_user):
 
 async def test_ignore_unavailable_states(hass, hass_admin_user):
     """Test set up person with two device trackers, one unavailable."""
+    hass.state = CoreState.not_running
     user_id = hass_admin_user.id
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
@@ -234,7 +237,7 @@ async def test_restore_home_state(hass, hass_admin_user):
         ATTR_SOURCE: DEVICE_TRACKER, ATTR_USER_ID: user_id}
     state = State('person.tracked_person', 'home', attrs)
     mock_restore_cache(hass, (state, ))
-    hass.state = CoreState.starting
+    hass.state = CoreState.not_running
     mock_component(hass, 'recorder')
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
