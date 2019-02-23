@@ -10,7 +10,7 @@ from homeassistant.core import callback
 
 from .const import (
     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY, CONF_TENANT,
-    DATA_TOON_CONFIG, DEFAULT_TENANT, DOMAIN)
+    DATA_TOON_CONFIG, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,9 @@ class ToonFlowHandler(config_entries.ConfigFlow):
         fields = OrderedDict()
         fields[vol.Required(CONF_USERNAME)] = str
         fields[vol.Required(CONF_PASSWORD)] = str
-        fields[vol.Optional(CONF_TENANT, default=DEFAULT_TENANT)] = str
+        fields[vol.Optional(CONF_TENANT)] = vol.In([
+            'eneco', 'electrabel', 'viesgo'
+        ])
 
         return self.async_show_form(
             step_id='authenticate',
