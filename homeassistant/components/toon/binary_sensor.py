@@ -50,6 +50,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                                    None, "Boiler Burner", 'mdi:fire', None),
             ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info', '2',
                                    "Hot Tap Water", 'mdi:water-pump', None),
+            ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info', '3',
+                                   "Boiler Preheating", 'mdi:fire', None),
         ])
 
     async_add_entities(sensors)
