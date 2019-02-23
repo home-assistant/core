@@ -5,7 +5,8 @@ from typing import Any, Dict
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (config_validation as cv,
+                                   device_registry as dr)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -54,6 +55,18 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
 
+    # Register device for the Meter Adapter, since it will have no entities.
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, toon.agreement.id, 'meter_adapter'),
+        },
+        manufacturer='Eneco',
+        name="Meter Adapter",
+        via_hub=(DOMAIN, toon.agreement.id)
+    )
+
     for component in 'binary_sensor', 'climate', 'sensor':
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component))
@@ -72,15 +85,6 @@ class ToonEntity(Entity):
         self.toon = toon
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id)
-            }
-        }
-
-    @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
@@ -89,3 +93,103 @@ class ToonEntity(Entity):
     def icon(self) -> str:
         """Return the mdi icon of the entity."""
         return self._icon
+
+
+class ToonDisplayDeviceEntity(ToonEntity):
+    """Defines a Toon display device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this thermostat."""
+        agreement = self.toon.agreement
+        model = agreement.display_hardware_version.rpartition('/')[0]
+        sw_version = agreement.display_software_version.rpartition('/')[-1]
+        return {
+            'identifiers': {
+                (DOMAIN, agreement.id),
+            },
+            'name': 'Toon Display',
+            'manufacturer': 'Eneco',
+            'model': model,
+            'sw_version': sw_version,
+        }
+
+
+class ToonElectricityMeterDeviceEntity(ToonEntity):
+    """Defines a Electricity Meter device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Electricity Meter',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'electricity'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+        }
+
+
+class ToonGasMeterDeviceEntity(ToonEntity):
+    """Defines a Gas Meter device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        via_hub = 'meter_adapter'
+        if self.toon.gas.is_smart:
+            via_hub = 'electricity'
+
+        return {
+            'name': 'Gas Meter',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'gas'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, via_hub),
+        }
+
+
+class ToonSolarDeviceEntity(ToonEntity):
+    """Defines a Solar Device device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Solar Panels',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'solar'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+        }
+
+
+class ToonBoilerModuleDeviceEntity(ToonEntity):
+    """Defines a Boiler Module device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Boiler Module',
+            'manufacturer': 'Eneco',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'boiler_module'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id),
+        }
+
+
+class ToonBoilerDeviceEntity(ToonEntity):
+    """Defines a Boiler device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Boiler',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'boiler'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'boiler_module'),
+        }

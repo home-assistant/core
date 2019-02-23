@@ -5,10 +5,10 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ToonEntity
-from .const import (
-    CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH, POWER_WATT, VOLUME_CM3,
-    VOLUME_M3)
+from . import (ToonEntity, ToonElectricityMeterDeviceEntity,
+               ToonGasMeterDeviceEntity, ToonSolarDeviceEntity)
+from .const import (CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH,
+                    POWER_WATT, VOLUME_CM3, VOLUME_M3)
 
 DEPENDENCIES = ['toon']
 
@@ -24,62 +24,76 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
 
     sensors = [
-        ToonSensor(toon, 'power', 'value', "Current Power Usage",
-                   'mdi:power-plug', POWER_WATT),
-        ToonSensor(toon, 'power', 'average', "Average Power Usage",
-                   'mdi:power-plug', POWER_WATT),
-        ToonSensor(toon, 'power', 'daily_value', "Power Usage Today",
-                   'mdi:power-plug', POWER_KWH),
-        ToonSensor(toon, 'power', 'average_daily', "Average Daily Power Usage",
-                   'mdi:power-plug', POWER_KWH),
-        ToonSensor(toon, 'power', 'meter_reading',
-                   "Power Meter Feed IN Tariff 1", 'mdi:power-plug',
-                   POWER_KWH),
-        ToonSensor(toon, 'power', 'meter_reading_low',
-                   "Power Meter Feed IN Tariff 2", 'mdi:power-plug',
-                   POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'value',
+                                         "Current Power Usage",
+                                         'mdi:power-plug', POWER_WATT),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'average',
+                                         "Average Power Usage",
+                                         'mdi:power-plug', POWER_WATT),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'daily_value',
+                                         "Power Usage Today",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'average_daily',
+                                         "Average Daily Power Usage",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'meter_reading',
+                                         "Power Meter Feed IN Tariff 1",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'meter_reading_low',
+                                         "Power Meter Feed IN Tariff 2",
+                                         'mdi:power-plug', POWER_KWH),
     ]
 
     if toon.gas:
         sensors.extend([
-            ToonSensor(toon, 'gas', 'value', "Current Gas Usage",
-                       'mdi:gas-cylinder', VOLUME_CM3),
-            ToonSensor(toon, 'gas', 'average', "Average Gas Usage",
-                       'mdi:gas-cylinder', VOLUME_CM3),
-            ToonSensor(toon, 'gas', 'daily_usage', "Gas Usage Today",
-                       'mdi:gas-cylinder', VOLUME_M3),
-            ToonSensor(toon, 'gas', 'average_daily', "Average Daily Gas Usage",
-                       'mdi:gas-cylinder', VOLUME_M3),
-            ToonSensor(toon, 'gas', 'meter_reading', "Gas Meter",
-                       'mdi:gas-cylinder', VOLUME_M3),
-            ToonSensor(toon, 'gas', 'daily_cost', "Gas Cost Today",
-                       'mdi:gas-cylinder', CURRENCY_EUR),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'value', "Current Gas Usage",
+                                     'mdi:gas-cylinder', VOLUME_CM3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'average',
+                                     "Average Gas Usage", 'mdi:gas-cylinder',
+                                     VOLUME_CM3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'daily_usage',
+                                     "Gas Usage Today", 'mdi:gas-cylinder',
+                                     VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'average_daily',
+                                     "Average Daily Gas Usage",
+                                     'mdi:gas-cylinder', VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'meter_reading', "Gas Meter",
+                                     'mdi:gas-cylinder', VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'daily_cost',
+                                     "Gas Cost Today", 'mdi:gas-cylinder',
+                                     CURRENCY_EUR),
         ])
 
     if toon.solar:
         sensors.extend([
-            ToonSensor(toon, 'solar', 'value', "Current Solar Production",
-                       'mdi:solar-power', POWER_WATT),
-            ToonSensor(toon, 'solar', 'maximum', "Max Solar Production",
-                       'mdi:solar-power', POWER_WATT),
-            ToonSensor(toon, 'solar', 'produced', "Solar Production to Grid",
-                       'mdi:solar-power', POWER_WATT),
-            ToonSensor(toon, 'solar', 'average_produced',
-                       "Average Solar Production to Grid", 'mdi:solar-power',
-                       POWER_WATT),
-            ToonSensor(toon, 'solar', 'meter_reading_produced',
-                       "Power Meter Feed OUT Tariff 1", 'mdi:solar-power',
-                       POWER_KWH),
-            ToonSensor(toon, 'solar', 'meter_reading_low_produced',
-                       "Power Meter Feed OUT Tariff 2", 'mdi:solar-power',
-                       POWER_KWH),
+            ToonSolarDeviceSensor(toon, 'solar', 'value',
+                                  "Current Solar Production",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'maximum',
+                                  "Max Solar Production", 'mdi:solar-power',
+                                  POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'produced',
+                                  "Solar Production to Grid",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'average_produced',
+                                  "Average Solar Production to Grid",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonElectricityMeterDeviceSensor(toon, 'solar',
+                                             'meter_reading_produced',
+                                             "Power Meter Feed OUT Tariff 1",
+                                             'mdi:solar-power',
+                                             POWER_KWH),
+            ToonElectricityMeterDeviceSensor(toon, 'solar',
+                                             'meter_reading_low_produced',
+                                             "Power Meter Feed OUT Tariff 2",
+                                             'mdi:solar-power', POWER_KWH),
         ])
 
     async_add_entities(sensors)
 
 
 class ToonSensor(ToonEntity):
-    """Representation of a Toon sensor."""
+    """Defines a Toon sensor."""
 
     def __init__(self, toon, section: str, measurement: str,
                  name: str, icon: str, unit_of_measurement: str) -> None:
@@ -135,3 +149,22 @@ class ToonSensor(ToonEntity):
             value = round(float(value)/1000.0, 2)
 
         self._state = max(0, value)
+
+
+class ToonElectricityMeterDeviceSensor(ToonSensor,
+                                       ToonElectricityMeterDeviceEntity):
+    """Defines a Eletricity Meter sensor."""
+
+    pass
+
+
+class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
+    """Defines a Gas Meter sensor."""
+
+    pass
+
+
+class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
+    """Defines a Solar sensor."""
+
+    pass

@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ToonEntity
+from . import ToonDisplayDeviceEntity
 from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 
 DEPENDENCIES = ['toon']
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
     async_add_entities([ToonThermostatDevice(toon)], True)
 
 
-class ToonThermostatDevice(ToonEntity, ClimateDevice):
+class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     """Representation of a Toon climate device."""
 
     def __init__(self, toon) -> None:
@@ -63,23 +63,7 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this thermostat."""
-        return self.toon.agreement.id
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this thermostat."""
-        agreement = self.toon.agreement
-        model = agreement.display_hardware_version.rpartition('/')[0]
-        sw_version = agreement.display_software_version.rpartition('/')[-1]
-        return {
-            'identifiers': {
-                (DOMAIN, agreement.id)
-            },
-            'name': self._name,
-            'manufacturer': 'Eneco',
-            'model': model,
-            'sw_version': sw_version,
-        }
+        return '_'.join([DOMAIN, self.toon.agreement.id, 'climate'])
 
     @property
     def supported_features(self) -> int:
