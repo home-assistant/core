@@ -160,6 +160,7 @@ homeassistant/components/arduino/* @fabaff
 homeassistant/components/*/arduino.py @fabaff
 homeassistant/components/*/arest.py @fabaff
 homeassistant/components/*/axis.py @kane610
+homeassistant/components/azuredns/* @Cloudenius
 
 # B
 homeassistant/components/blink/* @fronzbot
