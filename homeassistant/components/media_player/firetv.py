@@ -103,7 +103,7 @@ def adb_decorator(override_available=False):
     def _adb_decorator(func):
         """Wait if previous ADB commands haven't finished."""
         @functools.wraps(func)
-        def __adb_decorator(self, *args, **kwargs):
+        def _adb_exception_catcher(self, *args, **kwargs):
             # If the device is unavailable, don't do anything
             if not self.available and not override_available:
                 return None
@@ -117,7 +117,7 @@ def adb_decorator(override_available=False):
                 self._available = False  # pylint: disable=protected-access
                 return None
 
-        return __adb_decorator
+        return _adb_exception_catcher
 
     return _adb_decorator
 
