@@ -337,12 +337,18 @@ class Person(RestoreEntity):
         if state:
             self._parse_source_state(state)
 
-        @callback
-        def person_start_hass(now):
+        if self.hass.is_running:
+            # Update person now if hass is already running.
             self.person_updated()
+        else:
+            # Wait for hass start to not have race between person
+            # and device trackers finishing setup.
+            @callback
+            def person_start_hass(now):
+                self.person_updated()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, person_start_hass)
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, person_start_hass)
 
     @callback
     def person_updated(self):
