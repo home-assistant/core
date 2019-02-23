@@ -48,25 +48,35 @@ async def async_setup(hass, config):
     clientid = config[DOMAIN][CONF_CLIENTID]
     clientsecret = config[DOMAIN][CONF_CLIENTSECRET]
     authority_url = (AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT])
-    apiurl = ('https://management.azure.com/subscriptions/' + config[DOMAIN][CONF_SUBSCRIPTIONID] + '/resourceGroups/' + config[DOMAIN][CONF_RESOURCEGROUPNAME] + 'providers/Microsoft.Network/dnsZones/' + config[DOMAIN][CONF_DOMAIN] + '/A/' + config[DOMAIN][CONF_HOST] + '?api-version=2018-03-01-preview')
+    apiurl = ('https://management.azure.com/subscriptions/'
+              + config[DOMAIN][CONF_SUBSCRIPTIONID]
+              + '/resourceGroups/'
+              + config[DOMAIN][CONF_RESOURCEGROUPNAME]
+              + 'providers/Microsoft.Network/dnsZones/'
+              + config[DOMAIN][CONF_DOMAIN]
+              + '/A/'
+              + config[DOMAIN][CONF_HOST]
+              + '?api-version=2018-03-01-preview')
 
     session = async_get_clientsession(hass)
 
-    result = await _update_azuredns(session, domain, host, resource, tenant, clientid, clientsecret, authority_url, apiurl)
+    result = await _update_azuredns(session, domain, host, resource, tenant,
+                                    clientid, clientsecret, authority_url, apiurl)
 
     if not result:
         return False
 
     async def update_domain_interval(now):
         """Update the Azure DNS entry."""
-        await _update_azuredns(session, domain, host, resource, tenant, clientid, clientsecret, authority_url, apiurl)
+        await _update_azuredns(session, domain, host, resource, tenant,
+                               clientid, clientsecret, authority_url, apiurl)
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
-
     return result
 
 
-async def _update_azuredns(session, domain, host, resource, tenant, clientid, clientsecret, authority_url, apiurl):
+async def _update_azuredns(session, domain, host, resource, tenant,
+                           clientid, clientsecret, authority_url, apiurl):
     import adal
     import json
 
