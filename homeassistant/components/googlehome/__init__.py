@@ -20,6 +20,7 @@ NAME = 'GoogleHome'
 CONF_DEVICE_TYPES = 'device_types'
 CONF_RSSI_THRESHOLD = 'rssi_threshold'
 CONF_TRACK_ALARMS = 'track_alarms'
+CONF_TRACK_DEVICES = 'track_devices'
 
 DEVICE_TYPES = [1, 2, 3]
 DEFAULT_RSSI_THRESHOLD = -70
@@ -31,6 +32,7 @@ DEVICE_CONFIG = vol.Schema({
     vol.Optional(CONF_RSSI_THRESHOLD, default=DEFAULT_RSSI_THRESHOLD):
         vol.Coerce(int),
     vol.Optional(CONF_TRACK_ALARMS, default=False): cv.boolean,
+    vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
 })
 
 
@@ -48,9 +50,10 @@ async def async_setup(hass, config):
 
     for device in config[DOMAIN][CONF_DEVICES]:
         hass.data[DOMAIN][device['host']] = {}
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, 'device_tracker', DOMAIN, device, config))
+        if device[CONF_TRACK_DEVICES]:
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, 'device_tracker', DOMAIN, device, config))
 
         if device[CONF_TRACK_ALARMS]:
             hass.async_create_task(
