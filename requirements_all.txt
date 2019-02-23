@@ -776,7 +776,7 @@ openhomedevice==0.4.2
 opensensemap-api==0.1.4
 
 # homeassistant.components.device_tracker.luci
-openwrt-luci-rpc==0.3.0
+openwrt-luci-rpc==1.0.5
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
