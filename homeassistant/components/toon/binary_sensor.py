@@ -44,7 +44,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                                    'mdi:check-network-outline',
                                    'connectivity'),
             ToonBoilerBinarySensor(toon, 'thermostat_info', 'error_found', 255,
-                                   "Boiler Status", 'mdi:alert', 'problem'),
+                                   "Boiler Status", 'mdi:alert', 'problem',
+                                   inverted=True),
             ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info',
                                    None, "Boiler Burner", 'mdi:fire', None),
             ToonBoilerBinarySensor(toon, 'thermostat_info', 'burner_info', 2,
@@ -58,13 +59,15 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
     """Defines an Toon binary sensor."""
 
     def __init__(self, toon, section: str, measurement: str, on_value: Any,
-                 name: str, icon: str, device_class: str) -> None:
+                 name: str, icon: str, device_class: str,
+                 inverted: bool = False) -> None:
         """Initialize the Toon sensor."""
-        self._state = (device_class in ['connectivity', 'problem'])
+        self._state = inverted
         self._device_class = device_class
         self.section = section
         self.measurement = measurement
         self.on_value = on_value
+        self.inverted = inverted
 
         super().__init__(toon, name, icon)
 
@@ -87,10 +90,9 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
         elif self._state is None:
             value = False
         else:
-            value = bool(int(self._state))
+            value = bool(max(0, int(self._state)))
 
-        # Connectivity & Problems are reversed
-        if self.device_class in ['connectivity', 'problem']:
+        if self.inverted:
             return not value
 
         return value
