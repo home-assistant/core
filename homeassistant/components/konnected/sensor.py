@@ -1,7 +1,4 @@
-"""
-Support for DHT and DS18B20 sensors attached to a Konnected device.
-
-"""
+"""Support for DHT and DS18B20 sensors attached to a Konnected device."""
 import logging
 
 from homeassistant.components.konnected import (
@@ -73,11 +70,11 @@ class KonnectedSensor(Entity):
         self._pin_num = self._data.get(CONF_PIN)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
-        self._name = '{} {}'.format(
-            self._data.get(CONF_NAME, 'Konnected {} Pin {}'.format(
-                device_id, self._pin_num)),
-            SENSOR_TYPES[sensor_type][0])
-
+        self._name = self._data.get(CONF_NAME)
+        if self._name:
+            self._name += ' ' + SENSOR_TYPES[sensor_type][0]
+        self._unique_id = '{}-{}-{}'.format(
+            device_id, self._pin_num, sensor_type)
         if sensor_type == DEVICE_CLASS_TEMPERATURE:
             self._state = self.temperature(self._data.get(sensor_type))
 
@@ -90,6 +87,11 @@ class KonnectedSensor(Entity):
         if self._unit_of_measurement == TEMP_FAHRENHEIT:
             number = celsius_to_fahrenheit(number)
         return round(number, 1)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):
