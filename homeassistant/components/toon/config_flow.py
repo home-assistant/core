@@ -1,4 +1,5 @@
 """Config flow to configure the Toon component."""
+from collections import OrderedDict
 import logging
 
 import voluptuous as vol
@@ -48,15 +49,14 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
     async def _show_authenticaticate_form(self, errors=None):
         """Show the authentication form to the user."""
-        data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_TENANT, default=DEFAULT_TENANT): str,
-        })
+        fields = OrderedDict()
+        fields[vol.Required(CONF_USERNAME)] = str
+        fields[vol.Required(CONF_PASSWORD)] = str
+        fields[vol.Optional(CONF_TENANT, default=DEFAULT_TENANT)] = str
 
         return self.async_show_form(
             step_id='authenticate',
-            data_schema=data_schema,
+            data_schema=vol.Schema(fields),
             errors=errors if errors else {},
         )
 
@@ -107,13 +107,13 @@ class ToonFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_display()
 
     async def _show_display_form(self, errors=None):
-        data_schema = vol.Schema({
-            vol.Required(CONF_DISPLAY): vol.In(self.displays)
-        })
+        """Show the select display form to the user."""
+        fields = OrderedDict()
+        fields[vol.Required(CONF_DISPLAY)] = vol.In(self.displays)
 
         return self.async_show_form(
             step_id='display',
-            data_schema=data_schema,
+            data_schema=vol.Schema(fields),
             errors=errors if errors else {},
         )
 
