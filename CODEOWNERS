@@ -190,6 +190,9 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/esphome/*.py @OttoWinter
 
+# F
+homeassistant/components/freebox/*.py @snoof85
+
 # G
 homeassistant/components/googlehome/* @ludeeus
 homeassistant/components/*/googlehome.py @ludeeus

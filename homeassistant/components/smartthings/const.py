@@ -1,14 +1,20 @@
 """Constants used by the SmartThings component and platforms."""
+from datetime import timedelta
 import re
 
+APP_OAUTH_CLIENT_NAME = "Home Assistant"
 APP_OAUTH_SCOPES = [
     'r:devices:*'
 ]
 APP_NAME_PREFIX = 'homeassistant.'
 CONF_APP_ID = 'app_id'
 CONF_INSTALLED_APP_ID = 'installed_app_id'
+CONF_INSTALLED_APPS = 'installed_apps'
 CONF_INSTANCE_ID = 'instance_id'
 CONF_LOCATION_ID = 'location_id'
+CONF_OAUTH_CLIENT_ID = 'client_id'
+CONF_OAUTH_CLIENT_SECRET = 'client_secret'
+CONF_REFRESH_TOKEN = 'refresh_token'
 DATA_MANAGER = 'manager'
 DATA_BROKERS = 'brokers'
 DOMAIN = 'smartthings'
@@ -29,6 +35,7 @@ SUPPORTED_PLATFORMS = [
     'binary_sensor',
     'sensor'
 ]
+TOKEN_REFRESH_INTERVAL = timedelta(days=14)
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \
           "{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))$"
 VAL_UID_MATCHER = re.compile(VAL_UID)
