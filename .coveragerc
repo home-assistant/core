@@ -379,6 +379,7 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/owlet/*
     homeassistant/components/pilight/*
+    homeassistant/components/planifneige/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/point/*
     homeassistant/components/prometheus/*

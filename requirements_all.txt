@@ -823,6 +823,9 @@ pillow==5.4.1
 # homeassistant.components.dominos
 pizzapi==0.0.3
 
+# homeassistant.components.planifneige
+planif-neige-client==0.0.5
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==3.0.6
