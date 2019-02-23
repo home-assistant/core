@@ -111,8 +111,13 @@ class TestFilterSensor(unittest.TestCase):
         assert 21 == filtered.state
 
     def test_outlier_step(self):
-        """Test if outlier filter handles long-running
-        step-changes correctly."""
+        """
+        Test step-change handling in outlier.
+
+        Test if outlier filter handles long-running step-changes correctly.
+        It should converge to no longer filter once just over half the
+        window_size is occupied by the new post step-change values.
+        """
         filt = OutlierFilter(window_size=3,
                              precision=2,
                              entity=None,

@@ -411,7 +411,7 @@ class OutlierFilter(Filter):
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
         median = statistics.median([s.state for s in self.states]) \
-            if len(self.states) > 0 else 0
+            if self.states else 0
         if (len(self.states) == self.states.maxlen and
                 abs(new_state.state - median) >
                 self._radius):
