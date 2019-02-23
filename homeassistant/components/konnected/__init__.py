@@ -338,15 +338,15 @@ class DiscoveredDevice:
 
     def dht_sensor_configuration(self):
         """Return the configuration map for syncing DHT sensors."""
-        return [{'pin': sensor[CONF_PIN]} for sensor in
-                filter(lambda s: s[CONF_TYPE] == 'dht',
-                       self.stored_configuration[CONF_SENSORS])]
+        return [{'pin': sensor[CONF_PIN]} for sensor
+                in self.stored_configuration[CONF_SENSORS]
+                if sensor[CONF_TYPE] == 'dht']
 
     def ds18b20_sensor_configuration(self):
         """Return the configuration map for syncing DS18B20 sensors."""
-        return [{'pin': sensor[CONF_PIN]} for sensor in
-                filter(lambda s: s[CONF_TYPE] == 'ds18b20',
-                       self.stored_configuration[CONF_SENSORS])]
+        return [{'pin': sensor[CONF_PIN]} for sensor
+                in self.stored_configuration[CONF_SENSORS]
+                if sensor[CONF_TYPE] == 'ds18b20']
 
     def update_initial_states(self):
         """Update the initial state of each sensor from status poll."""

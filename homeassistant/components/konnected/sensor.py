@@ -1,8 +1,6 @@
 """
 Support for DHT and DS18B20 sensors attached to a Konnected device.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.konnected/
 """
 import logging
 
@@ -40,8 +38,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     sensors = []
 
     # Initialize all DHT sensors.
-    for sensor in filter(lambda s: s[CONF_TYPE] == 'dht',
-                         data[CONF_DEVICES][device_id][CONF_SENSORS]):
+    dht_sensors = [sensor for sensor
+                   in data[CONF_DEVICES][device_id][CONF_SENSORS]
+                   if sensor[CONF_TYPE] == 'dht']
+    for sensor in dht_sensors:
         sensors.append(
             KonnectedSensor(device_id, sensor, DEVICE_CLASS_TEMPERATURE))
         sensors.append(
