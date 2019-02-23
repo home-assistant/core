@@ -112,12 +112,12 @@ class ToonThermostatDevice(ToonEntity, ClimateDevice):
         return self._target_temperature
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return DEFAULT_MIN_TEMP
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return DEFAULT_MAX_TEMP
 
