@@ -69,7 +69,7 @@ async def test_lock(hass, device_factory):
     assert state.attributes['code_name'] == 'Code 1'
     assert state.attributes['used_code'] == 'Code 2'
     assert state.attributes['lock_name'] == 'Front Door'
-    assert 'codeId' not in state.attributes
+    assert 'code_id' not in state.attributes
 
 
 async def test_unlock(hass, device_factory):
