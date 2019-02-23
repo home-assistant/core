@@ -266,6 +266,21 @@ async def test_duplicate_ids(hass, hass_admin_user):
     assert hass.states.get('person.test_user_2') is None
 
 
+async def test_create_person_during_run(hass):
+    """Test that person is updated if created while hass is running."""
+    config = {DOMAIN: {}}
+    assert await async_setup_component(hass, DOMAIN, config)
+    hass.states.async_set(DEVICE_TRACKER, 'home')
+    await hass.async_block_till_done()
+
+    await hass.components.person.async_create_person(
+        'tracked person', device_trackers=[DEVICE_TRACKER])
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'home'
+
+
 async def test_load_person_storage(hass, hass_admin_user, storage_setup):
     """Test set up person from storage."""
     state = hass.states.get('person.tracked_person')
