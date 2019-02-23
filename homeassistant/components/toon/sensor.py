@@ -6,9 +6,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (ToonEntity, ToonElectricityMeterDeviceEntity,
-               ToonGasMeterDeviceEntity, ToonSolarDeviceEntity)
+               ToonGasMeterDeviceEntity, ToonSolarDeviceEntity,
+               ToonBoilerDeviceEntity)
 from .const import (CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH,
-                    POWER_WATT, VOLUME_CM3, VOLUME_M3)
+                    POWER_WATT, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT)
 
 DEPENDENCIES = ['toon']
 
@@ -89,6 +90,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                                              'mdi:solar-power', POWER_KWH),
         ])
 
+    if toon.thermostat_info.have_ot_boiler:
+        sensors.extend([
+            ToonBoilerDeviceSensor(toon, 'thermostat_info',
+                                   'current_modulation_level',
+                                   "Boiler Modulation Level",
+                                   'mdi:percent',
+                                   RATIO_PERCENT),
+        ])
+
     async_add_entities(sensors)
 
 
@@ -166,5 +176,11 @@ class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
+
+    pass
+
+
+class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
+    """Defines a Boiler sensor."""
 
     pass
