@@ -184,10 +184,10 @@ async def async_setup(hass, config):
     for component, conf_key in (('cover', CONF_COVERS),
                                 ('light', CONF_LIGHTS),
                                 ('switch', CONF_SWITCHES)):
-        hass.async_create_task(
-            async_load_platform(hass, component, DOMAIN,
-                                config[DOMAIN][conf_key], config))
-
+        if conf_key in config[DOMAIN]:
+            hass.async_create_task(
+                async_load_platform(hass, component, DOMAIN,
+                                    config[DOMAIN][conf_key], config))
     return True
 
 
