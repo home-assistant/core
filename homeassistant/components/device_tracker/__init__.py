@@ -105,6 +105,8 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
         ATTR_MAC: cv.string,
         ATTR_DEV_ID: cv.string,
         ATTR_HOST_NAME: cv.string,
+        ATTR_LATITUDE: cv.latitude,
+        ATTR_LONGITUDE: cv.longitude,
         ATTR_LOCATION_NAME: cv.string,
         ATTR_GPS: cv.gps,
         ATTR_GPS_ACCURACY: cv.positive_int,
