@@ -34,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
 
         ToonDisplayBinarySensor(toon, 'thermostat_info', 'active_state', 4,
                                 "Toon Holiday Mode", 'mdi:airport', None),
+
+        ToonDisplayBinarySensor(toon, 'thermostat_info', 'next_program', None,
+                                "Toon Program", 'mdi:calendar-clock', None),
     ]
 
     if toon.thermostat_info.have_ot_boiler:
