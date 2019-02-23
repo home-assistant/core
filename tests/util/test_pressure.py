@@ -3,7 +3,7 @@ import unittest
 import pytest
 
 from homeassistant.const import (PRESSURE_PA, PRESSURE_HPA, PRESSURE_MBAR,
-                                 PRESSURE_INHG)
+                                 PRESSURE_INHG, PRESSURE_PSI)
 import homeassistant.util.pressure as pressure_util
 
 INVALID_SYMBOL = 'bob'
@@ -34,8 +34,11 @@ class TestPressureUtil(unittest.TestCase):
             pressure_util.convert('a', PRESSURE_HPA, PRESSURE_INHG)
 
     def test_convert_from_hpascals(self):
-        """Test conversion from liters to other units."""
+        """Test conversion from hPA to other units."""
         hpascals = 1000
+        self.assertAlmostEqual(
+            pressure_util.convert(hpascals, PRESSURE_HPA, PRESSURE_PSI),
+            14.5037743897)
         self.assertAlmostEqual(
             pressure_util.convert(hpascals, PRESSURE_HPA, PRESSURE_INHG),
             29.5299801647)
@@ -47,8 +50,11 @@ class TestPressureUtil(unittest.TestCase):
             1000)
 
     def test_convert_from_inhg(self):
-        """Test conversion from gallons to other units."""
+        """Test conversion from inHg to other units."""
         inhg = 30
+        self.assertAlmostEqual(
+            pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_PSI),
+            14.7346266155)
         self.assertAlmostEqual(
             pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_HPA),
             1015.9167)
