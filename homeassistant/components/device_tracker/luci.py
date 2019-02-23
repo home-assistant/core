@@ -66,7 +66,7 @@ class LuciDeviceScanner(DeviceScanner):
         """
         Get extra attributes of a device.
 
-        Some known extra attributes that may be returned in the dict
+        Some known extra attributes that may be returned in the device tuple
         include Mac Address (mac), Network Device (dev), Ip Address
         (ip), reachable status (reachable), Associated router
         (host), Hostname if known (hostname) among others.
