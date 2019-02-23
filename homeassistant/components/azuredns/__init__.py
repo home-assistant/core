@@ -61,7 +61,8 @@ async def async_setup(hass, config):
     session = async_get_clientsession(hass)
 
     result = await _update_azuredns(session, domain, host, resource, tenant,
-                                    clientid, clientsecret, authority_url, apiurl)
+                                    clientid, clientsecret,
+                                    authority_url, apiurl)
 
     if not result:
         return False
