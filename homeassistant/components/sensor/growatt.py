@@ -151,7 +151,7 @@ class GrowattPlantCurrent(GrowattPlant):
     def _convert_to_w(self, value: str, metric_name: str):
         """Convert a value to a kWh value."""
         watts = float(value)
-        multiplier_lookup = {"W": 1, "kWh": 1000}
+        multiplier_lookup = {"W": 1, "kW": 1000}
         return watts * self.convert_multiplier(metric_name, multiplier_lookup)
 
     def update(self):
