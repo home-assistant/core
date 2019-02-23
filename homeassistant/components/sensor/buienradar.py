@@ -137,6 +137,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_TIMEFRAME, default=60):
         vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+    vol.Optional(CONF_NAME, default='br'): cv.string,
 })
 
 
@@ -161,7 +162,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
+        dev.append(BrSensor(sensor_type, config.get(CONF_NAME),
                             coordinates))
     async_add_entities(dev)
 
