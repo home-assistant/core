@@ -250,12 +250,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         # to EntityPlatform.
         entity_ids = hass.helpers.service.extract_entity_ids(call)
         data.pop(ATTR_ENTITY_ID, None)
+        entity_comp_data = dict(data)
+        if ATTR_GPS in entity_comp_data:
+            latitude, longitude = entity_comp_data[ATTR_GPS]
+            latitude = entity_comp_data.get(ATTR_LATITUDE, latitude)
+            longitude = entity_comp_data.get(ATTR_LONGITUDE, longitude)
+            entity_comp_data[ATTR_LATITUDE] = latitude
+            entity_comp_data[ATTR_LONGITUDE] = longitude
         entities = [
             entity for entity in component.entities
             if entity.entity_id in entity_ids]
         tasks = []
         for entity in entities:
-            tasks.append(entity.async_seen(**data))
+            tasks.append(entity.async_seen(**entity_comp_data))
         if tasks:
             await asyncio.wait(tasks)
         else:
