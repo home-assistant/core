@@ -5,14 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pca/
 """
 import logging
-import time
 
 import voluptuous as vol
 
 from homeassistant.components.switch import (
     SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, ATTR_VOLTAGE, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
+    CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pypca==0.0.1']
@@ -51,6 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, pca.close)
 
     pca.start_scan()
+
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
@@ -94,10 +94,11 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-        import pypca
         try:
-            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(self._pca.get_current_power(self._deviceId))
-            self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(self._pca.get_total_consumption(self._deviceId))
+            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+                self._pca.get_current_power(self._deviceId))
+            self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(
+                self._pca.get_total_consumption(self._deviceId))
 
             self._available = True
             self._state = self._pca.get_state(self._deviceId)
