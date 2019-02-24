@@ -791,6 +791,9 @@ panacotta==0.1
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.3.1
 
+# homeassistant.components.switch.pca
+pypca==0.0.1
+
 # homeassistant.components.media_player.dunehd
 pdunehd==1.3
 
