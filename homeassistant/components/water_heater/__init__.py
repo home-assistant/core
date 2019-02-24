@@ -39,12 +39,17 @@ STATE_GAS = 'gas'
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
+SUPPORT_TARGET_TEMPERATURE_HIGH = 8
+SUPPORT_TARGET_TEMPERATURE_LOW = 16
 
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
+ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
+ATTR_TARGET_TEMP_LOW = 'target_temp_low'
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -132,6 +137,9 @@ class WaterHeaterDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit,
                 self.precision),
@@ -154,6 +162,16 @@ class WaterHeaterDevice(Entity):
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
+        if supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
+            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                self.precision)
+
+        if supported_features & SUPPORT_TARGET_TEMPERATURE_LOW:
+            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                self.precision)
+
         return data
 
     @property
@@ -172,8 +190,23 @@ class WaterHeaterDevice(Entity):
         return None
 
     @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return None
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_high(self):
+        """Return the highbound target temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
         return None
 
     @property
