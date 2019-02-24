@@ -46,15 +46,12 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
         Capability.garage_door_control,
         Capability.window_shade
     ]
-    supported = min_required.copy()
-    supported.extend([
-        Capability.battery,
-        Capability.switch_level
-    ])
     # Must have one of the min_required
     if any(capability in capabilities
            for capability in min_required):
-        return supported
+        # Return all capabilities supported/consumed
+        return min_required + [Capability.battery, Capability.switch_level]
+
     return None
 
 
@@ -91,12 +88,10 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
-        if not self._supported_features & SUPPORT_SET_POSITION \
-                or not position:
+        if not self._supported_features & SUPPORT_SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
-        await self._device.set_level(position, 0)
+        await self._device.set_level(kwargs[ATTR_POSITION], 0)
 
     async def async_update(self):
         """Update the attrs of the cover."""
@@ -121,6 +116,23 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
             self._state_attrs[ATTR_BATTERY_LEVEL] = battery
 
     @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._state == STATE_OPENING
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._state == STATE_CLOSING
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        if self._state == STATE_CLOSED:
+            return True
+        return None if self._state is None else False
+
+    @property
     def current_cover_position(self):
         """Return current position of cover."""
         return self._device.status.level
@@ -139,8 +151,3 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def state(self) -> str:
-        """Get the state of the cover."""
-        return self._state

@@ -9,7 +9,7 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION,
-    STATE_CLOSING, STATE_OPENING)
+    STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 from homeassistant.components.smartthings import cover
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
@@ -153,7 +153,8 @@ async def test_update_from_signal(hass, device_factory):
     device = device_factory('Garage', [Capability.garage_door_control],
                             {Attribute.door: 'opening'})
     await setup_platform(hass, COVER_DOMAIN, device)
-    await device.lock(True)
+    device.status.update_attribute_value(Attribute.door, 'open')
+    assert hass.states.get('cover.garage').state == STATE_OPENING
     # Act
     async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
                           [device.device_id])
@@ -161,7 +162,7 @@ async def test_update_from_signal(hass, device_factory):
     await hass.async_block_till_done()
     state = hass.states.get('cover.garage')
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == STATE_OPEN
 
 
 async def test_unload_config_entry(hass, device_factory):
