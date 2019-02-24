@@ -111,11 +111,11 @@ class PlanifNeigeSensor(RestoreEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'startPlanDate': self._start_plan_date,
-            'endPlanDate': self.__end_plan_date,
-            'startReplanDate': self._start_replan_date,
-            'endReplanDate': self._end_replan_date,
-            'dateUpdated': self._date_updated,
+            'start_plan_date': self._start_plan_date,
+            'end_plan_date': self.__end_plan_date,
+            'start_replan_date': self._start_replan_date,
+            'end_replan_date': self._end_replan_date,
+            'date_updated': self._date_updated,
             ATTR_ATTRIBUTION: PLANIFNEIGE_ATTRIBUTION
         }
 
