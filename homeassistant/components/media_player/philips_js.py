@@ -122,8 +122,6 @@ class PhilipsTV(MediaPlayerDevice):
         if source in self._source_mapping:
             self._tv.setSource(self._source_mapping.get(source))
             self._source = source
-            if not self._tv.on:
-                self._state = STATE_OFF
             self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
@@ -144,26 +142,18 @@ class PhilipsTV(MediaPlayerDevice):
     def turn_off(self):
         """Turn off the device."""
         self._tv.sendKey('Standby')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def volume_up(self):
         """Send volume up command."""
         self._tv.sendKey('VolumeUp')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def volume_down(self):
         """Send volume down command."""
         self._tv.sendKey('VolumeDown')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def mute_volume(self, mute):
         """Send mute command."""
         self._tv.sendKey('Mute')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
