@@ -1,9 +1,12 @@
 """Support for LCN devices."""
 import logging
-import re
 
 import voluptuous as vol
 
+from homeassistant.components.lcn.const import (
+    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
+    CONF_SK_NUM_TRIES, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME, DIM_MODES,
+    DOMAIN, MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS, RELAY_PORTS)
 from homeassistant.const import (
     CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
     CONF_PASSWORD, CONF_PORT, CONF_SWITCHES, CONF_USERNAME)
@@ -11,33 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pypck==0.5.9']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'lcn'
-DATA_LCN = 'lcn'
-DEFAULT_NAME = 'pchk'
-
-CONF_SK_NUM_TRIES = 'sk_num_tries'
-CONF_DIM_MODE = 'dim_mode'
-CONF_OUTPUT = 'output'
-CONF_TRANSITION = 'transition'
-CONF_DIMMABLE = 'dimmable'
-CONF_CONNECTIONS = 'connections'
-CONF_MOTOR = 'motor'
-
-DIM_MODES = ['STEPS50', 'STEPS200']
-OUTPUT_PORTS = ['OUTPUT1', 'OUTPUT2', 'OUTPUT3', 'OUTPUT4']
-RELAY_PORTS = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4',
-               'RELAY5', 'RELAY6', 'RELAY7', 'RELAY8',
-               'MOTORONOFF1', 'MOTORUPDOWN1', 'MOTORONOFF2', 'MOTORUPDOWN2',
-               'MOTORONOFF3', 'MOTORUPDOWN3', 'MOTORONOFF4', 'MOTORUPDOWN4']
-MOTOR_PORTS = ['MOTOR1', 'MOTOR2', 'MOTOR3', 'MOTOR4']
-
-# Regex for address validation
-PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
-                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
+REQUIREMENTS = ['pypck==0.5.9']
 
 
 def has_unique_connection_names(connections):
