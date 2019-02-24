@@ -59,6 +59,7 @@ class SoCoMock():
         self.volume = 50
         self.mute = False
         self.shuffle = False
+        self.repeat = False
         self.night_mode = False
         self.dialog_mode = False
         self.music_library = MusicLibraryMock()

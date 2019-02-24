@@ -171,6 +171,16 @@ shuffle_set:
       description: True/false for enabling/disabling shuffle.
       example: true
 
+repeat_set:
+  description: Set repeating state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to set.
+      example: 'media_player.spotify'
+    repeat:
+      description: True/false for enabling/disabling repeat.
+      example: true
+
 snapcast_snapshot:
   description: Take a snapshot of the media player.
   fields:

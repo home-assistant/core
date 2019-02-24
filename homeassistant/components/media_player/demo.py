@@ -11,8 +11,9 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_REPEAT_SET, 
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, 
+    SUPPORT_VOLUME_SET)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 
@@ -40,7 +41,7 @@ YOUTUBE_PLAYER_SUPPORT = \
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_REPEAT_SET | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SELECT_SOUND_MODE
 
@@ -63,6 +64,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._volume_level = 1.0
         self._volume_muted = False
         self._shuffle = False
+        self._repeat = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
 
@@ -95,6 +97,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def shuffle(self):
         """Boolean if shuffling is enabled."""
         return self._shuffle
+
+    @property
+    def repeat(self):
+        """Boolean if repeating is enabled."""
+        return self._repeat
 
     @property
     def sound_mode(self):
@@ -139,6 +146,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
+        self.schedule_update_ha_state()
+
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
         self.schedule_update_ha_state()
 
     def select_sound_mode(self, sound_mode):

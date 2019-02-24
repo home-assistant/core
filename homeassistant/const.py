@@ -371,6 +371,7 @@ SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
 SERVICE_SHUFFLE_SET = 'shuffle_set'
+SERVICE_REPEAT_SET = 'repeat_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'

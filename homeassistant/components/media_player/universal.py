@@ -18,20 +18,21 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE, ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    ATTR_MEDIA_REPEAT, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, DOMAIN,
+    SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
+    SUPPORT_REPEAT_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, CONF_NAME,
     CONF_STATE, CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
-    SERVICE_SHUFFLE_SET, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
+    SERVICE_SHUFFLE_SET, SERVICE_REPEAT_SET, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_UNAVAILABLE)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
@@ -323,6 +324,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
 
     @property
+    def repeat(self):
+        """Boolean if repeating is enabled."""
+        return self._override_or_child_attr(ATTR_MEDIA_REPEAT)
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
@@ -351,6 +357,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if SERVICE_SHUFFLE_SET in self._cmds and \
                 ATTR_MEDIA_SHUFFLE in self._attrs:
             flags |= SUPPORT_SHUFFLE_SET
+
+        if SERVICE_REPEAT_SET in self._cmds and \
+                ATTR_MEDIA_REPEAT in self._attrs:
+            flags |= SUPPORT_REPEAT_SET
 
         return flags
 
@@ -501,6 +511,15 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         return self._async_call_service(
             SERVICE_SHUFFLE_SET, data, allow_override=True)
+
+    def async_set_repeat(self, repeat):
+        """Enable/disable repeating.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        data = {ATTR_MEDIA_REPEAT: repeat}
+        return self._async_call_service(
+            SERVICE_REPEAT_SET, data, allow_override=True)
 
     async def async_update(self):
         """Update state in HA."""
