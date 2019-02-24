@@ -4,16 +4,20 @@ Support for the CO2signal platform.
 For more details about this platform, please refer to the documentation
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE, CONF_SCAN_INTERVAL)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
+from homeassistant.util import Throttle
 
 CONF_COUNTRY_CODE = "country_code"
+SCAN_INTERVAL = timedelta(seconds=60)
 
 REQUIREMENTS = ['co2signal==0.4.2']
 
@@ -30,6 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LATITUDE, 'coords', msg=MSG_LOCATION): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coords', msg=MSG_LOCATION): cv.longitude,
     vol.Optional(CONF_COUNTRY_CODE): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+        cv.time_period,
 })
 
 
@@ -39,6 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lat = config.get(CONF_LATITUDE, hass.config.latitude)
     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     country_code = config.get(CONF_COUNTRY_CODE)
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
 
     _LOGGER.debug("Setting up the sensor using the %s", country_code)
 
@@ -47,20 +54,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devs.append(CO2Sensor(token,
                           country_code,
                           lat,
-                          lon))
+                          lon,
+                          scan_interval))
     add_entities(devs, True)
 
 
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    def __init__(self, token, country_code, lat, lon):
+    def __init__(self, token, country_code, lat, lon, scan_interval=SCAN_INTERVAL):
         """Initialize the sensor."""
         self._token = token
         self._country_code = country_code
         self._latitude = lat
         self._longitude = lon
         self._data = None
+        self._scan_interval = scan_interval
 
         if country_code is not None:
             device_name = country_code
@@ -96,6 +105,7 @@ class CO2Sensor(Entity):
         """Return the state attributes of the last update."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
+    @Throttle(SCAN_INTERVAL) # at most call it every 60 seconds (SCAN_INTERVAL)
     def update(self):
         """Get the latest data and updates the states."""
         import CO2Signal
@@ -111,3 +121,6 @@ class CO2Sensor(Entity):
                 latitude=self._latitude, longitude=self._longitude)
 
         self._data = round(self._data, 2)
+
+        # update values every CONF_SCAN_INTERVAL
+        track_time_interval(hass, update, self._scan_interval)
