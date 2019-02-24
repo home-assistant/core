@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
-    DeviceEntity, InstalledApp, Location, Subscription)
+    DeviceEntity, InstalledApp, Location, SceneEntity, Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -24,13 +24,15 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_coro
 
 
-async def setup_platform(hass, platform: str, *devices):
+async def setup_platform(hass, platform: str, *,
+                         devices=None, scenes=None):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
     config_entry = ConfigEntry(2, DOMAIN, "Test",
                                {CONF_INSTALLED_APP_ID:  str(uuid4())},
                                SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
-    broker = DeviceBroker(hass, config_entry, Mock(), Mock(), devices)
+    broker = DeviceBroker(hass, config_entry, Mock(), Mock(),
+                          devices or [], scenes or [])
 
     hass.data[DOMAIN] = {
         DATA_BROKERS: {
@@ -293,6 +295,31 @@ def device_factory_fixture():
                     'main', '', attribute, value)
         return device
     return _factory
+
+
+@pytest.fixture(name="scene_factory")
+def scene_factory_fixture(location):
+    """Fixture for creating mock devices."""
+    api = Mock(spec=Api)
+    api.execute_scene.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value={})
+
+    def _factory(name):
+        scene_data = {
+            'sceneId': str(uuid4()),
+            'sceneName': name,
+            'sceneIcon': '',
+            'sceneColor': '',
+            'locationId': location.location_id
+        }
+        return SceneEntity(api, scene_data)
+    return _factory
+
+
+@pytest.fixture(name="scene")
+def scene_fixture(scene_factory):
+    """Fixture for an individual scene."""
+    return scene_factory('Test Scene')
 
 
 @pytest.fixture(name="event_factory")
