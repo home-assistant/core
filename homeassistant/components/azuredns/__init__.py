@@ -1,6 +1,5 @@
 """Support for Azure DNS services."""
 import logging
-import json
 
 from datetime import datetime
 from datetime import timedelta
