@@ -2,9 +2,9 @@
 
 import logging
 
+from homeassistant.components.planifneige import PLANIFNEIGE_ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.components.planifneige import PLANIFNEIGE_ATTRIBUTION
 
 DEPENDENCIES = ['planifneige']
 

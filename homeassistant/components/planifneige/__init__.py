@@ -1,17 +1,17 @@
 """Platform for the City of Montreal's Planif-Neige snow removal APIs."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_NAME, CONF_API_KEY,
-                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
-                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 
 DOMAIN = 'planifneige'
 
