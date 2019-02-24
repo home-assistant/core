@@ -25,7 +25,7 @@ REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -186,7 +186,6 @@ class PhilipsTV(MediaPlayerDevice):
             return '{} - {}'.format(self._source, self._channel_name)
         return self._source
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and update device state."""
         self._tv.update()
