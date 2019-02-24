@@ -1,11 +1,11 @@
 """Sensor for the City of Montreal's Planif-Neige snow removal APIs."""
 
-import logging
 from datetime import datetime
+import logging
 
 from homeassistant.components.planifneige import (
-    DATA_PLANIFNEIGE, PLANIFNEIGE_ATTRIBUTION)
-from homeassistant.const import ATTR_ATTRIBUTION
+    CONF_STREETID, DATA_PLANIFNEIGE, PLANIFNEIGE_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.restore_state import RestoreEntity
 
 DEPENDENCIES = ['planifneige']
@@ -41,8 +41,8 @@ class PlanifNeigeSensor(RestoreEntity):
         """Initialize the sensor."""
         self._data = data.data
         self._state = None
-        self._name = sensor['name']
-        self._streetid = sensor['streetid']
+        self._name = sensor[CONF_NAME]
+        self._street_id = sensor[CONF_STREETID]
         self._icon = ""
         self._start_plan_date = None
         self._end_plan_date = None
@@ -56,9 +56,9 @@ class PlanifNeigeSensor(RestoreEntity):
         return self._name
 
     @property
-    def streetid(self):
-        """Return the streetid of the sensor."""
-        return self._streetid
+    def street_id(self):
+        """Return the street_id of the sensor."""
+        return self._street_id
 
     @property
     def start_plan_date(self):
@@ -93,7 +93,7 @@ class PlanifNeigeSensor(RestoreEntity):
     def update(self):
         """Update device state."""
         for street in self._data:
-            if street[1] == self._streetid:
+            if street[1] == self._street_id:
                 self._state = STREET_STATE[str(street[2])][0]
                 self._icon = STREET_STATE[str(street[2])][1]
                 self._start_plan_date = street[3]
@@ -103,6 +103,7 @@ class PlanifNeigeSensor(RestoreEntity):
                 self._date_updated = street[7]
 
     def format_dbtime(self, db_timestamp):
+        """Return DB timestamp format in ISO8601 format"""
         if db_timestamp is None:
             return None
         else:
@@ -112,6 +113,7 @@ class PlanifNeigeSensor(RestoreEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
+            'street_side_id': self.street_id,
             'start_plan_date': self.start_plan_date,
             'end_plan_date': self.end_plan_date,
             'start_replan_date': self.start_replan_date,

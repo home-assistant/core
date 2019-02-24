@@ -22,7 +22,7 @@ REQUIREMENTS = ['planif-neige-client==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STREETID = 'streetid'
+CONF_STREETID = 'street_id'
 CONF_STREETS = 'streets'
 
 DEFAULT_INTERVAL = timedelta(minutes=5)
@@ -94,6 +94,6 @@ class PlanifNeigeData:
 
         for street in self._streets:
             self.data.append(
-                self._pn.get_planification_for_street(street['streetid']))
+                self._pn.get_planification_for_street(street['street_id']))
 
         dispatcher_send(self._hass, DATA_UPDATED)
