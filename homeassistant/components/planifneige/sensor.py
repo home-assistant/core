@@ -1,6 +1,7 @@
 """Sensor for the City of Montreal's Planif-Neige snow removal APIs."""
 
 import logging
+from datetime import datetime
 
 from homeassistant.components.planifneige import (
     DATA_PLANIFNEIGE, PLANIFNEIGE_ATTRIBUTION)
@@ -10,6 +11,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 DEPENDENCIES = ['planifneige']
 
 _LOGGER = logging.getLogger(__name__)
+
+DB_TIMEFORMAT = '%Y-%m-%d %H:%M:%S'
 
 STREET_STATE = {
     '0': ['Snowed', 'mdi:snowflake'],  # street is snowed in
@@ -42,7 +45,7 @@ class PlanifNeigeSensor(RestoreEntity):
         self._streetid = sensor['streetid']
         self._icon = ""
         self._start_plan_date = None
-        self.__end_plan_date = None
+        self._end_plan_date = None
         self._start_replan_date = None
         self._end_replan_date = None
         self._date_updated = None
@@ -60,27 +63,27 @@ class PlanifNeigeSensor(RestoreEntity):
     @property
     def start_plan_date(self):
         """Return the start planned date of the sensor."""
-        return self._start_plan_date
+        return self.format_dbtime(self._start_plan_date)
 
     @property
-    def _end_plan_date(self):
+    def end_plan_date(self):
         """Return the end planned date of the sensor."""
-        return self.__end_plan_date
+        return self.format_dbtime(self._end_plan_date)
 
     @property
     def start_replan_date(self):
         """Return the start replanned date of the sensor."""
-        return self._start_replan_date
+        return self.format_dbtime(self._start_replan_date)
 
     @property
     def end_replan_date(self):
         """Return the end replanned date of the sensor."""
-        return self._end_replan_date
+        return self.format_dbtime(self._end_replan_date)
 
     @property
     def date_updated(self):
         """Return the date updated of the sensor."""
-        return self._date_updated
+        return self.format_dbtime(self._date_updated)
 
     @property
     def state(self):
@@ -94,20 +97,26 @@ class PlanifNeigeSensor(RestoreEntity):
                 self._state = STREET_STATE[str(street[2])][0]
                 self._icon = STREET_STATE[str(street[2])][1]
                 self._start_plan_date = street[3]
-                self.__end_plan_date = street[4]
+                self._end_plan_date = street[4]
                 self._start_replan_date = street[5]
                 self._end_replan_date = street[6]
                 self._date_updated = street[7]
+
+    def format_dbtime(self, db_timestamp):
+        if db_timestamp is None:
+            return None
+        else:
+            return datetime.strptime(db_timestamp, DB_TIMEFORMAT)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'start_plan_date': self._start_plan_date,
-            'end_plan_date': self.__end_plan_date,
-            'start_replan_date': self._start_replan_date,
-            'end_replan_date': self._end_replan_date,
-            'date_updated': self._date_updated,
+            'start_plan_date': self.start_plan_date,
+            'end_plan_date': self.end_plan_date,
+            'start_replan_date': self.start_replan_date,
+            'end_replan_date': self.end_replan_date,
+            'date_updated': self.date_updated,
             ATTR_ATTRIBUTION: PLANIFNEIGE_ATTRIBUTION
         }
 
