@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
