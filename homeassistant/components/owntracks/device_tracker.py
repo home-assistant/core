@@ -112,6 +112,7 @@ class OwnTracksEntity(DeviceTrackerEntity):
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
+        self._connected_seen = None
         self.hass.data[OWNTRACKS_ENTITIES].pop(self._dev_id)
 
     async def async_seen(self, **kwargs):

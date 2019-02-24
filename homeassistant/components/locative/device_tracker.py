@@ -85,6 +85,7 @@ class LocativeEntity(DeviceTrackerEntity):
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
+        self._connected_seen = None
         self.hass.data[LOCATIVE_ENTITIES].pop(self._name)
 
     async def async_seen(self, **kwargs):
