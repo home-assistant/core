@@ -72,8 +72,6 @@ class PhilipsTV(MediaPlayerDevice):
         self._tv = tv
         self._name = name
         self._state = None
-        self._min_volume = None
-        self._max_volume = None
         self._volume = None
         self._muted = False
         self._program_name = None
@@ -189,8 +187,6 @@ class PhilipsTV(MediaPlayerDevice):
     def update(self):
         """Get the latest data and update device state."""
         self._tv.update()
-        self._min_volume = self._tv.min_volume
-        self._max_volume = self._tv.max_volume
         self._volume = self._tv.volume
         self._muted = self._tv.muted
         if self._tv.source_id:
