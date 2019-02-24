@@ -145,8 +145,15 @@ class LutronButton:
             # A single-action button; the Lutron controller won't tell us
             # when the button is released, so use a different action name
             # than for buttons where we expect a release event.
-            action = 'single'
+            #
+            # Some Lutron keypads lie about their button types, though,
+            # and send release notifications even for single-action
+            # buttons. So we need to check that this is indeed a press.
+            if event == Button.Event.PRESSED:
+                action = 'single'
+            else:
+                action = None
 
-        data = {ATTR_ID: self._id, ATTR_ACTION: action}
-
-        self._hass.bus.fire(self._event, data)
+        if action:
+            data = {ATTR_ID: self._id, ATTR_ACTION: action}
+            self._hass.bus.fire(self._event, data)
