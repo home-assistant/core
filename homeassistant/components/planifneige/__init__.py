@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL)
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -45,10 +45,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the PlanifNeige component."""
+    from planif_neige_client import PlanifNeigeClient
     db_path = hass.config.path('planifneige.db')
     conf = config[DOMAIN]
+
+    pn = PlanifNeigeClient.PlanifNeigeClient(conf.get(CONF_API_KEY), db_path)
+    pn.get_planification_for_date()
+
     data = hass.data[DATA_PLANIFNEIGE] = PlanifNeigeData(
-        hass, conf.get(CONF_API_KEY), db_path, conf.get(CONF_STREETS))
+        hass, pn, conf.get(CONF_STREETS))
 
     async_track_time_interval(
         hass, data.update, conf[CONF_SCAN_INTERVAL]
@@ -76,23 +81,19 @@ async def async_setup(hass, config):
 class PlanifNeigeData:
     """Get the latest data from PlanifNeige."""
 
-    def __init__(self, hass, api_key, db_path, streets):
+    def __init__(self, hass, pn, streets):
         """Initialize the data object."""
         self.data = []
         self._hass = hass
         self._streets = streets
-        self._api_key = api_key
-        self._db_path = db_path
+        self._pn = pn
 
     def update(self, now=None):
         """Get the latest data from PlanifNeige."""
-        from planif_neige_client import PlanifNeigeClient
-        _pn = PlanifNeigeClient.PlanifNeigeClient(self._api_key,
-                                                  self._db_path)
-        _pn.get_planification_for_date()
+        self._pn.get_planification_for_date()
 
         for street in self._streets:
             self.data.append(
-                _pn.get_planification_for_street(street['streetid']))
+                self._pn.get_planification_for_street(street['streetid']))
 
         dispatcher_send(self._hass, DATA_UPDATED)
