@@ -343,9 +343,17 @@ def setup(hass, config):
         # model, id
         host = discovery_info['host']
         port = discovery_info['port']
-        model = discovery_info['properties']['md']
-        hkid = discovery_info['properties']['id']
-        config_num = int(discovery_info['properties']['c#'])
+
+        # Fold property keys to lower case, making them effectively
+        # case-insensitive. Some HomeKit devices capitalize them.
+        properties = {
+            key.lower(): value
+            for (key, value) in discovery_info['properties'].items()
+        }
+
+        model = properties['md']
+        hkid = properties['id']
+        config_num = int(properties['c#'])
 
         if model in HOMEKIT_IGNORE:
             return
