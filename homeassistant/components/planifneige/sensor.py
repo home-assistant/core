@@ -9,6 +9,7 @@ import logging
 
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.components.planifneige import PLANIFNEIGE_ATTRIBUTION
 
 DEPENDENCIES = ['planifneige']
 
@@ -32,9 +33,6 @@ STREET_STATE = {
     '5': ['Clearing', 'mdi:bulldozer'],  # trucks loading, still clearing
     '10': ['Ploughed', 'mdi:road']  # street cleared, snow not loaded
 }
-
-PLANIFNEIGE_ATTRIBUTION = "Information provided by the City of Montreal "\
-    "(http://donnees.ville.montreal.qc.ca/dataset/deneigement)"
 
 
 async def async_setup_platform(hass, config, async_add_entities,

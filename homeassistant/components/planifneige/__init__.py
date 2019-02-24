@@ -22,6 +22,8 @@ DOMAIN = 'planifneige'
 
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
+PLANIFNEIGE_ATTRIBUTION = "Information provided by the City of Montreal "
+
 REQUIREMENTS = ['planif-neige-client==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
