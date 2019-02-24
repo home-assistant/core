@@ -7,8 +7,6 @@ import os
 import sys
 from typing import List
 
-from pkg_resources import Requirement
-
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.core import HomeAssistant
