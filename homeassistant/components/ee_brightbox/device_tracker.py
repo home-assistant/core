@@ -28,16 +28,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an EE Brightbox device tracker platform."""
-    scanner = EEBrightBoxScanner(config)
+    scanner = EEBrightBoxScanner(config, add_entities)
     if not scanner.check_config():
+        _LOGGER.error("No devices found")
         return
-    entities = []
-    devices = scanner.scan_devices()
-    for mac in devices:
-        name = scanner.get_device_name(mac)
-        entities.append(EEBrightBoxEntity(mac, name, scanner))
-
-    add_entities(entities, True)
+    scanner.scan_devices()
 
 
 class EEBrightBoxEntity(DeviceTrackerEntity):
@@ -79,9 +74,7 @@ class EEBrightBoxEntity(DeviceTrackerEntity):
     def update(self):
         """Update state of entity."""
         self._scanner.scan_devices()
-        macs = [
-            d['mac'] for d in self._scanner.devices.values()
-            if d['activity_ip']]
+        macs = list(self._scanner.devices)
         self._is_connected = self._mac in macs
         self._attrs = self._scanner.get_extra_attributes(self._mac)
 
@@ -89,8 +82,9 @@ class EEBrightBoxEntity(DeviceTrackerEntity):
 class EEBrightBoxScanner(DeviceScanner):
     """Scan EE Brightbox router."""
 
-    def __init__(self, config):
+    def __init__(self, config, add_entities):
         """Initialise the scanner."""
+        self._add_entities = add_entities
         self.config = config
         self.devices = {}
 
@@ -111,13 +105,25 @@ class EEBrightBoxScanner(DeviceScanner):
         from eebrightbox import EEBrightBox
 
         with EEBrightBox(self.config) as ee_brightbox:
-            self.devices = {d['mac']: d for d in ee_brightbox.get_devices()}
+            all_devices = ee_brightbox.get_devices()
 
-        macs = [d['mac'] for d in self.devices.values() if d['activity_ip']]
+        active_devices = {d['mac']: d for d in all_devices if d['activity_ip']}
 
-        _LOGGER.debug('Scan devices %s', macs)
+        _LOGGER.debug('Scan devices %s', list(active_devices))
 
-        return macs
+        new_devices = set(active_devices) - set(self.devices)
+        self.devices = active_devices
+
+        if new_devices:
+            self._add_new_entities(new_devices)
+
+    def _add_new_entities(self, new_devices):
+        """Add new entities."""
+        entities = []
+        for mac in new_devices:
+            name = self.get_device_name(mac)
+            entities.append(EEBrightBoxEntity(mac, name, self))
+        self._add_entities(entities, True)
 
     def get_device_name(self, device):
         """Get the name of a device from hostname."""
