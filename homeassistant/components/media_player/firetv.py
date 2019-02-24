@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['firetv==1.0.8']
+REQUIREMENTS = ['firetv==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
