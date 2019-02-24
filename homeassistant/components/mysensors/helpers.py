@@ -44,6 +44,18 @@ def validate_child(gateway, node_id, child, value_type=None):
     if not child_schemas:
         _LOGGER.warning("Child type %s is not supported", s_name)
 
+    if value_type:
+        v_name = next(
+            (member.name for member in set_req if member.value == value_type),
+            None)
+        child_schemas = [
+            schema for schema in child_schemas if schema[TYPE] == v_name]
+    else:
+        v_names = [
+            member.name for member in set_req if member.value in child.values]
+        child_schemas = [
+            schema for schema in child_schemas if schema[TYPE] in v_names]
+
     def invalid_msg(name):
         """Return a message for an invalid schema."""
         return "{} requires value_type {}".format(
@@ -58,16 +70,11 @@ def validate_child(gateway, node_id, child, value_type=None):
              _child_schema.schema.get(set_req[key].value, val)
              for key, val in schema.get(SCHEMA, {v_name: cv.string}).items()},
             extra=vol.ALLOW_EXTRA)
-        if (value_type and value_type not in vol_schema.schema
-                or not any(
-                    child_value_type in vol_schema.schema
-                    for child_value_type in child.values)):
-            continue
         try:
             vol_schema(child.values)
         except vol.Invalid as exc:
             _LOGGER.warning(
-                "Invalid values: %s: %s platform: node %s child %s: %s",
+                "Invalid values in: %s: %s platform: node %s child %s: %s",
                 child.values, platform, node_id, child.id, exc)
             continue
         dev_id = id(gateway), node_id, child.id, set_req[v_name].value
