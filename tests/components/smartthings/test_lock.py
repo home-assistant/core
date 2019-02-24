@@ -5,6 +5,7 @@ The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
 from pysmartthings import Attribute, Capability
+from pysmartthings.device import Status
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.smartthings import lock
@@ -45,8 +46,15 @@ async def test_entity_and_device_attributes(hass, device_factory):
 async def test_lock(hass, device_factory):
     """Test the lock locks successfully."""
     # Arrange
-    device = device_factory('Lock_1', [Capability.lock],
-                            {Attribute.lock: 'unlocked'})
+    device = device_factory('Lock_1', [Capability.lock])
+    device.status.attributes[Attribute.lock] = Status(
+        'unlocked', None, {
+            'method': 'Manual',
+            'codeId': None,
+            'codeName': 'Code 1',
+            'lockName': 'Front Door',
+            'usedCode': 'Code 2'
+        })
     await setup_platform(hass, LOCK_DOMAIN, device)
     # Act
     await hass.services.async_call(
@@ -56,6 +64,12 @@ async def test_lock(hass, device_factory):
     state = hass.states.get('lock.lock_1')
     assert state is not None
     assert state.state == 'locked'
+    assert state.attributes['method'] == 'Manual'
+    assert state.attributes['lock_state'] == 'locked'
+    assert state.attributes['code_name'] == 'Code 1'
+    assert state.attributes['used_code'] == 'Code 2'
+    assert state.attributes['lock_name'] == 'Front Door'
+    assert 'code_id' not in state.attributes
 
 
 async def test_unlock(hass, device_factory):
