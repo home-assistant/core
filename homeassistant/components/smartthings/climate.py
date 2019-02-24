@@ -95,7 +95,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         super().__init__(device)
         self._supported_features = self._determine_features()
         self._current_operation = None
-        self._operation_list = None
+        self._operations = None
 
     def _determine_features(self):
         from pysmartthings import Capability
@@ -179,7 +179,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
                                   'supported thermostat mode: %s',
                                   self._device.label, self._device.device_id,
                                   mode)
-            self._operation_list = operations
+            self._operations = operations
         else:
             _LOGGER.debug('Device %s (%s) returned invalid supported '
                           'thermostat modes: %s', self._device.label,
@@ -221,7 +221,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return self._operations
 
     @property
     def supported_features(self):
