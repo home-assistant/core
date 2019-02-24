@@ -153,7 +153,9 @@ class PhilipsTV(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._tv.sendKey('Mute')
+        if self._muted != mute:
+            self._tv.sendKey('Mute')
+            self._muted = mute
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
