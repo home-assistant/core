@@ -1,7 +1,11 @@
 """Support for Azure DNS services."""
 import logging
+import json
+
+from datetime import datetime
 from datetime import timedelta
 
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -43,26 +47,28 @@ async def async_setup(hass, config):
     """Initialize the Azure DNS component."""
     domain = config[DOMAIN][CONF_DOMAIN]
     host = config[DOMAIN][CONF_HOST]
-    resource = (RESOURCE)
+    resource = RESOURCE
     tenant = config[DOMAIN][CONF_TENANT]
     clientid = config[DOMAIN][CONF_CLIENTID]
     clientsecret = config[DOMAIN][CONF_CLIENTSECRET]
-    authority_url = (AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT])
-    apiurl = ('https://management.azure.com/subscriptions/'
-              + config[DOMAIN][CONF_SUBSCRIPTIONID]
-              + '/resourceGroups/'
-              + config[DOMAIN][CONF_RESOURCEGROUPNAME]
-              + 'providers/Microsoft.Network/dnsZones/'
-              + config[DOMAIN][CONF_DOMAIN]
-              + '/A/'
-              + config[DOMAIN][CONF_HOST]
-              + '?api-version=2018-03-01-preview')
+    subscriptionid = config[DOMAIN][CONF_SUBSCRIPTIONID]
+    resourcegroupname = config[DOMAIN][CONF_RESOURCEGROUPNAME]
+    authority_url = AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT]
+    api_url = ('https://management.azure.com/subscriptions/'
+               + subscriptionid
+               + '/resourceGroups/'
+               + resourcegroupname
+               + '/providers/Microsoft.Network/dnsZones/'
+               + domain
+               + '/A/'
+               + host
+               + '?api-version=2018-05-01')
 
     session = async_get_clientsession(hass)
 
     result = await _update_azuredns(session, domain, host, resource, tenant,
                                     clientid, clientsecret,
-                                    authority_url, apiurl)
+                                    authority_url, api_url)
 
     if not result:
         return False
@@ -70,16 +76,16 @@ async def async_setup(hass, config):
     async def update_domain_interval(now):
         """Update the Azure DNS entry."""
         await _update_azuredns(session, domain, host, resource, tenant,
-                               clientid, clientsecret, authority_url, apiurl)
+                               clientid, clientsecret, authority_url, api_url)
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
     return result
 
 
 async def _update_azuredns(session, domain, host, resource, tenant,
-                           clientid, clientsecret, authority_url, apiurl):
+                           clientid, clientsecret, authority_url, api_url):
+    """Update the Azure DNS Record with the external IP address."""
     import adal
-    import json
 
     params = {
         'domain': domain,
@@ -88,10 +94,9 @@ async def _update_azuredns(session, domain, host, resource, tenant,
         'tenant': tenant,
         'clientid': clientid,
         'clientsecret': clientsecret,
-        'apiurl': apiurl,
+        'api_url': api_url,
     }
 
-    """Requesting the Azure AD App Token by using ADAL."""
     context = adal.AuthenticationContext(
         authority_url, validate_authority=['tenant'] != 'adfs',
     )
@@ -103,21 +108,17 @@ async def _update_azuredns(session, domain, host, resource, tenant,
 
     access_token = token.get('accessToken')
 
-    _LOGGER.debug("Azure AD App Token is:\n" + json.dumps(token, indent=2))
+    # Get the external IP address of the Home Assistant instance.
+    ipv4address = requests.get('https://api.ipify.org').text
 
-    """Update the DNS entry by using the Azure REST API."""
-    import requests
-    from datetime import datetime
+    _LOGGER.debug("External IP address is: %s", ipv4address)
 
-    ipv4Address = requests.get('https://api.ipify.org').text
-
-    _LOGGER.debug("External IP address is: " + ipv4Address)
-
+    # Create a PATCH request with the Azure REST API.
     headers = {
-        "Authorization": 'Bearer ' + access_token,
-        "Content-Type": 'application/json'
+        "Authorization": "Bearer " + access_token,
+        "Content-Type": "application/json"
     }
-    url = params['apiurl']
+    url = params['api_url']
     payload = {
         "properties": {
             "metadata": {
@@ -126,7 +127,7 @@ async def _update_azuredns(session, domain, host, resource, tenant,
             "TTL": 60,
             "ARecords": [
                 {
-                    "ipv4Address": ipv4Address
+                    "ipv4Address": ipv4address
                 }
             ]
         }
@@ -134,9 +135,8 @@ async def _update_azuredns(session, domain, host, resource, tenant,
 
     try:
         requests.patch(url, json=payload, headers=headers).json()
+        return True
 
     except requests.exceptions.RequestException as errormessage:
         _LOGGER.error(errormessage)
         return False
-
-    return True
