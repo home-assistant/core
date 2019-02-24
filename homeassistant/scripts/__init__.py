@@ -11,7 +11,8 @@ from pkg_resources import Requirement
 
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant import requirements
+from homeassistant.core import HomeAssistant
+from homeassistant.requirements import pip_kwargs, PackageLoadable
 from homeassistant.util.package import install_package, is_virtual_env
 
 
@@ -41,24 +42,25 @@ def run(args: List) -> int:
 
     config_dir = extract_config_dir()
 
-    if not is_virtual_env():
-        asyncio.get_event_loop().run_until_complete(
-            async_mount_local_lib_path(config_dir))
+    loop = asyncio.get_event_loop()
 
-    pip_kwargs = requirements.pip_kwargs(config_dir)
+    if not is_virtual_env():
+        loop.run_until_complete(async_mount_local_lib_path(config_dir))
+
+    _pip_kwargs = pip_kwargs(config_dir)
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
+    hass = HomeAssistant(loop)
+    pkgload = PackageLoadable(hass)
     for req in getattr(script, 'REQUIREMENTS', []):
         try:
-            # Only use the requirement's project_name to verify it exists
-            project_name = Requirement.parse(req).project_name
-            importlib.import_module(project_name)
+            loop.run_until_complete(pkgload.loadable(req))
             continue
         except ImportError:
             pass
 
-        returncode = install_package(req, **pip_kwargs)
+        returncode = install_package(req, **_pip_kwargs)
 
         if not returncode:
             print('Aborting script, could not install dependency', req)
