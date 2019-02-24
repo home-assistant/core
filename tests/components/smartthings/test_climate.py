@@ -174,7 +174,7 @@ async def test_thermostat_entity_state(hass, thermostat):
 
 async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
     """Tests the state attributes properly match the thermostat type."""
-    await setup_platform(hass, CLIMATE_DOMAIN, buggy_thermostat)
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[buggy_thermostat])
     state = hass.states.get('climate.buggy_thermostat')
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
@@ -190,7 +190,7 @@ async def test_buggy_thermostat_invalid_mode(hass, buggy_thermostat):
     buggy_thermostat.status.update_attribute_value(
         Attribute.supported_thermostat_modes,
         ['heat', 'emergency heat', 'other'])
-    await setup_platform(hass, CLIMATE_DOMAIN, buggy_thermostat)
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[buggy_thermostat])
     state = hass.states.get('climate.buggy_thermostat')
     assert state.attributes[ATTR_OPERATION_LIST] == {'heat'}
 
