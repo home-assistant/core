@@ -109,7 +109,7 @@ class CO2Sensor(Entity):
         """Return the state attributes of the last update."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    @Throttle(SCAN_INTERVAL)  # at most call it every 60 seconds (SCAN_INTERVAL)
+    @Throttle(SCAN_INTERVAL)  # at most call it every SCAN_INTERVAL
     def update(self):
         """Get the latest data and updates the states."""
         import CO2Signal
