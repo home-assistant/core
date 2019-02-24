@@ -65,48 +65,15 @@ DEFAULT_CORE_CONFIG = (
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
-# Show links to resources in log and frontend
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Show the introduction message on startup.
 introduction:
-
-# Enables the frontend
-frontend:
-
-# Enables configuration UI
-config:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123
-
-# Checks for available updates
-# Note: This component will send some information about your system to
-# the developers to assist with development of Home Assistant.
-# For more information, please see:
-# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
-updater:
-  # Optional, allows Home Assistant developers to focus on popular components.
-  # include_used_components: true
-
-# Discover some devices automatically
-discovery:
-
-# Allows you to issue voice commands from the frontend in enabled browsers
-conversation:
-
-# Enables support for tracking state changes over time
-history:
-
-# View all events in a logbook
-logbook:
-
-# Enables a map showing the location of tracked devices
-map:
-
-# Track the sun
-sun:
-
-# Allow diagnosing system problems
-system_health:
 
 # Sensors
 sensor:
@@ -116,9 +83,6 @@ sensor:
 # Text to speech
 tts:
   - platform: google
-
-# Cloud
-cloud:
 
 group: !include groups.yaml
 automation: !include automations.yaml

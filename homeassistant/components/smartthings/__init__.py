@@ -1,6 +1,6 @@
-"""SmartThings Cloud integration for Home Assistant."""
-
+"""Support for SmartThings Cloud."""
 import asyncio
+import importlib
 import logging
 from typing import Iterable
 
@@ -23,7 +23,7 @@ from .const import (
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.4.2']
+REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.2']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,12 +133,45 @@ class DeviceBroker:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._installed_app_id = installed_app_id
+        self.assignments = self._assign_capabilities(devices)
         self.devices = {device.device_id: device for device in devices}
         self.event_handler_disconnect = None
+
+    def _assign_capabilities(self, devices: Iterable):
+        """Assign platforms to capabilities."""
+        assignments = {}
+        for device in devices:
+            capabilities = device.capabilities.copy()
+            slots = {}
+            for platform_name in SUPPORTED_PLATFORMS:
+                platform = importlib.import_module(
+                    '.' + platform_name, self.__module__)
+                assigned = platform.get_capabilities(capabilities)
+                if not assigned:
+                    continue
+                # Draw-down capabilities and set slot assignment
+                for capability in assigned:
+                    if capability not in capabilities:
+                        continue
+                    capabilities.remove(capability)
+                    slots[capability] = platform_name
+            assignments[device.device_id] = slots
+        return assignments
+
+    def get_assigned(self, device_id: str, platform: str):
+        """Get the capabilities assigned to the platform."""
+        slots = self.assignments.get(device_id, {})
+        return [key for key, value in slots.items() if value == platform]
+
+    def any_assigned(self, device_id: str, platform: str):
+        """Return True if the platform has any assigned capabilities."""
+        slots = self.assignments.get(device_id, {})
+        return any(value for value in slots.values() if value == platform)
 
     async def event_handler(self, req, resp, app):
         """Broker for incoming events."""
         from pysmartapp.event import EVENT_TYPE_DEVICE
+        from pysmartthings import Capability, Attribute
 
         # Do not process events received from a different installed app
         # under the same parent SmartApp (valid use-scenario)
@@ -156,7 +189,8 @@ class DeviceBroker:
                 evt.component_id, evt.capability, evt.attribute, evt.value)
 
             # Fire events for buttons
-            if evt.capability == 'button' and evt.attribute == 'button':
+            if evt.capability == Capability.button and \
+                    evt.attribute == Attribute.button:
                 data = {
                     'component_id': evt.component_id,
                     'device_id': evt.device_id,
@@ -166,10 +200,18 @@ class DeviceBroker:
                 }
                 self._hass.bus.async_fire(EVENT_BUTTON, data)
                 _LOGGER.debug("Fired button event: %s", data)
+            else:
+                data = {
+                    'location_id': evt.location_id,
+                    'device_id': evt.device_id,
+                    'component_id': evt.component_id,
+                    'capability': evt.capability,
+                    'attribute': evt.attribute,
+                    'value': evt.value,
+                }
+                _LOGGER.debug("Push update received: %s", data)
 
             updated_devices.add(device.device_id)
-        _LOGGER.debug("Update received with %s events and updated %s devices",
-                      len(req.events), len(updated_devices))
 
         async_dispatcher_send(self._hass, SIGNAL_SMARTTHINGS_UPDATE,
                               updated_devices)

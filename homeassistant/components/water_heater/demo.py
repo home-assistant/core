@@ -1,9 +1,4 @@
-"""
-Demo platform that offers a fake water_heater device.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that offers a fake water_heater device."""
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
     SUPPORT_TARGET_TEMPERATURE,
@@ -18,11 +13,10 @@ SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo water_heater devices."""
     add_entities([
-        DemoWaterHeater('Demo Water Heater', 119,
-                        TEMP_FAHRENHEIT, False, 'eco'),
-        DemoWaterHeater('Demo Water Heater Celsius', 45,
-                        TEMP_CELSIUS, True, 'eco')
-
+        DemoWaterHeater(
+            'Demo Water Heater', 119, TEMP_FAHRENHEIT, False, 'eco'),
+        DemoWaterHeater(
+            'Demo Water Heater Celsius', 45, TEMP_CELSIUS, True, 'eco'),
     ])
 
 

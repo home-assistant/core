@@ -11,17 +11,19 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_ZONE, STATE_OFF, STATE_ON,
     STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.7.7']
+REQUIREMENTS = ['denonavr==0.7.8']
 
 _LOGGER = logging.getLogger(__name__)
 

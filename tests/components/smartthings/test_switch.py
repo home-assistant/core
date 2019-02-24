@@ -35,23 +35,6 @@ async def test_async_setup_platform():
     await switch.async_setup_platform(None, None, None)
 
 
-def test_is_switch(device_factory):
-    """Test switches are correctly identified."""
-    switch_device = device_factory('Switch', [Capability.switch])
-    non_switch_devices = [
-        device_factory('Light', [Capability.switch, Capability.switch_level]),
-        device_factory('Fan', [Capability.switch, Capability.fan_speed]),
-        device_factory('Color Light', [Capability.switch,
-                                       Capability.color_control]),
-        device_factory('Temp Light', [Capability.switch,
-                                      Capability.color_temperature]),
-        device_factory('Unknown', ['Unknown']),
-    ]
-    assert switch.is_switch(switch_device)
-    for non_switch_device in non_switch_devices:
-        assert not switch.is_switch(non_switch_device)
-
-
 async def test_entity_and_device_attributes(hass, device_factory):
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -126,7 +109,7 @@ async def test_update_from_signal(hass, device_factory):
 async def test_unload_config_entry(hass, device_factory):
     """Test the switch is removed when the config entry is unloaded."""
     # Arrange
-    device = device_factory('Switch', [Capability.switch],
+    device = device_factory('Switch 1', [Capability.switch],
                             {Attribute.switch: 'on'})
     config_entry = await _setup_platform(hass, device)
     # Act

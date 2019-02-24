@@ -9,16 +9,82 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.temperature import convert as convert_temperature
-from .core import helpers
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT, REPORT_CONFIG_RPT_CHANGE, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
+    ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
+    GENERIC, SENSOR_TYPE, ATTRIBUTE_CHANNEL, ELECTRICAL_MEASUREMENT_CHANNEL,
+    SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
+
+
+# Formatter functions
+def pass_through_formatter(value):
+    """No op update function."""
+    return value
+
+
+def temperature_formatter(value):
+    """Convert temperature data."""
+    if value is None:
+        return None
+    return round(value / 100, 1)
+
+
+def humidity_formatter(value):
+    """Return the state of the entity."""
+    if value is None:
+        return None
+    return round(float(value) / 100, 1)
+
+
+def active_power_formatter(value):
+    """Return the state of the entity."""
+    if value is None:
+        return None
+    return round(float(value) / 10, 1)
+
+
+def pressure_formatter(value):
+    """Return the state of the entity."""
+    if value is None:
+        return None
+
+    return round(float(value))
+
+
+FORMATTER_FUNC_REGISTRY = {
+    HUMIDITY: humidity_formatter,
+    TEMPERATURE: temperature_formatter,
+    PRESSURE: pressure_formatter,
+    ELECTRICAL_MEASUREMENT: active_power_formatter,
+    GENERIC: pass_through_formatter,
+}
+
+UNIT_REGISTRY = {
+    HUMIDITY: '%',
+    TEMPERATURE: TEMP_CELSIUS,
+    PRESSURE: 'hPa',
+    ILLUMINANCE: 'lx',
+    METERING: 'W',
+    ELECTRICAL_MEASUREMENT: 'W',
+    GENERIC: None
+}
+
+CHANNEL_REGISTRY = {
+    ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
+}
+
+POLLING_REGISTRY = {
+    ELECTRICAL_MEASUREMENT: True
+}
+
+FORCE_UPDATE_REGISTRY = {
+    ELECTRICAL_MEASUREMENT: True
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -56,279 +122,59 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
 
 async def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
-    from zigpy.zcl.clusters.measurement import (
-        RelativeHumidity, TemperatureMeasurement, PressureMeasurement,
-        IlluminanceMeasurement
-    )
-    from zigpy.zcl.clusters.smartenergy import Metering
-    from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
-    from zigpy.zcl.clusters.general import PowerConfiguration
-    in_clusters = discovery_info['in_clusters']
-    if 'sub_component' in discovery_info:
-        sensor = discovery_info['sub_component'](**discovery_info)
-    elif RelativeHumidity.cluster_id in in_clusters:
-        sensor = RelativeHumiditySensor(**discovery_info)
-    elif PowerConfiguration.cluster_id in in_clusters:
-        sensor = GenericBatterySensor(**discovery_info)
-    elif TemperatureMeasurement.cluster_id in in_clusters:
-        sensor = TemperatureSensor(**discovery_info)
-    elif PressureMeasurement.cluster_id in in_clusters:
-        sensor = PressureSensor(**discovery_info)
-    elif IlluminanceMeasurement.cluster_id in in_clusters:
-        sensor = IlluminanceMeasurementSensor(**discovery_info)
-    elif Metering.cluster_id in in_clusters:
-        sensor = MeteringSensor(**discovery_info)
-    elif ElectricalMeasurement.cluster_id in in_clusters:
-        sensor = ElectricalMeasurementSensor(**discovery_info)
-        return sensor
-    else:
-        sensor = Sensor(**discovery_info)
-
-    return sensor
+    return Sensor(**discovery_info)
 
 
 class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
     _domain = DOMAIN
-    value_attribute = 0
-    min_report_interval = REPORT_CONFIG_MIN_INT
-    max_report_interval = REPORT_CONFIG_MAX_INT
-    min_reportable_change = REPORT_CONFIG_RPT_CHANGE
-    report_config = (min_report_interval, max_report_interval,
-                     min_reportable_change)
 
-    def __init__(self, **kwargs):
-        """Init ZHA Sensor instance."""
-        super().__init__(**kwargs)
-        self._cluster = list(kwargs['in_clusters'].values())[0]
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
+        self._unit = UNIT_REGISTRY.get(sensor_type)
+        self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
+            sensor_type,
+            pass_through_formatter
+        )
+        self._force_update = FORCE_UPDATE_REGISTRY.get(
+            sensor_type,
+            False
+        )
+        self._should_poll = POLLING_REGISTRY.get(
+            sensor_type,
+            False
+        )
+        self._channel = self.cluster_channels.get(
+            CHANNEL_REGISTRY.get(sensor_type, ATTRIBUTE_CHANNEL)
+        )
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
+        await self.async_accept_signal(
+            self._channel, SIGNAL_STATE_ATTR,
+            self.async_update_state_attribute)
 
     @property
-    def zcl_reporting_config(self) -> dict:
-        """Return a dict of attribute reporting configuration."""
-        return {
-            self.cluster: {self.value_attribute: self.report_config}
-        }
-
-    @property
-    def cluster(self):
-        """Return Sensor's cluster."""
-        return self._cluster
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return self._unit
 
     @property
     def state(self) -> str:
         """Return the state of the entity."""
+        if self._state is None:
+            return None
         if isinstance(self._state, float):
             return str(round(self._state, 2))
         return self._state
 
-    def attribute_updated(self, attribute, value):
-        """Handle attribute update from device."""
-        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
-        if attribute == self.value_attribute:
-            self._state = value
-            self.async_schedule_update_ha_state()
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        result = await helpers.safe_read(
-            self.cluster,
-            [self.value_attribute],
-            allow_cache=False,
-            only_cache=(not self._initialized)
-        )
-        self._state = result.get(self.value_attribute, self._state)
-
-
-class GenericBatterySensor(Sensor):
-    """ZHA generic battery sensor."""
-
-    report_attribute = 32
-    value_attribute = 33
-    battery_sizes = {
-        0: 'No battery',
-        1: 'Built in',
-        2: 'Other',
-        3: 'AA',
-        4: 'AAA',
-        5: 'C',
-        6: 'D',
-        7: 'CR2',
-        8: 'CR123A',
-        9: 'CR2450',
-        10: 'CR2032',
-        11: 'CR1632',
-        255: 'Unknown'
-    }
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return '%'
-
-    @property
-    def zcl_reporting_config(self) -> dict:
-        """Return a dict of attribute reporting configuration."""
-        return {
-            self.cluster: {
-                self.value_attribute: self.report_config,
-                self.report_attribute: self.report_config
-            }
-        }
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        _LOGGER.debug("%s async_update", self.entity_id)
-
-        result = await helpers.safe_read(
-            self._endpoint.power,
-            [
-                'battery_size',
-                'battery_quantity',
-                'battery_percentage_remaining'
-            ],
-            allow_cache=False,
-            only_cache=(not self._initialized)
-        )
-        self._device_state_attributes['battery_size'] = self.battery_sizes.get(
-            result.get('battery_size', 255), 'Unknown')
-        self._device_state_attributes['battery_quantity'] = result.get(
-            'battery_quantity', 'Unknown')
-        self._state = result.get('battery_percentage_remaining', self._state)
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state == 'unknown' or self._state is None:
-            return None
-
-        return self._state
-
-
-class TemperatureSensor(Sensor):
-    """ZHA temperature sensor."""
-
-    min_reportable_change = 50  # 0.5'C
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self.hass.config.units.temperature_unit
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state is None:
-            return None
-        celsius = self._state / 100
-        return round(convert_temperature(celsius,
-                                         TEMP_CELSIUS,
-                                         self.unit_of_measurement),
-                     1)
-
-
-class RelativeHumiditySensor(Sensor):
-    """ZHA relative humidity sensor."""
-
-    min_reportable_change = 50  # 0.5%
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return '%'
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state is None:
-            return None
-
-        return round(float(self._state) / 100, 1)
-
-
-class PressureSensor(Sensor):
-    """ZHA pressure sensor."""
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return 'hPa'
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state is None:
-            return None
-
-        return round(float(self._state))
-
-
-class IlluminanceMeasurementSensor(Sensor):
-    """ZHA lux sensor."""
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return 'lx'
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
-
-
-class MeteringSensor(Sensor):
-    """ZHA Metering sensor."""
-
-    value_attribute = 1024
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return 'W'
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state is None:
-            return None
-
-        return round(float(self._state))
-
-
-class ElectricalMeasurementSensor(Sensor):
-    """ZHA Electrical Measurement sensor."""
-
-    value_attribute = 1291
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return 'W'
-
-    @property
-    def force_update(self) -> bool:
-        """Force update this entity."""
-        return True
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if self._state is None:
-            return None
-
-        return round(float(self._state) / 10, 1)
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return True
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        _LOGGER.debug("%s async_update", self.entity_id)
-
-        result = await helpers.safe_read(
-            self.cluster, ['active_power'],
-            allow_cache=False, only_cache=(not self._initialized))
-        self._state = result.get('active_power', self._state)
+    def async_set_state(self, state):
+        """Handle state update from channel."""
+        self._state = self._formatter_function(state)
+        self.async_schedule_update_ha_state()

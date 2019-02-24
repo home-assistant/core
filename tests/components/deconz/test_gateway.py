@@ -1,6 +1,9 @@
 """Test deCONZ gateway."""
 from unittest.mock import Mock, patch
 
+import pytest
+
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.deconz import gateway
 
 from tests.common import mock_coro
@@ -56,8 +59,10 @@ async def test_gateway_retry():
 
     deconz_gateway = gateway.DeconzGateway(hass, entry)
 
-    with patch.object(gateway, 'get_gateway', return_value=mock_coro(False)):
-        assert await deconz_gateway.async_setup() is False
+    with patch.object(
+            gateway, 'get_gateway', return_value=mock_coro(False)
+    ), pytest.raises(ConfigEntryNotReady):
+        await deconz_gateway.async_setup()
 
 
 async def test_connection_status(hass):
@@ -116,22 +121,6 @@ async def test_shutdown():
     deconz_gateway.shutdown(None)
 
     assert len(deconz_gateway.api.close.mock_calls) == 1
-
-
-async def test_reset_cancel_retry():
-    """Verify async reset can handle a scheduled retry."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    deconz_gateway = gateway.DeconzGateway(hass, entry)
-
-    with patch.object(gateway, 'get_gateway', return_value=mock_coro(False)):
-        assert await deconz_gateway.async_setup() is False
-
-    assert deconz_gateway._cancel_retry_setup is not None
-
-    assert await deconz_gateway.async_reset() is True
 
 
 async def test_reset_after_successful_setup():
