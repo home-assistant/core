@@ -45,7 +45,7 @@ DOMAIN = 'spotify'
 
 ICON = 'mdi:spotify'
 
-SCAN_INTERVAL = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
 
