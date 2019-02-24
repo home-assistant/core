@@ -10,7 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE, CONF_SCAN_INTERVAL)
+    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_SCAN_INTERVAL)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
@@ -63,7 +64,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    def __init__(self, token, country_code, lat, lon, hass, scan_interval=SCAN_INTERVAL):
+    def __init__(self, token, country_code, lat, lon, hass,
+                 scan_interval=SCAN_INTERVAL):
         """Initialize the sensor."""
         self._token = token
         self._country_code = country_code
@@ -107,7 +109,7 @@ class CO2Sensor(Entity):
         """Return the state attributes of the last update."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    @Throttle(SCAN_INTERVAL) # at most call it every 60 seconds (SCAN_INTERVAL)
+    @Throttle(SCAN_INTERVAL)  # at most call it every 60 seconds (SCAN_INTERVAL)
     def update(self):
         """Get the latest data and updates the states."""
         import CO2Signal
