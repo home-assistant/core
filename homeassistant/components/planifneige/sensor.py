@@ -1,9 +1,4 @@
-"""
-Sensor for the City of Montreal's Planif-Neige snow removal APIs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.planifneige/
-"""
+"""Sensor for the City of Montreal's Planif-Neige snow removal APIs."""
 
 import logging
 
