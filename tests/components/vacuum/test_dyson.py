@@ -2,8 +2,8 @@
 import unittest
 from unittest import mock
 
-from libpurecoollink.dyson_360_eye import Dyson360Eye
-from libpurecoollink.const import Dyson360EyeMode, PowerMode
+from libpurecool.dyson_360_eye import Dyson360Eye
+from libpurecool.const import Dyson360EyeMode, PowerMode
 
 from homeassistant.components.vacuum import dyson
 from homeassistant.components.vacuum.dyson import Dyson360EyeDevice

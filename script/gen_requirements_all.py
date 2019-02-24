@@ -68,7 +68,7 @@ TEST_REQUIREMENTS = (
     'homematicip',
     'influxdb',
     'jsonpath',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'luftdaten',
     'mbddns',
