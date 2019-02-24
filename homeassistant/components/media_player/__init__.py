@@ -472,10 +472,10 @@ class MediaPlayerDevice(Entity):
         """Boolean if shuffle is enabled."""
         return None
 
-	@property
-	def repeat(self):
-		"""Boolean if repeat is enabled."""
-		return None
+    @property
+    def repeat(self):
+        """Boolean if repeat is enabled."""
+        return None
 
     @property
     def supported_features(self):
