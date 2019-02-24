@@ -9,7 +9,7 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION,
-    STATE_CLOSING, STATE_OPEN, STATE_OPENING)
+    STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 from homeassistant.components.smartthings import cover
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
@@ -147,8 +147,8 @@ async def test_set_cover_position_unsupported(hass, device_factory):
     assert device._api.post_device_command.call_count == 0  # type: ignore
 
 
-async def test_update_from_signal(hass, device_factory):
-    """Test the cover updates when receiving a signal."""
+async def test_update_to_open_from_signal(hass, device_factory):
+    """Test the cover updates to open when receiving a signal."""
     # Arrange
     device = device_factory('Garage', [Capability.garage_door_control],
                             {Attribute.door: 'opening'})
@@ -163,6 +163,24 @@ async def test_update_from_signal(hass, device_factory):
     state = hass.states.get('cover.garage')
     assert state is not None
     assert state.state == STATE_OPEN
+
+
+async def test_update_to_closed_from_signal(hass, device_factory):
+    """Test the cover updates to closed when receiving a signal."""
+    # Arrange
+    device = device_factory('Garage', [Capability.garage_door_control],
+                            {Attribute.door: 'closing'})
+    await setup_platform(hass, COVER_DOMAIN, device)
+    device.status.update_attribute_value(Attribute.door, 'closed')
+    assert hass.states.get('cover.garage').state == STATE_CLOSING
+    # Act
+    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
+                          [device.device_id])
+    # Assert
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.garage')
+    assert state is not None
+    assert state.state == STATE_CLOSED
 
 
 async def test_unload_config_entry(hass, device_factory):
