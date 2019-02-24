@@ -164,17 +164,26 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         self._current_operation = MODE_TO_STATE.get(thermostat_mode)
         if self._current_operation is None:
             _LOGGER.debug('Device %s (%s) returned an invalid'
-                          'thermostat_mode: %s', self._device.label,
+                          'thermostat mode: %s', self._device.label,
                           self._device.device_id, thermostat_mode)
 
-        operation_mode_list = self._device.status.supported_thermostat_modes
-        if isinstance(operation_mode_list, Iterable):
-            self._operation_list = {MODE_TO_STATE.get(mode) for mode
-                                    in operation_mode_list}
+        supported_modes = self._device.status.supported_thermostat_modes
+        if isinstance(supported_modes, Iterable):
+            operations = set()
+            for mode in supported_modes:
+                state = MODE_TO_STATE.get(mode)
+                if state is not None:
+                    operations.add(state)
+                else:
+                    _LOGGER.debug('Device %s (%s) returned an invalid '
+                                  'supported thermostat mode: %s',
+                                  self._device.label, self._device.device_id,
+                                  mode)
+            self._operation_list = operations
         else:
-            _LOGGER.debug('Device %s (%s) returned an invalid'
-                          'operation_mode_list: %s', self._device.label,
-                          self._device.device_id, operation_mode_list)
+            _LOGGER.debug('Device %s (%s) returned invalid supported '
+                          'thermostat modes: %s', self._device.label,
+                          self._device.device_id, supported_modes)
 
     @property
     def current_fan_mode(self):

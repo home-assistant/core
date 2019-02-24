@@ -107,9 +107,9 @@ def buggy_thermostat_fixture(device_factory):
             Capability.thermostat_heating_setpoint,
             Capability.thermostat_mode],
         status={
+            Attribute.thermostat_mode: 'heating',
             Attribute.cooling_setpoint: 74,
-            Attribute.heating_setpoint: 68,
-            Attribute.thermostat_fan_mode: 'on'}
+            Attribute.heating_setpoint: 68}
     )
     device.status.attributes[Attribute.temperature] = Status(70, 'F', None)
     return device
@@ -183,6 +183,16 @@ async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
     assert ATTR_OPERATION_LIST not in state.attributes
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
+
+
+async def test_buggy_thermostat_invalid_mode(hass, buggy_thermostat):
+    """Tests when an invalid operation mode is included."""
+    buggy_thermostat.status.update_attribute_value(
+        Attribute.supported_thermostat_modes,
+        ['heat', 'emergency heat', 'other'])
+    await setup_platform(hass, CLIMATE_DOMAIN, buggy_thermostat)
+    state = hass.states.get('climate.buggy_thermostat')
+    assert state.attributes[ATTR_OPERATION_LIST] == {'heat'}
 
 
 async def test_set_fan_mode(hass, thermostat):
