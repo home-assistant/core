@@ -11,7 +11,7 @@ from homeassistant.components.ps4.const import DOMAIN  # noqa: pylint: disable=u
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyps4-homeassistant==0.3.4']
+REQUIREMENTS = ['pyps4-homeassistant==0.4.0']
 
 
 async def async_setup(hass, config):
