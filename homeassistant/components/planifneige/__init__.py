@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_STREETID = 'streetid'
 CONF_STREETS = 'streets'
-CONF_DBPATH = 'database_path'
 
 ATTR_SENSOR = 'sensor'
 ATTR_STATES = 'states'
@@ -39,30 +38,22 @@ _STREET_SCHEME = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        vol.Schema({
+    DOMAIN: vol.Schema({
             vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-                vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Required(CONF_DBPATH): cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL,
+                         default=DEFAULT_INTERVAL): vol.All(
+                             cv.time_period, cv.positive_timedelta),
             vol.Required(CONF_STREETS): [_STREET_SCHEME]
-        }),
-        cv.deprecated(
-            CONF_UPDATE_INTERVAL,
-            replacement_key=CONF_SCAN_INTERVAL,
-            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-            default=DEFAULT_INTERVAL
-        )
-    )
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the PlanifNeige component."""
+    db_path = hass.config.path('planifneige.db')
     conf = config[DOMAIN]
-    data = hass.data[DATA_PLANIFNEIGE] = PlanifNeigeData(hass, conf.get(CONF_API_KEY),
-                                               conf.get(CONF_DBPATH),
-                                               conf.get(CONF_STREETS))
+    data = hass.data[DATA_PLANIFNEIGE] = PlanifNeigeData(
+        hass, conf.get(CONF_API_KEY), db_path, conf.get(CONF_STREETS))
 
     async_track_time_interval(
         hass, data.update, conf[CONF_SCAN_INTERVAL]
