@@ -55,6 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                           country_code,
                           lat,
                           lon,
+                          hass,
                           scan_interval))
     add_entities(devs, True)
 
@@ -62,14 +63,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CO2Sensor(Entity):
     """Implementation of the CO2Signal sensor."""
 
-    def __init__(self, token, country_code, lat, lon, scan_interval=SCAN_INTERVAL):
+    def __init__(self, token, country_code, lat, lon, hass, scan_interval=SCAN_INTERVAL):
         """Initialize the sensor."""
         self._token = token
         self._country_code = country_code
         self._latitude = lat
         self._longitude = lon
         self._data = None
-        self._scan_interval = scan_interval
 
         if country_code is not None:
             device_name = country_code
@@ -79,6 +79,8 @@ class CO2Sensor(Entity):
                         lon=round(self._longitude, 2))
 
         self._friendly_name = 'CO2 intensity - {}'.format(device_name)
+
+        track_time_interval(hass, self.update, scan_interval)
 
     @property
     def name(self):
@@ -121,6 +123,3 @@ class CO2Sensor(Entity):
                 latitude=self._latitude, longitude=self._longitude)
 
         self._data = round(self._data, 2)
-
-        # update values every CONF_SCAN_INTERVAL
-        track_time_interval(hass, update, self._scan_interval)
