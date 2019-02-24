@@ -229,8 +229,7 @@ async def _process(hass, config, message):
 
     if result is None:
         return None
-    else:
-        return {'requestId': request_id, 'payload': result}
+    return {'requestId': request_id, 'payload': result}
 
 
 @HANDLERS.register('action.devices.SYNC')
