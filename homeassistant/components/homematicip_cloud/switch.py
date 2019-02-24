@@ -100,7 +100,7 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     def __init__(self, home, device, index):
         """Initialize the multi switch device."""
         self.channelIndex = index
-        super().__init__(home, device, 'channel{}'.format(index))
+        super().__init__(home, device, 'ch{}'.format(index))
 
     @property
     def unique_id(self):
@@ -110,7 +110,7 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._device.on[self.channelIndex]
+        return self._device.functionalChannels[self.channelIndex].on
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
