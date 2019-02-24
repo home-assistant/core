@@ -121,8 +121,6 @@ class PhilipsTV(MediaPlayerDevice):
         """Set the input source."""
         if source in self._source_mapping:
             self._tv.setSource(self._source_mapping.get(source))
-            self._source = source
-            self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
     def volume_level(self):
