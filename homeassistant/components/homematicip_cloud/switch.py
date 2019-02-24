@@ -128,7 +128,8 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
+        return "{}_{}_{}".format(self.__class__.__name__,
+                                 self.post, self._device.id)
 
     @property
     def is_on(self):
