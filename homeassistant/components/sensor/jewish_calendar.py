@@ -4,7 +4,6 @@ Platform to retrieve Jewish calendar information for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -140,12 +139,6 @@ class JewishCalSensor(Entity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        if now > sunset:
-            today += timedelta(1)
-
-        date = hdate.HDate(
-            today, diaspora=self.diaspora, hebrew=self._hebrew)
-
         location = hdate.Location(latitude=self.latitude,
                                   longitude=self.longitude,
                                   timezone=self.timezone,
@@ -158,27 +151,43 @@ class JewishCalSensor(Entity):
                 candle_lighting_offset=self.candle_lighting_offset,
                 havdalah_offset=self.havdalah_offset, hebrew=self._hebrew)
 
+        date = hdate.HDate(
+            today, diaspora=self.diaspora, hebrew=self._hebrew)
+        lagging_date = date
+
+        # Advance Hebrew date if sunset has passed.
+        # Not all sensors should advance immediately when the Hebrew date
+        # officially changes (i.e. after sunset), hence lagging_date.
+        if now > sunset:
+            date = date.next_day
+        today_times = make_zmanim(today)
+        if today_times.havdalah and now > today_times.havdalah:
+            lagging_date = lagging_date.next_day
+
+        # Terminology note: by convention in py-libhdate library, "upcoming"
+        # refers to "current" or "upcoming" dates.
         if self.type == 'date':
             self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
             # Compute the weekly portion based on the upcoming shabbat.
-            self._state = date.upcoming_shabbat.parasha
+            self._state = lagging_date.upcoming_shabbat.parasha
         elif self.type == 'holiday_name':
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
         elif self.type == 'upcoming_shabbat_candle_lighting':
-            times = make_zmanim(date.upcoming_shabbat.previous_day.gdate)
-            self._state = times.candle_lighting
-        elif self.type == 'upcoming_candle_lighting':
-            times = make_zmanim(date.upcoming_shabbat_or_yom_tov.first_day
+            times = make_zmanim(lagging_date.upcoming_shabbat
                                 .previous_day.gdate)
             self._state = times.candle_lighting
+        elif self.type == 'upcoming_candle_lighting':
+            times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov
+                                .first_day.previous_day.gdate)
+            self._state = times.candle_lighting
         elif self.type == 'upcoming_shabbat_havdalah':
-            times = make_zmanim(date.upcoming_shabbat.gdate)
+            times = make_zmanim(lagging_date.upcoming_shabbat.gdate)
             self._state = times.havdalah
         elif self.type == 'upcoming_havdalah':
-            times = make_zmanim(date.upcoming_shabbat_or_yom_tov
+            times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov
                                 .last_day.gdate)
             self._state = times.havdalah
         elif self.type == 'issur_melacha_in_effect':

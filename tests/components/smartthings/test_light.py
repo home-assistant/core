@@ -65,25 +65,6 @@ async def test_async_setup_platform():
     await light.async_setup_platform(None, None, None)
 
 
-def test_is_light(device_factory, light_devices):
-    """Test lights are correctly identified."""
-    non_lights = [
-        device_factory('Unknown', ['Unknown']),
-        device_factory("Fan 1",
-                       [Capability.switch, Capability.switch_level,
-                        Capability.fan_speed]),
-        device_factory("Switch 1", [Capability.switch]),
-        device_factory("Can't be turned off",
-                       [Capability.switch_level, Capability.color_control,
-                        Capability.color_temperature])
-    ]
-
-    for device in light_devices:
-        assert light.is_light(device), device.name
-    for device in non_lights:
-        assert not light.is_light(device), device.name
-
-
 async def test_entity_state(hass, light_devices):
     """Tests the state attributes properly match the light types."""
     await _setup_platform(hass, *light_devices)

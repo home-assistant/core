@@ -20,13 +20,15 @@ from homeassistant.const import (
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE)
-from homeassistant.components import modbus
+from homeassistant.components.modbus import (
+    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })
@@ -40,15 +42,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE, None)
     name = config.get(CONF_NAME, None)
-    add_entities([Flexit(modbus_slave, name)], True)
+    hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
+    add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
 class Flexit(ClimateDevice):
     """Representation of a Flexit AC unit."""
 
-    def __init__(self, modbus_slave, name):
+    def __init__(self, hub, modbus_slave, name):
         """Initialize the unit."""
         from pyflexit import pyflexit
+        self._hub = hub
         self._name = name
         self._slave = modbus_slave
         self._target_temperature = None
@@ -64,7 +68,7 @@ class Flexit(ClimateDevice):
         self._heating = None
         self._cooling = None
         self._alarm = False
-        self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
+        self.unit = pyflexit.pyflexit(hub, modbus_slave)
 
     @property
     def supported_features(self):

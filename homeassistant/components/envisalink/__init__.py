@@ -1,9 +1,4 @@
-"""
-Support for Envisalink devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/envisalink/
-"""
+"""Support for Envisalink devices."""
 import asyncio
 import logging
 

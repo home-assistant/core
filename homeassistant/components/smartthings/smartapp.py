@@ -22,8 +22,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     APP_NAME_PREFIX, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID, CONF_LOCATION_ID, DATA_BROKERS, DATA_MANAGER, DOMAIN,
-    SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, STORAGE_KEY, STORAGE_VERSION,
-    SUPPORTED_CAPABILITIES)
+    SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, STORAGE_KEY, STORAGE_VERSION)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,6 +175,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         webhook.async_generate_path(config[CONF_WEBHOOK_ID]),
         dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
+    manager.connect_update(functools.partial(smartapp_update, hass))
     manager.connect_uninstall(functools.partial(smartapp_uninstall, hass))
 
     webhook.async_register(hass, DOMAIN, 'SmartApp',
@@ -189,6 +189,45 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     }
 
 
+async def smartapp_sync_subscriptions(
+        hass: HomeAssistantType, auth_token: str, location_id: str,
+        installed_app_id: str, *, skip_delete=False):
+    """Synchronize subscriptions of an installed up."""
+    from pysmartthings import (
+        CAPABILITIES, SmartThings, SourceType, Subscription)
+
+    api = SmartThings(async_get_clientsession(hass), auth_token)
+    devices = await api.devices(location_ids=[location_id])
+
+    # Build set of capabilities and prune unsupported ones
+    capabilities = set()
+    for device in devices:
+        capabilities.update(device.capabilities)
+    capabilities.intersection_update(CAPABILITIES)
+
+    # Remove all (except for installs)
+    if not skip_delete:
+        await api.delete_subscriptions(installed_app_id)
+
+    # Create for each capability
+    async def create_subscription(target):
+        sub = Subscription()
+        sub.installed_app_id = installed_app_id
+        sub.location_id = location_id
+        sub.source_type = SourceType.CAPABILITY
+        sub.capability = target
+        try:
+            await api.create_subscription(sub)
+            _LOGGER.debug("Created subscription for '%s' under app '%s'",
+                          target, installed_app_id)
+        except Exception:  # pylint:disable=broad-except
+            _LOGGER.exception("Failed to create subscription for '%s' under "
+                              "app '%s'", target, installed_app_id)
+
+    tasks = [create_subscription(c) for c in capabilities]
+    await asyncio.gather(*tasks)
+
+
 async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     """
     Handle when a SmartApp is installed by the user into a location.
@@ -199,30 +238,9 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     representing the installation if this is not the first installation under
     the account.
     """
-    from pysmartthings import SmartThings, Subscription, SourceType
-
-    # This access token is a temporary 'SmartApp token' that expires in 5 min
-    # and is used to create subscriptions only.
-    api = SmartThings(async_get_clientsession(hass), req.auth_token)
-
-    async def create_subscription(target):
-        sub = Subscription()
-        sub.installed_app_id = req.installed_app_id
-        sub.location_id = req.location_id
-        sub.source_type = SourceType.CAPABILITY
-        sub.capability = target
-        try:
-            await api.create_subscription(sub)
-            _LOGGER.debug("Created subscription for '%s' under app '%s'",
-                          target, req.installed_app_id)
-        except Exception:  # pylint:disable=broad-except
-            _LOGGER.exception("Failed to create subscription for '%s' under "
-                              "app '%s'", target, req.installed_app_id)
-
-    tasks = [create_subscription(c) for c in SUPPORTED_CAPABILITIES]
-    await asyncio.gather(*tasks)
-    _LOGGER.debug("SmartApp '%s' under parent app '%s' was installed",
-                  req.installed_app_id, app.app_id)
+    await smartapp_sync_subscriptions(
+        hass, req.auth_token, req.location_id, req.installed_app_id,
+        skip_delete=True)
 
     # The permanent access token is copied from another config flow with the
     # same parent app_id.  If one is not found, that means the user is within
@@ -242,6 +260,19 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
                 CONF_LOCATION_ID: req.location_id,
                 CONF_ACCESS_TOKEN: access_token
             })
+
+
+async def smartapp_update(hass: HomeAssistantType, req, resp, app):
+    """
+    Handle when a SmartApp is updated (reconfigured) by the user.
+
+    Synchronize subscriptions to ensure we're up-to-date.
+    """
+    await smartapp_sync_subscriptions(
+        hass, req.auth_token, req.location_id, req.installed_app_id)
+
+    _LOGGER.debug("SmartApp '%s' under parent app '%s' was updated",
+                  req.installed_app_id, app.app_id)
 
 
 async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):

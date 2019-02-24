@@ -124,6 +124,8 @@ class HomeAccessory(Accessory):
         """
         battery_level = convert_to_float(
             new_state.attributes.get(ATTR_BATTERY_LEVEL))
+        if battery_level is None:
+            return
         self._char_battery.set_value(battery_level)
         self._char_low_battery.set_value(battery_level < 20)
         _LOGGER.debug('%s: Updated battery level to %d', self.entity_id,

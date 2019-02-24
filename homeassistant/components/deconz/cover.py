@@ -1,9 +1,4 @@
-"""
-Support for deCONZ covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.deconz/
-"""
+"""Support for deCONZ covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
@@ -18,8 +13,8 @@ DEPENDENCIES = ['deconz']
 ZIGBEE_SPEC = ['lumi.curtain']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Unsupported way of setting up deCONZ covers."""
     pass
 

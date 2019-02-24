@@ -1,9 +1,4 @@
-"""
-Support for Minut Point.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/point/
-"""
+"""Support for Minut Point."""
 import asyncio
 import logging
 
@@ -12,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -26,10 +20,11 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.0.6']
-DEPENDENCIES = ['webhook']
+REQUIREMENTS = ['pypoint==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['webhook']
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
@@ -117,8 +112,11 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
             entry, data={
                 **entry.data,
             })
-    session.update_webhook(entry.data[CONF_WEBHOOK_URL],
-                           entry.data[CONF_WEBHOOK_ID], events=['*'])
+    await hass.async_add_executor_job(
+        session.update_webhook,
+        entry.data[CONF_WEBHOOK_URL],
+        entry.data[CONF_WEBHOOK_ID],
+        ['*'])
 
     hass.components.webhook.async_register(
         DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
@@ -127,8 +125,8 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    client = hass.data[DOMAIN].pop(entry.entry_id)
-    client.remove_webhook()
+    session = hass.data[DOMAIN].pop(entry.entry_id)
+    await hass.async_add_executor_job(session.remove_webhook)
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -174,7 +172,8 @@ class MinutPointClient():
 
     async def _sync(self):
         """Update local list of devices."""
-        if not self._client.update() and self._is_available:
+        if not await self._hass.async_add_executor_job(
+                self._client.update) and self._is_available:
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             return
@@ -237,15 +236,14 @@ class MinutPointEntity(Entity):
         _LOGGER.debug('Created device %s', self)
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
-        self._update_callback()
+        await self._update_callback()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
 
-    @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """Update the value of the sensor."""
         pass
 

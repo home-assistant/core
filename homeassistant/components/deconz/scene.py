@@ -1,9 +1,4 @@
-"""
-Support for deCONZ scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.deconz/
-"""
+"""Support for deCONZ scenes."""
 from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.scene import Scene
 from homeassistant.core import callback
@@ -12,8 +7,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ scenes."""
     pass
 

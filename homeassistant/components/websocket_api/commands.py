@@ -9,7 +9,6 @@ from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import const, decorators, messages
 
-
 TYPE_CALL_SERVICE = 'call_service'
 TYPE_EVENT = 'event'
 TYPE_GET_CONFIG = 'get_config'
