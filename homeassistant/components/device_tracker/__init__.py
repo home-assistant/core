@@ -736,9 +736,7 @@ class DeviceTrackerEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique ID for the device."""
-        if self.mac_address is not None:
-            return self.mac_address
-        return None
+        return self.mac_address
 
     def seen(self, **kwargs):
         """Mark the device as seen."""
