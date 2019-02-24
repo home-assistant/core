@@ -15,7 +15,7 @@ from .const import (
     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY, CONF_TENANT,
     DATA_TOON_CLIENT, DATA_TOON_CONFIG, DOMAIN)
 
-REQUIREMENTS = ['toonapilib==3.0.7']
+REQUIREMENTS = ['toonapilib==3.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
