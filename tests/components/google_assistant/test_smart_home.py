@@ -316,3 +316,15 @@ async def test_empty_name_doesnt_sync(hass):
             'devices': []
         }
     }
+
+
+async def test_query_disconnect(hass):
+    """Test a disconnect message."""
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        'inputs': [
+            {'intent': 'action.devices.DISCONNECT'}
+        ],
+        'requestId': REQ_ID
+    })
+
+    assert result is None
