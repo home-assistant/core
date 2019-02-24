@@ -24,7 +24,7 @@ STREET_STATE = {
     '0': ['Snowed', 'mdi:snowflake'],  # street is snowed in
     '1': ['Clear', 'mdi:road'],  # street is clear
     '2': ['Planned', 'mdi:clock-outline'],  # street is planned for clearing
-    '3': ['Planned', 'mdi:clock-outline'],  # clearing planned with new date
+    '3': ['Replanned', 'mdi:clock-alert-outline'],  # clearing date replanned
     '4': ['Snowed', 'mdi:snowflake'],  # to be planned, still snowed in
     '5': ['Clearing', 'mdi:bulldozer'],  # trucks loading, still clearing
     '10': ['Ploughed', 'mdi:road']  # street cleared, snow not loaded
