@@ -48,7 +48,7 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 SERVICE_SET_OPTION = 'sonos_set_option'
 
-DATA_SONOS = 'sonos_devices'
+DATA_SONOS = 'sonos_media_player'
 
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
@@ -114,7 +114,7 @@ class SonosData:
     def __init__(self):
         """Initialize the data."""
         self.uids = set()
-        self.devices = []
+        self.entities = []
         self.topology_lock = threading.Lock()
 
 
@@ -129,9 +129,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
-    def add_entities(devices, update_before_add=False):
-        """Sync version of async add devices."""
-        hass.add_job(async_add_entities, devices, update_before_add)
+    def add_entities(entities, update_before_add=False):
+        """Sync version of async add entities."""
+        hass.add_job(async_add_entities, entities, update_before_add)
 
     hass.async_add_executor_job(
         _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
@@ -153,7 +153,7 @@ def _setup_platform(hass, config, add_entities, discovery_info):
     if discovery_info:
         player = pysonos.SoCo(discovery_info.get('host'))
 
-        # If device already exists by config
+        # If host already exists by config
         if player.uid in hass.data[DATA_SONOS].uids:
             return
 
@@ -176,53 +176,54 @@ def _setup_platform(hass, config, add_entities, discovery_info):
                     _LOGGER.warning("Failed to initialize '%s'", host)
         else:
             players = pysonos.discover(
-                interface_addr=config.get(CONF_INTERFACE_ADDR))
+                interface_addr=config.get(CONF_INTERFACE_ADDR),
+                all_households=True)
 
         if not players:
             _LOGGER.warning("No Sonos speakers found")
             return
 
     hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_entities(SonosDevice(p) for p in players)
+    add_entities(SonosEntity(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get('entity_id')
 
-        devices = hass.data[DATA_SONOS].devices
+        entities = hass.data[DATA_SONOS].entities
         if entity_ids:
-            devices = [d for d in devices if d.entity_id in entity_ids]
+            entities = [e for e in entities if e.entity_id in entity_ids]
 
         if service.service == SERVICE_JOIN:
-            master = [device for device in hass.data[DATA_SONOS].devices
-                      if device.entity_id == service.data[ATTR_MASTER]]
+            master = [e for e in hass.data[DATA_SONOS].entities
+                      if e.entity_id == service.data[ATTR_MASTER]]
             if master:
                 with hass.data[DATA_SONOS].topology_lock:
-                    master[0].join(devices)
+                    master[0].join(entities)
             return
 
         if service.service == SERVICE_UNJOIN:
             with hass.data[DATA_SONOS].topology_lock:
-                for device in devices:
-                    device.unjoin()
+                for entity in entities:
+                    entity.unjoin()
             return
 
-        for device in devices:
+        for entity in entities:
             if service.service == SERVICE_SNAPSHOT:
-                device.snapshot(service.data[ATTR_WITH_GROUP])
+                entity.snapshot(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_RESTORE:
-                device.restore(service.data[ATTR_WITH_GROUP])
+                entity.restore(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_SET_TIMER:
-                device.set_sleep_timer(service.data[ATTR_SLEEP_TIME])
+                entity.set_sleep_timer(service.data[ATTR_SLEEP_TIME])
             elif service.service == SERVICE_CLEAR_TIMER:
-                device.clear_sleep_timer()
+                entity.clear_sleep_timer()
             elif service.service == SERVICE_UPDATE_ALARM:
-                device.set_alarm(**service.data)
+                entity.set_alarm(**service.data)
             elif service.service == SERVICE_SET_OPTION:
-                device.set_option(**service.data)
+                entity.set_option(**service.data)
 
-            device.schedule_update_ha_state(True)
+            entity.schedule_update_ha_state(True)
 
     hass.services.register(
         DOMAIN, SERVICE_JOIN, service_handle,
@@ -270,9 +271,9 @@ class _ProcessSonosEventQueue:
 
 
 def _get_entity_from_soco_uid(hass, uid):
-    """Return SonosDevice from SoCo uid."""
-    for entity in hass.data[DATA_SONOS].devices:
-        if uid == entity.soco.uid:
+    """Return SonosEntity from SoCo uid."""
+    for entity in hass.data[DATA_SONOS].entities:
+        if uid == entity.unique_id:
             return entity
     return None
 
@@ -303,11 +304,11 @@ def soco_error(errorcodes=None):
 def soco_coordinator(funct):
     """Call function on coordinator."""
     @ft.wraps(funct)
-    def wrapper(device, *args, **kwargs):
+    def wrapper(entity, *args, **kwargs):
         """Wrap for call to coordinator."""
-        if device.is_coordinator:
-            return funct(device, *args, **kwargs)
-        return funct(device.coordinator, *args, **kwargs)
+        if entity.is_coordinator:
+            return funct(entity, *args, **kwargs)
+        return funct(entity.coordinator, *args, **kwargs)
 
     return wrapper
 
@@ -329,11 +330,11 @@ def _is_radio_uri(uri):
     return uri.startswith(radio_schemes)
 
 
-class SonosDevice(MediaPlayerDevice):
-    """Representation of a Sonos device."""
+class SonosEntity(MediaPlayerDevice):
+    """Representation of a Sonos entity."""
 
     def __init__(self, player):
-        """Initialize the Sonos device."""
+        """Initialize the Sonos entity."""
         self._subscriptions = []
         self._receives_events = False
         self._volume_increment = 2
@@ -366,7 +367,7 @@ class SonosDevice(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
-        self.hass.data[DATA_SONOS].devices.append(self)
+        self.hass.data[DATA_SONOS].entities.append(self)
         self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
@@ -376,7 +377,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def name(self):
-        """Return the name of the device."""
+        """Return the name of the entity."""
         return self._name
 
     @property
@@ -394,7 +395,7 @@ class SonosDevice(MediaPlayerDevice):
     @property
     @soco_coordinator
     def state(self):
-        """Return the state of the device."""
+        """Return the state of the entity."""
         if self._status in ('PAUSED_PLAYBACK', 'STOPPED'):
             return STATE_PAUSED
         if self._status in ('PLAYING', 'TRANSITIONING'):
@@ -410,7 +411,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def soco(self):
-        """Return soco device."""
+        """Return soco object."""
         return self._player
 
     @property
@@ -434,7 +435,7 @@ class SonosDevice(MediaPlayerDevice):
             return False
 
     def _set_basic_information(self):
-        """Set initial device information."""
+        """Set initial entity information."""
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info['zone_name']
         self._model = speaker_info['model_name']
@@ -477,8 +478,8 @@ class SonosDevice(MediaPlayerDevice):
         self._receives_events = False
 
         # New player available, build the current group topology
-        for device in self.hass.data[DATA_SONOS].devices:
-            device.update_groups()
+        for entity in self.hass.data[DATA_SONOS].entities:
+            entity.update_groups()
 
         player = self.soco
 
@@ -554,7 +555,7 @@ class SonosDevice(MediaPlayerDevice):
         self.schedule_update_ha_state()
 
         # Also update slaves
-        for entity in self.hass.data[DATA_SONOS].devices:
+        for entity in self.hass.data[DATA_SONOS].entities:
             coordinator = entity.coordinator
             if coordinator and coordinator.unique_id == self.unique_id:
                 entity.schedule_update_ha_state()
@@ -1087,7 +1088,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def device_state_attributes(self):
-        """Return device specific state attributes."""
+        """Return entity specific state attributes."""
         attributes = {ATTR_SONOS_GROUP: self._sonos_group}
 
         if self._night_sound is not None:
