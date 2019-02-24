@@ -5,9 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL,
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -26,9 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_STREETID = 'streetid'
 CONF_STREETS = 'streets'
-
-ATTR_SENSOR = 'sensor'
-ATTR_STATES = 'states'
 
 DEFAULT_INTERVAL = timedelta(minutes=5)
 

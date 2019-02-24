@@ -11,15 +11,6 @@ DEPENDENCIES = ['planifneige']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STREETID = 'streetid'
-CONF_STREETS = 'streets'
-CONF_DBPATH = 'database_path'
-
-ATTR_SENSOR = 'sensor'
-ATTR_STATES = 'states'
-
-DOMAIN = 'planifneige'
-
 STREET_STATE = {
     '0': ['Snowed', 'mdi:snowflake'],  # street is snowed in
     '1': ['Clear', 'mdi:road'],  # street is clear
@@ -63,32 +54,32 @@ class PlanifNeigeSensor(RestoreEntity):
 
     @property
     def streetid(self):
-        """Return the name of the sensor."""
+        """Return the streetid of the sensor."""
         return self._streetid
 
     @property
     def start_plan_date(self):
-        """Return the name of the sensor."""
+        """Return the start planned date of the sensor."""
         return self._start_plan_date
 
     @property
     def _end_plan_date(self):
-        """Return the name of the sensor."""
+        """Return the end planned date of the sensor."""
         return self.__end_plan_date
 
     @property
     def start_replan_date(self):
-        """Return the name of the sensor."""
+        """Return the start replanned date of the sensor."""
         return self._start_replan_date
 
     @property
     def end_replan_date(self):
-        """Return the name of the sensor."""
+        """Return the end replanned date of the sensor."""
         return self._end_replan_date
 
     @property
     def date_updated(self):
-        """Return the name of the sensor."""
+        """Return the date updated of the sensor."""
         return self._date_updated
 
     @property
