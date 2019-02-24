@@ -1550,7 +1550,7 @@ sense_energy==0.6.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.10.4
+shodan==1.11.0
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
