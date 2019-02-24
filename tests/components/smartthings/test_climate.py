@@ -19,7 +19,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_OFF,
+    STATE_UNKNOWN)
 
 from .conftest import setup_platform
 
@@ -95,6 +96,25 @@ def thermostat_fixture(device_factory):
     return device
 
 
+@pytest.fixture(name="buggy_thermostat")
+def buggy_thermostat_fixture(device_factory):
+    """Fixture returns a buggy thermostat."""
+    device = device_factory(
+        "Buggy Thermostat",
+        capabilities=[
+            Capability.temperature_measurement,
+            Capability.thermostat_cooling_setpoint,
+            Capability.thermostat_heating_setpoint,
+            Capability.thermostat_mode],
+        status={
+            Attribute.cooling_setpoint: 74,
+            Attribute.heating_setpoint: 68,
+            Attribute.thermostat_fan_mode: 'on'}
+    )
+    device.status.attributes[Attribute.temperature] = Status(70, 'F', None)
+    return device
+
+
 async def test_async_setup_platform():
     """Test setup platform does nothing (it uses config entries)."""
     await climate.async_setup_platform(None, None, None)
@@ -150,6 +170,19 @@ async def test_thermostat_entity_state(hass, thermostat):
     assert state.attributes[ATTR_TEMPERATURE] == 20  # celsius
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 34
+
+
+async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
+    """Tests the state attributes properly match the thermostat type."""
+    await setup_platform(hass, CLIMATE_DOMAIN, buggy_thermostat)
+    state = hass.states.get('climate.buggy_thermostat')
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
+        SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | \
+        SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE
+    assert ATTR_OPERATION_LIST not in state.attributes
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
 
 
 async def test_set_fan_mode(hass, thermostat):
