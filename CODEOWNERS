@@ -53,6 +53,7 @@ homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/binary_sensor/threshold.py @fabaff
 homeassistant/components/binary_sensor/uptimerobot.py @ludeeus
 homeassistant/components/camera/yi.py @bachya
+homeassistant/components/climate/coolmaster.py @OnFreund
 homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/mill.py @danielhiversen
@@ -67,6 +68,7 @@ homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/device_tracker/traccar.py @ludeeus
 homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
+homeassistant/components/device_tracker/synology_srm.py @aerialls
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/influx/* @fabaff
 homeassistant/components/light/lifx_legacy.py @amelchio
@@ -110,6 +112,7 @@ homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/gitter.py @fabaff
 homeassistant/components/sensor/glances.py @fabaff
 homeassistant/components/sensor/gpsd.py @fabaff
+homeassistant/components/sensor/integration.py @dgomes
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/jewish_calendar.py @tsvi
 homeassistant/components/sensor/launch_library.py @ludeeus
@@ -187,6 +190,9 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/esphome/*.py @OttoWinter
 
+# F
+homeassistant/components/freebox/*.py @snoof85
+
 # G
 homeassistant/components/googlehome/* @ludeeus
 homeassistant/components/*/googlehome.py @ludeeus
@@ -223,6 +229,7 @@ homeassistant/components/*/mystrom.py @fabaff
 # N
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/*/ness_alarm.py @nickw444
+homeassistant/components/nissan_leaf/* @filcole
 
 # O
 homeassistant/components/openuv/* @bachya
@@ -263,6 +270,7 @@ homeassistant/components/*/tradfri.py @ggravlingen
 homeassistant/components/unifi/* @kane610
 homeassistant/components/switch/unifi.py @kane610
 homeassistant/components/upcloud/* @scop
+homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/*/upcloud.py @scop
 
 # V

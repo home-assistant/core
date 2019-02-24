@@ -1,9 +1,4 @@
-"""
-Implements LightwaveRF lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lightwave/
-"""
+"""Support for LightwaveRF lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
@@ -14,8 +9,8 @@ DEPENDENCIES = ['lightwave']
 MAX_BRIGHTNESS = 255
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave lights."""
     if not discovery_info:
         return

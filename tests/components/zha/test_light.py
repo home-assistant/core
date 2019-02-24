@@ -14,13 +14,13 @@ OFF = 0
 
 async def test_light(hass, config_entry, zha_gateway):
     """Test zha light platform."""
-    from zigpy.zcl.clusters.general import OnOff, LevelControl
+    from zigpy.zcl.clusters.general import OnOff, LevelControl, Basic
     from zigpy.profiles.zha import DeviceType
 
     # create zigpy devices
     zigpy_device_on_off = await async_init_zigpy_device(
         hass,
-        [OnOff.cluster_id],
+        [OnOff.cluster_id, Basic.cluster_id],
         [],
         DeviceType.ON_OFF_LIGHT,
         zha_gateway
@@ -28,7 +28,7 @@ async def test_light(hass, config_entry, zha_gateway):
 
     zigpy_device_level = await async_init_zigpy_device(
         hass,
-        [OnOff.cluster_id, LevelControl.cluster_id],
+        [OnOff.cluster_id, LevelControl.cluster_id, Basic.cluster_id],
         [],
         DeviceType.ON_OFF_LIGHT,
         zha_gateway,

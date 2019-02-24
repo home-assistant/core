@@ -1,21 +1,16 @@
-"""
-Support for Ness D8X/D16X devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ness_alarm/
-"""
-import logging
+"""Support for Ness D8X/D16X devices."""
 from collections import namedtuple
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_CODE, ATTR_STATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['nessclient==0.9.9']
+REQUIREMENTS = ['nessclient==0.9.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +23,7 @@ CONF_ZONES = 'zones'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
 CONF_ZONE_ID = 'id'
-ATTR_CODE = 'code'
 ATTR_OUTPUT_ID = 'output_id'
-ATTR_STATE = 'state'
 DEFAULT_ZONES = []
 
 SIGNAL_ZONE_CHANGED = 'ness_alarm.zone_changed'

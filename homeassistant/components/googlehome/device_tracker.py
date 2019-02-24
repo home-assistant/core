@@ -1,9 +1,4 @@
-"""
-Support for Google Home bluetooth tacker.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.googlehome/
-"""
+"""Support for Google Home Bluetooth tacker."""
 import logging
 from datetime import timedelta
 
@@ -13,11 +8,11 @@ from homeassistant.components.googlehome import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['googlehome']
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):

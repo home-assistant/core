@@ -1,9 +1,4 @@
-"""
-Support for IHC devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ihc/
-"""
+"""Support for IHC devices."""
 import logging
 import os.path
 
@@ -224,7 +219,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
         return False
     project = ElementTree.fromstring(project_xml)
 
-    # if an auto setup file exist in the configuration it will override
+    # If an auto setup file exist in the configuration it will override
     yaml_path = hass.config.path(AUTO_SETUP_YAML)
     if not os.path.isfile(yaml_path):
         yaml_path = os.path.join(os.path.dirname(__file__), AUTO_SETUP_YAML)

@@ -1,9 +1,4 @@
-"""
-Support for interface with an LG webOS Smart TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.webostv/
-"""
+"""Support for interface with an LG webOS Smart TV."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -14,10 +9,12 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_FILENAME, CONF_HOST, CONF_NAME, CONF_TIMEOUT,
     STATE_OFF, STATE_PAUSED, STATE_PLAYING)

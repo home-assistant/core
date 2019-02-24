@@ -1,16 +1,12 @@
-"""
-Support for Netatmo Smart Thermostat.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.netatmo/
-"""
+"""Support for Netatmo Smart thermostats."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.components.climate import (
-    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv

@@ -1,9 +1,4 @@
-"""
-Support for AVM Fritz!Box smarthome temperature sensor only devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/sensor.fritzbox/
-"""
+"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
 import logging
 
 import requests

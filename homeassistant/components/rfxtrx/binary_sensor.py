@@ -1,9 +1,4 @@
-"""
-Support for RFXtrx binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rfxtrx/
-"""
+"""Support for RFXtrx binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -35,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Any(cv.time_period, cv.positive_timedelta),
             vol.Optional(CONF_DATA_BITS): cv.positive_int,
             vol.Optional(CONF_COMMAND_ON): cv.byte,
-            vol.Optional(CONF_COMMAND_OFF): cv.byte
+            vol.Optional(CONF_COMMAND_OFF): cv.byte,
         })
     },
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,

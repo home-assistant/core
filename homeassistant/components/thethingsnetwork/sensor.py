@@ -1,9 +1,4 @@
-"""
-Support for The Things Network's Data storage integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.thethingsnetwork_data/
-"""
+"""Support for The Things Network's Data storage integration."""
 import asyncio
 import logging
 
@@ -38,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up The Things Network Data storage sensors."""
     ttn = hass.data.get(DATA_TTN)
     device_id = config.get(CONF_DEVICE_ID)
@@ -153,7 +148,7 @@ class TtnDataStorage:
             return False
 
         data = await req.json()
-        self.data = data[0]
+        self.data = data[-1]
 
         for value in self._values.items():
             if value[0] not in self.data.keys():

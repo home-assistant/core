@@ -1,10 +1,4 @@
-"""
-Each ElkM1 area will be created as a separate alarm_control_panel in HASS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.elkm1/
-"""
-
+"""Each ElkM1 area will be created as a separate alarm_control_panel."""
 import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (

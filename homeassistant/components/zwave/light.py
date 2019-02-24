@@ -1,9 +1,4 @@
-"""
-Support for Z-Wave lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.zwave/
-"""
+"""Support for Z-Wave lights."""
 import logging
 
 from threading import Timer
@@ -55,8 +50,8 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave lights."""
     pass
 

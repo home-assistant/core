@@ -20,7 +20,7 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 
-CONF_ATTRIBUTION = "Data provided by openexchangerates.org"
+ATTRIBUTION = "Data provided by openexchangerates.org"
 
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange Rate Sensor'
@@ -82,7 +82,7 @@ class OpenexchangeratesSensor(Entity):
     def device_state_attributes(self):
         """Return other attributes of the sensor."""
         attr = self.rest.data
-        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         return attr
 

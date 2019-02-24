@@ -18,10 +18,10 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA)
-from homeassistant.components.media_player import DOMAIN as DOMAIN_MP
+from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError

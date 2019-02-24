@@ -1,9 +1,4 @@
-"""
-Support for OpenTherm Gateway sensors.
-
-For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/sensor.opentherm_gw/
-"""
+"""Support for OpenTherm Gateway sensors."""
 import logging
 
 from homeassistant.components.opentherm_gw import (
@@ -13,6 +8,8 @@ from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
+_LOGGER = logging.getLogger(__name__)
+
 UNIT_BAR = 'bar'
 UNIT_HOUR = 'h'
 UNIT_KW = 'kW'
@@ -21,11 +18,9 @@ UNIT_PERCENT = '%'
 
 DEPENDENCIES = ['opentherm_gw']
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenTherm Gateway sensors."""
     if discovery_info is None:
         return
@@ -163,7 +158,7 @@ class OpenThermSensor(Entity):
     """Representation of an OpenTherm Gateway sensor."""
 
     def __init__(self, entity_id, var, device_class, unit, friendly_name):
-        """Initialize the sensor."""
+        """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = entity_id
         self._var = var
         self._value = None

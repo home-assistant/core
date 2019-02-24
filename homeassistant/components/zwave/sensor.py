@@ -1,9 +1,4 @@
-"""
-Interfaces with Z-Wave sensors.
-
-For more details about this platform, please refer to the documentation
-at https://home-assistant.io/components/sensor.zwave/
-"""
+"""Support for Z-Wave sensors."""
 import logging
 from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
@@ -14,8 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave sensors."""
     pass
 

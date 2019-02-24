@@ -1,14 +1,8 @@
-"""
-Support for HomematicIP Cloud switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud switches."""
 import logging
 
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homematicip_cloud']
@@ -35,6 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         FullFlushSwitchMeasuring,
     )
 
+    from homematicip.group import SwitchingGroup
+
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -48,6 +44,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipSwitchMeasuring(home, device))
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))
+
+    for group in home.groups:
+        if isinstance(group, SwitchingGroup):
+            devices.append(
+                HomematicipGroupSwitch(home, group))
 
     if devices:
         async_add_entities(devices)
@@ -71,6 +72,28 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        await self._device.turn_off()
+
+
+class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
+    """representation of a HomematicIP switching group."""
+
+    def __init__(self, home, device, post='Group'):
+        """Initialize switching group."""
+        device.modelType = 'HmIP-{}'.format(post)
+        super().__init__(home, device, post)
+
+    @property
+    def is_on(self):
+        """Return true if group is on."""
+        return self._device.on
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the group on."""
+        await self._device.turn_on()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the group off."""
         await self._device.turn_off()
 
 

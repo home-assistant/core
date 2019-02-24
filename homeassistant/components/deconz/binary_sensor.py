@@ -1,23 +1,19 @@
-"""
-Support for deCONZ binary sensor.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.deconz/
-"""
+"""Support for deCONZ binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN,
+    NEW_SENSOR)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ binary sensors."""
     pass
 
@@ -39,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
+        async_dispatcher_connect(hass, NEW_SENSOR, async_add_sensor))
 
     async_add_sensor(gateway.api.sensors.values())
 

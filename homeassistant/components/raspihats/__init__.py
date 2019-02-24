@@ -1,9 +1,4 @@
-"""
-Support for controlling raspihats boards.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/raspihats/
-"""
+"""Support for controlling raspihats boards."""
 import logging
 import threading
 import time
@@ -19,7 +14,6 @@ DOMAIN = 'raspihats'
 
 CONF_I2C_HATS = 'i2c_hats'
 CONF_BOARD = 'board'
-CONF_ADDRESS = 'address'
 CONF_CHANNELS = 'channels'
 CONF_INDEX = 'index'
 CONF_INVERT_LOGIC = 'invert_logic'

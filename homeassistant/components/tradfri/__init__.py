@@ -1,9 +1,4 @@
-"""
-Support for IKEA Tradfri.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ikea_tradfri/
-"""
+"""Support for IKEA Tradfri."""
 import logging
 
 import voluptuous as vol
@@ -20,6 +15,9 @@ from . import config_flow  # noqa  pylint_disable=unused-import
 
 REQUIREMENTS = ['pytradfri[async]==6.0.1']
 
+_LOGGER = logging.getLogger(__name__)
+
+
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
 KEY_GATEWAY = 'tradfri_gateway'
@@ -34,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):

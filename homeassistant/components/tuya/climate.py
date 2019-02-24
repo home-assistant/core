@@ -1,19 +1,14 @@
-"""
-Support for the Tuya climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.tuya/
-"""
-
-from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, ENTITY_ID_FORMAT, STATE_AUTO, STATE_COOL, STATE_ECO,
+"""Support for the Tuya climate devices."""
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL, STATE_ECO,
     STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
 from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 
 from homeassistant.const import (
-    PRECISION_WHOLE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 DEPENDENCIES = ['tuya']
 DEVICE_TYPE = 'climate'

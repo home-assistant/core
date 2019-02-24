@@ -1,9 +1,4 @@
-"""
-Support for Arlo Alarm Control Panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.arlo/
-"""
+"""Support for Arlo Alarm Control Panels."""
 import logging
 
 import voluptuous as vol
@@ -14,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanel, PLATFORM_SCHEMA)
 from homeassistant.components.arlo import (
-    DATA_ARLO, CONF_ATTRIBUTION, SIGNAL_UPDATE_ARLO)
+    DATA_ARLO, ATTRIBUTION, SIGNAL_UPDATE_ARLO)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_NIGHT)
@@ -122,7 +117,7 @@ class ArloBaseStation(AlarmControlPanel):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'device_id': self._base_station.device_id
         }
 

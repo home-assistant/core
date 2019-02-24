@@ -1,9 +1,4 @@
-"""
-Support for testing internet speed via Speedtest.net.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/speedtestdotnet/
-"""
+"""Support for testing internet speed via Speedtest.net."""
 import logging
 from datetime import timedelta
 
@@ -13,7 +8,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.speedtestdotnet.const import DOMAIN, \
     DATA_UPDATED, SENSOR_TYPES
 from homeassistant.const import CONF_MONITORED_CONDITIONS, \
-    CONF_UPDATE_INTERVAL
+    CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL, \
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -29,16 +25,26 @@ CONF_MANUAL = 'manual'
 DEFAULT_INTERVAL = timedelta(hours=1)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_SERVER_ID): cv.positive_int,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL):
-            vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-        vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-            vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))])
-    })
+    DOMAIN: vol.All(
+        vol.Schema({
+            vol.Optional(CONF_SERVER_ID): cv.positive_int,
+            vol.Optional(CONF_UPDATE_INTERVAL):
+                vol.All(cv.time_period, cv.positive_timedelta),
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
+                vol.All(cv.time_period, cv.positive_timedelta),
+            vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+            vol.Optional(
+                CONF_MONITORED_CONDITIONS,
+                default=list(SENSOR_TYPES)
+            ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))])
+        }),
+        cv.deprecated(
+            CONF_UPDATE_INTERVAL,
+            replacement_key=CONF_SCAN_INTERVAL,
+            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+            default=DEFAULT_INTERVAL
+        )
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -49,7 +55,7 @@ async def async_setup(hass, config):
 
     if not conf[CONF_MANUAL]:
         async_track_time_interval(
-            hass, data.update, conf[CONF_UPDATE_INTERVAL]
+            hass, data.update, conf[CONF_SCAN_INTERVAL]
         )
 
     def update(call=None):

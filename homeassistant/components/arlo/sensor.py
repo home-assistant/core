@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor for Netgear Arlo IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arlo/
-"""
+"""Sensor support for Netgear Arlo IP cameras."""
 import logging
 
 import voluptuous as vol
@@ -11,7 +6,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import (
-    CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
+    ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
@@ -182,7 +177,7 @@ class ArloSensor(Entity):
         """Return the device state attributes."""
         attrs = {}
 
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
 
         if self._sensor_type != 'total_cameras':

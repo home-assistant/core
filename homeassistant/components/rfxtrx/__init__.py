@@ -1,9 +1,4 @@
-"""
-Support for RFXtrx components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rfxtrx/
-"""
+"""Support for RFXtrx devices."""
 from collections import OrderedDict
 import logging
 

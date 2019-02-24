@@ -1,9 +1,4 @@
-"""
-Reads vehicle status from BMW connected drive portal.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
-"""
+"""Reads vehicle status from BMW connected drive portal."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -42,14 +37,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if vehicle.has_hv_battery:
                 _LOGGER.debug('BMW with a high voltage battery')
                 for key, value in sorted(SENSOR_TYPES_ELEC.items()):
-                    device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1])
                     devices.append(device)
             elif vehicle.has_internal_combustion_engine:
                 _LOGGER.debug('BMW with an internal combustion engine')
                 for key, value in sorted(SENSOR_TYPES.items()):
-                    device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1])
                     devices.append(device)
     add_entities(devices, True)
 

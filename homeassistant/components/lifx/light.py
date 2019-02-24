@@ -1,9 +1,4 @@
-"""
-Support for the LIFX platform that implements lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lifx/
-"""
+"""Support for LIFX lights."""
 import asyncio
 from datetime import timedelta
 from functools import partial

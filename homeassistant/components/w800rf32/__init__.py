@@ -1,10 +1,4 @@
-"""
-Support for w800rf32 components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/w800rf32/
-
-"""
+"""Support for w800rf32 devices."""
 import logging
 
 import voluptuous as vol
@@ -18,15 +12,16 @@ from homeassistant.helpers.dispatcher import (dispatcher_send)
 
 REQUIREMENTS = ['pyW800rf32==0.1']
 
-DOMAIN = 'w800rf32'
 DATA_W800RF32 = 'data_w800rf32'
+DOMAIN = 'w800rf32'
+
 W800RF32_DEVICE = 'w800rf32_{}'
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string
+        vol.Required(CONF_DEVICE): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

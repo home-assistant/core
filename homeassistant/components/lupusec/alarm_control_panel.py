@@ -1,10 +1,4 @@
-"""
-This component provides HA alarm_control_panel support for Lupusec System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.lupusec/
-"""
-
+"""Support for Lupusec System alarm control panels."""
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel

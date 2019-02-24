@@ -62,7 +62,6 @@ ILLUMINANCE = 'illuminance'
 PRESSURE = 'pressure'
 METERING = 'metering'
 ELECTRICAL_MEASUREMENT = 'electrical_measurement'
-POWER_CONFIGURATION = 'power_configuration'
 GENERIC = 'generic'
 UNKNOWN = 'unknown'
 OPENING = 'opening'
@@ -71,15 +70,16 @@ OCCUPANCY = 'occupancy'
 
 ATTR_LEVEL = 'level'
 
-LISTENER_ON_OFF = 'on_off'
-LISTENER_ATTRIBUTE = 'attribute'
-LISTENER_COLOR = 'color'
-LISTENER_FAN = 'fan'
-LISTENER_LEVEL = ATTR_LEVEL
-LISTENER_ZONE = 'zone'
-LISTENER_ACTIVE_POWER = 'active_power'
-LISTENER_BATTERY = 'battery'
-LISTENER_EVENT_RELAY = 'event_relay'
+ON_OFF_CHANNEL = 'on_off'
+ATTRIBUTE_CHANNEL = 'attribute'
+BASIC_CHANNEL = 'basic'
+COLOR_CHANNEL = 'color'
+FAN_CHANNEL = 'fan'
+LEVEL_CHANNEL = ATTR_LEVEL
+ZONE_CHANNEL = 'zone'
+ELECTRICAL_MEASUREMENT_CHANNEL = 'active_power'
+POWER_CONFIGURATION_CHANNEL = 'battery'
+EVENT_RELAY_CHANNEL = 'event_relay'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
 SIGNAL_MOVE_LEVEL = "move_level"
@@ -87,6 +87,9 @@ SIGNAL_SET_LEVEL = "set_level"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
 SIGNAL_REMOVE = 'remove'
+
+QUIRK_APPLIED = 'quirk_applied'
+QUIRK_CLASS = 'quirk_class'
 
 
 class RadioType(enum.Enum):
@@ -110,6 +113,7 @@ CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
 EVENT_RELAY_CLUSTERS = []
+NO_SENSOR_CLUSTERS = []
 
 REPORT_CONFIG_MAX_INT = 900
 REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800

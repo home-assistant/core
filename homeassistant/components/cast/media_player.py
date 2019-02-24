@@ -1,9 +1,4 @@
-"""
-Provide functionality to interact with Cast devices on the network.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.cast/
-"""
+"""Provide functionality to interact with Cast devices on the network."""
 import asyncio
 import logging
 import threading
@@ -14,10 +9,12 @@ import voluptuous as vol
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -55,6 +52,10 @@ ADDED_CAST_DEVICES_KEY = 'cast_added_cast_devices'
 # Chromecast or receive it through configuration
 SIGNAL_CAST_DISCOVERED = 'cast_discovered'
 
+# Dispatcher signal fired with a ChromecastInfo every time a Chromecast is
+# removed
+SIGNAL_CAST_REMOVED = 'cast_removed'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_IGNORE_CEC, default=[]):
@@ -71,6 +72,7 @@ class ChromecastInfo:
 
     host = attr.ib(type=str)
     port = attr.ib(type=int)
+    service = attr.ib(type=Optional[str], default=None)
     uuid = attr.ib(type=Optional[str], converter=attr.converters.optional(str),
                    default=None)  # always convert UUID to string if not None
     manufacturer = attr.ib(type=str, default='')
@@ -103,13 +105,15 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
     # Fill out missing information via HTTP dial.
     from pychromecast import dial
 
-    http_device_status = dial.get_device_status(info.host)
+    http_device_status = dial.get_device_status(
+        info.host, services=[info.service],
+        zconf=ChromeCastZeroconf.get_zeroconf())
     if http_device_status is None:
         # HTTP dial didn't give us any new information.
         return info
 
     return ChromecastInfo(
-        host=info.host, port=info.port,
+        service=info.service, host=info.host, port=info.port,
         uuid=(info.uuid or http_device_status.uuid),
         friendly_name=(info.friendly_name or http_device_status.friendly_name),
         manufacturer=(info.manufacturer or http_device_status.manufacturer),
@@ -120,7 +124,6 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
 def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
     if info in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
         _LOGGER.debug("Discovered previous chromecast %s", info)
-        return
 
     # Either discovered completely new chromecast or a "moved" one.
     info = _fill_out_missing_chromecast_info(info)
@@ -136,6 +139,29 @@ def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
 
 
+def _remove_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
+    # Removed chromecast
+    _LOGGER.debug("Removed chromecast %s", info)
+
+    dispatcher_send(hass, SIGNAL_CAST_REMOVED, info)
+
+
+class ChromeCastZeroconf:
+    """Class to hold a zeroconf instance."""
+
+    __zconf = None
+
+    @classmethod
+    def set_zeroconf(cls, zconf):
+        """Set zeroconf."""
+        cls.__zconf = zconf
+
+    @classmethod
+    def get_zeroconf(cls):
+        """Get zeroconf."""
+        return cls.__zconf
+
+
 def _setup_internal_discovery(hass: HomeAssistantType) -> None:
     """Set up the pychromecast internal discovery."""
     if INTERNAL_DISCOVERY_RUNNING_KEY not in hass.data:
@@ -147,10 +173,22 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
 
     import pychromecast
 
-    def internal_callback(name):
+    def internal_add_callback(name):
         """Handle zeroconf discovery of a new chromecast."""
         mdns = listener.services[name]
         _discover_chromecast(hass, ChromecastInfo(
+            service=name,
+            host=mdns[0],
+            port=mdns[1],
+            uuid=mdns[2],
+            model_name=mdns[3],
+            friendly_name=mdns[4],
+        ))
+
+    def internal_remove_callback(name, mdns):
+        """Handle zeroconf discovery of a removed chromecast."""
+        _remove_chromecast(hass, ChromecastInfo(
+            service=name,
             host=mdns[0],
             port=mdns[1],
             uuid=mdns[2],
@@ -159,7 +197,9 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
         ))
 
     _LOGGER.debug("Starting internal pychromecast discovery.")
-    listener, browser = pychromecast.start_discovery(internal_callback)
+    listener, browser = pychromecast.start_discovery(internal_add_callback,
+                                                     internal_remove_callback)
+    ChromeCastZeroconf.set_zeroconf(browser.zc)
 
     def stop_discovery(event):
         """Stop discovery of new chromecasts."""
@@ -325,12 +365,18 @@ class CastDevice(MediaPlayerDevice):
         """Initialize the cast device."""
         import pychromecast  # noqa: pylint: disable=unused-import
         self._cast_info = cast_info  # type: ChromecastInfo
+        self.services = None
+        if cast_info.service:
+            self.services = set()
+            self.services.add(cast_info.service)
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
         self._available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
+        self._add_remove_handler = None
+        self._del_remove_handler = None
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -343,15 +389,36 @@ class CastDevice(MediaPlayerDevice):
             if self._cast_info.uuid != discover.uuid:
                 # Discovered is not our device.
                 return
+            if self.services is None:
+                _LOGGER.warning(
+                    "[%s %s (%s:%s)] Received update for manually added Cast",
+                    self.entity_id, self._cast_info.friendly_name,
+                    self._cast_info.host, self._cast_info.port)
+                return
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_create_task(self.async_set_cast_info(discover))
+
+        def async_cast_removed(discover: ChromecastInfo):
+            """Handle removal of Chromecast."""
+            if self._cast_info.uuid is None:
+                # We can't handle empty UUIDs
+                return
+            if self._cast_info.uuid != discover.uuid:
+                # Removed is not our device.
+                return
+            _LOGGER.debug("Removed chromecast with same UUID: %s", discover)
+            self.hass.async_create_task(self.async_del_cast_info(discover))
 
         async def async_stop(event):
             """Disconnect socket on Home Assistant stop."""
             await self._async_disconnect()
 
-        async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
-                                 async_cast_discovered)
+        self._add_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_CAST_DISCOVERED,
+            async_cast_discovered)
+        self._del_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_CAST_REMOVED,
+            async_cast_removed)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
 
@@ -362,27 +429,52 @@ class CastDevice(MediaPlayerDevice):
             # Remove the entity from the added casts so that it can dynamically
             # be re-added again.
             self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
+        if self._add_remove_handler:
+            self._add_remove_handler()
+        if self._del_remove_handler:
+            self._del_remove_handler()
 
     async def async_set_cast_info(self, cast_info):
         """Set the cast information and set up the chromecast object."""
         import pychromecast
-        old_cast_info = self._cast_info
         self._cast_info = cast_info
 
+        if self.services is not None:
+            if cast_info.service not in self.services:
+                _LOGGER.debug("[%s %s (%s:%s)] Got new service: %s (%s)",
+                              self.entity_id, self._cast_info.friendly_name,
+                              self._cast_info.host, self._cast_info.port,
+                              cast_info.service, self.services)
+
+            self.services.add(cast_info.service)
+
         if self._chromecast is not None:
-            if old_cast_info.host_port == cast_info.host_port:
-                _LOGGER.debug("No connection related update: %s",
-                              cast_info.host_port)
-                return
-            await self._async_disconnect()
+            # Only setup the chromecast once, added elements to services
+            # will automatically be picked up.
+            return
 
         # pylint: disable=protected-access
-        _LOGGER.debug("Connecting to cast device %s", cast_info)
-        chromecast = await self.hass.async_add_job(
-            pychromecast._get_chromecast_from_host, (
-                cast_info.host, cast_info.port, cast_info.uuid,
-                cast_info.model_name, cast_info.friendly_name
-            ))
+        if self.services is None:
+            _LOGGER.debug(
+                "[%s %s (%s:%s)] Connecting to cast device by host %s",
+                self.entity_id, self._cast_info.friendly_name,
+                self._cast_info.host, self._cast_info.port, cast_info)
+            chromecast = await self.hass.async_add_job(
+                pychromecast._get_chromecast_from_host, (
+                    cast_info.host, cast_info.port, cast_info.uuid,
+                    cast_info.model_name, cast_info.friendly_name
+                ))
+        else:
+            _LOGGER.debug(
+                "[%s %s (%s:%s)] Connecting to cast device by service %s",
+                self.entity_id, self._cast_info.friendly_name,
+                self._cast_info.host, self._cast_info.port, self.services)
+            chromecast = await self.hass.async_add_job(
+                pychromecast._get_chromecast_from_service, (
+                    self.services, ChromeCastZeroconf.get_zeroconf(),
+                    cast_info.uuid, cast_info.model_name,
+                    cast_info.friendly_name
+                ))
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only
@@ -392,15 +484,27 @@ class CastDevice(MediaPlayerDevice):
         self._available = True
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
-        _LOGGER.debug("Connection successful!")
+        _LOGGER.debug("[%s %s (%s:%s)] Connection successful!",
+                      self.entity_id, self._cast_info.friendly_name,
+                      self._cast_info.host, self._cast_info.port)
         self.async_schedule_update_ha_state()
+
+    async def async_del_cast_info(self, cast_info):
+        """Remove the service."""
+        self.services.discard(cast_info.service)
+        _LOGGER.debug("[%s %s (%s:%s)] Remove service: %s (%s)",
+                      self.entity_id, self._cast_info.friendly_name,
+                      self._cast_info.host, self._cast_info.port,
+                      cast_info.service, self.services)
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
         if self._chromecast is None:
             # Can't disconnect if not connected.
             return
-        _LOGGER.debug("Disconnecting from chromecast socket.")
+        _LOGGER.debug("[%s %s (%s:%s)] Disconnecting from chromecast socket.",
+                      self.entity_id, self._cast_info.friendly_name,
+                      self._cast_info.host, self._cast_info.port)
         self._available = False
         self.async_schedule_update_ha_state()
 
@@ -437,8 +541,11 @@ class CastDevice(MediaPlayerDevice):
         from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED, \
             CONNECTION_STATUS_DISCONNECTED
 
-        _LOGGER.debug("Received cast device connection status: %s",
-                      connection_status.status)
+        _LOGGER.debug(
+            "[%s %s (%s:%s)] Received cast device connection status: %s",
+            self.entity_id, self._cast_info.friendly_name,
+            self._cast_info.host, self._cast_info.port,
+            connection_status.status)
         if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
             self._available = False
             self._invalidate()
@@ -450,8 +557,11 @@ class CastDevice(MediaPlayerDevice):
             # Connection status callbacks happen often when disconnected.
             # Only update state when availability changed to put less pressure
             # on state machine.
-            _LOGGER.debug("Cast device availability changed: %s",
-                          connection_status.status)
+            _LOGGER.debug(
+                "[%s %s (%s:%s)] Cast device availability changed: %s",
+                self.entity_id, self._cast_info.friendly_name,
+                self._cast_info.host, self._cast_info.port,
+                connection_status.status)
             self._available = new_available
             self.schedule_update_ha_state()
 

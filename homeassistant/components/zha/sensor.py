@@ -12,8 +12,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
     ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
-    POWER_CONFIGURATION, GENERIC, SENSOR_TYPE, LISTENER_ATTRIBUTE,
-    LISTENER_ACTIVE_POWER, SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
+    GENERIC, SENSOR_TYPE, ATTRIBUTE_CHANNEL, ELECTRICAL_MEASUREMENT_CHANNEL,
+    SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR)
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,12 +71,11 @@ UNIT_REGISTRY = {
     ILLUMINANCE: 'lx',
     METERING: 'W',
     ELECTRICAL_MEASUREMENT: 'W',
-    POWER_CONFIGURATION: '%',
     GENERIC: None
 }
 
-LISTENER_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: LISTENER_ACTIVE_POWER,
+CHANNEL_REGISTRY = {
+    ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
 }
 
 POLLING_REGISTRY = {
@@ -131,9 +130,9 @@ class Sensor(ZhaEntity):
 
     _domain = DOMAIN
 
-    def __init__(self, unique_id, zha_device, listeners, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, listeners, **kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
         sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
         self._unit = UNIT_REGISTRY.get(sensor_type)
         self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
@@ -148,17 +147,17 @@ class Sensor(ZhaEntity):
             sensor_type,
             False
         )
-        self._listener = self.cluster_listeners.get(
-            LISTENER_REGISTRY.get(sensor_type, LISTENER_ATTRIBUTE)
+        self._channel = self.cluster_channels.get(
+            CHANNEL_REGISTRY.get(sensor_type, ATTRIBUTE_CHANNEL)
         )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
         await self.async_accept_signal(
-            self._listener, SIGNAL_STATE_ATTR,
+            self._channel, SIGNAL_STATE_ATTR,
             self.async_update_state_attribute)
 
     @property
@@ -176,6 +175,6 @@ class Sensor(ZhaEntity):
         return self._state
 
     def async_set_state(self, state):
-        """Handle state update from listener."""
+        """Handle state update from channel."""
         self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()

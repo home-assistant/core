@@ -8,8 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv

@@ -1,9 +1,4 @@
-"""
-Support for the light on the Sisyphus Kinetic Art Table.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.sisyphus/
-"""
+"""Support for the light on the Sisyphus Kinetic Art Table."""
 import logging
 
 from homeassistant.const import CONF_NAME
@@ -26,15 +21,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class SisyphusLight(Light):
-    """Represents a Sisyphus table as a light."""
+    """Representation of a Sisyphus table as a light."""
 
     def __init__(self, name, table):
-        """
-        Constructor.
-
-        :param name: name of the table
-        :param table: sisyphus-control Table object
-        """
+        """Initialize the Sisyphus table."""
         self._name = name
         self._table = table
 

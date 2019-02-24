@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "El nombre ya existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                },
+                "title": "Ubicaci\u00f3n"
+            }
+        },
+        "title": "Servicio meteorol\u00f3gico portugu\u00e9s (IPMA)"
+    }
+}

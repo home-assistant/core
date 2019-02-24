@@ -1,16 +1,13 @@
-"""
-Register a custom front end panel.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/panel_custom/
-"""
+"""Register a custom front end panel."""
 import logging
 import os
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'panel_custom'
 DEPENDENCIES = ['frontend']
@@ -57,8 +54,6 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_TRUST_EXTERNAL): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -154,8 +149,8 @@ async def async_setup(hass, config):
             kwargs['module_url'] = panel[CONF_MODULE_URL]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
-            _LOGGER.error('Unable to find webcomponent for %s: %s',
-                          name, panel_path)
+            _LOGGER.error(
+                "Unable to find webcomponent for %s: %s", name, panel_path)
             continue
 
         else:

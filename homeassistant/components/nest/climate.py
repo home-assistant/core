@@ -1,23 +1,19 @@
-"""
-Support for Nest thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.nest/
-"""
+"""Support for Nest thermostats."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.nest import (
     DATA_NEST, SIGNAL_NEST_UPDATE, DOMAIN as NEST_DOMAIN)
-from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
-    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 

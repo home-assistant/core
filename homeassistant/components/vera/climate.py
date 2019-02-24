@@ -1,15 +1,11 @@
-"""
-Support for Vera thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera/
-"""
+"""Support for Vera thermostats."""
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, STATE_COOL,
-    STATE_HEAT, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL,
+    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
     STATE_ON,

@@ -1,19 +1,15 @@
-"""
-Support for deCONZ scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.deconz/
-"""
-from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
+"""Support for deCONZ scenes."""
 from homeassistant.components.scene import Scene
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import DOMAIN as DECONZ_DOMAIN, NEW_SCENE
+
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ scenes."""
     pass
 
@@ -30,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(DeconzScene(scene, gateway))
         async_add_entities(entities)
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_scene', async_add_scene))
+        async_dispatcher_connect(hass, NEW_SCENE, async_add_scene))
 
     async_add_scene(gateway.api.scenes.values())
 

@@ -1,9 +1,4 @@
-"""
-Support for Satel Integra alarm, using ETHM module: https://www.satel.pl/en/ .
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.satel_integra/
-"""
+"""Support for Satel Integra alarm, using ETHM module."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -17,8 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['satel_integra']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up for Satel Integra alarm panels."""
     if not discovery_info:
         return

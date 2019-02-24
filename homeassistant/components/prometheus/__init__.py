@@ -1,22 +1,17 @@
-"""
-Support for Prometheus metrics export.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/prometheus/
-"""
+"""Support for Prometheus metrics export."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant import core as hacore
+from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
-from homeassistant import core as hacore
-import homeassistant.helpers.config_validation as cv
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONTENT_TYPE_TEXT_PLAIN,
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT)
 from homeassistant.helpers import entityfilter, state as state_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 REQUIREMENTS = ['prometheus_client==0.2.0']
@@ -152,6 +147,15 @@ class PrometheusMetrics:
             'device_tracker_state',
             self.prometheus_client.Gauge,
             'State of the device tracker (0/1)',
+        )
+        value = state_helper.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
+    def _handle_person(self, state):
+        metric = self._metric(
+            'person_state',
+            self.prometheus_client.Gauge,
+            'State of the person (0/1)',
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)

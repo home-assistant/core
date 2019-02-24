@@ -744,7 +744,10 @@ class State:
 
         context = json_dict.get('context')
         if context:
-            context = Context(**context)
+            context = Context(
+                id=context.get('id'),
+                user_id=context.get('user_id'),
+            )
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated,
@@ -1117,7 +1120,7 @@ class ServiceRegistry:
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
-        })
+        }, context=context)
 
         if not blocking:
             self._hass.async_create_task(

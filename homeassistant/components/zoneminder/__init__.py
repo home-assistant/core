@@ -1,9 +1,4 @@
-"""
-Support for ZoneMinder.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zoneminder/
-"""
+"""Support for ZoneMinder."""
 import logging
 
 import voluptuous as vol
@@ -16,7 +11,7 @@ from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['zm-py==0.3.1']
+REQUIREMENTS = ['zm-py==0.3.3']
 
 CONF_PATH_ZMS = 'path_zms'
 

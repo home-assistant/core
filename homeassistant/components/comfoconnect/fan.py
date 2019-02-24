@@ -1,9 +1,4 @@
-"""
-Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.comfoconnect/
-"""
+"""Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
 from homeassistant.components.comfoconnect import (

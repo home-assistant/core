@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Bridge er allerede konfigureret",
             "no_bridges": "Ingen deConz bridge fundet",
             "one_instance_only": "Komponenten underst\u00f8tter kun \u00e9n deCONZ forekomst"
         },
@@ -11,8 +12,13 @@
             "init": {
                 "data": {
                     "host": "V\u00e6rt",
-                    "port": "Port (standardv\u00e6rdi: '80')"
-                }
+                    "port": "Port"
+                },
+                "title": "Definer deCONZ gateway"
+            },
+            "link": {
+                "description": "L\u00e5s din deCONZ-gateway op for at registrere dig med Home Assistant. \n\n 1. G\u00e5 til deCONZ settings -> Gateway -> Advanced\n 2. Tryk p\u00e5 knappen \"Authenticate app\"",
+                "title": "Link med deCONZ"
             },
             "options": {
                 "data": {
@@ -21,6 +27,7 @@
                 },
                 "title": "Ekstra konfiguration valgmuligheder for deCONZ"
             }
-        }
+        },
+        "title": "deCONZ Zigbee gateway"
     }
 }

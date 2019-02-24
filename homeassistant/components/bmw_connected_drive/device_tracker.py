@@ -1,8 +1,4 @@
-"""Device tracker for BMW Connected Drive vehicles.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bmw_connected_drive/
-"""
+"""Device tracker for BMW Connected Drive vehicles."""
 import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN \

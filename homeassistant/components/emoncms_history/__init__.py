@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to Emoncms.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/emoncms_history/
-"""
+"""Support for sending data to Emoncms."""
 import logging
 from datetime import timedelta
 
