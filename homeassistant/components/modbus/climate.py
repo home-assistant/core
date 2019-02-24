@@ -4,20 +4,15 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE)
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['modbus']
-
-# Parameters not defined by homeassistant.const
 CONF_TARGET_TEMP = 'target_temp_register'
 CONF_CURRENT_TEMP = 'current_temp_register'
 CONF_DATA_TYPE = 'data_type'
@@ -27,20 +22,21 @@ CONF_PRECISION = 'precision'
 DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
+DEPENDENCIES = ['modbus']
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
     vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
     vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT):
         vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
-    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-    vol.Optional(CONF_PRECISION, default=1): cv.positive_int
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+    vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
 })
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -78,12 +74,14 @@ class ModbusThermostat(ClimateDevice):
         self._precision = precision
         self._structure = '>f'
 
-        data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
-                      DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
-                      DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'}}
+        data_types = {
+            DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
+            DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
+            DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'},
+        }
 
-        self._structure = '>{}'.format(data_types[self._data_type]
-                                       [self._count])
+        self._structure = '>{}'.format(
+            data_types[self._data_type][self._count])
 
     @property
     def supported_features(self):
@@ -109,7 +107,7 @@ class ModbusThermostat(ClimateDevice):
 
     @property
     def target_temperature(self):
-        """Return the temperature we try to reach."""
+        """Return the target temperature."""
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
@@ -121,16 +119,16 @@ class ModbusThermostat(ClimateDevice):
         register_value = struct.unpack('>h', byte_string[0:2])[0]
 
         try:
-            self.write_register(self._target_temperature_register,
-                                register_value)
+            self.write_register(
+                self._target_temperature_register, register_value)
         except AttributeError as ex:
             _LOGGER.error(ex)
 
     def read_register(self, register):
-        """Read holding register using the modbus hub slave."""
+        """Read holding register using the Modbus hub slave."""
         try:
-            result = self._hub.read_holding_registers(self._slave, register,
-                                                      self._count)
+            result = self._hub.read_holding_registers(
+                self._slave, register, self._count)
         except AttributeError as ex:
             _LOGGER.error(ex)
         byte_string = b''.join(
@@ -140,5 +138,5 @@ class ModbusThermostat(ClimateDevice):
         return register_value
 
     def write_register(self, register, value):
-        """Write register using the modbus hub slave."""
+        """Write register using the Modbus hub slave."""
         self._hub.write_registers(self._slave, register, [value, 0])
