@@ -184,7 +184,7 @@ def _setup_platform(hass, config, add_entities, discovery_info):
             return
 
     hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_entities(SonosDevice(p) for p in players)
+    add_entities(SonosEntity(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
@@ -271,7 +271,7 @@ class _ProcessSonosEventQueue:
 
 
 def _get_entity_from_soco_uid(hass, uid):
-    """Return SonosDevice from SoCo uid."""
+    """Return SonosEntity from SoCo uid."""
     for entity in hass.data[DATA_SONOS].entities:
         if uid == entity.unique_id:
             return entity
@@ -330,7 +330,7 @@ def _is_radio_uri(uri):
     return uri.startswith(radio_schemes)
 
 
-class SonosDevice(MediaPlayerDevice):
+class SonosEntity(MediaPlayerDevice):
     """Representation of a Sonos entity."""
 
     def __init__(self, player):

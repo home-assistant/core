@@ -144,14 +144,14 @@ class TestSonosMediaPlayer(unittest.TestCase):
             return True
 
         # Monkey patches
-        self.real_available = sonos.SonosDevice.available
-        sonos.SonosDevice.available = monkey_available
+        self.real_available = sonos.SonosEntity.available
+        sonos.SonosEntity.available = monkey_available
 
     # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         # Monkey patches
-        sonos.SonosDevice.available = self.real_available
+        sonos.SonosEntity.available = self.real_available
         self.hass.stop()
 
     @mock.patch('pysonos.SoCo', new=SoCoMock)
