@@ -14,6 +14,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = 'planifneige'
+DATA_PLANIFNEIGE = 'data_planifneige'
 
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
@@ -59,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the PlanifNeige component."""
     conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = PlanifNeigeData(hass, conf.get(CONF_API_KEY),
+    data = hass.data[DATA_PLANIFNEIGE] = PlanifNeigeData(hass, conf.get(CONF_API_KEY),
                                                conf.get(CONF_DBPATH),
                                                conf.get(CONF_STREETS))
 

@@ -2,7 +2,8 @@
 
 import logging
 
-from homeassistant.components.planifneige import PLANIFNEIGE_ATTRIBUTION
+from homeassistant.components.planifneige import (
+    DATA_PLANIFNEIGE, PLANIFNEIGE_ATTRIBUTION)
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -33,7 +34,7 @@ STREET_STATE = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the PlanifNeige platform."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DATA_PLANIFNEIGE]
     async_add_entities(
         [PlanifNeigeSensor(data, sensor) for sensor in discovery_info]
     )
