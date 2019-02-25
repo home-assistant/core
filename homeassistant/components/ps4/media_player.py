@@ -133,6 +133,7 @@ class PS4Device(MediaPlayerDevice):
         self._retry = 0
         self._info = None
         self._unique_id = None
+        self._power_on = False
 
     async def async_added_to_hass(self):
         """Subscribe PS4 events."""
@@ -153,6 +154,16 @@ class PS4Device(MediaPlayerDevice):
         if status is not None:
             self._retry = 0
             if status.get('status') == 'Ok':
+                # Check if only 1 device in Hass.
+                if len(self.hass.data[PS4_DATA].devices) == 1:
+                    """Enable keep alive feature for PS4 Connection.
+                     Only 1 device is supported,
+                     since can only use a single port, 997."""
+                    self._ps4._keep_alive = True
+                if self._power_on is True:
+                    # Auto Login after Turn On.
+                    self._ps4.open()
+                    self._power_on = False
                 title_id = status.get('running-app-titleid')
                 name = status.get('running-app-name')
                 if title_id and name is not None:
@@ -346,15 +357,16 @@ class PS4Device(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the media player."""
+        self._power_on = True
         self._ps4.wakeup()
 
     def media_pause(self):
         """Send keypress ps to return to menu."""
-        self._ps4.remote_control('ps')
+        self.send_remote_control('ps')
 
     def media_stop(self):
         """Send keypress ps to return to menu."""
-        self._ps4.remote_control('ps')
+        self.send_remote_control('ps')
 
     def select_source(self, source):
         """Select input source."""
@@ -369,4 +381,8 @@ class PS4Device(MediaPlayerDevice):
 
     def send_command(self, command):
         """Send Button Command."""
+        self.send_remote_control(command)
+
+    def send_remote_control(self, command):
+        """Send RC command."""
         self._ps4.remote_control(command)
