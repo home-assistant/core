@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylinky==0.1.8']
+REQUIREMENTS = ['pylinky==0.3.0']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -38,6 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from pylinky.client import LinkyClient, PyLinkyError
     client = LinkyClient(username, password, None, timeout)
     try:
+        client.login()
         client.fetch_data()
     except PyLinkyError as exp:
         _LOGGER.error(exp)
