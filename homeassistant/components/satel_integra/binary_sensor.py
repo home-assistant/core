@@ -5,13 +5,9 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (DATA_SATEL,
-               CONF_ZONES,
-               CONF_OUTPUTS,
-               CONF_ZONE_NAME,
-               CONF_ZONE_TYPE,
-               SIGNAL_ZONES_UPDATED,
-               SIGNAL_OUTPUTS_UPDATED)
+from . import (
+    CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES, DATA_SATEL,
+    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED)
 
 DEPENDENCIES = ['satel_integra']
 

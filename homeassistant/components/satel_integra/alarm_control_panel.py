@@ -1,17 +1,18 @@
 """Support for Satel Integra alarm, using ETHM module."""
-import logging
 import asyncio
+import logging
+from collections import OrderedDict
+
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, STATE_UNKNOWN)
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (CONF_ARM_HOME_MODE,
-               CONF_DEVICE_PARTITION,
-               DATA_SATEL,
-               SIGNAL_PANEL_MESSAGE)
+from . import (
+    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITION, DATA_SATEL,
+    SIGNAL_PANEL_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._state = None
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
-        _LOGGER.info("Creating AlarmPanel")
+        _LOGGER.debug("Creating AlarmPanel")
 
     async def async_added_to_hass(self):
         """Update alarm status and register callbacks for future updates."""
@@ -49,6 +50,17 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._update_alarm_status()
         async_dispatcher_connect(
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
+
+    @callback
+    def _update_alarm_status(self):
+        """Handle alarm status update."""
+        state = self._read_alarm_state()
+        _LOGGER.debug("Got status update, current status: %s", state)
+        if state != self._state:
+            self._state = state
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug("Ignoring alarm status message, same state")
 
     def _read_alarm_state(self):
         """Read current status of the alarm and translate it into HA status."""
@@ -59,18 +71,18 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
         satel_controller = self.hass.data[DATA_SATEL]
         if not satel_controller.connected:
-            return STATE_UNKNOWN
-        # Warning: order is important here:
-        state_map = {
-            AlarmState.TRIGGERED: STATE_ALARM_TRIGGERED,
-            AlarmState.TRIGGERED_FIRE: STATE_ALARM_TRIGGERED,
-            AlarmState.ARMED_MODE3: STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE2: STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE1: STATE_ALARM_ARMED_HOME,
-            AlarmState.ARMED_MODE0: STATE_ALARM_ARMED_AWAY,
-            AlarmState.EXIT_COUNTDOWN_OVER_10: STATE_ALARM_PENDING,
-            AlarmState.EXIT_COUNTDOWN_UNDER_10: STATE_ALARM_PENDING,
-        }
+            return None
+
+        state_map = OrderedDict([
+            (AlarmState.TRIGGERED, STATE_ALARM_TRIGGERED),
+            (AlarmState.TRIGGERED_FIRE, STATE_ALARM_TRIGGERED),
+            (AlarmState.ARMED_MODE3, STATE_ALARM_ARMED_HOME),
+            (AlarmState.ARMED_MODE2, STATE_ALARM_ARMED_HOME),
+            (AlarmState.ARMED_MODE1, STATE_ALARM_ARMED_HOME),
+            (AlarmState.ARMED_MODE0, STATE_ALARM_ARMED_AWAY),
+            (AlarmState.EXIT_COUNTDOWN_OVER_10, STATE_ALARM_PENDING),
+            (AlarmState.EXIT_COUNTDOWN_UNDER_10, STATE_ALARM_PENDING)
+        ])
         _LOGGER.debug("State map of Satel: %s",
                       satel_controller.partition_states)
 
@@ -82,17 +94,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
                 break
 
         return hass_alarm_status
-
-    @callback
-    def _update_alarm_status(self, message=None):
-        """Handle received messages."""
-        state = self._read_alarm_state()
-        _LOGGER.info("Got status update, current status: %s", state)
-        if state != self._state:
-            self._state = state
-            self.async_schedule_update_ha_state()
-        else:
-            _LOGGER.debug("Ignoring alarm status message, same state")
 
     @property
     def name(self):
@@ -117,12 +118,12 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         if not code:
-            _LOGGER.debug("Code was null")
+            _LOGGER.debug("Code was empty or None")
             return
 
-        clear_alarm_necessary = (self._state == STATE_ALARM_TRIGGERED)
+        clear_alarm_necessary = self._state == STATE_ALARM_TRIGGERED
 
-        _LOGGER.debug("clear_alarm_necessary: %s", clear_alarm_necessary)
+        _LOGGER.debug("Disarming, self._state: %s", self._state)
 
         await self.hass.data[DATA_SATEL].disarm(code)
 
@@ -133,7 +134,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        _LOGGER.debug("Arming away...")
+        _LOGGER.debug("Arming away")
 
         if code:
             await self.hass.data[DATA_SATEL].arm(code)

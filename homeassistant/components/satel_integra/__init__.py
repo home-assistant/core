@@ -1,11 +1,10 @@
 """Support for Satel Integra devices."""
 import logging
 
-
 import voluptuous as vol
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -105,7 +104,7 @@ async def async_setup(hass, config):
     def alarm_status_update_callback():
         """Send status update received from alarm to home assistant."""
         _LOGGER.debug("Sending request to update panel state")
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, None)
+        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE)
 
     @callback
     def zones_update_callback(status):
