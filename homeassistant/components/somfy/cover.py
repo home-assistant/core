@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 devices if
                 categories & set(cover.categories)]
 
-    async_add_entities(await hass.async_add_job(get_covers), True)
+    async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
 class SomfyCover(SomfyEntity, CoverDevice):

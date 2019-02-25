@@ -54,7 +54,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
 
     config_flow.register_flow_implementation(
-        hass, DOMAIN, config[DOMAIN][CONF_CLIENT_ID],
+        hass, config[DOMAIN][CONF_CLIENT_ID],
         config[DOMAIN][CONF_CLIENT_SECRET])
 
     hass.async_create_task(
@@ -68,6 +68,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
+
     def token_saver(token):
         _LOGGER.debug('Saving updated token')
         entry.data[CONF_TOKEN] = token
@@ -86,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     for component in SOMFY_COMPONENTS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                entry, component))
+            hass.config_entries.async_forward_entry_setup(entry, component))
 
     return True
 
@@ -99,8 +99,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data.pop(DOMAIN)
 
     for component in SOMFY_COMPONENTS:
-        await hass.config_entries.async_forward_entry_unload(
-            entry, component)
+        await hass.config_entries.async_forward_entry_unload(entry, component)
 
     return True
 
@@ -155,7 +154,7 @@ async def update_all_devices(hass):
     from requests import HTTPError
     try:
         data = hass.data[DOMAIN]
-        data[DEVICES] = data[API].get_devices()
+        data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
     except HTTPError:
         _LOGGER.warning("Cannot update devices", exc_info=True)
         return False
