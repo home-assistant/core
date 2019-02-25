@@ -38,6 +38,7 @@ CONF_XSHUT = 'xshut'
 
 DEFAULT_NAME = 'VL53L1X'
 DEFAULT_I2C_ADDRESS = 0x29
+DEFAULT_I2C_BUS = 1
 DEFAULT_XSHUT = 16
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
@@ -86,7 +87,7 @@ async def async_setup_platform(hass,
 class VL53L1XSensor(Entity):
     """Implementation of VL53L1X sensor."""
 
-    def __init__(self, vl53l1x_sensor, name, unit):
+    def __init__(self, vl53l1x_sensor, name, unit, i2c_address):
         """Initialize the sensor."""
         self._name = name
         self._unit_of_measurement = unit
