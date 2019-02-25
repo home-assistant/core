@@ -8,11 +8,10 @@ import datetime
 
 from aiohttp import web
 
-from . import StreamView
-from .core import StreamOutput
+from .core import StreamView, StreamOutput
 
 
-async def async_setup_platform(hass):
+async def async_setup_hls(hass):
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())

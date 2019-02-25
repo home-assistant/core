@@ -4,37 +4,26 @@ Provide functionality to stream video source.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/stream/
 """
-import asyncio
 import logging
 import threading
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.util import generate_secret
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_call_later
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_prepare_setup_platform
 
+from .const import (
+    DOMAIN, CONF_KEEPALIVE, ATTR_STREAMS, ATTR_ENDPOINTS)
 from .worker import stream_worker
+from .hls import async_setup_hls
 
 REQUIREMENTS = ['av==6.1.2', 'pillow==5.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_OPTIONS = 'options'
-ATTR_ENDPOINTS = 'endpoints'
-ATTR_STREAMS = 'streams'
-
-CONF_KEEPALIVE = 'keepalive'
-
-OUTPUT_FORMATS = ['hls', 'mjpeg']
-
 DEPENDENCIES = ['http']
-DOMAIN = 'stream'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -90,28 +79,9 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = {}
 
-    # Platforms here register the views
-    async def async_setup_platform(p_type, p_config, disc_info=None):
-        """Set up a stream platform."""
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, p_type)
-        if platform is None:
-            return
-
-        try:
-            # This should register all views required
-            # by the different platforms
-            endpoint = await platform.async_setup_platform(hass)
-            hass.data[DOMAIN][ATTR_ENDPOINTS][p_type] = endpoint
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform: %s", p_type)
-            return
-
-    setup_tasks = [async_setup_platform(p_type, {})
-                   for p_type in OUTPUT_FORMATS]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+    # Setup HLS
+    hls_endpoint = await async_setup_hls(hass)
+    hass.data[DOMAIN][ATTR_ENDPOINTS]['hls'] = hls_endpoint
 
     return True
 
@@ -176,44 +146,3 @@ class Stream:
             self.__thread.join()
             self.__thread = None
             self.__container = None
-
-
-class StreamView(HomeAssistantView):
-    """Base StreamView."""
-
-    requires_auth = False
-    platform = None
-
-    def __init__(self):
-        """Initialize a basic stream view."""
-        self._unsub = None
-
-    async def get(self, request, token, sequence=None):
-        """Start a GET request."""
-        hass = request.app['hass']
-
-        stream = next((
-            s for s in hass.data[DOMAIN][ATTR_STREAMS].values()
-            if s.access_token == token), None)
-
-        if not stream:
-            raise web.HTTPUnauthorized()
-
-        # Start worker if not already started
-        stream.start()
-
-        if self._unsub is not None:
-            self._unsub()
-
-        async def cleanup(_now):
-            """Stop the stream."""
-            stream.stop_stream()
-            self._unsub = None
-
-        self._unsub = async_call_later(hass, 300, cleanup)
-
-        return await self.handle(request, stream, sequence)
-
-    async def handle(self, request, stream, sequence):
-        """Handle the stream request."""
-        raise NotImplementedError()

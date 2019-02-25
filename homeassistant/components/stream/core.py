@@ -4,6 +4,12 @@ import io
 from typing import List, Any
 
 import attr
+from aiohttp import web
+
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.helpers.event import async_call_later
+
+from .const import DOMAIN, ATTR_STREAMS
 
 
 @attr.s
@@ -93,3 +99,44 @@ class StreamOutput:
             self.__segments = self.__segments[-self.num_segments:]
         self.__event.set()
         self.__event.clear()
+
+
+class StreamView(HomeAssistantView):
+    """Base StreamView."""
+
+    requires_auth = False
+    platform = None
+
+    def __init__(self):
+        """Initialize a basic stream view."""
+        self._unsub = None
+
+    async def get(self, request, token, sequence=None):
+        """Start a GET request."""
+        hass = request.app['hass']
+
+        stream = next((
+            s for s in hass.data[DOMAIN][ATTR_STREAMS].values()
+            if s.access_token == token), None)
+
+        if not stream:
+            raise web.HTTPUnauthorized()
+
+        # Start worker if not already started
+        stream.start()
+
+        if self._unsub is not None:
+            self._unsub()
+
+        async def cleanup(_now):
+            """Stop the stream."""
+            stream.stop_stream()
+            self._unsub = None
+
+        self._unsub = async_call_later(hass, 300, cleanup)
+
+        return await self.handle(request, stream, sequence)
+
+    async def handle(self, request, stream, sequence):
+        """Handle the stream request."""
+        raise NotImplementedError()

@@ -32,7 +32,8 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
     SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
 from homeassistant.components.stream import (
-    async_request_stream, get_url, OUTPUT_FORMATS)
+    async_request_stream, get_url)
+from homeassistant.components.stream.const import OUTPUT_FORMATS
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
