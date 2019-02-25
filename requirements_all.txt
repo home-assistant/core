@@ -420,7 +420,7 @@ fiblary3==0.1.7
 fints==1.0.1
 
 # homeassistant.components.media_player.firetv
-firetv==1.0.7
+firetv==1.0.9
 
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
@@ -1263,7 +1263,7 @@ pysmartthings==0.6.3
 pysnmp==4.4.8
 
 # homeassistant.components.sonos
-pysonos==0.0.6
+pysonos==0.0.7
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
