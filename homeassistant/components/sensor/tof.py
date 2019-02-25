@@ -12,8 +12,8 @@ Fixed setup for current driver version:
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
 """
+import asyncio
 import logging
-import time
 from datetime import timedelta
 from functools import partial
 
@@ -68,9 +68,9 @@ async def async_setup_platform(hass,
     #  pulse XSHUT port and keep it HIGH
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, 0)
-    time.sleep(0.01)
+    await asyncio.sleep(0.01)
     rpi_gpio.write_output(xshut, 1)
-    time.sleep(0.01)
+    await asyncio.sleep(0.01)
 
     sensor = await hass.async_add_job(partial(VL53L1X))
     dev = [VL53L1XSensor(sensor, name, unit)]
