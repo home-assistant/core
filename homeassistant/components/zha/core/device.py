@@ -8,6 +8,7 @@ import asyncio
 from enum import Enum
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send
 )
@@ -229,7 +230,8 @@ class ZHADevice:
         if self._unsub:
             self._unsub()
 
-    async def get_clusters(self):
+    @callback
+    def async_get_clusters(self):
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -239,25 +241,27 @@ class ZHADevice:
             if ep_id != 0
         }
 
-    async def get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
+    @callback
+    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
-        clusters = await self.get_clusters()
+        clusters = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
-    async def get_cluster_attributes(self, endpoint_id, cluster_id,
+    @callback
+    def async_get_cluster_attributes(self, endpoint_id, cluster_id,
                                      cluster_type=IN):
         """Get zigbee attributes for specified cluster."""
-        cluster = await self.get_cluster(endpoint_id, cluster_id,
+        cluster = self.async_get_cluster(endpoint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
             return None
         return cluster.attributes
 
-    async def get_cluster_commands(self, endpoint_id, cluster_id,
+    @callback
+    def async_get_cluster_commands(self, endpoint_id, cluster_id,
                                    cluster_type=IN):
         """Get zigbee commands for specified cluster."""
-        cluster = await self.get_cluster(endpoint_id, cluster_id,
-                                         cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         return {
@@ -269,8 +273,7 @@ class ZHADevice:
                                      attribute, value, cluster_type=IN,
                                      manufacturer=None):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = await self.get_cluster(
-            endpoint_id, cluster_id, cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
 
@@ -304,8 +307,7 @@ class ZHADevice:
                                     command_type, args, cluster_type=IN,
                                     manufacturer=None):
         """Issue a command against specified zigbee cluster on this entity."""
-        cluster = await self.get_cluster(
-            endpoint_id, cluster_id, cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         response = None
