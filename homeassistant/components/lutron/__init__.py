@@ -134,19 +134,18 @@ class LutronButton:
         """Fire an event about a button being pressed or released."""
         from pylutron import Button
 
+        # Events per button type:
+        #   RaiseLower -> pressed/released
+        #   SingleAction -> single
+        action = None
         if self._has_release_event:
-            # A raise/lower button; we will get callbacks when the button is
-            # pressed and when it's released, so fire events for each.
             if event == Button.Event.PRESSED:
                 action = 'pressed'
             else:
                 action = 'released'
-        else:
-            # A single-action button; the Lutron controller won't tell us
-            # when the button is released, so use a different action name
-            # than for buttons where we expect a release event.
+        elif event == Button.Event.PRESSED:
             action = 'single'
 
-        data = {ATTR_ID: self._id, ATTR_ACTION: action}
-
-        self._hass.bus.fire(self._event, data)
+        if action:
+            data = {ATTR_ID: self._id, ATTR_ACTION: action}
+            self._hass.bus.fire(self._event, data)
