@@ -154,7 +154,8 @@ async def update_all_devices(hass):
     from requests import HTTPError
     try:
         data = hass.data[DOMAIN]
-        data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
+        data[DEVICES] = await hass.async_add_executor_job(
+            data[API].get_devices)
     except HTTPError:
         _LOGGER.warning("Cannot update devices", exc_info=True)
         return False

@@ -84,7 +84,8 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         api = SomfyApi(client_id, client_secret, redirect_uri)
 
         self.hass.http.register_view(SomfyAuthCallbackView())
-        return await self.hass.async_add_executor_job(api.get_authorization_url)
+        return await self.hass.async_add_executor_job(
+            api.get_authorization_url)
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
