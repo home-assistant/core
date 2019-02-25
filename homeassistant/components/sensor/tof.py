@@ -12,15 +12,15 @@ Fixed setup for current driver version:
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
 """
-from datetime import timedelta
-from functools import partial
 import logging
 import time
-import voluptuous as vol
+from datetime import timedelta
+from functools import partial
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components import rpi_gpio
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.components import rpi_gpio
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
@@ -58,7 +58,7 @@ async def async_setup_platform(hass,
                                config,
                                async_add_entities,
                                discovery_info=None):
-    """Setup the VL53L1X ToF Sensor from ST."""
+    """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
     from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
