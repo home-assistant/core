@@ -195,7 +195,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_DISARM) +
-                (self._config.get(CONF_CODE_SEPARATOR)+code if self._config.get(CONF_PUBLISH_CODE) else ''),
+                (self._config.get(CONF_CODE_SEPARATOR)+code
+                    if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -209,7 +210,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_HOME) +
-                (self._config.get(CONF_CODE_SEPARATOR)+code if self._config.get(CONF_PUBLISH_CODE) else ''),
+                (self._config.get(CONF_CODE_SEPARATOR)+code
+                    if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -223,7 +225,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_AWAY) +
-                (self._config.get(CONF_CODE_SEPARATOR)+code if self._config.get(CONF_PUBLISH_CODE) else ''),
+                (self._config.get(CONF_CODE_SEPARATOR)+code
+                    if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -236,8 +239,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             return
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_ARM_NIGHT) + 
-                (self._config.get(CONF_CODE_SEPARATOR)+code if self._config.get(CONF_PUBLISH_CODE) else ''),
+            self._config.get(CONF_PAYLOAD_ARM_NIGHT) +
+                (self._config.get(CONF_CODE_SEPARATOR)+code
+                    if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -245,7 +249,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Validate given code."""
         conf_code = self._config.get(CONF_CODE)
         publish_code = self._config.get(CONF_PUBLISH_CODE)
-        check = conf_code is None or code == conf_code or (publish_code and code is not None)
+        check = conf_code is None or code == conf_code or
+                (publish_code and code is not None)
         if not check:
             _LOGGER.warning('Wrong code entered for %s', state)
         return check
