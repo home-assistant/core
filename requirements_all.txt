@@ -77,6 +77,9 @@ TravisPy==0.3.5
 # homeassistant.components.notify.twitter
 TwitterAPI==2.5.9
 
+# homeassistant.components.sensor.tof
+# VL53L1X2==0.1.5
+
 # homeassistant.components.sensor.waze_travel_time
 WazeRouteCalculator==0.6
 
@@ -154,7 +157,7 @@ amcrest==1.2.3
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.media_player.anthemav
-anthemav==1.1.9
+anthemav==1.1.8
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -196,7 +199,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.1
+bellows==0.7.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -535,7 +538,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190220.0
+home-assistant-frontend==20190219.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -773,10 +776,7 @@ openevsewifi==0.4
 openhomedevice==0.4.2
 
 # homeassistant.components.air_quality.opensensemap
-opensensemap-api==0.1.4
-
-# homeassistant.components.device_tracker.luci
-openwrt-luci-rpc==0.3.0
+opensensemap-api==0.1.3
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
@@ -892,7 +892,8 @@ py17track==2.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
-# homeassistant.components.tplink
+# homeassistant.components.light.tplink
+# homeassistant.components.switch.tplink
 pyHS100==0.3.4
 
 # homeassistant.components.air_quality.norway_air
@@ -1064,7 +1065,7 @@ pyhik==0.2.2
 pyhiveapi==0.2.17
 
 # homeassistant.components.homematic
-pyhomematic==0.1.56
+pyhomematic==0.1.55
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1252,7 +1253,7 @@ pysma==0.3.1
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.3
+pysmartthings==0.6.2
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
@@ -1416,9 +1417,6 @@ pytradfri[async]==6.0.1
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
 
-# homeassistant.components.device_tracker.ubee
-pyubee==0.2
-
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.16
 
@@ -1507,7 +1505,7 @@ rocketchat-API==0.6.1
 roombapy==1.3.1
 
 # homeassistant.components.sensor.rova
-rova==0.1.0
+rova==0.0.2
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.7
@@ -1580,6 +1578,9 @@ smappy==0.2.16
 # homeassistant.components.sensor.envirophat
 # homeassistant.components.sensor.htu21d
 # smbus-cffi==0.5.1
+
+# homeassistant.components.sensor.tof
+smbus2==0.2.2
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.8
@@ -1816,13 +1817,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.1.1
+zigpy-deconz==0.0.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.0
+zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.1.2
+zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3

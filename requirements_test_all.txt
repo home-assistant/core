@@ -50,7 +50,7 @@ aiounifi==4
 apns2==0.3.0
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.1
+bellows==0.7.0
 
 # homeassistant.components.calendar.caldav
 caldav==0.5.0
@@ -116,7 +116,7 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190220.0
+home-assistant-frontend==20190219.0
 
 # homeassistant.components.homekit_controller
 homekit==0.12.2
@@ -180,9 +180,6 @@ pushbullet.py==0.11.0
 # homeassistant.components.canary
 py-canary==0.5.0
 
-# homeassistant.components.tplink
-pyHS100==0.3.4
-
 # homeassistant.components.media_player.blackbird
 pyblackbird==0.5
 
@@ -193,7 +190,7 @@ pydeconz==52
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.56
+pyhomematic==0.1.55
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -223,7 +220,7 @@ pyqwikswitch==0.8
 pysmartapp==0.3.0
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.3
+pysmartthings==0.6.2
 
 # homeassistant.components.sonos
 pysonos==0.0.6
@@ -309,4 +306,4 @@ wakeonlan==1.1.6
 warrant==0.6.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.0
+zigpy==0.2.0
