@@ -840,7 +840,7 @@ pocketcasts==0.1
 # homeassistant.components.sensor.postnl
 postnl_api==1.0.2
 
-# homeassistant.components.sensor.reddit
+# homeassistant.components.reddit.sensor
 praw==6.1.1
 
 # homeassistant.components.sensor.islamic_prayer_times
