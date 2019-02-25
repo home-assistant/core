@@ -94,6 +94,8 @@ class VL53L1XSensor(Entity):
         self.vl53l1x_sensor = vl53l1x_sensor
         self.i2c_address = i2c_address
         self._state = None
+        self.vl53l1x_sensor.open()
+        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
 
     @property
     def name(self) -> str:
@@ -113,8 +115,6 @@ class VL53L1XSensor(Entity):
     async def async_update(self):
         """Get the latest measurement from VL53L1X and update state."""
 
-        self.vl53l1x_sensor.open()
-        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
         self.vl53l1x_sensor.start_ranging(self.i2c_address, 2)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
