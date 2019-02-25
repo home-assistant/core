@@ -250,7 +250,6 @@ omit =
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
-    homeassistant/components/homekit_controller/*
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
