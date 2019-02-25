@@ -34,13 +34,11 @@ LENGTH_MILLIMETERS = 'mm'
 
 CONF_I2C_ADDRESS = 'i2c_address'
 CONF_I2C_BUS = 'i2c_bus'
-CONF_RANGE = 'range'
 CONF_XSHUT = 'xshut'
 
 DEFAULT_NAME = 'VL53L1X'
 DEFAULT_I2C_ADDRESS = 0x29
 DEFAULT_XSHUT = 16
-DEFAULT_SENSOR_ID = 123
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
@@ -49,6 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_I2C_ADDRESS,
                  default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+    vol.Optional(CONF_I2C_BUS,
+                 default=DEFAULT_I2C_BUS): vol.Coerce(int),
     vol.Optional(CONF_XSHUT,
                  default=DEFAULT_XSHUT): cv.positive_int,
 })
@@ -62,6 +62,8 @@ async def async_setup_platform(hass,
     from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
+    bus_number = config.get(CONF_I2C_BUS)
+    i2c_address = config.get(CONF_I2C_ADDRESS)
     unit = LENGTH_MILLIMETERS
     xshut = config.get(CONF_XSHUT)
 
@@ -72,8 +74,11 @@ async def async_setup_platform(hass,
     rpi_gpio.write_output(xshut, 1)
     await asyncio.sleep(0.01)
 
-    sensor = await hass.async_add_job(partial(VL53L1X))
-    dev = [VL53L1XSensor(sensor, name, unit)]
+    sensor = await hass.async_add_executor_job(
+        partial(VL53L1X, bus_number)
+    )
+
+    dev = [VL53L1XSensor(sensor, name, unit, i2c_address)]
 
     async_add_entities(dev, True)
 
@@ -86,6 +91,7 @@ class VL53L1XSensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
         self.vl53l1x_sensor = vl53l1x_sensor
+        self.i2c_address = i2c_address
         self._state = None
 
     @property
@@ -107,9 +113,9 @@ class VL53L1XSensor(Entity):
         """Get the latest measurement from VL53L1X and update state."""
 
         self.vl53l1x_sensor.open()
-        self.vl53l1x_sensor.add_sensor(DEFAULT_SENSOR_ID, DEFAULT_I2C_ADDRESS)
-        self.vl53l1x_sensor.start_ranging(DEFAULT_SENSOR_ID, 2)
-        self.vl53l1x_sensor.update(DEFAULT_SENSOR_ID)
-        self.vl53l1x_sensor.stop_ranging(DEFAULT_SENSOR_ID)
+        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
+        self.vl53l1x_sensor.start_ranging(self.i2c_address, 2)
+        self.vl53l1x_sensor.update(self.i2c_address)
+        self.vl53l1x_sensor.stop_ranging(self.i2c_address)
 
         self._state = self.vl53l1x_sensor.distance
