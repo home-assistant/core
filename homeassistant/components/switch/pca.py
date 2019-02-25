@@ -20,12 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 
-DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_NAME = 'PCA 301'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string
+    vol.Required(CONF_DEVICE): cv.string
 })
 
 
@@ -40,12 +39,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         pca = pypca.PCA(usb_device)
         pca.open()
+        entities = []
         for device in pca.get_devices():
-            add_entities([SmartPlugSwitch(pca, device, name)], True)
+            entities.append(SmartPlugSwitch(pca, device, name))
+        add_entities(entities, True)
 
     except SerialException as exc:
         _LOGGER.warning("Unable to open serial port: %s", exc)
-        return False
+        return
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, pca.close)
 
@@ -55,11 +56,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, pca, deviceId, name):
+    def __init__(self, pca, device_id, name):
         """Initialize the switch."""
-        self._deviceId = deviceId
+        self._device_id = device_id
         self._name = name
-        self._state = pca.get_state(self._deviceId)
+        self._state = pca.get_state(self._device_id)
         self._available = True
         self._emeter_params = {}
         self._pca = pca
@@ -81,11 +82,11 @@ class SmartPlugSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the switch on."""
-        self._pca.turn_on(self._deviceId)
+        self._pca.turn_on(self._device_id)
 
     def turn_off(self):
         """Turn the switch off."""
-        self._pca.turn_off(self._deviceId)
+        self._pca.turn_off(self._device_id)
 
     @property
     def device_state_attributes(self):
@@ -96,16 +97,14 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         try:
             self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self._pca.get_current_power(self._deviceId))
+                self._pca.get_current_power(self._device_id))
             self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(
-                self._pca.get_total_consumption(self._deviceId))
+                self._pca.get_total_consumption(self._device_id))
 
             self._available = True
-            self._state = self._pca.get_state(self._deviceId)
+            self._state = self._pca.get_state(self._device_id)
 
         except (OSError) as ex:
-            print("try failed")
             if self._available:
                 _LOGGER.warning(
                     "Could not read state for %s: %s", self.name, ex)
-                self._available = False
