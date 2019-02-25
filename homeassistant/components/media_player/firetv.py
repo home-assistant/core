@@ -15,8 +15,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['firetv==1.0.9']
@@ -37,12 +37,11 @@ DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 
-SERVICE_ADB_CMD = 'firetv_adb_cmd'
-ATTR_CMD = 'cmd'
+SERVICE_ADB_COMMAND = 'firetv_adb_command'
 
-SERVICE_ADB_CMD_SCHEMA = vol.Schema({
+SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_CMD): cv.string,
+    vol.Required(ATTR_COMMAND): cv.string,
 })
 
 DATA_KEY = '{}.firetv'.format(DOMAIN)
@@ -78,8 +77,8 @@ FIRETV_STATES = {'off': STATE_OFF,
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     from firetv import FireTV
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
+
+    hass.data.setdefault(DATA_KEY, {})
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
@@ -106,33 +105,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     get_sources = config[CONF_GET_SOURCES]
 
     if host in hass.data[DATA_KEY]:
-        _LOGGER.warning("Platform already setup on %s, skipping.", host)
+        _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
         device = FireTVDevice(ftv, name, get_sources)
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
         hass.data[DATA_KEY][host] = device
 
-    if hass.services.has_service(DOMAIN, SERVICE_ADB_CMD):
+    if hass.services.has_service(DOMAIN, SERVICE_ADB_COMMAND):
         return
 
-    def service_adb_cmd(service):
+    def service_adb_command(service):
         """Dispatch service calls to target entities."""
-        cmd = service.data.get(ATTR_CMD)
+        cmd = service.data.get(ATTR_COMMAND)
         entity_id = service.data.get(ATTR_ENTITY_ID)
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
-            output = target_device.adb_cmd(cmd)
+            output = target_device.adb_command(cmd)
 
             # log the output if there is any
             if output:
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
-    hass.services.register(DOMAIN, SERVICE_ADB_CMD, service_adb_cmd,
-                           schema=SERVICE_ADB_CMD_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_ADB_COMMAND, service_adb_command,
+                           schema=SERVICE_ADB_COMMAND_SCHEMA)
 
 
 def adb_decorator(override_available=False):
@@ -317,7 +316,7 @@ class FireTVDevice(MediaPlayerDevice):
                 self.firetv.stop_app(source[1:].lstrip())
 
     @adb_decorator()
-    def adb_cmd(self, cmd):
+    def adb_command(self, cmd):
         """Send an ADB command to a Fire TV device."""
         key = self.KEYS.get(cmd)
         if key:
