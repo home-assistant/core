@@ -196,7 +196,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_DISARM) +
                 (self._config.get(CONF_CODE_SEPARATOR)+code
-                if self._config.get(CONF_PUBLISH_CODE) else ''),
+                 if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -211,7 +211,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_HOME) +
                 (self._config.get(CONF_CODE_SEPARATOR)+code
-                if self._config.get(CONF_PUBLISH_CODE) else ''),
+                 if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -226,7 +226,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_AWAY) +
                 (self._config.get(CONF_CODE_SEPARATOR)+code
-                if self._config.get(CONF_PUBLISH_CODE) else ''),
+                 if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
@@ -241,7 +241,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_NIGHT) +
                 (self._config.get(CONF_CODE_SEPARATOR)+code
-                if self._config.get(CONF_PUBLISH_CODE) else ''),
+                 if self._config.get(CONF_PUBLISH_CODE) else ''),
             self._config.get(CONF_QOS),
             self._config.get(CONF_RETAIN))
 
