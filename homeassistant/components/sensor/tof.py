@@ -30,7 +30,7 @@ DEPENDENCIES = ['rpi_gpio']
 
 _LOGGER = logging.getLogger(__name__)
 
-LENGTH_MILIMETERS = 'mm'
+LENGTH_MILLIMETERS = 'mm'
 
 CONF_I2C_ADDRESS = 'i2c_address'
 CONF_I2C_BUS = 'i2c_bus'
@@ -62,7 +62,7 @@ async def async_setup_platform(hass,
     from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
-    unit = LENGTH_MILIMETERS
+    unit = LENGTH_MILLIMETERS
     xshut = config.get(CONF_XSHUT)
 
     #  pulse XSHUT port and keep it HIGH

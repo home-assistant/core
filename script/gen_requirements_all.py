@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     'credstash',
     'bme680',
     'py_noaa',
+    'VL53L1X2'
 )
 
 TEST_REQUIREMENTS = (
