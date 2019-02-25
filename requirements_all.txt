@@ -1210,7 +1210,7 @@ pypoint==1.1.1
 pypollencom==2.2.2
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.4.4
+pyps4-homeassistant==0.4.6
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
