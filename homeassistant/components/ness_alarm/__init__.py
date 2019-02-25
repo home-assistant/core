@@ -6,12 +6,14 @@ from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
-from homeassistant.const import ATTR_CODE, ATTR_STATE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (ATTR_CODE, ATTR_STATE,
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['nessclient==0.9.11']
+REQUIREMENTS = ['nessclient==0.9.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,14 +22,13 @@ DATA_NESS = 'ness_alarm'
 
 CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PORT = 'port'
-CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_ZONES = 'zones'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
 CONF_ZONE_ID = 'id'
 ATTR_OUTPUT_ID = 'output_id'
 DEFAULT_ZONES = []
-DEFAULT_UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 
 SIGNAL_ZONE_CHANGED = 'ness_alarm.zone_changed'
 SIGNAL_ARMING_STATE_CHANGED = 'ness_alarm.arming_state_changed'
@@ -45,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE_HOST): cv.string,
         vol.Required(CONF_DEVICE_PORT): cv.port,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
             cv.time_period,
         vol.Optional(CONF_ZONES, default=DEFAULT_ZONES):
             vol.All(cv.ensure_list, [ZONE_SCHEMA]),
@@ -72,10 +73,10 @@ async def async_setup(hass, config):
     zones = conf[CONF_ZONES]
     host = conf[CONF_DEVICE_HOST]
     port = conf[CONF_DEVICE_PORT]
-    update_interval = conf[CONF_UPDATE_INTERVAL]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     client = Client(host=host, port=port, loop=hass.loop,
-                    update_interval=update_interval.total_seconds())
+                    update_interval=scan_interval.total_seconds())
     hass.data[DATA_NESS] = client
 
     async def _close(event):
