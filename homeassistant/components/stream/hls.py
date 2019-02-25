@@ -8,33 +8,36 @@ import datetime
 
 from aiohttp import web
 
-from homeassistant.components.stream import StreamView, StreamOutput
+from . import StreamView
+from .core import StreamOutput
 
 
 async def async_setup_platform(hass):
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
-    return '/api/hls/{}/playlist.m3u8'
+    return '{}/api/hls/{}/playlist.m3u8'
 
 
 class HlsPlaylistView(StreamView):
-    """Camera view to serve a M3U8 stream."""
+    """Stream view to serve a M3U8 stream."""
 
-    url = '/api/hls/{token}/playlist.m3u8'
-    name = 'api:camera:hls:playlist'
+    url = r'/api/hls/{token:[a-f0-9]+}/playlist.m3u8'
+    name = 'api:stream:hls:playlist'
+    # cors_allowed = True
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        renderer = M3U8Renderer(stream)
+        hass = request.app['hass']
+        renderer = M3U8Renderer(stream, hass.config.api.base_url)
         track = stream.add_provider(HlsStreamOutput())
         # Wait for a segment to be ready
         if not track.segments:
             await track.recv()
         headers = {
             'Access-Control-Allow-Origin': '*',
+            'Access-Control-Expose-Headers': 'Content-Length',
             'Content-Type': 'application/vnd.apple.mpegurl',
-            'Content-Disposition': "inline; filename=\"playlist.m3u8\"",
         }
         return web.Response(body=renderer.render(
             track, datetime.datetime.utcnow()
@@ -42,10 +45,11 @@ class HlsPlaylistView(StreamView):
 
 
 class HlsSegmentView(StreamView):
-    """Camera view to serve a MPEG2TS segment."""
+    """Stream view to serve a MPEG2TS segment."""
 
-    url = '/api/hls/{token}/segment/{sequence}.ts'
-    name = 'api:camera:hls:segment'
+    url = r'/api/hls/{token:[a-f0-9]+}/segment/{sequence:\d+}.ts'
+    name = 'api:stream:hls:segment'
+    # cors_allowed = True
 
     async def handle(self, request, stream, sequence):
         """Return mpegts segment."""
@@ -55,10 +59,8 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {
             'Access-Control-Allow-Origin': '*',
-            'Accept-Ranges': 'bytes',
+            'Access-Control-Expose-Headers': 'Content-Length',
             'Content-Type': 'video/mp2t',
-            'Content-Length': str(segment.segment.getbuffer().nbytes),
-            'Content-Disposition': "inline; filename=\"%d.ts\"" % sequence,
         }
         return web.Response(body=segment.segment.getvalue(), headers=headers)
 
@@ -66,9 +68,10 @@ class HlsSegmentView(StreamView):
 class M3U8Renderer:
     """M3U8 Render Helper."""
 
-    def __init__(self, stream, version=3, lookback=4):
+    def __init__(self, stream, base_url, version=3, lookback=4):
         """Initialize renderer."""
         self.stream = stream
+        self.base_url = base_url
         self.version = version
         self.lookback = lookback
 
@@ -83,7 +86,8 @@ class M3U8Renderer:
         """Render segment."""
         return [
             "#EXTINF:{:.04},".format(float(segment.duration)),
-            "/api/hls/{}/segment/{}.ts".format(
+            "{}/api/hls/{}/segment/{}.ts".format(
+                self.base_url,
                 self.stream.access_token,
                 segment.sequence),
         ]

@@ -8,20 +8,21 @@ import asyncio
 
 from aiohttp import web
 
-from homeassistant.components.stream import StreamView, StreamOutput
+from . import StreamView
+from .core import StreamOutput
 
 
 async def async_setup_platform(hass):
     """Set up api endpoints."""
     hass.http.register_view(MjpegView())
-    return '/api/mjpeg/{}'
+    return '{}/api/mjpeg/{}'
 
 
 class MjpegView(StreamView):
-    """Camera view to serve a MJPEG stream."""
+    """Stream view to serve a MJPEG stream."""
 
-    url = '/api/mjpeg/{token}'
-    name = 'api:camera:hls:playlist'
+    url = r'/api/mjpeg/{token:[a-f0-9]+}'
+    name = 'api:stream:mjpeg'
 
     async def handle(self, request, stream, sequence):
         """Return mjpeg stream."""
