@@ -166,6 +166,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         """Enable/disable repeat mode."""
         self._repeat = repeat
 
+
 class TestMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
