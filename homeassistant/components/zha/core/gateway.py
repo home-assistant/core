@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
-import asyncio
 import collections
 import itertools
 import logging
@@ -191,7 +190,6 @@ class ZHAGateway:
 
         device_entity = _async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
-
 
     @callback
     def _async_process_endpoint(
