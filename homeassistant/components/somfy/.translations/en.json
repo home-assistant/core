@@ -11,20 +11,12 @@
             "default": "Successfully authenticated with Somfy."
         },
         "error": {
-            "follow_link": "Please follow the link and authenticate before pressing Submit",
-            "no_token": "Not authenticated with Somfy"
+            "follow_link": "Please follow the link and authenticate before pressing Submit"
         },
         "step": {
             "auth": {
-                "description": "Please follow the link below and <b>Accept</b> access to your Somfy account, then come back and press <b>Submit</b> below.\n\n[Link]({authorization_url})",
+                "description": "Please follow this [Link]({authorization_url}) and <b>Accept</b> access to your Somfy account, then come back and press <b>Submit</b> below",
                 "title": "Authenticate Somfy"
-            },
-            "user": {
-                "data": {
-                    "flow_impl": "Provider"
-                },
-                "description": "Pick via which authentication provider you want to authenticate with Somfy.",
-                "title": "Authentication Provider"
             }
         },
         "title": "Somfy"

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Vous ne pouvez configurer qu'un seul compte Somfy.",
+            "authorize_url_fail": "Erreur inconnu lors de la génération de l'url d'autorisation.",
+            "authorize_url_timeout": "Durée expirée pour la génération de l'url d'autorisation.",
+            "external_setup": "Somfy configuré avec succès depuis un autre flux.",
+            "no_flows": "Vous devez configurer Somfy avant de pouvoir vous authentifier. [Merci de lire les instructions](https://www.home-assistant.io/components/somfy/)."
+        },
+        "create_entry": {
+            "default": "Authentification réussie avec Somfy."
+        },
+        "error": {
+            "follow_link": "Merci de suivre le lien et de vous authentifier avant de cliquer sur <b>Submit</b>."
+        },
+        "step": {
+            "auth": {
+                "description": "Merci de suivre ce [lien]({authorization_url}) et d'accepter l'accès à votre compte Somfy. Revenez ensuite pour clicker sur <b>Submit</b>.",
+                "title": "Authentification Somfy"
+            }
+        },
+        "title": "Somfy"
+    }
+}
