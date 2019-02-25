@@ -25,12 +25,13 @@ SETTINGS_INSTANCE_ID = "hassInstanceId"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 # Ordered 'specific to least-specific platform' in order for capabilities
-# to be drawn-down and represented by the appropriate platform.
+# to be drawn-down and represented by the most appropriate platform.
 SUPPORTED_PLATFORMS = [
     'climate',
     'fan',
     'light',
     'lock',
+    'cover',
     'switch',
     'binary_sensor',
     'sensor'
