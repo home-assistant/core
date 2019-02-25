@@ -1,1 +1,1 @@
-"""Reddit Component"""
+"""Reddit Component."""
