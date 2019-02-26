@@ -36,20 +36,13 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_info(self):
         """Return device specific attributes."""
+        from homematicip.aio.device import AsyncDevice
         # Only physical devices should be HA devices.
-        # Every HomematicIP device has a serial number,
-        # that is stored in id property.
-        from homematicip.device import Device
-        if isinstance(self._device, Device):
-            if self._device.id is not None:
-                identifier = self._device.id
-            else:
-                return None
-
+        if isinstance(self._device, AsyncDevice):
             return {
                 'identifiers': {
                     # Serial numbers of Homematic IP device
-                    (homematicip_cloud.DOMAIN, identifier)
+                    (homematicip_cloud.DOMAIN, self._device.id)
                 },
                 'name': self._device.label,
                 'manufacturer': self._device.oem,
