@@ -23,7 +23,7 @@ from .const import (
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE, NO_SENSOR_CLUSTERS,
     POWER_CONFIGURATION_CHANNEL)
-from .device import ZHADevice
+from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
     AttributeListeningChannel, EventRelayChannel, ZDOChannel
@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
+SMARTTHINGS_HUMIDITY_CLUSTER = 64581
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
@@ -139,7 +140,9 @@ class ZHAGateway:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
-            device.update_available(True)
+            # avoid a race condition during new joins
+            if device.status is DeviceStatus.INITIALIZED:
+                device.update_available(True)
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
@@ -172,7 +175,8 @@ class ZHAGateway:
             # available and we already loaded fresh state above
             zha_device.update_available(True)
         elif not zha_device.available and zha_device.power_source is not None\
-                and zha_device.power_source != BasicChannel.BATTERY:
+                and zha_device.power_source != BasicChannel.BATTERY\
+                and zha_device.power_source != BasicChannel.UNKNOWN:
             # the device is currently marked unavailable and it isn't a battery
             # powered device so we should be able to update it now
             _LOGGER.debug(
@@ -253,6 +257,10 @@ async def _create_cluster_channel(cluster, zha_device, is_new_join,
 
 async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
     """Dispatch or store discovery information."""
+    if not discovery_info['channels']:
+        _LOGGER.warning(
+            "there are no channels in the discovery info: %s", discovery_info)
+        return
     component = discovery_info['component']
     if is_new_join:
         async_dispatcher_send(
@@ -319,6 +327,14 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
     cluster_match_tasks = []
     event_channel_tasks = []
     for cluster in endpoint.in_clusters.values():
+        # don't let profiles prevent these channels from being created
+        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
+            cluster_match_tasks.append(_handle_channel_only_cluster_match(
+                zha_device,
+                cluster,
+                is_new_join,
+            ))
+
         if cluster.cluster_id not in profile_clusters[0]:
             cluster_match_tasks.append(_handle_single_cluster_match(
                 hass,
@@ -326,13 +342,6 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
                 cluster,
                 device_key,
                 zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
-                is_new_join,
-            ))
-
-        if cluster.cluster_id in NO_SENSOR_CLUSTERS:
-            cluster_match_tasks.append(_handle_channel_only_cluster_match(
-                zha_device,
-                cluster,
                 is_new_join,
             ))
 
@@ -373,7 +382,10 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
     """Dispatch a single cluster match to a HA component."""
     component = None  # sub_component = None
     for cluster_type, candidate_component in device_classes.items():
-        if isinstance(cluster, cluster_type):
+        if isinstance(cluster_type, int):
+            if cluster.cluster_id == cluster_type:
+                component = candidate_component
+        elif isinstance(cluster, cluster_type):
             component = candidate_component
             break
 
@@ -466,6 +478,9 @@ def establish_device_mappings():
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
+        # this works for now but if we hit conflicts we can break it out to
+        # a different dict that is keyed by manufacturer
+        SMARTTHINGS_HUMIDITY_CLUSTER: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
         zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
@@ -482,6 +497,7 @@ def establish_device_mappings():
 
     SENSOR_TYPES.update({
         zcl.clusters.measurement.RelativeHumidity.cluster_id: HUMIDITY,
+        SMARTTHINGS_HUMIDITY_CLUSTER: HUMIDITY,
         zcl.clusters.measurement.TemperatureMeasurement.cluster_id:
         TEMPERATURE,
         zcl.clusters.measurement.PressureMeasurement.cluster_id: PRESSURE,

@@ -105,6 +105,7 @@ TEST_REQUIREMENTS = (
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
+    'pyHS100',
     'regenmaschine',
     'restrictedpython',
     'rflink',
@@ -125,8 +126,8 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
-    'zigpy',
-    'bellows',
+    'zigpy-homeassistant',
+    'bellows-homeassistant',
 )
 
 IGNORE_PACKAGES = (
@@ -158,9 +159,6 @@ pycrypto==1000000000.0.0
 
 # Contains code to modify Home Assistant to work around our rules
 python-systemair-savecair==1000000000.0.0
-
-# The 2019.02.19 failed to be imported, breaking our builds
-regex==2019.02.07
 """
 
 
