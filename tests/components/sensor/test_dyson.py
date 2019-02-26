@@ -2,12 +2,13 @@
 import unittest
 from unittest import mock
 
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+
+from homeassistant.components.sensor import dyson
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \
     STATE_OFF
-from homeassistant.components.sensor import dyson
 from tests.common import get_test_home_assistant
-from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
-from libpurecool.dyson_pure_cool import DysonPureCool
 
 
 def _get_device_without_state():
@@ -275,102 +276,6 @@ class DysonTest(unittest.TestCase):
         device_non_fan = _get_purecool_device_with_state()
         self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
-
-    def test_dyson_purecool_p25_sensor(self):
-        """Test p25 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter25Sensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "μg/m3"
-        assert sensor.name == "Device_name Particulate matter 2.5 μg/m3"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_p25_sensor_with_values(self):
-        """Test p25 sensor with with values."""
-        sensor = dyson.DysonParticulateMatter25Sensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 60
-        assert sensor.unit_of_measurement == "μg/m3"
-        assert sensor.name == "Device_name Particulate matter 2.5 μg/m3"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_p10_sensor(self):
-        """Test p10 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter10Sensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "μg/m3"
-        assert sensor.name == "Device_name Particulate matter 10 μg/m3"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_p10_sensor_with_values(self):
-        """Test p10 sensor with no value."""
-        sensor = dyson.DysonParticulateMatter10Sensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 50
-        assert sensor.unit_of_measurement == "μg/m3"
-        assert sensor.name == "Device_name Particulate matter 10 μg/m3"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_no2_sensor(self):
-        """Test no2 sensor with no value."""
-        sensor = dyson.DysonNitrogenDioxideSensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Nitrogen dioxide"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_no2_sensor_with_values(self):
-        """Test no2 sensor with with values."""
-        sensor = dyson.DysonNitrogenDioxideSensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 1
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Nitrogen dioxide"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_voc_sensor(self):
-        """Test voc sensor with no value."""
-        sensor = dyson.DysonVolatileOrganicCompoundsSensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Volatile organic compounds"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_voc_sensor_with_values(self):
-        """Test voc sensor with with values."""
-        sensor = dyson.DysonVolatileOrganicCompoundsSensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 13
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Volatile organic compounds"
-        assert sensor.entity_id == "sensor.dyson_1"
 
     def test_dyson_purecool_carbon_filter_sensor(self):
         """Test carbon filter sensor with no value."""

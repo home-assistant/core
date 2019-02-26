@@ -481,7 +481,7 @@ class DysonPureCoolDevice(FanEntity):
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return SPEED_MEDIUM
             if self._device.state.speed in low_speeds:
-                return SPEED_MEDIUM
+                return SPEED_LOW
             if self._device.state.speed in medium_speeds:
                 return SPEED_MEDIUM
             if self._device.state.speed in high_speeds:

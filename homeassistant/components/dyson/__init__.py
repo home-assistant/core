@@ -3,10 +3,10 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['libpurecool==0.5.0']
 
@@ -97,5 +97,6 @@ def setup(hass, config):
         discovery.load_platform(hass, "fan", DOMAIN, {}, config)
         discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
         discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+        discovery.load_platform(hass, "air_quality", DOMAIN, {}, config)
 
     return True

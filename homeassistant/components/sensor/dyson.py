@@ -18,9 +18,6 @@ SENSOR_UNITS = {
     'dust': None,
     'filter_life': 'hours',
     'humidity': '%',
-    'particulate_matter': 'μg/m3',
-    'volatile_organic_compounds': None,
-    'nitrogen_dioxide': None,
     'filter_state': '%'
 }
 
@@ -30,9 +27,6 @@ SENSOR_ICONS = {
     'filter_life': 'mdi:filter-outline',
     'humidity': 'mdi:water-percent',
     'temperature': 'mdi:thermometer',
-    'particulate_matter': 'mdi:cloud',
-    'volatile_organic_compounds': 'mdi:biohazard',
-    'nitrogen_dioxide': 'mdi:cloud',
     'filter_state': 'mdi:filter-outline'
 }
 
@@ -52,10 +46,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if isinstance(device, DysonPureCool):
             devices.append(DysonTemperatureSensor(device, unit))
             devices.append(DysonHumiditySensor(device))
-            devices.append(DysonParticulateMatter25Sensor(device))
-            devices.append(DysonParticulateMatter10Sensor(device))
-            devices.append(DysonVolatileOrganicCompoundsSensor(device))
-            devices.append(DysonNitrogenDioxideSensor(device))
             devices.append(DysonCarbonFilterStateSensor(device))
             devices.append(DysonHepaFilterStateSensor(device))
         elif isinstance(device, DysonPureCoolLink):
@@ -203,72 +193,6 @@ class DysonAirQualitySensor(DysonSensor):
         """Return Air Quality value."""
         if self._device.environmental_state:
             return self._device.environmental_state.volatil_organic_compounds
-        return None
-
-
-class DysonParticulateMatter25Sensor(DysonSensor):
-    """Representation of Dyson pm25 sensor."""
-
-    def __init__(self, device):
-        """Create a new Dyson pm25 sensor."""
-        super().__init__(device, 'particulate_matter')
-        self._name = "{} Particulate matter 2.5 μg/m3"\
-            .format(self._device.name)
-
-    @property
-    def state(self):
-        """Return pm25 level."""
-        if self._device.state:
-            return int(self._device.environmental_state.particulate_matter_25)
-        return None
-
-
-class DysonParticulateMatter10Sensor(DysonSensor):
-    """Representation of Dyson pm10 sensor."""
-
-    def __init__(self, device):
-        """Create a new Dyson pm10 sensor."""
-        super().__init__(device, 'particulate_matter')
-        self._name = "{} Particulate matter 10 μg/m3".format(self._device.name)
-
-    @property
-    def state(self):
-        """Return pm10 level."""
-        if self._device.state:
-            return int(self._device.environmental_state.particulate_matter_10)
-        return None
-
-
-class DysonNitrogenDioxideSensor(DysonSensor):
-    """Representation of Dyson no2 sensor."""
-
-    def __init__(self, device):
-        """Create a new Dyson no2 sensor."""
-        super().__init__(device, 'nitrogen_dioxide')
-        self._name = "{} Nitrogen dioxide".format(self._device.name)
-
-    @property
-    def state(self):
-        """Return no2 level."""
-        if self._device.state:
-            return int(self._device.environmental_state.nitrogen_dioxide)
-        return None
-
-
-class DysonVolatileOrganicCompoundsSensor(DysonSensor):
-    """Representation of Dyson VOC sensor."""
-
-    def __init__(self, device):
-        """Create a new Dyson voc sensor."""
-        super().__init__(device, 'volatile_organic_compounds')
-        self._name = "{} Volatile organic compounds".format(self._device.name)
-
-    @property
-    def state(self):
-        """Return voc level."""
-        if self._device.state:
-            return int(self._device.environmental_state.
-                       volatile_organic_compounds)
         return None
 
 
