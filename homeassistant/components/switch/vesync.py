@@ -11,7 +11,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pyvesync-v2==0.9.0']
+REQUIREMENTS = ['pyvesync-v2==0.9.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,5 +104,6 @@ class VeSyncSwitchHA(SwitchDevice):
     def update(self):
         """Handle data changes for node values."""
         self.smartplug.update()
-        self._current_power_w = self.smartplug.get_power()
-        self._today_energy_kwh = self.smartplug.get_kwh_today()
+        if self.smartplug.devtype == 'outlet':
+            self._current_power_w = self.smartplug.get_power()
+            self._today_energy_kwh = self.smartplug.get_kwh_today()
