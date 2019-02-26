@@ -52,7 +52,10 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 
-SWITCH_SCHEMA = DEVICE_SCHEMA.extend({})
+SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
+    vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
+    vol.Optional(CONF_ON_ID, default=0): cv.positive_int,    
+})
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_INVERTING, default=False): cv.boolean,
