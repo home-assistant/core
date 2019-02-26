@@ -131,6 +131,7 @@ class MiTempBtSensor(Entity):
 
     @property
     def device_class(self):
+        """Device class of this entity."""
         return self._device
 
     @property
