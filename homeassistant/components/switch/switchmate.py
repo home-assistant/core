@@ -42,6 +42,7 @@ class Switchmate(SwitchDevice):
 
     def __init__(self, mac, name, flip_on_off) -> None:
         """Initialize the Switchmate."""
+        # pylint: disable=import-error, no-member, no-value-for-parameter
         import switchmate
         self._mac = mac
         self._name = name
