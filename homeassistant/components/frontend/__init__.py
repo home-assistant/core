@@ -236,12 +236,14 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN, {})
 
-    manifest_json_data = conf.get('manifest_json')
-    for manifest_setting in CONF_MANIFEST_JSON_SETTINGS:
-        add_manifest_json_key(
-            manifest_setting,
-            manifest_json_data[manifest_setting]
-        )
+    """ Setup customizable manifest.json attributes."""
+    manifest_json_data = conf.get(CONF_MANIFEST_JSON)
+    if manifest_json_data is not None:
+        for manifest_setting in CONF_MANIFEST_JSON_SETTINGS:
+            add_manifest_json_key(
+                manifest_setting,
+                manifest_json_data[manifest_setting]
+            )
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None

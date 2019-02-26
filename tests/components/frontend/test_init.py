@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 import asyncio
 import re
+import json
 from unittest.mock import patch
 
 import pytest
@@ -8,7 +9,10 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5)
+    CONF_EXTRA_HTML_URL_ES5, CONF_MANIFEST_JSON, 
+    CONF_MANIFEST_JSON_DISPLAY, CONF_MANIFEST_JSON_START_URL, 
+    CONF_MANIFEST_JSON_SHORT_NAME, CONF_MANIFEST_JSON_DISPLAY_DEFAULT, 
+    CONF_MANIFEST_JSON_START_URL_DEFAULT, CONF_MANIFEST_JSON_SHORT_NAME_DEFAULT)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import mock_coro
@@ -66,6 +70,47 @@ def mock_onboarded():
                return_value=True):
         yield
 
+
+@pytest.fixture
+def mock_manifest_json_no_custom(hass, aiohttp_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+        }}))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+
+@pytest.fixture
+def mock_manifest_json_with_custom_short_name(hass, aiohttp_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            CONF_MANIFEST_JSON: {
+                CONF_MANIFEST_JSON_SHORT_NAME: 'Home Assistant'
+             }
+        }}))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+
+@pytest.fixture
+def mock_manifest_json_with_custom_start_url(hass, aiohttp_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            CONF_MANIFEST_JSON: {
+                CONF_MANIFEST_JSON_START_URL: '/'
+             }
+        }}))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+
+@pytest.fixture
+def mock_manifest_json_with_custom_display():
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            CONF_MANIFEST_JSON: {
+                CONF_MANIFEST_JSON_DISPLAY: 'fullscreen'
+             }
+        }}))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 @asyncio.coroutine
 def test_frontend_and_static(mock_http_client, mock_onboarded):
@@ -243,6 +288,36 @@ def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
     assert resp.status == 200
     text = yield from resp.text()
     assert text.find("href='https://domain.com/my_extra_url_es5.html'") >= 0
+
+@asyncio.coroutine
+def test_get_manifest_json_no_custom(mock_manifest_json_no_custom, mock_onboarded):
+    """Test test_get_manifest_json_no_custom command."""
+    resp = yield from mock_manifest_json_no_custom.get('/manifest.json')
+    assert resp.status == 200
+    text = yield from resp.text()
+    jsonObj = json.loads(text)
+    assert jsonObj is not None
+    assert jsonObj['display'] == CONF_MANIFEST_JSON_DISPLAY_DEFAULT
+    assert jsonObj['short_name'] == CONF_MANIFEST_JSON_SHORT_NAME_DEFAULT
+    assert jsonObj['start_url'] == CONF_MANIFEST_JSON_START_URL_DEFAULT
+
+@asyncio.coroutine
+def test_get_manifest_json_with_custom_short_name(mock_manifest_json_with_custom_short_name, mock_onboarded):
+    """Test test_get_manifest_json_with_custom_short_name command."""
+    resp = yield from mock_manifest_json_with_custom_short_name.get('/manifest.json')
+    assert resp.status == 200
+    text = yield from resp.text()
+    jsonObj = json.loads(text)
+    assert jsonObj['short_name'] == 'Home Assistant'
+
+@asyncio.coroutine
+def test_get_manifest_json_with_custom_start_url(mock_manifest_json_with_custom_start_url, mock_onboarded):
+    """Test test_get_manifest_json_with_custom_start_url command."""
+    resp = yield from mock_manifest_json_with_custom_start_url.get('/manifest.json')
+    assert resp.status == 200
+    text = yield from resp.text()
+    jsonObj = json.loads(text)
+    assert jsonObj['start_url'] == '/'
 
 
 async def test_get_panels(hass, hass_ws_client):
