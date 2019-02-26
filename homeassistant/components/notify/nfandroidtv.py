@@ -55,6 +55,8 @@ ATTR_FILE_PATH = 'path'
 ATTR_FILE_USERNAME = 'username'
 ATTR_FILE_PASSWORD = 'password'
 ATTR_FILE_AUTH = 'auth'
+# Add option to ignore certificate errors for self-signed certificates
+ATTR_FILE_VERIFY_SSL = 'verify_ssl'
 # Any other value or absence of 'auth' lead to basic authentication being used
 ATTR_FILE_AUTH_DIGEST = 'digest'
 
@@ -212,7 +214,8 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     local_path=filedata.get(ATTR_FILE_PATH),
                     username=filedata.get(ATTR_FILE_USERNAME),
                     password=filedata.get(ATTR_FILE_PASSWORD),
-                    auth=filedata.get(ATTR_FILE_AUTH))
+                    auth=filedata.get(ATTR_FILE_AUTH),
+                    verify_ssl=filedata.get(ATTR_FILE_VERIFY_SSL))
                 if file_as_bytes:
                     payload[ATTR_IMAGE] = (
                         'image', file_as_bytes,
@@ -229,9 +232,13 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                           self._target, str(err))
 
     def load_file(self, url=None, local_path=None, username=None,
-                  password=None, auth=None):
+                  password=None, auth=None, verify_ssl=None):
         """Load image/document/etc from a local path or URL."""
         try:
+            if verify_ssl is not None:
+                verify_ssl_ = '%i' % cv.boolean(verify_ssl)
+            else:
+                verify_ssl_ = 1
             if url is not None:
                 # Check whether authentication parameters are provided
                 if username is not None and password is not None:
@@ -242,10 +249,10 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth_ = HTTPBasicAuth(username, password)
                     # Load file from URL with authentication
                     req = requests.get(
-                        url, auth=auth_, timeout=DEFAULT_TIMEOUT)
+                        url, auth=auth_, timeout=DEFAULT_TIMEOUT, verify=bool(int(verify_ssl_)))
                 else:
                     # Load file from URL without authentication
-                    req = requests.get(url, timeout=DEFAULT_TIMEOUT)
+                    req = requests.get(url, timeout=DEFAULT_TIMEOUT, verify=bool(int(verify_ssl_)))
                 return req.content
 
             elif local_path is not None:
