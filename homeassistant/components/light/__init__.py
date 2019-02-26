@@ -256,7 +256,7 @@ async def async_setup(hass, config):
         params = service.data.copy()
 
         # Convert the entity ids to valid light ids
-        target_lights = component.async_extract_from_service(service)
+        target_lights = await component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
         if service.context.user_id:
