@@ -100,6 +100,7 @@ UOM_MMHG = 'mmhg'
 UOM_BPM = 'bpm'
 UOM_HOURS = 'hrs'
 
+
 class WithingsAttribute(object):
     def __init__(self, measurement: str, measure_type: int, friendly_name: str, unit_of_measurement: str, icon: str) -> None:
         self.measurement = measurement
@@ -107,14 +108,88 @@ class WithingsAttribute(object):
         self.friendly_name = friendly_name
         self.unit_of_measurement = unit_of_measurement
         self.icon = icon
-        
+
+    def __eq__(self, that):
+        return that is not None \
+            and self.measurement == that.measurement \
+            and self.measure_type == that.measure_type \
+            and self.friendly_name == that.friendly_name \
+            and self.unit_of_measurement == that.unit_of_measurement \
+            and self.icon == that.icon
+
+
 class WithingsMeasureAttribute(WithingsAttribute):
     def __init__(self, measurement: str, measure_type: int, friendly_name: str, unit_of_measurement: str, icon: str) -> None:
         super(WithingsMeasureAttribute, self).__init__(measurement, measure_type, friendly_name, unit_of_measurement, icon)
-    
+
+
 class WithingsSleepAttribute(WithingsAttribute):
     def __init__(self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str) -> None:
         super(WithingsSleepAttribute, self).__init__(measurement, None, friendly_name, unit_of_measurement, icon)
+
+
+class WithingsDataManager(object):
+    """A class representing an Withings cloud service connection."""
+
+    def __init__(self, hass, config, add_entities, slug: str, api):
+        self._hass = hass
+        self._config = config
+        self._add_entities = add_entities
+        self._api = api
+        self._slug = slug
+
+        self._measures = None
+        self._sleep = None
+
+    def get_slug(self) -> str:
+        return self._slug
+
+    def get_api(self):
+        return self._api
+
+    def get_measures(self):
+        return self._measures
+
+    def get_sleep(self):
+        return self._sleep
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_refresh_token(self):
+        current_time = int(time.time())
+        expiration_time = int(self._api.credentials.token_expiry)
+
+        if expiration_time - 1200 > current_time:
+            _LOGGER.debug('No need to refresh access token.')
+            return
+
+        _LOGGER.debug('Refreshing access token.')
+        api_client = self._api.client
+        api_client.refresh_token(
+            api_client.auto_refresh_url
+        )
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_update_measures(self) -> None:
+        _LOGGER.debug('async_update_measures')
+
+        self._measures = self._api.get_measures()
+
+        return self._measures
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_update_sleep(self) -> None:
+        _LOGGER.debug('async_update_sleep')
+
+        end_date = int(time.time())
+        start_date = end_date - 86400
+
+        self._sleep = self._api.get_sleep(
+            startdate=start_date,
+            enddate=end_date
+        )
+
+        return self._sleep
+
 
 WITHINGS_ATTRIBUTES = [
     WithingsMeasureAttribute(MEAS_WEIGHT_KG, MEASURE_TYPE_WEIGHT, 'Weight', UOM_MASS_KG, 'mdi:weight-kilogram'),
@@ -173,7 +248,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
     vol.Required(CONF_PROFILE): cv.string,
-    vol.Optional(CONF_BASE_URL): cv.string,
+    vol.Optional(CONF_BASE_URL,): cv.string,
     vol.Required(CONF_MEASUREMENTS, default=[]):
         vol.All(cv.ensure_list, [vol.In(CONF_SENSORS)]),
         
@@ -210,7 +285,7 @@ def _get_credentials_from_file(hass: HomeAssistant, config_filename: str) -> Non
 
 def _write_credentials_to_file(hass: HomeAssistant, config_filename: str, creds) -> None:
     """Attempt to store token data to file."""
-    import nokia
+
     _LOGGER.debug('_write_credentials_to_file')
     path = hass.config.path(config_filename)
 
@@ -224,33 +299,60 @@ def _write_credentials_to_file(hass: HomeAssistant, config_filename: str, creds)
     save_json(path, token_data)
 
 
-async def async_credentials_refreshed(hass: HomeAssistant, config_filename: str, creds) -> None:
+def credentials_refreshed(hass: HomeAssistant, config_filename: str, creds) -> None:
     _LOGGER.debug('async_credentials_refreshed')
-    hass.async_add_job(_write_credentials_to_file, hass, config_filename, creds)
+    hass.add_job(_write_credentials_to_file, hass, config_filename, creds)
 
 
-async def async_initialize(hass: HomeAssistant, config: HomeAssistantConfig, add_entities, slug: str, creds, config_filename: str) -> None:
+class WithingsConfiguring:
+    request_id = None
+
+    def __init__(self, hass, config, add_entities, slug, config_filename, oauth_initialize_callback, auth_client):
+        self.hass = hass
+        self.config = config
+        self.add_entities = add_entities
+        self.slug = slug
+        self.config_filename = config_filename
+        self.oauth_initialize_callback = oauth_initialize_callback
+        self.auth_client = auth_client
+
+
+async def async_initialize(configuring: WithingsConfiguring, creds) -> WithingsDataManager:
     """Initialize the Withings data manager object from the created session."""
     import nokia
     
     _LOGGER.debug('async_initialize')
     api = nokia.NokiaApi(
         creds, 
-        refresh_cb=(lambda: async_credentials_refreshed(hass, config_filename, api.credentials))
+        refresh_cb=(lambda token: credentials_refreshed(
+            configuring.hass,
+            configuring.config_filename,
+            api.credentials
+        ))
     )
     
     _LOGGER.debug('Saving the token data..')
-    await async_credentials_refreshed(hass, config_filename, api.credentials)
+    credentials_refreshed(
+        configuring.hass,
+        configuring.config_filename,
+        api.credentials
+    )
     
-    _LOGGER.debug('Creating withings data manager for slug: {}'.format(slug))
-    data_manager = WithingsDataManager(hass, config, add_entities, api, slug)
+    _LOGGER.debug('Creating withings data manager for slug: {}'.format(configuring.slug))
+    data_manager = WithingsDataManager(
+        configuring.hass,
+        configuring.config,
+        configuring.add_entities,
+        configuring.slug,
+        api
+    )
     
     _LOGGER.debug('Attempting to refresh token.')
     await data_manager.async_refresh_token()
     
     _LOGGER.debug('Creating entities.')
     entities = []
-    measurements = config.get(CONF_MEASUREMENTS)
+    measurements = configuring.config.get(CONF_MEASUREMENTS)
     for measurement in measurements:
         _LOGGER.debug('Creating entity for {}'.format(measurement))
         
@@ -261,7 +363,23 @@ async def async_initialize(hass: HomeAssistant, config: HomeAssistantConfig, add
         entities.append(entity)
 
     _LOGGER.debug('Adding entities.')
-    add_entities(entities)
+    configuring.add_entities(entities)
+
+    return data_manager
+
+
+async def async_oauth_initialize_callback(code: str, configuring: WithingsConfiguring) -> None:
+    """Call after OAuth2 response is returned."""
+    _LOGGER.debug('async_oauth_initialize_callback')
+
+    _LOGGER.debug('Requesting credentials with code: {}.'.format(code))
+    creds = configuring.auth_client.get_credentials(code)
+
+    _LOGGER.debug('Initializing data.')
+    await async_initialize(configuring, creds)
+
+    _LOGGER.debug('Finishing request.')
+    configuring.hass.components.configurator.async_request_done(configuring.request_id)
 
 
 async def async_setup_platform(hass: HomeAssistant, config: HomeAssistantConfig, add_entities, discovery_info=None):
@@ -273,7 +391,7 @@ async def async_setup_platform(hass: HomeAssistant, config: HomeAssistantConfig,
     config_filename = WITHINGS_CONFIG_FILE.format(config[CONF_CLIENT_ID], slug)
     creds = await hass.async_add_job(_get_credentials_from_file, hass, config_filename)
     callback_uri = '{}{}'.format(
-        (config.get(CONF_BASE_URL) or hass.config.api.base_url).rstrip('/'), 
+        (config.get(CONF_BASE_URL) or hass.config.api.base_url).rstrip('/'),
         WITHINGS_AUTH_CALLBACK_PATH
     )
 
@@ -281,118 +399,51 @@ async def async_setup_platform(hass: HomeAssistant, config: HomeAssistantConfig,
     auth_client = nokia.NokiaAuth(
         config[CONF_CLIENT_ID],
         config[CONF_SECRET],
-        callback_uri=callback_uri,
+        callback_uri,
         scope=','.join(['user.info', 'user.metrics', 'user.activity'])
     )
 
+    configuring = WithingsConfiguring(
+        hass,
+        config,
+        add_entities,
+        slug,
+        config_filename,
+        async_oauth_initialize_callback,
+        auth_client
+    )
 
     if creds is not None:
         _LOGGER.debug('Token data already exists. Using that.')
         try:
-            await async_initialize(hass, config, add_entities, slug, creds, config_filename)
+            await async_initialize(configuring, creds)
             return True
         except Exception:
             _LOGGER.info('Failed to initialize. Reverting back to configure mode.', exc_info=True)
 
-
     _LOGGER.debug('Starting configuration for slug: {}'.format(slug))
     hass.http.register_view(WithingsAuthCallbackView(slug))
 
-    configurator = hass.components.configurator
-    request_id = configurator.async_request_config(
-        "Withings", description=(
+    configuring.request_id = hass.components.configurator.async_request_config(
+        "Withings",
+        description=(
             "Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '{}'.".format(profile)
         ),
         link_name="Click here to authorize Home Assistant.",
         link_url=auth_client.get_authorize_url(),
     )
 
-    async def async_oauth_initialize_callback(code: str) -> None:
-        """Call after OAuth2 response is returned."""
-        _LOGGER.debug('async_oauth_initialize_callback')
-
-        _LOGGER.debug('Requesting credentials with code: {}.'.format(code))
-        creds = auth_client.get_credentials(code)
-        
-        _LOGGER.debug('Initializing data.')
-        await async_initialize(hass, config, add_entities, slug, creds, config_filename)
-        configurator.async_request_done(request_id)
-
     if DATA_CONFIGURING not in hass.data:
         hass.data[DATA_CONFIGURING] = {}
 
-    hass.data[DATA_CONFIGURING][slug] = async_oauth_initialize_callback
+    hass.data[DATA_CONFIGURING][slug] = configuring
 
     return True
-    
-    
-class WithingsDataManager(object):
-    """A class representing an Withings cloud service connection."""
-    
-    def __init__(self, hass, config, add_entities, api, slug: str):
-        self._hass = hass
-        self._config = config
-        self._add_entities = add_entities
-        self._api = api
-        self._slug = slug
-        
-        self._measures = None
-        self._sleep = None
-        
-    def get_slug(self) -> str:
-        return self._slug
-        
-    def get_api(self):
-        return self._api
-        
-    def get_measures(self):
-        return self._measures
-        
-    def get_sleep(self):
-        return self._sleep
-        
-    @Throttle(SCAN_INTERVAL)
-    async def async_refresh_token(self):
-        current_time = int(time.time())
-        expiration_time = int(self._api.credentials.token_expiry)
-        
-        if expiration_time - 1200 > current_time:
-            _LOGGER.debug('No need to refresh access token.')
-            return
-        
-        _LOGGER.debug('Refreshing access token.')
-        api_client = self._api.client
-        api_client.refresh_token(
-            api_client.auto_refresh_url
-        )
-        
-    @Throttle(SCAN_INTERVAL)
-    async def async_update_measures(self) -> None:
-        _LOGGER.debug('async_update_measures')
-        
-        self._measures = self._api.get_measures()
-        
-        return self._measures
-        
-    @Throttle(SCAN_INTERVAL)
-    async def async_update_sleep(self) -> None:
-        _LOGGER.debug('async_update_sleep')
-        
-        end_date = int(time.time())
-        start_date = end_date - 86400
-        
-        self._sleep = self._api.get_sleep(
-            startdate=start_date,
-            enddate=end_date
-        )
-        
-        return self._sleep
-    
+
     
 class WithingsAuthCallbackView(HomeAssistantView):
     """Handle OAuth finish callback requests."""
 
-    requires_auth = False
     url = WITHINGS_AUTH_CALLBACK_PATH
     name = 'api:withings:callback'
     
@@ -429,11 +480,18 @@ class WithingsAuthCallbackView(HomeAssistantView):
         _LOGGER.debug('Calling async_oauth_initialize_callback')
         code = params['code']
         state = params['state']
-        async_oauth_initialize_callback = hass.data[DATA_CONFIGURING][self.slug]
-        hass.async_create_task(async_oauth_initialize_callback(code))
+        configuring = hass.data[DATA_CONFIGURING][self.slug]
+        oauth_initialize_callback = configuring.oauth_initialize_callback
+        hass.async_create_task(oauth_initialize_callback(code, configuring))
 
         _LOGGER.debug('Returning response.')
         return response
+
+    def __eq__(self, that):
+        return that is not None \
+            and self.url == that.url \
+            and self.name == that.name \
+            and self.slug == that.slug
 
 class WithingsHealthSensor(Entity):
     """Implementation of a Withings sensor."""
