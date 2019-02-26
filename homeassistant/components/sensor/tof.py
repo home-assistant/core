@@ -9,7 +9,7 @@ https://github.com/josemotta/vl53l1x-python
 https://github.com/NagyAttila/vl53l1x-python
 https://github.com/pimoroni/vl53l1x-python
 
-- DEFAULT_RANGE is always LONG = 2, for 4 meters range
+- DEFAULT_RANGE is always LONG = 2, for 4 meters range.
 - A GPIO connected to VL53L1X XSHUT input resets the device.
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
@@ -42,8 +42,7 @@ DEFAULT_NAME = 'VL53L1X'
 DEFAULT_I2C_ADDRESS = 0x29
 DEFAULT_I2C_BUS = 1
 DEFAULT_XSHUT = 16
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+DEFAULT_RANGE = 2
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME,
@@ -116,7 +115,7 @@ class VL53L1XSensor(Entity):
 
     def measure(self):
         """Get the latest measurement from VL53L1X."""
-        self.vl53l1x_sensor.start_ranging(self.i2c_address, 2)
+        self.vl53l1x_sensor.start_ranging(self.i2c_address, DEFAULT_RANGE)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
 
