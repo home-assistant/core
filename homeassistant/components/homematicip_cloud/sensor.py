@@ -66,6 +66,20 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         super().__init__(home, home)
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            'identifiers': {
+                # Serial numbers of Homematic IP device
+                (HMIPC_DOMAIN, self._device.id)
+            },
+            'name': self._device.label,
+            'manufacturer': 'eQ-3',
+            'model': self._device.modelType,
+            'sw_version': self._device.currentAPVersion,
+        }
+
+    @property
     def icon(self):
         """Return the icon of the access point device."""
         return 'mdi:access-point-network'

@@ -84,12 +84,6 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
         super().__init__(home, device, post)
 
     @property
-    def device_info(self):
-        """Return device specific attributes."""
-        # A HomematicipGroupSwitch is not a device.
-        return None
-
-    @property
     def is_on(self):
         """Return true if group is on."""
         return self._device.on

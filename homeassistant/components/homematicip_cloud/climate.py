@@ -49,12 +49,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         super().__init__(home, device)
 
     @property
-    def device_info(self):
-        """Return device specific attributes."""
-        # A HomematicipHeatingGroup is not a device.
-        return None
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS

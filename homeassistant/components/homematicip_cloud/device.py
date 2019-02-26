@@ -21,7 +21,6 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 ATTR_SABOTAGE = 'sabotage'
 ATTR_STATUS_UPDATE = 'status_update'
 ATTR_UNREACHABLE = 'unreachable'
-CONST_MANUFACTURER = 'eQ-3'
 
 
 class HomematicipGenericDevice(Entity):
@@ -40,38 +39,25 @@ class HomematicipGenericDevice(Entity):
         # Only physical devices should be HA devices.
         # Every HomematicIP device has a serial number,
         # that is stored in id property.
-        if hasattr(self._device, 'id') and self._device.id is not None:
-            identifier = self._device.id
-        else:
-            return None
+        from homematicip.device import Device
+        if isinstance(self._device, Device):
+            if self._device.id is not None:
+                identifier = self._device.id
+            else:
+                return None
 
-        name = self._device.label \
-            if hasattr(self._device, 'label') \
-            else None
-        manufacturer = self._device.oem \
-            if hasattr(self._device, 'oem') \
-            else CONST_MANUFACTURER
-        model_type = self._device.modelType \
-            if hasattr(self._device, 'modelType') \
-            else None
-        sw_version = self._device.firmwareVersion \
-            if hasattr(self._device, 'firmwareVersion') \
-            else None
-        via_hub = self._device.homeId \
-            if hasattr(self._device, 'homeId') \
-            else None
-
-        return {
-            'identifiers': {
-                # Serial numbers of Homematic IP device
-                (homematicip_cloud.DOMAIN, identifier)
-            },
-            'name': name,
-            'manufacturer': manufacturer,
-            'model': model_type,
-            'sw_version': sw_version,
-            'via_hub': (homematicip_cloud.DOMAIN, via_hub),
-        }
+            return {
+                'identifiers': {
+                    # Serial numbers of Homematic IP device
+                    (homematicip_cloud.DOMAIN, identifier)
+                },
+                'name': self._device.label,
+                'manufacturer': self._device.oem,
+                'model': self._device.modelType,
+                'sw_version': self._device.firmwareVersion,
+                'via_hub': (homematicip_cloud.DOMAIN, self._device.homeId),
+            }
+        return None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
