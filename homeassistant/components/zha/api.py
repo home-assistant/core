@@ -251,7 +251,7 @@ def async_load_api(hass, application_controller, zha_gateway):
         zha_device = zha_gateway.get_device(ieee)
         response_clusters = []
         if zha_device is not None:
-            clusters_by_endpoint = await zha_device.get_clusters()
+            clusters_by_endpoint = zha_device.async_get_clusters()
             for ep_id, clusters in clusters_by_endpoint.items():
                 for c_id, cluster in clusters[IN].items():
                     response_clusters.append({
@@ -289,7 +289,7 @@ def async_load_api(hass, application_controller, zha_gateway):
         zha_device = zha_gateway.get_device(ieee)
         attributes = None
         if zha_device is not None:
-            attributes = await zha_device.get_cluster_attributes(
+            attributes = zha_device.async_get_cluster_attributes(
                 endpoint_id,
                 cluster_id,
                 cluster_type)
@@ -329,7 +329,7 @@ def async_load_api(hass, application_controller, zha_gateway):
         cluster_commands = []
         commands = None
         if zha_device is not None:
-            commands = await zha_device.get_cluster_commands(
+            commands = zha_device.async_get_cluster_commands(
                 endpoint_id,
                 cluster_id,
                 cluster_type)
@@ -380,7 +380,7 @@ def async_load_api(hass, application_controller, zha_gateway):
         zha_device = zha_gateway.get_device(ieee)
         success = failure = None
         if zha_device is not None:
-            cluster = await zha_device.get_cluster(
+            cluster = zha_device.async_get_cluster(
                 endpoint_id, cluster_id, cluster_type=cluster_type)
             success, failure = await cluster.read_attributes(
                 [attribute],
