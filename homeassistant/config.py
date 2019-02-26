@@ -444,8 +444,6 @@ async def async_process_ha_core_config(
             auth_conf = [
                 {'type': 'homeassistant'}
             ]
-            _LOGGER.info('A Homeassistant auth provider is automatic'
-                         ' configured')
             if has_api_password:
                 auth_conf.append({'type': 'legacy_api_password'})
                 _LOGGER.info('A Legacy API Password auth provider is automatic'
@@ -455,8 +453,6 @@ async def async_process_ha_core_config(
                     'type': 'trusted_networks',
                     'trusted_networks': trusted_networks,
                 })
-                _LOGGER.info('A Trusted Networks auth provider is automatic'
-                             ' configured using http.trusted_networks config')
 
         mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
             {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
