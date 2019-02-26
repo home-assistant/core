@@ -249,11 +249,11 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth_ = HTTPBasicAuth(username, password)
                     # Load file from URL with authentication
                     req = requests.get(
-                        url, auth=auth_, timeout=DEFAULT_TIMEOUT, 
+                        url, auth=auth_, timeout=DEFAULT_TIMEOUT,
                         verify=bool(int(verify_ssl_)))
                 else:
                     # Load file from URL without authentication
-                    req = requests.get(url, timeout=DEFAULT_TIMEOUT, 
+                    req = requests.get(url, timeout=DEFAULT_TIMEOUT,
                                        verify=bool(int(verify_ssl_)))
                 return req.content
 
