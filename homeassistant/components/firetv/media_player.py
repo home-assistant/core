@@ -164,7 +164,7 @@ class FireTVDevice(MediaPlayerDevice):
     def __init__(self, ftv, name, get_sources):
         """Initialize the FireTV device."""
         from firetv import KEYS
-        self.KEYS = KEYS
+        self.keys = KEYS
 
         self.firetv = ftv
 
@@ -319,7 +319,7 @@ class FireTVDevice(MediaPlayerDevice):
     @adb_decorator()
     def adb_command(self, cmd):
         """Send an ADB command to a Fire TV device."""
-        key = self.KEYS.get(cmd)
+        key = self.keys.get(cmd)
         if key:
             return self.firetv.adb_shell('input keyevent {}'.format(key))
         return self.firetv.adb_shell(cmd)
