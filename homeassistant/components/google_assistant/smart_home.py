@@ -89,8 +89,7 @@ class _GoogleEntity:
         return [Trait(self.hass, state, self.config) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
-    @callback
-    def sync_serialize(self):
+    async def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -136,6 +135,23 @@ class _GoogleEntity:
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
             device['roomHint'] = room
+        else:
+            entity_registry = (await self.hass.helpers.
+                               entity_registry.async_get_registry())
+
+            entity_entry = entity_registry.async_get(state.entity_id)
+            if entity_entry:
+                device_registry = (await self.hass.helpers.
+                                   device_registry.async_get_registry())
+                device_entry = device_registry.devices.get(
+                    entity_entry.device_id)
+                if device_entry and device_entry.area_id:
+                    area_registry = (await self.hass.helpers.
+                                     area_registry.async_get_registry())
+                    area_entry = area_registry.areas.get(device_entry.area_id)
+
+                    if area_entry and area_entry.name:
+                        device['roomHint'] = area_entry.name
 
         for trt in traits:
             device['attributes'].update(trt.sync_attributes())
@@ -253,7 +269,7 @@ async def async_devices_sync(hass, config, request_id, payload):
             continue
 
         entity = _GoogleEntity(hass, config, state)
-        serialized = entity.sync_serialize()
+        serialized = await entity.sync_serialize()
 
         if serialized is None:
             _LOGGER.debug("No mapping for %s domain", entity.state)
