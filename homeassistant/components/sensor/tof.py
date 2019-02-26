@@ -1,6 +1,5 @@
 """
-Platform for tof
-Time of Flight - VL53L1X Laser Ranger.
+Platform for Time of Flight sensor VL53L1X.
 
 For more details about this platform, please refer to
 https://github.com/josemotta/vl53l1x-python
@@ -120,7 +119,6 @@ class VL53L1XSensor(Entity):
 
     async def async_update(self):
         """Get the latest measurement and update state."""
-
         await self.hass.async_add_executor_job(
             self.measure
         )
