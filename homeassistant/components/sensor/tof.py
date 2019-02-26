@@ -16,7 +16,6 @@ https://github.com/pimoroni/vl53l1x-python
 """
 import asyncio
 import logging
-from datetime import timedelta
 from functools import partial
 
 import homeassistant.helpers.config_validation as cv
