@@ -47,8 +47,9 @@ class CiscoMEDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.last_results = {}
-        self.success_init = self.get_data() is not None
+        self.success_init = False
+        self.last_results = []
+        self.get_data()
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -78,7 +79,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
     def _update_info(self):
         """Check the Cisco ME controller for devices."""
         self.last_results = self.get_data()
-        _LOGGER.debug("Cisco ME returned:"
+        _LOGGER.debug("Cisco Mobility Express controller returned:"
                       " %s", self.last_results)
 
     def get_data(self):
@@ -91,6 +92,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
             verify=self.verify_ssl)
 
         if response.status_code == 200:
+            self.success_init = True
             result = response.json()
             for device_entry in result['data']:
                 device_entry['controller'] = self.host
@@ -98,4 +100,18 @@ class CiscoMEDeviceScanner(DeviceScanner):
                     *device_entry.values())
                 results_list.append(device)
             return results_list
-        return None
+        if response.status_code == 401:
+            _LOGGER.error("Failed to authenticate "
+                          "with Cisco Mobility Express "
+                          "controller, check your "
+                          "username and password.")
+        elif response.status_code == 403:
+            _LOGGER.error("Cisco Mobility Express responded "
+                          "with a 403 Invalid token")
+        elif response.status_code == 404:
+            _LOGGER.error("Cisco Mobility Express responded "
+                          "with a 404 "
+                          "from %s", url)
+
+        _LOGGER.error("Invalid response from luci: %s", response)
+        return []
