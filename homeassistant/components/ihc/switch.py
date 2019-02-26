@@ -47,17 +47,17 @@ class IHCSwitch(IHCDevice, SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._ihc_on_id:
-            pulse(self.ihc_controller, self._ihc_on_id)
+            await pulse(self.ihc_controller, self._ihc_on_id)
         else:
             self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self._ihc_off_id:
-            pulse(self.ihc_controller, self._ihc_off_id)
+            await pulse(self.ihc_controller, self._ihc_off_id)
         else:
             self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 

@@ -73,7 +73,7 @@ class IhcLight(IHCDevice, Light):
             return SUPPORT_BRIGHTNESS
         return 0
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -87,17 +87,17 @@ class IhcLight(IHCDevice, Light):
                 self.ihc_id, int(brightness * 100 / 255))
         else:
             if self._ihc_on_id:
-                pulse(self.ihc_controller, self._ihc_on_id)
+                await pulse(self.ihc_controller, self._ihc_on_id)
             else:
                 self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if self._dimmable:
             self.ihc_controller.set_runtime_value_int(self.ihc_id, 0)
         else:
             if self._ihc_off_id:
-                pulse(self.ihc_controller, self._ihc_off_id)
+                await pulse(self.ihc_controller, self._ihc_off_id)
             else:
                 self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 

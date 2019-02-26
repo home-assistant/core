@@ -54,7 +54,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
-    vol.Optional(CONF_ON_ID, default=0): cv.positive_int,    
+    vol.Optional(CONF_ON_ID, default=0): cv.positive_int,
 })
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
@@ -300,10 +300,10 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
         value = call.data[ATTR_VALUE]
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
-    def pulse_runtime_input(call):
+    async def pulse_runtime_input(call):
         """Pulse a IHC controller input function."""
         ihc_id = call.data[ATTR_IHC_ID]
-        pulse(ihc_controller, ihc_id)
+        await pulse(ihc_controller, ihc_id)
 
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_BOOL,
                            set_runtime_value_bool,
@@ -314,6 +314,6 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_PULSE,
-                           pulse_runtime_input,
-                           schema=PULSE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_PULSE,
+                                 pulse_runtime_input,
+                                 schema=PULSE_SCHEMA)
