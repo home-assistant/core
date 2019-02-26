@@ -13,7 +13,7 @@ import homeassistant.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK, SUPPORT_VOLUME_STEP,
+    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, ATTR_MEDIA_DURATION, ATTR_MEDIA_SEEK_POSITION)
 from typing import Optional
 from homeassistant.const import (
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | \
-    SUPPORT_SEEK | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
+    SUPPORT_SEEK | SUPPORT_SELECT_SOURCE
 
 SUBSCTRIBE_TOPIC = 'ais/player_status'
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
