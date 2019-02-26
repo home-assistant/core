@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_RECEIVED = 'ifttt_webhook_received'
 
 ATTR_EVENT = 'event'
+ATTR_TO = 'to'
 ATTR_VALUE1 = 'value1'
 ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
@@ -29,6 +30,7 @@ SERVICE_TRIGGER = 'trigger'
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema({
     vol.Required(ATTR_EVENT): cv.string,
+    vol.Optional(ATTR_TO): vol.Any([cv.string], cv.string),
     vol.Optional(ATTR_VALUE1): cv.string,
     vol.Optional(ATTR_VALUE2): cv.string,
     vol.Optional(ATTR_VALUE3): cv.string,
@@ -36,7 +38,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
-        vol.Required(CONF_KEY): cv.string,
+        vol.Required(CONF_KEY): vol.Any({cv.string: cv.string}, cv.string),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -46,18 +48,37 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    key = config[DOMAIN][CONF_KEY]
+    conf_keys = config[DOMAIN][CONF_KEY]
+    if isinstance(conf_keys, str):
+        conf_keys = {"default": conf_keys}
 
     def trigger_service(call):
         """Handle IFTTT trigger service calls."""
         event = call.data[ATTR_EVENT]
+        send_to = call.data.get(ATTR_TO, None)
         value1 = call.data.get(ATTR_VALUE1)
         value2 = call.data.get(ATTR_VALUE2)
         value3 = call.data.get(ATTR_VALUE3)
 
+        if send_to is None:
+            send_to = list(conf_keys.keys())
+        elif isinstance(send_to, str):
+            send_to = [send_to]
+
+        keys = dict()
+        for key_name in send_to:
+            if key_name not in conf_keys.keys():
+                _LOGGER.error("No IFTTT key %s", key_name)
+                continue
+            keys[key_name] = conf_keys[key_name]
+
         try:
             import pyfttt
-            pyfttt.send_event(key, event, value1, value2, value3)
+            for key_name, key in keys.items():
+                res = pyfttt.send_event(key, event, value1, value2, value3)
+                if res.status_code != 200:
+                    _LOGGER.error("IFTTT reported error sending event to %s.",
+                                  key_name)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
