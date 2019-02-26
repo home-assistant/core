@@ -130,7 +130,9 @@ async def async_setup(hass, config):
                 'value': slot['rawValue']}
         slots['site_id'] = {'value': request.get('siteId')}
         slots['session_id'] = {'value': request.get('sessionId')}
-        slots['confidenceScore'] = {'value': request['intent']['confidenceScore']}
+        slots['confidenceScore'] = {
+            'value': request['intent']['confidenceScore']
+        }
 
         try:
             intent_response = await intent.async_handle(
