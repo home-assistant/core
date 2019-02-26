@@ -237,6 +237,7 @@ homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tplink/* @rytilahti
 homeassistant/components/tradfri/* @ggravlingen
+homeassistant/components/toon/* @frenck
 
 # U
 homeassistant/components/unifi/* @kane610
