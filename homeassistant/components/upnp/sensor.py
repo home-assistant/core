@@ -113,9 +113,6 @@ class UpnpSensor(Entity):
             'identifiers': {
                 (DOMAIN_UPNP, self.unique_id)
             },
-            'connections': {
-                (dr.CONNECTION_UPNP, self._device.udn)
-            },
             'name': self.name,
             'via_hub': (DOMAIN_UPNP, self._device.udn),
         }
