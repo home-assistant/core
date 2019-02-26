@@ -11,13 +11,14 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE,
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
+
+DOMAIN = 'firetv'
 
 REQUIREMENTS = ['firetv==1.0.9']
 
@@ -37,14 +38,12 @@ DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 
-SERVICE_ADB_COMMAND = 'firetv_adb_command'
+SERVICE_ADB_COMMAND = 'adb_command'
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_COMMAND): cv.string,
 })
-
-DATA_KEY = '{}.firetv'.format(DOMAIN)
 
 
 def has_adb_files(value):
@@ -78,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     from firetv import FireTV
 
-    hass.data.setdefault(DATA_KEY, {})
+    hass.data.setdefault(DOMAIN, {})
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
@@ -104,13 +103,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     get_sources = config[CONF_GET_SOURCES]
 
-    if host in hass.data[DATA_KEY]:
+    if host in hass.data[DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
         device = FireTVDevice(ftv, name, get_sources)
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
-        hass.data[DATA_KEY][host] = device
+        hass.data[DOMAIN][host] = device
 
     if hass.services.has_service(DOMAIN, SERVICE_ADB_COMMAND):
         return
@@ -119,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Dispatch service calls to target entities."""
         cmd = service.data.get(ATTR_COMMAND)
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+        target_devices = [dev for dev in hass.data[DOMAIN].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
