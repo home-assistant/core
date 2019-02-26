@@ -37,15 +37,28 @@ JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
 
+CONF_MANIFEST_JSON = 'manifest_json'
+CONF_MANIFEST_JSON_SETTINGS = ['display', 'short_name', 'start_url']
+CONF_MANIFEST_JSON_DISPLAY = 'display'
+CONF_MANIFEST_JSON_DISPLAY_DEFAULT = 'standalone'
+CONF_MANIFEST_JSON_SHORT_NAME = 'short_name'
+CONF_MANIFEST_JSON_SHORT_NAME_DEFAULT = 'Assistant'
+CONF_MANIFEST_JSON_START_URL = 'start_url'
+CONF_MANIFEST_JSON_START_URL_DEFAULT = '/?homescreen=1'
+MANIFEST_JSON_DISPLAY_OPTIONS = [
+    'fullscreen',
+    'standalone',
+    'minimal-ui',
+    'browser'
+]
+
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
     'description': 'Open-source home automation platform running on Python 3.',
     'dir': 'ltr',
-    'display': 'standalone',
     'icons': [],
     'lang': 'en-US',
     'name': 'Home Assistant',
-    'short_name': 'Assistant',
     'start_url': '/?homescreen=1',
     'theme_color': DEFAULT_THEME_COLOR
 }
@@ -81,7 +94,26 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXTRA_HTML_URL_ES5):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_JS_VERSION, default=JS_DEFAULT_OPTION):
-            vol.In(JS_OPTIONS)
+            vol.In(JS_OPTIONS),
+        vol.Optional(CONF_MANIFEST_JSON, default={
+            CONF_MANIFEST_JSON_DISPLAY: CONF_MANIFEST_JSON_DISPLAY_DEFAULT,
+            CONF_MANIFEST_JSON_SHORT_NAME:
+                CONF_MANIFEST_JSON_SHORT_NAME_DEFAULT,
+            CONF_MANIFEST_JSON_START_URL: CONF_MANIFEST_JSON_START_URL_DEFAULT
+        }): vol.Schema({
+            cv.string: cv.string,
+            vol.Optional(
+                CONF_MANIFEST_JSON_DISPLAY,
+                default=CONF_MANIFEST_JSON_DISPLAY_DEFAULT
+            ):
+            vol.In(MANIFEST_JSON_DISPLAY_OPTIONS),
+            vol.Optional(
+                CONF_MANIFEST_JSON_SHORT_NAME,
+                default=CONF_MANIFEST_JSON_SHORT_NAME_DEFAULT): cv.string,
+            vol.Optional(
+                CONF_MANIFEST_JSON_START_URL,
+                default=CONF_MANIFEST_JSON_START_URL_DEFAULT): cv.string,
+        }),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -203,6 +235,13 @@ async def async_setup(hass, config):
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
+
+    manifest_json_data = conf.get('manifest_json')
+    for manifest_setting in CONF_MANIFEST_JSON_SETTINGS:
+        add_manifest_json_key(
+            manifest_setting,
+            manifest_json_data[manifest_setting]
+        )
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
