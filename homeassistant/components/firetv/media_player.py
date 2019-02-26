@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'firetv'
+FIRETV_DOMAIN = 'firetv'
 
 REQUIREMENTS = ['firetv==1.0.9']
 
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     from firetv import FireTV
 
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(FIRETV_DOMAIN, {})
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
@@ -103,22 +103,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     get_sources = config[CONF_GET_SOURCES]
 
-    if host in hass.data[DOMAIN]:
+    if host in hass.data[FIRETV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
         device = FireTVDevice(ftv, name, get_sources)
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
-        hass.data[DOMAIN][host] = device
+        hass.data[FIRETV_DOMAIN][host] = device
 
-    if hass.services.has_service(DOMAIN, SERVICE_ADB_COMMAND):
+    if hass.services.has_service(FIRETV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
         cmd = service.data.get(ATTR_COMMAND)
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [dev for dev in hass.data[DOMAIN].values()
+        target_devices = [dev for dev in hass.data[FIRETV_DOMAIN].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
@@ -129,7 +129,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
-    hass.services.register(DOMAIN, SERVICE_ADB_COMMAND, service_adb_command,
+    hass.services.register(FIRETV_DOMAIN, SERVICE_ADB_COMMAND,
+                           service_adb_command,
                            schema=SERVICE_ADB_COMMAND_SCHEMA)
 
 
