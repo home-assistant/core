@@ -160,11 +160,6 @@ class ZHAGateway:
         if is_new_join:
             # configure the device
             await zha_device.async_configure()
-            # because it's a new join we can immediately mark the device as
-            # available and we already loaded fresh state above this will
-            # cause async_initialize to fire so we don't have to call it
-            # separately
-            zha_device.update_available(True)
         elif not zha_device.available and zha_device.power_source is not None\
                 and zha_device.power_source != BasicChannel.BATTERY\
                 and zha_device.power_source != BasicChannel.UNKNOWN:
@@ -190,6 +185,11 @@ class ZHAGateway:
 
         device_entity = _async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
+
+        if is_new_join:
+            # because it's a new join we can immediately mark the device as
+            # available. We do it here because the entities didn't exist above
+            zha_device.update_available(True)
 
     @callback
     def _async_process_endpoint(

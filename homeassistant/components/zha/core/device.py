@@ -189,13 +189,14 @@ class ZHADevice:
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_channel_tasks('async_initialize', from_cache)
-        self.power_source = self.cluster_channels.get(
-            BASIC_CHANNEL).get_power_source()
-        _LOGGER.debug(
-            '%s: power source: %s',
-            self.name,
-            BasicChannel.POWER_SOURCES.get(self.power_source)
-        )
+        if BASIC_CHANNEL in self.cluster_channels:
+            self.power_source = self.cluster_channels.get(
+                BASIC_CHANNEL).get_power_source()
+            _LOGGER.debug(
+                '%s: power source: %s',
+                self.name,
+                BasicChannel.POWER_SOURCES.get(self.power_source)
+            )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
