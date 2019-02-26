@@ -40,17 +40,16 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
+        if DOMAIN not in self.hass.data:
+            return self.async_abort(reason='no_flows')
+
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='already_setup')
+
         return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if DOMAIN not in self.hass.data:
-            return self.async_abort(reason='no_flows')
-
-        if self.hass.config_entries.async_entries(
-                DOMAIN) and self.cur_step is None:
-            return self.async_abort(reason='already_setup')
-
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='external_setup')
 
