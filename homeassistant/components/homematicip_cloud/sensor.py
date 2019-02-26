@@ -68,15 +68,12 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     @property
     def device_info(self):
         """Return device specific attributes."""
+        # Adds a sensor to the existing HAP device
         return {
             'identifiers': {
                 # Serial numbers of Homematic IP device
                 (HMIPC_DOMAIN, self._device.id)
-            },
-            'name': self._device.label,
-            'manufacturer': 'eQ-3',
-            'model': self._device.modelType,
-            'sw_version': self._device.currentAPVersion,
+            }
         }
 
     @property

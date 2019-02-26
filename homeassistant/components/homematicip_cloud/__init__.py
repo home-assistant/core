@@ -52,7 +52,23 @@ async def async_setup_entry(hass, entry):
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()
     hass.data[DOMAIN][hapid] = hap
-    return await hap.async_setup()
+
+    result = await hap.async_setup()
+
+    # Register hap as device in registry.
+    from homeassistant.helpers import device_registry as dr
+    device_registry = await dr.async_get_registry(hass)
+    home = hap.home
+    device_registry.async_get_or_create(
+        config_entry_id=home.id,
+        identifiers={(DOMAIN, home.id)},
+        manufacturer='eQ-3',
+        name=home.label,
+        model=home.modelType,
+        sw_version=home.currentAPVersion,
+    )
+
+    return result
 
 
 async def async_unload_entry(hass, entry):
