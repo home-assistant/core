@@ -40,6 +40,7 @@ ICONS = {
     7: 'mdi:stairs',
 }
 
+DATE_FORMAT = '%Y-%m-%d'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,7 +60,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     now = datetime.datetime.now() + offset
     day_name = now.strftime('%A').lower()
     now_str = now.strftime('%H:%M:%S')
-    today = now.strftime('%Y-%m-%d')
+    today = now.strftime(DATE_FORMAT)
 
     from sqlalchemy.sql import text
 
@@ -69,7 +70,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
            time(origin_stop_time.departure_time) AS origin_depart_time,
            origin_stop_time.drop_off_type AS origin_drop_off_type,
            origin_stop_time.pickup_type AS origin_pickup_type,
-           origin_stop_time.shape_dist_traveled AS origin_shape_dist_traveled,
+           origin_stop_time.shape_dist_traveled AS origin_dist_traveled,
            origin_stop_time.stop_headsign AS origin_stop_headsign,
            origin_stop_time.stop_sequence AS origin_stop_sequence,
            time(destination_stop_time.arrival_time) AS dest_arrival_time,
@@ -111,10 +112,27 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     if item == {}:
         return None
 
-    origin_arrival_time = '{} {}'.format(today, item['origin_arrival_time'])
+    # Format arrival and departure dates and times, accounting for the
+    # possibility of times crossing over midnight.
+    origin_arrival = now
+    if item['origin_arrival_time'] > item['origin_depart_time']:
+        origin_arrival -= datetime.timedelta(days=1)
+    origin_arrival_time = '{} {}'.format(origin_arrival.strftime(DATE_FORMAT),
+                                         item['origin_arrival_time'])
+
     origin_depart_time = '{} {}'.format(today, item['origin_depart_time'])
-    dest_arrival_time = '{} {}'.format(today, item['dest_arrival_time'])
-    dest_depart_time = '{} {}'.format(today, item['dest_depart_time'])
+
+    dest_arrival = now
+    if item['dest_arrival_time'] < item['origin_depart_time']:
+        dest_arrival += datetime.timedelta(days=1)
+    dest_arrival_time = '{} {}'.format(dest_arrival.strftime(DATE_FORMAT),
+                                       item['dest_arrival_time'])
+
+    dest_depart = dest_arrival
+    if item['dest_depart_time'] < item['dest_arrival_time']:
+        dest_depart += datetime.timedelta(days=1)
+    dest_depart_time = '{} {}'.format(dest_depart.strftime(DATE_FORMAT),
+                                      item['dest_depart_time'])
 
     depart_time = datetime.datetime.strptime(origin_depart_time, TIME_FORMAT)
     arrival_time = datetime.datetime.strptime(dest_arrival_time, TIME_FORMAT)
@@ -129,7 +147,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
         'Departure Time': origin_depart_time,
         'Drop Off Type': item['origin_drop_off_type'],
         'Pickup Type': item['origin_pickup_type'],
-        'Shape Dist Traveled': item['origin_shape_dist_traveled'],
+        'Shape Dist Traveled': item['origin_dist_traveled'],
         'Headsign': item['origin_stop_headsign'],
         'Sequence': item['origin_stop_sequence']
     }
