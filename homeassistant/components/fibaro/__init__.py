@@ -266,8 +266,10 @@ class FibaroController():
                         self.fibaro_devices[dtype].append(device)
                     else:
                         # if a sibling of this has been added, skip this one
-                        if last_climate_parent != device.parentId:
-                            device.visible = True
+                        # otherwise add the first visible device in the group
+                        # which is a hack, but solves a problem with FGT having
+                        # hidden compatibility devices before the real device
+                        if last_climate_parent != device.parentId and device.visible:
                             self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
                 _LOGGER.debug("%s (%s, %s) -> %s %s",

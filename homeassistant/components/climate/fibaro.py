@@ -8,16 +8,17 @@ import logging
 
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, STATE_COOL,
-    STATE_HEAT, STATE_FAN_ONLY, ENTITY_ID_FORMAT,
+    STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
+    ENTITY_ID_FORMAT,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
-    TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
-    ATTR_TEMPERATURE)
+    TEMP_FAHRENHEIT)
 
 from homeassistant.components.fibaro import (
     FIBARO_DEVICES, FibaroDevice)
@@ -25,41 +26,64 @@ from homeassistant.components.fibaro import (
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
+STATE_AUXILIARY = 'auxiliary'
+STATE_RESUME = 'resume'
+STATE_MOIST = 'moist'
+STATE_AUTO_CHANGEOVER = 'auto changeover'
+STATE_ENERGY_HEAT = 'energy heat'
+STATE_ENERGY_COOL = 'energy cool'
+STATE_FULL_POWER = 'full power'
+STATE_FORCE_OPEN = 'force open'
+STATE_AWAY = 'away'
+FAN_AUTO_HIGH = 'auto_high'
+FAN_AUTO_MEDIUM = 'auto_medium'
+FAN_CIRCULATION = 'circulation'
+FAN_HUMIDITY_CIRCULATION = 'humidity_circulation'
+FAN_LEFT_RIGHT = 'left_right'
+FAN_UP_DOWN = 'up_down'
+FAN_QUIET = 'quiet'
+STATE_FURNACE = 'furnace'
+
 DEPENDENCIES = ['fibaro']
 
 _LOGGER = logging.getLogger(__name__)
 
-
-FANMODE_MAP = {
-    "1": {0: STATE_OFF, 1: STATE_ON},
-    "1,128": {0: STATE_OFF, 1: STATE_ON, 128: STATE_AUTO},
-    "1,3,5,128": {0: STATE_OFF, 1: SPEED_LOW, 3: SPEED_MEDIUM,
-                  5: SPEED_HIGH, 128: STATE_AUTO},
+# SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
+# Table 128, Thermostat Fan Mode Set version 4::Fan Mode encoding
+FANMODES = {
+    0: STATE_OFF,
+    1: SPEED_LOW,
+    2: FAN_AUTO_HIGH,
+    3: SPEED_HIGH,
+    4: FAN_AUTO_MEDIUM,
+    5: SPEED_MEDIUM,
+    6: FAN_CIRCULATION,
+    7: FAN_HUMIDITY_CIRCULATION,
+    8: FAN_LEFT_RIGHT,
+    9: FAN_UP_DOWN,
+    10: FAN_QUIET,
+    128: STATE_AUTO
 }
 
-IFANMODE_MAP = {
-    "1": {STATE_OFF: 0, STATE_ON: 1},
-    "1,128": {STATE_OFF: 0, STATE_ON: 1, STATE_AUTO: 128},
-    "1,3,5,128": {STATE_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 3,
-                  SPEED_HIGH: 5, STATE_AUTO: 128},
-}
-
-OPMODE_MAP = {
-    "1": {1: STATE_ON},
-    "0,1": {0: STATE_OFF, 1: STATE_ON},
-    "0,1,31": {0: STATE_OFF, 1: STATE_ON, 31: STATE_OPEN},
-    "0,1,2": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL},
-    "0,1,2,6": {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL,
-                6: STATE_FAN_ONLY},
-}
-
-IOPMODE_MAP = {
-    "1": {STATE_ON: 1},
-    "0,1": {STATE_OFF: 0, STATE_ON: 1},
-    "0,1,31": {STATE_OFF: 0, STATE_ON: 1, STATE_OPEN: 31},
-    "0,1,2": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2},
-    "0,1,2,6": {STATE_OFF: 0, STATE_HEAT: 1, STATE_COOL: 2,
-                STATE_FAN_ONLY: 6},
+# SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
+# Table 130, Thermostat Mode Set version 3::Mode encoding
+OPMODES = {
+    0: STATE_OFF,
+    1: STATE_HEAT,
+    2: STATE_COOL,
+    3: STATE_AUTO,
+    4: STATE_AUXILIARY,
+    5: STATE_RESUME,
+    6: STATE_FAN_ONLY,
+    7: STATE_FURNACE,
+    8: STATE_DRY,
+    9: STATE_MOIST,
+    10: STATE_AUTO_CHANGEOVER,
+    11: STATE_ENERGY_HEAT,
+    12: STATE_ENERGY_COOL,
+    13: STATE_AWAY,
+    15: STATE_FULL_POWER,
+    31: STATE_FORCE_OPEN
 }
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
@@ -87,6 +111,10 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         self._fanmode_device = None
         self._support_flags = 0
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self._fanmode_map = {}
+        self._ifanmode_map = {}
+        self._opmode_map = {}
+        self._iopmode_map = {}
 
         siblings = fibaro_device.fibaro_controller.get_siblings(
             fibaro_device.id)
@@ -116,18 +144,27 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
 
         if self._fanmode_device:
             smode = self._fanmode_device.fibaro_device.\
-                properties.supportedModes
-            self._fanmode_map = FANMODE_MAP.get(smode, {})
-            self._ifanmode_map = IFANMODE_MAP.get(smode, {})
+                properties.supportedModes.split(",")
+            for mode in smode:
+                try:
+                    self._fanmode_map[int(mode)] = FANMODES[int(mode)]
+                    self._ifanmode_map[FANMODES[int(mode)]] = int(mode)
+                except KeyError:
+                    self._fanmode_map[int(mode)] = 'unkown'
+
         if self._opmode_device:
             if "supportedOperatingModes" in self._opmode_device.fibaro_device.properties:
                 omode = self._opmode_device.fibaro_device. \
-                    properties.supportedOperatingModes
+                    properties.supportedOperatingModes.split(",")
             elif "supportedModes" in self._opmode_device.fibaro_device.properties:
                 omode = self._opmode_device.fibaro_device. \
-                    properties.supportedModes
-            self._opmode_map = OPMODE_MAP.get(omode, {})
-            self._iopmode_map = IOPMODE_MAP.get(omode, {})
+                    properties.supportedModes.split(",")
+            for mode in omode:
+                try:
+                    self._opmode_map[int(mode)] = OPMODES[int(mode)]
+                    self._iopmode_map[OPMODES[int(mode)]] = int(mode)
+                except KeyError:
+                    self._opmode_map[int(mode)] = 'unkown'
 
         _LOGGER.debug("Climate %s", self.ha_id)
         _LOGGER.debug("-- _tempsensor_device %s", self._tempsensor_device.ha_id if self._tempsensor_device else "None")
