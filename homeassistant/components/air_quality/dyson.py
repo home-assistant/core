@@ -72,7 +72,7 @@ class DysonAirSensor(AirQualityEntity):
 
     @property
     def name(self):
-        """Return the name of the Dyson sensor name."""
+        """Return the name of the Dyson sensor."""
         return self._name
 
     @property
