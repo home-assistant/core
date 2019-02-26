@@ -161,10 +161,11 @@ def adb_decorator(override_available=False):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    from firetv import KEYS
-
     def __init__(self, ftv, name, get_sources):
         """Initialize the FireTV device."""
+        from firetv import KEYS
+        self.KEYS = KEYS
+
         self.firetv = ftv
 
         self._name = name
