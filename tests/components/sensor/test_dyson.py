@@ -260,17 +260,11 @@ class DysonTest(unittest.TestCase):
     def test_setup_purecool_component(self):
         """Test setup purecool component with devices."""
         def _add_device(devices):
-            assert len(devices) == 8
+            assert len(devices) == 4
             assert devices[0].name == "Device_name Temperature"
             assert devices[1].name == "Device_name Humidity"
-            assert devices[2].name == "Device_name " \
-                                      "Particulate matter 2.5 μg/m3"
-            assert devices[3].name == "Device_name " \
-                                      "Particulate matter 10 μg/m3"
-            assert devices[4].name == "Device_name Volatile organic compounds"
-            assert devices[5].name == "Device_name Nitrogen dioxide"
-            assert devices[6].name == "Device_name Carbon filter state"
-            assert devices[7].name == "Device_name HEPA filter state"
+            assert devices[2].name == "Device_name Carbon filter state"
+            assert devices[3].name == "Device_name HEPA filter state"
 
         device_fan = _get_purecool_device_without_state()
         device_non_fan = _get_purecool_device_with_state()

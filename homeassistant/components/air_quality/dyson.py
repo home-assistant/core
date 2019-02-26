@@ -32,7 +32,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
     _LOGGER.debug("Creating new Dyson fans")
     devices = []
-    unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
     from libpurecool.dyson_pure_cool import DysonPureCool
 
