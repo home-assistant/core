@@ -446,8 +446,6 @@ async def async_process_ha_core_config(
             ]
             if has_api_password:
                 auth_conf.append({'type': 'legacy_api_password'})
-                _LOGGER.info('A Legacy API Password auth provider is automatic'
-                             ' configured using http.api_password config')
             if trusted_networks:
                 auth_conf.append({
                     'type': 'trusted_networks',
@@ -457,7 +455,6 @@ async def async_process_ha_core_config(
         mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
             {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
         ])
-        _LOGGER.info('A Authenticator app MFA module is automatic configured')
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
             hass,
