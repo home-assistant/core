@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
+    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W)
 from homeassistant.const import (
     CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
