@@ -15,8 +15,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_OFF,
-    STATE_ON,
-    STATE_OPEN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
@@ -153,12 +151,11 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
                     self._fanmode_map[int(mode)] = 'unkown'
 
         if self._opmode_device:
-            if "supportedOperatingModes" in self._opmode_device.fibaro_device.properties:
-                omode = self._opmode_device.fibaro_device. \
-                    properties.supportedOperatingModes.split(",")
-            elif "supportedModes" in self._opmode_device.fibaro_device.properties:
-                omode = self._opmode_device.fibaro_device. \
-                    properties.supportedModes.split(",")
+            prop = self._opmode_device.fibaro_device.properties
+            if "supportedOperatingModes" in prop:
+                omode = prop.supportedOperatingModes.split(",")
+            elif "supportedModes" in prop:
+                omode = prop.supportedModes.split(",")
             for mode in omode:
                 try:
                     self._opmode_map[int(mode)] = OPMODES[int(mode)]
@@ -167,10 +164,14 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
                     self._opmode_map[int(mode)] = 'unkown'
 
         _LOGGER.debug("Climate %s", self.ha_id)
-        _LOGGER.debug("-- _tempsensor_device %s", self._tempsensor_device.ha_id if self._tempsensor_device else "None")
-        _LOGGER.debug("-- _targettemp_device %s", self._targettemp_device.ha_id if self._targettemp_device else "None")
-        _LOGGER.debug("-- _opmode_device %s", self._opmode_device.ha_id if self._opmode_device else "None")
-        _LOGGER.debug("-- _fanmode_device %s", self._fanmode_device.ha_id if self._fanmode_device else "None")
+        _LOGGER.debug("- _tempsensor_device %s", self._tempsensor_device.ha_id
+                      if self._tempsensor_device else "None")
+        _LOGGER.debug("- _targettemp_device %s", self._targettemp_device.ha_id
+                      if self._targettemp_device else "None")
+        _LOGGER.debug("- _opmode_device %s", self._opmode_device.ha_id
+                      if self._opmode_device else "None")
+        _LOGGER.debug("- _fanmode_device %s", self._fanmode_device.ha_id
+                      if self._fanmode_device else "None")
 
     @property
     def supported_features(self):
@@ -206,7 +207,8 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             return None
 
         if "operatingMode" in self._opmode_device.fibaro_device.properties:
-            mode = int(self._opmode_device.fibaro_device.properties.operatingMode)
+            mode = int(self._opmode_device.fibaro_device.
+                       properties.operatingMode)
         else:
             mode = int(self._opmode_device.fibaro_device.properties.mode)
         ret = self._opmode_map.get(mode, "")
