@@ -2,11 +2,14 @@
 Platform for Time of Flight sensor VL53L1X.
 
 For more details about this platform, please refer to
+https://home-assistant.io/components/sensor.tof/
+
+Based on revised Python library for the VL53L1X Laser Ranger.
 https://github.com/josemotta/vl53l1x-python
+https://github.com/NagyAttila/vl53l1x-python
+https://github.com/pimoroni/vl53l1x-python
 
-Fixed setup for current driver version:
-
-- DEFAULT_RANGE is always LONG
+- DEFAULT_RANGE is always LONG = 2, for 4 meters range
 - A GPIO connected to VL53L1X XSHUT input resets the device.
 - XSHUT starts pulsing LOW and after that it is kept HIGH all time.
 
