@@ -265,6 +265,7 @@ homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/*/tibber.py @danielhiversen
 homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/*/tradfri.py @ggravlingen
+homeassistant/components/toon/* @frenck
 
 # U
 homeassistant/components/unifi/* @kane610
