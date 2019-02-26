@@ -172,6 +172,7 @@ FLOWS = [
     'smhi',
     'sonos',
     'tellduslive',
+    'toon',
     'tplink',
     'tradfri',
     'twilio',

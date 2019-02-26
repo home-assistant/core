@@ -102,7 +102,7 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.esphome
-aioesphomeapi==1.5.0
+aioesphomeapi==1.6.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.6
@@ -420,7 +420,7 @@ fiblary3==0.1.7
 fints==1.0.1
 
 # homeassistant.components.media_player.firetv
-firetv==1.0.7
+firetv==1.0.9
 
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
@@ -1113,7 +1113,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.sensor.linky
-pylinky==0.1.8
+pylinky==0.3.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -1685,7 +1685,7 @@ tikteck==0.4
 todoist-python==7.0.17
 
 # homeassistant.components.toon
-toonlib==1.1.3
+toonapilib==3.0.9
 
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.22
