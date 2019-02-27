@@ -173,7 +173,7 @@ async def test_multiple_flow_implementation(hass):
         result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['data'][CONF_TOKEN] == MOCK_CREDS
-        assert len(result['data']['devices']) == 2
+        assert len(result['data']['devices']) == 1
         assert result['title'] == MOCK_TITLE
 
     mock_data = {
@@ -185,10 +185,10 @@ async def test_multiple_flow_implementation(hass):
     entry.add_to_manager(manager)
     manager.async_update_entry(entry)
 
-    # Check if there is still 1 entry.
-    assert len(manager.async_entries()) == 1
-    # Check if there are two device configs in entry.
-    assert len(entry.data['devices']) == 2
+    # Check if there are 2 entries.
+    assert len(manager.async_entries()) == 2
+    # Check if there is device config in entry.
+    assert len(entry.data['devices']) == 1
 
 
 async def test_port_bind_abort(hass):
@@ -229,7 +229,17 @@ async def test_additional_device(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
     flow.creds = MOCK_CREDS
-    MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA).add_to_hass(hass)
+
+    """Init config manager."""
+    manager = config_entries.ConfigEntries(hass, {})
+    manager._entries = []
+    hass.config_entries = manager
+
+    # Mock existing entry.
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
+    entry.add_to_manager(manager)
+    # Check that only 1 entry exists
+    assert len(manager.async_entries()) == 1
 
     with patch('pyps4_homeassistant.Helper.has_devices',
                return_value=[{'host-ip': MOCK_HOST},
@@ -239,8 +249,15 @@ async def test_additional_device(hass):
         result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['data'][CONF_TOKEN] == MOCK_CREDS
-        assert len(result['data']['devices']) == 2
+        assert len(result['data']['devices']) == 1
         assert result['title'] == MOCK_TITLE
+
+    # Add New Entry
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
+    entry.add_to_manager(manager)
+
+    # Check that there are 2 entries
+    assert len(manager.async_entries()) == 2
 
 
 async def test_no_devices_found_abort(hass):
