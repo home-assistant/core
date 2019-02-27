@@ -839,7 +839,7 @@ async def test_entry_reload_not_loaded(hass, manager, state):
     config_entries.ENTRY_STATE_MIGRATION_ERROR,
     config_entries.ENTRY_STATE_FAILED_UNLOAD,
 ))
-async def test_entry_reload_not_loaded(hass, manager, state):
+async def test_entry_reload_error(hass, manager, state):
     """Test that we can reload an entry."""
     entry = MockConfigEntry(
         domain='comp',
