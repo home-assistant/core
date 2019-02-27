@@ -1,5 +1,6 @@
 """Support for native mobile apps."""
 import logging
+import json
 
 import voluptuous as vol
 from aiohttp.web import json_response
@@ -31,11 +32,10 @@ STORAGE_VERSION = 1
 CONF_SECRET = 'secret'
 
 ATTR_DEVICE_ID = 'device_id'
-
 ATTR_DEVICE_NAME = 'device_name'
-
 ATTR_APP_ID = 'app_id'
 ATTR_APP_VERSION = 'app_version'
+ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
 ATTR_EVENT_TYPE = 'event_type'
 ATTR_EVENT_DATA = 'event_data'
@@ -43,12 +43,33 @@ ATTR_EVENT_DATA = 'event_data'
 ATTR_TEMPLATE = 'template'
 ATTR_TEMPLATE_VARIABLES = 'variables'
 
+ATTR_WEBHOOK_TYPE = 'type'
+ATTR_WEBHOOK_DATA = 'data'
+ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
+ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
+
+WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
+WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
+WEBHOOK_TYPE_RENDER_TEMPLATE = 'render_template'
+WEBHOOK_TYPE_UPDATE_LOCATION = 'update_location'
+
+WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                 WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION]
+
 REGISTER_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+    vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=True): cv.boolean,
+})
+
+WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
+    vol.Required(ATTR_WEBHOOK_TYPE): vol.In(WEBHOOK_TYPES),
+    vol.Required(ATTR_WEBHOOK_DATA, default={}): dict,
+    vol.Optional(ATTR_WEBHOOK_ENCRYPTED, default=False): cv.boolean,
+    vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
+})
 
 CALL_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_DOMAIN): cv.string,
@@ -66,57 +87,113 @@ RENDER_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
 })
 
+WEBHOOK_SCHEMAS = {
+    WEBHOOK_TYPE_CALL_SERVICE: CALL_SERVICE_SCHEMA,
+    WEBHOOK_TYPE_FIRE_EVENT: FIRE_EVENT_SCHEMA,
+    WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
+    WEBHOOK_TYPE_UPDATE_LOCATION: SEE_SCHEMA,
+}
+
+
+def get_cipher():
+    """Return decryption function and length of key.
+
+    Async friendly.
+    """
+    from nacl.secret import SecretBox
+    from nacl.encoding import Base64Encoder
+
+    def decrypt(ciphertext, key):
+        """Decrypt ciphertext using key."""
+        return SecretBox(key).decrypt(ciphertext, encoder=Base64Encoder)
+    return (SecretBox.KEY_SIZE, decrypt)
+
+
+def _decrypt_payload(key, ciphertext):
+    """Decrypt encrypted payload."""
+    try:
+        keylen, decrypt = get_cipher()
+    except OSError:
+        _LOGGER.warning(
+            "Ignoring encrypted payload because libsodium not installed")
+        return None
+
+    if key is None:
+        _LOGGER.warning(
+            "Ignoring encrypted payload because no decryption key known")
+        return None
+
+    key = key.encode("utf-8")
+    key = key[:keylen]
+    key = key.ljust(keylen, b'\0')
+
+    try:
+        message = decrypt(ciphertext, key).decode("utf-8")
+        message = json.loads(message)
+        _LOGGER.debug("decrypted payload: %s", message)
+        return message
+    except ValueError:
+        _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
+        return None
+
 
 async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     """Handle webhook callback."""
+    device = device_for_webhook_id(hass, webhook_id)
+
     req_data = await request.json()
 
-    webhook_type = req_data.get('type')
+    try:
+        req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
+    except vol.Invalid as ex:
+        return json_response(vol.humanize.humanize_error(req_data, ex),
+                             status=HTTP_BAD_REQUEST)
 
-    if webhook_type == 'call_service':
-        try:
-            data = CALL_SERVICE_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return json_response(vol.humanize.humanize_error(request.json, ex),
-                                 HTTP_BAD_REQUEST)
+    webhook_type = req_data[ATTR_WEBHOOK_TYPE]
 
+    webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
+
+    if req_data[ATTR_WEBHOOK_ENCRYPTED]:
+        webhook_payload = _decrypt_payload(device[CONF_SECRET],
+                                           webhook_payload)
+
+    try:
+        data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
+    except vol.Invalid as ex:
+        return json_response(vol.humanize.humanize_error(webhook_payload, ex),
+                             status=HTTP_BAD_REQUEST)
+
+    if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
         await hass.services.async_call(data[ATTR_DOMAIN], data[ATTR_SERVICE],
                                        data[ATTR_SERVICE_DATA])
-    elif webhook_type == 'fire_event':
-        try:
-            data = FIRE_EVENT_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return json_response(vol.humanize.humanize_error(request.json, ex),
-                                 HTTP_BAD_REQUEST)
-
+        return json_response([])
+    elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         hass.bus.fire(data[ATTR_EVENT_TYPE], data[ATTR_EVENT_DATA])
-    elif webhook_type == 'render_template':
-        try:
-            data = RENDER_TEMPLATE_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return json_response(vol.humanize.humanize_error(request.json, ex),
-                                 HTTP_BAD_REQUEST)
-
+        return json_response([])
+    elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
         tpl = template.Template(data[ATTR_TEMPLATE], hass)
         return tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
-    elif webhook_type == 'update_location':
-        try:
-            data = SEE_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return json_response(vol.humanize.humanize_error(request.json, ex),
-                                 HTTP_BAD_REQUEST)
-
+    elif webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
                                        DEVICE_TRACKER_SEE, data)
+        return json_response([])
 
 
 def supports_encryption():
     """Test if we support encryption."""
     try:
-        import libnacl   # noqa pylint: disable=unused-import
+        import nacl   # noqa pylint: disable=unused-import
         return True
     except OSError:
         return False
+
+
+def device_for_webhook_id(hass, webhook_id):
+    """Return the device name for the webhook ID."""
+    for device_name, device in hass.data[DOMAIN].items():
+        if device.get(CONF_WEBHOOK_ID) == webhook_id:
+            return device
+    return None
 
 
 async def async_setup(hass, config):
@@ -152,8 +229,8 @@ async def async_setup_entry(hass, entry):
 class RegisterDeviceView(HomeAssistantView):
     """A view that accepts device registration requests."""
 
-    url = '/api/mobile_app/identify'
-    name = 'api:mobile_app:identify'
+    url = '/api/mobile_app/register'
+    name = 'api:mobile_app:register'
 
     def __init__(self):
         """Initialize the view."""
@@ -171,22 +248,30 @@ class RegisterDeviceView(HomeAssistantView):
             data = REGISTER_DEVICE_SCHEMA(req_data)
         except vol.Invalid as ex:
             return self.json_message(
-                vol.humanize.humanize_error(request.json, ex),
+                vol.humanize.humanize_error(req_data, ex),
                 HTTP_BAD_REQUEST)
 
-        name = data.get(ATTR_DEVICE_ID)
+        device_id = data[ATTR_DEVICE_ID]
 
-        existing_device = hass.data[DOMAIN][name]
+        if data[ATTR_DEVICE_ID] in hass.data[DOMAIN]:
+            return self.json_message("device_exists", 409)
 
-        webhook_id = existing_device.get(CONF_WEBHOOK_ID,
-                                         generate_secret())
+        resp = {}
 
-        secret = existing_device.get(CONF_SECRET, generate_secret(16))
+        webhook_id = generate_secret()
 
-        data[CONF_SECRET] = secret
         data[CONF_WEBHOOK_ID] = webhook_id
 
-        hass.data[DOMAIN][name] = data
+        resp[CONF_WEBHOOK_ID] = webhook_id
+
+        if data[ATTR_SUPPORTS_ENCRYPTION] is True and supports_encryption():
+            secret = generate_secret(16)
+
+            data[CONF_SECRET] = secret
+
+            resp[CONF_SECRET] = secret
+
+        hass.data[DOMAIN][device_id] = data
 
         store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
@@ -200,7 +285,7 @@ class RegisterDeviceView(HomeAssistantView):
             webhook.async_register(hass, DOMAIN, 'Mobile app', webhook_id,
                                    handle_webhook)
 
-        return self.json({'webhook_id': webhook_id, 'secret': secret})
+        return self.json(resp)
 
 
 config_entry_flow.register_discovery_flow(
