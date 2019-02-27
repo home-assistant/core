@@ -170,7 +170,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    hass.states.async_set(DEVICE_TRACKER, 'home',
+    hass.states.async_set(
+        DEVICE_TRACKER, 'home',
         {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
     await hass.async_block_till_done()
 
@@ -212,7 +213,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.state == 'zone1'
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
 
-    hass.states.async_set(DEVICE_TRACKER, 'home',
+    hass.states.async_set(
+        DEVICE_TRACKER, 'home',
         {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
     await hass.async_block_till_done()
     hass.states.async_set(
