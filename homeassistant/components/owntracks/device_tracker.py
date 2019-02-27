@@ -4,7 +4,6 @@ Device tracker platform that adds support for OwnTracks over MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
-import base64
 import json
 import logging
 
@@ -141,7 +140,6 @@ def _decrypt_payload(secret, topic, ciphertext):
     key = key.ljust(keylen, b'\0')
 
     try:
-        ciphertext = base64.b64decode(ciphertext)
         message = decrypt(ciphertext, key)
         message = message.decode("utf-8")
         _LOGGER.debug("Decrypted payload: %s", message)
