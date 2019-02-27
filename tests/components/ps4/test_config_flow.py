@@ -1,7 +1,7 @@
 """Define tests for the PlayStation 4 config flow."""
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.ps4.const import (
     DEFAULT_NAME, DEFAULT_REGION)
@@ -50,6 +50,13 @@ async def test_full_flow_implementation(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
+    """Init config manager."""
+    manager = config_entries.ConfigEntries(hass, {})
+    manager._entries = []
+    hass.config_entries = manager
+    # Check if there are no entries.
+    assert len(manager.async_entries()) == 0
+
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
                return_value=None):
@@ -77,11 +84,30 @@ async def test_full_flow_implementation(hass):
         assert result['data']['devices'] == [MOCK_DEVICE]
         assert result['title'] == MOCK_TITLE
 
+    # Add entry using result data.
+    mock_data = {
+        CONF_TOKEN: result['data'][CONF_TOKEN],
+        'devices': result['data']['devices']}
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=mock_data)
+    entry.add_to_manager(manager)
+
+    # Check if entry exists.
+    assert len(manager.async_entries()) == 1
+    # Check if there is a device config in entry.
+    assert len(entry.data['devices']) == 1
+
 
 async def test_multiple_flow_implementation(hass):
     """Test multiple device flows."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+
+    """Init config manager."""
+    manager = config_entries.ConfigEntries(hass, {})
+    manager._entries = []
+    hass.config_entries = manager
+    # Check if there are no entries.
+    assert len(manager.async_entries()) == 0
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -114,13 +140,21 @@ async def test_multiple_flow_implementation(hass):
 
         await hass.async_block_till_done()
 
-    # Test additional flow.
+    # Add entry using result data.
     mock_data = {
         CONF_TOKEN: result['data'][CONF_TOKEN],
         'devices': result['data']['devices']}
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=mock_data)
+    entry.add_to_manager(manager)
+
+    # Check if entry exists.
+    assert len(manager.async_entries()) == 1
+    # Check if there is a device config in entry.
+    assert len(entry.data['devices']) == 1
+
+    # Test additional flow.
 
     # User Step Started, results in Step Link:
-    MockConfigEntry(domain=ps4.DOMAIN, data=mock_data).add_to_hass(hass)
     with patch('pyps4_homeassistant.Helper.port_bind',
                return_value=None), \
             patch('pyps4_homeassistant.Helper.has_devices',
@@ -141,6 +175,20 @@ async def test_multiple_flow_implementation(hass):
         assert result['data'][CONF_TOKEN] == MOCK_CREDS
         assert len(result['data']['devices']) == 2
         assert result['title'] == MOCK_TITLE
+
+    mock_data = {
+        CONF_TOKEN: result['data'][CONF_TOKEN],
+        'devices': result['data']['devices']}
+
+    # Update config entries with result data
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=mock_data)
+    entry.add_to_manager(manager)
+    manager.async_update_entry(entry)
+
+    # Check if there is still 1 entry.
+    assert len(manager.async_entries()) == 1
+    # Check if there are two device configs in entry.
+    assert len(entry.data['devices']) == 2
 
 
 async def test_port_bind_abort(hass):
