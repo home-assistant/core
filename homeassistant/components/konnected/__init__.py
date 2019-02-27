@@ -18,35 +18,21 @@ from homeassistant.const import (
     CONF_SWITCHES, CONF_HOST, CONF_PORT, CONF_ID, CONF_NAME, CONF_TYPE,
     CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN, ATTR_ENTITY_ID, ATTR_STATE,
     STATE_ON)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, dispatcher_send)
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
+
+from .const import (
+    CONF_ACTIVATION, CONF_API_HOST,
+    CONF_MOMENTARY, CONF_PAUSE, CONF_POLL_INTERVAL, CONF_REPEAT,
+    CONF_INVERSE, CONF_BLINK, CONF_DISCOVERY, CONF_DHT_SENSORS,
+    CONF_DS18B20_SENSORS, DOMAIN, STATE_LOW, STATE_HIGH, PIN_TO_ZONE,
+    ZONE_TO_PIN, ENDPOINT_ROOT, UPDATE_ENDPOINT, SIGNAL_SENSOR_UPDATE)
+from .handlers import HANDLERS
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['konnected==0.1.5']
-
-DOMAIN = 'konnected'
-
-CONF_ACTIVATION = 'activation'
-CONF_API_HOST = 'api_host'
-CONF_MOMENTARY = 'momentary'
-CONF_PAUSE = 'pause'
-CONF_POLL_INTERVAL = 'poll_interval'
-CONF_PRECISION = 'precision'
-CONF_REPEAT = 'repeat'
-CONF_INVERSE = 'inverse'
-CONF_BLINK = 'blink'
-CONF_DISCOVERY = 'discovery'
-CONF_DHT_SENSORS = 'dht_sensors'
-CONF_DS18B20_SENSORS = 'ds18b20_sensors'
-
-STATE_LOW = 'low'
-STATE_HIGH = 'high'
-
-PIN_TO_ZONE = {1: 1, 2: 2, 5: 3, 6: 4, 7: 5, 8: 'out', 9: 6}
-ZONE_TO_PIN = {zone: pin for pin, zone in PIN_TO_ZONE.items()}
 
 _BINARY_SENSOR_SCHEMA = vol.All(
     vol.Schema({
@@ -111,11 +97,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 DEPENDENCIES = ['http']
-
-ENDPOINT_ROOT = '/api/konnected'
-UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
-SIGNAL_SENSOR_UPDATE = 'konnected.{}.update'
-SIGNAL_DS18B20_NEW = 'konnected.ds18b20.new'
 
 
 async def async_setup(hass, config):
@@ -251,9 +232,7 @@ class ConfiguredDevice:
                     CONF_NAME, 'Konnected {} Sensor {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
                 CONF_TYPE: entity[CONF_TYPE],
-                CONF_POLL_INTERVAL: entity.get(CONF_POLL_INTERVAL),
-                CONF_PRECISION: entity.get(CONF_PRECISION),
-                ATTR_STATE: None
+                CONF_POLL_INTERVAL: entity.get(CONF_POLL_INTERVAL)
             }
             sensors.append(sensor)
             _LOGGER.debug('Set up %s sensor %s (initial state: %s)',
@@ -420,7 +399,6 @@ class KonnectedView(HomeAssistantView):
     """View creates an endpoint to receive push updates from the device."""
 
     url = UPDATE_ENDPOINT
-    extra_urls = [UPDATE_ENDPOINT + '/{pin_num}/{state}']
     name = 'api:konnected'
     requires_auth = False  # Uses access token from configuration
 
@@ -465,8 +443,7 @@ class KonnectedView(HomeAssistantView):
                  hass.states.get(pin[ATTR_ENTITY_ID]).state,
                  pin[CONF_ACTIVATION])})
 
-    async def put(self, request: Request, device_id,
-                  pin_num=None, state=None) -> Response:
+    async def put(self, request: Request, device_id) -> Response:
         """Receive a sensor update via PUT request and async set state."""
         hass = request.app['hass']
         data = hass.data[DOMAIN]
@@ -474,11 +451,10 @@ class KonnectedView(HomeAssistantView):
         try:  # Konnected 2.2.0 and above supports JSON payloads
             payload = await request.json()
             pin_num = payload['pin']
-            state = payload.get('state')
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning(("Your Konnected device software may be out of "
-                             "date. Visit https://help.konnected.io for "
-                             "updating instructions."))
+            _LOGGER.error(("Your Konnected device software may be out of "
+                           "date. Visit https://help.konnected.io for "
+                           "updating instructions."))
 
         auth = request.headers.get(AUTHORIZATION, None)
         if not hmac.compare_digest('Bearer {}'.format(self.auth_token), auth):
@@ -497,37 +473,13 @@ class KonnectedView(HomeAssistantView):
             return self.json_message('unregistered sensor/actuator',
                                      status_code=HTTP_BAD_REQUEST)
 
-        if state:
-            entity_id = pin_data.get(ATTR_ENTITY_ID)
-            state = bool(int(state))
-            if pin_data.get(CONF_INVERSE):
-                state = not state
+        pin_data['device_id'] = device_id
 
-            async_dispatcher_send(
-                hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state)
-
-        temp, humi = payload.get('temp'), payload.get('humi')
-        addr = payload.get('addr')
-
-        if addr:
-            entity_id = pin_data.get(addr)
-            if entity_id:
-                async_dispatcher_send(
-                    hass, SIGNAL_SENSOR_UPDATE.format(entity_id), temp)
-            else:
-                sensor_data = pin_data
-                sensor_data['device_id'] = device_id
-                sensor_data['temperature'] = temp
-                sensor_data['addr'] = addr
-                async_dispatcher_send(
-                    hass, SIGNAL_DS18B20_NEW, sensor_data)
-        if temp:
-            entity_id = pin_data.get('temperature')
-            async_dispatcher_send(
-                hass, SIGNAL_SENSOR_UPDATE.format(entity_id), temp)
-        if humi:
-            entity_id = pin_data.get('humidity')
-            async_dispatcher_send(
-                hass, SIGNAL_SENSOR_UPDATE.format(entity_id), humi)
+        for attr in ['state', 'temp', 'humi', 'addr']:
+            value = payload.get(attr)
+            if value is not None:
+                handler = HANDLERS.get(attr)
+                if handler:
+                    hass.async_create_task(handler(hass, pin_data, payload))
 
         return self.json_message('ok')

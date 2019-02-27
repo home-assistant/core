@@ -1,7 +1,7 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
 import logging
 
-from homeassistant.components.konnected import (
+from homeassistant.components.konnected.const import (
     DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
     CONF_DEVICES, CONF_PIN, CONF_TYPE, CONF_NAME, CONF_SENSORS,
@@ -43,11 +43,17 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(sensors)
 
     @callback
-    def async_add_ds18b20(data):
+    def async_add_ds18b20(attrs):
         """Add new KonnectedSensor representing a ds18b20 sensor."""
+        sensor_config = next((s for s
+                              in data[CONF_DEVICES][device_id][CONF_SENSORS]
+                              if s[CONF_TYPE] == 'ds18b20'
+                              and s[CONF_PIN] == attrs.get(CONF_PIN)), None)
+
         async_add_entities([
-            KonnectedSensor(data.get('device_id'), data,
-                            DEVICE_CLASS_TEMPERATURE)
+            KonnectedSensor(device_id, sensor_config, DEVICE_CLASS_TEMPERATURE,
+                            addr=attrs.get('addr'),
+                            initial_state=attrs.get('temp'))
         ], True)
 
     # DS18B20 sensors entities are initialized when they report for the first
@@ -58,18 +64,20 @@ async def async_setup_platform(hass, config, async_add_entities,
 class KonnectedSensor(Entity):
     """Represents a Konnected DHT Sensor."""
 
-    def __init__(self, device_id, data, sensor_type):
+    def __init__(self, device_id, data, sensor_type, addr=None,
+                 initial_state=None):
         """Initialize the entity for a single sensor_type."""
+        self._addr = addr
         self._data = data
         self._device_id = device_id
         self._type = sensor_type
         self._pin_num = self._data.get(CONF_PIN)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._unique_id = self._data.get('addr') or '{}-{}-{}'.format(
+        self._unique_id = addr or '{}-{}-{}'.format(
             device_id, self._pin_num, sensor_type)
 
         # set initial state if known at initialization
-        self._state = self._data.get(sensor_type)
+        self._state = initial_state
         if self._state:
             self._state = round(float(self._state), 1)
 
@@ -100,7 +108,7 @@ class KonnectedSensor(Entity):
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""
-        entity_id_key = self._data.get('addr') or self._type
+        entity_id_key = self._addr or self._type
         self._data[entity_id_key] = self.entity_id
         async_dispatcher_connect(
             self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id),
