@@ -65,10 +65,15 @@ class KonnectedSensor(Entity):
         self._type = sensor_type
         self._pin_num = self._data.get(CONF_PIN)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._state = self._data.get(sensor_type)
         self._unique_id = self._data.get('addr') or '{}-{}-{}'.format(
             device_id, self._pin_num, sensor_type)
 
+        # set initial state if known at initialization
+        self._state = self._data.get(sensor_type)
+        if self._state:
+            self._state = round(float(self._state), 1)
+
+        # set entity name if given
         self._name = self._data.get(CONF_NAME)
         if self._name:
             self._name += ' ' + SENSOR_TYPES[sensor_type][0]
@@ -107,5 +112,5 @@ class KonnectedSensor(Entity):
         if self._type == DEVICE_CLASS_HUMIDITY:
             self._state = int(float(state))
         else:
-            self._state = state
+            self._state = round(float(state), 1)
         self.async_schedule_update_ha_state()

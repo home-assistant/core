@@ -33,6 +33,8 @@ CONF_ACTIVATION = 'activation'
 CONF_API_HOST = 'api_host'
 CONF_MOMENTARY = 'momentary'
 CONF_PAUSE = 'pause'
+CONF_POLL_INTERVAL = 'poll_interval'
+CONF_PRECISION = 'precision'
 CONF_REPEAT = 'repeat'
 CONF_INVERSE = 'inverse'
 CONF_BLINK = 'blink'
@@ -63,6 +65,8 @@ _SENSOR_SCHEMA = vol.All(
         vol.Required(CONF_TYPE):
             vol.All(vol.Lower, vol.In(['dht', 'ds18b20'])),
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_POLL_INTERVAL):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
@@ -247,6 +251,8 @@ class ConfiguredDevice:
                     CONF_NAME, 'Konnected {} Sensor {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
                 CONF_TYPE: entity[CONF_TYPE],
+                CONF_POLL_INTERVAL: entity.get(CONF_POLL_INTERVAL),
+                CONF_PRECISION: entity.get(CONF_PRECISION),
                 ATTR_STATE: None
             }
             sensors.append(sensor)
@@ -338,7 +344,8 @@ class DiscoveredDevice:
 
     def dht_sensor_configuration(self):
         """Return the configuration map for syncing DHT sensors."""
-        return [{'pin': sensor[CONF_PIN]} for sensor
+        return [{CONF_PIN: sensor[CONF_PIN],
+                 CONF_POLL_INTERVAL: sensor[CONF_POLL_INTERVAL]} for sensor
                 in self.stored_configuration[CONF_SENSORS]
                 if sensor[CONF_TYPE] == 'dht']
 
