@@ -1,6 +1,6 @@
 # Home Assistant core
 aiohttp==3.5.4
-astral==1.9.2
+astral==1.10.1
 async_timeout==3.0.1
 attrs==18.2.0
 bcrypt==3.1.5
