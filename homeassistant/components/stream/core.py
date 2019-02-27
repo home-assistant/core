@@ -16,16 +16,10 @@ from .const import DOMAIN, ATTR_STREAMS
 class StreamBuffer:
     """Represent a segment."""
 
-    # pylint: disable=no-name-in-module
-    from av import CodecContext
-    from av.container import OutputContainer
-    from av.video.stream import VideoStream
-    from av.audio.stream import AudioStream
-
     segment = attr.ib(type=io.BytesIO)
-    output = attr.ib(type=OutputContainer)
-    vstream = attr.ib(type=VideoStream)
-    astream = attr.ib(type=AudioStream, default=None)
+    output = attr.ib()               # type=av.OutputContainer
+    vstream = attr.ib()              # type=av.VideoStream
+    astream = attr.ib(default=None)  # type=av.AudioStream
 
 
 @attr.s
