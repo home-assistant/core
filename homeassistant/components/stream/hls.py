@@ -30,6 +30,7 @@ class HlsPlaylistView(StreamView):
         hass = request.app['hass']
         renderer = M3U8Renderer(stream, hass.config.api.base_url)
         track = stream.add_provider(HlsStreamOutput())
+        stream.start()
         # Wait for a segment to be ready
         if not track.segments:
             await track.recv()

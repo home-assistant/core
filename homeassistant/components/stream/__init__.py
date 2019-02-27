@@ -39,6 +39,9 @@ async def async_request_stream(hass, stream_source, options={}, preload=False):
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream is not configured.")
 
+    if not stream_source:
+        raise HomeAssistantError("Invalid stream source.")
+
     keepalive = hass.data[DOMAIN][CONF_KEEPALIVE]
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
@@ -49,12 +52,17 @@ async def async_request_stream(hass, stream_source, options={}, preload=False):
             hass.data[DOMAIN][ATTR_STREAMS][stream_source] = stream
         if not preload and not stream.access_token:
             stream.access_token = generate_secret()
-        stream.start()
+            stream.start()
         return stream.access_token
-    except KeyError:
-        _LOGGER.error("No stream found for %s", stream_source)
+    except Exception:
+        raise HomeAssistantError('Unable to get stream')
 
-    raise HomeAssistantError('Unable to get stream')
+
+@bind_hass
+def get_stream(hass, stream_source):
+    """Return available stream."""
+    streams = hass.data[DOMAIN][ATTR_STREAMS]
+    return streams.get(stream_source)
 
 
 @bind_hass
@@ -121,7 +129,7 @@ class Stream:
     def start(self):
         """Start a stream."""
         import av
-        if self.__thread is None:
+        if self.__thread is None or not self.__thread.isAlive():
             self.__container = av.open(self.source, options=self.options)
             self.__thread_quit = threading.Event()
             self.__thread = threading.Thread(

@@ -45,6 +45,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
 
 def stream_worker(hass, stream, quit_event):
     """Handle consuming streams."""
+    import av
     try:
         video_stream = stream.container.streams.video[0]
     except (KeyError, IndexError):
@@ -59,26 +60,42 @@ def stream_worker(hass, stream, quit_event):
     audio_packets = {}
 
     while not quit_event.is_set():
-        packet = next(stream.container.demux(video_stream))
+        try:
+            packet = next(stream.container.demux(video_stream))
+            if packet.dts is None:
+                # If we get a "flushing" packet, the stream is done
+                raise StopIteration
+        except (av.AVError, StopIteration):
+            # End of stream, clear listeners and stop thread
+            for fmt, buffer in outputs.items():
+                asyncio.run_coroutine_threadsafe(
+                    stream.outputs[fmt].put(None), hass.loop)
+            break
 
-        # We need to skip the "flushing" packets that `demux` generates.
-        if packet.dts is None:
-            continue
-
-        # Mux on every keyframe
-        if packet.is_keyframe and not first_packet:
+        # Reset segment on every keyframe
+        if packet.is_keyframe:
+            # Save segment to outputs
             segment_duration = (packet.pts * packet.time_base) / sequence
             for fmt, buffer in outputs.items():
+                # Flush streams
+                for packet in buffer.vstream.encode():
+                    buffer.output.mux(packet)
+                if buffer.astream:
+                    for packet in buffer.astream.encode():
+                        buffer.output.mux(packet)
                 buffer.output.close()
                 del audio_packets[buffer.astream]
                 asyncio.run_coroutine_threadsafe(
                     stream.outputs[fmt].put(Segment(
                         sequence, buffer.segment, segment_duration
                     )), hass.loop)
-            outputs = {}
-            sequence += 1
 
-            # Initialize outputs on keyframes as well
+            # Clear outputs and increment sequence
+            outputs = {}
+            if not first_packet:
+                sequence += 1
+
+            # Initialize outputs
             if not outputs:
                 for stream_output in stream.outputs.values():
                     if video_stream.name != stream_output.video_codec:
@@ -95,23 +112,31 @@ def stream_worker(hass, stream, quit_event):
             packet.pts = 0
             first_packet = False
 
-        # We need to assign the packet to the new stream.
+        # Store packets on each output
         for buffer in outputs.values():
+            # Check if the format requires audio
             if audio_packets.get(buffer.astream):
                 a_packet = audio_packets[buffer.astream]
                 a_time_base = a_packet.time_base
+
+                # Determine video start timestamp and duration
                 video_start = packet.pts * packet.time_base
                 video_duration = packet.duration * packet.time_base
+
                 if packet.is_keyframe:
+                    # Set first audio packet in sequence to equal video pts
                     a_packet.pts = int(video_start / a_time_base)
                     a_packet.dts = int(video_start / a_time_base)
-                # Adjust pts
+
+                # Determine target end timestamp for audio
                 target_pts = int((video_start + video_duration) / a_time_base)
                 while a_packet.pts < target_pts:
+                    # Mux audio packet and adjust points until target hit
                     buffer.output.mux(a_packet)
                     a_packet.pts += a_packet.duration
                     a_packet.dts += a_packet.duration
                     audio_packets[buffer.astream] = a_packet
 
+            # Assign the video packet to the new stream & mux
             packet.stream = buffer.vstream
             buffer.output.mux(packet)

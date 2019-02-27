@@ -1,13 +1,15 @@
 """The tests for the camera component."""
 import asyncio
 import base64
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, PropertyMock
 
 import pytest
 
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.components import camera, http
+from homeassistant.components.stream.core import Segment
+from homeassistant.components.stream.hls import HlsStreamOutput
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -16,6 +18,8 @@ from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component,
     mock_coro)
 from tests.components.camera import common
+from tests.components.stream.common import (
+    generate_h264_video, async_preload_stream)
 
 
 @pytest.fixture
@@ -28,8 +32,19 @@ def mock_camera(hass):
     }))
 
     with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
-               return_value=b'Test'):
+               return_value=b'Test'), \
+        patch('homeassistant.components.camera.demo.DemoCamera.stream_source',
+              new_callable=PropertyMock) as mock_stream_source:
+        mock_stream_source.return_value = generate_h264_video()
         yield
+
+
+@pytest.fixture
+def mock_stream(hass):
+    """Initialize a demo camera platform with streaming."""
+    assert hass.loop.run_until_complete(async_setup_component(hass, 'stream', {
+        'stream': {}
+    }))
 
 
 class TestSetupCamera:
@@ -156,3 +171,38 @@ async def test_webocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     assert msg['result']['content_type'] == 'image/jpeg'
     assert msg['result']['content'] == \
         base64.b64encode(b'Test').decode('utf-8')
+
+
+async def test_webocket_camera_stream(hass, hass_ws_client,
+                                      mock_camera, mock_stream):
+    """Test camera/stream websocket command."""
+    await async_setup_component(hass, 'camera')
+
+    demo_camera = camera._get_camera_from_entity_id(hass, 'camera.demo_camera')
+    stream = await async_preload_stream(hass, demo_camera.stream_source)
+    track = stream.add_provider(HlsStreamOutput())
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 6,
+        'type': 'camera/stream',
+        'entity_id': 'camera.demo_camera',
+    })
+
+    msg = await client.receive_json()
+
+    # Test output is only 2 segments long, wait for the first one
+    if track.segments:
+        segment = track.get_segment(1)
+    else:
+        segment = await track.recv()
+
+    # Stop stream, if it hasn't quit already
+    stream.stop()
+
+    assert msg['id'] == 6
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert msg['result']['url'][-13:] == 'playlist.m3u8'
+
+    assert isinstance(segment, Segment)

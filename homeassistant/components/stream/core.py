@@ -86,14 +86,24 @@ class StreamOutput:
 
     async def recv(self) -> Segment:
         """Wait for and retrieve the latest segment."""
-        if self.__cursor is None or self.__cursor <= max(self.segments):
+        last_segment = max(self.segments, default=0)
+        if self.__cursor is None or self.__cursor <= last_segment:
             await self.__event.wait()
+
+        if not self.__segments:
+            return None
+
         segment = self.__segments[-1]
         self.__cursor = segment.sequence
         return segment
 
     async def put(self, segment: Segment) -> None:
         """Store output."""
+        if segment is None:
+            self.__segments = []
+            self.__event.set()
+            return
+
         self.__segments.append(segment)
         if len(self.__segments) > self.num_segments:
             self.__segments = self.__segments[-self.num_segments:]
