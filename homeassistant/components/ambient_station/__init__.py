@@ -1,5 +1,6 @@
 """Support for Ambient Weather Station Service."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -13,7 +14,8 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import (
+    async_call_later, async_track_time_interval)
 
 from .config_flow import configured_instances
 from .const import (
@@ -26,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'
 
+DEFAULT_HEALTH_CHECK_INTERVAL = timedelta(minutes=5)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 TYPE_24HOURRAININ = '24hourrainin'
@@ -296,6 +299,7 @@ class AmbientStation:
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
+        self._health_timer_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.monitored_conditions = monitored_conditions
@@ -305,9 +309,18 @@ class AmbientStation:
         """Register handlers and connect to the websocket."""
         from aioambient.errors import WebsocketError
 
+        async def _ws_reconnect(event_time):
+            """Forcibly disconnect from and reconnect to the websocket."""
+            _LOGGER.debug('Watchdog expired; forcing socket reconnection')
+            await self.client.websocket.disconnect()
+            await self.client.websocket.connect()
+
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
+            _LOGGER.debug('Watchdog starting')
+            self._health_timer_listener = async_track_time_interval(
+                self._hass, _ws_reconnect, DEFAULT_HEALTH_CHECK_INTERVAL)
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -316,6 +329,11 @@ class AmbientStation:
                 _LOGGER.debug('New data received: %s', data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(self._hass, TOPIC_UPDATE)
+
+            _LOGGER.debug('Resetting watchdog')
+            self._health_timer_listener()
+            self._health_timer_listener = async_track_time_interval(
+                self._hass, _ws_reconnect, DEFAULT_HEALTH_CHECK_INTERVAL)
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
