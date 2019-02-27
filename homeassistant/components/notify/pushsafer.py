@@ -149,8 +149,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 response = requests.get(url, timeout=CONF_TIMEOUT)
             return self.get_base64(response.content,
                                    response.headers['content-type'])
-        else:
-            _LOGGER.warning("url not found in param")
+        _LOGGER.warning("url not found in param")
 
         return None
 
