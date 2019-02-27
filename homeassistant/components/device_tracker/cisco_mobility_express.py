@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/device_tracker.cisco_mobility_express/
 """
 import logging
-from collections import namedtuple
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -14,6 +12,10 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL)
+
+
+REQUIREMENTS = ['ciscomobilityexpress==0.1.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,15 +43,17 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        self.protocol = 'https' if config[CONF_SSL] else 'http'
-        self.verify_ssl = config[CONF_VERIFY_SSL]
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        from ciscomobilityexpress.ciscome import CiscoMobilityExpress
 
-        self.success_init = False
-        self.last_results = []
-        self.get_data()
+        self.controller = CiscoMobilityExpress(
+            config[CONF_HOST],
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_SSL],
+            config[CONF_VERIFY_SSL])
+
+        self.last_results = {}
+        self.success_init = self.controller.is_logged_in()
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -60,7 +64,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next((
-            result.Name for result in self.last_results
+            result.clId for result in self.last_results
             if result.macaddr == device), None)
         return name
 
@@ -78,40 +82,6 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Check the Cisco ME controller for devices."""
-        self.last_results = self.get_data()
+        self.last_results = self.controller.get_associated_devices()
         _LOGGER.debug("Cisco Mobility Express controller returned:"
                       " %s", self.last_results)
-
-    def get_data(self):
-        """Retrieve data from Cisco ME and return parsed result."""
-        results_list = []
-        url = '{}://{}/data/client-table.html'.format(
-            self.protocol, self.host)
-        response = requests.get(
-            url, auth=(self.username, self.password),
-            verify=self.verify_ssl)
-
-        if response.status_code == 200:
-            self.success_init = True
-            result = response.json()
-            for device_entry in result['data']:
-                device_entry['controller'] = self.host
-                device = namedtuple("Device", device_entry.keys())(
-                    *device_entry.values())
-                results_list.append(device)
-            return results_list
-        if response.status_code == 401:
-            _LOGGER.error("Failed to authenticate "
-                          "with Cisco Mobility Express "
-                          "controller, check your "
-                          "username and password.")
-        elif response.status_code == 403:
-            _LOGGER.error("Cisco Mobility Express responded "
-                          "with a 403 Invalid token")
-        elif response.status_code == 404:
-            _LOGGER.error("Cisco Mobility Express responded "
-                          "with a 404 "
-                          "from %s", url)
-
-        _LOGGER.error("Invalid response from luci: %s", response)
-        return []
