@@ -4,9 +4,12 @@ import json
 
 import voluptuous as vol
 from aiohttp.web import json_response
+from aiohttp.web_exceptions import HTTPBadRequest
 
 from homeassistant import config_entries
 from homeassistant.auth.util import generate_secret
+import homeassistant.core as ha
+from homeassistant.core import Context
 from homeassistant.components import webhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.device_tracker import (
@@ -15,10 +18,12 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
                                  CONF_WEBHOOK_ID)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
+                                      TemplateError)
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers import template
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.state import AsyncTrackStates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +142,15 @@ def _decrypt_payload(key, ciphertext):
         return None
 
 
+def context(request):
+    """Generate a context from a request."""
+    user = request.get('hass_user')
+    if user is None:
+        return Context()
+
+    return Context(user_id=user.id)
+
+
 async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     """Handle webhook callback."""
     device = device_for_webhook_id(hass, webhook_id)
@@ -164,15 +178,32 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
                              status=HTTP_BAD_REQUEST)
 
     if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
-        await hass.services.async_call(data[ATTR_DOMAIN], data[ATTR_SERVICE],
-                                       data[ATTR_SERVICE_DATA])
-        return json_response([])
+
+        with AsyncTrackStates(hass) as changed_states:
+            try:
+                await hass.services.async_call(data[ATTR_DOMAIN],
+                                               data[ATTR_SERVICE],
+                                               data[ATTR_SERVICE_DATA],
+                                               True,
+                                               context(request))
+            except (vol.Invalid, ServiceNotFound):
+                raise HTTPBadRequest()
+
+        return json_response(changed_states)
     elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
-        hass.bus.fire(data[ATTR_EVENT_TYPE], data[ATTR_EVENT_DATA])
-        return json_response([])
+        event_type = data[ATTR_EVENT_TYPE]
+        hass.bus.fire(event_type, data[ATTR_EVENT_DATA], ha.EventOrigin.remote,
+                      context(request))
+        return json_response({"message": "Event {} fired.".format(event_type)})
     elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
-        tpl = template.Template(data[ATTR_TEMPLATE], hass)
-        return tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
+        try:
+            tpl = template.Template(data[ATTR_TEMPLATE], hass)
+            rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
+            return json_response({"rendered": rendered})
+        except (ValueError, TemplateError) as ex:
+            return json_response("Error rendering template: {}".format(ex),
+                                 status=HTTP_BAD_REQUEST)
+
     elif webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
                                        DEVICE_TRACKER_SEE, data)
