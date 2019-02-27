@@ -5,18 +5,17 @@ from homeassistant.components.konnected import (
     DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
     CONF_DEVICES, CONF_PIN, CONF_TYPE, CONF_NAME, CONF_SENSORS,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['konnected']
 
 SENSOR_TYPES = {
-    DEVICE_CLASS_TEMPERATURE: ['Temperature', None],
+    DEVICE_CLASS_TEMPERATURE: ['Temperature', TEMP_CELSIUS],
     DEVICE_CLASS_HUMIDITY: ['Humidity', '%']
 }
 
@@ -26,9 +25,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up sensors attached to a Konnected device."""
     if discovery_info is None:
         return
-
-    SENSOR_TYPES[DEVICE_CLASS_TEMPERATURE][1] = \
-        hass.config.units.temperature_unit
 
     data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
@@ -69,24 +65,13 @@ class KonnectedSensor(Entity):
         self._type = sensor_type
         self._pin_num = self._data.get(CONF_PIN)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._state = None
+        self._state = self._data.get(sensor_type)
+        self._unique_id = self._data.get('addr') or '{}-{}-{}'.format(
+            device_id, self._pin_num, sensor_type)
+
         self._name = self._data.get(CONF_NAME)
         if self._name:
             self._name += ' ' + SENSOR_TYPES[sensor_type][0]
-        self._unique_id = '{}-{}-{}'.format(
-            device_id, self._pin_num, sensor_type)
-        if sensor_type == DEVICE_CLASS_TEMPERATURE:
-            self._state = self.temperature(self._data.get(sensor_type))
-
-    def temperature(self, number=None):
-        """Format temperature and convert to Fahrenheit if necessary."""
-        if number is None:
-            return None
-
-        number = float(number)
-        if self._unit_of_measurement == TEMP_FAHRENHEIT:
-            number = celsius_to_fahrenheit(number)
-        return round(number, 1)
 
     @property
     def unique_id(self) -> str:
@@ -105,7 +90,7 @@ class KonnectedSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
+        """Return the unit of measurement."""
         return self._unit_of_measurement
 
     async def async_added_to_hass(self):
@@ -119,8 +104,8 @@ class KonnectedSensor(Entity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        if self._type == DEVICE_CLASS_TEMPERATURE:
-            self._state = self.temperature(state)
-        else:
+        if self._type == DEVICE_CLASS_HUMIDITY:
             self._state = int(float(state))
+        else:
+            self._state = state
         self.async_schedule_update_ha_state()
