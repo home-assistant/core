@@ -190,8 +190,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
             ATTR_GPS_ACCURACY: 12,
             ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
     await hass.async_block_till_done()
-    hass.states.async_set(DEVICE_TRACKER, 'not_home',
-        {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
+    hass.states.async_set(
+        DEVICE_TRACKER, 'not_home', {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
