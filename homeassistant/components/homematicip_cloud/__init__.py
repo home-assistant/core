@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 
 from .config_flow import configured_haps
@@ -53,22 +54,21 @@ async def async_setup_entry(hass, entry):
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()
     hass.data[DOMAIN][hapid] = hap
 
-    if await hap.async_setup():
-        # Register hap as device in registry.
-        from homeassistant.helpers import device_registry as dr
-        device_registry = await dr.async_get_registry(hass)
-        home = hap.home
-        device_registry.async_get_or_create(
-            config_entry_id=home.id,
-            identifiers={(DOMAIN, home.id)},
-            manufacturer='eQ-3',
-            name=home.label,
-            model=home.modelType,
-            sw_version=home.currentAPVersion,
-        )
-        return True
+    if not await hap.async_setup():
+        return False
 
-    return False
+    # Register hap as device in registry.
+    device_registry = await dr.async_get_registry(hass)
+    home = hap.home
+    device_registry.async_get_or_create(
+        config_entry_id=home.id,
+        identifiers={(DOMAIN, home.id)},
+        manufacturer='eQ-3',
+        name=home.label,
+        model=home.modelType,
+        sw_version=home.currentAPVersion,
+    )
+    return True
 
 
 async def async_unload_entry(hass, entry):
