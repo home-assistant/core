@@ -114,7 +114,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'ARM_HOME', 0, False)
 
-    def test_arm_home_not_publishes_mqtt_with_invalid_code_when_required(self):
+    def test_arm_home_not_publishes_mqtt_with_invalid_code_when_req(self):
         """Test not publishing of MQTT messages with invalid.
 
         When code_arm_required = True
@@ -135,24 +135,6 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.hass.block_till_done()
         assert call_count == self.mock_publish.call_count
 
-    def test_arm_home_publishes_mqtt_when_code_not_required(self):
-        """Test publishing of MQTT messages when code is not required."""
-        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
-            alarm_control_panel.DOMAIN: {
-                'platform': 'mqtt',
-                'name': 'test',
-                'state_topic': 'alarm/state',
-                'command_topic': 'alarm/command',
-                'code': '1234',
-                'code_arm_required': False
-            }
-        })
-
-        common.alarm_arm_home(self.hass)
-        self.hass.block_till_done()
-        self.mock_publish.async_publish.assert_called_once_with(
-            'alarm/command', 'ARM_HOME', 0, False)
-
     def test_arm_away_publishes_mqtt(self):
         """Test publishing of MQTT messages while armed."""
         assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
@@ -169,7 +151,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'ARM_AWAY', 0, False)
 
-    def test_arm_away_not_publishes_mqtt_with_invalid_code_when_required(self):
+    def test_arm_away_not_publishes_mqtt_with_invalid_code_when_req(self):
         """Test not publishing of MQTT messages with invalid code.
 
         When code_arm_required = True
@@ -190,7 +172,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.hass.block_till_done()
         assert call_count == self.mock_publish.call_count
 
-    def test_arm_away_publishes_mqtt_when_code_not_required(self):
+    def test_arm_away_publishes_mqtt_when_code_not_req(self):
         """Test publishing of MQTT messages.
 
         When code_arm_required = False
@@ -210,6 +192,43 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'ARM_AWAY', 0, False)
+
+    def test_arm_night_publishes_mqtt(self):
+        """Test publishing of MQTT messages while armed."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+            }
+        })
+
+        common.alarm_arm_night(self.hass)
+        self.hass.block_till_done()
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'ARM_NIGHT', 0, False)
+
+    def test_arm_night_not_publishes_mqtt_with_invalid_code_when_req(self):
+        """Test not publishing of MQTT messages with invalid code.
+
+        When code_arm_required = True
+        """
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'code_arm_required': True
+            }
+        })
+
+        call_count = self.mock_publish.call_count
+        common.alarm_arm_night(self.hass, 'abcd')
+        self.hass.block_till_done()
+        assert call_count == self.mock_publish.call_count
 
     def test_disarm_publishes_mqtt(self):
         """Test publishing of MQTT messages while disarmed."""

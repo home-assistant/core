@@ -18,15 +18,10 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
-    CONF_CODE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
+    CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -58,9 +53,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -73,26 +68,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT alarm control panel dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities, config_entry,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(alarm.DOMAIN, 'mqtt'),
         async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry=None,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(config, discovery_hash)])
+    async_add_entities([MqttAlarm(config, config_entry, discovery_hash)])
 
 
 class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 MqttEntityDeviceInfo, alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
         self._state = None
         self._config = config
@@ -124,17 +125,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        template = self._config.get(CONF_VALUE_TEMPLATE)
-        if template is not None:
-            template.hass = self.hass
-
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
-            if template is not None:
-                payload = template.async_render_with_possible_json_value(
-                    payload)
-
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                                STATE_ALARM_ARMED_AWAY,
                                STATE_ALARM_ARMED_NIGHT,
