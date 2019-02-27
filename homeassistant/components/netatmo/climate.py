@@ -114,10 +114,13 @@ class NetatmoThermostat(ClimateDevice):
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
         self._support_flags = SUPPORT_FLAGS
-        self._operation_list = [STATE_NETATMO_SCHEDULE, STATE_MANUAL,
-                                STATE_NETATMO_AWAY, STATE_NETATMO_HG]
+        self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                                DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
         if self._module_type == 'NATherm1':
-            self._operation_list += [STATE_NETATMO_MAX, STATE_OFF]
+            self._operation_list += [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+                                     DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
             self._support_flags |= SUPPORT_ON_OFF
         self._operation_mode = None
         self.update_without_throttle = False
@@ -213,16 +216,16 @@ class NetatmoThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self.set_operation_mode(STATE_NETATMO_AWAY)
+        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY])
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.set_operation_mode(STATE_NETATMO_SCHEDULE)
+        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE])
 
     def turn_off(self):
         """Turn Netatmo off."""
         _LOGGER.debug("Switching off ...")
-        self.set_operation_mode(STATE_OFF)
+        self.set_operation_mode(DICT_NETATMO_TO_HA[STATE_NETATMO_OFF])
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -233,11 +236,11 @@ class NetatmoThermostat(ClimateDevice):
                       self._data.hg_temperature)
         self._data.homestatus.setroomThermpoint(
             self._data.homedata.gethomeId(self._data.home),
-            self._room_id, STATE_MANUAL, self._data.hg_temperature)
+            self._room_id, STATE_NETATMO_MANUAL, self._data.hg_temperature)
         _LOGGER.debug("Setting operation mode to schedule ...")
         self._data.homestatus.setThermmode(
             self._data.homedata.gethomeId(self._data.home),
-            DICT_HA_TO_NETATMO[STATE_NETATMO_SCHEDULE])
+            STATE_NETATMO_SCHEDULE)
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -245,12 +248,14 @@ class NetatmoThermostat(ClimateDevice):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         if not self.is_on:
             self.turn_on()
-        if operation_mode in [STATE_NETATMO_MAX, STATE_OFF]:
+        if operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+                              DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]:
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
                 self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE,
-                                STATE_NETATMO_AWAY]:
+        elif operation_mode in [DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
+                                DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY]]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
                 DICT_HA_TO_NETATMO[operation_mode])
@@ -262,7 +267,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        mode = STATE_MANUAL
+        mode = STATE_NETATMO_MANUAL
         self._data.homestatus.setroomThermpoint(
             self._data.homedata.gethomeId(self._data.home),
             self._room_id, DICT_HA_TO_NETATMO[mode], temp)
@@ -285,7 +290,8 @@ class NetatmoThermostat(ClimateDevice):
             self._data.room_status[self._room_id]['target_temperature']
         self._operation_mode = DICT_NETATMO_TO_HA[
             self._data.room_status[self._room_id]['setpoint_mode']]
-        self._away = self._operation_mode == STATE_NETATMO_AWAY
+        self._away = self._operation_mode == DICT_NETATMO_TO_HA[
+            STATE_NETATMO_AWAY]
 
 
 class HomeData():
