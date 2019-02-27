@@ -27,7 +27,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE, DEVICE_DEFAULT_NAME, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pystiebeleltron==0.0.1.dev2']
@@ -39,8 +39,6 @@ DEFAULT_SLAVE = 1
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE):
-        vol.All(int, vol.Range(min=0, max=32)),
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,10 +67,9 @@ HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the StiebelEltron platform."""
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
-    modbus_slave = config.get(CONF_SLAVE, DEFAULT_SLAVE)
     modbus_client = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
 
-    add_devices([StiebelEltron(name, modbus_client, modbus_slave)], True)
+    add_devices([StiebelEltron(name, modbus_client, DEFAULT_SLAVE)], True)
     return True
 
 
