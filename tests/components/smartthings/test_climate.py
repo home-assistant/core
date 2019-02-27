@@ -19,8 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_OFF,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_UNKNOWN)
 
 from .conftest import setup_platform
 
