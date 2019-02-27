@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN, ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
 from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY,
-    CONF_ID, CONF_NAME, EVENT_HOMEASSISTANT_START, 
+    CONF_ID, CONF_NAME, EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN, STATE_UNAVAILABLE, STATE_HOME, STATE_NOT_HOME)
 from homeassistant.core import callback, Event
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -317,11 +317,11 @@ class Person(RestoreEntity):
             ATTR_ID: self.unique_id,
         }
         if self._latitude is not None:
-            data[ATTR_LATITUDE] = round(self._latitude, 5)
+            data[ATTR_LATITUDE] = self._latitude
         if self._longitude is not None:
-            data[ATTR_LONGITUDE] = round(self._longitude, 5)
+            data[ATTR_LONGITUDE] = self._longitude
         if self._gps_accuracy is not None:
-            data[ATTR_GPS_ACCURACY] = round(self._gps_accuracy, 1)
+            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
         user_id = self._config.get(CONF_USER_ID)
@@ -377,10 +377,14 @@ class Person(RestoreEntity):
         """Handle the device tracker state changes."""
         self._update_state()
 
+    def _get_latest(self, prev, curr):
+        return curr \
+               if prev is None or curr.last_updated > prev.last_updated \
+               else prev
+
+
     @callback
     def _update_state(self):
-        def _get_latest(prev, curr):
-            return curr if prev is None or curr.last_updated > prev.last_updated else prev
 
         """Update the state."""
         latest_home = latest_not_home = latest_gps = latest = None
@@ -391,11 +395,11 @@ class Person(RestoreEntity):
                 continue
 
             if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
-                latest_gps = _get_latest(latest_gps, state)
+                latest_gps = self._get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
-                latest_home = _get_latest(latest_home, state)
+                latest_home = self._get_latest(latest_home, state)
             elif state.state == STATE_NOT_HOME:
-                latest_not_home = _get_latest(latest_not_home, state)
+                latest_not_home = self._get_latest(latest_not_home, state)
 
         if latest_home:
             latest = latest_home
