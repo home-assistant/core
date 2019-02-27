@@ -197,9 +197,9 @@ def _setup_platform(hass, config, add_entities, discovery_info):
 
         with hass.data[DATA_SONOS].topology_lock:
             if service.service == SERVICE_SNAPSHOT:
-                snapshot(entities, service.data[ATTR_WITH_GROUP])
+                snapshot_entities(entities, service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_RESTORE:
-                restore(entities, service.data[ATTR_WITH_GROUP])
+                restore_entities(entities, service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_JOIN:
                 master = [e for e in hass.data[DATA_SONOS].entities
                           if e.entity_id == service.data[ATTR_MASTER]]
@@ -357,6 +357,7 @@ class SonosEntity(MediaPlayerDevice):
         self._favorites = None
         self._soco_snapshot = None
         self._snapshot_group = None
+        self._restore_pending = False
 
         self._set_basic_information()
 
@@ -724,6 +725,9 @@ class SonosEntity(MediaPlayerDevice):
                     pass
 
             if self.unique_id == coordinator_uid:
+                if self._restore_pending:
+                    self.restore()
+
                 sonos_group = []
                 for uid in (coordinator_uid, *slave_uids):
                     entity = _get_entity_from_soco_uid(self.hass, uid)
@@ -975,6 +979,35 @@ class SonosEntity(MediaPlayerDevice):
         self._coordinator = None
 
     @soco_error()
+    def snapshot(self, with_group):
+        """Snapshot the state of a player."""
+        from pysonos.snapshot import Snapshot
+
+        self._soco_snapshot = Snapshot(self.soco)
+        self._soco_snapshot.snapshot()
+        if with_group:
+            self._snapshot_group = self._sonos_group.copy()
+        else:
+            self._snapshot_group = None
+
+    @soco_error()
+    def restore(self):
+        """Restore a snapshotted state to a player."""
+        from pysonos.exceptions import SoCoException
+
+        try:
+            # pylint: disable=protected-access
+            self.soco._zgs_cache.clear()
+            self._soco_snapshot.restore()
+        except (TypeError, AttributeError, SoCoException) as ex:
+            # Can happen if restoring a coordinator onto a current slave
+            _LOGGER.warning("Error on restore %s: %s", self.entity_id, ex)
+
+        self._soco_snapshot = None
+        self._snapshot_group = None
+        self._restore_pending = False
+
+    @soco_error()
     @soco_coordinator
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
@@ -1035,12 +1068,9 @@ class SonosEntity(MediaPlayerDevice):
         return attributes
 
 
-@soco_error()
-def snapshot(entities, with_group):
+def snapshot_entities(entities, with_group):
     """Snapshot all the entities and optionally their groups."""
     # pylint: disable=protected-access
-    from pysonos.snapshot import Snapshot
-
     # Find all affected players
     entities = set(entities)
     if with_group:
@@ -1048,20 +1078,12 @@ def snapshot(entities, with_group):
             entities.update(entity._sonos_group)
 
     for entity in entities:
-        entity._soco_snapshot = Snapshot(entity.soco)
-        entity._soco_snapshot.snapshot()
-        if with_group:
-            entity._snapshot_group = entity._sonos_group.copy()
-        else:
-            entity._snapshot_group = None
+        entity.snapshot(with_group)
 
 
-@soco_error()
-def restore(entities, with_group):
+def restore_entities(entities, with_group):
     """Restore snapshots for all the entities."""
     # pylint: disable=protected-access
-    from pysonos.exceptions import SoCoException
-
     # Find all affected players
     entities = set(e for e in entities if e._soco_snapshot)
     if with_group:
@@ -1073,22 +1095,21 @@ def restore(entities, with_group):
         if entity.state == STATE_PLAYING:
             entity.media_pause()
 
-    # Bring back the original group topology and clear pysonos cache
+    # Bring back the original group topology
     if with_group:
         for entity in (e for e in entities if e._snapshot_group):
             if entity._snapshot_group[0] == entity:
                 entity.join(entity._snapshot_group)
-                entity.soco._zgs_cache.clear()
 
-    # Restore slaves, then coordinators
-    slaves = [e for e in entities if not e.is_coordinator]
-    coordinators = [e for e in entities if e.is_coordinator]
-    for entity in slaves + coordinators:
-        try:
-            entity._soco_snapshot.restore()
-        except (TypeError, AttributeError, SoCoException) as ex:
-            # Can happen if restoring a coordinator onto a current slave
-            _LOGGER.warning("Error on restore %s: %s", entity.entity_id, ex)
+    # Restore slaves
+    for entity in (e for e in entities if not e.is_coordinator):
+        entity.restore()
 
-        entity._soco_snapshot = None
-        entity._snapshot_group = None
+    # Restore coordinators (or delay if moving from slave)
+    for entity in (e for e in entities if e.is_coordinator):
+        if entity._sonos_group[0] == entity:
+            # Was already coordinator
+            entity.restore()
+        else:
+            # Await coordinator role
+            entity._restore_pending = True
