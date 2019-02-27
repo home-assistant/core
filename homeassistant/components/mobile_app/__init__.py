@@ -133,9 +133,9 @@ def _decrypt_payload(key, ciphertext):
     key = key.ljust(keylen, b'\0')
 
     try:
-        message = decrypt(ciphertext, key).decode("utf-8")
-        message = json.loads(message)
-        _LOGGER.debug("decrypted payload: %s", message)
+        message = decrypt(ciphertext, key)
+        message = json.loads(message.decode("utf-8"))
+        _LOGGER.debug("Successfully decrypted mobile_app payload")
         return message
     except ValueError:
         _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
@@ -168,8 +168,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
 
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
-        webhook_payload = _decrypt_payload(device[CONF_SECRET],
-                                           webhook_payload)
+        enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
+        webhook_payload = _decrypt_payload(device[CONF_SECRET], enc_data)
 
     try:
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
@@ -284,8 +284,8 @@ class RegisterDeviceView(HomeAssistantView):
 
         device_id = data[ATTR_DEVICE_ID]
 
-        if data[ATTR_DEVICE_ID] in hass.data[DOMAIN]:
-            return self.json_message("device_exists", 409)
+        if device_id in hass.data[DOMAIN]:
+            return self.json(hass.data[DOMAIN][device_id])
 
         resp = {}
 
