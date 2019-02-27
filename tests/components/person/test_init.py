@@ -135,10 +135,10 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
     hass.states.async_set(
-        DEVICE_TRACKER, 'not_home',
-        {ATTR_LATITUDE: 10.123456, 
-         ATTR_LONGITUDE: 11.123456,
-         ATTR_GPS_ACCURACY: 10})
+        DEVICE_TRACKER, 'not_home', {
+            ATTR_LATITUDE: 10.123456,
+            ATTR_LONGITUDE: 11.123456,
+            ATTR_GPS_ACCURACY: 10})
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
@@ -184,11 +184,11 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
     hass.states.async_set(
-        DEVICE_TRACKER_2, 'not_home',
-        {ATTR_LATITUDE: 12.123456,
-         ATTR_LONGITUDE: 13.123456,
-         ATTR_GPS_ACCURACY: 12,
-         ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
+        DEVICE_TRACKER_2, 'not_home', {
+            ATTR_LATITUDE: 12.123456,
+            ATTR_LONGITUDE: 13.123456,
+            ATTR_GPS_ACCURACY: 12,
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
     await hass.async_block_till_done()
     hass.states.async_set(DEVICE_TRACKER, 'not_home',
         {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
