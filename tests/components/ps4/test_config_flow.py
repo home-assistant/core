@@ -50,12 +50,10 @@ async def test_full_flow_implementation(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    """Init config manager."""
+    # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []
+    manager._entries = []  # noqa: pylint: disable=protected-access
     hass.config_entries = manager
-    # Check if there are no entries.
-    assert len(manager.async_entries()) == 0
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -102,12 +100,10 @@ async def test_multiple_flow_implementation(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    """Init config manager."""
+    # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []
+    manager._entries = []   # noqa: pylint: disable=protected-access
     hass.config_entries = manager
-    # Check if there are no entries.
-    assert len(manager.async_entries()) == 0
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -230,9 +226,9 @@ async def test_additional_device(hass):
     flow.hass = hass
     flow.creds = MOCK_CREDS
 
-    """Init config manager."""
+    # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []
+    manager._entries = []  # noqa: pylint: disable=protected-access
     hass.config_entries = manager
 
     # Mock existing entry.
