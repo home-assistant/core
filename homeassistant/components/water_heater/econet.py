@@ -112,10 +112,11 @@ class EcoNetWaterHeater(WaterHeaterDevice):
         self.water_heater = water_heater
         self.supported_modes = self.water_heater.supported_modes
         self.econet_state_to_ha = {}
-        for mode in ECONET_STATE_TO_HA.keys():
+        self.ha_state_to_econet = {}
+        for mode in ECONET_STATE_TO_HA:
             if mode in self.supported_modes:
                 self.econet_state_to_ha[mode] = ECONET_STATE_TO_HA.get(mode)
-        for key, value in self.econet_state_to_ha.itmes():
+        for key, value in self.econet_state_to_ha.items():
             self.ha_state_to_econet[value] = key
         for mode in self.supported_modes:
             if mode not in ECONET_STATE_TO_HA:
