@@ -134,6 +134,7 @@ class WebDavCalendarData:
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
+        self.events = None
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -160,6 +161,7 @@ class WebDavCalendarData:
 
             event_list.append(data)
 
+        self.events = event_list
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

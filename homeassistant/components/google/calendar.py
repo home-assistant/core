@@ -61,6 +61,7 @@ class GoogleCalendarData:
         self.search = search
         self.ignore_availability = ignore_availability
         self.event = None
+        self.events = None
 
     def _prepare_query(self):
         # pylint: disable=import-error
@@ -106,11 +107,10 @@ class GoogleCalendarData:
 
         events = service.events()
         result = events.list(**params).execute()
-
-        items = result.get('items', [])
+        self.events = result.get('items', [])
 
         new_event = None
-        for item in items:
+        for item in self.events:
             if (not self.ignore_availability
                     and 'transparency' in item.keys()):
                 if item['transparency'] == 'opaque':

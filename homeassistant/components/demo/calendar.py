@@ -34,6 +34,11 @@ class DemoGoogleCalendarData:
 
     event = {}
 
+    @property
+    def events(self):
+        """Get all events for calendar."""
+        return [copy.copy(self.event), copy.copy(self.event)]
+
     # pylint: disable=no-self-use
     def update(self):
         """Return true so entity knows we have new data."""

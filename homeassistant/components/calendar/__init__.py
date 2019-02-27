@@ -1,19 +1,23 @@
 """Support for Google Calendar event device sensors."""
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
+from typing import Dict
 
 from aiohttp import web
+import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.google import (
-    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
-from homeassistant.const import STATE_OFF, STATE_ON
+    CONF_DEVICE_ID, CONF_NAME)
+from homeassistant.const import (
+    STATE_OFF, STATE_ON, CONF_MAXIMUM, CONF_ENTITY_ID, CONF_TYPE)
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 from homeassistant.components import http
 
@@ -31,7 +35,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 async def async_setup(hass, config):
     """Track states and offer events for calendars."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
     hass.http.register_view(CalendarListView(component))
@@ -41,12 +45,10 @@ async def async_setup(hass, config):
     # await hass.components.frontend.async_register_built_in_panel(
     #     'calendar', 'calendar', 'hass:calendar')
 
+    hass.components.websocket_api.async_register_command(get_calendar_info)
+
     await component.async_setup(config)
     return True
-
-
-DEFAULT_CONF_TRACK_NEW = True
-DEFAULT_CONF_OFFSET = '!!'
 
 
 def get_date(date):
@@ -55,6 +57,79 @@ def get_date(date):
         return dt.start_of_local_day(dt.dt.datetime.combine(
             dt.parse_date(date['date']), dt.dt.time.min))
     return dt.as_local(dt.parse_datetime(date['dateTime']))
+
+
+def normalize_event(event):
+    """Normalize a calendar event."""
+    normalized_event = {}
+
+    start = get_date(event['start'])
+    end = get_date(event['end'])
+    normalized_event['dt_start'] = start
+    normalized_event['dt_end'] = end
+
+    # save io foramtted date string
+    start_formatted = start.isoformat() if start is not None else None
+    end_formatted = end.isoformat() if end is not None else None
+    normalized_event['start'] = start_formatted
+    normalized_event['end'] = end_formatted
+
+    # cleanup the string so we don't have a bunch of double+ spaces
+    summary = event.get('summary', '')
+    normalized_event['message'] = re.sub('  +', '', summary).strip()
+
+    normalized_event['location'] = event.get('location', '')
+    normalized_event['description'] = event.get('description', '')
+    normalized_event['htmlLink'] = event.get('htmlLink', '')
+    normalized_event['all_day'] = 'date' in event['start']
+
+    return normalized_event
+
+
+def filter_events(events, **filters):
+    """Filter a list of events by given filters."""
+    filtered_events = []
+
+    start_day = filters['start'].date()
+    end_day = filters['end'].date()
+    max_events = filters[CONF_MAXIMUM]
+
+    for event in events:
+        is_between = start_day <= event['dt_start'].date() <= end_day
+        if (is_between and len(filtered_events) < max_events):
+            filtered_events.append(event)
+
+    return filtered_events
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    vol.Required(CONF_TYPE): 'calendar/events',
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_MAXIMUM, default=14): cv.positive_int,
+    vol.Optional('start', default=datetime.min): vol.Any(None, cv.datetime),
+    vol.Optional('end', default=datetime.max): vol.Any(None, cv.datetime),
+})
+async def get_calendar_info(hass: HomeAssistantType,
+                            connection: websocket_api.ActiveConnection,
+                            msg: Dict):
+    """Handle calendar request."""
+    component = hass.data.get(DOMAIN, {})
+    calendar = component.get_entity(msg['entity_id'])
+
+    if calendar is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'entity_not_found', 'Entity not found'))
+        return
+
+    if calendar.events is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'not_found', 'Events not found'))
+        return
+
+    filtered_events = filter_events(calendar.events, **msg)
+    connection.send_message(
+        websocket_api.result_message(msg['id'], filtered_events))
 
 
 class CalendarEventDevice(Entity):
@@ -68,13 +143,11 @@ class CalendarEventDevice(Entity):
         """Create the Calendar Event Device."""
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
-        self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
         self._cal_data = {
             'all_day': False,
-            'offset_time': dt.dt.timedelta(),
             'message': '',
             'start': None,
             'end': None,
@@ -82,16 +155,8 @@ class CalendarEventDevice(Entity):
             'description': '',
         }
 
+        self._events = None
         self.update()
-
-    def offset_reached(self):
-        """Have we reached the offset time specified in the event title."""
-        if self._cal_data['start'] is None or \
-           self._cal_data['offset_time'] == dt.dt.timedelta():
-            return False
-
-        return self._cal_data['start'] + self._cal_data['offset_time'] <= \
-            dt.now(self._cal_data['start'].tzinfo)
 
     @property
     def name(self):
@@ -99,19 +164,18 @@ class CalendarEventDevice(Entity):
         return self._name
 
     @property
+    def events(self):
+        """Return all events of the entity."""
+        return self._events
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        start = self._cal_data.get('start', None)
-        end = self._cal_data.get('end', None)
-        start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-        end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-
         return {
             'message': self._cal_data.get('message', ''),
             'all_day': self._cal_data.get('all_day', False),
-            'offset_reached': self.offset_reached(),
-            'start_time': start,
-            'end_time': end,
+            'start_time': self._cal_data.get('start', None),
+            'end_time': self._cal_data.get('end', None),
             'location': self._cal_data.get('location', None),
             'description': self._cal_data.get('description', None),
         }
@@ -119,8 +183,8 @@ class CalendarEventDevice(Entity):
     @property
     def state(self):
         """Return the state of the calendar event."""
-        start = self._cal_data.get('start', None)
-        end = self._cal_data.get('end', None)
+        start = self._cal_data.get('dt_start', None)
+        end = self._cal_data.get('dt_end', None)
         if start is None or end is None:
             return STATE_OFF
 
@@ -146,6 +210,8 @@ class CalendarEventDevice(Entity):
             'description': None
         }
 
+        self._events = None
+
     def update(self):
         """Search for the next event."""
         if not self.data or not self.data.update():
@@ -155,39 +221,12 @@ class CalendarEventDevice(Entity):
         if not self.data.event:
             # we have no event to work on, make sure we're clean
             self.cleanup()
-            return
-
-        start = get_date(self.data.event['start'])
-        end = get_date(self.data.event['end'])
-
-        summary = self.data.event.get('summary', '')
-
-        # check if we have an offset tag in the message
-        # time is HH:MM or MM
-        reg = '{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)'.format(self._offset)
-        search = re.search(reg, summary)
-        if search and search.group(1):
-            time = search.group(1)
-            if ':' not in time:
-                if time[0] == '+' or time[0] == '-':
-                    time = '{}0:{}'.format(time[0], time[1:])
-                else:
-                    time = '0:{}'.format(time)
-
-            offset_time = time_period_str(time)
-            summary = (summary[:search.start()] + summary[search.end():]) \
-                .strip()
         else:
-            offset_time = dt.dt.timedelta()  # default it
+            self._cal_data = normalize_event(self.data.event)
 
-        # cleanup the string so we don't have a bunch of double+ spaces
-        self._cal_data['message'] = re.sub('  +', '', summary).strip()
-        self._cal_data['offset_time'] = offset_time
-        self._cal_data['location'] = self.data.event.get('location', '')
-        self._cal_data['description'] = self.data.event.get('description', '')
-        self._cal_data['start'] = start
-        self._cal_data['end'] = end
-        self._cal_data['all_day'] = 'date' in self.data.event['start']
+        if hasattr(self.data, 'events') and self.data.events:
+            self._events = [normalize_event(event)
+                            for event in self.data.events]
 
 
 class CalendarEventView(http.HomeAssistantView):
