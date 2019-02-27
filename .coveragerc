@@ -109,6 +109,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
+    homeassistant/components/device_tracker/cisco_mobility_express.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
