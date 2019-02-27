@@ -379,7 +379,7 @@ class Person(RestoreEntity):
 
     @callback
     def _update_state(self):
-        def _get_latest(prev,curr):
+        def _get_latest(prev, curr):
             return curr if prev is None or curr.last_updated > prev.last_updated else prev
 
         """Update the state."""
@@ -391,11 +391,11 @@ class Person(RestoreEntity):
                 continue
 
             if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
-                latest_gps = _get_latest(latest_gps,state)
+                latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
-                latest_home = _get_latest(latest_home,state)
+                latest_home = _get_latest(latest_home, state)
             elif state.state == STATE_NOT_HOME:
-                latest_not_home = _get_latest(latest_not_home,state)
+                latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_home:
             latest = latest_home
