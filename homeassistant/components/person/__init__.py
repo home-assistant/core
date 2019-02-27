@@ -10,7 +10,8 @@ from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
+    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY,
+    CONF_ID, CONF_NAME,
     EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
 from homeassistant.core import callback, Event
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -285,6 +286,7 @@ class Person(RestoreEntity):
         self._editable = editable
         self._latitude = None
         self._longitude = None
+        self._gps_accuracy = None
         self._source = None
         self._state = None
         self._unsub_track_device = None
@@ -318,6 +320,8 @@ class Person(RestoreEntity):
             data[ATTR_LATITUDE] = round(self._latitude, 5)
         if self._longitude is not None:
             data[ATTR_LONGITUDE] = round(self._longitude, 5)
+        if self._gps_accuracy is not None:
+            data[ATTR_LONGITUDE] = round(self._gps_accuracy, 1)
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
         user_id = self._config.get(CONF_USER_ID)
@@ -393,6 +397,7 @@ class Person(RestoreEntity):
             self._source = None
             self._latitude = None
             self._longitude = None
+            self._gps_accuracy = None
 
         self.async_schedule_update_ha_state()
 
@@ -406,6 +411,7 @@ class Person(RestoreEntity):
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
         self._longitude = state.attributes.get(ATTR_LONGITUDE)
+        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
 
 
 @websocket_api.websocket_command({
