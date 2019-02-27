@@ -19,7 +19,7 @@ from .const import (
 from .worker import stream_worker
 from .hls import async_setup_hls
 
-REQUIREMENTS = ['av==6.1.2', 'pillow==5.4.1']
+REQUIREMENTS = ['av==6.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
