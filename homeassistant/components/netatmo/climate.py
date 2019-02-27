@@ -23,36 +23,38 @@ CONF_ROOMS = 'rooms'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
-                                                          [cv.string]),
-        }
-    ]),
+HOME_CONFIG_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string])
 })
 
-STATE_AWAY = STATE_ECO
-STATE_HG = STATE_COOL
-STATE_MAX = STATE_HEAT
-STATE_SCHEDULE = STATE_AUTO
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])
+})
+
+STATE_NETATMO_SCHEDULE = 'schedule'
+STATE_NETATMO_HG = 'hg'
+STATE_NETATMO_MAX = 'max'
+STATE_NETATMO_AWAY = 'away'
+STATE_NETATMO_OFF = STATE_OFF
+STATE_NETATMO_MANUAL = STATE_MANUAL
+
 DICT_NETATMO_TO_HA = {
-    'schedule': STATE_SCHEDULE,
-    'hg': STATE_HG,
-    'max': STATE_MAX,
-    'off': STATE_OFF,
-    'away': STATE_AWAY,
-    'manual': STATE_MANUAL
+    STATE_NETATMO_SCHEDULE: STATE_AUTO,
+    STATE_NETATMO_HG: STATE_COOL,
+    STATE_NETATMO_MAX: STATE_HEAT,
+    STATE_NETATMO_AWAY: STATE_ECO,
+    STATE_NETATMO_OFF: STATE_OFF,
+    STATE_NETATMO_MANUAL: STATE_MANUAL
 }
 
 DICT_HA_TO_NETATMO = {
-    STATE_SCHEDULE: 'schedule',
-    STATE_HG: 'hg',
-    STATE_MAX: 'max',
-    STATE_OFF: 'off',
-    STATE_AWAY: 'away',
-    STATE_MANUAL: 'manual'
+    STATE_AUTO: STATE_NETATMO_SCHEDULE,
+    STATE_COOL: STATE_NETATMO_HG,
+    STATE_HEAT: STATE_NETATMO_MAX,
+    STATE_ECO: STATE_NETATMO_AWAY,
+    STATE_OFF: STATE_NETATMO_OFF,
+    STATE_MANUAL: STATE_NETATMO_MANUAL
 }
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
@@ -61,7 +63,6 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    _LOGGER.debug("Starting to setup platform climate.netatmo...")
     netatmo = hass.components.netatmo
 
     import pyatmo
@@ -113,10 +114,10 @@ class NetatmoThermostat(ClimateDevice):
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
         self._support_flags = SUPPORT_FLAGS
-        self._operation_list = [STATE_SCHEDULE, STATE_MANUAL, STATE_AWAY,
-                                STATE_HG]
+        self._operation_list = [STATE_NETATMO_SCHEDULE, STATE_MANUAL, STATE_NETATMO_AWAY,
+                                STATE_NETATMO_HG]
         if self._module_type == 'NATherm1':
-            self._operation_list += [STATE_MAX, STATE_OFF]
+            self._operation_list += [STATE_NETATMO_MAX, STATE_OFF]
             self._support_flags |= SUPPORT_ON_OFF
         self._operation_mode = None
         self.update_without_throttle = False
@@ -212,11 +213,11 @@ class NetatmoThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self.set_operation_mode(STATE_AWAY)
+        self.set_operation_mode(STATE_NETATMO_AWAY)
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.set_operation_mode(STATE_SCHEDULE)
+        self.set_operation_mode(STATE_NETATMO_SCHEDULE)
 
     def turn_off(self):
         """Turn Netatmo off."""
@@ -236,7 +237,7 @@ class NetatmoThermostat(ClimateDevice):
         _LOGGER.debug("Setting operation mode to schedule ...")
         self._data.homestatus.setThermmode(
             self._data.homedata.gethomeId(self._data.home),
-            DICT_HA_TO_NETATMO[STATE_SCHEDULE])
+            DICT_HA_TO_NETATMO[STATE_NETATMO_SCHEDULE])
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -244,11 +245,11 @@ class NetatmoThermostat(ClimateDevice):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         if not self.is_on:
             self.turn_on()
-        if operation_mode in [STATE_MAX, STATE_OFF]:
+        if operation_mode in [STATE_NETATMO_MAX, STATE_OFF]:
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
                 self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [STATE_HG, STATE_SCHEDULE, STATE_AWAY]:
+        elif operation_mode in [STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE, STATE_NETATMO_AWAY]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
                 DICT_HA_TO_NETATMO[operation_mode])
@@ -283,7 +284,7 @@ class NetatmoThermostat(ClimateDevice):
             self._data.room_status[self._room_id]['target_temperature']
         self._operation_mode = DICT_NETATMO_TO_HA[
             self._data.room_status[self._room_id]['setpoint_mode']]
-        self._away = self._operation_mode == STATE_AWAY
+        self._away = self._operation_mode == STATE_NETATMO_AWAY
 
 
 class HomeData():
