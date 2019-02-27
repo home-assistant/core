@@ -37,13 +37,13 @@ def get_cipher():
 
     Async friendly.
     """
-    from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
-    from libnacl.secret import SecretBox
+    from nacl.secret import SecretBox
+    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
-        return SecretBox(key).decrypt(ciphertext)
-    return (KEYLEN, decrypt)
+        return SecretBox(key).decrypt(ciphertext, encoder=Base64Encoder)
+    return (SecretBox.KEY_SIZE, decrypt)
 
 
 def _parse_topic(topic, subscribe_topic):

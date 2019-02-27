@@ -16,7 +16,7 @@ from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
 
-REQUIREMENTS = ['libnacl==1.6.1']
+REQUIREMENTS = ['PyNaCl==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

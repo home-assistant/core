@@ -25,6 +25,8 @@ from homeassistant.helpers import template
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.state import AsyncTrackStates
 
+REQUIREMENTS = ['PyNaCl==1.3.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mobile_app'
