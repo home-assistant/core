@@ -66,6 +66,17 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         super().__init__(home, home)
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        # Adds a sensor to the existing HAP device
+        return {
+            'identifiers': {
+                # Serial numbers of Homematic IP device
+                (HMIPC_DOMAIN, self._device.id)
+            }
+        }
+
+    @property
     def icon(self):
         """Return the icon of the access point device."""
         return 'mdi:access-point-network'
