@@ -119,10 +119,9 @@ class CurrencylayerData:
                 self._resource, params=self._parameters, timeout=10)
             if 'error' in result.json():
                 raise ValueError(result.json()['error']['info'])
-            else:
-                self.data = result.json()['quotes']
-                _LOGGER.debug("Currencylayer data updated: %s",
-                              result.json()['timestamp'])
+            self.data = result.json()['quotes']
+            _LOGGER.debug("Currencylayer data updated: %s",
+                          result.json()['timestamp'])
         except ValueError as err:
             _LOGGER.error("Check Currencylayer API %s", err.args)
             self.data = None

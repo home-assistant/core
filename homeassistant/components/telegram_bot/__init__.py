@@ -628,7 +628,7 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        elif ATTR_CALLBACK_QUERY in data:
+        if ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get(ATTR_CALLBACK_QUERY)
             message_ok, event_data = self._get_message_data(data)
@@ -642,6 +642,6 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        else:
-            _LOGGER.warning("Message with unknown data received: %s", data)
-            return True
+
+        _LOGGER.warning("Message with unknown data received: %s", data)
+        return True
