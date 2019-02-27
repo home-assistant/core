@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pysyncthru==0.3.1']
+REQUIREMENTS = ['pysyncthru==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,30 +62,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SyncThru component."""
-    from pysyncthru import SyncThru, test_syncthru
+    from pysyncthru import SyncThru
 
     if discovery_info is not None:
+        _LOGGER.info("Discovered a new Samsung Printer at %s",
+                     discovery_info.get(CONF_HOST))
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        _LOGGER.debug("Discovered a new Samsung Printer: %s", discovery_info)
-        # Test if the discovered device actually is a syncthru printer
-        if not test_syncthru(host):
-            _LOGGER.error("No SyncThru Printer found at %s", host)
-            return
+        # Main device, always added
         monitored = DEFAULT_MONITORED_CONDITIONS
     else:
         host = config.get(CONF_RESOURCE)
         name = config.get(CONF_NAME)
         monitored = config.get(CONF_MONITORED_CONDITIONS)
 
-    # Main device, always added
+    printer = SyncThru(host)
+    # Test if the discovered device actually is a syncthru printer
     try:
-        printer = SyncThru(host)
-    except TypeError:
-        # if an exception is thrown, printer cannot be set up
+        # No error is thrown when the device is off (only after user added it manually)
+        # , so additional catches are inside the Sensor below
+        printer.update()
+    except ValueError:
+        # if an exception is thrown, printer does not support syncthru
+        _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
         return
 
-    printer.update()
     devices = [SyncThruMainSensor(printer, name)]
 
     for key in printer.toner_status(filter_supported=True):
@@ -150,7 +151,7 @@ class SyncThruSensor(Entity):
 
 
 class SyncThruMainSensor(SyncThruSensor):
-    """Implementation of the main sensor, monitoring the general state."""
+    """Implementation of the main sensor, conducting the actual polling. """
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
@@ -159,7 +160,11 @@ class SyncThruMainSensor(SyncThruSensor):
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
-        self.syncthru.update()
+        try:
+            self.syncthru.update()
+        except ValueError:
+            # if an exception is thrown, printer does not support syncthru
+            _LOGGER.info("Samsung printer at %s does not support SyncThru", self.syncthru.url)
         self._state = self.syncthru.device_status()
 
 
