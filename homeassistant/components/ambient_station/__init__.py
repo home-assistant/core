@@ -28,8 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'
 
-DEFAULT_HEALTH_CHECK_INTERVAL = timedelta(minutes=5)
 DEFAULT_SOCKET_MIN_RETRY = 15
+DEFAULT_WATCHDOG_LISTENER = timedelta(minutes=5)
 
 TYPE_24HOURRAININ = '24hourrainin'
 TYPE_BAROMABSIN = 'baromabsin'
@@ -299,7 +299,7 @@ class AmbientStation:
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
-        self._health_timer_listener = None
+        self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.monitored_conditions = monitored_conditions
@@ -319,8 +319,8 @@ class AmbientStation:
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
             _LOGGER.debug('Watchdog starting')
-            self._health_timer_listener = async_track_time_interval(
-                self._hass, _ws_reconnect, DEFAULT_HEALTH_CHECK_INTERVAL)
+            self._watchdog_listener = async_track_time_interval(
+                self._hass, _ws_reconnect, DEFAULT_WATCHDOG_LISTENER)
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -331,9 +331,9 @@ class AmbientStation:
                 async_dispatcher_send(self._hass, TOPIC_UPDATE)
 
             _LOGGER.debug('Resetting watchdog')
-            self._health_timer_listener()
-            self._health_timer_listener = async_track_time_interval(
-                self._hass, _ws_reconnect, DEFAULT_HEALTH_CHECK_INTERVAL)
+            self._watchdog_listener()
+            self._watchdog_listener = async_track_time_interval(
+                self._hass, _ws_reconnect, DEFAULT_WATCHDOG_LISTENER)
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
