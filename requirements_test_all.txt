@@ -53,6 +53,9 @@ aiounifi==4
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
+# homeassistant.components.stream
+av==6.1.2
+
 # homeassistant.components.zha
 bellows-homeassistant==0.7.1
 
