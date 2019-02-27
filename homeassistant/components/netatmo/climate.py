@@ -114,8 +114,8 @@ class NetatmoThermostat(ClimateDevice):
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
         self._support_flags = SUPPORT_FLAGS
-        self._operation_list = [STATE_NETATMO_SCHEDULE, STATE_MANUAL, STATE_NETATMO_AWAY,
-                                STATE_NETATMO_HG]
+        self._operation_list = [STATE_NETATMO_SCHEDULE, STATE_MANUAL,
+                                STATE_NETATMO_AWAY, STATE_NETATMO_HG]
         if self._module_type == 'NATherm1':
             self._operation_list += [STATE_NETATMO_MAX, STATE_OFF]
             self._support_flags |= SUPPORT_ON_OFF
@@ -249,7 +249,8 @@ class NetatmoThermostat(ClimateDevice):
             self._data.homestatus.setroomThermpoint(
                 self._data.homedata.gethomeId(self._data.home),
                 self._room_id, DICT_HA_TO_NETATMO[operation_mode])
-        elif operation_mode in [STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE, STATE_NETATMO_AWAY]:
+        elif operation_mode in [STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE,
+                                STATE_NETATMO_AWAY]:
             self._data.homestatus.setThermmode(
                 self._data.homedata.gethomeId(self._data.home),
                 DICT_HA_TO_NETATMO[operation_mode])
