@@ -1,5 +1,5 @@
 """
-Platform for Stiebel Eltron heat pumps with ISGWeb Modbus module.
+Platform for STIEBEL ELTRON heat pumps with ISGWeb Modbus module.
 
 Example configuration:
 
@@ -46,12 +46,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-STATE_DAYMODE = 'Tagbetrieb'
-STATE_SETBACK = 'Absenkbetrieb'
-STATE_DHW = 'Warmwasserbetrieb'
-STATE_EMERGENCY = 'Notbetrieb'
+STATE_DAYMODE = 'day_mode'
+STATE_SETBACK = 'setback_mode'
+STATE_DHW = 'dhw'
+STATE_EMERGENCY = 'emergency'
 
-"""Mapping Stiebel Eltron states to homeassistant states."""
+"""Mapping STIEBEL ELTRON states to homeassistant states."""
 STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
                    'MANUAL MODE': STATE_MANUAL,
                    'STANDBY': STATE_IDLE,
@@ -60,7 +60,7 @@ STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
                    'DHW': STATE_DHW,
                    'EMERGENCY OPERATION': STATE_EMERGENCY}
 
-"""Mapping homeassistant states to Stiebel Eltron states."""
+"""Mapping homeassistant states to STIEBEL ELTRON states."""
 HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
 
 
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class StiebelEltron(ClimateDevice):
-    """Representation of a Stiebel Eltron heat pump."""
+    """Representation of a STIEBEL ELTRON heat pump."""
 
     def __init__(self, name, modbus_client, modbus_slave):
         """Initialize the unit."""
@@ -91,7 +91,7 @@ class StiebelEltron(ClimateDevice):
         self._filter_alarm = None
         self.unit = pystiebeleltron.StiebelEltronAPI(self._modbus_client,
                                                      self._modbus_slave)
-        _LOGGER.debug("Initialized StiebelEltron climat component.")
+        _LOGGER.debug("Initialized STIEBEL ELTRON climat component.")
 
     @property
     def supported_features(self):
