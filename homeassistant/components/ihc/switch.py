@@ -1,7 +1,7 @@
 """Support for IHC switches."""
 from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
 from homeassistant.components.ihc.const import CONF_OFF_ID, CONF_ON_ID
-from homeassistant.components.ihc.util import pulse
+from homeassistant.components.ihc.util import async_pulse, async_set_bool
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import SwitchDevice
 
@@ -50,16 +50,18 @@ class IHCSwitch(IHCDevice, SwitchDevice):
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._ihc_on_id:
-            await pulse(self.ihc_controller, self._ihc_on_id)
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
         else:
-            self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
+            await async_set_bool(self.hass, self.ihc_controller,
+                                 self.ihc_id, True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self._ihc_off_id:
-            await pulse(self.ihc_controller, self._ihc_off_id)
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
         else:
-            self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
+            await async_set_bool(self.hass, self.ihc_controller,
+                                 self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""

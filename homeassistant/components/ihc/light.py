@@ -4,7 +4,8 @@ import logging
 from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
 from homeassistant.components.ihc.const import (
     CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID)
-from homeassistant.components.ihc.util import pulse
+from homeassistant.components.ihc.util import (
+    async_pulse, async_set_bool, async_set_int)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
@@ -83,23 +84,28 @@ class IhcLight(IHCDevice, Light):
                 brightness = 255
 
         if self._dimmable:
-            self.ihc_controller.set_runtime_value_int(
-                self.ihc_id, int(brightness * 100 / 255))
+            await async_set_int(self.hass, self.ihc_controller,
+                                self.ihc_id, int(brightness * 100 / 255))
         else:
             if self._ihc_on_id:
-                await pulse(self.ihc_controller, self._ihc_on_id)
+                await async_pulse(self.hass, self.ihc_controller,
+                                  self._ihc_on_id)
             else:
-                self.ihc_controller.set_runtime_value_bool(self.ihc_id, True)
+                await async_set_bool(self.hass, self.ihc_controller,
+                                     self.ihc_id, True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if self._dimmable:
-            self.ihc_controller.set_runtime_value_int(self.ihc_id, 0)
+            await async_set_int(self.hass, self.ihc_controller,
+                                self.ihc_id, 0)
         else:
             if self._ihc_off_id:
-                await pulse(self.ihc_controller, self._ihc_off_id)
+                await async_pulse(self.hass, self.ihc_controller,
+                                  self._ihc_off_id)
             else:
-                self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
+                await async_set_bool(self.hass, self.ihc_controller,
+                                     self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC notifications."""

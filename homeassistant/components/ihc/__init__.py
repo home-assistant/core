@@ -11,7 +11,7 @@ from homeassistant.components.ihc.const import (
     CONF_ON_ID, CONF_POSITION, CONF_SENSOR, CONF_SWITCH, CONF_XPATH,
     SERVICE_SET_RUNTIME_VALUE_BOOL, SERVICE_SET_RUNTIME_VALUE_FLOAT,
     SERVICE_SET_RUNTIME_VALUE_INT, SERVICE_PULSE)
-from homeassistant.components.ihc.util import pulse
+from homeassistant.components.ihc.util import async_pulse
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT,
@@ -300,10 +300,10 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
         value = call.data[ATTR_VALUE]
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
-    async def pulse_runtime_input(call):
+    async def async_pulse_runtime_input(call):
         """Pulse a IHC controller input function."""
         ihc_id = call.data[ATTR_IHC_ID]
-        await pulse(ihc_controller, ihc_id)
+        await async_pulse(hass, ihc_controller, ihc_id)
 
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_BOOL,
                            set_runtime_value_bool,
@@ -314,6 +314,6 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_PULSE,
-                                 pulse_runtime_input,
-                                 schema=PULSE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_PULSE,
+                           async_pulse_runtime_input,
+                           schema=PULSE_SCHEMA)
