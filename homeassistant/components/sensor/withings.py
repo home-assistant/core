@@ -257,8 +257,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-
-def _get_credentials_from_file(hass: HomeAssistant, config_filename: str) -> None:
+def _get_credentials_from_file(hass: HomeAssistant, config_filename: str) -> nokia.NokiaCredentials:
     """Attempt to load token data from file."""
     import nokia
     _LOGGER.debug('_get_credentials_from_file')
@@ -464,18 +463,19 @@ class WithingsAuthCallbackView(HomeAssistantView):
             if 'error' in params:
                 _LOGGER.error(
                     "Error authorizing Withings: %s", params['error'])
-                return response
+                return web.Response(text='ERROR_0001: Withings provided an error: {}'.format(params['error']))
             _LOGGER.error(
                 "Error authorizing Withings. Invalid response returned")
-            return response
+
+            return web.Response(text='ERROR_0002: either state or code url parameters were not set.')
 
         if DATA_CONFIGURING not in hass.data:
             _LOGGER.error("Withings configuration request not found")
-            return response
+            return web.Response(text='ERROR_0003: {} was not found in hass.data. This is a bug.'.format(DATA_CONFIGURING))
             
         if self.slug not in hass.data[DATA_CONFIGURING]:
             _LOGGER.error("Withings configuration request for {} not found".format(self.slug))
-            return response
+            return web.Response(text='ERROR_0004: {} was not found in hass.data[{}].'.format(self.slug, DATA_CONFIGURING))
 
         _LOGGER.debug('Calling async_oauth_initialize_callback')
         code = params['code']
@@ -489,9 +489,11 @@ class WithingsAuthCallbackView(HomeAssistantView):
 
     def __eq__(self, that):
         return that is not None \
+            and isinstance(that, WithingsAuthCallbackView) \
             and self.url == that.url \
             and self.name == that.name \
             and self.slug == that.slug
+
 
 class WithingsHealthSensor(Entity):
     """Implementation of a Withings sensor."""

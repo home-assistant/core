@@ -3,6 +3,7 @@ from datetime import datetime
 from asynctest import patch, MagicMock
 import pytest
 import asyncio
+import unittest
 import os
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -15,7 +16,8 @@ import nokia
 import callee
 from aiohttp.web_request import BaseRequest
 import homeassistant.components.sensor.withings as withings
-
+from tests.common import (
+    get_test_home_assistant, load_fixture)
 
 PLATFORM_NAME = 'withings'
 
@@ -222,3 +224,58 @@ async def test_initialize_credentials_refreshed(hass):
 
         credentials_refreshed_spy.assert_called()
 
+
+class TestWithingsAuthCallbackView(unittest.TestCase):
+    def setUp(self):
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def test_get_errors(self):
+        request = MagicMock(spec=BaseRequest)
+        request.app = {
+            'hass': self.hass
+        }
+        request.query = {
+            'state': 'my_state',
+            'code': 'my_code'
+        }
+
+        view = withings.WithingsAuthCallbackView('person_1')
+
+        request.query = {}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0002:')
+
+        request.query = {'error': 'MY_ERROR'}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0001:')
+
+        request.query = {'state': 'MY_STATE'}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0002:')
+
+        request.query = {'code': 'MY_CODE'}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0002:')
+
+        request.query = {'state': 'MY_STATE', 'code': 'MY_CODE'}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0003:')
+
+        request.query = {'state': 'MY_STATE', 'code': 'MY_CODE'}
+        self.hass.data[withings.DATA_CONFIGURING] = {}
+        response = view.get(request)
+        assert response.body.startswith(b'ERROR_0004:')
+
+    def test__eq__(self):
+        view1a = withings.WithingsAuthCallbackView('profile_1')
+        view1b = withings.WithingsAuthCallbackView('profile_1')
+        view2a = withings.WithingsAuthCallbackView('profile_2')
+
+        assert view1a == view1b
+        assert view1a != view2a
+        assert view1b != view2a
+        assert view1a != {}
+        assert view1a != 'HELLO'
