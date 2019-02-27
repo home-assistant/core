@@ -4,11 +4,12 @@ import io
 from homeassistant.components.stream import async_request_stream, get_stream
 from homeassistant.loader import bind_hass
 
+
 def generate_h264_video():
     """
     Generate a test video.
 
-    See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html#generating-video
+    See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
     import numpy as np
     import av
@@ -29,9 +30,12 @@ def generate_h264_video():
     for frame_i in range(total_frames):
 
         img = np.empty((480, 320, 3))
-        img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
-        img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
-        img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
+        img[:, :, 0] = 0.5 + 0.5 * np.sin(
+            2 * np.pi * (0 / 3 + frame_i / total_frames))
+        img[:, :, 1] = 0.5 + 0.5 * np.sin(
+            2 * np.pi * (1 / 3 + frame_i / total_frames))
+        img[:, :, 2] = 0.5 + 0.5 * np.sin(
+            2 * np.pi * (2 / 3 + frame_i / total_frames))
 
         img = np.round(255 * img).astype(np.uint8)
         img = np.clip(img, 0, 255)
