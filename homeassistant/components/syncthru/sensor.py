@@ -79,8 +79,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     printer = SyncThru(host)
     # Test if the discovered device actually is a syncthru printer
     try:
-        # No error is thrown when the device is off (only after user added it manually)
-        # , so additional catches are inside the Sensor below
+        # No error is thrown when the device is off
+        # (only after user added it manually)
+        # therefore additional catches are inside the Sensor below
         printer.update()
     except ValueError:
         # if an exception is thrown, printer does not support syncthru
@@ -164,7 +165,10 @@ class SyncThruMainSensor(SyncThruSensor):
             self.syncthru.update()
         except ValueError:
             # if an exception is thrown, printer does not support syncthru
-            _LOGGER.info("Samsung printer at %s does not support SyncThru", self.syncthru.url)
+            _LOGGER.info(
+                "Samsung printer at %s does not support SyncThru",
+                self.syncthru.url
+            )
         self._state = self.syncthru.device_status()
 
 
