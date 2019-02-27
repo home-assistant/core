@@ -79,13 +79,15 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
-            # Should be only 1 entry max.
-            _entry = self.hass.config_entries.async_entries(DOMAIN)[0]
-            conf_devices = _entry.data['devices']
-            for c_device in conf_devices:
-                if c_device['host'] in device_list:
-                    # Remove configured device from search list.
-                    device_list.remove(c_device['host'])
+            _entries = []
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                _entries.append(entry)
+            for _entry in _entries:
+                conf_devices = _entry.data['devices']
+                for c_device in conf_devices:
+                    if c_device['host'] in device_list:
+                        # Remove configured device from search list.
+                        device_list.remove(c_device['host'])
             # If list is empty then all devices are configured.
             if not device_list:
                 return self.async_abort(reason='devices_configured')
@@ -110,18 +112,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                     CONF_NAME: self.name,
                     CONF_REGION: self.region
                 }
-
-                if self.hass.config_entries.async_entries(DOMAIN):
-                    # Add new device to previous entry data
-                    _entry.data['devices'].append(device)
-                    # Delete previous entry
-                    await self.hass.config_entries.async_remove(
-                        _entry.entry_id)
-                    # Create new entry from previous, with new device
-                    return self.async_create_entry(
-                        title='PlayStation 4',
-                        data=_entry.data,
-                    )
 
                 # Create entry.
                 return self.async_create_entry(
