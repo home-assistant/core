@@ -321,7 +321,7 @@ class Person(RestoreEntity):
         if self._longitude is not None:
             data[ATTR_LONGITUDE] = round(self._longitude, 5)
         if self._gps_accuracy is not None:
-            data[ATTR_LONGITUDE] = round(self._gps_accuracy, 1)
+            data[ATTR_GPS_ACCURACY] = round(self._gps_accuracy, 1)
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
         user_id = self._config.get(CONF_USER_ID)
