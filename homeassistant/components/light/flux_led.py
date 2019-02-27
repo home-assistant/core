@@ -151,6 +151,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device['name'] = '{} {}'.format(device['id'], ipaddr)
         device[ATTR_MODE] = MODE_RGBW
         device[CONF_PROTOCOL] = None
+        device[CONF_CUSTOM_EFFECT] = None
         light = FluxLight(device)
         lights.append(light)
 

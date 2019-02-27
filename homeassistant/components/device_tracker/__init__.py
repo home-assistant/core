@@ -580,6 +580,7 @@ class Device(RestoreEntity):
             return
         self._state = state.state
         self.last_update_home = (state.state == STATE_HOME)
+        self.last_seen = dt_util.utcnow()
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),

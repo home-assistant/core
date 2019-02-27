@@ -8,32 +8,34 @@ import sys
 import fnmatch
 
 COMMENT_REQUIREMENTS = (
-    'RPi.GPIO',
-    'raspihats',
-    'rpi-rf',
     'Adafruit-DHT',
     'Adafruit_BBIO',
-    'fritzconnection',
-    'pybluez',
-    'beacontools',
-    'bluepy',
-    'opencv-python',
-    'python-lirc',
-    'pyuserinput',
-    'evdev',
-    'pycups',
-    'python-eq3bt',
     'avion',
-    'decora',
-    'face_recognition',
+    'beacontools',
     'blinkt',
-    'smbus-cffi',
-    'envirophat',
-    'i2csense',
-    'credstash',
+    'bluepy',
     'bme680',
+    'credstash',
+    'decora',
+    'envirophat',
+    'evdev',
+    'face_recognition',
+    'fritzconnection',
+    'i2csense',
+    'opencv-python',
     'py_noaa',
     'VL53L1X2',
+    'pybluez',
+    'pycups',
+    'PySwitchbot',
+    'pySwitchmate',
+    'python-eq3bt',
+    'python-lirc',
+    'pyuserinput',
+    'raspihats',
+    'rpi-rf',
+    'RPi.GPIO',
+    'smbus-cffi',
 )
 
 TEST_REQUIREMENTS = (
@@ -106,6 +108,7 @@ TEST_REQUIREMENTS = (
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
+    'pyHS100',
     'regenmaschine',
     'restrictedpython',
     'rflink',
@@ -118,6 +121,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'srpenergy',
     'statsd',
+    'toonapilib',
     'uvcclient',
     'vsure',
     'warrant',
@@ -126,8 +130,8 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
-    'zigpy',
-    'bellows',
+    'zigpy-homeassistant',
+    'bellows-homeassistant',
 )
 
 IGNORE_PACKAGES = (
@@ -159,6 +163,10 @@ pycrypto==1000000000.0.0
 
 # Contains code to modify Home Assistant to work around our rules
 python-systemair-savecair==1000000000.0.0
+
+# Newer version causes pylint to take forever
+# https://github.com/timothycrosley/isort/issues/848
+isort==4.3.4
 """
 
 
