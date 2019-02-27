@@ -117,7 +117,7 @@ async def async_from_config_dict(config: Dict[str, Any],
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_load()
+    await hass.config_entries.async_initialize()
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()

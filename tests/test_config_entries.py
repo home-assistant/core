@@ -407,7 +407,7 @@ async def test_saving_and_loading(hass):
 
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
-    await manager.async_load()
+    await manager.async_initialize()
 
     # Ensure same order
     for orig, loaded in zip(hass.config_entries.async_entries(),
@@ -518,7 +518,7 @@ async def test_loading_default_config(hass):
     manager = config_entries.ConfigEntries(hass, {})
 
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
-        await manager.async_load()
+        await manager.async_initialize()
 
     assert len(manager.async_entries()) == 0
 
@@ -650,3 +650,219 @@ async def test_entry_options(hass, manager):
     assert entry.options == {
         'second': True
     }
+
+
+async def test_entry_setup_succeed(hass, manager):
+    """Test that we can setup an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=config_entries.ENTRY_STATE_NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_setup=mock_setup,
+        async_setup_entry=mock_setup_entry
+    ))
+
+    assert await manager.async_setup(entry.entry_id)
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+@pytest.mark.parametrize('state', (
+    config_entries.ENTRY_STATE_LOADED,
+    config_entries.ENTRY_STATE_SETUP_ERROR,
+    config_entries.ENTRY_STATE_MIGRATION_ERROR,
+    config_entries.ENTRY_STATE_SETUP_RETRY,
+    config_entries.ENTRY_STATE_FAILED_UNLOAD,
+))
+async def test_entry_setup_invalid_state(hass, manager, state):
+    """Test that we cannot setup an entry with invalid state."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=state
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_setup=mock_setup,
+        async_setup_entry=mock_setup_entry
+    ))
+
+    with pytest.raises(config_entries.OperationNotAllowed):
+        assert await manager.async_setup(entry.entry_id)
+
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state == state
+
+
+async def test_entry_unload_succeed(hass, manager):
+    """Test that we can unload an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=config_entries.ENTRY_STATE_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_unload_entry=async_unload_entry
+    ))
+
+    assert await manager.async_unload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+
+@pytest.mark.parametrize('state', (
+    config_entries.ENTRY_STATE_NOT_LOADED,
+    config_entries.ENTRY_STATE_SETUP_ERROR,
+    config_entries.ENTRY_STATE_SETUP_RETRY,
+))
+async def test_entry_unload_failed_to_load(hass, manager, state):
+    """Test that we can unload an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=state,
+    )
+    entry.add_to_hass(hass)
+
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_unload_entry=async_unload_entry
+    ))
+
+    assert await manager.async_unload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+
+@pytest.mark.parametrize('state', (
+    config_entries.ENTRY_STATE_MIGRATION_ERROR,
+    config_entries.ENTRY_STATE_FAILED_UNLOAD,
+))
+async def test_entry_unload_invalid_state(hass, manager, state):
+    """Test that we cannot unload an entry with invalid state."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=state
+    )
+    entry.add_to_hass(hass)
+
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_unload_entry=async_unload_entry
+    ))
+
+    with pytest.raises(config_entries.OperationNotAllowed):
+        assert await manager.async_unload(entry.entry_id)
+
+    assert len(async_unload_entry.mock_calls) == 0
+    assert entry.state == state
+
+
+async def test_entry_reload_succeed(hass, manager):
+    """Test that we can reload an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=config_entries.ENTRY_STATE_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    async_setup = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_setup=async_setup,
+        async_setup_entry=async_setup_entry,
+        async_unload_entry=async_unload_entry
+    ))
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+@pytest.mark.parametrize('state', (
+    config_entries.ENTRY_STATE_NOT_LOADED,
+    config_entries.ENTRY_STATE_SETUP_ERROR,
+    config_entries.ENTRY_STATE_SETUP_RETRY,
+))
+async def test_entry_reload_not_loaded(hass, manager, state):
+    """Test that we can reload an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=state
+    )
+    entry.add_to_hass(hass)
+
+    async_setup = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_setup=async_setup,
+        async_setup_entry=async_setup_entry,
+        async_unload_entry=async_unload_entry
+    ))
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 0
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+@pytest.mark.parametrize('state', (
+    config_entries.ENTRY_STATE_MIGRATION_ERROR,
+    config_entries.ENTRY_STATE_FAILED_UNLOAD,
+))
+async def test_entry_reload_not_loaded(hass, manager, state):
+    """Test that we can reload an entry."""
+    entry = MockConfigEntry(
+        domain='comp',
+        state=state
+    )
+    entry.add_to_hass(hass)
+
+    async_setup = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(hass, 'comp', MockModule(
+        'comp',
+        async_setup=async_setup,
+        async_setup_entry=async_setup_entry,
+        async_unload_entry=async_unload_entry
+    ))
+
+    with pytest.raises(config_entries.OperationNotAllowed):
+        assert await manager.async_reload(entry.entry_id)
+
+    assert len(async_unload_entry.mock_calls) == 0
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+
+    assert entry.state == state
