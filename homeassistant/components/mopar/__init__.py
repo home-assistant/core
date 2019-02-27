@@ -1,9 +1,4 @@
-"""
-Support for Mopar vehicles.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mopar/
-"""
+"""Support for Mopar vehicles."""
 import logging
 from datetime import timedelta
 
@@ -22,8 +17,8 @@ DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VEHICLE_INDEX = 'vehicle_index'
-
 COOKIE_FILE = 'mopar_cookies.pickle'
+SUCCESS_RESPONSE = 'completed'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
 
@@ -72,7 +67,8 @@ class MoparData:
     def update(self, **kwargs):
         """Update data."""
         import motorparts
-        _LOGGER.info("Updating vehicle data")
+
+        _LOGGER.debug("Updating vehicle data")
         try:
             self.vehicles = motorparts.get_summary(self._session)['vehicles']
         except motorparts.MoparError:
@@ -94,4 +90,21 @@ class MoparData:
     def attribution(self):
         """Get the attribution string from Mopar."""
         import motorparts
+
         return motorparts.ATTRIBUTION
+
+    @property
+    def session(self):
+        """Get the session to communicate with the vehicle."""
+        return self._session
+
+    def get_vehicle_name(self, index):
+        """Get the name corresponding with this vehicle."""
+        vehicle = self.vehicles[index]
+        if not vehicle:
+            return None
+        return '{} {} {}'.format(
+            vehicle['year'],
+            vehicle['make'],
+            vehicle['model']
+        )
