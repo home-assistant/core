@@ -156,10 +156,9 @@ class PS4Device(MediaPlayerDevice):
             if status.get('status') == 'Ok':
                 # Check if only 1 device in Hass.
                 if len(self.hass.data[PS4_DATA].devices) == 1:
-                    """Enable keep alive feature for PS4 Connection.
-                     Only 1 device is supported,
-                     since can only use a single port, 997."""
-                    self._ps4._keep_alive = True
+                    # Enable keep alive feature for PS4 Connection.
+                    # Only 1 device is supported, Since have to use port 997.
+                    self._ps4.keep_alive = True
                 if self._power_on is True:
                     # Auto Login after Turn On.
                     self._ps4.open()
