@@ -1210,7 +1210,7 @@ pypjlink2==1.2.0
 pypoint==1.1.1
 
 # homeassistant.components.sensor.pollen
-pypollencom==2.2.2
+pypollencom==2.2.3
 
 # homeassistant.components.ps4
 pyps4-homeassistant==0.3.0
