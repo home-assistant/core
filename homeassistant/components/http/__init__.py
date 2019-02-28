@@ -55,6 +55,9 @@ NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 def trusted_networks_deprecated(value):
     """Warn user trusted_networks config is deprecated."""
+    if not value:
+        return value
+
     _LOGGER.warning(
         "Configuring trusted_networks via the http component has been"
         " deprecated. Use the trusted networks auth provider instead."
