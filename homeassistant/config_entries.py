@@ -558,6 +558,7 @@ class ConfigEntries:
         if entry.domain in self.hass.config.components:
             await entry.async_setup(self.hass)
         else:
+            # Setting up the component will set up all its config entries
             result = await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
