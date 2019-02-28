@@ -84,6 +84,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
+
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER): cv.string,
