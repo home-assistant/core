@@ -382,10 +382,8 @@ class Person(RestoreEntity):
                if prev is None or curr.last_updated > prev.last_updated \
                else prev
 
-
     @callback
     def _update_state(self):
-
         """Update the state."""
         latest_home = latest_not_home = latest_gps = latest = None
         for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
