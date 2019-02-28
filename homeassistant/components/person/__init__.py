@@ -176,7 +176,7 @@ class PersonManager:
             CONF_ID: uuid.uuid4().hex,
             CONF_NAME: name,
             CONF_USER_ID: user_id,
-            CONF_DEVICE_TRACKERS: device_trackers,
+            CONF_DEVICE_TRACKERS: device_trackers or [],
         }
         self.storage_data[person[CONF_ID]] = person
         self._async_schedule_save()
@@ -337,12 +337,18 @@ class Person(RestoreEntity):
         if state:
             self._parse_source_state(state)
 
-        @callback
-        def person_start_hass(now):
+        if self.hass.is_running:
+            # Update person now if hass is already running.
             self.person_updated()
+        else:
+            # Wait for hass start to not have race between person
+            # and device trackers finishing setup.
+            @callback
+            def person_start_hass(now):
+                self.person_updated()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, person_start_hass)
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, person_start_hass)
 
     @callback
     def person_updated(self):
