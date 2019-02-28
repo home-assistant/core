@@ -8,7 +8,7 @@ from homeassistant.const import VOLUME_GALLONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-DEPENDS = ['streamlabswater']
+DEPENDENCIES = ['streamlabswater']
 
 WATER_ICON = 'mdi:water'
 MIN_TIME_BETWEEN_USAGE_UPDATES = timedelta(seconds=60)
