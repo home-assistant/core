@@ -334,7 +334,7 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass, *, component=None):
+    async def async_unload(self, hass, *, component=None) -> bool:
         """Unload an entry.
 
         Returns if unload is possible and was successful.
