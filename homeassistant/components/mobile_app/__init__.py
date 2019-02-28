@@ -24,7 +24,6 @@ from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers import template
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.state import AsyncTrackStates
 
 REQUIREMENTS = ['PyNaCl==1.3.0']
 
@@ -182,22 +181,23 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
 
     if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
 
-        with AsyncTrackStates(hass) as changed_states:
-            try:
-                await hass.services.async_call(data[ATTR_DOMAIN],
-                                               data[ATTR_SERVICE],
-                                               data[ATTR_SERVICE_DATA],
-                                               True,
-                                               context(request))
-            except (vol.Invalid, ServiceNotFound):
-                raise HTTPBadRequest()
+        try:
+            await hass.services.async_call(data[ATTR_DOMAIN],
+                                           data[ATTR_SERVICE],
+                                           data[ATTR_SERVICE_DATA],
+                                           True,
+                                           context(request))
+        except (vol.Invalid, ServiceNotFound):
+            raise HTTPBadRequest()
 
-        return json_response(changed_states)
+        return Response(status=200)
+
     elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         event_type = data[ATTR_EVENT_TYPE]
         hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
                             ha.EventOrigin.remote, context(request))
-        return json_response({"message": "Event {} fired.".format(event_type)})
+        return Response(status=200)
+
     elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
         try:
             tpl = template.Template(data[ATTR_TEMPLATE], hass)
