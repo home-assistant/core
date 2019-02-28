@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.2.0', 'defusedxml==0.5.0']
+REQUIREMENTS = ['ihcsdk==2.3.0', 'defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
