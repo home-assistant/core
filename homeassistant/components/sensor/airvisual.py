@@ -278,11 +278,11 @@ class AirVisualData:
 
         try:
             if self.city and self.state and self.country:
-                resp = await self._client.data.city(
+                resp = await self._client.api.city(
                     self.city, self.state, self.country)
                 self.longitude, self.latitude = resp['location']['coordinates']
             else:
-                resp = await self._client.data.nearest_city(
+                resp = await self._client.api.nearest_city(
                     self.latitude, self.longitude)
 
             _LOGGER.debug("New data retrieved: %s", resp)
