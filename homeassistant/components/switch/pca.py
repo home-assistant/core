@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pypca==0.0.1']
+REQUIREMENTS = ['pypca==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
