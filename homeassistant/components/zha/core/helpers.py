@@ -200,6 +200,6 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
                 ).intersection(
                     target_clusters[t_endpoint_id][IN].keys()
                 )
-            if bool(matches & bindables):
+            if any(bindable in bindables for bindable in matches):
                 return True
     return False
