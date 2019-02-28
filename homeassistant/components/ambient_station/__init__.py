@@ -20,7 +20,7 @@ from .const import (
     ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
-REQUIREMENTS = ['aioambient==0.1.2']
+REQUIREMENTS = ['aioambient==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
