@@ -5,13 +5,12 @@ Example configuration:
 
 modbus:
   type: tcp
-  host: 192.168.1.20
+  host: YOUR_ISGWEB_IP
   port: 502
 
 climate:
   - platform: stiebel_eltron
     name: LWZ504e
-    slave: 1
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.stiebel_eltron/
@@ -37,8 +36,8 @@ DEPENDENCIES = ['modbus']
 DEFAULT_SLAVE = 1
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    vol.Required(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
 })
 
 _LOGGER = logging.getLogger(__name__)
