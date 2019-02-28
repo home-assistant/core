@@ -168,6 +168,7 @@ omit =
     homeassistant/components/fan/wemo.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/fibaro/*
+    homeassistant/components/firetv/*
     homeassistant/components/folder_watcher/*
     homeassistant/components/foursquare/*
     homeassistant/components/freebox/*
@@ -280,7 +281,6 @@ omit =
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/epson.py
-    homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
