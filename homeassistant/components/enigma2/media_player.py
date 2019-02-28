@@ -1,9 +1,4 @@
-"""
-Support for Enigma2 media players.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.enigma2/
-"""
+"""Support for Enigma2 media players."""
 import logging
 
 import voluptuous as vol
