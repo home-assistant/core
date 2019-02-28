@@ -1622,7 +1622,7 @@ sqlalchemy==1.2.18
 srpenergy==1.0.5
 
 # homeassistant.components.sensor.starlingbank
-starlingbank==3.0
+starlingbank==3.1
 
 # homeassistant.components.statsd
 statsd==3.2.1
