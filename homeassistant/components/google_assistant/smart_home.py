@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+from asyncio import gather
 from collections.abc import Mapping
 from itertools import product
 import logging
@@ -131,30 +132,31 @@ class _GoogleEntity:
         if aliases:
             device['name']['nicknames'] = aliases
 
-        # add room hint if annotated
+        for trt in traits:
+            device['attributes'].update(trt.sync_attributes())
+
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
             device['roomHint'] = room
-        else:
-            entity_registry = (await self.hass.helpers.
-                               entity_registry.async_get_registry())
+            return device
 
-            entity_entry = entity_registry.async_get(state.entity_id)
-            if entity_entry:
-                device_registry = (await self.hass.helpers.
-                                   device_registry.async_get_registry())
-                device_entry = device_registry.devices.get(
-                    entity_entry.device_id)
-                if device_entry and device_entry.area_id:
-                    area_registry = (await self.hass.helpers.
-                                     area_registry.async_get_registry())
-                    area_entry = area_registry.areas.get(device_entry.area_id)
+        dev_reg, ent_reg, area_reg = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+            self.hass.helpers.area_registry.async_get_registry(),
+        )
 
-                    if area_entry and area_entry.name:
-                        device['roomHint'] = area_entry.name
+        entity_entry = ent_reg.async_get(state.entity_id)
+        if not (entity_entry and entity_entry.device_id):
+            return device
 
-        for trt in traits:
-            device['attributes'].update(trt.sync_attributes())
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        if not (device_entry and device_entry.area_id):
+            return device
+
+        area_entry = area_reg.areas.get(device_entry.area_id)
+        if area_entry and area_entry.name:
+            device['roomHint'] = area_entry.name
 
         return device
 
