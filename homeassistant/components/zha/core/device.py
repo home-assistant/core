@@ -243,6 +243,18 @@ class ZHADevice:
         }
 
     @callback
+    def async_get_zha_clusters(self):
+        """Get zigbee home automation clusters for this device."""
+        from zigpy.profiles.zha import PROFILE_ID
+        return {
+            ep_id: {
+                IN: endpoint.in_clusters,
+                OUT: endpoint.out_clusters
+            } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+            if ep_id != 0 and endpoint.profile_id == PROFILE_ID
+        }
+
+    @callback
     def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
         clusters = self.async_get_clusters()

@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
+import asyncio
 import logging
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
     CLIENT_COMMANDS, SERVER_COMMANDS, SERVER, NAME, ATTR_ENDPOINT_ID)
+from .core.helpers import get_matched_clusters, async_is_bindable_target
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +28,18 @@ DEVICE_INFO = 'device_info'
 ATTR_DURATION = 'duration'
 ATTR_IEEE_ADDRESS = 'ieee_address'
 ATTR_IEEE = 'ieee'
+ATTR_SOURCE_IEEE = 'source_ieee'
+ATTR_TARGET_IEEE = 'target_ieee'
+BIND_REQUEST = 0x0021
+UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = 'permit'
 SERVICE_REMOVE = 'remove'
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = 'set_zigbee_cluster_attribute'
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = 'issue_zigbee_cluster_command'
+SERVICE_DIRECT_ZIGBEE_BIND = 'issue_direct_zigbee_bind'
+SERVICE_DIRECT_ZIGBEE_UNBIND = 'issue_direct_zigbee_unbind'
+SERVICE_ZIGBEE_BIND = 'service_zigbee_bind'
 IEEE_SERVICE = 'ieee_based_service'
 
 SERVICE_SCHEMAS = {
@@ -108,6 +117,26 @@ SCHEMA_WS_CLUSTER_COMMANDS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required(ATTR_ENDPOINT_ID): int,
     vol.Required(ATTR_CLUSTER_ID): int,
     vol.Required(ATTR_CLUSTER_TYPE): str
+})
+
+WS_BIND_DEVICE = 'zha/devices/bind'
+SCHEMA_WS_BIND_DEVICE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required(TYPE): WS_BIND_DEVICE,
+    vol.Required(ATTR_SOURCE_IEEE): str,
+    vol.Required(ATTR_TARGET_IEEE): str
+})
+
+WS_UNBIND_DEVICE = 'zha/devices/unbind'
+SCHEMA_WS_UNBIND_DEVICE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required(TYPE): WS_UNBIND_DEVICE,
+    vol.Required(ATTR_SOURCE_IEEE): str,
+    vol.Required(ATTR_TARGET_IEEE): str
+})
+
+WS_BINDABLE_DEVICES = 'zha/devices/bindable'
+SCHEMA_WS_BINDABLE_DEVICES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required(TYPE): WS_BINDABLE_DEVICES,
+    vol.Required(ATTR_IEEE): str
 })
 
 
@@ -243,6 +272,103 @@ def async_load_api(hass, application_controller, zha_gateway):
         WS_RECONFIGURE_NODE, websocket_reconfigure_node,
         SCHEMA_WS_RECONFIGURE_NODE
     )
+
+    @websocket_api.async_response
+    async def websocket_get_bindable_devices(hass, connection, msg):
+        """Directly bind devices."""
+        source_ieee = msg[ATTR_IEEE]
+        source_device = zha_gateway.get_device(source_ieee)
+        devices = [
+            {
+                **device.device_info
+            } for device in zha_gateway.devices.values() if
+            async_is_bindable_target(source_device, device)
+        ]
+
+        _LOGGER.debug("Get bindable devices: %s %s",
+                      "{}: [{}]".format(ATTR_SOURCE_IEEE, source_ieee),
+                      "{}: [{}]".format('bindable devices:', devices)
+                      )
+
+        connection.send_message(websocket_api.result_message(
+            msg[ID],
+            devices
+        ))
+
+    hass.components.websocket_api.async_register_command(
+        WS_BINDABLE_DEVICES, websocket_get_bindable_devices,
+        SCHEMA_WS_BINDABLE_DEVICES
+    )
+
+    @websocket_api.async_response
+    async def websocket_bind_devices(hass, connection, msg):
+        """Directly bind devices."""
+        source_ieee = msg[ATTR_SOURCE_IEEE]
+        target_ieee = msg[ATTR_TARGET_IEEE]
+        await async_binding_operation(
+            source_ieee, target_ieee, BIND_REQUEST)
+        _LOGGER.info("Issue bind devices: %s %s",
+                     "{}: [{}]".format(ATTR_SOURCE_IEEE, source_ieee),
+                     "{}: [{}]".format(ATTR_TARGET_IEEE, target_ieee)
+                     )
+
+    hass.components.websocket_api.async_register_command(
+        WS_BIND_DEVICE, websocket_bind_devices,
+        SCHEMA_WS_BIND_DEVICE
+    )
+
+    @websocket_api.async_response
+    async def websocket_unbind_devices(hass, connection, msg):
+        """Remove a direct binding between devices."""
+        source_ieee = msg[ATTR_SOURCE_IEEE]
+        target_ieee = msg[ATTR_TARGET_IEEE]
+        await async_binding_operation(
+            source_ieee, target_ieee, UNBIND_REQUEST)
+        _LOGGER.info("Issue unbind devices: %s %s",
+                     "{}: [{}]".format(ATTR_SOURCE_IEEE, source_ieee),
+                     "{}: [{}]".format(ATTR_TARGET_IEEE, target_ieee)
+                     )
+
+    hass.components.websocket_api.async_register_command(
+        WS_UNBIND_DEVICE, websocket_unbind_devices,
+        SCHEMA_WS_UNBIND_DEVICE
+    )
+
+    async def async_binding_operation(source_ieee, target_ieee,
+                                      operation):
+        """Create or remove a direct zigbee binding between 2 devices."""
+        from zigpy.zdo import types as zdo_types
+        source_device = zha_gateway.get_device(source_ieee)
+        target_device = zha_gateway.get_device(target_ieee)
+
+        clusters_to_bind = await get_matched_clusters(source_device,
+                                                      target_device)
+
+        bind_tasks = []
+        for cluster_pair in clusters_to_bind:
+            destination_address = zdo_types.MultiAddress()
+            destination_address.addrmode = 3
+            destination_address.ieee = target_device.ieee
+            destination_address.endpoint = \
+                cluster_pair.target_cluster.endpoint.endpoint_id
+
+            zdo = cluster_pair.source_cluster.endpoint.device.zdo
+
+            _LOGGER.debug("processing binding operation for: %s %s %s",
+                          "{}: [{}]".format(ATTR_SOURCE_IEEE, source_ieee),
+                          "{}: [{}]".format(ATTR_TARGET_IEEE, target_ieee),
+                          "{}: {}".format(
+                              'cluster',
+                              cluster_pair.source_cluster.cluster_id)
+                          )
+            bind_tasks.append(zdo.request(
+                operation,
+                source_device.ieee,
+                cluster_pair.source_cluster.endpoint.endpoint_id,
+                cluster_pair.source_cluster.cluster_id,
+                destination_address
+            ))
+        await asyncio.gather(*bind_tasks)
 
     @websocket_api.async_response
     async def websocket_device_clusters(hass, connection, msg):
