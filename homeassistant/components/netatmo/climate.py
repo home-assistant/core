@@ -76,9 +76,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     rooms = {}
     if homes_conf is not None:
         for home_conf in homes_conf:
-            home = home_conf.get(CONF_NAME)
-            if CONF_ROOMS in home_conf and home_conf[CONF_ROOMS] != []:
-                rooms[home] = home_conf.get(CONF_ROOMS)
+            home = home_conf[CONF_NAME]
+            if home_conf[CONF_ROOMS] != []:
+                rooms[home] = home_conf[CONF_ROOMS]
             homes.append(home)
     else:
         homes = home_data.get_home_names()
@@ -109,19 +109,24 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         room_name = self._data.homedata.rooms[self._data.home][room_id]['name']
-        self._name = 'netatmo_' + room_name
+        self._name = "netatmo_{}".format(room_name)
         self._target_temperature = None
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
-        self._support_flags = SUPPORT_FLAGS
-        self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
-                                DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
-        if self._module_type == 'NATherm1':
-            self._operation_list += [DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
-                                     DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
-            self._support_flags |= SUPPORT_ON_OFF
+        if self._module_type == 'NRV':
+            self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
+            self._support_flags = SUPPORT_FLAGS
+        elif self._module_type == 'NATherm1':
+            self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_HG],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_MAX],
+                                    DICT_NETATMO_TO_HA[STATE_NETATMO_OFF]]
+            self._support_flags = SUPPORT_FLAGS | SUPPORT_ON_OFF
         self._operation_mode = None
         self.update_without_throttle = False
 
@@ -380,21 +385,22 @@ class ThermostatData():
         _LOGGER.debug(self.homestatus.rawData)
         for key in self.homestatus.rooms:
             roomstatus = {}
-            roomstatus['roomID'] = self.homestatus.rooms[key]['id']
-            roomstatus['roomname'] = \
-                self.homedata.rooms[self.home][key]['name']
+            homestatus_room = self.homestatus.rooms[key]
+            homedata_room = self.homedata.rooms[self.home][key]
+            roomstatus['roomID'] = homestatus_room['id']
+            roomstatus['roomname'] = homedata_room['name']
             roomstatus['target_temperature'] = \
-                self.homestatus.rooms[key]['therm_setpoint_temperature']
+                homestatus_room['therm_setpoint_temperature']
             roomstatus['setpoint_mode'] = \
-                self.homestatus.rooms[key]['therm_setpoint_mode']
+                homestatus_room['therm_setpoint_mode']
             roomstatus['current_temperature'] = \
-                self.homestatus.rooms[key]['therm_measured_temperature']
+                homestatus_room['therm_measured_temperature']
             roomstatus['module_type'] = \
                 self.homestatus.thermostatType(self.home, key)
             roomstatus['module_id'] = None
             roomstatus['heating_status'] = None
             roomstatus['heating_power_request'] = None
-            for module_id in self.homedata.rooms[self.home][key]['module_ids']:
+            for module_id in homedata_room['module_ids']:
                 if self.homedata.modules[self.home][module_id]['type'] == \
                    "NATherm1" or roomstatus['module_id'] is None:
                     roomstatus['module_id'] = module_id
@@ -404,7 +410,7 @@ class ThermostatData():
                 roomstatus['heating_status'] = self.boilerstatus
             elif roomstatus['module_type'] == 'NRV':
                 roomstatus['heating_power_request'] = \
-                    self.homestatus.rooms[key]['heating_power_request']
+                    homestatus_room['heating_power_request']
                 roomstatus['heating_status'] = \
                     roomstatus['heating_power_request'] > 0
                 if self.boilerstatus is not None:
