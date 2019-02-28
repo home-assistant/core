@@ -258,6 +258,9 @@ buienradar==0.91
 # homeassistant.components.calendar.caldav
 caldav==0.5.0
 
+# homeassistant.components.cisco_mobility_express.device_tracker
+ciscomobilityexpress==0.1.2
+
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 

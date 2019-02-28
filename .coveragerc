@@ -68,6 +68,7 @@ omit =
     homeassistant/components/camera/xiaomi.py
     homeassistant/components/camera/yi.py
     homeassistant/components/cast/*
+    homeassistant/components/cisco_mobility_express/device_tracker.py
     homeassistant/components/climate/coolmaster.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
