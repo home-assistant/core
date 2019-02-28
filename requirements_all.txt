@@ -927,7 +927,7 @@ pyads==3.0.7
 pyaftership==0.1.2
 
 # homeassistant.components.sensor.airvisual
-pyairvisual==2.0.1
+pyairvisual==3.0.1
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.2
