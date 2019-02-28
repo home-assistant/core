@@ -306,22 +306,25 @@ class ZDOChannel:
     async def async_get_node_descriptor(self, from_cache):
         """Request the node descriptor from the device."""
         from zigpy.zdo.types import Status
-        if not from_cache:
-            node_descriptor = await self._cluster.request(
-                NODE_DESCRIPTOR_REQUEST,
-                self._cluster.device.nwk, tries=3, delay=2)
 
-            def get_bit(byteval, idx):
-                return int(((byteval & (1 << idx)) != 0))
+        if from_cache:
+            return
 
-            if node_descriptor is not None and\
-                    node_descriptor[0] == Status.SUCCESS:
-                mac_capability_flags = node_descriptor[2].mac_capability_flags
+        node_descriptor = await self._cluster.request(
+            NODE_DESCRIPTOR_REQUEST,
+            self._cluster.device.nwk, tries=3, delay=2)
 
-                self.power_source = get_bit(mac_capability_flags, 2)
-                self.manufacturer_code = node_descriptor[2].manufacturer_code
+        def get_bit(byteval, idx):
+            return int(((byteval & (1 << idx)) != 0))
 
-                _LOGGER.debug("node descriptor: %s", node_descriptor)
+        if node_descriptor is not None and\
+                node_descriptor[0] == Status.SUCCESS:
+            mac_capability_flags = node_descriptor[2].mac_capability_flags
+
+            self.power_source = get_bit(mac_capability_flags, 2)
+            self.manufacturer_code = node_descriptor[2].manufacturer_code
+
+            _LOGGER.debug("node descriptor: %s", node_descriptor)
 
     async def async_configure(self):
         """Configure channel."""
