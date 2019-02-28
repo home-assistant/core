@@ -257,7 +257,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def _get_credentials_from_file(hass: HomeAssistant, config_filename: str) -> nokia.NokiaCredentials:
+def _get_credentials_from_file(hass: HomeAssistant, config_filename: str):
     """Attempt to load token data from file."""
     import nokia
     _LOGGER.debug('_get_credentials_from_file')
