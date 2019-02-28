@@ -10,10 +10,6 @@ DOMAIN = 'remote_rpi_gpio'
 
 def setup(hass, config):
     """Set up the Raspberry PI GPIO component."""
-#    def cleanup_gpio(event):
-#        """Stuff to do before stopping."""
-#    def prepare_gpio(event):
-#        """Stuff to do when home assistant starts."""
     return True
 
 
