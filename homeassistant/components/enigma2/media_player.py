@@ -33,10 +33,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up of an enigma2 media player."""
-    name = config[CONF_NAME]
+    if discovery_info:
+        discovered_config = {
+            'name': DEFAULT_NAME,
+            'port': DEFAULT_PORT,
+            'host': discovery_info['host'],
+            'timeout': DEFAULT_TIMEOUT,
+        }
+        add_devices([Enigma2Device(discovery_info['hostname'],
+                                   discovered_config)], True)
+        return
 
     # Generate a configuration for the Enigma2 library
     remote_config = {
@@ -47,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'timeout': DEFAULT_TIMEOUT,
     }
 
-    add_devices([Enigma2Device(name, remote_config)], True)
+    add_devices([Enigma2Device(config[CONF_NAME], remote_config)], True)
 
 
 class Enigma2Device(MediaPlayerDevice):
