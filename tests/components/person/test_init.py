@@ -18,6 +18,7 @@ from tests.common import mock_component, mock_restore_cache, mock_coro_func
 DEVICE_TRACKER = 'device_tracker.test_tracker'
 DEVICE_TRACKER_2 = 'device_tracker.test_tracker_2'
 
+
 @pytest.fixture
 def storage_setup(hass, hass_storage, hass_admin_user):
     """Storage setup."""
