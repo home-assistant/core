@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from itertools import chain
 import logging
+from typing import Optional
 import uuid
 
 import voluptuous as vol
@@ -13,7 +14,7 @@ from homeassistant.const import (
     ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY,
     CONF_ID, CONF_NAME, EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN, STATE_UNAVAILABLE, STATE_HOME, STATE_NOT_HOME)
-from homeassistant.core import callback, Event
+from homeassistant.core import callback, Event, State
 from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -377,11 +378,6 @@ class Person(RestoreEntity):
         """Handle the device tracker state changes."""
         self._update_state()
 
-    def _get_latest(self, prev, curr):
-        return curr \
-               if prev is None or curr.last_updated > prev.last_updated \
-               else prev
-
     @callback
     def _update_state(self):
         """Update the state."""
@@ -393,11 +389,11 @@ class Person(RestoreEntity):
                 continue
 
             if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
-                latest_gps = self._get_latest(latest_gps, state)
+                latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
-                latest_home = self._get_latest(latest_home, state)
+                latest_home = _get_latest(latest_home, state)
             elif state.state == STATE_NOT_HOME:
-                latest_not_home = self._get_latest(latest_not_home, state)
+                latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_home:
             latest = latest_home
@@ -508,3 +504,10 @@ async def ws_delete_person(hass: HomeAssistantType,
     manager = hass.data[DOMAIN]  # type: PersonManager
     await manager.async_delete_person(msg['person_id'])
     connection.send_result(msg['id'])
+
+
+def _get_latest(prev: Optional[State], curr: State):
+    """Get latest state."""
+    if prev is None or curr.last_updated > prev.last_updated:
+        return curr
+    return prev
