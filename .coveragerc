@@ -395,6 +395,7 @@ omit =
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
+    homeassistant/components/reddit/*
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py

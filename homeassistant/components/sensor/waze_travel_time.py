@@ -44,7 +44,7 @@ REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 SCAN_INTERVAL = timedelta(minutes=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,

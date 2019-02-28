@@ -18,8 +18,10 @@
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
-                }
+                },
+                "title": "ESPHome"
             }
-        }
+        },
+        "title": "ESPHome"
     }
 }

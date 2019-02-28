@@ -77,6 +77,19 @@ async def test_recoverable_api_errors_raise_not_ready(
         await smartthings.async_setup_entry(hass, config_entry)
 
 
+async def test_scenes_api_errors_raise_not_ready(
+        hass, config_entry, app, installed_app, smartthings_mock):
+    """Test if scenes are unauthorized we continue to load platforms."""
+    setattr(hass.config_entries, '_entries', [config_entry])
+    api = smartthings_mock.return_value
+    api.app.return_value = mock_coro(return_value=app)
+    api.installed_app.return_value = mock_coro(return_value=installed_app)
+    api.scenes.return_value = mock_coro(
+        exception=ClientResponseError(None, None, status=500))
+    with pytest.raises(ConfigEntryNotReady):
+        await smartthings.async_setup_entry(hass, config_entry)
+
+
 async def test_connection_errors_raise_not_ready(
         hass, config_entry, smartthings_mock):
     """Test config entry not ready raised for connection errors."""
@@ -118,17 +131,45 @@ async def test_unauthorized_installed_app_raises_not_ready(
         await smartthings.async_setup_entry(hass, config_entry)
 
 
-async def test_config_entry_loads_platforms(
+async def test_scenes_unauthorized_loads_platforms(
         hass, config_entry, app, installed_app,
         device, smartthings_mock, subscription_factory):
-    """Test config entry loads properly and proxies to platforms."""
+    """Test if scenes are unauthorized we continue to load platforms."""
     setattr(hass.config_entries, '_entries', [config_entry])
-
     api = smartthings_mock.return_value
     api.app.return_value = mock_coro(return_value=app)
     api.installed_app.return_value = mock_coro(return_value=installed_app)
     api.devices.side_effect = \
         lambda *args, **kwargs: mock_coro(return_value=[device])
+    api.scenes.return_value = mock_coro(
+        exception=ClientResponseError(None, None, status=403))
+    mock_token = Mock()
+    mock_token.access_token.return_value = str(uuid4())
+    mock_token.refresh_token.return_value = str(uuid4())
+    api.generate_tokens.return_value = mock_coro(return_value=mock_token)
+    subscriptions = [subscription_factory(capability)
+                     for capability in device.capabilities]
+    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
+
+    with patch.object(hass.config_entries, 'async_forward_entry_setup',
+                      return_value=mock_coro()) as forward_mock:
+        assert await smartthings.async_setup_entry(hass, config_entry)
+        # Assert platforms loaded
+        await hass.async_block_till_done()
+        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+
+
+async def test_config_entry_loads_platforms(
+        hass, config_entry, app, installed_app,
+        device, smartthings_mock, subscription_factory, scene):
+    """Test config entry loads properly and proxies to platforms."""
+    setattr(hass.config_entries, '_entries', [config_entry])
+    api = smartthings_mock.return_value
+    api.app.return_value = mock_coro(return_value=app)
+    api.installed_app.return_value = mock_coro(return_value=installed_app)
+    api.devices.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value=[device])
+    api.scenes.return_value = mock_coro(return_value=[scene])
     mock_token = Mock()
     mock_token.access_token.return_value = str(uuid4())
     mock_token.refresh_token.return_value = str(uuid4())
@@ -151,7 +192,7 @@ async def test_unload_entry(hass, config_entry):
     smart_app = Mock()
     smart_app.connect_event.return_value = connect_disconnect
     broker = smartthings.DeviceBroker(
-        hass, config_entry, Mock(), smart_app, [])
+        hass, config_entry, Mock(), smart_app, [], [])
     broker.connect()
     hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id] = broker
 
@@ -184,7 +225,7 @@ async def test_broker_regenerates_token(
                '.async_track_time_interval',
                new=async_track_time_interval):
         broker = smartthings.DeviceBroker(
-            hass, config_entry, token, Mock(), [])
+            hass, config_entry, token, Mock(), [], [])
         broker.connect()
 
     assert stored_action
@@ -214,7 +255,7 @@ async def test_event_handler_dispatches_updated_devices(
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
 
     broker = smartthings.DeviceBroker(
-        hass, config_entry, Mock(), Mock(), devices)
+        hass, config_entry, Mock(), Mock(), devices, [])
     broker.connect()
 
     # pylint:disable=protected-access
@@ -238,7 +279,7 @@ async def test_event_handler_ignores_other_installed_app(
         called = True
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
     broker = smartthings.DeviceBroker(
-        hass, config_entry, Mock(), Mock(), [device])
+        hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
     # pylint:disable=protected-access
@@ -271,7 +312,7 @@ async def test_event_handler_fires_button_events(
         }
     hass.bus.async_listen(EVENT_BUTTON, handler)
     broker = smartthings.DeviceBroker(
-        hass, config_entry, Mock(), Mock(), [device])
+        hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
     # pylint:disable=protected-access
