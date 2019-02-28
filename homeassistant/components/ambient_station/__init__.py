@@ -1,6 +1,5 @@
 """Support for Ambient Weather Station Service."""
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -14,8 +13,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_call_later, async_track_time_interval)
+from homeassistant.helpers.event import async_call_later
 
 from .config_flow import configured_instances
 from .const import (
@@ -29,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG = 'config'
 
 DEFAULT_SOCKET_MIN_RETRY = 15
-DEFAULT_WATCHDOG_LISTENER = timedelta(minutes=5)
+DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 TYPE_24HOURRAININ = '24hourrainin'
 TYPE_BAROMABSIN = 'baromabsin'
@@ -319,8 +317,8 @@ class AmbientStation:
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
             _LOGGER.debug('Watchdog starting')
-            self._watchdog_listener = async_track_time_interval(
-                self._hass, _ws_reconnect, DEFAULT_WATCHDOG_LISTENER)
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -332,8 +330,8 @@ class AmbientStation:
 
             _LOGGER.debug('Resetting watchdog')
             self._watchdog_listener()
-            self._watchdog_listener = async_track_time_interval(
-                self._hass, _ws_reconnect, DEFAULT_WATCHDOG_LISTENER)
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
