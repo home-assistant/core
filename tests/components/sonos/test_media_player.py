@@ -328,7 +328,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         snapshotMock.return_value = True
         entity.soco.group = mock.MagicMock()
         entity.soco.group.members = [e.soco for e in entities]
-        sonos.snapshot(entities, True)
+        sonos.SonosEntity.snapshot_multi(entities, True)
         assert snapshotMock.call_count == 1
         assert snapshotMock.call_args == mock.call()
 
@@ -350,6 +350,6 @@ class TestSonosMediaPlayer(unittest.TestCase):
         entity._snapshot_group = mock.MagicMock()
         entity._snapshot_group.members = [e.soco for e in entities]
         entity._soco_snapshot = Snapshot(entity.soco)
-        sonos.restore(entities, True)
+        sonos.SonosEntity.restore_multi(entities, True)
         assert restoreMock.call_count == 1
         assert restoreMock.call_args == mock.call()
