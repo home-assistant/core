@@ -568,7 +568,7 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.2.0
+ihcsdk==2.3.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
