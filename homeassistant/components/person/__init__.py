@@ -8,10 +8,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN)
+    DOMAIN as DEVICE_TRACKER_DOMAIN, ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS)
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ID, CONF_NAME,
-    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, STATE_UNAVAILABLE)
+    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY,
+    CONF_ID, CONF_NAME, EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN, STATE_UNAVAILABLE, STATE_HOME, STATE_NOT_HOME)
 from homeassistant.core import callback, Event
 from homeassistant.auth import EVENT_USER_REMOVED
 import homeassistant.helpers.config_validation as cv
@@ -285,6 +286,7 @@ class Person(RestoreEntity):
         self._editable = editable
         self._latitude = None
         self._longitude = None
+        self._gps_accuracy = None
         self._source = None
         self._state = None
         self._unsub_track_device = None
@@ -315,9 +317,11 @@ class Person(RestoreEntity):
             ATTR_ID: self.unique_id,
         }
         if self._latitude is not None:
-            data[ATTR_LATITUDE] = round(self._latitude, 5)
+            data[ATTR_LATITUDE] = self._latitude
         if self._longitude is not None:
-            data[ATTR_LONGITUDE] = round(self._longitude, 5)
+            data[ATTR_LONGITUDE] = self._longitude
+        if self._gps_accuracy is not None:
+            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
         user_id = self._config.get(CONF_USER_ID)
@@ -373,18 +377,34 @@ class Person(RestoreEntity):
         """Handle the device tracker state changes."""
         self._update_state()
 
+    def _get_latest(self, prev, curr):
+        return curr \
+               if prev is None or curr.last_updated > prev.last_updated \
+               else prev
+
     @callback
     def _update_state(self):
         """Update the state."""
-        latest = None
+        latest_home = latest_not_home = latest_gps = latest = None
         for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
             state = self.hass.states.get(entity_id)
 
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if latest is None or state.last_updated > latest.last_updated:
-                latest = state
+            if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
+                latest_gps = self._get_latest(latest_gps, state)
+            elif state.state == STATE_HOME:
+                latest_home = self._get_latest(latest_home, state)
+            elif state.state == STATE_NOT_HOME:
+                latest_not_home = self._get_latest(latest_not_home, state)
+
+        if latest_home:
+            latest = latest_home
+        elif latest_gps:
+            latest = latest_gps
+        else:
+            latest = latest_not_home
 
         if latest:
             self._parse_source_state(latest)
@@ -393,6 +413,7 @@ class Person(RestoreEntity):
             self._source = None
             self._latitude = None
             self._longitude = None
+            self._gps_accuracy = None
 
         self.async_schedule_update_ha_state()
 
@@ -406,6 +427,7 @@ class Person(RestoreEntity):
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
         self._longitude = state.attributes.get(ATTR_LONGITUDE)
+        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
 
 
 @websocket_api.websocket_command({
