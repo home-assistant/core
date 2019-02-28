@@ -32,6 +32,7 @@ CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
+CONF_CODE_COMMAND_TOPIC = 'code_command_topic'
 
 DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
@@ -50,6 +51,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+    vol.Optional(CONF_CODE_COMMAND_TOPIC): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
@@ -179,6 +181,14 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
+    def _publish_code(self, code):
+        """Publish the code via MQTT."""
+        mqtt.async_publish(
+            self.hass, self._config.get(CONF_CODE_COMMAND_TOPIC),
+            code,
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
+    
     async def async_alarm_disarm(self, code=None):
         """Send disarm command.
 
@@ -186,6 +196,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         if not self._validate_code(code, 'disarming'):
             return
+        if self._config.get(CONF_CODE_COMMAND_TOPIC):
+            self._publish_code(code)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_DISARM),
@@ -199,6 +211,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         if not self._validate_code(code, 'arming home'):
             return
+        if self._config.get(CONF_CODE_COMMAND_TOPIC):
+            self._publish_code(code)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_HOME),
@@ -212,6 +226,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         if not self._validate_code(code, 'arming away'):
             return
+        if self._config.get(CONF_CODE_COMMAND_TOPIC):
+            self._publish_code(code)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_AWAY),
@@ -225,6 +241,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         if not self._validate_code(code, 'arming night'):
             return
+        if self._config.get(CONF_CODE_COMMAND_TOPIC):
+            self._publish_code(code)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             self._config.get(CONF_PAYLOAD_ARM_NIGHT),
@@ -234,7 +252,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def _validate_code(self, code, state):
         """Validate given code."""
         conf_code = self._config.get(CONF_CODE)
-        check = conf_code is None or code == conf_code
+        check = conf_code is None or code == conf_code or \
+                (code is not None and self._config.get(CONF_CODE_COMMAND_TOPIC))
         if not check:
             _LOGGER.warning('Wrong code entered for %s', state)
         return check
