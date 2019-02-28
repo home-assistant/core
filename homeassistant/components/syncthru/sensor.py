@@ -155,7 +155,7 @@ class SyncThruSensor(Entity):
 
 
 class SyncThruMainSensor(SyncThruSensor):
-    """Implementation of the main sensor, conducting the actual polling. """
+    """Implementation of the main sensor, conducting the actual polling."""
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
