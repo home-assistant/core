@@ -172,16 +172,17 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 
     for endpoint_id in source_clusters:
         for cluster_id in source_clusters[endpoint_id][OUT]:
-            if cluster_id in BINDABLE_CLUSTERS:
-                for t_endpoint_id in target_clusters:
-                    if cluster_id in target_clusters[t_endpoint_id][IN]:
-                        cluster_pair = ClusterPair(
-                            source_cluster=source_clusters[
-                                endpoint_id][OUT][cluster_id],
-                            target_cluster=target_clusters[
-                                t_endpoint_id][IN][cluster_id]
-                        )
-                        clusters_to_bind.append(cluster_pair)
+            if cluster_id not in BINDABLE_CLUSTERS:
+                continue
+            for t_endpoint_id in target_clusters:
+                if cluster_id in target_clusters[t_endpoint_id][IN]:
+                    cluster_pair = ClusterPair(
+                        source_cluster=source_clusters[
+                            endpoint_id][OUT][cluster_id],
+                        target_cluster=target_clusters[
+                            t_endpoint_id][IN][cluster_id]
+                    )
+                    clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
 
 
@@ -191,6 +192,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     source_clusters = source_zha_device.async_get_zha_clusters()
     target_clusters = target_zha_device.async_get_zha_clusters()
 
+    bindables = set(BINDABLE_CLUSTERS)
     for endpoint_id in source_clusters:
         for t_endpoint_id in target_clusters:
             matches = set(
@@ -198,6 +200,6 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
                 ).intersection(
                     target_clusters[t_endpoint_id][IN].keys()
                 )
-            if bool(set(matches) & set(BINDABLE_CLUSTERS)):
+            if bool(matches & bindables):
                 return True
     return False
