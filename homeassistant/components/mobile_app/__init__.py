@@ -3,7 +3,7 @@ import logging
 import json
 
 import voluptuous as vol
-from aiohttp.web import json_response
+from aiohttp.web import json_response, Response
 from aiohttp.web_exceptions import HTTPBadRequest
 
 from homeassistant import config_entries
@@ -12,6 +12,7 @@ import homeassistant.core as ha
 from homeassistant.core import Context
 from homeassistant.components import webhook
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN, SERVICE_SEE as DEVICE_TRACKER_SEE,
     SERVICE_SEE_PAYLOAD_SCHEMA as SEE_SCHEMA)
@@ -68,7 +69,7 @@ REGISTER_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
-    vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=True): cv.boolean,
+    vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
 })
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
@@ -194,8 +195,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
         return json_response(changed_states)
     elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         event_type = data[ATTR_EVENT_TYPE]
-        hass.bus.fire(event_type, data[ATTR_EVENT_DATA], ha.EventOrigin.remote,
-                      context(request))
+        hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
+                            ha.EventOrigin.remote, context(request))
         return json_response({"message": "Event {} fired.".format(event_type)})
     elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
         try:
@@ -209,7 +210,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     elif webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
                                        DEVICE_TRACKER_SEE, data)
-        return json_response([])
+        return Response(status=200)
 
 
 def supports_encryption():
@@ -241,20 +242,14 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = app_config
 
     for name, device in app_config.items():
-        if CONF_WEBHOOK_ID in device:
-            webhook.async_register(hass, DOMAIN, 'Mobile app',
-                                   device[CONF_WEBHOOK_ID], handle_webhook)
+        webhook.async_register(hass, DOMAIN, 'Mobile app',
+                               device[CONF_WEBHOOK_ID], handle_webhook)
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
-    return True
-
-
-async def async_setup_entry(hass, entry):
-    """Set up an mobile app entry."""
-    hass.http.register_view(RegisterDeviceView())
+    hass.http.register_view(RegisterDeviceView(store))
 
     return True
 
@@ -265,24 +260,14 @@ class RegisterDeviceView(HomeAssistantView):
     url = '/api/mobile_app/register'
     name = 'api:mobile_app:register'
 
-    def __init__(self):
+    def __init__(self, store):
         """Initialize the view."""
+        self._store = store
 
-    async def post(self, request):
+    @RequestDataValidator(REGISTER_DEVICE_SCHEMA)
+    async def post(self, request, data):
         """Handle the POST request for device registration."""
-        try:
-            req_data = await request.json()
-        except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
-
         hass = request.app['hass']
-
-        try:
-            data = REGISTER_DEVICE_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return self.json_message(
-                vol.humanize.humanize_error(req_data, ex),
-                HTTP_BAD_REQUEST)
 
         device_id = data[ATTR_DEVICE_ID]
 
@@ -293,30 +278,23 @@ class RegisterDeviceView(HomeAssistantView):
 
         webhook_id = generate_secret()
 
-        data[CONF_WEBHOOK_ID] = webhook_id
+        data[CONF_WEBHOOK_ID] = resp[CONF_WEBHOOK_ID] = webhook_id
 
-        resp[CONF_WEBHOOK_ID] = webhook_id
-
-        if data[ATTR_SUPPORTS_ENCRYPTION] is True and supports_encryption():
+        if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
             secret = generate_secret(16)
 
-            data[CONF_SECRET] = secret
-
-            resp[CONF_SECRET] = secret
+            data[CONF_SECRET] = resp[CONF_SECRET] = secret
 
         hass.data[DOMAIN][device_id] = data
 
-        store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-
         try:
-            await store.async_save(hass.data[DOMAIN])
+            await self._store.async_save(hass.data[DOMAIN])
         except HomeAssistantError:
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
-        if webhook_id not in hass.data.get('webhook', {}):
-            webhook.async_register(hass, DOMAIN, 'Mobile app', webhook_id,
-                                   handle_webhook)
+        webhook.async_register(hass, DOMAIN, 'Mobile app', webhook_id,
+                               handle_webhook)
 
         return self.json(resp)
 
