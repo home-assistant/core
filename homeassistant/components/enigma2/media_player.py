@@ -85,13 +85,11 @@ class Enigma2Device(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        if self.state == STATE_ON:
-            self.e2_box.toggle_standby()
+        self.e2_box.toggle_standby()
 
     def turn_on(self):
         """Turn the media player on."""
-        if self.state == STATE_OFF:
-            self.e2_box.toggle_standby()
+        self.e2_box.toggle_standby()
 
     @property
     def media_title(self):
@@ -133,17 +131,14 @@ class Enigma2Device(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self.e2_box.set_volume(int(volume * 100))
-        self.volume = volume * 100
 
     def volume_up(self):
         """Volume up the media player."""
-        self.volume += 5
-        self.e2_box.set_volume(self.volume)
+        self.e2_box.set_volume(self.volume + 5)
 
     def volume_down(self):
         """Volume down media player."""
-        self.volume -= 5
-        self.e2_box.set_volume(self.volume)
+        self.e2_box.set_volume(self.volume - 5)
 
     @property
     def volume_level(self):
@@ -172,8 +167,7 @@ class Enigma2Device(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute or unmute."""
-        if self.muted != mute:
-            self.e2_box.mute_volume()
+        self.e2_box.mute_volume()
 
     def update(self):
         """Update state of the media_player."""
@@ -181,16 +175,16 @@ class Enigma2Device(MediaPlayerDevice):
 
         if self.e2_box.is_box_in_standby():
             self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
-            self.current_service_channel_name = \
-                status_info['currservice_station']
-            pname = status_info['currservice_name']
-            self.current_programme_name = pname if pname != "N/A" else ""
-            self.current_service_ref = status_info['currservice_serviceref']
-            self.muted = status_info['muted']
-            self.volume = status_info['volume']
-            self.picon_url = \
-                self.e2_box.get_current_playing_picon_url(
-                    channel_name=self.current_service_channel_name,
-                    currservice_serviceref=self.current_service_ref)
+            return
+        self._state = STATE_ON
+        self.current_service_channel_name = \
+            status_info['currservice_station']
+        pname = status_info['currservice_name']
+        self.current_programme_name = pname if pname != "N/A" else ""
+        self.current_service_ref = status_info['currservice_serviceref']
+        self.muted = status_info['muted']
+        self.volume = status_info['volume']
+        self.picon_url = \
+            self.e2_box.get_current_playing_picon_url(
+                channel_name=self.current_service_channel_name,
+                currservice_serviceref=self.current_service_ref)
