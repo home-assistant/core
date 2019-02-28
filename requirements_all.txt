@@ -773,7 +773,7 @@ openevsewifi==0.4
 openhomedevice==0.4.2
 
 # homeassistant.components.air_quality.opensensemap
-opensensemap-api==0.1.4
+opensensemap-api==0.1.5
 
 # homeassistant.components.device_tracker.luci
 openwrt-luci-rpc==1.0.5
