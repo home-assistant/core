@@ -149,6 +149,7 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
 
     return extracted
 
+
 @bind_hass
 async def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
