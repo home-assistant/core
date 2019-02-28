@@ -255,15 +255,10 @@ class ConfiguredDevice:
                       DOMAIN, CONF_DEVICES, self.device_id, device_data)
         self.hass.data[DOMAIN][CONF_DEVICES][self.device_id] = device_data
 
-        discovery.load_platform(
-            self.hass, 'binary_sensor', DOMAIN,
-            {'device_id': self.device_id}, self.hass_config)
-        discovery.load_platform(
-            self.hass, 'sensor', DOMAIN,
-            {'device_id': self.device_id}, self.hass_config)
-        discovery.load_platform(
-            self.hass, 'switch', DOMAIN,
-            {'device_id': self.device_id}, self.hass_config)
+        for platform in ['binary_sensor', 'sensor', 'switch']:
+            discovery.load_platform(
+                self.hass, platform, DOMAIN,
+                {'device_id': self.device_id}, self.hass_config)
 
 
 class DiscoveredDevice:
@@ -477,9 +472,8 @@ class KonnectedView(HomeAssistantView):
 
         for attr in ['state', 'temp', 'humi', 'addr']:
             value = payload.get(attr)
-            if value is not None:
-                handler = HANDLERS.get(attr)
-                if handler:
-                    hass.async_create_task(handler(hass, pin_data, payload))
+            handler = HANDLERS.get(attr)
+            if value is not None and handler:
+                hass.async_create_task(handler(hass, pin_data, payload))
 
         return self.json_message('ok')
