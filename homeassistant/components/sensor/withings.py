@@ -131,10 +131,7 @@ class WithingsSleepAttribute(WithingsAttribute):
 class WithingsDataManager(object):
     """A class representing an Withings cloud service connection."""
 
-    def __init__(self, hass, config, add_entities, slug: str, api):
-        self._hass = hass
-        self._config = config
-        self._add_entities = add_entities
+    def __init__(self, slug: str, api):
         self._api = api
         self._slug = slug
 
@@ -339,9 +336,6 @@ async def async_initialize(configuring: WithingsConfiguring, creds) -> WithingsD
     
     _LOGGER.debug('Creating withings data manager for slug: {}'.format(configuring.slug))
     data_manager = WithingsDataManager(
-        configuring.hass,
-        configuring.config,
-        configuring.add_entities,
         configuring.slug,
         api
     )

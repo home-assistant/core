@@ -296,9 +296,6 @@ class TestWithingsDataManager(unittest.TestCase):
 
     async def test_async_update_measures(self):
         self.data_manager = withings.WithingsDataManager(
-            self.hass,
-            None,
-            None,
             'person_1',
             self.api
         )
@@ -317,9 +314,6 @@ class TestWithingsDataManager(unittest.TestCase):
 
     async def test_async_update_sleep(self):
         self.data_manager = withings.WithingsDataManager(
-            self.hass,
-            None,
-            None,
             'person_1',
             self.api
         )
