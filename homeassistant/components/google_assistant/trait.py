@@ -168,20 +168,20 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
         elif domain == cover.DOMAIN:
             await self.hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     cover.ATTR_POSITION: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
         elif domain == media_player.DOMAIN:
             await self.hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -242,7 +242,7 @@ class OnOffTrait(_Trait):
 
         await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -298,7 +298,7 @@ class ColorSpectrumTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_HS_COLOR: color
-        }, blocking=True)
+        }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -371,7 +371,7 @@ class ColorTemperatureTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_COLOR_TEMP: temp,
-        }, blocking=True)
+        }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -406,7 +406,8 @@ class SceneTrait(_Trait):
         await self.hass.services.async_call(
             self.state.domain, SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=self.state.domain != script.DOMAIN)
+            }, blocking=self.state.domain != script.DOMAIN,
+            context=self.config.context)
 
 
 @register_trait
@@ -439,7 +440,7 @@ class DockTrait(_Trait):
         await self.hass.services.async_call(
             self.state.domain, vacuum.SERVICE_RETURN_TO_BASE, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=True)
+            }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -480,23 +481,23 @@ class StartStopTrait(_Trait):
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=self.config.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_STOP, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=self.config.context)
         elif command == COMMAND_PAUSEUNPAUSE:
             if params['pause']:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_PAUSE, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=self.config.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -608,7 +609,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     ATTR_TEMPERATURE: temp
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             temp_high = temp_util.convert(
@@ -640,7 +641,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_TARGET_TEMP_HIGH: temp_high,
                     climate.ATTR_TARGET_TEMP_LOW: temp_low,
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             await self.hass.services.async_call(
@@ -648,7 +649,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
-                }, blocking=True)
+                }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -690,7 +691,7 @@ class LockUnlockTrait(_Trait):
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -766,7 +767,7 @@ class FanSpeedTrait(_Trait):
             fan.DOMAIN, fan.SERVICE_SET_SPEED, {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 fan.ATTR_SPEED: params['fanSpeed']
-            }, blocking=True)
+            }, blocking=True, context=self.config.context)
 
 
 @register_trait
@@ -951,4 +952,4 @@ class ModesTrait(_Trait):
                         media_player.SERVICE_SELECT_SOURCE, {
                             ATTR_ENTITY_ID: self.state.entity_id,
                             media_player.ATTR_INPUT_SOURCE: source
-                        }, blocking=True)
+                        }, blocking=True, context=self.config.context)

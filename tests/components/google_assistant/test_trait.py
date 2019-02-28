@@ -19,7 +19,7 @@ from homeassistant.components.google_assistant import trait, helpers, const
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE)
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
+from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
 from homeassistant.util import color
 from tests.common import async_mock_service
 
@@ -51,14 +51,27 @@ async def test_brightness_light(hass):
         'brightness': 95
     }
 
+    events = []
+    hass.bus.async_listen(EVENT_CALL_SERVICE, events.append)
+
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(trait.COMMAND_BRIGHTNESS_ABSOLUTE, {
         'brightness': 50
     })
+    await hass.async_block_till_done()
+
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
         light.ATTR_BRIGHTNESS_PCT: 50
+    }
+
+    assert len(events) == 1
+    assert events[0].context == BASIC_CONFIG.context
+    assert events[0].data == {
+        'domain': 'light',
+        'service': 'turn_on',
+        'service_data': {'brightness_pct': 50, 'entity_id': 'light.bla'}
     }
 
 

@@ -1,4 +1,5 @@
 """Helper classes for Google Assistant integration."""
+from homeassistant.core import Context
 
 
 class SmartHomeError(Exception):
@@ -17,9 +18,10 @@ class Config:
     """Hold the configuration for Google Assistant."""
 
     def __init__(self, should_expose, allow_unlock, agent_user_id,
-                 entity_config=None):
+                 entity_config=None, context=None):
         """Initialize the configuration."""
         self.should_expose = should_expose
         self.agent_user_id = agent_user_id
         self.entity_config = entity_config or {}
         self.allow_unlock = allow_unlock
+        self.context = context or Context()

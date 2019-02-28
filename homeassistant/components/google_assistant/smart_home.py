@@ -216,6 +216,7 @@ async def async_handle_message(hass, config, message):
 async def _process(hass, config, message):
     """Process a message."""
     request_id = message.get('requestId')  # type: str
+    config.request_id = request_id
     inputs = message.get('inputs')  # type: list
 
     if len(inputs) != 1:
@@ -233,8 +234,7 @@ async def _process(hass, config, message):
         }
 
     try:
-        result = await handler(hass, config, request_id,
-                               inputs[0].get('payload'))
+        result = await handler(hass, config, inputs[0].get('payload'))
     except SmartHomeError as err:
         return {
             'requestId': request_id,
@@ -253,14 +253,15 @@ async def _process(hass, config, message):
 
 
 @HANDLERS.register('action.devices.SYNC')
-async def async_devices_sync(hass, config, request_id, payload):
+async def async_devices_sync(hass, config, payload):
     """Handle action.devices.SYNC request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicessync
     """
-    hass.bus.async_fire(EVENT_SYNC_RECEIVED, {
-        'request_id': request_id
-    })
+    hass.bus.async_fire(
+        EVENT_SYNC_RECEIVED,
+        {'request_id': config.request_id},
+        context=config.context)
 
     devices = []
     for state in hass.states.async_all():
@@ -288,7 +289,7 @@ async def async_devices_sync(hass, config, request_id, payload):
 
 
 @HANDLERS.register('action.devices.QUERY')
-async def async_devices_query(hass, config, request_id, payload):
+async def async_devices_query(hass, config, payload):
     """Handle action.devices.QUERY request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
@@ -298,10 +299,13 @@ async def async_devices_query(hass, config, request_id, payload):
         devid = device['id']
         state = hass.states.get(devid)
 
-        hass.bus.async_fire(EVENT_QUERY_RECEIVED, {
-            'request_id': request_id,
-            ATTR_ENTITY_ID: devid,
-        })
+        hass.bus.async_fire(
+            EVENT_QUERY_RECEIVED,
+            {
+                'request_id': config.request_id,
+                ATTR_ENTITY_ID: devid,
+            },
+            context=config.context)
 
         if not state:
             # If we can't find a state, the device is offline
@@ -314,7 +318,7 @@ async def async_devices_query(hass, config, request_id, payload):
 
 
 @HANDLERS.register('action.devices.EXECUTE')
-async def handle_devices_execute(hass, config, request_id, payload):
+async def handle_devices_execute(hass, config, payload):
     """Handle action.devices.EXECUTE request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
@@ -327,11 +331,14 @@ async def handle_devices_execute(hass, config, request_id, payload):
                                          command['execution']):
             entity_id = device['id']
 
-            hass.bus.async_fire(EVENT_COMMAND_RECEIVED, {
-                'request_id': request_id,
-                ATTR_ENTITY_ID: entity_id,
-                'execution': execution
-            })
+            hass.bus.async_fire(
+                EVENT_COMMAND_RECEIVED,
+                {
+                    'request_id': config.request_id,
+                    ATTR_ENTITY_ID: entity_id,
+                    'execution': execution
+                },
+                context=config.context)
 
             # Happens if error occurred. Skip entity for further processing
             if entity_id in results:
@@ -378,7 +385,7 @@ async def handle_devices_execute(hass, config, request_id, payload):
 
 
 @HANDLERS.register('action.devices.DISCONNECT')
-async def async_devices_disconnect(hass, config, request_id, payload):
+async def async_devices_disconnect(hass, config, payload):
     """Handle action.devices.DISCONNECT request.
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect

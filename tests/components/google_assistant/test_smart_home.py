@@ -1,7 +1,7 @@
 """Test Google Smart Home."""
 import pytest
 
-from homeassistant.core import State
+from homeassistant.core import State, EVENT_CALL_SERVICE
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
@@ -280,12 +280,15 @@ async def test_execute(hass):
         'light': {'platform': 'demo'}
     })
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
-
     await hass.services.async_call(
         'light', 'turn_off', {'entity_id': 'light.ceiling_lights'},
         blocking=True)
+
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+
+    service_events = []
+    hass.bus.async_listen(EVENT_CALL_SERVICE, service_events.append)
 
     result = await sh.async_handle_message(hass, BASIC_CONFIG, {
         "requestId": REQ_ID,
@@ -382,6 +385,24 @@ async def test_execute(hass):
             }
         }
     }
+
+    assert len(service_events) == 2
+    assert service_events[0].data == {
+        'domain': 'light',
+        'service': 'turn_on',
+        'service_data': {'entity_id': 'light.ceiling_lights'}
+    }
+    assert service_events[0].context == events[2].context
+    assert service_events[1].data == {
+        'domain': 'light',
+        'service': 'turn_on',
+        'service_data': {
+            'brightness_pct': 20,
+            'entity_id': 'light.ceiling_lights'
+        }
+    }
+    assert service_events[1].context == events[2].context
+    assert service_events[1].context == events[3].context
 
 
 async def test_raising_error_trait(hass):
