@@ -104,6 +104,7 @@ def setup_auth(app, trusted_networks, api_password):
 def _is_trusted_ip(request, trusted_networks):
     """Test if request is from a trusted ip."""
     ip_addr = request[KEY_REAL_IP]
+
     return any(
         ip_addr in trusted_network for trusted_network
         in trusted_networks)

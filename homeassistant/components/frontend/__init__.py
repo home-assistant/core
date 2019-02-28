@@ -19,6 +19,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
+from .storage import async_setup_frontend_storage
+
 REQUIREMENTS = ['ais-dom-frontend==20190220.0']
 
 DOMAIN = 'frontend'

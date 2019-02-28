@@ -5,7 +5,6 @@ weather:
 sensor:
   - platform: darksky
     api_key: use_ais_dom_api_key
-    mode: daily
     forecast: 0
     language: pl
     units: si
@@ -22,7 +21,7 @@ sensor:
       - humidity
       - pressure
       - visibility
-    update_interval:
+    scan_interval:
       hours: 2
 
 group:
