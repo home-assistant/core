@@ -109,7 +109,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         room_name = self._data.homedata.rooms[self._data.home][room_id]['name']
-        self._name = "netatmo_{}".format(room_name)
+        self._name = 'netatmo_{}'.format(room_name)
         self._target_temperature = None
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
@@ -178,36 +178,25 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        if self._data.room_status[self._room_id]['module_type'] == \
-           'NATherm1':
-            return {
-                "home_id": self._data.homedata.gethomeId(self._data.home),
-                "room_id": self._room_id,
-                "setpoint_default_duration": self._data.setpoint_duration,
-                "away_temperature": self._data.away_temperature,
-                "hg_temperature": self._data.hg_temperature,
-                "operation_mode": self._operation_mode,
-                "boiler_status": self.current_operation,
-                "module_type":
-                    self._data.room_status[self._room_id]['module_type'],
-                "module_id":
-                    self._data.room_status[self._room_id]['module_id']
-                }
-        if self._data.room_status[self._room_id]['module_type'] == 'NRV':
-            return {
-                "home_id": self._data.homedata.gethomeId(self._data.home),
-                "room_id": self._room_id,
-                "setpoint_default_duration": self._data.setpoint_duration,
-                "away_temperature": self._data.away_temperature,
-                "hg_temperature": self._data.hg_temperature,
-                "operation_mode": self._operation_mode,
-                "module_type":
-                    self._data.room_status[self._room_id]['module_type'],
-                "heating_power_request":
-                self._data.room_status[self._room_id]['heating_power_request'],
-                "module_id": self._data.room_status[self._room_id]['module_id']
-                }
-        return {}
+        module_type = self._data.room_status[self._room_id]['module_type']
+        if module_type not in ('NATherm1', 'NRV'):
+            return {}
+        state_attributes = {
+            "home_id": self._data.homedata.gethomeId(self._data.home),
+            "room_id": self._room_id,
+            "setpoint_default_duration": self._data.setpoint_duration,
+            "away_temperature": self._data.away_temperature,
+            "hg_temperature": self._data.hg_temperature,
+            "operation_mode": self._operation_mode,
+            "module_type": module_type,
+            "module_id": self._data.room_status[self._room_id]['module_id']
+        }
+        if module_type == 'NATherm1':
+            state_attributes["boiler_status"] = self.current_operation
+        elif module_type == 'NRV':
+            state_attributes["heating_power_request"] = \
+                self._data.room_status[self._room_id]['heating_power_request']
+        return state_attributes
 
     @property
     def is_away_mode_on(self):
