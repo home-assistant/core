@@ -141,7 +141,7 @@ async def async_setup_platform(
             "Using city, state, and country: %s, %s, %s", city, state, country)
         location_id = ','.join((city, state, country))
         data = AirVisualData(
-            Client(config[CONF_API_KEY], websession),
+            Client(websession, api_key=config[CONF_API_KEY]),
             city=city,
             state=state,
             country=country,
@@ -152,7 +152,7 @@ async def async_setup_platform(
             "Using latitude and longitude: %s, %s", latitude, longitude)
         location_id = ','.join((str(latitude), str(longitude)))
         data = AirVisualData(
-            Client(config[CONF_API_KEY], websession),
+            Client(websession, api_key=config[CONF_API_KEY]),
             latitude=latitude,
             longitude=longitude,
             show_on_map=config[CONF_SHOW_ON_MAP],
