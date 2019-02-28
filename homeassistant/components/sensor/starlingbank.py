@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['starlingbank==3.0']
+REQUIREMENTS = ['starlingbank==3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sterling Bank sensor platform."""
-    from starlingbank import StarlingAccount  # pylint: disable=syntax-error
+    from starlingbank import StarlingAccount
 
     sensors = []
     for account in config[CONF_ACCOUNTS]:
