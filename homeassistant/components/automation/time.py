@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_AT, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ async def async_trigger(hass, config, action, automation_info):
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'time',
-                'now': now,
+                'now': dt_util.as_local(now),
             },
         })
 
