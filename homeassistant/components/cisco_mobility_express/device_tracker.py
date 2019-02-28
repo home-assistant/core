@@ -1,9 +1,4 @@
-"""
-Support for Cisco Mobility Express.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/device_tracker.cisco_mobility_express/
-"""
+"""Support for Cisco Mobility Express."""
 import logging
 import voluptuous as vol
 
