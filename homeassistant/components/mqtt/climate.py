@@ -93,6 +93,7 @@ TEMPLATE_KEYS = (
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
 PLATFORM_SCHEMA = SCHEMA_BASE.extend({
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
