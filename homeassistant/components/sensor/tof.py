@@ -61,6 +61,7 @@ def init_tof(xshut, level):
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, level)
 
+
 async def async_setup_platform(hass,
                                config,
                                async_add_entities,
