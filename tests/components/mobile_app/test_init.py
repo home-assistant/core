@@ -5,8 +5,6 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, MockConfigEntry
-
 from homeassistant.components.mobile_app import (DOMAIN, STORAGE_KEY,
                                                  STORAGE_VERSION)
 
@@ -36,7 +34,6 @@ REGISTER = {
 @pytest.fixture
 def mobile_app_client(hass, aiohttp_client, hass_storage):
     """mobile_app mock client."""
-
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
         'data': {
@@ -100,7 +97,6 @@ def test_returns_error_incorrect_json(mobile_app_client, caplog):
 @asyncio.coroutine
 def test_handle_encryption(mobile_app_client):
     """Test that we can encrypt/decrypt properly."""
-
     import json
     from nacl.secret import SecretBox
     from nacl.encoding import Base64Encoder
