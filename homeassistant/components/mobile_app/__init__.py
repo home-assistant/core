@@ -41,8 +41,8 @@ CONF_SECRET = 'secret'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_APP_VERSION = 'app_version'
-ATTR_DEVICE_ID = 'device_id'
 ATTR_DEVICE_NAME = 'device_name'
+ATTR_FINGERPRINT = 'fingerprint'
 ATTR_INTEGRATION_DATA = 'integration_data'
 ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
@@ -72,8 +72,8 @@ REGISTER_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Optional(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
-    vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
+    vol.Required(ATTR_FINGERPRINT): cv.string,
     vol.Optional(ATTR_INTEGRATION_DATA, default={}): dict,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
@@ -250,7 +250,7 @@ def safe_device(device: dict):
         ATTR_APP_ID: device[ATTR_APP_ID],
         ATTR_APP_NAME: device[ATTR_APP_NAME],
         ATTR_APP_VERSION: device[ATTR_APP_VERSION],
-        ATTR_DEVICE_ID: device[ATTR_DEVICE_ID],
+        ATTR_FINGERPRINT: device[ATTR_FINGERPRINT],
         ATTR_DEVICE_NAME: device[ATTR_DEVICE_NAME],
         ATTR_INTEGRATION_DATA: device[ATTR_INTEGRATION_DATA],
         ATTR_MANUFACTURER: device[ATTR_MANUFACTURER],
@@ -271,7 +271,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = app_config
 
-    for name, device in app_config.items():
+    for key, device in app_config.items():
         webhook.async_register(hass, DOMAIN, 'Mobile app',
                                device[CONF_WEBHOOK_ID], handle_webhook)
 
@@ -316,9 +316,9 @@ class DevicesView(HomeAssistantView):
         """Handle the POST request for device registration."""
         hass = request.app['hass']
 
-        device_id = data[ATTR_DEVICE_ID]
+        fingerprint = data[ATTR_FINGERPRINT]
 
-        if device_id in hass.data[DOMAIN]:
+        if fingerprint in hass.data[DOMAIN]:
             return Response(status=409)
 
         resp = {}
@@ -332,7 +332,7 @@ class DevicesView(HomeAssistantView):
 
             data[CONF_SECRET] = resp[CONF_SECRET] = secret
 
-        hass.data[DOMAIN][device_id] = data
+        hass.data[DOMAIN][fingerprint] = data
 
         try:
             await self._store.async_save(hass.data[DOMAIN])
@@ -375,12 +375,12 @@ class SingleDeviceView(HomeAssistantView):
         if device is None:
             return Response(status=404)
 
-        device_id = device[ATTR_DEVICE_ID]
+        fingerprint = device[ATTR_FINGERPRINT]
 
         data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
         data[CONF_SECRET] = device[CONF_SECRET]
 
-        hass.data[DOMAIN][device_id] = data
+        hass.data[DOMAIN][fingerprint] = data
 
         try:
             await self._store.async_save(hass.data[DOMAIN])
