@@ -56,6 +56,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def init_tof(xshut, level):
+    """XSHUT port LOW resets the device"""
+    rpi_gpio.setup_output(xshut)
+    rpi_gpio.write_output(xshut, level)
+
 async def async_setup_platform(hass,
                                config,
                                async_add_entities,
@@ -69,15 +74,17 @@ async def async_setup_platform(hass,
     unit = LENGTH_MILLIMETERS
     xshut = config.get(CONF_XSHUT)
 
-    #  pulse XSHUT port and keep it HIGH
-    rpi_gpio.setup_output(xshut)
-    rpi_gpio.write_output(xshut, 0)
+    await hass.async_add_executor_job(
+        init_tof, xshut, 0
+    )
     await asyncio.sleep(0.01)
-    rpi_gpio.write_output(xshut, 1)
+    await hass.async_add_executor_job(
+        init_tof, xshut, 1
+    )
     await asyncio.sleep(0.01)
 
     sensor = await hass.async_add_executor_job(
-        partial(VL53L1X, bus_number)
+        partial, VL53L1X, bus_number
     )
 
     dev = [VL53L1XSensor(sensor, name, unit, i2c_address)]
