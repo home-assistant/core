@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def init_tof(xshut, level):
-    """XSHUT port LOW resets the device"""
+    """XSHUT port LOW resets the device."""
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, level)
 
