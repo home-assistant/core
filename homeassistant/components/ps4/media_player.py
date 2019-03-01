@@ -279,7 +279,7 @@ class PS4Device(MediaPlayerDevice):
             'sw_version': sw_version
         }
         self._unique_id = status['host-id']
-        
+
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
         self.hass.data[PS4_DATA].devices.remove(self)
