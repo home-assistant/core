@@ -257,6 +257,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
     if any([task.exception() for task in done]):
+        exceptions = [task.exception() for task in done]
+        for exception in exceptions:
+            _LOGGER.debug("Failed to setup chromecast", exc_info=exception)
         raise PlatformNotReady
 
 
@@ -306,8 +309,6 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if info.friendly_name is None:
             _LOGGER.debug("Cannot retrieve detail information for chromecast"
                           " %s, the device may not be online", info)
-            remove_handler()
-            raise PlatformNotReady
 
         hass.async_add_job(_discover_chromecast, hass, info)
 
@@ -462,8 +463,8 @@ class CastDevice(MediaPlayerDevice):
             chromecast = await self.hass.async_add_job(
                 pychromecast._get_chromecast_from_host, (
                     cast_info.host, cast_info.port, cast_info.uuid,
-                    cast_info.model_name, cast_info.friendly_name
-                ))
+                    cast_info.model_name, cast_info.friendly_name,
+                ), None, None, None, True, True)
         else:
             _LOGGER.debug(
                 "[%s %s (%s:%s)] Connecting to cast device by service %s",
@@ -562,6 +563,10 @@ class CastDevice(MediaPlayerDevice):
                 self.entity_id, self._cast_info.friendly_name,
                 self._cast_info.host, self._cast_info.port,
                 connection_status.status)
+            info = self._cast_info
+            if info.friendly_name is None and not info.is_audio_group:
+                # We couldn't find friendly_name when the cast was added, retry
+                self._cast_info = _fill_out_missing_chromecast_info(info)
             self._available = new_available
             self.schedule_update_ha_state()
 
