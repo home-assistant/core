@@ -145,6 +145,7 @@ class PS4Device(MediaPlayerDevice):
         try:
             status = self._ps4.get_status()
             if self._info is None:
+                # Add entity to registry
                 self.get_device_info(status)
                 self._games = self.load_games()
                 if self._games is not None:
