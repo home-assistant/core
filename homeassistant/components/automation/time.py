@@ -28,7 +28,7 @@ async def async_trigger(hass, config, action, automation_info):
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'time',
-                'now': dt_util.as_local(now),
+                'now': now,
             },
         })
 
