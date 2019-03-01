@@ -64,7 +64,7 @@ FANMODES = {
 }
 
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
-# Table 130, Thermostat Mode Set version 3::Mode encoding
+# Table 130, Thermostat Mode Set version 3::Mode encoding.
 OPMODES = {
     0: STATE_OFF,
     1: STATE_HEAT,
