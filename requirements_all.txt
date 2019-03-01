@@ -776,6 +776,9 @@ openhomedevice==0.4.2
 # homeassistant.components.air_quality.opensensemap
 opensensemap-api==0.1.5
 
+# homeassistant.components.enigma2.media_player
+openwebif.py==0.9
+
 # homeassistant.components.device_tracker.luci
 openwrt-luci-rpc==1.0.5
 
