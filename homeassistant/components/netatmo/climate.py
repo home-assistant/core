@@ -60,6 +60,9 @@ DICT_HA_TO_NETATMO = {
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_AWAY_MODE)
 
+NA_THERM = 'NATherm1'
+NA_VALVE = 'NRV'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
@@ -113,13 +116,13 @@ class NetatmoThermostat(ClimateDevice):
         self._target_temperature = None
         self._away = None
         self._module_type = self._data.room_status[room_id]['module_type']
-        if self._module_type == 'NRV':
+        if self._module_type == NA_VALVE:
             self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
                                     DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
                                     DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
                                     DICT_NETATMO_TO_HA[STATE_NETATMO_HG]]
             self._support_flags = SUPPORT_FLAGS
-        elif self._module_type == 'NATherm1':
+        elif self._module_type == NA_THERM:
             self._operation_list = [DICT_NETATMO_TO_HA[STATE_NETATMO_SCHEDULE],
                                     DICT_NETATMO_TO_HA[STATE_NETATMO_MANUAL],
                                     DICT_NETATMO_TO_HA[STATE_NETATMO_AWAY],
@@ -179,7 +182,7 @@ class NetatmoThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         module_type = self._data.room_status[self._room_id]['module_type']
-        if module_type not in ('NATherm1', 'NRV'):
+        if module_type not in (NA_THERM, NA_VALVE):
             return {}
         state_attributes = {
             "home_id": self._data.homedata.gethomeId(self._data.home),
@@ -191,9 +194,9 @@ class NetatmoThermostat(ClimateDevice):
             "module_type": module_type,
             "module_id": self._data.room_status[self._room_id]['module_id']
         }
-        if module_type == 'NATherm1':
+        if module_type == NA_THERM:
             state_attributes["boiler_status"] = self.current_operation
-        elif module_type == 'NRV':
+        elif module_type == NA_VALVE:
             state_attributes["heating_power_request"] = \
                 self._data.room_status[self._room_id]['heating_power_request']
         return state_attributes
@@ -288,7 +291,7 @@ class NetatmoThermostat(ClimateDevice):
             STATE_NETATMO_AWAY]
 
 
-class HomeData():
+class HomeData:
     """Representation Netatmo homes."""
 
     def __init__(self, auth, home=None):
@@ -322,7 +325,7 @@ class HomeData():
             _LOGGER.error("Error when getting homestatus response.")
 
 
-class ThermostatData():
+class ThermostatData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):
@@ -391,13 +394,13 @@ class ThermostatData():
             roomstatus['heating_power_request'] = None
             for module_id in homedata_room['module_ids']:
                 if self.homedata.modules[self.home][module_id]['type'] == \
-                   "NATherm1" or roomstatus['module_id'] is None:
+                   NA_THERM or roomstatus['module_id'] is None:
                     roomstatus['module_id'] = module_id
-            if roomstatus['module_type'] == 'NATherm1':
+            if roomstatus['module_type'] == NA_THERM:
                 self.boilerstatus = self.homestatus.boilerStatus(
                     rid=roomstatus['module_id'])
                 roomstatus['heating_status'] = self.boilerstatus
-            elif roomstatus['module_type'] == 'NRV':
+            elif roomstatus['module_type'] == NA_VALVE:
                 roomstatus['heating_power_request'] = \
                     homestatus_room['heating_power_request']
                 roomstatus['heating_status'] = \
