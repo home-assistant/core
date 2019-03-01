@@ -49,8 +49,8 @@ class ZHADevice:
             self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
         self.cluster_channels = {}
-        self._relay_channels = []
-        self._all_channels = []
+        self._relay_channels = {}
+        self._all_channels = {}
         self._name = "{} {}".format(
             self.manufacturer,
             self.model
@@ -126,7 +126,7 @@ class ZHADevice:
     @property
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
-        return self._all_channels
+        return self._all_channels.values()
 
     @property
     def available_signal(self):
@@ -173,11 +173,13 @@ class ZHADevice:
         if cluster_channel.name is POWER_CONFIGURATION_CHANNEL and \
                 POWER_CONFIGURATION_CHANNEL in self.cluster_channels:
             return
-        self._all_channels.append(cluster_channel)
+
         if isinstance(cluster_channel, EventRelayChannel):
-            self._relay_channels.append(cluster_channel)
+            self._relay_channels[cluster_channel.unique_id] = cluster_channel
+            self._all_channels[cluster_channel.unique_id] = cluster_channel
         else:
             self.cluster_channels[cluster_channel.name] = cluster_channel
+            self._all_channels[cluster_channel.name] = cluster_channel
 
     async def async_configure(self):
         """Configure the device."""
