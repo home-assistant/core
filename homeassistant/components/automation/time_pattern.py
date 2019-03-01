@@ -7,7 +7,6 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.util import dt as dt_util
 
 CONF_HOURS = 'hours'
 CONF_MINUTES = 'minutes'
