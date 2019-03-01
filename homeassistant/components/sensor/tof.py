@@ -84,7 +84,7 @@ async def async_setup_platform(hass,
     await asyncio.sleep(0.01)
 
     sensor = await hass.async_add_executor_job(
-        partial, VL53L1X, bus_number
+        partial(VL53L1X, bus_number)
     )
 
     dev = [VL53L1XSensor(sensor, name, unit, i2c_address)]
