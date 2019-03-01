@@ -33,7 +33,7 @@ DEPENDENCIES = ['greeneye_monitor']
 DATA_PULSES = 'pulses'
 DATA_WATT_SECONDS = 'watt_seconds'
 
-UNIT_WATTS = POWER_WATT 
+UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = 'mdi:counter'
 CURRENT_SENSOR_ICON = 'mdi:flash'

@@ -11,8 +11,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, 
-    POWER_WATT)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

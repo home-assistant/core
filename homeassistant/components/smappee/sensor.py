@@ -15,7 +15,8 @@ SENSOR_TYPES = {
     'solar':
         ['Solar', 'mdi:white-balance-sunny', 'local', POWER_WATT, 'solar'],
     'active_power':
-        ['Active Power', 'mdi:power-plug', 'local', POWER_WATT, 'active_power'],
+        ['Active Power', 'mdi:power-plug', 'local', POWER_WATT,
+         'active_power'],
     'current':
         ['Current', 'mdi:gauge', 'local', 'A', 'current'],
     'voltage':

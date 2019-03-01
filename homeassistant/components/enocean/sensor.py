@@ -59,4 +59,4 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return POWER_WATT 
+        return POWER_WATT

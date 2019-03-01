@@ -27,7 +27,7 @@ ICON = 'mdi:gauge'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-UNIT_OF_MEASUREMENT = POWER_WATT 
+UNIT_OF_MEASUREMENT = POWER_WATT
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,

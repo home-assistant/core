@@ -90,7 +90,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return POWER_WATT 
+        return POWER_WATT
 
     async def async_update(self):
         """Parse the data for this sensor."""

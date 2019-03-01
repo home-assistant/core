@@ -34,7 +34,7 @@ CONF_ONLY_INCLUDE_FEEDID = 'include_only_feed_id'
 CONF_SENSOR_NAMES = 'sensor_names'
 
 DECIMALS = 2
-DEFAULT_UNIT = POWER_WATT 
+DEFAULT_UNIT = POWER_WATT
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 

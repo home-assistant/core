@@ -91,7 +91,7 @@ class Sense(Entity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT 
+            self._unit_of_measurement = POWER_WATT
         else:
             self._unit_of_measurement = 'kWh'
 
