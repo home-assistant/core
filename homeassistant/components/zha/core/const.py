@@ -14,6 +14,7 @@ DATA_ZHA_RADIO = 'zha_radio'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
 DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 DATA_ZHA_CORE_EVENTS = 'zha_core_events'
+DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = [

@@ -22,7 +22,8 @@ from .const import (
     OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE,
-    NO_SENSOR_CLUSTERS, POWER_CONFIGURATION_CHANNEL, BINDABLE_CLUSTERS)
+    NO_SENSOR_CLUSTERS, POWER_CONFIGURATION_CHANNEL, BINDABLE_CLUSTERS,
+    DATA_ZHA_GATEWAY)
 from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
@@ -52,6 +53,7 @@ class ZHAGateway:
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
+        hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
 
     def device_joined(self, device):
         """Handle device joined.
