@@ -7,18 +7,22 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.alarm_control_panel import ALARM_SERVICE_SCHEMA
 from homeassistant.components.envisalink import (
     DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
     CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, ATTR_ENTITY_ID)
+    STATE_UNKNOWN, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, ATTR_ENTITY_ID,
+    ATTR_CODE)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['envisalink']
 
 SERVICE_ALARM_KEYPRESS = 'envisalink_alarm_keypress'
+SERVICE_ALARM_ARM_MAX = 'envisalink_alarm_arm_max'
+
 ATTR_KEYPRESS = 'keypress'
 ALARM_KEYPRESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -43,6 +47,21 @@ async def async_setup_platform(
         devices.append(device)
 
     async_add_entities(devices)
+
+    @callback
+    def alarm_arm_max_handler(service):
+        """Map arm max service to method on the Alarm."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        code = service.data.get(ATTR_CODE)
+        target_devices = [device for device in devices
+                          if device.entity_id in entity_ids]
+
+        for device in target_devices:
+            device.async_alarm_arm_max(code)
+
+    hass.services.async_register(
+        alarm.DOMAIN, SERVICE_ALARM_ARM_MAX, alarm_arm_max_handler,
+        schema=ALARM_SERVICE_SCHEMA)
 
     @callback
     def alarm_keypress_handler(service):
@@ -145,6 +164,24 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     async def async_alarm_trigger(self, code=None):
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
+
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if code:
+            self.hass.data[DATA_EVL].arm_night_partition(
+                str(code), self._partition_number)
+        else:
+            self.hass.data[DATA_EVL].arm_night_partition(
+                str(self._code), self._partition_number)
+
+    async def async_alarm_arm_max(self, code=None):
+        """Send arm max command."""
+        if code:
+            self.hass.data[DATA_EVL].arm_max_partition(
+                str(code), self._partition_number)
+        else:
+            self.hass.data[DATA_EVL].arm_max_partition(
+                str(self._code), self._partition_number)
 
     @callback
     def async_alarm_keypress(self, keypress=None):
