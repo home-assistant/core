@@ -158,7 +158,7 @@ class RestSensor(Entity):
                         self._attributes = attrs
                         attrs_str = json.dumps(attrs)
                         value = (attrs_str[:252] + '...') \
-                            if len (attrs_str) > 255 else attrs_str
+                            if len(attrs_str) > 255 else attrs_str
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
