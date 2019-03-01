@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import async_get_registry
 from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
@@ -80,9 +81,14 @@ SERVICE_SCHEMAS = {
 async def websocket_get_devices(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
     devices = [
         {
             **device.device_info,
+            'user_given_name': ha_device_registry.async_get_device(
+                {(DOMAIN, str(device.ieee))}, set()).name_by_user,
+            'device_reg_id': ha_device_registry.async_get_device(
+                {(DOMAIN, str(device.ieee))}, set()).id,
             'entities': [{
                 'entity_id': entity_ref.reference_id,
                 NAME: entity_ref.device_info[NAME]
