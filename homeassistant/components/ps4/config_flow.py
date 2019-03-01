@@ -79,11 +79,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
-            _entries = []
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                _entries.append(entry)
-            for _entry in _entries:
-                conf_devices = _entry.data['devices']
+                conf_devices = entry.data['devices']
                 for c_device in conf_devices:
                     if c_device['host'] in device_list:
                         # Remove configured device from search list.
