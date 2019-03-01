@@ -1,8 +1,10 @@
 """Support for climate devices through the SmartThings cloud API."""
 import asyncio
-from typing import Optional, Sequence
+import logging
+from typing import Iterable, Optional, Sequence
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_FAN_MODE,
@@ -38,6 +40,8 @@ UNIT_MAP = {
     'F': TEMP_FAHRENHEIT
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -50,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsThermostat(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, 'climate')])
+         if broker.any_assigned(device.device_id, CLIMATE_DOMAIN)], True)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
@@ -90,6 +94,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         """Init the class."""
         super().__init__(device)
         self._supported_features = self._determine_features()
+        self._current_operation = None
+        self._operations = None
 
     def _determine_features(self):
         from pysmartthings import Capability
@@ -127,6 +133,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         if operation_state:
             mode = STATE_TO_MODE[operation_state]
             await self._device.set_thermostat_mode(mode, set_status=True)
+            await self.async_update()
 
         # Heat/cool setpoint
         heating_setpoint = None
@@ -151,6 +158,33 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
+    async def async_update(self):
+        """Update the attributes of the climate device."""
+        thermostat_mode = self._device.status.thermostat_mode
+        self._current_operation = MODE_TO_STATE.get(thermostat_mode)
+        if self._current_operation is None:
+            _LOGGER.debug('Device %s (%s) returned an invalid'
+                          'thermostat mode: %s', self._device.label,
+                          self._device.device_id, thermostat_mode)
+
+        supported_modes = self._device.status.supported_thermostat_modes
+        if isinstance(supported_modes, Iterable):
+            operations = set()
+            for mode in supported_modes:
+                state = MODE_TO_STATE.get(mode)
+                if state is not None:
+                    operations.add(state)
+                else:
+                    _LOGGER.debug('Device %s (%s) returned an invalid '
+                                  'supported thermostat mode: %s',
+                                  self._device.label, self._device.device_id,
+                                  mode)
+            self._operations = operations
+        else:
+            _LOGGER.debug('Device %s (%s) returned invalid supported '
+                          'thermostat modes: %s', self._device.label,
+                          self._device.device_id, supported_modes)
+
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
@@ -164,7 +198,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return MODE_TO_STATE[self._device.status.thermostat_mode]
+        return self._current_operation
 
     @property
     def current_temperature(self):
@@ -187,8 +221,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return {MODE_TO_STATE[mode] for mode in
-                self._device.status.supported_thermostat_modes}
+        return self._operations
 
     @property
     def supported_features(self):

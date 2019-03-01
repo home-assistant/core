@@ -84,14 +84,15 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
     vol.Optional(CONF_MODEL): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional(CONF_CUSTOM_EFFECTS): [{
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA
     }]
 })
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |

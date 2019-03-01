@@ -1,0 +1,6 @@
+speedtest:
+  description: Immediately take a speedest with iperf3
+  fields:
+    host:
+      description: The host name of the iperf3 server (already configured) to run a test with.
+      example: 'iperf.he.net'

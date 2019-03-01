@@ -147,6 +147,18 @@ async def async_setup_platform(hass, config, async_add_entities,
             'Voltage Swells Phase L3',
             obis_ref.VOLTAGE_SWELL_L3_COUNT
         ],
+        [
+            'Voltage Phase L1',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L1
+        ],
+        [
+            'Voltage Phase L2',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L2
+        ],
+        [
+            'Voltage Phase L3',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L3
+        ],
     ]
 
     # Generate device entities

@@ -187,7 +187,7 @@ async def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
     response = await _process(hass, config, message)
 
-    if 'errorCode' in response['payload']:
+    if response and 'errorCode' in response['payload']:
         _LOGGER.error('Error handling message %s: %s',
                       message, response['payload'])
 
@@ -215,7 +215,6 @@ async def _process(hass, config, message):
 
     try:
         result = await handler(hass, config, inputs[0].get('payload'))
-        return {'requestId': request_id, 'payload': result}
     except SmartHomeError as err:
         return {
             'requestId': request_id,
@@ -227,6 +226,10 @@ async def _process(hass, config, message):
             'requestId': request_id,
             'payload': {'errorCode': ERR_UNKNOWN_ERROR}
         }
+
+    if result is None:
+        return None
+    return {'requestId': request_id, 'payload': result}
 
 
 @HANDLERS.register('action.devices.SYNC')
@@ -335,6 +338,15 @@ async def handle_devices_execute(hass, config, payload):
         })
 
     return {'commands': final_results}
+
+
+@HANDLERS.register('action.devices.DISCONNECT')
+async def async_devices_disconnect(hass, config, payload):
+    """Handle action.devices.DISCONNECT request.
+
+    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    """
+    return None
 
 
 def turned_off_response(message):

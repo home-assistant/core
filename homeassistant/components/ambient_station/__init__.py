@@ -263,7 +263,8 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY], session),
-            hass.data[DOMAIN][DATA_CONFIG].get(CONF_MONITORED_CONDITIONS, []))
+            hass.data[DOMAIN].get(DATA_CONFIG, {}).get(
+                CONF_MONITORED_CONDITIONS, []))
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
@@ -339,8 +340,10 @@ class AmbientStation:
 
                 self.stations[station['macAddress']] = {
                     ATTR_LAST_DATA: station['lastData'],
-                    ATTR_LOCATION: station['info']['location'],
-                    ATTR_NAME: station['info']['name'],
+                    ATTR_LOCATION: station.get('info', {}).get('location'),
+                    ATTR_NAME:
+                        station.get('info', {}).get(
+                            'name', station['macAddress']),
                 }
 
             for component in ('binary_sensor', 'sensor'):
