@@ -157,7 +157,11 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     """Handle webhook callback."""
     device = device_for_webhook_id(hass, webhook_id)
 
-    req_data = await request.json()
+    try:
+        req_data = await request.json()
+    except ValueError:
+        _LOGGER.warning('Received invalid JSON from mobile_app')
+        return json_response([], status=HTTP_BAD_REQUEST)
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
@@ -251,6 +255,11 @@ async def async_setup(hass, config):
 
     hass.http.register_view(RegisterDeviceView(store))
 
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up an mobile_app entry."""
     return True
 
 
