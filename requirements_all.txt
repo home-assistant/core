@@ -1590,9 +1590,6 @@ smappy==0.2.16
 # homeassistant.components.sensor.htu21d
 # smbus-cffi==0.5.1
 
-# homeassistant.components.sensor.tof
-smbus2==0.2.2
-
 # homeassistant.components.smhi
 smhi-pkg==1.0.8
 
