@@ -46,8 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_NAME: DEFAULT_NAME,
             CONF_PORT: DEFAULT_PORT,
             CONF_HOST: discovery_info['host'],
-            CONF_USERNAME: None,
-            CONF_PASSWORD: None,
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
             CONF_SSL: DEFAULT_SSL,
         }
         add_devices([Enigma2Device(discovery_info['hostname'],
