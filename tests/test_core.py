@@ -726,8 +726,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test registering and calling an async service."""
         calls = []
 
-        @asyncio.coroutine
-        def service_handler(call):
+        async def service_handler(call):
             """Service handler coroutine."""
             calls.append(call)
 
@@ -802,6 +801,45 @@ class TestServiceRegistry(unittest.TestCase):
         self.services.remove('test_xxx', 'test_yyy')
         self.hass.block_till_done()
         assert len(calls_remove) == 0
+
+    def test_async_service_raise_exception(self):
+        """Test registering and calling an async service raise exception."""
+        async def service_handler(_):
+            """Service handler coroutine."""
+            raise ValueError
+
+        self.services.register(
+            'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
+
+        with pytest.raises(ValueError):
+            assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                      blocking=True)
+            self.hass.block_till_done()
+
+        # Non-blocking service call never throw exception
+        self.services.call('test_domain', 'REGISTER_CALLS', blocking=False)
+        self.hass.block_till_done()
+
+    def test_callback_service_raise_exception(self):
+        """Test registering and calling an callback service raise exception."""
+        @ha.callback
+        def service_handler(_):
+            """Service handler coroutine."""
+            raise ValueError
+
+        self.services.register(
+            'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
+
+        with pytest.raises(ValueError):
+            assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                      blocking=True)
+            self.hass.block_till_done()
+
+        # Non-blocking service call never throw exception
+        self.services.call('test_domain', 'REGISTER_CALLS', blocking=False)
+        self.hass.block_till_done()
 
 
 class TestConfig(unittest.TestCase):
