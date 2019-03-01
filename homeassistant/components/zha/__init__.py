@@ -33,7 +33,7 @@ REQUIREMENTS = [
     'zigpy-homeassistant==0.3.0',
     'zigpy-xbee-homeassistant==0.1.2',
     'zha-quirks==0.0.6',
-    'zigpy-deconz==0.1.1'
+    'zigpy-deconz==0.1.2'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
