@@ -9,10 +9,6 @@ https://github.com/josemotta/vl53l1x-python
 https://github.com/NagyAttila/vl53l1x-python
 https://github.com/pimoroni/vl53l1x-python
 
-- DEFAULT_RANGE is always LONG = 2, for 4 meters range.
-- A GPIO connected to VL53L1X XSHUT input resets the device.
-- XSHUT starts pulsing LOW and after that it is kept HIGH all time.
-
 """
 import asyncio
 import logging
