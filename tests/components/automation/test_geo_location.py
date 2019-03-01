@@ -68,7 +68,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
     await hass.async_block_till_done()
 
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
     assert 'geo_location - geo_location.entity - hello - hello - test' == \
         calls[0].data['some']
 
@@ -221,7 +221,7 @@ async def test_if_fires_on_zone_appear(hass, calls):
     await hass.async_block_till_done()
 
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
     assert 'geo_location - geo_location.entity -  - hello - test' == \
         calls[0].data['some']
 

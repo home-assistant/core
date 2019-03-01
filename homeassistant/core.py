@@ -409,6 +409,10 @@ class Context:
         type=str,
         default=None,
     )
+    parent_id = attr.ib(
+        type=Optional[str],
+        default=None
+    )
     id = attr.ib(
         type=str,
         default=attr.Factory(lambda: uuid.uuid4().hex),
@@ -418,6 +422,7 @@ class Context:
         """Return a dictionary representation of the context."""
         return {
             'id': self.id,
+            'parent_id': self.parent_id,
             'user_id': self.user_id,
         }
 
