@@ -174,7 +174,8 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
             self.hass.data[DATA_EVL].arm_night_partition(
                 str(self._code), self._partition_number)
 
-    async def async_alarm_arm_max(self, code=None):
+    @callback
+    def async_alarm_arm_max(self, code=None):
         """Send arm max command."""
         if code:
             self.hass.data[DATA_EVL].arm_max_partition(
