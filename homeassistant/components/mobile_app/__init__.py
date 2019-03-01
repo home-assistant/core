@@ -281,7 +281,7 @@ class RegisterDeviceView(HomeAssistantView):
         device_id = data[ATTR_DEVICE_ID]
 
         if device_id in hass.data[DOMAIN]:
-            return self.json(hass.data[DOMAIN][device_id])
+            return Response(status=409)
 
         resp = {}
 
