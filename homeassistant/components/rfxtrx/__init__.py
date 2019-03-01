@@ -6,7 +6,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, ATTR_STATE, CONF_DEVICE, CONF_DEVICES,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS,
+    POWER_WATT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -40,8 +41,8 @@ DATA_TYPES = OrderedDict([
     ('Barometer', ''),
     ('Wind direction', ''),
     ('Rain rate', ''),
-    ('Energy usage', 'W'),
-    ('Total usage', 'W'),
+    ('Energy usage', POWER_WATT),
+    ('Total usage', POWER_WATT),
     ('Sound', ''),
     ('Sensor Status', ''),
     ('Counter value', ''),

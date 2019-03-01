@@ -7,7 +7,7 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, POWER_WATT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
@@ -69,8 +69,8 @@ UNIT_REGISTRY = {
     TEMPERATURE: TEMP_CELSIUS,
     PRESSURE: 'hPa',
     ILLUMINANCE: 'lx',
-    METERING: 'W',
-    ELECTRICAL_MEASUREMENT: 'W',
+    METERING: POWER_WATT,
+    ELECTRICAL_MEASUREMENT: POWER_WATT,
     GENERIC: None
 }
 

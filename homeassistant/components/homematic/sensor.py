@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, POWER_WATT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ HM_UNIT_HA_CAST = {
     'TEMPERATURE': '°C',
     'ACTUAL_TEMPERATURE': '°C',
     'BRIGHTNESS': '#',
-    'POWER': 'W',
+    'POWER': POWER_WATT,
     'CURRENT': 'mA',
     'VOLTAGE': 'V',
     'ENERGY_COUNTER': 'Wh',

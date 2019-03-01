@@ -5,7 +5,7 @@ from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, POWER_WATT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -223,4 +223,4 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return 'W'
+        return POWER_WATT 
