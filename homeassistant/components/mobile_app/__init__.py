@@ -38,22 +38,27 @@ STORAGE_VERSION = 1
 
 CONF_SECRET = 'secret'
 
+ATTR_APP_ID = 'app_id'
+ATTR_APP_NAME = 'app_name'
+ATTR_APP_VERSION = 'app_version'
 ATTR_DEVICE_ID = 'device_id'
 ATTR_DEVICE_NAME = 'device_name'
-ATTR_APP_ID = 'app_id'
-ATTR_APP_VERSION = 'app_version'
+ATTR_INTEGRATION_DATA = 'integration_data'
+ATTR_MANUFACTURER = 'manufacturer'
+ATTR_MODEL = 'model'
+ATTR_OS_VERSION = 'os_version'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
-ATTR_EVENT_TYPE = 'event_type'
 ATTR_EVENT_DATA = 'event_data'
+ATTR_EVENT_TYPE = 'event_type'
 
 ATTR_TEMPLATE = 'template'
 ATTR_TEMPLATE_VARIABLES = 'variables'
 
-ATTR_WEBHOOK_TYPE = 'type'
 ATTR_WEBHOOK_DATA = 'data'
 ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
 ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
+ATTR_WEBHOOK_TYPE = 'type'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
@@ -64,10 +69,15 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION]
 
 REGISTER_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_DEVICE_NAME): cv.string,
-    vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_APP_ID): cv.string,
+    vol.Optional(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
+    vol.Required(ATTR_DEVICE_ID): cv.string,
+    vol.Required(ATTR_DEVICE_NAME): cv.string,
+    vol.Optional(ATTR_INTEGRATION_DATA, default={}): dict,
+    vol.Required(ATTR_MANUFACTURER): cv.string,
+    vol.Required(ATTR_MODEL): cv.string,
+    vol.Optional(ATTR_OS_VERSION): cv.string,
     vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
 })
 

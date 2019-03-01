@@ -23,10 +23,15 @@ RENDER_TEMPLATE = {
 }
 
 REGISTER = {
-    'device_name': 'Test 1',
     'app_id': 'io.homeassistant.mobile_app_test',
-    'device_id': 'mobile_app_test',
+    'app_name': 'Mobile App Tests',
     'app_version': '1.0.0',
+    'device_id': 'mobile_app_test',
+    'device_name': 'Test 1',
+    'integration_data': {'foo': 'bar'},
+    'manufacturer': 'mobile_app',
+    'model': 'Test',
+    'os_version': '1.0',
     'supports_encryption': True
 }
 
