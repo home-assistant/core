@@ -40,7 +40,7 @@ async def async_trigger(hass, config, action, automation_info):
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'time_pattern',
-                'now': now,
+                'now': dt_util.as_local(now),
             },
         })
 
