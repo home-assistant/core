@@ -1,6 +1,12 @@
 # Describes the format for available RainMachine services
 
 ---
+pause_watering:
+  description: Pause all watering for a number of seconds.
+  fields:
+    seconds:
+      description: The number of seconds to pause.
+      example: 30
 start_program:
   description: Start a program.
   fields:
@@ -30,3 +36,5 @@ stop_zone:
     zone_id:
       description: The zone to stop.
       example: 3
+unpause_watering:
+  description: Unpause all watering.
