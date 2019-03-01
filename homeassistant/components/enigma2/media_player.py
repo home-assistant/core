@@ -10,16 +10,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
+    STATE_OFF, STATE_ON, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebif.py==0.9']
+REQUIREMENTS = ['openwebifpy==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
-DEFAULT_TIMEOUT = 0
+DEFAULT_SSL = False
+DEFAULT_USERNAME = 'root'
+DEFAULT_PASSWORD = ''
 
 SUPPORTED_ENIGMA2 = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                           SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
@@ -30,6 +33,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
@@ -37,25 +43,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up of an enigma2 media player."""
     if discovery_info:
         discovered_config = {
-            'name': DEFAULT_NAME,
-            'port': DEFAULT_PORT,
-            'host': discovery_info['host'],
-            'timeout': DEFAULT_TIMEOUT,
+            CONF_NAME: DEFAULT_NAME,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_HOST: discovery_info['host'],
+            CONF_USERNAME: None,
+            CONF_PASSWORD: None,
+            CONF_SSL: DEFAULT_SSL,
         }
         add_devices([Enigma2Device(discovery_info['hostname'],
                                    discovered_config)], True)
         return
 
-    # Generate a configuration for the Enigma2 library
-    remote_config = {
-        'name': 'HomeAssistant',
-        'description': config[CONF_NAME],
-        'port': config[CONF_PORT],
-        'host': config[CONF_HOST],
-        'timeout': DEFAULT_TIMEOUT,
-    }
-
-    add_devices([Enigma2Device(config[CONF_NAME], remote_config)], True)
+    add_devices([Enigma2Device(config[CONF_NAME], config)], True)
 
 
 class Enigma2Device(MediaPlayerDevice):
@@ -66,8 +65,12 @@ class Enigma2Device(MediaPlayerDevice):
         import openwebif.api
         self._state = None
         self._name = name
-        self.e2_box = openwebif.api.CreateDevice(config['host'],
-                                                 port=config['port'])
+        self.e2_box = \
+            openwebif.api.CreateDevice(host=config[CONF_HOST],
+                                       port=config[CONF_PORT],
+                                       username=config[CONF_USERNAME],
+                                       password=config[CONF_PASSWORD],
+                                       is_https=config[CONF_SSL])
 
         self.volume = 10
         self.current_service_channel_name = None
