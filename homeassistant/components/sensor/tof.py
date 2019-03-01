@@ -26,7 +26,7 @@ from homeassistant.components import rpi_gpio
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['smbus2==0.2.2', 'VL53L1X2==0.1.5']
+REQUIREMENTS = ['VL53L1X2==0.1.5']
 
 DEPENDENCIES = ['rpi_gpio']
 
