@@ -3,9 +3,7 @@ from unittest.mock import Mock
 import pytest
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.zha.api import (
-    async_load_api, WS_DEVICE_CLUSTERS, ATTR_IEEE, TYPE,
-    ID, WS_DEVICE_CLUSTER_ATTRIBUTES, WS_DEVICE_CLUSTER_COMMANDS,
-    WS_DEVICES
+    async_load_api, ATTR_IEEE, TYPE, ID
 )
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, IN, IEEE, MODEL, NAME, QUIRK_APPLIED,
@@ -38,7 +36,7 @@ async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
     """Test getting device cluster info."""
     await zha_client.send_json({
         ID: 5,
-        TYPE: WS_DEVICE_CLUSTERS,
+        TYPE: 'zha/devices/clusters',
         ATTR_IEEE: '00:0d:6f:00:0a:90:69:e7'
     })
 
@@ -64,7 +62,7 @@ async def test_device_cluster_attributes(
     """Test getting device cluster attributes."""
     await zha_client.send_json({
         ID: 5,
-        TYPE: WS_DEVICE_CLUSTER_ATTRIBUTES,
+        TYPE: 'zha/devices/clusters/attributes',
         ATTR_ENDPOINT_ID: 1,
         ATTR_IEEE: '00:0d:6f:00:0a:90:69:e7',
         ATTR_CLUSTER_ID: 6,
@@ -86,7 +84,7 @@ async def test_device_cluster_commands(
     """Test getting device cluster commands."""
     await zha_client.send_json({
         ID: 5,
-        TYPE: WS_DEVICE_CLUSTER_COMMANDS,
+        TYPE: 'zha/devices/clusters/commands',
         ATTR_ENDPOINT_ID: 1,
         ATTR_IEEE: '00:0d:6f:00:0a:90:69:e7',
         ATTR_CLUSTER_ID: 6,
@@ -109,7 +107,7 @@ async def test_list_devices(
     """Test getting entity cluster commands."""
     await zha_client.send_json({
         ID: 5,
-        TYPE: WS_DEVICES
+        TYPE: 'zha/devices'
     })
 
     msg = await zha_client.receive_json()
