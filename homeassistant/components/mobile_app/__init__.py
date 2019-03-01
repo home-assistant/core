@@ -17,8 +17,8 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN, SERVICE_SEE as DEVICE_TRACKER_SEE,
     SERVICE_SEE_PAYLOAD_SCHEMA as SEE_SCHEMA)
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
-                                 HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
-                                 CONF_WEBHOOK_ID)
+                                 HTTP_BAD_REQUEST, HTTP_CREATED,
+                                 HTTP_INTERNAL_SERVER_ERROR, CONF_WEBHOOK_ID)
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
 from homeassistant.helpers import config_entry_flow, config_validation as cv
@@ -244,6 +244,22 @@ def device_for_webhook_id(hass, webhook_id):
     return None
 
 
+def safe_device(device: dict):
+    """Return a device without webhook_id or secret."""
+    return {
+        ATTR_APP_ID: device[ATTR_APP_ID],
+        ATTR_APP_NAME: device[ATTR_APP_NAME],
+        ATTR_APP_VERSION: device[ATTR_APP_VERSION],
+        ATTR_DEVICE_ID: device[ATTR_DEVICE_ID],
+        ATTR_DEVICE_NAME: device[ATTR_DEVICE_NAME],
+        ATTR_INTEGRATION_DATA: device[ATTR_INTEGRATION_DATA],
+        ATTR_MANUFACTURER: device[ATTR_MANUFACTURER],
+        ATTR_MODEL: device[ATTR_MODEL],
+        ATTR_OS_VERSION: device[ATTR_OS_VERSION],
+        ATTR_SUPPORTS_ENCRYPTION: device[ATTR_SUPPORTS_ENCRYPTION],
+    }
+
+
 async def async_setup(hass, config):
     """Set up the mobile app component."""
     conf = config.get(DOMAIN)
@@ -263,7 +279,8 @@ async def async_setup(hass, config):
         hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
-    hass.http.register_view(RegisterDeviceView(store))
+    hass.http.register_view(DevicesView(store))
+    hass.http.register_view(SingleDeviceView(store))
 
     return True
 
@@ -273,15 +290,26 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-class RegisterDeviceView(HomeAssistantView):
+class DevicesView(HomeAssistantView):
     """A view that accepts device registration requests."""
 
-    url = '/api/mobile_app/register'
-    name = 'api:mobile_app:register'
+    url = '/api/mobile_app/devices'
+    name = 'api:mobile_app:register-device'
 
     def __init__(self, store):
         """Initialize the view."""
         self._store = store
+
+    async def get(self, request):
+        """Handle a request to get all registered devices."""
+        all_devices = []
+
+        hass = request.app['hass']
+
+        for key, device in hass.data[DOMAIN].items():
+            all_devices.append(safe_device(device))
+
+        return self.json(all_devices)
 
     @RequestDataValidator(REGISTER_DEVICE_SCHEMA)
     async def post(self, request, data):
@@ -315,7 +343,52 @@ class RegisterDeviceView(HomeAssistantView):
         webhook.async_register(hass, DOMAIN, 'Mobile app', webhook_id,
                                handle_webhook)
 
-        return self.json(resp)
+        return self.json(resp, status_code=HTTP_CREATED)
+
+
+class SingleDeviceView(HomeAssistantView):
+    """A view that represents a single device."""
+
+    url = '/api/mobile_app/devices/{webhook_id}'
+    name = 'api:mobile_app:single-device'
+
+    def __init__(self, store):
+        """Initialize the view."""
+        self._store = store
+
+    async def get(self, request, webhook_id):
+        """Return what we know about the device."""
+        device = device_for_webhook_id(request.app['hass'], webhook_id)
+
+        if device is None:
+            return Response(status=404)
+
+        return self.json(safe_device(device))
+
+    @RequestDataValidator(REGISTER_DEVICE_SCHEMA)
+    async def put(self, request, webhook_id, data):
+        """Handle the update data request for device registration."""
+        hass = request.app['hass']
+
+        device = device_for_webhook_id(hass, webhook_id)
+
+        if device is None:
+            return Response(status=404)
+
+        device_id = device[ATTR_DEVICE_ID]
+
+        data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
+        data[CONF_SECRET] = device[CONF_SECRET]
+
+        hass.data[DOMAIN][device_id] = data
+
+        try:
+            await self._store.async_save(hass.data[DOMAIN])
+        except HomeAssistantError:
+            return self.json_message("Error updating device.",
+                                     HTTP_INTERNAL_SERVER_ERROR)
+
+        return self.json(safe_device(data))
 
 
 config_entry_flow.register_discovery_flow(

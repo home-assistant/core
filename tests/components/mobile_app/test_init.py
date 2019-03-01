@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.mobile_app import (DOMAIN, STORAGE_KEY,
                                                  STORAGE_VERSION)
 
@@ -133,42 +134,114 @@ def test_handle_encryption(mobile_app_client):
     assert json == {'rendered': 'Hello world'}
 
 
-async def test_registers_device(hass, hass_client):
-    """Test that a device can be registered."""
+@pytest.fixture
+async def mock_api_client(hass, hass_client):
+    """Provide an authenticated client for mobile_app to use."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    return await hass_client()
 
-    http_client = await hass_client()
 
-    resp = await http_client.post(
-        '/api/mobile_app/register', json=REGISTER
+async def test_register_device(mock_api_client):
+    """Test that a device can be registered."""
+    resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
     )
 
-    assert resp.status == 200
+    assert resp.status == 201
     json = await resp.json()
     assert 'webhook_id' in json
     assert 'secret' in json
 
 
-async def test_no_duplicate_device(hass, hass_client):
-    """Test that a device can not be registered twice."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    http_client = await hass_client()
-
-    good_resp = await http_client.post(
-        '/api/mobile_app/register', json=REGISTER
+async def test_get_all_devices(mock_api_client):
+    """Test that we can get all registered devices."""
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
     )
 
-    assert good_resp.status == 200
+    assert register_resp.status == 201
+    json = await register_resp.json()
+    assert 'webhook_id' in json
+    assert 'secret' in json
+
+    devices_resp = await mock_api_client.get(
+        '/api/mobile_app/devices'
+    )
+
+    assert devices_resp.status == 200
+    json = await devices_resp.json()
+    assert len(json) == 1
+
+
+async def test_no_duplicate_device(mock_api_client):
+    """Test that a device can not be registered twice."""
+    good_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert good_resp.status == 201
     good_json = await good_resp.json()
     assert 'webhook_id' in good_json
     assert 'secret' in good_json
 
-    bad_resp = await http_client.post(
-        '/api/mobile_app/register', json=REGISTER
+    bad_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
     )
 
     assert bad_resp.status == 409
+
+
+async def test_get_device(mock_api_client):
+    """Test that a we can get a device payload."""
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+
+    webhook_id = register_json[CONF_WEBHOOK_ID]
+
+    get_resp = await mock_api_client.get(
+        '/api/mobile_app/devices/{}'.format(webhook_id)
+    )
+
+    assert get_resp.status == 200
+    json = await get_resp.json()
+    assert json == REGISTER
+
+
+async def test_update_device(mock_api_client):
+    """Test that a we can update an existing device."""
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+
+    webhook_id = register_json[CONF_WEBHOOK_ID]
+
+    update = REGISTER
+    update['app_version'] = '2.0.0'
+
+    put_resp = await mock_api_client.put(
+        '/api/mobile_app/devices/{}'.format(webhook_id), json=update
+    )
+
+    assert put_resp.status == 200
+    put_json = await put_resp.json()
+    assert put_json['app_version'] == '2.0.0'
+    assert 'webhook_id' not in put_json
+    assert 'secret' not in put_json
+
+    get_resp = await mock_api_client.get(
+        '/api/mobile_app/devices/{}'.format(webhook_id)
+    )
+
+    assert get_resp.status == 200
+    get_json = await get_resp.json()
+    assert get_json['app_version'] == '2.0.0'
 
 
 async def test_config_flow_import(hass):
