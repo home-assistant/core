@@ -159,6 +159,8 @@ class PS4Device(MediaPlayerDevice):
                     # Enable keep alive feature for PS4 Connection.
                     # Only 1 device is supported, Since have to use port 997.
                     self._ps4.keep_alive = True
+                else:
+                    self._ps4.keep_alive = False
                 if self._power_on is True:
                     # Auto Login after Turn On.
                     self._ps4.open()
@@ -277,6 +279,10 @@ class PS4Device(MediaPlayerDevice):
             'sw_version': sw_version
         }
         self._unique_id = status['host-id']
+        
+    async def async_will_remove_from_hass(self):
+        """Remove Entity from Hass."""
+        self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
     def device_info(self):
