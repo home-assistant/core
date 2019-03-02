@@ -14,8 +14,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
-    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_APPS, CONF_HOST, CONF_NAME, CONF_PORT,
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
 FIRETV_DOMAIN = 'firetv'
@@ -37,6 +37,7 @@ DEFAULT_NAME = 'Amazon Fire TV'
 DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
+DEFAULT_APPS = {}
 
 SERVICE_ADB_COMMAND = 'adb_command'
 
@@ -62,7 +63,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(
         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
-    vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean
+    vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
+    vol.Optional(CONF_APPS, default=DEFAULT_APPS): dict,
 })
 
 # Translate from `FireTV` reported state to HA state.
@@ -102,11 +104,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config[CONF_NAME]
     get_sources = config[CONF_GET_SOURCES]
+    apps = config[CONF_APPS]
 
     if host in hass.data[FIRETV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
-        device = FireTVDevice(ftv, name, get_sources)
+        device = FireTVDevice(ftv, name, get_sources, apps)
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
         hass.data[FIRETV_DOMAIN][host] = device
@@ -161,10 +164,13 @@ def adb_decorator(override_available=False):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    def __init__(self, ftv, name, get_sources):
+    def __init__(self, ftv, name, get_sources, apps):
         """Initialize the FireTV device."""
-        from firetv import KEYS
+        from firetv import APPS, KEYS
+        self.apps = APPS
         self.keys = KEYS
+
+        self.apps.update(dict(apps))
 
         self.firetv = ftv
 
@@ -221,6 +227,11 @@ class FireTVDevice(MediaPlayerDevice):
     def app_id(self):
         """Return the current app."""
         return self._current_app
+
+    @property
+    def app_name(self):
+        """Return the friendly name of the current app."""
+        return self.apps.get(self._current_app, self._current_app)
 
     @property
     def source(self):
