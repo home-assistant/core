@@ -166,7 +166,7 @@ class WithingsDataManager(object):
         )
 
     @Throttle(SCAN_INTERVAL)
-    async def async_update_measures(self) -> None:
+    async def async_update_measures(self):
         _LOGGER.debug('async_update_measures')
 
         self._measures = self._api.get_measures()
@@ -174,7 +174,7 @@ class WithingsDataManager(object):
         return self._measures
 
     @Throttle(SCAN_INTERVAL)
-    async def async_update_sleep(self) -> None:
+    async def async_update_sleep(self):
         _LOGGER.debug('async_update_sleep')
 
         end_date = int(time.time())
@@ -194,7 +194,7 @@ WITHINGS_ATTRIBUTES = [
     WithingsMeasureAttribute(MEAS_FAT_MASS_KG, MEASURE_TYPE_FAT_MASS, 'Fat Mass', UOM_MASS_KG, 'mdi:weight-kilogram'),
     WithingsMeasureAttribute(MEAS_FAT_MASS_LB, MEASURE_TYPE_FAT_MASS, 'Fat Mass', UOM_MASS_LB, 'mdi:weight-pound'),
     WithingsMeasureAttribute(MEAS_FAT_FREE_MASS_KG, MEASURE_TYPE_FAT_MASS_FREE, 'Fat Free Mass', UOM_MASS_KG, 'mdi:weight-kilogram'),
-    WithingsMeasureAttribute(MEAS_FAT_FREE_MASS_LB, MEASURE_TYPE_FAT_MASS_FREE, 'Fat Free Mass', ';b', 'mdi:weight-pound'),
+    WithingsMeasureAttribute(MEAS_FAT_FREE_MASS_LB, MEASURE_TYPE_FAT_MASS_FREE, 'Fat Free Mass', UOM_MASS_LB, 'mdi:weight-pound'),
     WithingsMeasureAttribute(MEAS_MUSCLE_MASS_KG, MEASURE_TYPE_MUSCLE_MASS, 'Muscle Mass', UOM_MASS_KG, 'mdi:weight-kilogram'),
     WithingsMeasureAttribute(MEAS_MUSCLE_MASS_LB, MEASURE_TYPE_MUSCLE_MASS, 'Muscle Mass', UOM_MASS_LB, 'mdi:weight-pound'),
     WithingsMeasureAttribute(MEAS_BONE_MASS_KG, MEASURE_TYPE_BONE_MASS, 'Bone Mass', UOM_MASS_KG, 'mdi:weight-kilogram'),
@@ -595,7 +595,7 @@ class WithingsHealthSensor(Entity):
             state = round((value * 1.8) + 32, 2)
             
         elif unit_of_measurement is UOM_PCT:
-            state = value
+            state = round(value * 100, 1)
             
         elif unit_of_measurement is UOM_MMHG:
             state = value
@@ -609,15 +609,14 @@ class WithingsHealthSensor(Entity):
             inches_ratio = feet_raw - feet
             inches = round(inches_ratio * 12, 1)
             
-            state = "%d\" %d'" % (feet, inches)
+            state = "%d' %d\"" % (feet, inches)
 
         else:
-            state = value
+            state = round(value, 2)
         
         _LOGGER.debug('Setting state: {}'.format(state))
         self._state = state
-        
-        
+
     async def async_update_sleep(self, data) -> None:
         _LOGGER.debug('async_update_sleep')
         

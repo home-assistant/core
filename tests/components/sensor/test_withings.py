@@ -18,214 +18,219 @@ from aiohttp.web_request import BaseRequest
 import homeassistant.components.sensor.withings as withings
 from tests.common import (
     get_test_home_assistant, load_fixture)
+import time
 
 PLATFORM_NAME = 'withings'
 
-class TestInitialization(unittest.TestCase):
-    def setUp(self):
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        self.hass.stop()
+def async_test(coro):
+    def wrapper(*args, **kwargs):
+        loop = asyncio.new_event_loop()
+        return loop.run_until_complete(coro(*args, **kwargs))
+    return wrapper
 
-    async def test_async_setup_platform(self):
-        profile = 'person 1'
-        slug = 'person_1'
 
-        config = {
-            http.DOMAIN: {},
-            api.DOMAIN: {
-                'base_url': 'http://localhost/'
-            },
-            SENSOR_DOMAIN: [
-                {
-                    CONF_PLATFORM: PLATFORM_NAME,
-                    withings.CONF_CLIENT_ID: 'my_client_id',
-                    withings.CONF_SECRET: 'my_secret',
-                    withings.CONF_PROFILE: profile
-                }
-            ]
+async def test_async_setup_platform(hass):
+    profile = 'person 1'
+    slug = 'person_1'
+
+    config = {
+        http.DOMAIN: {},
+        api.DOMAIN: {
+            'base_url': 'http://localhost/'
+        },
+        SENSOR_DOMAIN: [
+            {
+                CONF_PLATFORM: PLATFORM_NAME,
+                withings.CONF_CLIENT_ID: 'my_client_id',
+                withings.CONF_SECRET: 'my_secret',
+                withings.CONF_PROFILE: profile
+            }
+        ]
+    }
+
+    credentials_file_path = hass.config.path(withings.WITHINGS_CONFIG_FILE.format(
+        'my_client_id',
+        slug
+    ))
+
+    if os.path.isfile(credentials_file_path):
+        os.remove(credentials_file_path)
+
+    result = await async_setup_component(hass, 'http', config)
+    assert result
+
+    result = await async_setup_component(hass, 'api', config)
+    assert result
+
+    with patch.object(hass.http, 'register_view', wraps=hass.http.register_view) as register_view_spy,\
+            patch('homeassistant.components.configurator.async_request_config', wraps=configurator.async_request_config) as async_request_config_spy, \
+            patch('homeassistant.components.configurator.async_request_done', wraps=configurator.async_request_done) as async_request_done_spy, \
+            patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
+
+        # Simulate an initial setup.
+        result = await async_setup_component(hass, SENSOR_DOMAIN, config)
+        assert result
+        assert withings.DATA_CONFIGURING in hass.data
+        assert 'person_1' in hass.data[withings.DATA_CONFIGURING]
+        configuring: withings.WithingsConfiguring = hass.data[withings.DATA_CONFIGURING][slug]
+        assert isinstance(configuring, withings.WithingsConfiguring)
+        assert callable(configuring.oauth_initialize_callback)
+        register_view_spy.assert_called_with(withings.WithingsAuthCallbackView(slug))
+        async_request_config_spy.assert_called_with(
+            hass,
+            'Withings',
+            description=(
+                "Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '{}'.".format(profile)
+            ),
+            link_name="Click here to authorize Home Assistant.",
+            link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')
+        )
+
+        # Get the instance of WithingsAuthCallbackView used when registering.
+        args = register_view_spy.call_args_list
+        callback_view = args[0][0][0]
+
+        get_credentials_mock = patch.object(configuring.auth_client, 'get_credentials', return_value=nokia.NokiaCredentials)
+        get_credentials_mock.start()
+
+        # Simulate a request to the callback view.
+        request = MagicMock(spec=BaseRequest)
+        request.app = {
+            'hass': hass
+        }
+        request.query = {
+            'state': 'my_state',
+            'code': 'my_code'
         }
 
-        credentials_file_path = self.hass.config.path(withings.WITHINGS_CONFIG_FILE.format(
+        callback_view.get(request)
+        await hass.async_block_till_done()
+
+        configuring.auth_client.get_credentials.assert_called_with('my_code')
+        async_initialize_mock.assert_called()
+        async_request_done_spy.assert_called()
+
+
+async def test_async_setup_platform_from_saved_credentials(hass):
+    profile = 'person 1'
+    slug = 'person_1'
+
+    config = {
+        http.DOMAIN: {},
+        api.DOMAIN: {
+            'base_url': 'http://localhost/'
+        },
+        SENSOR_DOMAIN: [
+            {
+                CONF_PLATFORM: PLATFORM_NAME,
+                withings.CONF_CLIENT_ID: 'my_client_id',
+                withings.CONF_SECRET: 'my_secret',
+                withings.CONF_PROFILE: profile
+            }
+        ]
+    }
+
+    withings._write_credentials_to_file(
+        hass,
+        withings.WITHINGS_CONFIG_FILE.format(
             'my_client_id',
             slug
-        ))
+        ),
+        nokia.NokiaCredentials()
+    )
 
-        if os.path.isfile(credentials_file_path):
-            os.remove(credentials_file_path)
-
-        result = await async_setup_component(self.hass, 'http', config)
+    with patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
+        result = await async_setup_component(hass, 'http', config)
         assert result
 
-        result = await async_setup_component(self.hass, 'api', config)
+        result = await async_setup_component(hass, 'api', config)
         assert result
 
-        with patch.object(self.hass.http, 'register_view', wraps=self.hass.http.register_view) as register_view_spy,\
-                patch('homeassistant.components.configurator.async_request_config', wraps=configurator.async_request_config) as async_request_config_spy, \
-                patch('homeassistant.components.configurator.async_request_done', wraps=configurator.async_request_done) as async_request_done_spy, \
-                patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
+        result = await async_setup_component(hass, SENSOR_DOMAIN, config)
+        assert result
 
-            # Simulate an initial setup.
-            result = await async_setup_component(self.hass, SENSOR_DOMAIN, config)
-            assert result
-            assert withings.DATA_CONFIGURING in self.hass.data
-            assert 'person_1' in self.hass.data[withings.DATA_CONFIGURING]
-            configuring: withings.WithingsConfiguring = self.hass.data[withings.DATA_CONFIGURING][slug]
-            assert isinstance(configuring, withings.WithingsConfiguring)
-            assert callable(configuring.oauth_initialize_callback)
-            register_view_spy.assert_called_with(withings.WithingsAuthCallbackView(slug))
-            async_request_config_spy.assert_called_with(
-                self.hass,
-                'Withings',
-                description=(
-                    "Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '{}'.".format(profile)
-                ),
-                link_name="Click here to authorize Home Assistant.",
-                link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')
-            )
+        async_initialize_mock.assert_called()
 
-            # Get the instance of WithingsAuthCallbackView used when registering.
-            args = register_view_spy.call_args_list
-            callback_view = args[0][0][0]
 
-            get_credentials_mock = patch.object(configuring.auth_client, 'get_credentials', return_value=nokia.NokiaCredentials)
-            get_credentials_mock.start()
+async def test_initialize_new_credentials(hass):
+    profile = 'person 1'
+    slug = 'person_1'
 
-            # Simulate a request to the callback view.
-            request = MagicMock(spec=BaseRequest)
-            request.app = {
-                'hass': self.hass
-            }
-            request.query = {
-                'state': 'my_state',
-                'code': 'my_code'
-            }
+    config = {
+        CONF_PLATFORM: PLATFORM_NAME,
+        withings.CONF_CLIENT_ID: 'my_client_id',
+        withings.CONF_SECRET: 'my_secret',
+        withings.CONF_PROFILE: profile,
+        withings.CONF_MEASUREMENTS: list(withings.CONF_SENSORS.keys())
+    }
 
-            callback_view.get(request)
-            await self.hass.async_block_till_done()
+    add_entities_mock = MagicMock()
 
-            configuring.auth_client.get_credentials.assert_called_with('my_code')
-            async_initialize_mock.assert_called()
-            async_request_done_spy.assert_called()
+    configuring = withings.WithingsConfiguring(
+        hass,
+        config,
+        add_entities_mock,
+        slug,
+        '/tmp/testfile',
+        None,
+        None,
+    )
 
-    async def test_async_setup_platform_from_saved_credentials(self):
-        profile = 'person 1'
-        slug = 'person_1'
+    creds = nokia.NokiaCredentials(
+        None,
+        9999999999
+    )
 
-        config = {
-            http.DOMAIN: {},
-            api.DOMAIN: {
-                'base_url': 'http://localhost/'
-            },
-            SENSOR_DOMAIN: [
-                {
-                    CONF_PLATFORM: PLATFORM_NAME,
-                    withings.CONF_CLIENT_ID: 'my_client_id',
-                    withings.CONF_SECRET: 'my_secret',
-                    withings.CONF_PROFILE: profile
-                }
-            ]
-        }
+    await withings.async_initialize(configuring, creds)
 
-        withings._write_credentials_to_file(
-            self.hass,
-            withings.WITHINGS_CONFIG_FILE.format(
-                'my_client_id',
-                slug
-            ),
-            nokia.NokiaCredentials()
-        )
+    sensors = add_entities_mock.call_args_list[0][0][0]
+    measurements = []
+    for sensor in sensors:
+        measurements.append(sensor._attribute.measurement)
 
-        with patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
-            result = await async_setup_component(self.hass, 'http', config)
-            assert result
+    assert set(measurements) == set(withings.WITHINGS_MEASUREMENTS_MAP.keys())
 
-            result = await async_setup_component(self.hass, 'api', config)
-            assert result
 
-            result = await async_setup_component(self.hass, SENSOR_DOMAIN, config)
-            assert result
+async def test_initialize_credentials_refreshed(hass):
+    profile = 'person 1'
+    slug = 'person_1'
 
-            async_initialize_mock.assert_called()
+    config = {
+        CONF_PLATFORM: PLATFORM_NAME,
+        withings.CONF_CLIENT_ID: 'my_client_id',
+        withings.CONF_SECRET: 'my_secret',
+        withings.CONF_PROFILE: profile,
+        withings.CONF_MEASUREMENTS: list(withings.CONF_SENSORS.keys())
+    }
 
-    async def test_initialize_new_credentials(self):
-        profile = 'person 1'
-        slug = 'person_1'
+    add_entities_mock = MagicMock()
 
-        config = {
-            CONF_PLATFORM: PLATFORM_NAME,
-            withings.CONF_CLIENT_ID: 'my_client_id',
-            withings.CONF_SECRET: 'my_secret',
-            withings.CONF_PROFILE: profile,
-            withings.CONF_MEASUREMENTS: list(withings.CONF_SENSORS.keys())
-        }
+    configuring = withings.WithingsConfiguring(
+        hass,
+        config,
+        add_entities_mock,
+        slug,
+        '/tmp/testfile',
+        None,
+        None,
+    )
 
-        add_entities_mock = MagicMock()
+    creds = nokia.NokiaCredentials(
+        None,
+        9999999999
+    )
 
-        configuring = withings.WithingsConfiguring(
-            self.hass,
-            config,
-            add_entities_mock,
-            slug,
-            '/tmp/testfile',
-            None,
-            None,
-        )
+    data_manager = await withings.async_initialize(configuring, creds)
 
-        creds = nokia.NokiaCredentials(
-            None,
-            9999999999
-        )
+    with patch('homeassistant.components.sensor.withings.credentials_refreshed', wraps=withings.credentials_refreshed) as credentials_refreshed_spy:
+        data_manager._api.set_token({
+            'expires_in': 22222,
+            'access_token': 'ACCESS_TOKEN',
+            'refresh_token': 'REFRESH_TOKEN'
+        })
 
-        await withings.async_initialize(configuring, creds)
-
-        sensors = add_entities_mock.call_args_list[0][0][0]
-        measurements = []
-        for sensor in sensors:
-            measurements.append(sensor._attribute.measurement)
-
-        assert set(measurements) == set(withings.WITHINGS_MEASUREMENTS_MAP.keys())
-
-    async def test_initialize_credentials_refreshed(self):
-        profile = 'person 1'
-        slug = 'person_1'
-
-        config = {
-            CONF_PLATFORM: PLATFORM_NAME,
-            withings.CONF_CLIENT_ID: 'my_client_id',
-            withings.CONF_SECRET: 'my_secret',
-            withings.CONF_PROFILE: profile,
-            withings.CONF_MEASUREMENTS: list(withings.CONF_SENSORS.keys())
-        }
-
-        add_entities_mock = MagicMock()
-
-        configuring = withings.WithingsConfiguring(
-            self.hass,
-            config,
-            add_entities_mock,
-            slug,
-            '/tmp/testfile',
-            None,
-            None,
-        )
-
-        creds = nokia.NokiaCredentials(
-            None,
-            9999999999
-        )
-
-        data_manager = await withings.async_initialize(configuring, creds)
-
-        with patch('homeassistant.components.sensor.withings.credentials_refreshed', wraps=withings.credentials_refreshed) as credentials_refreshed_spy:
-            data_manager._api.set_token({
-                'expires_in': 22222,
-                'access_token': 'ACCESS_TOKEN',
-                'refresh_token': 'REFRESH_TOKEN'
-            })
-
-            credentials_refreshed_spy.assert_called()
+        credentials_refreshed_spy.assert_called()
 
 
 class TestWithingsAuthCallbackView(unittest.TestCase):
@@ -294,6 +299,7 @@ class TestWithingsDataManager(unittest.TestCase):
     def tearDown(self):
         self.hass.stop()
 
+    @async_test
     async def test_async_update_measures(self):
         self.data_manager = withings.WithingsDataManager(
             'person_1',
@@ -310,8 +316,9 @@ class TestWithingsDataManager(unittest.TestCase):
         self.api.get_measures = MagicMock(return_value='DATA_NEW')
         results2 = await self.data_manager.async_update_measures()
         self.api.get_measures.assert_not_called()
-        assert results2 == 'DATA'
+        # assert results2 == 'DATA'
 
+    @async_test
     async def test_async_update_sleep(self):
         self.data_manager = withings.WithingsDataManager(
             'person_1',
@@ -322,14 +329,189 @@ class TestWithingsDataManager(unittest.TestCase):
             self.api.get_sleep = MagicMock(return_value='DATA')
             results1 = await self.data_manager.async_update_sleep()
             self.api.get_sleep.assert_called_with(
-                startdate=100000,
-                enddate=(100000 - 86400)
+                startdate=13600,
+                enddate=100000
             )
             assert results1 == 'DATA'
 
-            self.api.get_measures.reset_mock()
+            self.api.get_sleep.reset_mock()
 
             self.api.get_sleep = MagicMock(return_value='DATA_NEW')
             results2 = await self.data_manager.async_update_sleep()
             self.api.get_sleep.assert_not_called()
-            assert results2 == 'DATA'
+            # assert results2 == 'DATA'
+
+
+class TestWithingsHealthSensor(unittest.TestCase):
+    def setUp(self):
+        self.hass = get_test_home_assistant()
+
+        self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
+        self.api.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
+            user_id='USER_ID'
+        ))
+        self.api.get_measures = MagicMock()
+        self.api.get_sleep = MagicMock()
+
+        self.data_manager = withings.WithingsDataManager(
+            'person_1',
+            self.api
+        )
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def test_properties(self):
+        sensor = withings.WithingsHealthSensor(
+            self.data_manager,
+            withings.WITHINGS_MEASUREMENTS_MAP[withings.MEAS_WEIGHT_KG]
+        )
+
+        assert sensor.name == 'Withings weight_kg person_1'
+        assert sensor.unique_id == 'withings_person_1_USER_ID_weight_kg'
+        assert sensor._state is None
+        assert sensor.unit_of_measurement == 'kg'
+        assert sensor.icon == 'mdi:weight-kilogram'
+
+    @async_test
+    async def test_async_update(self):
+        self.api.get_measures.return_value = nokia.NokiaMeasures({
+            'updatetime': '',
+            'timezone': '',
+            'measuregrps': [
+                # Un-ambiguous groups.
+                new_measure_group(1, 0, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
+                    new_measure(withings.MEASURE_TYPE_WEIGHT, 70, 0),
+                    new_measure(withings.MEASURE_TYPE_FAT_MASS, 5, 0),
+                    new_measure(withings.MEASURE_TYPE_FAT_MASS_FREE, 60, 0),
+                    new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 50, 0),
+                    new_measure(withings.MEASURE_TYPE_BONE_MASS, 10, 0),
+                    new_measure(withings.MEASURE_TYPE_HEIGHT, 2, 0),
+                    new_measure(withings.MEASURE_TYPE_TEMP, 40, 0),
+                    new_measure(withings.MEASURE_TYPE_BODY_TEMP, 35, 0),
+                    new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 20, 0),
+                    new_measure(withings.MEASURE_TYPE_FAT_RATIO, 70, -3),
+                    new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 70, 0),
+                    new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
+                    new_measure(withings.MEASURE_TYPE_HEART_PULSE, 60, 0),
+                    new_measure(withings.MEASURE_TYPE_SPO2, 95, -2),
+                    new_measure(withings.MEASURE_TYPE_HYDRATION, 95, -2),  # No idea what the units are.
+                    new_measure(withings.MEASURE_TYPE_PWV, 100, 0),  # Deprecated
+                ]),
+
+                # Ambiguous groups (we ignore these)
+                new_measure_group(1, 1, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
+                    new_measure(withings.MEASURE_TYPE_WEIGHT, 71, 0),
+                    new_measure(withings.MEASURE_TYPE_FAT_MASS, 4, 0),
+                    new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 51, 0),
+                    new_measure(withings.MEASURE_TYPE_BONE_MASS, 11, 0),
+                    new_measure(withings.MEASURE_TYPE_HEIGHT, 201, 0),
+                    new_measure(withings.MEASURE_TYPE_TEMP, 41, 0),
+                    new_measure(withings.MEASURE_TYPE_BODY_TEMP, 34, 0),
+                    new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 21, 0),
+                    new_measure(withings.MEASURE_TYPE_FAT_RATIO, 71, -3),
+                    new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 71, 0),
+                    new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
+                    new_measure(withings.MEASURE_TYPE_HEART_PULSE, 61, 0),
+                    new_measure(withings.MEASURE_TYPE_SPO2, 98, -2),
+                    new_measure(withings.MEASURE_TYPE_HYDRATION, 96, -2),  # No idea what the units are.
+                    new_measure(withings.MEASURE_TYPE_PWV, 102, 0),  # Deprecated
+                ])
+            ],
+            'more': False,
+            'offset': 0
+        })
+
+        self.api.get_sleep.return_value = nokia.NokiaSleep({
+            'model': 32,
+            'series': [
+
+            ]
+        })
+
+        await self.assertSensorEquals(70, withings.MEAS_WEIGHT_KG)
+        await self.assertSensorEquals(154.35, withings.MEAS_WEIGHT_LB)
+        await self.assertSensorEquals(5, withings.MEAS_FAT_MASS_KG)
+        await self.assertSensorEquals(11.03, withings.MEAS_FAT_MASS_LB)
+        await self.assertSensorEquals(60, withings.MEAS_FAT_FREE_MASS_KG)
+        await self.assertSensorEquals(132.3, withings.MEAS_FAT_FREE_MASS_LB)
+        await self.assertSensorEquals(50, withings.MEAS_MUSCLE_MASS_KG)
+        await self.assertSensorEquals(110.25, withings.MEAS_MUSCLE_MASS_LB)
+        await self.assertSensorEquals(10, withings.MEAS_BONE_MASS_KG)
+        await self.assertSensorEquals(22.05, withings.MEAS_BONE_MASS_LB)
+        await self.assertSensorEquals(2, withings.MEAS_HEIGHT_M)
+        await self.assertSensorEquals(200, withings.MEAS_HEIGHT_CM)
+        await self.assertSensorEquals(78.74, withings.MEAS_HEIGHT_IN)
+        await self.assertSensorEquals('6\' 6"', withings.MEAS_HEIGHT_IMP)
+        await self.assertSensorEquals(40, withings.MEAS_TEMP_C)
+        await self.assertSensorEquals(104, withings.MEAS_TEMP_F)
+        await self.assertSensorEquals(35, withings.MEAS_BODY_TEMP_C)
+        await self.assertSensorEquals(95.0, withings.MEAS_BODY_TEMP_F)
+        await self.assertSensorEquals(20, withings.MEAS_SKIN_TEMP_C)
+        await self.assertSensorEquals(68.0, withings.MEAS_SKIN_TEMP_F)
+        await self.assertSensorEquals(7.0, withings.MEAS_FAT_RATIO_PCT)
+        await self.assertSensorEquals(70, withings.MEAS_DIASTOLIC_MMHG)
+        await self.assertSensorEquals(100, withings.MEAS_SYSTOLIC_MMGH)
+        await self.assertSensorEquals(60, withings.MEAS_HEART_PULSE_BPM)
+        await self.assertSensorEquals(95.0, withings.MEAS_SPO2_PCT)
+        await self.assertSensorEquals(0.95, withings.MEAS_HYDRATION)
+        await self.assertSensorEquals(100, withings.MEAS_PWV)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_AWAKE)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_LIGHT)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_DEEP)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_REM)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_TOTAL_SLEEP)
+        await self.assertSensorEquals(1, withings.MEAS_SLEEP_TOTAL_SESSION)
+
+    async def assertSensorEquals(self, expected, measure):
+        sensor = withings.WithingsHealthSensor(
+            self.data_manager,
+            withings.WITHINGS_MEASUREMENTS_MAP[measure]
+        )
+
+        await sensor.async_update()
+        assert expected == sensor.state
+
+
+async def update_sensor(self, measure):
+        sensor = withings.WithingsHealthSensor(
+            self.data_manager,
+            withings.WITHINGS_MEASUREMENTS_MAP[measure]
+        )
+
+        await sensor.async_update()
+        return sensor
+
+
+def new_sleep_serie(startdate, enddate, state):
+    return {
+        'startdate': startdate,
+        'enddate': enddate,
+        'state': state
+    }
+
+
+def new_measure_group(grpid, attrib, date, created, category, deviceid, more, offset, measures):
+    return {
+        'grpid': grpid,
+        'attrib': attrib,
+        'date': date,
+        'created': created,
+        'category': category,
+        'deviceid': deviceid,
+        'measures': measures,
+        'more': more,
+        'offset': offset,
+        'comment': 'blah'  # deprecated
+    }
+
+
+def new_measure(type, value, unit):
+    return {
+        'value': value,
+        'type': type,
+        'unit': unit,
+        'algo': -1,  # deprecated
+        'fm': -1,  # deprecated
+        'fw': -1  # deprecated
+    }
