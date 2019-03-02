@@ -452,8 +452,11 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
+    NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
+    BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
@@ -537,6 +540,7 @@ def establish_device_mappings():
         zcl.clusters.general.PollControl.cluster_id: [],
         zcl.clusters.general.GreenPowerProxy.cluster_id: [],
         zcl.clusters.general.OnOffConfiguration.cluster_id: [],
+        zcl.clusters.lightlink.LightLink.cluster_id: [],
         zcl.clusters.general.OnOff.cluster_id: [{
             'attr': 'on_off',
             'config': REPORT_CONFIG_IMMEDIATE
