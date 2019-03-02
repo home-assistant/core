@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensors.greeneye_monitor_temperature/
 """
 import logging
 
-from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT
+from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, POWER_WATT
 from homeassistant.helpers.entity import Entity
 
 from ..greeneye_monitor import (
@@ -33,7 +33,7 @@ DEPENDENCIES = ['greeneye_monitor']
 DATA_PULSES = 'pulses'
 DATA_WATT_SECONDS = 'watt_seconds'
 
-UNIT_WATTS = 'W'
+UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = 'mdi:counter'
 CURRENT_SENSOR_ICON = 'mdi:flash'

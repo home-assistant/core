@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from homeassistant.components.smappee import DATA_SMAPPEE
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import POWER_WATT
 
 DEPENDENCIES = ['smappee']
 
@@ -12,9 +13,10 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_PREFIX = 'Smappee'
 SENSOR_TYPES = {
     'solar':
-        ['Solar', 'mdi:white-balance-sunny', 'local', 'W', 'solar'],
+        ['Solar', 'mdi:white-balance-sunny', 'local', POWER_WATT, 'solar'],
     'active_power':
-        ['Active Power', 'mdi:power-plug', 'local', 'W', 'active_power'],
+        ['Active Power', 'mdi:power-plug', 'local', POWER_WATT,
+         'active_power'],
     'current':
         ['Current', 'mdi:gauge', 'local', 'A', 'current'],
     'voltage':

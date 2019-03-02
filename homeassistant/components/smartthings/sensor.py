@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, POWER_WATT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -85,7 +85,7 @@ CAPABILITY_TO_SENSORS = {
     'ovenSetpoint': [
         Map('ovenSetpoint', "Oven Set Point", None, None)],
     'powerMeter': [
-        Map('power', "Power Meter", 'W', None)],
+        Map('power', "Power Meter", POWER_WATT, None)],
     'powerSource': [
         Map('powerSource', "Power Source", None, None)],
     'refrigerationSetpoint': [
