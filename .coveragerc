@@ -320,6 +320,7 @@ omit =
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/ziggo_mediabox_xl.py
     homeassistant/components/meteo_france/*
+    homeassistant/components/mobile_app/*
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
     homeassistant/components/mychevy/*
@@ -384,7 +385,7 @@ omit =
     homeassistant/components/point/*
     homeassistant/components/prometheus/*
     homeassistant/components/ps4/__init__.py
-    homeassistant/components/ps4/media_player.py    
+    homeassistant/components/ps4/media_player.py
     homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/rainbird/*
