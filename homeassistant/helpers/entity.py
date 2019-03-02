@@ -201,7 +201,7 @@ class Entity:
         self._context_set = dt_util.utcnow()
 
     def _get_state_and_attributes(self):
-        """Get state and attributes"""
+        """Get state and attributes."""
         start = timer()
 
         if not self.available:
