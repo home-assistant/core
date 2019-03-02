@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_SENSORS, CONF_FILENAME,
     CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['blinkpy==0.12.1']
+REQUIREMENTS = ['blinkpy==0.13.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ BINARY_SENSORS = {
 SENSORS = {
     TYPE_TEMPERATURE: ['Temperature', TEMP_FAHRENHEIT, 'mdi:thermometer'],
     TYPE_BATTERY: ['Battery', '%', 'mdi:battery-80'],
-    TYPE_WIFI_STRENGTH: ['Wifi Signal', 'bars', 'mdi:wifi-strength-2'],
+    TYPE_WIFI_STRENGTH: ['Wifi Signal', 'dBm', 'mdi:wifi-strength-2'],
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
