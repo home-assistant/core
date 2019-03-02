@@ -1,14 +1,6 @@
 """
 Platform for Time of Flight sensor VL53L1X.
 
-For more details about this platform, please refer to
-https://home-assistant.io/components/sensor.tof/
-
-Based on revised Python library for the VL53L1X Laser Ranger.
-https://github.com/josemotta/vl53l1x-python
-https://github.com/NagyAttila/vl53l1x-python
-https://github.com/pimoroni/vl53l1x-python
-
 """
 import asyncio
 import logging
