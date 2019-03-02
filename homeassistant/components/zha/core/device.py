@@ -205,20 +205,22 @@ class ZHADevice:
     async def _execute_channel_tasks(self, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
+        semaphore = asyncio.Semaphore(3)
         for channel in self.all_channels:
             channel_tasks.append(
-                self._async_create_task(channel, task_name, *args))
+                self._async_create_task(semaphore, channel, task_name, *args))
         await asyncio.gather(*channel_tasks)
 
-    async def _async_create_task(self, channel, func_name, *args):
+    async def _async_create_task(self, semaphore, channel, func_name, *args):
         """Configure a single channel on this device."""
         try:
-            await getattr(channel, func_name)(*args)
-            _LOGGER.debug('%s: channel: %s %s stage succeeded',
-                          self.name,
-                          "{}-{}".format(
-                              channel.name, channel.unique_id),
-                          func_name)
+            async with semaphore:
+                await getattr(channel, func_name)(*args)
+                _LOGGER.debug('%s: channel: %s %s stage succeeded',
+                              self.name,
+                              "{}-{}".format(
+                                  channel.name, channel.unique_id),
+                              func_name)
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.warning(
                 '%s channel: %s %s stage failed ex: %s',

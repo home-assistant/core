@@ -71,11 +71,19 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._on_off_channel.on()
+        success = await self._on_off_channel.on()
+        if not success:
+            return
+        self._state = True
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._on_off_channel.off()
+        success = await self._on_off_channel.off()
+        if not success:
+            return
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def async_set_state(self, state):
         """Handle state update from channel."""
