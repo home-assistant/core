@@ -292,8 +292,12 @@ class Recorder(threading.Thread):
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
                     with session_scope(session=self.get_session()) as session:
+                        from homeassistant.components import logbook as logbook
+
                         try:
                             dbevent = Events.from_event(event)
+                            for_logbook = logbook.keep_event(dbevent.to_native())
+                            dbevent.logbook_excluded = not for_logbook
                             session.add(dbevent)
                             session.flush()
                         except (TypeError, ValueError):

@@ -392,7 +392,7 @@ def _generate_filter_from_config(config):
 
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
-    from homeassistant.components.recorder.models import Events, States
+    from homeassistant.components.recorder.models import Events
     from homeassistant.components.recorder.util import session_scope
 
     entities_filter = _generate_filter_from_config(config)
@@ -401,7 +401,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(500):
             event = row.to_native()
-            if _keep_event(event, entities_filter):
+            if keep_event(event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -411,19 +411,18 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             entity_ids = _get_related_entity_ids(session, entities_filter)
 
         query = session.query(Events).order_by(Events.time_fired) \
-            .outerjoin(States, (Events.event_id == States.event_id)) \
-            .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
+            .filter(Events.logbook_excluded.is_(False)) \
             .filter((Events.time_fired > start_day)
-                    & (Events.time_fired < end_day)) \
-            .filter(((States.last_updated == States.last_changed) &
-                     States.entity_id.in_(entity_ids))
-                    | (States.state_id.is_(None)))
+                    & (Events.time_fired < end_day))
 
         return list(humanify(hass, yield_events(query)))
 
 
-def _keep_event(event, entities_filter):
+def keep_event(event, entities_filter=None):
     domain, entity_id = None, None
+
+    if event.event_type not in ALL_EVENT_TYPES:
+        return False
 
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.data.get('entity_id')
@@ -482,7 +481,7 @@ def _keep_event(event, entities_filter):
     if not entity_id and domain:
         entity_id = "%s." % (domain, )
 
-    return not entity_id or entities_filter(entity_id)
+    return not entity_id or not entities_filter or entities_filter(entity_id)
 
 
 def _entry_message_from_state(domain, state):

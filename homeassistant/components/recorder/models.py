@@ -17,7 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ class Events(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
+    logbook_excluded = Column(Boolean, default=False, nullable=False)
     # context_parent_id = Column(String(36), index=True)
 
     @staticmethod

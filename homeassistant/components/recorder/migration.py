@@ -221,6 +221,10 @@ def _apply_update(engine, new_version, old_version):
     elif new_version == 7:
         _create_index(engine, "states", "ix_states_entity_id")
     elif new_version == 8:
+        _add_columns(engine, "events", [
+            'logbook_excluded BOOLEAN DEFAULT FALSE NOT NULL'
+        ])
+    elif new_version == 9:
         # Pending migration, want to group a few.
         pass
         # _add_columns(engine, "events", [
