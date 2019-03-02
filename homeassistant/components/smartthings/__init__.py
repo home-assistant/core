@@ -46,23 +46,7 @@ async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
     integration setup again so we can properly retrieve the needed data
     elements. Force this by removing the entry and triggering a new flow.
     """
-    from pysmartthings import SmartThings
-
-    # Remove the installed_app, which if already removed raises a 403 error.
-    api = SmartThings(async_get_clientsession(hass),
-                      entry.data[CONF_ACCESS_TOKEN])
-    installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
-    try:
-        await api.delete_installed_app(installed_app_id)
-    except ClientResponseError as ex:
-        if ex.status == 403:
-            _LOGGER.exception("Installed app %s has already been removed",
-                              installed_app_id)
-        else:
-            raise
-    _LOGGER.debug("Removed installed app %s", installed_app_id)
-
-    # Delete the entry
+    # Remove the entry which will invoke the callback to delete the app.
     hass.async_create_task(
         hass.config_entries.async_remove(entry.entry_id))
     # only create new flow if there isn't a pending one for SmartThings.

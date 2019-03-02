@@ -22,12 +22,14 @@ async def test_migration_creates_new_flow(
     config_entry.version = 1
     setattr(hass.config_entries, '_entries', [config_entry])
     api = smartthings_mock.return_value
-    api.delete_installed_app.return_value = mock_coro()
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro()
 
     await smartthings.async_migrate_entry(hass, config_entry)
+    await hass.async_block_till_done()
 
     assert api.delete_installed_app.call_count == 1
-    await hass.async_block_till_done()
+    assert api.delete_app.call_count == 1
     assert not hass.config_entries.async_entries(DOMAIN)
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
