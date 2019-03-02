@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+from asyncio import gather
 from collections.abc import Mapping
 from itertools import product
 import logging
@@ -89,8 +90,7 @@ class _GoogleEntity:
         return [Trait(self.hass, state, self.config) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
-    @callback
-    def sync_serialize(self):
+    async def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -132,13 +132,31 @@ class _GoogleEntity:
         if aliases:
             device['name']['nicknames'] = aliases
 
-        # add room hint if annotated
+        for trt in traits:
+            device['attributes'].update(trt.sync_attributes())
+
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
             device['roomHint'] = room
+            return device
 
-        for trt in traits:
-            device['attributes'].update(trt.sync_attributes())
+        dev_reg, ent_reg, area_reg = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+            self.hass.helpers.area_registry.async_get_registry(),
+        )
+
+        entity_entry = ent_reg.async_get(state.entity_id)
+        if not (entity_entry and entity_entry.device_id):
+            return device
+
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        if not (device_entry and device_entry.area_id):
+            return device
+
+        area_entry = area_reg.areas.get(device_entry.area_id)
+        if area_entry and area_entry.name:
+            device['roomHint'] = area_entry.name
 
         return device
 
@@ -253,7 +271,7 @@ async def async_devices_sync(hass, config, request_id, payload):
             continue
 
         entity = _GoogleEntity(hass, config, state)
-        serialized = entity.sync_serialize()
+        serialized = await entity.sync_serialize()
 
         if serialized is None:
             _LOGGER.debug("No mapping for %s domain", entity.state)
