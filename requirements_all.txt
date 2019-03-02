@@ -116,6 +116,9 @@ aioftp==0.12.0
 # homeassistant.components.harmony.remote
 aioharmony==0.1.8
 
+# homeassistant.components.azuredns
+aiohttp==3.5.4
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0

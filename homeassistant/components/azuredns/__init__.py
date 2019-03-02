@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['adal==1.2.1']
+REQUIREMENTS = ['adal==1.2.1', 'aiohttp==3.5.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,19 +59,19 @@ async def async_setup(hass, config):
     timeout = config[DOMAIN][CONF_TIMEOUT]
     ttl = config[DOMAIN][CONF_TTL]
     authority_url = AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT]
-    api_url = ('https://management.azure.com/subscriptions/'
-               + subscriptionid
-               + '/resourceGroups/'
-               + resourcegroupname
-               + '/providers/Microsoft.Network/dnsZones/'
-               + domain
-               + '/A/'
-               + host
-               + '?api-version=2018-05-01')
+    api_url = ('https://management.azure.com/subscriptions/' +
+               subscriptionid +
+               '/resourceGroups/' +
+               resourcegroupname +
+               '/providers/Microsoft.Network/dnsZones/' +
+               domain +
+               '/A/' +
+               host +
+               '?api-version=2018-05-01')
 
     session = async_get_clientsession(hass)
 
-    result = await _update_azuredns(session, domain, host, resource, tenant,
+    result = await _update_azuredns(session, resource, tenant,
                                     clientid, clientsecret,
                                     authority_url, api_url, timeout, ttl)
 
@@ -80,7 +80,7 @@ async def async_setup(hass, config):
 
     async def update_domain_interval(now):
         """Update the Azure DNS entry."""
-        await _update_azuredns(session, domain, host, resource, tenant,
+        await _update_azuredns(session, resource, tenant,
                                clientid, clientsecret, authority_url,
                                api_url, timeout, ttl)
 
@@ -88,15 +88,14 @@ async def async_setup(hass, config):
     return result
 
 
-async def _update_azuredns(session, domain, host, resource, tenant,
+async def _update_azuredns(session, resource, tenant,
                            clientid, clientsecret, authority_url,
                            api_url, timeout, ttl):
     """Update the Azure DNS Record with the external IP address."""
     import adal
+    import aiohttp
 
     params = {
-        'domain': domain,
-        'host': host,
         'resource': resource,
         'tenant': tenant,
         'clientid': clientid,
@@ -104,6 +103,7 @@ async def _update_azuredns(session, domain, host, resource, tenant,
         'api_url': api_url,
     }
 
+    # Acquire the Azure AD token.
     context = adal.AuthenticationContext(
         authority_url, validate_authority=['tenant'] != 'adfs',
     )
@@ -116,11 +116,15 @@ async def _update_azuredns(session, domain, host, resource, tenant,
     access_token = token.get('accessToken')
 
     # Get the external IP address of the Home Assistant instance.
-    ipv4address = requests.get('https://api.ipify.org', timeout=timeout).text
+    aiotimeout = aiohttp.ClientTimeout(total=timeout)
+
+    async with aiohttp.ClientSession(timeout=aiotimeout) as aiosession:
+        async with aiosession.get('https://api.ipify.org') as aioresp:
+            ipv4address = (await aioresp.text())
 
     _LOGGER.debug("External IP address is: %s", ipv4address)
 
-    # Create a PATCH request with the Azure REST API.
+    # Create a PATCH request with the Azure Resource Manager REST API.
     headers = {
         "Authorization": "Bearer " + access_token,
         "Content-Type": "application/json"
