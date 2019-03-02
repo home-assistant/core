@@ -24,15 +24,24 @@ RENDER_TEMPLATE = {
 }
 
 REGISTER = {
+    'app_data': {'foo': 'bar'},
     'app_id': 'io.homeassistant.mobile_app_test',
     'app_name': 'Mobile App Tests',
     'app_version': '1.0.0',
     'device_name': 'Test 1',
-    'integration_data': {'foo': 'bar'},
     'manufacturer': 'mobile_app',
     'model': 'Test',
     'os_version': '1.0',
     'supports_encryption': True
+}
+
+UPDATE = {
+    'app_data': {'foo': 'bar'},
+    'app_version': '2.0.0',
+    'device_name': 'Test 1',
+    'manufacturer': 'mobile_app',
+    'model': 'Test',
+    'os_version': '1.0'
 }
 
 
@@ -98,12 +107,9 @@ async def test_update_registration(mobile_app_client, hass_client):
 
     webhook_id = register_json[CONF_WEBHOOK_ID]
 
-    update = REGISTER
-    update['app_version'] = '2.0.0'
-
     update_container = {
         'type': 'update_registration',
-        'data': update
+        'data': UPDATE
     }
 
     update_resp = await mobile_app_client.post(
@@ -111,10 +117,10 @@ async def test_update_registration(mobile_app_client, hass_client):
     )
 
     assert update_resp.status == 200
-    put_json = await update_resp.json()
-    assert put_json['app_version'] == '2.0.0'
-    assert 'webhook_id' not in put_json
-    assert 'secret' not in put_json
+    update_json = await update_resp.json()
+    assert update_json['app_version'] == '2.0.0'
+    assert 'webhook_id' not in update_json
+    assert 'secret' not in update_json
 
 
 @asyncio.coroutine

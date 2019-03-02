@@ -39,11 +39,11 @@ STORAGE_VERSION = 1
 CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
 
+ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_APP_VERSION = 'app_version'
 ATTR_DEVICE_NAME = 'device_name'
-ATTR_INTEGRATION_DATA = 'integration_data'
 ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
 ATTR_OS_VERSION = 'os_version'
@@ -71,15 +71,24 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION]
 
 REGISTER_DEVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Optional(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
-    vol.Optional(ATTR_INTEGRATION_DATA, default={}): dict,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
     vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
+})
+
+UPDATE_DEVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_APP_DATA, default={}): dict,
+    vol.Required(ATTR_APP_VERSION): cv.string,
+    vol.Required(ATTR_DEVICE_NAME): cv.string,
+    vol.Required(ATTR_MANUFACTURER): cv.string,
+    vol.Required(ATTR_MODEL): cv.string,
+    vol.Optional(ATTR_OS_VERSION): cv.string,
 })
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
@@ -110,7 +119,7 @@ WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_FIRE_EVENT: FIRE_EVENT_SCHEMA,
     WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
     WEBHOOK_TYPE_UPDATE_LOCATION: SEE_SCHEMA,
-    WEBHOOK_TYPE_UPDATE_REGISTRATION: REGISTER_DEVICE_SCHEMA,
+    WEBHOOK_TYPE_UPDATE_REGISTRATION: UPDATE_DEVICE_SCHEMA,
 }
 
 
@@ -227,8 +236,12 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
                                        blocking=True, context=context(device))
         return Response(status=200)
     elif webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
-        data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
+        data[ATTR_APP_ID] = device[ATTR_APP_ID]
+        data[ATTR_APP_NAME] = device[ATTR_APP_NAME]
+        data[ATTR_SUPPORTS_ENCRYPTION] = device[ATTR_SUPPORTS_ENCRYPTION]
         data[CONF_SECRET] = device[CONF_SECRET]
+        data[CONF_USER_ID] = device[CONF_USER_ID]
+        data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
 
         hass.data[DOMAIN][webhook_id] = data
 
@@ -261,11 +274,11 @@ def device_for_webhook_id(hass, webhook_id):
 def safe_device(device: dict):
     """Return a device without webhook_id or secret."""
     return {
+        ATTR_APP_DATA: device[ATTR_APP_DATA],
         ATTR_APP_ID: device[ATTR_APP_ID],
         ATTR_APP_NAME: device[ATTR_APP_NAME],
         ATTR_APP_VERSION: device[ATTR_APP_VERSION],
         ATTR_DEVICE_NAME: device[ATTR_DEVICE_NAME],
-        ATTR_INTEGRATION_DATA: device[ATTR_INTEGRATION_DATA],
         ATTR_MANUFACTURER: device[ATTR_MANUFACTURER],
         ATTR_MODEL: device[ATTR_MODEL],
         ATTR_OS_VERSION: device[ATTR_OS_VERSION],
