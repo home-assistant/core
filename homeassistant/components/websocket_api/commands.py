@@ -153,7 +153,7 @@ async def handle_call_service(hass, connection, msg):
     except HomeAssistantError as err:
         connection.send_message(messages.error_message(
             msg['id'], const.ERR_HOME_ASSISTANT_ERROR, '{}'.format(err)))
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         connection.send_message(messages.error_message(
             msg['id'], const.ERR_UNKNOWN_ERROR, '{}'.format(err)))
 
