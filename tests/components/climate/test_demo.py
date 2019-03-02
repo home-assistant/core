@@ -82,7 +82,6 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 30 == state.attributes.get('temperature')  # away_mode is off
 
-
     def test_set_only_target_temp_with_convert(self):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_HEATPUMP)
