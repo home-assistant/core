@@ -28,6 +28,8 @@ CONF_CLIENTSECRET = 'clientsecret'
 CONF_TENANT = 'tenant'
 CONF_SUBSCRIPTIONID = 'subscriptionid'
 CONF_RESOURCEGROUPNAME = 'resourcegroupname'
+CONF_TTL = 'ttl'
+CONF_TIMEOUT = 'timeout'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -38,6 +40,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_CLIENTSECRET): cv.string,
         vol.Required(CONF_SUBSCRIPTIONID): cv.string,
         vol.Required(CONF_RESOURCEGROUPNAME): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=60): cv.byte,
+        vol.Optional(CONF_TTL, default=60): cv.byte,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -52,6 +56,8 @@ async def async_setup(hass, config):
     clientsecret = config[DOMAIN][CONF_CLIENTSECRET]
     subscriptionid = config[DOMAIN][CONF_SUBSCRIPTIONID]
     resourcegroupname = config[DOMAIN][CONF_RESOURCEGROUPNAME]
+    timeout = config[DOMAIN][CONF_TIMEOUT]
+    ttl = config[DOMAIN][CONF_TTL]
     authority_url = AUTHORITYHOSTURL + '/' + config[DOMAIN][CONF_TENANT]
     api_url = ('https://management.azure.com/subscriptions/'
                + subscriptionid
@@ -67,7 +73,7 @@ async def async_setup(hass, config):
 
     result = await _update_azuredns(session, domain, host, resource, tenant,
                                     clientid, clientsecret,
-                                    authority_url, api_url)
+                                    authority_url, api_url, timeout, ttl)
 
     if not result:
         return False
@@ -75,14 +81,16 @@ async def async_setup(hass, config):
     async def update_domain_interval(now):
         """Update the Azure DNS entry."""
         await _update_azuredns(session, domain, host, resource, tenant,
-                               clientid, clientsecret, authority_url, api_url)
+                               clientid, clientsecret, authority_url,
+                               api_url, timeout, ttl)
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
     return result
 
 
 async def _update_azuredns(session, domain, host, resource, tenant,
-                           clientid, clientsecret, authority_url, api_url):
+                           clientid, clientsecret, authority_url,
+                           api_url, timeout, ttl):
     """Update the Azure DNS Record with the external IP address."""
     import adal
 
@@ -108,7 +116,7 @@ async def _update_azuredns(session, domain, host, resource, tenant,
     access_token = token.get('accessToken')
 
     # Get the external IP address of the Home Assistant instance.
-    ipv4address = requests.get('https://api.ipify.org').text
+    ipv4address = requests.get('https://api.ipify.org', timeout=timeout).text
 
     _LOGGER.debug("External IP address is: %s", ipv4address)
 
@@ -123,7 +131,7 @@ async def _update_azuredns(session, domain, host, resource, tenant,
             "metadata": {
                 "Last_changed_by_Home_Assistant": str(datetime.now())
             },
-            "TTL": 60,
+            "TTL": ttl,
             "ARecords": [
                 {
                     "ipv4Address": ipv4address
@@ -133,7 +141,7 @@ async def _update_azuredns(session, domain, host, resource, tenant,
     }
 
     try:
-        requests.patch(url, json=payload, headers=headers).json()
+        requests.patch(url, json=payload, headers=headers, timeout=timeout).json()
         return True
 
     except requests.exceptions.RequestException as errormessage:
