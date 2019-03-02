@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['nokia==1.1.0']
+REQUIREMENTS = ['nokia==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

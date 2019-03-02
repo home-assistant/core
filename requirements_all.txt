@@ -740,7 +740,7 @@ niko-home-control==0.1.8
 niluclient==0.1.2
 
 # homeassistant.components.sensor.withings
-nokia==1.1.0
+nokia==1.2.0
 
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
