@@ -370,7 +370,9 @@ def async_track_utc_time_change(hass, action,
         last_now = now
 
         if next_time <= now:
-            hass.async_run_job(action, event.data[ATTR_NOW])
+            if local:
+                now = dt_util.as_local(now)
+            hass.async_run_job(action, now)
             calculate_next(now + timedelta(seconds=1))
 
     # We can't use async_track_point_in_utc_time here because it would
