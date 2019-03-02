@@ -173,7 +173,7 @@ def context(device):
 async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
                          request):
     """Handle webhook callback."""
-    device = device_for_webhook_id(hass, webhook_id)
+    device = hass.data[DOMAIN][webhook_id]
 
     try:
         req_data = await request.json()
@@ -263,14 +263,6 @@ def supports_encryption():
         return False
 
 
-def device_for_webhook_id(hass, webhook_id):
-    """Return the device name for the webhook ID."""
-    for device in hass.data[DOMAIN].items():
-        if device.get(CONF_WEBHOOK_ID) == webhook_id:
-            return device
-    return None
-
-
 def safe_device(device: dict):
     """Return a device without webhook_id or secret."""
     return {
@@ -286,7 +278,7 @@ def safe_device(device: dict):
     }
 
 
-def register_device_webhook(hass: HomeAssistantType, store, device: dict):
+def register_device_webhook(hass: HomeAssistantType, store, device):
     """Register the webhook for a device."""
     device_name = 'Mobile App: {}'.format(device[ATTR_DEVICE_NAME])
     webhook_id = device[CONF_WEBHOOK_ID]
@@ -305,7 +297,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = app_config
 
-    for device in app_config.items():
+    for device in app_config.values():
         register_device_webhook(hass, store, device)
 
     if conf is not None:
