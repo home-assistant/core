@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.geniushub/
 """
 from homeassistant.components.geniushub import GENIUS_HUB
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE)
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE)
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'geniushub'
