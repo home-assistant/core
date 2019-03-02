@@ -1,5 +1,4 @@
 ''' This module connects to the Genius hub and shares the data'''
-import logging
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -8,7 +7,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['geniushub==0.1']
-_LOGGER = logging.getLogger(__name__)
 GENIUS_HUB = 'genius_hub'
 DOMAIN = 'geniushub'
 
@@ -24,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     from geniushub.geniushub import GeniusHub
-    """Try to start embedded Lightwave broker."""
+    """Try to start embedded Genius Hub  broker."""
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     host = config[DOMAIN].get(CONF_HOST)
