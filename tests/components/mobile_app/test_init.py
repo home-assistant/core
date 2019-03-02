@@ -60,6 +60,8 @@ UPDATE = {
     'os_version': '1.0'
 }
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture
 def mobile_app_client(hass, aiohttp_client, hass_storage, hass_admin_user):
@@ -116,7 +118,7 @@ async def test_handle_call_services(hass, mobile_app_client):
 
     assert resp.status == 200
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_handle_fire_event(hass, mobile_app_client):
@@ -206,7 +208,7 @@ async def test_handle_decryption(mobile_app_client):
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
 
-    RENDER_TEMPLATE = {
+    container = {
         'type': 'render_template',
         'encrypted': True,
         'encrypted_data': data,
@@ -214,7 +216,7 @@ async def test_handle_decryption(mobile_app_client):
 
     resp = await mobile_app_client.post(
         '/api/webhook/mobile_app_test',
-        json=RENDER_TEMPLATE
+        json=container
     )
 
     assert resp.status == 200
@@ -254,7 +256,7 @@ async def test_register_device(hass_client, mock_api_client):
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
 
-    RENDER_TEMPLATE = {
+    container = {
         'type': 'render_template',
         'encrypted': True,
         'encrypted_data': data,
@@ -264,7 +266,7 @@ async def test_register_device(hass_client, mock_api_client):
 
     resp = await mobile_app_client.post(
         '/api/webhook/{}'.format(register_json[CONF_WEBHOOK_ID]),
-        json=RENDER_TEMPLATE
+        json=container
     )
 
     assert resp.status == 200

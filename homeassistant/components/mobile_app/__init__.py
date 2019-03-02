@@ -185,7 +185,7 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
     except vol.Invalid as ex:
         err = vol.humanize.humanize_error(req_data, ex)
-        _LOGGER.error('Received invalid webhook payload: {}'.format(err))
+        _LOGGER.error('Received invalid webhook payload: %s', err)
         return Response(status=200)
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
@@ -200,11 +200,10 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
     except vol.Invalid as ex:
         err = vol.humanize.humanize_error(webhook_payload, ex)
-        _LOGGER.error('Received invalid webhook payload: {}'.format(err))
+        _LOGGER.error('Received invalid webhook payload: %s', err)
         return Response(status=200)
 
     if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
-
         try:
             await hass.services.async_call(data[ATTR_DOMAIN],
                                            data[ATTR_SERVICE],
@@ -216,13 +215,13 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
 
         return Response(status=200)
 
-    elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
+    if webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         event_type = data[ATTR_EVENT_TYPE]
         hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
                             ha.EventOrigin.remote, context=context(device))
         return Response(status=200)
 
-    elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
+    if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
         try:
             tpl = template.Template(data[ATTR_TEMPLATE], hass)
             rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
@@ -230,12 +229,13 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         except (ValueError, TemplateError) as ex:
             return json_response(({"error": ex}), status=HTTP_BAD_REQUEST)
 
-    elif webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
+    if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
                                        DEVICE_TRACKER_SEE, data,
                                        blocking=True, context=context(device))
         return Response(status=200)
-    elif webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
+
+    if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
         data[ATTR_APP_ID] = device[ATTR_APP_ID]
         data[ATTR_APP_NAME] = device[ATTR_APP_NAME]
         data[ATTR_SUPPORTS_ENCRYPTION] = device[ATTR_SUPPORTS_ENCRYPTION]
@@ -265,7 +265,7 @@ def supports_encryption():
 
 def device_for_webhook_id(hass, webhook_id):
     """Return the device name for the webhook ID."""
-    for device_name, device in hass.data[DOMAIN].items():
+    for device in hass.data[DOMAIN].items():
         if device.get(CONF_WEBHOOK_ID) == webhook_id:
             return device
     return None
@@ -305,7 +305,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = app_config
 
-    for key, device in app_config.items():
+    for device in app_config.items():
         register_device_webhook(hass, store, device)
 
     if conf is not None:
