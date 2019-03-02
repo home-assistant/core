@@ -73,9 +73,9 @@ class TfiacClimate(ClimateDevice):
         """Return if the device is available."""
         return self._client.available
 
-    def update(self):
+    async def async_update(self):
         """Update status via socket polling."""
-        self._client.update()
+        await self._client.update()
 
     @property
     def supported_features(self):
