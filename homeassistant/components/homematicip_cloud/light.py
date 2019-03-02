@@ -167,13 +167,11 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
-
-        if self._home.show_extra_attr:
-            if self.is_on:
-                attr.update({
-                    ATTR_COLOR_NAME:
-                        self._channel.simpleRGBColorState
-                })
+        if self.is_on:
+            attr.update({
+                ATTR_COLOR_NAME:
+                    self._channel.simpleRGBColorState
+            })
         return attr
 
     @property

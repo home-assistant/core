@@ -91,6 +91,4 @@ class HomematicipGenericDevice(Entity):
             if hasattr(self._device, 'rssiPeerValue') and \
                     self._device.rssiPeerValue:
                 attr.update({ATTR_PEER_RSSI: self._device.rssiPeerValue})
-            if hasattr(self._device, 'dutyCycle') and self._device.dutyCycle:
-                attr.update({ATTR_DUTY_CYCLE: True})
         return attr
