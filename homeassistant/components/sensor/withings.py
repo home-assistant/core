@@ -8,8 +8,6 @@ import os
 import logging
 import datetime
 import time
-from typing import List
-from functools import reduce
 
 from aiohttp import web
 import voluptuous as vol
@@ -17,13 +15,13 @@ import voluptuous as vol
 from homeassistant.core import callback, HomeAssistant, Config as HomeAssistantConfig
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import MASS_KILOGRAMS, CONF_MONITORED_CONDITIONS, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['nokia==1.2.0']
+REQUIREMENTS = ['nokia==1.2.0', 'pint==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +30,10 @@ WITHINGS_AUTH_CALLBACK_PATH = '/api/withings/callback'
 DATA_CONFIGURING = 'withings_configurator_clients'
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
-SLEEP_STATE_AWAKE = 0
-SLEEP_STATE_LIGHT = 1
-SLEEP_STATE_DEEP = 2
-SLEEP_STATE_REM = 3
+STATE_AWAKE = 'awake'
+STATE_LIGHT = 'light'
+STATE_DEEP = 'deep'
+STATE_REM = 'rem'
 
 MEASURE_TYPE_WEIGHT = 1
 MEASURE_TYPE_FAT_MASS = 8
@@ -53,6 +51,23 @@ MEASURE_TYPE_HEART_PULSE = 11
 MEASURE_TYPE_SPO2 = 54
 MEASURE_TYPE_HYDRATION = 77
 MEASURE_TYPE_PWV = 91
+MEASURE_TYPE_SLEEP_STATE_AWAKE = 0
+MEASURE_TYPE_SLEEP_STATE_LIGHT = 1
+MEASURE_TYPE_SLEEP_STATE_DEEP = 2
+MEASURE_TYPE_SLEEP_STATE_REM = 3
+MEASURE_TYPE_SLEEP_WAKEUP_DURATION = 'wakeupduration'
+MEASURE_TYPE_SLEEP_LIGHT_DURATION = 'lightsleepduration'
+MEASURE_TYPE_SLEEP_DEEP_DURATION = 'deepsleepduration'
+MEASURE_TYPE_SLEEP_REM_DURATION = 'remsleepduration'
+MEASURE_TYPE_SLEEP_WAKUP_COUNT = 'wakeupcount'
+MEASURE_TYPE_SLEEP_TOSLEEP_DURATION = 'durationtosleep'
+MEASURE_TYPE_SLEEP_TOWAKEUP_DURATION = 'durationtowakeup'
+MEASURE_TYPE_SLEEP_HEART_RATE_AVERAGE = 'hr_average'
+MEASURE_TYPE_SLEEP_HEART_RATE_MIN = 'hr_min'
+MEASURE_TYPE_SLEEP_HEART_RATE_MAX = 'hr_max'
+MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_AVERAGE = 'rr_average'
+MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MIN = 'rr_min'
+MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MAX = 'rr_max'
 
 MEAS_WEIGHT_KG = 'weight_kg'
 MEAS_WEIGHT_LB = 'weight_lb'
@@ -81,12 +96,26 @@ MEAS_HEART_PULSE_BPM = 'heart_pulse_bpm'
 MEAS_SPO2_PCT = 'spo2_pct'
 MEAS_HYDRATION = 'hydration'
 MEAS_PWV = 'pulse_wave_velocity'
-MEAS_SLEEP_AWAKE = 'sleep_awake'
-MEAS_SLEEP_LIGHT = 'sleep_light'
-MEAS_SLEEP_DEEP = 'sleep_deep'
-MEAS_SLEEP_REM = 'sleep_rem'
-MEAS_SLEEP_TOTAL_SLEEP = 'sleep_totel_sleep'
-MEAS_SLEEP_TOTAL_SESSION = 'sleep_total_session'
+MEAS_SLEEP_STATE = 'sleep_state'
+MEAS_SLEEP_WAKEUP_DURATION_HOURS = 'wakeupduration_hours'
+MEAS_SLEEP_LIGHT_DURATION_HOURS = 'lightsleepduration_hours'
+MEAS_SLEEP_DEEP_DURATION_HOURS = 'deepsleepduration_hours'
+MEAS_SLEEP_REM_DURATION_HOURS = 'remsleepduration_hours'
+MEAS_SLEEP_WAKEUP_DURATION_MINUTES = 'wakeupduration_minutes'
+MEAS_SLEEP_LIGHT_DURATION_MINUTES = 'lightsleepduration_minutes'
+MEAS_SLEEP_DEEP_DURATION_MINUTES = 'deepsleepduration_minutes'
+MEAS_SLEEP_REM_DURATION_MINUTES = 'remsleepduration_minutes'
+MEAS_SLEEP_WAKEUP_COUNT = 'wakeupcount'
+MEAS_SLEEP_TOSLEEP_DURATION_HOURS = 'durationtosleep_hours'
+MEAS_SLEEP_TOWAKEUP_DURATION_HOURS = 'durationtowakeup_hours'
+MEAS_SLEEP_TOSLEEP_DURATION_MINUTES = 'durationtosleep_minutes'
+MEAS_SLEEP_TOWAKEUP_DURATION_MINUTES = 'durationtowakeup_minutes'
+MEAS_SLEEP_HEART_RATE_AVERAGE = 'hr_average_bpm'
+MEAS_SLEEP_HEART_RATE_MIN = 'hr_min_bpm'
+MEAS_SLEEP_HEART_RATE_MAX = 'hr_max_bpm'
+MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE = 'rr_average_bpm'
+MEAS_SLEEP_RESPIRATORY_RATE_MIN = 'rr_min_bpm'
+MEAS_SLEEP_RESPIRATORY_RATE_MAX = 'rr_max_bpm'
 
 UOM_MASS_KG = 'kg'
 UOM_MASS_LB = 'lb'
@@ -95,10 +124,15 @@ UOM_LENGTH_CM = 'cm'
 UOM_LENGTH_IN = 'in'
 UOM_TEMP_C = '°C'
 UOM_TEMP_F = '°F'
-UOM_PCT = '%'
+UOM_PERCENT = '%'
 UOM_MMHG = 'mmhg'
-UOM_BPM = 'bpm'
+UOM_BEATS_PER_MINUTE = 'bpm'
 UOM_HOURS = 'hrs'
+UOM_MINUTES = 'mins'
+UOM_METERS_PER_SECOND = 'm/s'
+UOM_BREATHS_PER_MINUTE = 'br/m'
+UOM_FREQUENCY = 'times'
+UOM_IMPERIAL_HEIGHT = 'height'
 
 
 class WithingsAttribute(object):
@@ -123,9 +157,14 @@ class WithingsMeasureAttribute(WithingsAttribute):
         super(WithingsMeasureAttribute, self).__init__(measurement, measure_type, friendly_name, unit_of_measurement, icon)
 
 
-class WithingsSleepAttribute(WithingsAttribute):
+class WithingsSleepStateAttribute(WithingsAttribute):
     def __init__(self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str) -> None:
-        super(WithingsSleepAttribute, self).__init__(measurement, None, friendly_name, unit_of_measurement, icon)
+        super(WithingsSleepStateAttribute, self).__init__(measurement, None, friendly_name, unit_of_measurement, icon)
+
+
+class WithingsSleepSummaryAttribute(WithingsAttribute):
+    def __init__(self, measurement: str, measure_type: int, friendly_name: str, unit_of_measurement: str, icon: str) -> None:
+        super(WithingsSleepSummaryAttribute, self).__init__(measurement, measure_type, friendly_name, unit_of_measurement, icon)
 
 
 class WithingsDataManager(object):
@@ -137,6 +176,9 @@ class WithingsDataManager(object):
 
         self._measures = None
         self._sleep = None
+        self._sleep_summary = None
+
+        self.sleep_summary_last_update_parameter = None
 
     def get_slug(self) -> str:
         return self._slug
@@ -149,6 +191,9 @@ class WithingsDataManager(object):
 
     def get_sleep(self):
         return self._sleep
+
+    def get_sleep_summary(self):
+        return self._sleep_summary
 
     @Throttle(SCAN_INTERVAL)
     async def async_refresh_token(self):
@@ -178,7 +223,7 @@ class WithingsDataManager(object):
         _LOGGER.debug('async_update_sleep')
 
         end_date = int(time.time())
-        start_date = end_date - 86400
+        start_date = end_date - (6 * 60 * 60)
 
         self._sleep = self._api.get_sleep(
             startdate=start_date,
@@ -186,6 +231,21 @@ class WithingsDataManager(object):
         )
 
         return self._sleep
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_update_sleep_summary(self):
+        _LOGGER.debug('async_update_sleep_summary')
+
+        now = datetime.datetime.utcnow()
+        yesterday = now - datetime.timedelta(days=1)
+        yesterday_noon = datetime.datetime(yesterday.year, yesterday.month, yesterday.day, 12, 0, 0, 0, datetime.timezone.utc)
+
+        _LOGGER.debug('Getting sleep summary data since: {}.'.format(yesterday.strftime('%Y-%m-%d %H:%M:%S UTC')))
+        self._sleep_summary = self._api.get_sleep_summary(
+            lastupdate=yesterday_noon.timestamp()
+        )
+
+        return self._sleep_summary
 
 
 WITHINGS_ATTRIBUTES = [
@@ -203,7 +263,7 @@ WITHINGS_ATTRIBUTES = [
     WithingsMeasureAttribute(MEAS_HEIGHT_M, MEASURE_TYPE_HEIGHT, 'Height', UOM_LENGTH_M, 'mdi:ruler'),
     WithingsMeasureAttribute(MEAS_HEIGHT_CM, MEASURE_TYPE_HEIGHT, 'Height', UOM_LENGTH_CM, 'mdi:ruler'),
     WithingsMeasureAttribute(MEAS_HEIGHT_IN, MEASURE_TYPE_HEIGHT, 'Height', UOM_LENGTH_IN, 'mdi:ruler'),
-    WithingsMeasureAttribute(MEAS_HEIGHT_IMP, MEASURE_TYPE_HEIGHT, 'Height', ' ', 'mdi:ruler'),
+    WithingsMeasureAttribute(MEAS_HEIGHT_IMP, MEASURE_TYPE_HEIGHT, 'Height', UOM_IMPERIAL_HEIGHT, 'mdi:ruler'),
     
     WithingsMeasureAttribute(MEAS_TEMP_C, MEASURE_TYPE_TEMP, 'Temperature', UOM_TEMP_C, 'mdi:temperature-celsius'),
     WithingsMeasureAttribute(MEAS_TEMP_F, MEASURE_TYPE_TEMP, 'Temperature', UOM_TEMP_F, 'mdi:temperature-fahrenheit'),
@@ -212,20 +272,35 @@ WITHINGS_ATTRIBUTES = [
     WithingsMeasureAttribute(MEAS_SKIN_TEMP_C, MEASURE_TYPE_SKIN_TEMP, 'Skin Temperature', UOM_TEMP_C, 'mdi:temperature-celsius'),
     WithingsMeasureAttribute(MEAS_SKIN_TEMP_F, MEASURE_TYPE_SKIN_TEMP, 'Skin Temperature', UOM_TEMP_F, 'mdi:temperature-fahrenheit'),
     
-    WithingsMeasureAttribute(MEAS_FAT_RATIO_PCT, MEASURE_TYPE_FAT_RATIO, 'Fat Ratio', UOM_PCT, None),
+    WithingsMeasureAttribute(MEAS_FAT_RATIO_PCT, MEASURE_TYPE_FAT_RATIO, 'Fat Ratio', UOM_PERCENT, None),
     WithingsMeasureAttribute(MEAS_DIASTOLIC_MMHG, MEASURE_TYPE_DIASTOLIC_BP, 'Diastolic Blood Pressure', UOM_MMHG, None),
     WithingsMeasureAttribute(MEAS_SYSTOLIC_MMGH, MEASURE_TYPE_SYSTOLIC_BP, 'Systolic Blood Pressure', UOM_MMHG, None),
-    WithingsMeasureAttribute(MEAS_HEART_PULSE_BPM, MEASURE_TYPE_HEART_PULSE, 'Heart Pulse', UOM_BPM, 'mdi:heart-pulse'),
-    WithingsMeasureAttribute(MEAS_SPO2_PCT, MEASURE_TYPE_SPO2, 'SP02', UOM_PCT, None),
+    WithingsMeasureAttribute(MEAS_HEART_PULSE_BPM, MEASURE_TYPE_HEART_PULSE, 'Heart Pulse', UOM_BEATS_PER_MINUTE, 'mdi:heart-pulse'),
+    WithingsMeasureAttribute(MEAS_SPO2_PCT, MEASURE_TYPE_SPO2, 'SP02', UOM_PERCENT, None),
     WithingsMeasureAttribute(MEAS_HYDRATION, MEASURE_TYPE_HYDRATION, 'Hydration', '', 'mdi:water'),
-    WithingsMeasureAttribute(MEAS_PWV, MEASURE_TYPE_PWV, 'Pulse Wave Velocity', '', None),
-    
-    WithingsSleepAttribute(MEAS_SLEEP_AWAKE, 'Awake', UOM_HOURS, 'mdi:sleep-off'),
-    WithingsSleepAttribute(MEAS_SLEEP_LIGHT, 'Light Sleep', UOM_HOURS, 'mdi:sleep'),
-    WithingsSleepAttribute(MEAS_SLEEP_DEEP, 'Deep Sleep', UOM_HOURS, 'mdi:sleep'),
-    WithingsSleepAttribute(MEAS_SLEEP_REM, 'REM Sleep', UOM_HOURS, 'mdi:sleep'),
-    WithingsSleepAttribute(MEAS_SLEEP_TOTAL_SLEEP, 'Total Sleep', UOM_HOURS, 'mdi:sleep'),
-    WithingsSleepAttribute(MEAS_SLEEP_TOTAL_SESSION, 'Total Session', UOM_HOURS, 'mdi:sleep'),
+    WithingsMeasureAttribute(MEAS_PWV, MEASURE_TYPE_PWV, 'Pulse Wave Velocity', UOM_METERS_PER_SECOND, None),
+
+    WithingsSleepStateAttribute(MEAS_SLEEP_STATE, 'Sleep state', ' ', None),
+
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_WAKEUP_DURATION_HOURS, MEASURE_TYPE_SLEEP_WAKEUP_DURATION, 'Wakeup time', UOM_HOURS, 'mdi:sleep-off'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_LIGHT_DURATION_HOURS, MEASURE_TYPE_SLEEP_LIGHT_DURATION, 'Light sleep', UOM_HOURS, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_DEEP_DURATION_HOURS, MEASURE_TYPE_SLEEP_DEEP_DURATION, 'Deep sleep', UOM_HOURS, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_REM_DURATION_HOURS, MEASURE_TYPE_SLEEP_REM_DURATION, 'REM sleep', UOM_HOURS, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_WAKEUP_DURATION_MINUTES, MEASURE_TYPE_SLEEP_WAKEUP_DURATION, 'Wakeup time', UOM_MINUTES, 'mdi:sleep-off'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_LIGHT_DURATION_MINUTES, MEASURE_TYPE_SLEEP_LIGHT_DURATION, 'Light sleep', UOM_MINUTES, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_DEEP_DURATION_MINUTES, MEASURE_TYPE_SLEEP_DEEP_DURATION, 'Deep sleep', UOM_MINUTES, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_REM_DURATION_MINUTES, MEASURE_TYPE_SLEEP_REM_DURATION, 'REM sleep', UOM_MINUTES, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_WAKEUP_COUNT, MEASURE_TYPE_SLEEP_WAKUP_COUNT, 'Wakeup count', UOM_FREQUENCY, 'mdi:sleep-off'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_TOSLEEP_DURATION_HOURS, MEASURE_TYPE_SLEEP_TOSLEEP_DURATION, 'Time to sleep', UOM_HOURS, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_TOWAKEUP_DURATION_HOURS, MEASURE_TYPE_SLEEP_TOWAKEUP_DURATION, 'Time to wakeup', UOM_HOURS, 'mdi:sleep-off'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_TOSLEEP_DURATION_MINUTES, MEASURE_TYPE_SLEEP_TOSLEEP_DURATION, 'Time to sleep', UOM_MINUTES, 'mdi:sleep'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_TOWAKEUP_DURATION_MINUTES, MEASURE_TYPE_SLEEP_TOWAKEUP_DURATION, 'Time to wakeup', UOM_MINUTES, 'mdi:sleep-off'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_HEART_RATE_AVERAGE, MEASURE_TYPE_SLEEP_HEART_RATE_AVERAGE, 'Average heart rate', UOM_BEATS_PER_MINUTE, 'mdi:heart-pulse'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_HEART_RATE_MIN, MEASURE_TYPE_SLEEP_HEART_RATE_MIN, 'Minimum heart rate', UOM_BEATS_PER_MINUTE, 'mdi:heart-pulse'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_HEART_RATE_MAX, MEASURE_TYPE_SLEEP_HEART_RATE_MAX, 'Maximum heart rate', UOM_BEATS_PER_MINUTE, 'mdi:heart-pulse'),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE, MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_AVERAGE, 'Average respiratory rate', UOM_BREATHS_PER_MINUTE, None),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_RESPIRATORY_RATE_MIN, MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MIN, 'Minimum respiratory rate', UOM_BREATHS_PER_MINUTE, None),
+    WithingsSleepSummaryAttribute(MEAS_SLEEP_RESPIRATORY_RATE_MAX, MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MAX, 'Maximum respiratory rate', UOM_BREATHS_PER_MINUTE, None),
 ]
 
 CONF_SENSORS = {}
@@ -491,6 +566,7 @@ class WithingsAuthCallbackView(HomeAssistantView):
 
 class WithingsHealthSensor(Entity):
     """Implementation of a Withings sensor."""
+    import nokia
 
     def __init__(self, data_manager: WithingsDataManager, attribute: WithingsAttribute) -> None:
         """Initialize the Withings sensor."""
@@ -535,11 +611,16 @@ class WithingsHealthSensor(Entity):
             _LOGGER.debug('Updating measures state.')
             await self._data_manager.async_update_measures()
             return await self.async_update_measure(self._data_manager.get_measures())
-        
-        elif isinstance(self._attribute, WithingsSleepAttribute):
+
+        elif isinstance(self._attribute, WithingsSleepStateAttribute):
             _LOGGER.debug('Updating sleep state.')
             await self._data_manager.async_update_sleep()
-            return await self.async_update_sleep(self._data_manager.get_sleep())
+            return await self.async_update_sleep_state(self._data_manager.get_sleep())
+
+        elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
+            _LOGGER.debug('Updating sleep summary state.')
+            await self._data_manager.async_update_sleep_summary()
+            return await self.async_update_sleep_summary(self._data_manager.get_sleep_summary())
    
     async def async_update_measure(self, data) -> None:
         _LOGGER.debug('async_update_measure')
@@ -559,7 +640,7 @@ class WithingsHealthSensor(Entity):
         ))
         
         if len(measure_groups) == 0:
-            _LOGGER('No measure groups found.')
+            _LOGGER.warning('No measure groups found.')
             return
         
         _LOGGER.debug('Sorting list of {} measure groups by date created (DESC).'.format(len(measure_groups)))
@@ -571,83 +652,118 @@ class WithingsHealthSensor(Entity):
         _LOGGER.debug('Determining state for measurement: {}, measure_type: {}, unit_of_measurement: {}, value: {}'.format(
             measurement, measure_type, unit_of_measurement, value
         ))
-        
-        state = None
+
         if unit_of_measurement is UOM_MASS_KG:
-            state = value
-            
+            state = round(value, 1)
+        
         elif unit_of_measurement is UOM_MASS_LB:
             state = round(value * 2.205, 2)
-            
+        
         elif unit_of_measurement is UOM_LENGTH_M:
-            state = value
-            
+            state = round(value, 2)
+        
         elif unit_of_measurement is UOM_LENGTH_CM:
-            state = value * 100
-            
+            state = round(value * 100, 1)
+        
         elif unit_of_measurement is UOM_LENGTH_IN:
             state = round(value * 39.37, 2)
-            
+        
         elif unit_of_measurement is UOM_TEMP_C:
-            state = value
-            
+            state = round(value, 1)
+        
         elif unit_of_measurement is UOM_TEMP_F:
             state = round((value * 1.8) + 32, 2)
-            
-        elif unit_of_measurement is UOM_PCT:
+        
+        elif unit_of_measurement is UOM_PERCENT:
             state = round(value * 100, 1)
-            
+        
         elif unit_of_measurement is UOM_MMHG:
-            state = value
-            
-        elif unit_of_measurement is UOM_BPM:
-            state = value
-
-        elif measurement is MEAS_HEIGHT_IMP:
+            state = round(value, 0)
+        
+        elif unit_of_measurement is UOM_BEATS_PER_MINUTE:
+            state = round(value, 0)
+        
+        elif unit_of_measurement is UOM_IMPERIAL_HEIGHT:
             feet_raw = value * 3.281
             feet = int(feet_raw)
             inches_ratio = feet_raw - feet
             inches = round(inches_ratio * 12, 1)
-            
+        
             state = "%d' %d\"" % (feet, inches)
-
+        
+        elif unit_of_measurement is UOM_METERS_PER_SECOND:
+            state = round(value, 0)
+        
         else:
             state = round(value, 2)
-        
+    
         _LOGGER.debug('Setting state: {}'.format(state))
         self._state = state
 
-    async def async_update_sleep(self, data) -> None:
-        _LOGGER.debug('async_update_sleep')
-        
+    async def async_update_sleep_state(self, data: nokia) -> None:
+        _LOGGER.debug('async_update_sleep_state')
+
+        if data is None:
+            _LOGGER.error('Provided data is None, setting value to {}.'.format(STATE_UNKNOWN))
+            self._state = STATE_UNKNOWN
+            return
+
+        if len(data.series) == 0:
+            _LOGGER.warning('No sleep data, setting value to {}.'.format(STATE_UNKNOWN))
+            self._state = STATE_UNKNOWN
+            return
+
+        series = sorted(data.series, key=lambda o: o.enddate, reverse=True)
+
+        serie = series[0]
+
+        state = None
+        if serie.state == MEASURE_TYPE_SLEEP_STATE_AWAKE:
+            state = STATE_AWAKE
+        elif serie.state == MEASURE_TYPE_SLEEP_STATE_LIGHT:
+            state = STATE_LIGHT
+        elif serie.state == MEASURE_TYPE_SLEEP_STATE_DEEP:
+            state = STATE_DEEP
+        elif serie.state == MEASURE_TYPE_SLEEP_STATE_REM:
+            state = STATE_REM
+        else:
+            state = STATE_UNKNOWN
+
+        _LOGGER.debug('Setting state: {}'.format(state))
+        self._state = state
+
+    async def async_update_sleep_summary(self, data) -> None:
+        _LOGGER.debug('async_update_sleep_summary')
+
         if data is None:
             _LOGGER.error('Provided data is None. Not updating state.')
             return
-        
+
+        if len(data.series) == 0:
+            _LOGGER.warning('Sleep data has no series.')
+            return
+
         measurement = self._attribute.measurement
         measure_type = self._attribute.measure_type
         unit_of_measurement = self._attribute.unit_of_measurement
-        
-        _LOGGER.debug('Building map of sleep masurements and the states to collect.')
-        measurement_state_map = {
-            MEAS_SLEEP_AWAKE: [SLEEP_STATE_AWAKE],
-            MEAS_SLEEP_LIGHT: [SLEEP_STATE_LIGHT],
-            MEAS_SLEEP_DEEP: [SLEEP_STATE_DEEP],
-            MEAS_SLEEP_REM: [SLEEP_STATE_REM],
-            MEAS_SLEEP_TOTAL_SLEEP: [SLEEP_STATE_LIGHT, SLEEP_STATE_DEEP, SLEEP_STATE_REM],
-            MEAS_SLEEP_TOTAL_SESSION: [SLEEP_STATE_AWAKE, SLEEP_STATE_LIGHT, SLEEP_STATE_DEEP, SLEEP_STATE_REM],
-        }
-        
-        _LOGGER.debug('Filter for series for measurement: {}.'.format(measurement))
-        filtered_series = filter(
-            lambda serie: serie.state in measurement_state_map[measurement],
-            data.series
-        )
-        _LOGGER.debug('Summing timedeltas in filtered series.')
-        total_time_delta = sum((serie.timedelta for serie in filtered_series), datetime.timedelta())
-        
-        _LOGGER.debug('Converting time to hours.')
-        state_hours = round(total_time_delta.total_seconds() / 360, 1)
-        
-        _LOGGER.debug('Setting state: {}'.format(state_hours))
-        self._state = state_hours
+
+        _LOGGER.debug('Determining average value for: {}'.format(measurement))
+        count = 0
+        total = 0
+        for serie in data.series:
+            if hasattr(serie, measure_type):
+                count += 1
+                total += getattr(serie, measure_type)
+
+        value = total / count
+
+        # Convert the units.
+        state = None
+        if unit_of_measurement is UOM_HOURS:
+            state = round(value / 60, 1)
+
+        else:
+            state = value
+
+        _LOGGER.debug('Setting state: {}'.format(state))
+        self._state = state

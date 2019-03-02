@@ -1,14 +1,12 @@
 from datetime import datetime
 
 from asynctest import patch, MagicMock
-import pytest
 import asyncio
 import unittest
 import os
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_PLATFORM)
-from homeassistant.setup import async_setup_component, async_when_setup
+from homeassistant.const import (CONF_PLATFORM)
+from homeassistant.setup import async_setup_component
 import homeassistant.components.http as http
 import homeassistant.components.api as api
 import homeassistant.components.configurator as configurator
@@ -16,12 +14,11 @@ import nokia
 import callee
 from aiohttp.web_request import BaseRequest
 import homeassistant.components.sensor.withings as withings
-from tests.common import (
-    get_test_home_assistant, load_fixture)
+from tests.common import (get_test_home_assistant)
 import time
+import datetime
 
 PLATFORM_NAME = 'withings'
-
 
 def async_test(coro):
     def wrapper(*args, **kwargs):
@@ -329,7 +326,7 @@ class TestWithingsDataManager(unittest.TestCase):
             self.api.get_sleep = MagicMock(return_value='DATA')
             results1 = await self.data_manager.async_update_sleep()
             self.api.get_sleep.assert_called_with(
-                startdate=13600,
+                startdate=78400,
                 enddate=100000
             )
             assert results1 == 'DATA'
@@ -340,6 +337,34 @@ class TestWithingsDataManager(unittest.TestCase):
             results2 = await self.data_manager.async_update_sleep()
             self.api.get_sleep.assert_not_called()
             # assert results2 == 'DATA'
+
+    @async_test
+    async def test_async_update_sleep_summary(self):
+        now = datetime.datetime.utcnow()
+        noon = datetime.datetime(now.year, now.month, now.day, 12, 0, 0, 0, datetime.timezone.utc)
+        yesterday_noon_timestamp = noon.timestamp() - 86400
+
+        self.data_manager = withings.WithingsDataManager(
+            'person_1',
+            self.api
+        )
+
+        self.api.get_sleep_summary = MagicMock(return_value='DATA')
+        results1 = await self.data_manager.async_update_sleep_summary()
+        self.api.get_sleep_summary.assert_called_with(
+            lastupdate=callee.And(
+                callee.GreaterOrEqualTo(yesterday_noon_timestamp),
+                callee.LessThan(yesterday_noon_timestamp + 10)
+            )
+        )
+        assert results1 == 'DATA'
+
+        self.api.get_sleep_summary.reset_mock()
+
+        self.api.get_sleep_summary = MagicMock(return_value='DATA_NEW')
+        results2 = await self.data_manager.async_update_sleep_summary()
+        self.api.get_sleep_summary.assert_not_called()
+        # assert results2 == 'DATA_NEW'
 
 
 class TestWithingsHealthSensor(unittest.TestCase):
@@ -352,14 +377,19 @@ class TestWithingsHealthSensor(unittest.TestCase):
         ))
         self.api.get_measures = MagicMock()
         self.api.get_sleep = MagicMock()
+        self.api.get_sleep_summary = MagicMock()
 
+        self.recreate_data_manager()
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def recreate_data_manager(self):
         self.data_manager = withings.WithingsDataManager(
             'person_1',
             self.api
         )
 
-    def tearDown(self):
-        self.hass.stop()
 
     def test_properties(self):
         sensor = withings.WithingsHealthSensor(
@@ -422,13 +452,6 @@ class TestWithingsHealthSensor(unittest.TestCase):
             'offset': 0
         })
 
-        self.api.get_sleep.return_value = nokia.NokiaSleep({
-            'model': 32,
-            'series': [
-
-            ]
-        })
-
         await self.assertSensorEquals(70, withings.MEAS_WEIGHT_KG)
         await self.assertSensorEquals(154.35, withings.MEAS_WEIGHT_LB)
         await self.assertSensorEquals(5, withings.MEAS_FAT_MASS_KG)
@@ -456,12 +479,77 @@ class TestWithingsHealthSensor(unittest.TestCase):
         await self.assertSensorEquals(95.0, withings.MEAS_SPO2_PCT)
         await self.assertSensorEquals(0.95, withings.MEAS_HYDRATION)
         await self.assertSensorEquals(100, withings.MEAS_PWV)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_AWAKE)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_LIGHT)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_DEEP)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_REM)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_TOTAL_SLEEP)
-        await self.assertSensorEquals(1, withings.MEAS_SLEEP_TOTAL_SESSION)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
+            new_sleep_data_serie('2019-02-01 00:00:00', '2019-02-01 00:30:00', withings.MEASURE_TYPE_SLEEP_STATE_AWAKE),
+            new_sleep_data_serie('2019-02-01 02:00:00', '2019-02-01 02:30:00', withings.MEASURE_TYPE_SLEEP_STATE_DEEP),
+            new_sleep_data_serie('2019-02-01 01:00:00', '2019-02-01 01:30:00', withings.MEASURE_TYPE_SLEEP_STATE_REM),
+        ]))
+        await self.assertSensorEquals(withings.STATE_DEEP, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
+            new_sleep_data_serie('2019-02-01 00:00:00', '2019-02-01 00:30:00', withings.MEASURE_TYPE_SLEEP_STATE_AWAKE),
+        ]))
+        await self.assertSensorEquals(withings.STATE_AWAKE, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
+            new_sleep_data_serie('2019-02-01 00:00:00', '2019-02-01 00:30:00', withings.MEASURE_TYPE_SLEEP_STATE_LIGHT),
+        ]))
+        await self.assertSensorEquals(withings.STATE_LIGHT, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
+            new_sleep_data_serie('2019-02-01 00:00:00', '2019-02-01 00:30:00', withings.MEASURE_TYPE_SLEEP_STATE_DEEP),
+        ]))
+        await self.assertSensorEquals(withings.STATE_DEEP, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
+            new_sleep_data_serie('2019-02-01 00:00:00', '2019-02-01 00:30:00', withings.MEASURE_TYPE_SLEEP_STATE_REM),
+        ]))
+        await self.assertSensorEquals(withings.STATE_REM, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = None
+        await self.assertSensorEquals(withings.STATE_UNKNOWN, withings.MEAS_SLEEP_STATE)
+
+        self.recreate_data_manager()
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', []))
+        await self.assertSensorEquals(withings.STATE_UNKNOWN, withings.MEAS_SLEEP_STATE)
+
+        self.api.get_sleep_summary.return_value = nokia.NokiaSleepSummary({
+            'series': [
+                new_sleep_summary('UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
+                    new_sleep_summary_detail(110, 210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310),
+                ),
+                new_sleep_summary('UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
+                    new_sleep_summary_detail(210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310, 1410),
+                )
+            ]
+        })
+
+        await self.assertSensorEquals(2.7, withings.MEAS_SLEEP_WAKEUP_DURATION_HOURS)
+        await self.assertSensorEquals(4.3, withings.MEAS_SLEEP_LIGHT_DURATION_HOURS)
+        await self.assertSensorEquals(6.0, withings.MEAS_SLEEP_DEEP_DURATION_HOURS)
+        await self.assertSensorEquals(7.7, withings.MEAS_SLEEP_REM_DURATION_HOURS)
+        await self.assertSensorEquals(160.0, withings.MEAS_SLEEP_WAKEUP_DURATION_MINUTES)
+        await self.assertSensorEquals(260.0, withings.MEAS_SLEEP_LIGHT_DURATION_MINUTES)
+        await self.assertSensorEquals(360, withings.MEAS_SLEEP_DEEP_DURATION_MINUTES)
+        await self.assertSensorEquals(460.0, withings.MEAS_SLEEP_REM_DURATION_MINUTES)
+        await self.assertSensorEquals(560.0, withings.MEAS_SLEEP_WAKEUP_COUNT)
+        await self.assertSensorEquals(11.0, withings.MEAS_SLEEP_TOSLEEP_DURATION_HOURS)
+        await self.assertSensorEquals(12.7, withings.MEAS_SLEEP_TOWAKEUP_DURATION_HOURS)
+        await self.assertSensorEquals(660.0, withings.MEAS_SLEEP_TOSLEEP_DURATION_MINUTES)
+        await self.assertSensorEquals(760.0, withings.MEAS_SLEEP_TOWAKEUP_DURATION_MINUTES)
+        await self.assertSensorEquals(860.0, withings.MEAS_SLEEP_HEART_RATE_AVERAGE)
+        await self.assertSensorEquals(960.0, withings.MEAS_SLEEP_HEART_RATE_MIN)
+        await self.assertSensorEquals(1060.0, withings.MEAS_SLEEP_HEART_RATE_MAX)
+        await self.assertSensorEquals(1160.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE)
+        await self.assertSensorEquals(1260.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_MIN)
+        await self.assertSensorEquals(1360.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_MAX)
 
     async def assertSensorEquals(self, expected, measure):
         sensor = withings.WithingsHealthSensor(
@@ -470,24 +558,54 @@ class TestWithingsHealthSensor(unittest.TestCase):
         )
 
         await sensor.async_update()
-        assert expected == sensor.state
-
-
-async def update_sensor(self, measure):
-        sensor = withings.WithingsHealthSensor(
-            self.data_manager,
-            withings.WITHINGS_MEASUREMENTS_MAP[measure]
+        assert sensor.state == expected, 'Expected {} but was {} for measure: {}.'.format(
+            expected,
+            sensor.state,
+            measure
         )
 
-        await sensor.async_update()
-        return sensor
+
+def new_sleep_data(model, series):
+    return {
+        'series': series,
+        'model': model
+    }
 
 
-def new_sleep_serie(startdate, enddate, state):
+def new_sleep_data_serie(startdate, enddate, state):
     return {
         'startdate': startdate,
         'enddate': enddate,
         'state': state
+    }
+
+def new_sleep_summary(timezone, model, startdate, enddate, date, modified, data):
+    return {
+        'timezone': timezone,
+        'model': model,
+        'startdate': startdate,
+        'enddate': enddate,
+        'date': date,
+        'modified': modified,
+        'data': data,
+    }
+
+
+def new_sleep_summary_detail(wakeupduration, lightsleepduration, deepsleepduration, remsleepduration, wakeupcount, durationtosleep, durationtowakeup, hr_average, hr_min, hr_max, rr_average, rr_min, rr_max):
+    return {
+        'wakeupduration': wakeupduration,
+        'lightsleepduration': lightsleepduration,
+        'deepsleepduration': deepsleepduration,
+        'remsleepduration': remsleepduration,
+        'wakeupcount': wakeupcount,
+        'durationtosleep': durationtosleep,
+        'durationtowakeup': durationtowakeup,
+        'hr_average': hr_average,
+        'hr_min': hr_min,
+        'hr_max': hr_max,
+        'rr_average': rr_average,
+        'rr_min': rr_min,
+        'rr_max': rr_max,
     }
 
 
