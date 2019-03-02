@@ -46,6 +46,7 @@ SERVICE_ROKU = 'roku'
 SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_TELLDUSLIVE = 'tellstick'
+SERVICE_YEELIGHT = 'yeelight'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
@@ -79,6 +80,7 @@ SERVICE_HANDLERS = {
     SERVICE_KONNECTED: ('konnected', None),
     SERVICE_OCTOPRINT: ('octoprint', None),
     SERVICE_FREEBOX: ('freebox', None),
+    SERVICE_YEELIGHT: ('yeelight', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'yamaha': ('media_player', 'yamaha'),
@@ -86,7 +88,6 @@ SERVICE_HANDLERS = {
     'directv': ('media_player', 'directv'),
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
-    'yeelight': ('light', 'yeelight'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),
