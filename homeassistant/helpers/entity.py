@@ -200,28 +200,8 @@ class Entity:
         self._context = context
         self._context_set = dt_util.utcnow()
 
-    async def async_update_ha_state(self, force_refresh=False):
-        """Update Home Assistant with current state of entity.
-
-        If force_refresh == True will update entity before setting state.
-
-        This method must be run in the event loop.
-        """
-        if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
-
-        if self.entity_id is None:
-            raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name))
-
-        # update entity data
-        if force_refresh:
-            try:
-                await self.async_device_update()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Update for %s fails", self.entity_id)
-                return
-
+    def _get_state_and_attributes(self):
+        """Get state and attributes"""
         start = timer()
 
         if not self.available:
@@ -281,6 +261,32 @@ class Entity:
                             "https://goo.gl/Nvioub", self.entity_id,
                             type(self), end - start)
 
+        return (state, attr)
+
+    async def async_update_ha_state(self, force_refresh=False, stateattr=None):
+        """Update Home Assistant with current state of entity.
+
+        If force_refresh == True will update entity before setting state.
+
+        This method must be run in the event loop.
+        """
+        if self.hass is None:
+            raise RuntimeError("Attribute hass is None for {}".format(self))
+
+        if self.entity_id is None:
+            raise NoEntitySpecifiedError(
+                "No entity id specified for entity {}".format(self.name))
+
+        # update entity data
+        if force_refresh:
+            try:
+                await self.async_device_update()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Update for %s fails", self.entity_id)
+                return
+
+        state, attr = stateattr or self._get_state_and_attributes()
+
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
@@ -313,12 +319,20 @@ class Entity:
 
         That avoid executor dead looks.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        stateattr = None
+        if not force_refresh:
+            stateattr = self._get_state_and_attributes()
+        self.hass.add_job(
+            self.async_update_ha_state(force_refresh, stateattr))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task."""
-        self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+        stateattr = None
+        if not force_refresh:
+            stateattr = self._get_state_and_attributes()
+        self.hass.async_create_task(
+            self.async_update_ha_state(force_refresh, stateattr))
 
     async def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.
