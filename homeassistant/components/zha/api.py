@@ -82,19 +82,23 @@ async def websocket_get_devices(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ha_device_registry = await async_get_registry(hass)
-    devices = [
-        {
-            **device.device_info,
-            'user_given_name': ha_device_registry.async_get_device(
-                {(DOMAIN, str(device.ieee))}, set()).name_by_user,
-            'device_reg_id': ha_device_registry.async_get_device(
-                {(DOMAIN, str(device.ieee))}, set()).id,
-            'entities': [{
-                'entity_id': entity_ref.reference_id,
-                NAME: entity_ref.device_info[NAME]
-            } for entity_ref in zha_gateway.device_registry[device.ieee]]
-        } for device in zha_gateway.devices.values()
-    ]
+
+    devices = []
+    for device in zha_gateway.devices.values():
+        ret_device = {}
+        ret_device.update(device.device_info)
+        ret_device['entities'] = [{
+            'entity_id': entity_ref.reference_id,
+            NAME: entity_ref.device_info[NAME]
+        } for entity_ref in zha_gateway.device_registry[device.ieee]]
+
+        reg_device = ha_device_registry.async_get_device(
+            {(DOMAIN, str(device.ieee))}, set())
+        if reg_device is not None:
+            ret_device['user_given_name'] = reg_device.name_by_user
+            ret_device['device_reg_id'] = reg_device.id
+
+        devices.append(ret_device)
 
     connection.send_result(msg[ID], devices)
 
