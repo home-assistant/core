@@ -15,7 +15,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO,
     ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, DOMAIN)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, ATTR_ENTITY_ID,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_UNKNOWN, PRECISION_HALVES,
@@ -25,6 +25,8 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +34,8 @@ DEPENDENCIES = ['switch', 'sensor']
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = 'Generic Thermostat'
+
+DATA = '{}.GenericThermostat'.format(DOMAIN)
 
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
@@ -69,6 +73,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float),
     vol.Optional(CONF_PRECISION): vol.In(
         [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+})
+
+SERVICE_SET_AWAY_TEMP = 'generic_set_away_temperature'
+SET_AWAY_TEMPERATURE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
 })
 
 
@@ -157,6 +167,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
+
         # Check If we have an old state
         old_state = await self.async_get_last_state()
         if old_state is not None:
@@ -191,6 +202,19 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     self._target_temp = self.min_temp
             _LOGGER.warning("No previously saved temperature, setting to %s",
                             self._target_temp)
+
+        # Register services
+        if DATA not in self.hass.data:
+            self.hass.data[DATA] = []
+        self.hass.data[DATA].append(self)
+
+        async def handler(service):
+            """Service handler."""
+            return await async_service_away_temperature_set(self.hass, service)
+
+        self.hass.services.async_register(
+            DOMAIN, SERVICE_SET_AWAY_TEMP, handler,
+            schema=SET_AWAY_TEMPERATURE_SCHEMA)
 
     @property
     def state(self):
@@ -272,14 +296,32 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         """Turn thermostat off."""
         await self.async_set_operation_mode(STATE_OFF)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, temperature, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
+            raise ValueError('temperature parameter is None')
+        if ((self.supported_features & SUPPORT_AWAY_MODE)
+                and self.is_away_mode_on):
+            _LOGGER.error('Cannot change temperature while away mode is ON,'
+                          ' please call async_set_away_temperature')
             return
         self._target_temp = temperature
         await self._async_control_heating(force=True)
         await self.async_update_ha_state()
+
+    async def async_set_away_temperature(self, temperature):
+        """Set new away temperature."""
+        print("async_set_away_temperature %s", temperature)
+        print(self.hass)
+        if temperature is None:
+            raise ValueError('temperature parameter is None')
+        self._away_temp = temperature
+
+        if ((self.supported_features & SUPPORT_AWAY_MODE)
+                and self.is_away_mode_on):
+            self._target_temp = temperature
+            await self._async_control_heating(force=True)
+            await self.async_update_ha_state()
 
     @property
     def min_temp(self):
@@ -359,7 +401,8 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or \
                    (not self.ac_mode and too_hot):
-                    _LOGGER.info("Turning off heater %s",
+                    _LOGGER.info('Turning off %s %s',
+                                 'ac' if self.ac_mode else 'heater',
                                  self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
@@ -368,7 +411,9 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             else:
                 if (self.ac_mode and too_hot) or \
                    (not self.ac_mode and too_cold):
-                    _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+                    _LOGGER.info('Turning on %s %s',
+                                 'ac' if self.ac_mode else 'heater',
+                                 self.heater_entity_id)
                     await self._async_heater_turn_on()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
@@ -417,3 +462,21 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         self._target_temp = self._saved_target_temp
         await self._async_control_heating(force=True)
         await self.async_update_ha_state()
+
+
+async def async_service_away_temperature_set(hass, service):
+    """Handle set away temperature service."""
+    if ATTR_ENTITY_ID in service.data:
+        entity_ids = set(extract_entity_ids(hass, service, True))
+        service_entities = [entity for entity in hass.data[DATA]
+                            if entity.entity_id in entity_ids]
+    else:
+        service_entities = hass.data[DATA]
+
+    for entity in service_entities:
+        temperature = convert_temperature(
+            service.data.get(ATTR_TEMPERATURE),
+            hass.config.units.temperature_unit,
+            entity.temperature_unit
+        )
+        await entity.async_set_away_temperature(temperature)

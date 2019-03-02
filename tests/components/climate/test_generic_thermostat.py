@@ -224,6 +224,61 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     assert 23 == state.attributes.get('temperature')
 
 
+async def test_set_target_temp_not_allowed_in_away_mode(hass, setup_comp_2):
+    """Test the target temp does not allow to change while away mode is on.
+
+    Verify target temperature keep same.
+    """
+    common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
+    common.async_set_away_mode(hass, True)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 16 == state.attributes.get('temperature')
+    common.async_set_temperature(hass, 20)
+    assert 16 == state.attributes.get('temperature')
+    common.async_set_away_mode(hass, False)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 23 == state.attributes.get('temperature')
+
+
+async def test_set_away_temp(hass, setup_comp_2):
+    """Test the away temp can be changed.
+
+    Verify target temperature not change if away mode was off.
+    Verify target temperature will change if away mode was on.
+    """
+    async def set_away_temp(hass, temp):
+        """Set away temp helper."""
+        await hass.services.async_call(
+            'climate', 'generic_set_away_temperature', {
+                'entity_id': ENTITY,
+                'temperature': temp
+            }, blocking=True)
+
+    common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
+    common.async_set_away_mode(hass, True)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 16 == state.attributes.get('temperature')
+    await set_away_temp(hass, 20)
+    state = hass.states.get(ENTITY)
+    assert 20 == state.attributes.get('temperature')
+    common.async_set_away_mode(hass, False)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 23 == state.attributes.get('temperature')
+    await set_away_temp(hass, 18)
+    state = hass.states.get(ENTITY)
+    assert 23 == state.attributes.get('temperature')
+    common.async_set_away_mode(hass, True)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 18 == state.attributes.get('temperature')
+
+
 async def test_sensor_bad_value(hass, setup_comp_2):
     """Test sensor that have None as state."""
     state = hass.states.get(ENTITY)
