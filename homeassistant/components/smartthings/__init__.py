@@ -194,6 +194,45 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return all(await asyncio.gather(*tasks))
 
 
+async def async_remove_entry(
+        hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    """Perform clean-up when entry is being removed."""
+    from pysmartthings import SmartThings
+
+    api = SmartThings(async_get_clientsession(hass),
+                      entry.data[CONF_ACCESS_TOKEN])
+
+    # Remove the installed_app, which if already removed raises a 403 error.
+    installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
+    try:
+        await api.delete_installed_app(installed_app_id)
+    except ClientResponseError as ex:
+        if ex.status == 403:
+            _LOGGER.exception("Installed app %s has already been removed",
+                              installed_app_id)
+        else:
+            raise
+    _LOGGER.debug("Removed installed app %s", installed_app_id)
+
+    # Remove the app if not referenced by other entries, which if already
+    # removed raises a 403 error.
+    app_id = entry.data[CONF_APP_ID]
+    app_count = sum(1 for entry in hass.config_entries.async_entries(DOMAIN)
+                    if entry.data[CONF_APP_ID] == app_id)
+    if app_count <= 1:
+        try:
+            await api.delete_app(app_id)
+        except ClientResponseError as ex:
+            if ex.status == 403:
+                _LOGGER.exception("App %s has already been removed", app_id)
+            else:
+                raise
+        _LOGGER.debug("Removed app %s", app_id)
+    else:
+        _LOGGER.debug("App %s was not removed because it is in use by other"
+                      "config entries", app_id)
+
+
 class DeviceBroker:
     """Manages an individual SmartThings config entry."""
 
