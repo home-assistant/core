@@ -173,6 +173,9 @@ async def test_remove_entry(hass, manager):
         assert result
         return result
 
+    mock_remove_entry = MagicMock(
+        side_effect=lambda *args, **kwargs: mock_coro())
+
     entity = MockEntity(
         unique_id='1234',
         name='Test Entity',
@@ -185,7 +188,8 @@ async def test_remove_entry(hass, manager):
     loader.set_component(hass, 'test', MockModule(
         'test',
         async_setup_entry=mock_setup_entry,
-        async_unload_entry=mock_unload_entry
+        async_unload_entry=mock_unload_entry,
+        async_remove_entry=mock_remove_entry
     ))
     loader.set_component(
         hass, 'light.test',
@@ -227,6 +231,9 @@ async def test_remove_entry(hass, manager):
         'require_restart': False
     }
 
+    # Check the remove callback was invoked.
+    assert mock_remove_entry.call_count == 1
+
     # Check that config entry was removed.
     assert [item.entry_id for item in manager.async_entries()] == \
         ['test1', 'test3']
@@ -239,6 +246,43 @@ async def test_remove_entry(hass, manager):
     # Check that entity registry entry no longer references config_entry_id
     entity_entry = list(ent_reg.entities.values())[0]
     assert entity_entry.config_entry_id is None
+
+
+async def test_remove_entry_handles_callback_error(hass, manager):
+    """Test that exceptions in the remove callback are handled."""
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_unload_entry = MagicMock(return_value=mock_coro(True))
+    mock_remove_entry = MagicMock(
+        side_effect=lambda *args, **kwargs: mock_coro())
+    loader.set_component(hass, 'test', MockModule(
+        'test',
+        async_setup_entry=mock_setup_entry,
+        async_unload_entry=mock_unload_entry,
+        async_remove_entry=mock_remove_entry
+    ))
+    entry = MockConfigEntry(
+        domain='test',
+        entry_id='test1',
+    )
+    entry.add_to_manager(manager)
+    # Check all config entries exist
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1']
+    # Setup entry
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    # Remove entry
+    result = await manager.async_remove('test1')
+    await hass.async_block_till_done()
+    # Check that unload went well and so no need to restart
+    assert result == {
+        'require_restart': False
+    }
+    # Check the remove callback was invoked.
+    assert mock_remove_entry.call_count == 1
+    # Check that config entry was removed.
+    assert [item.entry_id for item in manager.async_entries()] == []
 
 
 @asyncio.coroutine

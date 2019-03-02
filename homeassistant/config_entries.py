@@ -378,6 +378,17 @@ class ConfigEntry:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
+    async def async_remove(self, hass: HomeAssistant) -> None:
+        """Invoke remove callback on component."""
+        component = getattr(hass.components, self.domain)
+        if not hasattr(component, 'async_remove_entry'):
+            return
+        try:
+            await component.async_remove_entry(hass, self)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error calling entry remove callback %s for %s',
+                              self.title, component.DOMAIN)
+
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
 
@@ -498,6 +509,8 @@ class ConfigEntries:
             unload_success = entry.state != ENTRY_STATE_FAILED_UNLOAD
         else:
             unload_success = await self.async_unload(entry_id)
+
+        await entry.async_remove(self.hass)
 
         self._entries.remove(entry)
         self._async_schedule_save()

@@ -452,7 +452,7 @@ class MockModule:
                  requirements=None, config_schema=None, platform_schema=None,
                  platform_schema_base=None, async_setup=None,
                  async_setup_entry=None, async_unload_entry=None,
-                 async_migrate_entry=None):
+                 async_migrate_entry=None, async_remove_entry=None):
         """Initialize the mock module."""
         self.__name__ = 'homeassistant.components.{}'.format(domain)
         self.DOMAIN = domain
@@ -486,6 +486,9 @@ class MockModule:
 
         if async_migrate_entry is not None:
             self.async_migrate_entry = async_migrate_entry
+
+        if async_remove_entry is not None:
+            self.async_remove_entry = async_remove_entry
 
 
 class MockPlatform:
