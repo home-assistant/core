@@ -141,7 +141,8 @@ async def _update_azuredns(session, domain, host, resource, tenant,
     }
 
     try:
-        requests.patch(url, json=payload, headers=headers, timeout=timeout).json()
+        requests.patch(url, json=payload,
+                       headers=headers, timeout=timeout).json()
         return True
 
     except requests.exceptions.RequestException as errormessage:
