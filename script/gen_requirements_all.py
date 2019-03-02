@@ -108,6 +108,7 @@ TEST_REQUIREMENTS = (
     'pyupnp-async',
     'pywebpush',
     'pyHS100',
+    'PyNaCl',
     'regenmaschine',
     'restrictedpython',
     'rflink',
