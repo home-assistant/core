@@ -296,8 +296,9 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         """Turn thermostat off."""
         await self.async_set_operation_mode(STATE_OFF)
 
-    async def async_set_temperature(self, temperature, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             raise ValueError('temperature parameter is None')
         if ((self.supported_features & SUPPORT_AWAY_MODE)

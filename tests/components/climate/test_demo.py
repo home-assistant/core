@@ -74,7 +74,14 @@ class TestDemoClimate(unittest.TestCase):
         common.set_temperature(self.hass, 30, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        assert 30.0 == state.attributes.get('temperature')
+        assert 21 == state.attributes.get('temperature')  # away_mode is on
+        common.set_away_mode(self.hass, False, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        common.set_temperature(self.hass, 30, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 30 == state.attributes.get('temperature')  # away_mode is off
+
 
     def test_set_only_target_temp_with_convert(self):
         """Test the setting of the target temperature."""

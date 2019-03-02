@@ -556,11 +556,6 @@ async def async_service_temperature_set(entity: ClimateDevice, service):
             raise HomeAssistantError(
                 'Cannot change temperature while away mode is ON')
 
-    if entity.supported_features & SUPPORT_HOLD_MODE:
-        if entity.current_hold_mode:
-            raise HomeAssistantError(
-                'Cannot change temperature while hold mode is set')
-
     kwargs = {}
     for key, value in service.data.items():
         if key in CONVERTIBLE_ATTRIBUTE:
