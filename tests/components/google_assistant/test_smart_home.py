@@ -1,4 +1,6 @@
 """Test Google Smart Home."""
+import pytest
+
 from homeassistant.core import State
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
@@ -11,6 +13,9 @@ from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.light.demo import DemoLight
 
+from homeassistant.helpers import device_registry
+from tests.common import (mock_device_registry, mock_registry,
+                          mock_area_registry)
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
@@ -18,6 +23,17 @@ BASIC_CONFIG = helpers.Config(
     agent_user_id='test-agent',
 )
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
+
+
+@pytest.fixture
+def registries(hass):
+    """Registry mock setup."""
+    from types import SimpleNamespace
+    ret = SimpleNamespace()
+    ret.entity = mock_registry(hass)
+    ret.device = mock_device_registry(hass)
+    ret.area = mock_area_registry(hass)
+    return ret
 
 
 async def test_sync_message(hass):
@@ -71,6 +87,83 @@ async def test_sync_message(hass):
                         'Hello',
                         'World',
                     ]
+                },
+                'traits': [
+                    trait.TRAIT_BRIGHTNESS,
+                    trait.TRAIT_ONOFF,
+                    trait.TRAIT_COLOR_SPECTRUM,
+                    trait.TRAIT_COLOR_TEMP,
+                ],
+                'type': sh.TYPE_LIGHT,
+                'willReportState': False,
+                'attributes': {
+                    'colorModel': 'rgb',
+                    'temperatureMinK': 2000,
+                    'temperatureMaxK': 6535,
+                },
+                'roomHint': 'Living Room'
+            }]
+        }
+    }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+    }
+
+
+async def test_sync_in_area(hass, registries):
+    """Test a sync message where room hint comes from area."""
+    area = registries.area.async_create("Living Room")
+
+    device = registries.device.async_get_or_create(
+        config_entry_id='1234',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        })
+    registries.device.async_update_device(device.id, area_id=area.id)
+
+    entity = registries.entity.async_get_or_create(
+        'light', 'test', '1235',
+        suggested_object_id='demo_light',
+        device_id=device.id)
+
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
+        hs_color=(180, 75),
+    )
+    light.hass = hass
+    light.entity_id = entity.entity_id
+    await light.async_update_ha_state()
+
+    config = helpers.Config(
+        should_expose=lambda _: True,
+        allow_unlock=False,
+        agent_user_id='test-agent',
+        entity_config={}
+    )
+
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+
+    result = await sh.async_handle_message(hass, config, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'id': 'light.demo_light',
+                'name': {
+                    'name': 'Demo Light'
                 },
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
@@ -350,11 +443,12 @@ async def test_raising_error_trait(hass):
     }
 
 
-def test_serialize_input_boolean():
+async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State('input_boolean.bla', 'on')
-    entity = sh._GoogleEntity(None, BASIC_CONFIG, state)
-    assert entity.sync_serialize() == {
+    entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
+    result = await entity.sync_serialize()
+    assert result == {
         'id': 'input_boolean.bla',
         'attributes': {},
         'name': {'name': 'bla'},
