@@ -311,8 +311,6 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def async_set_away_temperature(self, temperature):
         """Set new away temperature."""
-        print("async_set_away_temperature %s", temperature)
-        print(self.hass)
         if temperature is None:
             raise ValueError('temperature parameter is None')
         self._away_temp = temperature
