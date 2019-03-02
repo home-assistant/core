@@ -1295,18 +1295,25 @@ async def test_unsupported_message(hass, context):
 
 def generate_ciphers(secret):
     """Generate test ciphers for the DEFAULT_LOCATION_MESSAGE."""
-    # libnacl ciphertext generation will fail if the module
+    # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
     import pickle
     import base64
 
     try:
-        from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
-        from libnacl.secret import SecretBox
-        key = secret.encode("utf-8")[:KEYLEN].ljust(KEYLEN, b'\0')
-        ctxt = base64.b64encode(SecretBox(key).encrypt(json.dumps(
-            DEFAULT_LOCATION_MESSAGE).encode("utf-8"))).decode("utf-8")
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
+
+        keylen = SecretBox.KEY_SIZE
+        key = secret.encode("utf-8")
+        key = key[:keylen]
+        key = key.ljust(keylen, b'\0')
+
+        msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
+
+        ctxt = SecretBox(key).encrypt(msg,
+                                      encoder=Base64Encoder).decode("utf-8")
     except (ImportError, OSError):
         ctxt = ''
 
@@ -1341,7 +1348,8 @@ def mock_cipher():
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
         import pickle
-        (mkey, plaintext) = pickle.loads(ciphertext)
+        import base64
+        (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
             raise ValueError()
         return plaintext
@@ -1443,9 +1451,9 @@ async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
         # pylint: disable=unused-import
-        import libnacl  # noqa: F401
+        import nacl  # noqa: F401
     except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
+        pytest.skip("PyNaCl/libsodium is not installed")
         return
 
     await setup_owntracks(hass, {
