@@ -1453,7 +1453,7 @@ pywebpush==1.6.0
 pywemo==0.4.34
 
 # homeassistant.components.camera.xeoma
-pyxeoma==1.4.0
+pyxeoma==1.4.1
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
