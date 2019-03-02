@@ -4,10 +4,12 @@ Lights on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
+from datetime import timedelta
 import logging
 
 from homeassistant.components import light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 from .const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, COLOR_CHANNEL,
@@ -26,6 +28,7 @@ CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
+LIFELINE_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -148,6 +151,8 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
+        async_track_time_interval(
+            self.hass, self.async_lifeline, LIFELINE_INTERVAL)
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -217,3 +222,8 @@ class Light(ZhaEntity, light.Light):
             return
         self._state = False
         self.async_schedule_update_ha_state()
+
+    async def async_lifeline(self, time):
+        """Attempt to retrieve on off state from the light."""
+        if self._on_off_channel:
+            await self._on_off_channel.async_update()
