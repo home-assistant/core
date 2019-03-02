@@ -11,14 +11,15 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT)
 
 
 REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
-    "production": ("Envoy Current Energy Production", 'W'),
+    "production": ("Envoy Current Energy Production", POWER_WATT),
     "daily_production": ("Envoy Today's Energy Production", "Wh"),
     "seven_days_production": ("Envoy Last Seven Days Energy Production", "Wh"),
     "lifetime_production": ("Envoy Lifetime Energy Production", "Wh"),

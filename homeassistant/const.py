@@ -319,6 +319,9 @@ ATTR_DEVICE_CLASS = 'device_class'
 ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
+# Power units
+POWER_WATT = 'W'
+
 # Temperature units
 TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'
