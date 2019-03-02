@@ -28,7 +28,6 @@ REGISTER = {
     'app_name': 'Mobile App Tests',
     'app_version': '1.0.0',
     'device_name': 'Test 1',
-    'fingerprint': 'mobile_app_test',
     'integration_data': {'foo': 'bar'},
     'manufacturer': 'mobile_app',
     'model': 'Test',
@@ -46,7 +45,8 @@ def mobile_app_client(hass, aiohttp_client, hass_storage):
             'mobile_app_test': {
                 'secret': '58eb127991594dad934d1584bdee5f27',
                 'supports_encryption': True,
-                'webhook_id': 'mobile_app_test'
+                'webhook_id': 'mobile_app_test',
+                'device_name': 'Test Device'
             }
         }
     }
@@ -153,44 +153,6 @@ async def test_register_device(mock_api_client):
     assert 'secret' in json
 
 
-async def test_get_all_devices(mock_api_client):
-    """Test that we can get all registered devices."""
-    register_resp = await mock_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
-    )
-
-    assert register_resp.status == 201
-    json = await register_resp.json()
-    assert 'webhook_id' in json
-    assert 'secret' in json
-
-    devices_resp = await mock_api_client.get(
-        '/api/mobile_app/devices'
-    )
-
-    assert devices_resp.status == 200
-    json = await devices_resp.json()
-    assert len(json) == 1
-
-
-async def test_no_duplicate_device(mock_api_client):
-    """Test that a device can not be registered twice."""
-    good_resp = await mock_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
-    )
-
-    assert good_resp.status == 201
-    good_json = await good_resp.json()
-    assert 'webhook_id' in good_json
-    assert 'secret' in good_json
-
-    bad_resp = await mock_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
-    )
-
-    assert bad_resp.status == 409
-
-
 async def test_get_device(mock_api_client):
     """Test that a we can get a device payload."""
     register_resp = await mock_api_client.post(
@@ -242,15 +204,3 @@ async def test_update_device(mock_api_client):
     assert get_resp.status == 200
     get_json = await get_resp.json()
     assert get_json['app_version'] == '2.0.0'
-
-
-async def test_config_flow_import(hass):
-    """Test that we automatically create a config flow."""
-    assert not hass.config_entries.async_entries(DOMAIN)
-    assert await async_setup_component(hass, DOMAIN, {
-        DOMAIN: {
-
-        }
-    })
-    await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)
