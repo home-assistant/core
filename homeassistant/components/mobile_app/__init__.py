@@ -195,8 +195,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
             await hass.services.async_call(data[ATTR_DOMAIN],
                                            data[ATTR_SERVICE],
                                            data[ATTR_SERVICE_DATA],
-                                           True,
-                                           context(device))
+                                           blocking=True,
+                                           context=context(device))
         except (vol.Invalid, ServiceNotFound):
             raise HTTPBadRequest()
 
@@ -205,7 +205,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
     elif webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         event_type = data[ATTR_EVENT_TYPE]
         hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
-                            ha.EventOrigin.remote, context(device))
+                            ha.EventOrigin.remote, context=context(device))
         return Response(status=200)
 
     elif webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
@@ -218,7 +218,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str, request):
 
     elif webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
-                                       DEVICE_TRACKER_SEE, data, True)
+                                       DEVICE_TRACKER_SEE, data,
+                                       blocking=True, context=context(device))
         return Response(status=200)
 
 
