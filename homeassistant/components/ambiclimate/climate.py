@@ -1,48 +1,31 @@
 """Support for Ambiclimate ac."""
 
+import asyncio
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY, DOMAIN, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_ON_OFF, STATE_HEAT)
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (ATTR_NAME, ATTR_TEMPERATURE,
+from homeassistant.const import ATTR_NAME
+from homeassistant.const import (ATTR_TEMPERATURE,
                                  STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+                    DOMAIN, SERVICE_COMFORT_FEEDBACK, SERVICE_COMFORT_MODE,
+                    SERVICE_TEMPERATURE_MODE, STORAGE_KEY, STORAGE_VERSION)
 
 REQUIREMENTS = ['ambiclimate==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-AMBICLIMATE_DATA = 'ambiclimate'
-ATTR_VALUE = 'value'
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
-CONFIGURATOR_DESCRIPTION = 'To link your Ambiclimate account, ' \
-                           'click the link, login, and authorize:'
-CONFIGURATOR_LINK_NAME = 'Link Ambiclimate account'
-CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
-DEFAULT_NAME = 'Ambiclimate'
-SERVICE_COMFORT_FEEDBACK = 'send_comfort_feedback'
-SERVICE_COMFORT_MODE = 'set_comfort_mode'
-SERVICE_TEMPERATURE_MODE = 'set_temperature_mode'
-STORAGE_KEY = 'ambiclimate_auth'
-STORAGE_VERSION = 1
-
-AUTH_CALLBACK_NAME = 'api:ambiclimate'
-AUTH_CALLBACK_PATH = '/api/ambiclimate'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_ON_OFF)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
-})
 
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -59,62 +42,40 @@ SET_TEMPERATURE_MODE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up the Ambiclimate heater."""
-    import ambiclimate
-    callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
-    oauth = ambiclimate.AmbiclimateOAuth(config.get(CONF_CLIENT_ID),
-                                         config.get(CONF_CLIENT_SECRET),
-                                         callback_url,
-                                         async_get_clientsession(hass))
+async def setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
+    """Set up the Ambicliamte device."""
 
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Ambicliamte device from config entry."""
+    import ambiclimate
+    config = entry.data
+    websession = async_get_clientsession(hass)
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     token_info = await store.async_load()
 
-    if not token_info:
-        _LOGGER.info("no token; requesting authorization")
-        hass.http.register_view(AmbiclimateAuthCallbackView(config,
-                                                            async_add_entities,
-                                                            oauth,
-                                                            store))
-
-        def _call_request_config():
-            configurator = hass.components.configurator
-            req = configurator.request_config
-            data = req(DEFAULT_NAME, lambda _: None,
-                       link_name=CONFIGURATOR_LINK_NAME,
-                       link_url=oauth.get_authorize_url(),
-                       description=CONFIGURATOR_DESCRIPTION,
-                       submit_caption=CONFIGURATOR_SUBMIT_CAPTION)
-            hass.data[AMBICLIMATE_DATA] = data
-
-        hass.async_add_job(_call_request_config)
-        return
-
-    if hass.data.get(AMBICLIMATE_DATA):
-        def _call_request_config_done():
-            configurator = hass.components.configurator
-            configurator.request_done(hass.data.get(AMBICLIMATE_DATA))
-            del hass.data[AMBICLIMATE_DATA]
-
-        hass.async_add_job(_call_request_config_done)
-
-    websession = async_get_clientsession(hass)
+    oauth = ambiclimate.AmbiclimateOAuth(config[CONF_CLIENT_ID],
+                                         config[CONF_CLIENT_SECRET],
+                                         config['callback_url'],
+                                         websession)
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
                                                         websession=websession)
 
-    if await data_connection.refresh_access_token():
-        await store.async_save(data_connection.token_info)
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     if not await data_connection.find_devices():
         return
 
+    tasks = []
+    for heater in data_connection.get_devices():
+        tasks.append(heater.update_device_info())
+    await asyncio.wait(tasks, loop=hass.loop)
+
     devs = []
     for heater in data_connection.get_devices():
-        await heater.update_device_info()
-        devs.append(Ambiclimate(heater, store))
+        devs.append(AmbiclimateEntity(heater, store))
 
     async_add_entities(devs, True)
 
@@ -155,31 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                  schema=SET_TEMPERATURE_MODE_SCHEMA)
 
 
-class AmbiclimateAuthCallbackView(HomeAssistantView):
-    """Ambiclimate Authorization Callback View."""
-
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = AUTH_CALLBACK_NAME
-
-    def __init__(self, config, async_add_entities, oauth, store):
-        """Initialize."""
-        self.config = config
-        self.async_add_entities = async_add_entities
-        self.oauth = oauth
-        self.store = store
-
-    async def get(self, request):
-        """Receive authorization token."""
-        hass = request.app['hass']
-
-        token_info = await self.oauth.get_access_token(request.query['code'])
-        await self.store.async_save(token_info)
-
-        await async_setup_platform(hass, self.config, self.async_add_entities)
-
-
-class Ambiclimate(ClimateDevice):
+class AmbiclimateEntity(ClimateDevice):
     """Representation of a Ambiclimate Thermostat device."""
 
     def __init__(self, heater, store):
@@ -197,6 +134,17 @@ class Ambiclimate(ClimateDevice):
     def name(self):
         """Return the name of the entity."""
         return self._heater.name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'manufacturer': 'Ambiclimate',
+        }
 
     @property
     def temperature_unit(self):
@@ -219,9 +167,9 @@ class Ambiclimate(ClimateDevice):
         return self._data.get('temperature')
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self._data.get('humidity')}
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._data.get('humidity')
 
     @property
     def is_on(self):
@@ -265,7 +213,11 @@ class Ambiclimate(ClimateDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        token_info = await self._heater.control.refresh_access_token()
-        if token_info:
-            await self._store.async_save(token_info)
+        import ambiclimate
+        try:
+            token_info = await self._heater.control.refresh_access_token()
+            if token_info:
+                await self._store.async_save(token_info)
+        except ambiclimate.AmbiclimateOauthError:
+            _LOGGER.error("Failed to refresh access token")
         self._data = await self._heater.update_device()

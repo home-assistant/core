@@ -40,8 +40,6 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize flow."""
-        # self.callback_url =
-        #self.callback_url = '{}{}'.format('http://server1.dahoiv.net:8123', AUTH_CALLBACK_PATH)
         self._registred_view = False
 
     async def async_step_user(self, user_input=None):
