@@ -114,10 +114,10 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
         ATTR_ATTRIBUTES: dict,
         ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
         ATTR_CONSIDER_HOME: cv.time_period,
+        ATTR_ENTITY_ID: cv.entity_ids,
         # Temp workaround for iOS app introduced in 0.65
         vol.Optional('battery_status'): str,
         vol.Optional('hostname'): str,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     }))
 
 
