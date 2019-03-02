@@ -180,8 +180,8 @@ class SystemMonitorSensor(Entity):
                 now = datetime.now()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
-                                    (counter - self._last_value) / 1000**2 /
-                                    (now - self._last_update_time).seconds, 3)
+                        (counter - self._last_value) / 1000**2 /
+                        (now - self._last_update_time).seconds, 3)
                 else:
                     self._state = None
                 self._last_update_time = now
