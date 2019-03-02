@@ -86,6 +86,37 @@ def test_handle_fire_event(mobile_app_client):
     assert text == ""
 
 
+async def test_update_registration(mobile_app_client, hass_client):
+    """Test that a we can update an existing registration via webhook."""
+    mock_api_client = await hass_client()
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+
+    webhook_id = register_json[CONF_WEBHOOK_ID]
+
+    update = REGISTER
+    update['app_version'] = '2.0.0'
+
+    update_container = {
+        'type': 'update_registration',
+        'data': update
+    }
+
+    update_resp = await mobile_app_client.post(
+        '/api/webhook/{}'.format(webhook_id), json=update_container
+    )
+
+    assert update_resp.status == 200
+    put_json = await update_resp.json()
+    assert put_json['app_version'] == '2.0.0'
+    assert 'webhook_id' not in put_json
+    assert 'secret' not in put_json
+
+
 @asyncio.coroutine
 def test_returns_error_incorrect_json(mobile_app_client, caplog):
     """Test that an error is returned when JSON is invalid."""
@@ -151,56 +182,3 @@ async def test_register_device(mock_api_client):
     json = await resp.json()
     assert 'webhook_id' in json
     assert 'secret' in json
-
-
-async def test_get_device(mock_api_client):
-    """Test that a we can get a device payload."""
-    register_resp = await mock_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
-    )
-
-    assert register_resp.status == 201
-    register_json = await register_resp.json()
-
-    webhook_id = register_json[CONF_WEBHOOK_ID]
-
-    get_resp = await mock_api_client.get(
-        '/api/mobile_app/devices/{}'.format(webhook_id)
-    )
-
-    assert get_resp.status == 200
-    json = await get_resp.json()
-    assert json == REGISTER
-
-
-async def test_update_device(mock_api_client):
-    """Test that a we can update an existing device."""
-    register_resp = await mock_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
-    )
-
-    assert register_resp.status == 201
-    register_json = await register_resp.json()
-
-    webhook_id = register_json[CONF_WEBHOOK_ID]
-
-    update = REGISTER
-    update['app_version'] = '2.0.0'
-
-    put_resp = await mock_api_client.put(
-        '/api/mobile_app/devices/{}'.format(webhook_id), json=update
-    )
-
-    assert put_resp.status == 200
-    put_json = await put_resp.json()
-    assert put_json['app_version'] == '2.0.0'
-    assert 'webhook_id' not in put_json
-    assert 'secret' not in put_json
-
-    get_resp = await mock_api_client.get(
-        '/api/mobile_app/devices/{}'.format(webhook_id)
-    )
-
-    assert get_resp.status == 200
-    get_json = await get_resp.json()
-    assert get_json['app_version'] == '2.0.0'
